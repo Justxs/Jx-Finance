@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { usePing } from "../api/generated";
+import { useGetPingEndpoint } from "../api/generated";
 import { useDate, useMoney } from "../hooks/use-formatters";
 
 export const HomePage = () => {
   const { t } = useTranslation();
   const money = useMoney();
   const date = useDate();
-  const ping = usePing();
+  const ping = useGetPingEndpoint();
 
   let status = t("status.ok");
   if (ping.isLoading) {

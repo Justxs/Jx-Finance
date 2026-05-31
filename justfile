@@ -8,6 +8,7 @@ dev:
 gen:
     Invoke-WebRequest http://localhost:8080/swagger/v1/swagger.json -OutFile frontend/openapi.json
     pnpm --prefix frontend orval
+    pnpm --prefix frontend exec oxfmt src/api/generated
 
 # Run backend tests (needs Docker for Testcontainers).
 test:

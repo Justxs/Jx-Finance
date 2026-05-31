@@ -18,8 +18,11 @@ builder.Services.AddProblemDetails();
 builder.Services.AddFastEndpoints();
 builder.Services.SwaggerDocument(options =>
 {
+	options.ShortSchemaNames = true;
+	options.EnableJWTBearerAuth = false;
 	options.DocumentSettings = settings =>
 	{
+		settings.DocumentName = "v1";
 		settings.Title = "Just Finance API";
 		settings.Version = "v1";
 	};
@@ -42,7 +45,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseSerilogRequestLogging();
 
-app.UseFastEndpoints();
+app.UseFastEndpoints(c => c.Endpoints.ShortNames = true);
+await app.ExportSwaggerDocsAndExitAsync("v1");
 app.UseSwaggerGen();
 
 app.MapScalarApiReference(options =>

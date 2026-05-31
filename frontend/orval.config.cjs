@@ -4,6 +4,7 @@ module.exports = {
     output: {
       mode: "single",
       client: "react-query",
+      clean: true,
       target: "./src/api/generated/index.ts",
       schemas: "./src/api/generated/model",
       override: {

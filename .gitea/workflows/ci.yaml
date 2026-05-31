@@ -85,3 +85,52 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+  client-drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Export OpenAPI document
+        env:
+          ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
+        run: dotnet run --project backend/JxFinance.Api -c Release --export-swagger-docs true -p:PublishAot=false
+
+      - name: Copy spec for codegen
+        run: cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
+
+      - name: Regenerate client
+        working-directory: frontend
+        run: |
+          pnpm orval
+          pnpm exec oxfmt src/api/generated
+
+      - name: Fail on client drift
+        run: |
+          if ! git diff --quiet -- frontend/src/api/generated; then
+            echo "::error::Generated API client is out of date. Run 'just gen' and commit the result."
+            git diff -- frontend/src/api/generated
+            exit 1
+          fi

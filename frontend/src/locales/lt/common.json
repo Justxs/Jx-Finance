@@ -31,5 +31,11 @@
   },
   "statusMeta": {
     "time": "UTC"
+  },
+  "errors": {
+    "generic": "Kazkas nepavyko. Bandykite dar karta."
+  },
+  "toast": {
+    "dismiss": "Uzdaryti"
   }
 }

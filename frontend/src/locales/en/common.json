@@ -31,5 +31,11 @@
   },
   "statusMeta": {
     "time": "UTC"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again."
+  },
+  "toast": {
+    "dismiss": "Dismiss"
   }
 }
