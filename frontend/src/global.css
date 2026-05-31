@@ -1,0 +1,83 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&family=Source+Sans+3:wght@400;500;600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #1c2629;
+  --paper: #f6f1ea;
+  --accent: #1f7a6b;
+  --accent-soft: rgba(31, 122, 107, 0.14);
+  --line: rgba(31, 41, 55, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "Source Sans 3", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 800px at 20% -10%, #ffffff 0%, #f6f1ea 45%, #efe6dc 100%),
+    linear-gradient(120deg, rgba(31, 122, 107, 0.08) 0%, rgba(245, 215, 178, 0.2) 100%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: "Space Grotesk", system-ui, sans-serif;
+  }
+}
+
+@layer components {
+  .page-shell {
+    position: relative;
+    min-height: 100vh;
+    padding: 32px 24px 56px;
+    overflow: hidden;
+  }
+
+  .page-shell::before,
+  .page-shell::after {
+    content: "";
+    position: absolute;
+    z-index: 0;
+    border-radius: 999px;
+    filter: blur(0px);
+    opacity: 0.5;
+  }
+
+  .page-shell::before {
+    width: 380px;
+    height: 380px;
+    right: -120px;
+    top: 120px;
+    background: radial-gradient(circle, rgba(31, 122, 107, 0.2), transparent 70%);
+  }
+
+  .page-shell::after {
+    width: 480px;
+    height: 480px;
+    left: -200px;
+    bottom: -220px;
+    background: radial-gradient(circle, rgba(245, 215, 178, 0.35), transparent 70%);
+  }
+
+  .page-shell > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card {
+    @apply rounded-3xl border border-line bg-white/70 shadow-soft backdrop-blur;
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "appName": "Just Finance",
+  "tagline": "Greita ivestis. Patikimi skaiciai.",
+  "hero": {
+    "title": "Asmeninis finansu sekimas be sklaidos lapu",
+    "subtitle": "Fiksuok pajamas ir islaidas per kelias sekundes, laikyk balansa tiksliu ir valdyk viska savo kompiuteryje."
+  },
+  "cta": {
+    "add": "Prideti irasa",
+    "view": "Atidaryti zurnala"
+  },
+  "principles": {
+    "fast": {
+      "title": "Greita ivestis",
+      "body": "Keli paspaudimai ir irasas sukurtas."
+    },
+    "trust": {
+      "title": "Patikimi skaiciai",
+      "body": "Visos sumos saugomos tiksliai, be apvalinimo klaidu."
+    },
+    "private": {
+      "title": "Privatus talpinimas",
+      "body": "Duomenys lieka tavo duomenu bazeje."
+    }
+  },
+  "status": {
+    "label": "API bukle",
+    "loading": "Tikrinama...",
+    "ok": "Prisijungta",
+    "error": "Neprieinama"
+  },
+  "statusMeta": {
+    "time": "UTC"
+  }
+}

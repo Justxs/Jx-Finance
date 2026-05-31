@@ -1,0 +1,62 @@
+# ---- Secrets / environment ----
+.env
+.env.*
+!.env.example
+
+# ---- .NET ----
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+*.userosscache
+*.userprefs
+*.sln.docstates
+*.DotSettings.user
+# Test results & coverage
+[Tt]est[Rr]esults/
+**/TestResults/
+*.trx
+*.coverage
+coverage.cobertura.xml
+
+# ---- Node / frontend ----
+node_modules/
+.pnpm-store/
+pnpm-debug.log*
+**/dist/
+**/dist-ssr/
+*.local
+.vite/
+# Coverage
+**/coverage/
+# Generated OpenAPI spec (the client in src/api/generated is committed; the spec is fetched at gen time)
+frontend/openapi.json
+
+# ---- Logs ----
+*.log
+logs/
+
+# ---- Editors / IDEs ----
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.iml
+*.swp
+*.swo
+.sv
+*~
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# ---- Docker ----
+docker-compose.override.yml
+
+# ---- Misc ----
+*.bak
+*.tmp

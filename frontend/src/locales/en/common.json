@@ -1,0 +1,35 @@
+{
+  "appName": "Just Finance",
+  "tagline": "Fast entry. Trusted numbers.",
+  "hero": {
+    "title": "Personal money tracking without the spreadsheet drag",
+    "subtitle": "Capture income and expenses in seconds, keep balances exact, and stay private on your own machine."
+  },
+  "cta": {
+    "add": "Add transaction",
+    "view": "Open ledger"
+  },
+  "principles": {
+    "fast": {
+      "title": "Fast entry first",
+      "body": "A few taps to record the money moving in or out."
+    },
+    "trust": {
+      "title": "Trust the numbers",
+      "body": "Money stays exact end-to-end with decimal precision."
+    },
+    "private": {
+      "title": "Self-hosted & private",
+      "body": "Runs locally with data stored in your own database."
+    }
+  },
+  "status": {
+    "label": "API status",
+    "loading": "Checking API...",
+    "ok": "Connected",
+    "error": "Unavailable"
+  },
+  "statusMeta": {
+    "time": "UTC"
+  }
+}
