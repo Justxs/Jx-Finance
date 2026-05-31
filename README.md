@@ -4,7 +4,7 @@ Self-hosted personal finance tracker built as a React SPA + ASP.NET Core API.
 
 ## Prerequisites
 - .NET 10 SDK
-- Node.js 20+ and pnpm
+- Node.js 22+ and pnpm
 - Docker Desktop (for Postgres)
 - just (task runner)
 
