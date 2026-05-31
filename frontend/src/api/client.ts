@@ -16,8 +16,6 @@ const axiosInstance = axios.create({
   },
 });
 
-// Orval mutator: every generated request flows through here. Maps RFC 7807
-// ProblemDetails responses onto a predictable ApiError shape for the UI.
 export const customFetch = async <TResponse>(
   config: AxiosRequestConfig,
   options?: AxiosRequestConfig,

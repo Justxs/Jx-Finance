@@ -1,26 +1,27 @@
-set windows-shell := ["powershell", "-NoProfile", "-Command"]
+set windows-shell := ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
 
-# Start the DB container and run API + frontend dev servers.
+# Run Postgres (Docker) + API + frontend dev servers.
 dev:
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/dev.ps1
+    & scripts/dev.ps1
 
-# Fetch OpenAPI and regenerate the frontend client.
+# Regenerate the frontend API client from the running API's OpenAPI spec.
 gen:
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gen-openapi.ps1
+    Invoke-WebRequest http://localhost:8080/swagger/v1/swagger.json -OutFile frontend/openapi.json
+    pnpm --prefix frontend orval
 
 # Run backend tests (needs Docker for Testcontainers).
 test:
     dotnet test backend/JxFinance.slnx
 
-# Lint and format-check the frontend (Oxc).
-lint:
-    pnpm --prefix frontend lint
-    pnpm --prefix frontend format:check
-
-# Format the frontend in place (Oxc).
-fmt:
+# Auto-fix lint issues and format the frontend (Oxc).
+fix:
+    pnpm --prefix frontend lint --fix
     pnpm --prefix frontend format
 
-# Bring up the docker stack.
+# Build and start the full Docker stack.
 up:
-    powershell -NoProfile -ExecutionPolicy Bypass -File scripts/up.ps1
+    docker compose up -d --build
+
+# Stop the Docker stack.
+down:
+    docker compose down

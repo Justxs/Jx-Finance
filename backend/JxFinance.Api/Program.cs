@@ -25,7 +25,6 @@ builder.Services.SwaggerDocument(options =>
 	};
 });
 
-// Feature services (vertical slices) — injected into endpoints and background jobs.
 builder.Services.AddScoped<IPingService, PingService>();
 
 var connectionString = builder.Configuration.GetConnectionString("Default");
@@ -54,12 +53,10 @@ app.MapScalarApiReference(options =>
 
 app.MapHealthChecks("/health");
 
-// Send the bare root to the API docs instead of a 404.
 app.MapGet("/", () => Results.Redirect("/scalar/v1"));
 
 app.ApplyMigrations();
 
 app.Run();
 
-// Exposed so the integration test project can boot the API via WebApplicationFactory.
 public partial class Program;

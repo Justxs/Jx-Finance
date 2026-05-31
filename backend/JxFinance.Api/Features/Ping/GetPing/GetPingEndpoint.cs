@@ -2,7 +2,6 @@ using FastEndpoints;
 
 namespace JxFinance.Api.Features.Ping.GetPing;
 
-// Thin endpoint: bind/validate, call the feature service, map to the response DTO.
 public sealed class GetPingEndpoint(IPingService pingService)
     : EndpointWithoutRequest<GetPingResponse>
 {

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 
-// React Compiler memoizes these per i18n.language — no manual useMemo needed.
 export const useMoney = () => {
   const { i18n } = useTranslation();
 

@@ -12,12 +12,10 @@ on:
       - "**/*.md"
   workflow_dispatch:
 
-# Only the latest run per ref matters; cancel superseded ones.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Least privilege by default.
 permissions:
   contents: read
 
@@ -52,8 +50,6 @@ jobs:
       - name: Build
         run: dotnet build backend/JxFinance.slnx --configuration Release --no-restore
 
-      # Integration tests use Testcontainers — the runner must expose a Docker
-      # daemon (mount /var/run/docker.sock or run docker-in-docker).
       - name: Test
         run: dotnet test backend/JxFinance.slnx --configuration Release --no-build --logger "console;verbosity=normal"
 
