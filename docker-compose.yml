@@ -21,10 +21,13 @@ services:
       dockerfile: backend/JxFinance.Api/Dockerfile
     environment:
       ASPNETCORE_URLS: http://+:8080
+      App__BackupDirectory: /backups
     env_file:
       - .env
     ports:
       - "8080:8080"
+    volumes:
+      - backups:/backups
     depends_on:
       db:
         condition: service_healthy
@@ -47,3 +50,4 @@ services:
 
 volumes:
   db_data:
+  backups:

@@ -1,6 +1,4 @@
 <Solution>
   <Project Path="JxFinance.Api/JxFinance.Api.csproj" />
-  <Project Path="JxFinance.Domain/JxFinance.Domain.csproj" />
-  <Project Path="JxFinance.Infrastructure/JxFinance.Infrastructure.csproj" />
   <Project Path="JxFinance.Tests/JxFinance.Tests.csproj" />
 </Solution>

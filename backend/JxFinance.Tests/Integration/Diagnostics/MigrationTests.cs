@@ -1,4 +1,4 @@
-using JxFinance.Infrastructure.Persistence;
+using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

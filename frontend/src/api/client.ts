@@ -1,6 +1,3 @@
-import axios from "axios";
-import type { AxiosRequestConfig } from "axios";
-
 export interface ApiError {
   status: number;
   title?: string;
@@ -8,32 +5,31 @@ export interface ApiError {
   errors?: Record<string, string[]>;
 }
 
-const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "",
-  withCredentials: true,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
-export const customFetch = async <TResponse>(
-  config: AxiosRequestConfig,
-  options?: AxiosRequestConfig,
-): Promise<TResponse> => {
-  try {
-    const response = await axiosInstance.request<TResponse>({ ...config, ...options });
-    return response.data;
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      const body = error.response?.data as Partial<ApiError> | undefined;
-      const apiError: ApiError = {
-        status: error.response?.status ?? 0,
-        title: body?.title ?? error.message,
-        detail: body?.detail,
-        errors: body?.errors,
-      };
-      throw apiError;
-    }
-    throw error;
+export async function customFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${baseUrl}${url}`, {
+    credentials: "include",
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...options?.headers,
+    },
+  });
+
+  const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;
+  const body: unknown = isJson ? await response.json() : await response.text();
+
+  if (!response.ok) {
+    const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiError>;
+    const apiError: ApiError = {
+      status: response.status,
+      title: problem.title ?? response.statusText,
+      detail: problem.detail,
+      errors: problem.errors,
+    };
+    throw apiError;
   }
-};
+
+  return body as T;
+}

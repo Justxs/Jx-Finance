@@ -5,7 +5,7 @@
     "browser": true,
     "es2024": true
   },
-  "ignorePatterns": ["dist", "src/api/generated"],
+  "ignorePatterns": ["dist", "src/api/generated", "src/route-tree.gen.ts"],
   "categories": {
     "correctness": "error"
   },

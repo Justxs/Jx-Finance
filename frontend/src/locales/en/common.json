@@ -1,27 +1,13 @@
 {
-  "appName": "Just Finance",
+  "appName": "Jx Finance",
   "tagline": "Fast entry. Trusted numbers.",
-  "hero": {
-    "title": "Personal money tracking without the spreadsheet drag",
-    "subtitle": "Capture income and expenses in seconds, keep balances exact, and stay private on your own machine."
+  "welcome": {
+    "title": "Welcome to Jx Finance",
+    "subtitle": "Your private, self-hosted place to track income and expenses. Let's get your money in order.",
+    "cta": "Get started"
   },
-  "cta": {
-    "add": "Add transaction",
-    "view": "Open ledger"
-  },
-  "principles": {
-    "fast": {
-      "title": "Fast entry first",
-      "body": "A few taps to record the money moving in or out."
-    },
-    "trust": {
-      "title": "Trust the numbers",
-      "body": "Money stays exact end-to-end with decimal precision."
-    },
-    "private": {
-      "title": "Self-hosted & private",
-      "body": "Runs locally with data stored in your own database."
-    }
+  "theme": {
+    "toggle": "Toggle theme"
   },
   "status": {
     "label": "API status",
@@ -29,13 +15,7 @@
     "ok": "Connected",
     "error": "Unavailable"
   },
-  "statusMeta": {
-    "time": "UTC"
-  },
   "errors": {
     "generic": "Something went wrong. Please try again."
-  },
-  "toast": {
-    "dismiss": "Dismiss"
   }
 }

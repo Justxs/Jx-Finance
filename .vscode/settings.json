@@ -1,0 +1,10 @@
+{
+  "files.associations": {
+    "justfile": "plaintext",
+    "Justfile": "plaintext"
+  },
+  "sonarlint.analysisExcludesStandalone": "**/src/api/generated/**",
+  "files.watcherExclude": {
+    "**/src/api/generated/**": true
+  }
+}

@@ -1,30 +1,26 @@
-import { useLocale } from "../stores/app-store";
+import GB from "country-flag-icons/react/3x2/GB";
+import LT from "country-flag-icons/react/3x2/LT";
+import { Button } from "@/components/ui/button";
+import { type Locale, useLocale } from "@/stores/app-store";
 
-export const LanguageToggle = () => {
+const flags: Record<Locale, typeof GB> = { en: GB, lt: LT };
+const labels: Record<Locale, string> = { en: "English", lt: "Lietuvių" };
+const nextLocale: Record<Locale, Locale> = { en: "lt", lt: "en" };
+
+export function LanguageToggle() {
   const { locale, setLocale } = useLocale();
+  const Flag = flags[locale];
 
   return (
-    <div className="flex items-center gap-1 rounded-full border border-line bg-white/70 p-1 text-xs font-semibold uppercase tracking-[0.2em] text-ink">
-      <button
-        type="button"
-        onClick={() => setLocale("en")}
-        className={`rounded-full px-3 py-1 transition ${
-          locale === "en" ? "bg-ink text-white" : "text-ink/70 hover:text-ink"
-        }`}
-        aria-pressed={locale === "en"}
-      >
-        EN
-      </button>
-      <button
-        type="button"
-        onClick={() => setLocale("lt")}
-        className={`rounded-full px-3 py-1 transition ${
-          locale === "lt" ? "bg-ink text-white" : "text-ink/70 hover:text-ink"
-        }`}
-        aria-pressed={locale === "lt"}
-      >
-        LT
-      </button>
-    </div>
+    <Button
+      type="button"
+      variant="outline"
+      size="icon"
+      onClick={() => setLocale(nextLocale[locale])}
+      aria-label={labels[locale]}
+      title={labels[locale]}
+    >
+      <Flag className="h-4 w-6 rounded-sm" />
+    </Button>
   );
-};
+}

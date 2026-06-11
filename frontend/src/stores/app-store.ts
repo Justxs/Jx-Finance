@@ -1,6 +1,6 @@
 import { Store } from "@tanstack/store";
-import { useStore } from "@tanstack/react-store";
-import i18n from "../lib/i18n";
+import { useSelector } from "@tanstack/react-store";
+import i18n from "@/lib/i18n";
 
 export type Locale = "en" | "lt";
 
@@ -14,12 +14,12 @@ const initialState: AppState = {
 
 export const appStore = new Store<AppState>(initialState);
 
-export const setLocale = (next: Locale) => {
+export function setLocale(next: Locale) {
   appStore.setState((state) => ({ ...state, locale: next }));
   i18n.changeLanguage(next).catch(() => undefined);
-};
+}
 
-export const useLocale = () => {
-  const locale = useStore(appStore, (state) => state.locale);
+export function useLocale() {
+  const locale = useSelector(appStore, (state) => state.locale);
   return { locale, setLocale };
-};
+}

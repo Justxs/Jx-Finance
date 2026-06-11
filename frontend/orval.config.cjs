@@ -12,6 +12,9 @@ module.exports = {
           path: "./src/api/client.ts",
           name: "customFetch",
         },
+        fetch: {
+          includeHttpResponseReturnType: false,
+        },
       },
     },
   },
