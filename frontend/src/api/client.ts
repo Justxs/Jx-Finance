@@ -8,13 +8,17 @@ export interface ApiError {
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
 export async function customFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const headers: Record<string, string> = {
+    ...(options?.headers as Record<string, string> | undefined),
+  };
+  if (options?.body !== undefined && options.body !== null) {
+    headers["Content-Type"] ??= "application/json";
+  }
+
   const response = await fetch(`${baseUrl}${url}`, {
     credentials: "include",
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...options?.headers,
-    },
+    headers,
   });
 
   const isJson = response.headers.get("content-type")?.includes("application/json") ?? false;

@@ -1,25 +1,20 @@
 using JxFinance.Domain.Common;
-using Microsoft.AspNetCore.Mvc;
 
 namespace JxFinance.Common.Errors;
 
 public static class ResultExtensions
 {
-    public static ProblemDetails ToProblemDetails<T>(this Result<T> result)
+    public static IResult ToProblemResult<T>(this Result<T> result)
     {
         if (result.IsSuccess)
         {
-            throw new InvalidOperationException("Cannot convert a successful result to ProblemDetails.");
+            throw new InvalidOperationException("Cannot convert a successful result to a problem response.");
         }
 
-        var statusCode = StatusCodeFor(result.ErrorCode);
-        return new ProblemDetails
-        {
-            Status = statusCode,
-            Title = ReasonPhrases.For(statusCode),
-            Detail = result.ErrorMessage,
-            Extensions = { ["errorCode"] = result.ErrorCode },
-        };
+        return Results.Problem(
+            detail: result.ErrorMessage,
+            statusCode: StatusCodeFor(result.ErrorCode),
+            extensions: new Dictionary<string, object?> { ["errorCode"] = result.ErrorCode });
     }
 
     private static int StatusCodeFor(string? errorCode) => errorCode switch
@@ -29,15 +24,4 @@ public static class ResultExtensions
         ErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
         _ => StatusCodes.Status400BadRequest,
     };
-
-    private static class ReasonPhrases
-    {
-        public static string For(int statusCode) => statusCode switch
-        {
-            StatusCodes.Status404NotFound => "Not Found",
-            StatusCodes.Status409Conflict => "Conflict",
-            StatusCodes.Status403Forbidden => "Forbidden",
-            _ => "Bad Request",
-        };
-    }
 }

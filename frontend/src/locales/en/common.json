@@ -1,10 +1,83 @@
 {
   "appName": "Jx Finance",
   "tagline": "Fast entry. Trusted numbers.",
-  "welcome": {
-    "title": "Welcome to Jx Finance",
-    "subtitle": "Your private, self-hosted place to track income and expenses. Let's get your money in order.",
-    "cta": "Get started"
+  "nav": {
+    "dashboard": "Dashboard",
+    "transactions": "Transactions",
+    "accounts": "Accounts",
+    "categories": "Categories"
+  },
+  "actions": {
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "archive": "Archive",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Where your money stands right now.",
+    "totalBalance": "Total balance",
+    "monthIncome": "Income this month",
+    "monthExpense": "Expenses this month",
+    "recent": "Recent transactions",
+    "empty": "No transactions yet. Add your first one on the Transactions page."
+  },
+  "accounts": {
+    "title": "Accounts",
+    "subtitle": "Every place your money lives.",
+    "add": "Add account",
+    "name": "Name",
+    "namePlaceholder": "e.g. Swedbank checking",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Main salary account",
+    "iban": "IBAN",
+    "ibanPlaceholder": "LT12 1000 0111 0100 1000 (optional)",
+    "type": "Type",
+    "startingBalance": "Starting balance",
+    "currentBalance": "Current balance",
+    "empty": "No accounts yet. Add one to start tracking.",
+    "archived": "Account archived",
+    "types": {
+      "checking": "Checking",
+      "savings": "Savings",
+      "cash": "Cash",
+      "other": "Other"
+    }
+  },
+  "categories": {
+    "title": "Categories",
+    "subtitle": "Labels that give your spending shape.",
+    "add": "Add category",
+    "name": "Name",
+    "namePlaceholder": "e.g. Food",
+    "icon": "Icon",
+    "income": "Income",
+    "expense": "Expense",
+    "deleted": "Category deleted; its transactions are now uncategorized",
+    "empty": "No categories in this group."
+  },
+  "transactions": {
+    "title": "Transactions",
+    "subtitle": "Income and expenses, as they happen.",
+    "add": "Add transaction",
+    "editTitle": "Edit transaction",
+    "account": "Account",
+    "category": "Category",
+    "uncategorized": "Uncategorized",
+    "type": "Type",
+    "income": "Income",
+    "expense": "Expense",
+    "amount": "Amount",
+    "date": "Date",
+    "description": "Description",
+    "descriptionPlaceholder": "e.g. Lidl",
+    "empty": "No transactions yet.",
+    "pageInfo": "Page {{page}} of {{pages}}",
+    "needAccount": "Create an account first to add transactions."
   },
   "theme": {
     "toggle": "Toggle theme"
@@ -17,5 +90,12 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again."
+  },
+  "validation": {
+    "required": "This field is required.",
+    "money": "Enter a valid amount, e.g. 12.34.",
+    "positiveMoney": "Enter an amount greater than 0, e.g. 12.34.",
+    "iban": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000.",
+    "maxLength": "Must be {{max}} characters or fewer."
   }
 }

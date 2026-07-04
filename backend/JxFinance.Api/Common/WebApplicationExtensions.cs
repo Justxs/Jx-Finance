@@ -1,7 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Npgsql;
@@ -23,6 +25,7 @@ public static class WebApplicationExtensions
         if (pending.Count == 0)
         {
             logger.LogInformation("Database is up to date; no migrations to apply.");
+            await SeedAsync(services, db, logger);
             return;
         }
 
@@ -49,6 +52,14 @@ public static class WebApplicationExtensions
 
         await db.Database.MigrateAsync();
         logger.LogInformation("Migrations applied successfully.");
+
+        await SeedAsync(services, db, logger);
+    }
+
+    private static async Task SeedAsync(IServiceProvider services, AppDbContext db, ILogger logger)
+    {
+        var userManager = services.GetRequiredService<UserManager<AppUser>>();
+        await DevDataSeeder.SeedAsync(db, userManager, logger);
     }
 
     private static async Task<bool> TryBackupAsync(string connectionString, string backupDirectory, ILogger logger)

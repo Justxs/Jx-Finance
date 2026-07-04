@@ -1,3 +1,4 @@
+using JxFinance.Infrastructure.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -12,6 +13,6 @@ public sealed class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<App
         var optionsBuilder = new DbContextOptionsBuilder<AppDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
 
-        return new AppDbContext(optionsBuilder.Options);
+        return new AppDbContext(optionsBuilder.Options, new DevCurrentUser());
     }
 }

@@ -25,6 +25,7 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<ICurrentUser, DevCurrentUser>();
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));

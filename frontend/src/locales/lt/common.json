@@ -1,21 +1,101 @@
 {
   "appName": "Jx Finance",
-  "tagline": "Greita ivestis. Patikimi skaiciai.",
-  "welcome": {
-    "title": "Sveiki atvyke i Jx Finance",
-    "subtitle": "Privati, savarankiskai talpinama vieta pajamoms ir islaidoms sekti. Pradekime tvarkyti finansus.",
-    "cta": "Pradeti"
+  "tagline": "Greita įvestis. Patikimi skaičiai.",
+  "nav": {
+    "dashboard": "Suvestinė",
+    "transactions": "Operacijos",
+    "accounts": "Sąskaitos",
+    "categories": "Kategorijos"
+  },
+  "actions": {
+    "add": "Pridėti",
+    "save": "Išsaugoti",
+    "cancel": "Atšaukti",
+    "edit": "Redaguoti",
+    "delete": "Ištrinti",
+    "archive": "Archyvuoti",
+    "previous": "Ankstesnis",
+    "next": "Kitas"
+  },
+  "dashboard": {
+    "title": "Suvestinė",
+    "subtitle": "Jūsų finansų padėtis šiandien.",
+    "totalBalance": "Bendras likutis",
+    "monthIncome": "Šio mėnesio pajamos",
+    "monthExpense": "Šio mėnesio išlaidos",
+    "recent": "Paskutinės operacijos",
+    "empty": "Operacijų dar nėra. Pridėkite pirmąją Operacijų puslapyje."
+  },
+  "accounts": {
+    "title": "Sąskaitos",
+    "subtitle": "Visos vietos, kur laikomi jūsų pinigai.",
+    "add": "Pridėti sąskaitą",
+    "name": "Pavadinimas",
+    "namePlaceholder": "pvz. Swedbank sąskaita",
+    "description": "Aprašymas",
+    "descriptionPlaceholder": "pvz. Pagrindinė atlyginimo sąskaita",
+    "iban": "IBAN",
+    "ibanPlaceholder": "LT12 1000 0111 0100 1000 (nebūtina)",
+    "type": "Tipas",
+    "startingBalance": "Pradinis likutis",
+    "currentBalance": "Dabartinis likutis",
+    "empty": "Sąskaitų dar nėra. Pridėkite pirmąją.",
+    "archived": "Sąskaita archyvuota",
+    "types": {
+      "checking": "Einamoji",
+      "savings": "Taupomoji",
+      "cash": "Grynieji",
+      "other": "Kita"
+    }
+  },
+  "categories": {
+    "title": "Kategorijos",
+    "subtitle": "Etiketės, kurios suteikia išlaidoms formą.",
+    "add": "Pridėti kategoriją",
+    "name": "Pavadinimas",
+    "namePlaceholder": "pvz. Maistas",
+    "icon": "Piktograma",
+    "income": "Pajamos",
+    "expense": "Išlaidos",
+    "deleted": "Kategorija ištrinta; jos operacijos liko be kategorijos",
+    "empty": "Šioje grupėje kategorijų nėra."
+  },
+  "transactions": {
+    "title": "Operacijos",
+    "subtitle": "Pajamos ir išlaidos realiu laiku.",
+    "add": "Pridėti operaciją",
+    "editTitle": "Redaguoti operaciją",
+    "account": "Sąskaita",
+    "category": "Kategorija",
+    "uncategorized": "Be kategorijos",
+    "type": "Tipas",
+    "income": "Pajamos",
+    "expense": "Išlaidos",
+    "amount": "Suma",
+    "date": "Data",
+    "description": "Aprašymas",
+    "descriptionPlaceholder": "pvz. Lidl",
+    "empty": "Operacijų dar nėra.",
+    "pageInfo": "Puslapis {{page}} iš {{pages}}",
+    "needAccount": "Pirmiausia sukurkite sąskaitą."
   },
   "theme": {
-    "toggle": "Perjungti tema"
+    "toggle": "Perjungti temą"
   },
   "status": {
-    "label": "API bukle",
+    "label": "API būklė",
     "loading": "Tikrinama...",
     "ok": "Prisijungta",
     "error": "Neprieinama"
   },
   "errors": {
-    "generic": "Kazkas nepavyko. Bandykite dar karta."
+    "generic": "Kažkas nepavyko. Bandykite dar kartą."
+  },
+  "validation": {
+    "required": "Šis laukas privalomas.",
+    "money": "Įveskite teisingą sumą, pvz. 12.34.",
+    "positiveMoney": "Įveskite sumą, didesnę už 0, pvz. 12.34.",
+    "iban": "Įveskite teisingą IBAN, pvz. LT12 1000 0111 0100 1000.",
+    "maxLength": "Turi būti ne daugiau nei {{max}} simbolių."
   }
 }

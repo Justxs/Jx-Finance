@@ -16,7 +16,7 @@ foreach ($line in Get-Content ".env") {
 }
 
 $env:ConnectionStrings__Default = "Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])"
-$env:ASPNETCORE_URLS = "http://localhost:8080"
+$env:ASPNETCORE_URLS = "http://localhost:8091"
 
 docker compose up -d db
 

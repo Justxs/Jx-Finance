@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using JxFinance.Common.Middleware;
@@ -14,7 +16,11 @@ public static class ApiPipelineExtensions
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseSerilogRequestLogging();
 
-        app.UseFastEndpoints(c => c.Endpoints.ShortNames = true);
+        app.UseFastEndpoints(c =>
+        {
+            c.Endpoints.ShortNames = true;
+            c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        });
         app.UseSwaggerGen();
 
         app.MapScalarApiReference(options =>

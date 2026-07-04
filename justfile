@@ -6,7 +6,7 @@ dev:
 
 # Regenerate the frontend API client from the running API's OpenAPI spec.
 gen:
-    Invoke-WebRequest http://localhost:8080/swagger/v1/swagger.json -OutFile frontend/openapi.json
+    Invoke-WebRequest http://localhost:8091/swagger/v1/swagger.json -OutFile frontend/openapi.json
     pnpm --prefix frontend orval
     pnpm --prefix frontend exec oxfmt src/api/generated
 

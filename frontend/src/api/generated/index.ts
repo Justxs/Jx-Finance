@@ -4,23 +4,548 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
   DefinedUseQueryResult,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
   UndefinedInitialDataOptions,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { GetPingResponse } from "./model";
+import type {
+  AccountResponse,
+  CategoryResponse,
+  CreateAccountRequest,
+  CreateCategoryRequest,
+  CreateTransactionRequest,
+  DashboardSummaryResponse,
+  ErrorResponse,
+  GetPingResponse,
+  GetTransactionsEndpointParams,
+  PagedResponseOfTransactionResponse,
+  ProblemDetails,
+  TransactionResponse,
+  UpdateAccountRequest,
+  UpdateCategoryRequest,
+  UpdateTransactionRequest,
+} from "./model";
 
 import { customFetch } from "../client";
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
+
+export const getUpdateTransactionEndpointUrl = (id: string) => {
+  return `/api/transactions/${id}`;
+};
+
+export const updateTransactionEndpoint = async (
+  id: string,
+  updateTransactionRequest: UpdateTransactionRequest,
+  options?: RequestInit,
+): Promise<TransactionResponse> => {
+  return customFetch<TransactionResponse>(getUpdateTransactionEndpointUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateTransactionRequest),
+  });
+};
+
+export const getUpdateTransactionEndpointMutationOptions = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTransactionEndpoint>>,
+    TError,
+    { id: string; data: UpdateTransactionRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTransactionEndpoint>>,
+  TError,
+  { id: string; data: UpdateTransactionRequest },
+  TContext
+> => {
+  const mutationKey = ["updateTransactionEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTransactionEndpoint>>,
+    { id: string; data: UpdateTransactionRequest }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateTransactionEndpoint(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateTransactionEndpoint>>
+>;
+export type UpdateTransactionEndpointMutationBody = UpdateTransactionRequest;
+export type UpdateTransactionEndpointMutationError = ErrorResponse | ProblemDetails;
+
+export const useUpdateTransactionEndpoint = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateTransactionEndpoint>>,
+      TError,
+      { id: string; data: UpdateTransactionRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateTransactionEndpoint>>,
+  TError,
+  { id: string; data: UpdateTransactionRequest },
+  TContext
+> => {
+  return useMutation(getUpdateTransactionEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetTransactionEndpointUrl = (id: string) => {
+  return `/api/transactions/${id}`;
+};
+
+export const getTransactionEndpoint = async (
+  id: string,
+  options?: RequestInit,
+): Promise<TransactionResponse> => {
+  return customFetch<TransactionResponse>(getGetTransactionEndpointUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTransactionEndpointQueryKey = (id: string) => {
+  return [`/api/transactions/${id}`] as const;
+};
+
+export const getGetTransactionEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionEndpoint>>> = ({ signal }) =>
+    getTransactionEndpoint(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetTransactionEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionEndpoint>>
+>;
+export type GetTransactionEndpointQueryError = ProblemDetails;
+
+export function useGetTransactionEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetTransactionEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionEndpointQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getDeleteTransactionEndpointUrl = (id: string) => {
+  return `/api/transactions/${id}`;
+};
+
+export const deleteTransactionEndpoint = async (
+  id: string,
+  options?: RequestInit,
+): Promise<void> => {
+  return customFetch<void>(getDeleteTransactionEndpointUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteTransactionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteTransactionEndpoint>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteTransactionEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteTransactionEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteTransactionEndpoint>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteTransactionEndpoint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteTransactionEndpoint>>
+>;
+
+export type DeleteTransactionEndpointMutationError = ProblemDetails;
+
+export const useDeleteTransactionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteTransactionEndpoint>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteTransactionEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteTransactionEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetTransactionsEndpointUrl = (params: GetTransactionsEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions?${stringifiedParams}`
+    : `/api/transactions`;
+};
+
+export const getTransactionsEndpoint = async (
+  params: GetTransactionsEndpointParams,
+  options?: RequestInit,
+): Promise<PagedResponseOfTransactionResponse> => {
+  return customFetch<PagedResponseOfTransactionResponse>(getGetTransactionsEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTransactionsEndpointQueryKey = (params?: GetTransactionsEndpointParams) => {
+  return [`/api/transactions`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetTransactionsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = unknown,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsEndpoint>>> = ({
+    signal,
+  }) => getTransactionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransactionsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionsEndpoint>>
+>;
+export type GetTransactionsEndpointQueryError = unknown;
+
+export function useGetTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = unknown,
+>(
+  params: GetTransactionsEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = unknown,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = unknown,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = unknown,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionsEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getCreateTransactionEndpointUrl = () => {
+  return `/api/transactions`;
+};
+
+export const createTransactionEndpoint = async (
+  createTransactionRequest: CreateTransactionRequest,
+  options?: RequestInit,
+): Promise<TransactionResponse> => {
+  return customFetch<TransactionResponse>(getCreateTransactionEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createTransactionRequest),
+  });
+};
+
+export const getCreateTransactionEndpointMutationOptions = <
+  TError = ErrorResponse,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createTransactionEndpoint>>,
+    TError,
+    { data: CreateTransactionRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createTransactionEndpoint>>,
+  TError,
+  { data: CreateTransactionRequest },
+  TContext
+> => {
+  const mutationKey = ["createTransactionEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createTransactionEndpoint>>,
+    { data: CreateTransactionRequest }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createTransactionEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createTransactionEndpoint>>
+>;
+export type CreateTransactionEndpointMutationBody = CreateTransactionRequest;
+export type CreateTransactionEndpointMutationError = ErrorResponse;
+
+export const useCreateTransactionEndpoint = <TError = ErrorResponse, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createTransactionEndpoint>>,
+      TError,
+      { data: CreateTransactionRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createTransactionEndpoint>>,
+  TError,
+  { data: CreateTransactionRequest },
+  TContext
+> => {
+  return useMutation(getCreateTransactionEndpointMutationOptions(options), queryClient);
+};
 
 export const getGetPingEndpointUrl = () => {
   return `/api/ping`;
@@ -126,3 +651,943 @@ export function useGetPingEndpoint<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+export const getGetDashboardSummaryEndpointUrl = () => {
+  return `/api/dashboard/summary`;
+};
+
+export const getDashboardSummaryEndpoint = async (
+  options?: RequestInit,
+): Promise<DashboardSummaryResponse> => {
+  return customFetch<DashboardSummaryResponse>(getGetDashboardSummaryEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetDashboardSummaryEndpointQueryKey = () => {
+  return [`/api/dashboard/summary`] as const;
+};
+
+export const getGetDashboardSummaryEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>> = ({
+    signal,
+  }) => getDashboardSummaryEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetDashboardSummaryEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>
+>;
+export type GetDashboardSummaryEndpointQueryError = unknown;
+
+export function useGetDashboardSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDashboardSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDashboardSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetDashboardSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetDashboardSummaryEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getUpdateCategoryEndpointUrl = (id: string) => {
+  return `/api/categories/${id}`;
+};
+
+export const updateCategoryEndpoint = async (
+  id: string,
+  updateCategoryRequest: UpdateCategoryRequest,
+  options?: RequestInit,
+): Promise<CategoryResponse> => {
+  return customFetch<CategoryResponse>(getUpdateCategoryEndpointUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateCategoryRequest),
+  });
+};
+
+export const getUpdateCategoryEndpointMutationOptions = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateCategoryEndpoint>>,
+    TError,
+    { id: string; data: UpdateCategoryRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateCategoryEndpoint>>,
+  TError,
+  { id: string; data: UpdateCategoryRequest },
+  TContext
+> => {
+  const mutationKey = ["updateCategoryEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateCategoryEndpoint>>,
+    { id: string; data: UpdateCategoryRequest }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateCategoryEndpoint(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateCategoryEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateCategoryEndpoint>>
+>;
+export type UpdateCategoryEndpointMutationBody = UpdateCategoryRequest;
+export type UpdateCategoryEndpointMutationError = ErrorResponse | ProblemDetails;
+
+export const useUpdateCategoryEndpoint = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateCategoryEndpoint>>,
+      TError,
+      { id: string; data: UpdateCategoryRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateCategoryEndpoint>>,
+  TError,
+  { id: string; data: UpdateCategoryRequest },
+  TContext
+> => {
+  return useMutation(getUpdateCategoryEndpointMutationOptions(options), queryClient);
+};
+
+export const getDeleteCategoryEndpointUrl = (id: string) => {
+  return `/api/categories/${id}`;
+};
+
+export const deleteCategoryEndpoint = async (id: string, options?: RequestInit): Promise<void> => {
+  return customFetch<void>(getDeleteCategoryEndpointUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteCategoryEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteCategoryEndpoint>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteCategoryEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteCategoryEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteCategoryEndpoint>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteCategoryEndpoint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteCategoryEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteCategoryEndpoint>>
+>;
+
+export type DeleteCategoryEndpointMutationError = ProblemDetails;
+
+export const useDeleteCategoryEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteCategoryEndpoint>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteCategoryEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteCategoryEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetCategoriesEndpointUrl = () => {
+  return `/api/categories`;
+};
+
+export const getCategoriesEndpoint = async (options?: RequestInit): Promise<CategoryResponse[]> => {
+  return customFetch<CategoryResponse[]>(getGetCategoriesEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCategoriesEndpointQueryKey = () => {
+  return [`/api/categories`] as const;
+};
+
+export const getGetCategoriesEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCategoriesEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoriesEndpoint>>> = ({ signal }) =>
+    getCategoriesEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCategoriesEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCategoriesEndpoint>>
+>;
+export type GetCategoriesEndpointQueryError = unknown;
+
+export function useGetCategoriesEndpoint<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getCategoriesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoriesEndpoint<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getCategoriesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoriesEndpoint<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetCategoriesEndpoint<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCategoriesEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getCreateCategoryEndpointUrl = () => {
+  return `/api/categories`;
+};
+
+export const createCategoryEndpoint = async (
+  createCategoryRequest: CreateCategoryRequest,
+  options?: RequestInit,
+): Promise<CategoryResponse> => {
+  return customFetch<CategoryResponse>(getCreateCategoryEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createCategoryRequest),
+  });
+};
+
+export const getCreateCategoryEndpointMutationOptions = <
+  TError = ErrorResponse,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createCategoryEndpoint>>,
+    TError,
+    { data: CreateCategoryRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createCategoryEndpoint>>,
+  TError,
+  { data: CreateCategoryRequest },
+  TContext
+> => {
+  const mutationKey = ["createCategoryEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createCategoryEndpoint>>,
+    { data: CreateCategoryRequest }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createCategoryEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateCategoryEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createCategoryEndpoint>>
+>;
+export type CreateCategoryEndpointMutationBody = CreateCategoryRequest;
+export type CreateCategoryEndpointMutationError = ErrorResponse;
+
+export const useCreateCategoryEndpoint = <TError = ErrorResponse, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createCategoryEndpoint>>,
+      TError,
+      { data: CreateCategoryRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createCategoryEndpoint>>,
+  TError,
+  { data: CreateCategoryRequest },
+  TContext
+> => {
+  return useMutation(getCreateCategoryEndpointMutationOptions(options), queryClient);
+};
+
+export const getUpdateAccountEndpointUrl = (id: string) => {
+  return `/api/accounts/${id}`;
+};
+
+export const updateAccountEndpoint = async (
+  id: string,
+  updateAccountRequest: UpdateAccountRequest,
+  options?: RequestInit,
+): Promise<AccountResponse> => {
+  return customFetch<AccountResponse>(getUpdateAccountEndpointUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(updateAccountRequest),
+  });
+};
+
+export const getUpdateAccountEndpointMutationOptions = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateAccountEndpoint>>,
+    TError,
+    { id: string; data: UpdateAccountRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateAccountEndpoint>>,
+  TError,
+  { id: string; data: UpdateAccountRequest },
+  TContext
+> => {
+  const mutationKey = ["updateAccountEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateAccountEndpoint>>,
+    { id: string; data: UpdateAccountRequest }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateAccountEndpoint(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateAccountEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateAccountEndpoint>>
+>;
+export type UpdateAccountEndpointMutationBody = UpdateAccountRequest;
+export type UpdateAccountEndpointMutationError = ErrorResponse | ProblemDetails;
+
+export const useUpdateAccountEndpoint = <
+  TError = ErrorResponse | ProblemDetails,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateAccountEndpoint>>,
+      TError,
+      { id: string; data: UpdateAccountRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateAccountEndpoint>>,
+  TError,
+  { id: string; data: UpdateAccountRequest },
+  TContext
+> => {
+  return useMutation(getUpdateAccountEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetAccountEndpointUrl = (id: string) => {
+  return `/api/accounts/${id}`;
+};
+
+export const getAccountEndpoint = async (
+  id: string,
+  options?: RequestInit,
+): Promise<AccountResponse> => {
+  return customFetch<AccountResponse>(getGetAccountEndpointUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAccountEndpointQueryKey = (id: string) => {
+  return [`/api/accounts/${id}`] as const;
+};
+
+export const getGetAccountEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccountEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountEndpoint>>> = ({ signal }) =>
+    getAccountEndpoint(id, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: id !== null && id !== undefined,
+    ...queryOptions,
+  } as UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+};
+
+export type GetAccountEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountEndpoint>>
+>;
+export type GetAccountEndpointQueryError = ProblemDetails;
+
+export function useGetAccountEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>> &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetAccountEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccountEndpointQueryOptions(id, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getDeleteAccountEndpointUrl = (id: string) => {
+  return `/api/accounts/${id}`;
+};
+
+export const deleteAccountEndpoint = async (id: string, options?: RequestInit): Promise<void> => {
+  return customFetch<void>(getDeleteAccountEndpointUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAccountEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAccountEndpoint>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAccountEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["deleteAccountEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAccountEndpoint>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteAccountEndpoint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAccountEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAccountEndpoint>>
+>;
+
+export type DeleteAccountEndpointMutationError = ProblemDetails;
+
+export const useDeleteAccountEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAccountEndpoint>>,
+      TError,
+      { id: string },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAccountEndpoint>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getDeleteAccountEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetAccountsEndpointUrl = () => {
+  return `/api/accounts`;
+};
+
+export const getAccountsEndpoint = async (options?: RequestInit): Promise<AccountResponse[]> => {
+  return customFetch<AccountResponse[]>(getGetAccountsEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetAccountsEndpointQueryKey = () => {
+  return [`/api/accounts`] as const;
+};
+
+export const getGetAccountsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = unknown,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccountsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountsEndpoint>>> = ({ signal }) =>
+    getAccountsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getAccountsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAccountsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountsEndpoint>>
+>;
+export type GetAccountsEndpointQueryError = unknown;
+
+export function useGetAccountsEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = unknown,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountsEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getAccountsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getAccountsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountsEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+export function useGetAccountsEndpoint<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = unknown,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccountsEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+export const getCreateAccountEndpointUrl = () => {
+  return `/api/accounts`;
+};
+
+export const createAccountEndpoint = async (
+  createAccountRequest: CreateAccountRequest,
+  options?: RequestInit,
+): Promise<AccountResponse> => {
+  return customFetch<AccountResponse>(getCreateAccountEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createAccountRequest),
+  });
+};
+
+export const getCreateAccountEndpointMutationOptions = <
+  TError = ErrorResponse,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createAccountEndpoint>>,
+    TError,
+    { data: CreateAccountRequest },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createAccountEndpoint>>,
+  TError,
+  { data: CreateAccountRequest },
+  TContext
+> => {
+  const mutationKey = ["createAccountEndpoint"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createAccountEndpoint>>,
+    { data: CreateAccountRequest }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createAccountEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateAccountEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createAccountEndpoint>>
+>;
+export type CreateAccountEndpointMutationBody = CreateAccountRequest;
+export type CreateAccountEndpointMutationError = ErrorResponse;
+
+export const useCreateAccountEndpoint = <TError = ErrorResponse, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createAccountEndpoint>>,
+      TError,
+      { data: CreateAccountRequest },
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createAccountEndpoint>>,
+  TError,
+  { data: CreateAccountRequest },
+  TContext
+> => {
+  return useMutation(getCreateAccountEndpointMutationOptions(options), queryClient);
+};

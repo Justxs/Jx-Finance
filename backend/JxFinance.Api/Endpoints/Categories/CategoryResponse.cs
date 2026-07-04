@@ -1,0 +1,5 @@
+using JxFinance.Domain.Common;
+
+namespace JxFinance.Endpoints.Categories;
+
+public sealed record CategoryResponse(Guid Id, string Name, FlowType Type, string? Icon, bool IsDefault);

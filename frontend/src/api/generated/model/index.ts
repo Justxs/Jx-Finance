@@ -5,4 +5,24 @@
  * OpenAPI spec version: v1
  */
 
+export * from "./accountResponse";
+export * from "./accountType";
+export * from "./categoryResponse";
+export * from "./createAccountRequest";
+export * from "./createCategoryRequest";
+export * from "./createTransactionRequest";
+export * from "./dashboardSummaryResponse";
+export * from "./errorResponse";
+export * from "./errorResponseErrors";
+export * from "./flowType";
 export * from "./getPingResponse";
+export * from "./getTransactionsEndpointParams";
+export * from "./getTransactionsRequest";
+export * from "./pagedResponseOfTransactionResponse";
+export * from "./problemDetails";
+export * from "./problemDetailsError";
+export * from "./transactionResponse";
+export * from "./transactionSource";
+export * from "./updateAccountRequest";
+export * from "./updateCategoryRequest";
+export * from "./updateTransactionRequest";
