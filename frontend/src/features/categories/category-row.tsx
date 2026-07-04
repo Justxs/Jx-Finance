@@ -1,4 +1,5 @@
 import { useForm } from "@tanstack/react-form";
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -119,11 +120,26 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
         <span className="text-sm font-medium">{category.name}</span>
       </div>
       <div className="flex gap-1">
-        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-          {t("actions.edit")}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => setEditing(true)}
+          aria-label={t("actions.edit")}
+          title={t("actions.edit")}
+        >
+          <Pencil />
         </Button>
-        <Button variant="ghost" size="sm" disabled={deletePending} onClick={onDelete}>
-          {t("actions.delete")}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          disabled={deletePending}
+          onClick={onDelete}
+          aria-label={t("actions.delete")}
+          title={t("actions.delete")}
+        >
+          <Trash2 />
         </Button>
       </div>
     </li>

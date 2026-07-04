@@ -5,7 +5,9 @@
     "dashboard": "Dashboard",
     "transactions": "Transactions",
     "accounts": "Accounts",
-    "categories": "Categories"
+    "categories": "Categories",
+    "collapse": "Collapse sidebar",
+    "expand": "Expand sidebar"
   },
   "actions": {
     "add": "Add",

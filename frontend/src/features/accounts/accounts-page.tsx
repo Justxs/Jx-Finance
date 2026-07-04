@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Archive, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -112,16 +113,26 @@ export function AccountsPage() {
           </td>
           <td className="px-6 py-3">
             <div className="flex justify-end gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setEditingId(account.id!)}>
-                {t("actions.edit")}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8"
+                onClick={() => setEditingId(account.id!)}
+                aria-label={t("actions.edit")}
+                title={t("actions.edit")}
+              >
+                <Pencil />
               </Button>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="size-8"
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate({ id: account.id! })}
+                aria-label={t("actions.archive")}
+                title={t("actions.archive")}
               >
-                {t("actions.archive")}
+                <Archive />
               </Button>
             </div>
           </td>

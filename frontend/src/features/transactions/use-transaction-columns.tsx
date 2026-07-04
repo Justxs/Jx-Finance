@@ -1,4 +1,5 @@
 import { createColumnHelper } from "@tanstack/react-table";
+import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
@@ -82,19 +83,25 @@ export function useTransactionColumns({
           <div className="flex justify-end gap-1">
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="size-8"
               disabled={isOptimistic}
               onClick={() => onEdit(row)}
+              aria-label={t("actions.edit")}
+              title={t("actions.edit")}
             >
-              {t("actions.edit")}
+              <Pencil />
             </Button>
             <Button
               variant="ghost"
-              size="sm"
+              size="icon"
+              className="size-8"
               disabled={isOptimistic || deletePending}
               onClick={() => onDelete(row.id!)}
+              aria-label={t("actions.delete")}
+              title={t("actions.delete")}
             >
-              {t("actions.delete")}
+              <Trash2 />
             </Button>
           </div>
         );

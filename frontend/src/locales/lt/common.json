@@ -5,7 +5,9 @@
     "dashboard": "Suvestinė",
     "transactions": "Operacijos",
     "accounts": "Sąskaitos",
-    "categories": "Kategorijos"
+    "categories": "Kategorijos",
+    "collapse": "Suskleisti šoninę juostą",
+    "expand": "Išskleisti šoninę juostą"
   },
   "actions": {
     "add": "Pridėti",
