@@ -4,7 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from "./flowType";
+import type { FlowType } from './flowType';
+import type { Scope } from './scope';
 
 export interface CategoryResponse {
   id?: string;
@@ -13,4 +14,7 @@ export interface CategoryResponse {
   /** @nullable */
   icon?: string | null;
   isDefault?: boolean;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }

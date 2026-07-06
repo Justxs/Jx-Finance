@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Accounts.CreateAccount;
 
@@ -16,5 +17,9 @@ public sealed class CreateAccountValidator : Validator<CreateAccountRequest>
         RuleFor(r => r.StartingBalance)
             .Must(MoneyWire.IsValid)
             .WithMessage("Starting balance must be a decimal with at most 2 decimal places.");
+        RuleFor(r => r.HouseholdId)
+            .NotNull()
+            .WithMessage("A shared account needs a household.")
+            .When(r => r.Scope == Scope.Shared);
     }
 }

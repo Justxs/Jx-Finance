@@ -1,6 +1,7 @@
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Categories.CreateCategory;
 using JxFinance.Endpoints.Categories.UpdateCategory;
 using JxFinance.Infrastructure.Data;
@@ -8,26 +9,35 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Categories;
 
-public sealed class CategoryService(AppDbContext db) : ICategoryService
+public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) : ICategoryService
 {
     public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        return await db.Categories
+        var categories = await db.Categories
             .OrderBy(c => c.Type)
             .ThenBy(c => c.Name)
-            .Select(c => new CategoryResponse(c.Id.Value, c.Name, c.Type, c.Icon, c.IsDefault))
             .ToListAsync(cancellationToken);
+
+        return categories.Select(ToResponse).ToList();
     }
 
     public async Task<Result<CategoryResponse>> CreateAsync(
         CreateCategoryRequest request,
         CancellationToken cancellationToken)
     {
+        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        if (membershipError is not null)
+        {
+            return Result<CategoryResponse>.Failure(ErrorCodes.Validation, membershipError);
+        }
+
         var category = new Category
         {
             Name = request.Name.Trim(),
             Type = request.Type,
             Icon = NormalizeIcon(request.Icon),
+            Scope = request.Scope,
+            HouseholdId = request.Scope == Scope.Shared ? new HouseholdId(request.HouseholdId!.Value) : null,
         };
 
         db.Categories.Add(category);
@@ -47,11 +57,37 @@ public sealed class CategoryService(AppDbContext db) : ICategoryService
             return Result<CategoryResponse>.Failure(ErrorCodes.NotFound, "Category not found.");
         }
 
+        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        if (membershipError is not null)
+        {
+            return Result<CategoryResponse>.Failure(ErrorCodes.Validation, membershipError);
+        }
+
         category.Name = request.Name.Trim();
         category.Icon = NormalizeIcon(request.Icon);
+        category.Scope = request.Scope;
+        category.HouseholdId = request.Scope == Scope.Shared ? new HouseholdId(request.HouseholdId!.Value) : null;
         await db.SaveChangesAsync(cancellationToken);
 
         return Result<CategoryResponse>.Success(ToResponse(category));
+    }
+
+    private async Task<string?> ValidateHouseholdAsync(
+        Scope scope,
+        Guid? householdId,
+        CancellationToken cancellationToken)
+    {
+        if (scope == Scope.Personal || householdId is null)
+        {
+            return null;
+        }
+
+        var typedHouseholdId = new HouseholdId(householdId.Value);
+        var isMember = await db.HouseholdMemberships.AnyAsync(
+            m => m.HouseholdId == typedHouseholdId && m.UserId == currentUser.Id,
+            cancellationToken);
+
+        return isMember ? null : "You are not a member of that household.";
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -87,6 +123,12 @@ public sealed class CategoryService(AppDbContext db) : ICategoryService
         return string.IsNullOrEmpty(trimmed) ? null : trimmed;
     }
 
-    private static CategoryResponse ToResponse(Category category) =>
-        new(category.Id.Value, category.Name, category.Type, category.Icon, category.IsDefault);
+    private static CategoryResponse ToResponse(Category category) => new(
+        category.Id.Value,
+        category.Name,
+        category.Type,
+        category.Icon,
+        category.IsDefault,
+        category.Scope,
+        category.HouseholdId?.Value);
 }

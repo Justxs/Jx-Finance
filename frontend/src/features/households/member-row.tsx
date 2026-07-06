@@ -1,0 +1,54 @@
+import { useTranslation } from "react-i18next";
+import { useUpdateMemberRoleEndpoint } from "@/api/generated";
+import type { HouseholdMemberResponse, HouseholdRole } from "@/api/generated/model";
+import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
+
+interface Props {
+  householdId: string;
+  member: HouseholdMemberResponse;
+  isOwnerView: boolean;
+  onRemove: () => void;
+  removePending: boolean;
+  onSaved: () => void;
+}
+
+export function MemberRow({ householdId, member, isOwnerView, onRemove, removePending, onSaved }: Readonly<Props>) {
+  const { t } = useTranslation();
+
+  const roleMutation = useUpdateMemberRoleEndpoint({ mutation: { onSettled: onSaved } });
+
+  return (
+    <li className="flex items-center justify-between gap-3 py-2.5">
+      <div>
+        <p className="text-sm font-medium">{member.displayName}</p>
+        <p className="text-xs text-muted-foreground">{member.email}</p>
+      </div>
+      {isOwnerView ? (
+        <div className="flex items-center gap-2">
+          <Select
+            value={member.role}
+            disabled={roleMutation.isPending}
+            onChange={(e) =>
+              roleMutation.mutate({
+                id: householdId,
+                userId: member.userId!,
+                data: { role: e.target.value as HouseholdRole },
+              })
+            }
+          >
+            <option value="owner">{t("households.roles.owner")}</option>
+            <option value="member">{t("households.roles.member")}</option>
+          </Select>
+          <Button variant="ghost" size="sm" disabled={removePending} onClick={onRemove}>
+            {t("actions.delete")}
+          </Button>
+        </div>
+      ) : (
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+          {t(`households.roles.${member.role}`)}
+        </span>
+      )}
+    </li>
+  );
+}

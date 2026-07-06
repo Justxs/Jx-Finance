@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateCategoryEndpoint } from "@/api/generated";
-import type { FlowType } from "@/api/generated/model";
+import { useCreateCategoryEndpoint, useGetHouseholdsEndpoint } from "@/api/generated";
+import type { FlowType, Scope } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ interface FormValues {
   name: string;
   type: FlowType;
   icon: string | null;
+  scope: Scope;
+  householdId: string;
 }
 
 interface Props {
@@ -22,27 +24,42 @@ interface Props {
 
 export function AddCategoryForm({ onCreated }: Readonly<Props>) {
   const { t } = useTranslation();
+  const households = useGetHouseholdsEndpoint();
+  const householdList = households.data ?? [];
 
-  const schema = z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
-    type: z.enum(["income", "expense"]),
-    icon: z.string().nullable(),
-  });
+  const schema = z
+    .object({
+      name: z
+        .string()
+        .trim()
+        .min(1, t("validation.required"))
+        .max(100, t("validation.maxLength", { max: 100 })),
+      type: z.enum(["income", "expense"]),
+      icon: z.string().nullable(),
+      scope: z.enum(["personal", "shared"]),
+      householdId: z.string(),
+    })
+    .refine((value) => value.scope !== "shared" || value.householdId !== "", {
+      message: t("validation.required"),
+      path: ["householdId"],
+    });
 
   const createMutation = useCreateCategoryEndpoint({ mutation: { onSettled: onCreated } });
 
-  const defaultValues: FormValues = { name: "", type: "expense", icon: null };
+  const defaultValues: FormValues = { name: "", type: "expense", icon: null, scope: "personal", householdId: "" };
 
   const form = useForm({
     defaultValues,
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
       createMutation.mutate({
-        data: { name: value.name.trim(), type: value.type, icon: value.icon },
+        data: {
+          name: value.name.trim(),
+          type: value.type,
+          icon: value.icon,
+          scope: value.scope,
+          householdId: value.scope === "shared" ? value.householdId : null,
+        },
       });
       form.reset();
     },
@@ -105,6 +122,55 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
           )}
         </form.Subscribe>
       </div>
+
+      {householdList.length > 0 ? (
+        <div className="grid gap-4 md:grid-cols-3 md:items-start">
+          <form.Field name="scope">
+            {(field) => (
+              <div className="space-y-1.5">
+                <Label htmlFor="category-scope">{t("sharing.scope")}</Label>
+                <Select
+                  id="category-scope"
+                  value={field.state.value}
+                  onChange={(e) => field.handleChange(e.target.value as FormValues["scope"])}
+                >
+                  <option value="personal">{t("sharing.personal")}</option>
+                  <option value="shared">{t("sharing.shared")}</option>
+                </Select>
+              </div>
+            )}
+          </form.Field>
+
+          <form.Subscribe selector={(state) => state.values.scope}>
+            {(scope) =>
+              scope === "shared" ? (
+                <form.Field name="householdId">
+                  {(field) => (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="category-household">{t("sharing.household")}</Label>
+                      <Select
+                        id="category-household"
+                        value={field.state.value}
+                        aria-invalid={field.state.meta.errors.length > 0}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      >
+                        <option value="">{t("sharing.selectHousehold")}</option>
+                        {householdList.map((household) => (
+                          <option key={household.id} value={household.id}>
+                            {household.name}
+                          </option>
+                        ))}
+                      </Select>
+                      <FieldError message={field.state.meta.errors[0]?.message} />
+                    </div>
+                  )}
+                </form.Field>
+              ) : null
+            }
+          </form.Subscribe>
+        </div>
+      ) : null}
 
       <form.Field name="icon">
         {(field) => (

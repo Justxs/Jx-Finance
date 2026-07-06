@@ -1,4 +1,5 @@
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Accounts;
 
@@ -10,4 +11,6 @@ public sealed record AccountResponse(
     AccountType Type,
     string StartingBalance,
     string CurrentBalance,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Scope Scope,
+    Guid? HouseholdId);
