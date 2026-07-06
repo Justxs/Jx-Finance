@@ -8,19 +8,26 @@ interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   exportUrl: string;
+  exportPdfUrl: string;
 }
 
-export function TransactionsToolbar({ accounts, categories, exportUrl }: Readonly<Props>) {
+export function TransactionsToolbar({ accounts, categories, exportUrl, exportPdfUrl }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
     <section className="card p-6">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="font-semibold">{t("transactions.filters")}</h2>
-        <a href={exportUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
-          <Download />
-          {t("transactions.exportCsv")}
-        </a>
+        <div className="flex gap-2">
+          <a href={exportUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Download />
+            {t("transactions.exportCsv")}
+          </a>
+          <a href={exportPdfUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <Download />
+            {t("transactions.exportPdf")}
+          </a>
+        </div>
       </div>
       <TransactionFilters accounts={accounts} categories={categories} />
     </section>

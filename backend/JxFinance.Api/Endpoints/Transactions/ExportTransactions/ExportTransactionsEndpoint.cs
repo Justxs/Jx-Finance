@@ -4,6 +4,7 @@ using FastEndpoints;
 using JxFinance.Endpoints.Accounts;
 using JxFinance.Endpoints.Categories;
 using JxFinance.Endpoints.Transactions.GetTransactions;
+using QuestPDF.Fluent;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
@@ -28,6 +29,24 @@ public sealed class ExportTransactionsEndpoint(
 
         var csv = BuildCsv(transactions, accountNames, categoryNames);
         await Send.BytesAsync(Encoding.UTF8.GetBytes(csv), "transactions.csv", "text/csv", cancellation: ct);
+    }
+
+    public static async Task<byte[]> BuildPdfAsync(
+        ITransactionService transactionService,
+        IAccountService accountService,
+        ICategoryService categoryService,
+        GetTransactionsRequest req,
+        CancellationToken ct)
+    {
+        var transactions = await transactionService.ExportAsync(req, ct);
+        var accounts = await accountService.GetAllAsync(ct);
+        var categories = await categoryService.GetAllAsync(ct);
+
+        var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
+        var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
+
+        var document = new TransactionsPdfDocument(transactions, accountNames, categoryNames, req.DateFrom, req.DateTo);
+        return document.GeneratePdf();
     }
 
     private static string BuildCsv(

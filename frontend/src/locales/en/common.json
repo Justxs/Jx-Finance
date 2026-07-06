@@ -11,6 +11,7 @@
     "netWorth": "Net worth",
     "recurringBills": "Recurring bills",
     "households": "Households",
+    "reports": "Reports",
     "users": "Users",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
@@ -105,6 +106,7 @@
     "clearFilters": "Clear filters",
     "filters": "Filters",
     "exportCsv": "Export CSV",
+    "exportPdf": "Export PDF",
     "split": "Split",
     "splitTransaction": "Split into categories",
     "addLine": "Add line",
@@ -287,6 +289,27 @@
     "household": "Household",
     "selectHousehold": "Select a household",
     "sharedWith": "Shared · {{household}}"
+  },
+  "reports": {
+    "title": "Reports",
+    "subtitle": "Income, expenses and category breakdown for any date range.",
+    "range": "Range",
+    "from": "From",
+    "to": "To",
+    "presets": {
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "thisYear": "This year",
+      "lastYear": "Last year",
+      "custom": "Custom"
+    },
+    "totalIncome": "Total income",
+    "totalExpense": "Total expense",
+    "net": "Net",
+    "trend": "Trend",
+    "expenseByCategory": "Expense by category",
+    "netWorthChange": "Net worth change",
+    "notEnoughNetWorthHistory": "Not enough net worth history in this period yet."
   },
   "imports": {
     "title": "Import a Swedbank CSV",
