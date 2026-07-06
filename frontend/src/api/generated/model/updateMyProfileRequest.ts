@@ -7,16 +7,16 @@
 
 export interface UpdateMyProfileRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   displayName: string;
   /** @nullable */
   currentPassword?: string | null;
   /**
-     * @minLength 8
-     * @maxLength 100
-     * @nullable
-     */
+   * @minLength 8
+   * @maxLength 100
+   * @nullable
+   */
   newPassword?: string | null;
 }

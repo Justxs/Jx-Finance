@@ -4,9 +4,9 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from './flowType';
-import type { TransactionLineResponse } from './transactionLineResponse';
-import type { TransactionSource } from './transactionSource';
+import type { FlowType } from "./flowType";
+import type { TransactionLineResponse } from "./transactionLineResponse";
+import type { TransactionSource } from "./transactionSource";
 
 export interface TransactionResponse {
   id?: string;

@@ -7,8 +7,8 @@
 
 export interface CreateHouseholdRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
 }

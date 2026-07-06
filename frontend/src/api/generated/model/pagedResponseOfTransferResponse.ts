@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { TransferResponse } from './transferResponse';
+import type { TransferResponse } from "./transferResponse";
 
 export interface PagedResponseOfTransferResponse {
   items?: TransferResponse[];

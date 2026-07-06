@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { CategoryBreakdownItem } from './categoryBreakdownItem';
+import type { CategoryBreakdownItem } from "./categoryBreakdownItem";
 
 export interface CategoryBreakdownResponse {
   items?: CategoryBreakdownItem[];

@@ -4,8 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { NotificationChannel } from './notificationChannel';
-import type { NotificationType } from './notificationType';
+import type { NotificationChannel } from "./notificationChannel";
+import type { NotificationType } from "./notificationType";
 
 export interface NotificationResponse {
   id?: string;

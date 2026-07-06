@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { UserProfileResponse } from './userProfileResponse';
+import type { UserProfileResponse } from "./userProfileResponse";
 
 export interface LoginResponse {
   twoFactorRequired?: boolean;

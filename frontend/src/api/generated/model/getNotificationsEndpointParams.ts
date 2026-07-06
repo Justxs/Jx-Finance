@@ -6,8 +6,8 @@
  */
 
 export type GetNotificationsEndpointParams = {
-/**
- * @nullable
- */
-unread?: boolean | null;
+  /**
+   * @nullable
+   */
+  unread?: boolean | null;
 };

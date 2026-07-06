@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { MonthlyTrendItem } from './monthlyTrendItem';
+import type { MonthlyTrendItem } from "./monthlyTrendItem";
 
 export interface MonthlyTrendResponse {
   items?: MonthlyTrendItem[];

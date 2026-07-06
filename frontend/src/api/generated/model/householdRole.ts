@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type HouseholdRole = typeof HouseholdRole[keyof typeof HouseholdRole];
-
+export type HouseholdRole = (typeof HouseholdRole)[keyof typeof HouseholdRole];
 
 export const HouseholdRole = {
-  Owner: 'owner',
-  Member: 'member',
+  Owner: "owner",
+  Member: "member",
 } as const;

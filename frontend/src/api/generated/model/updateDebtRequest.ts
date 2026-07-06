@@ -4,21 +4,21 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { DebtType } from './debtType';
+import type { DebtType } from "./debtType";
 
 export interface UpdateDebtRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   type?: DebtType;
   outstandingAmount?: string;
   /**
-     * @minimum 0
-     * @maximum 100
-     * @nullable
-     */
+   * @minimum 0
+   * @maximum 100
+   * @nullable
+   */
   interestRate?: number | null;
   /** @minLength 1 */
   asOf: string;

@@ -5,4 +5,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface GetTransfersRequest { [key: string]: unknown }
+export interface GetTransfersRequest {
+  [key: string]: unknown;
+}

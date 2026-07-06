@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { RecurringBillResponse } from './recurringBillResponse';
+import type { RecurringBillResponse } from "./recurringBillResponse";
 
 export interface ConfirmRecurringBillResponse {
   bill?: RecurringBillResponse;

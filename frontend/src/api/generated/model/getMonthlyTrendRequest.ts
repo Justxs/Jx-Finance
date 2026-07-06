@@ -5,4 +5,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface GetMonthlyTrendRequest { [key: string]: unknown }
+export interface GetMonthlyTrendRequest {
+  [key: string]: unknown;
+}

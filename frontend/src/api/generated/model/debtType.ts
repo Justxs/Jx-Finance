@@ -5,11 +5,10 @@
  * OpenAPI spec version: v1
  */
 
-export type DebtType = typeof DebtType[keyof typeof DebtType];
-
+export type DebtType = (typeof DebtType)[keyof typeof DebtType];
 
 export const DebtType = {
-  Mortgage: 'mortgage',
-  Loan: 'loan',
-  Other: 'other',
+  Mortgage: "mortgage",
+  Loan: "loan",
+  Other: "other",
 } as const;

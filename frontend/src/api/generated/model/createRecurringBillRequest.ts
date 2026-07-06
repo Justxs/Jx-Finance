@@ -4,14 +4,14 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { RecurringBillCadence } from './recurringBillCadence';
-import type { RecurringBillKind } from './recurringBillKind';
+import type { RecurringBillCadence } from "./recurringBillCadence";
+import type { RecurringBillKind } from "./recurringBillKind";
 
 export interface CreateRecurringBillRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   kind?: RecurringBillKind;
   /** @nullable */

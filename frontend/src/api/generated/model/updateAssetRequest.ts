@@ -4,13 +4,13 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { AssetType } from './assetType';
+import type { AssetType } from "./assetType";
 
 export interface UpdateAssetRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   type?: AssetType;
   currentValue?: string;

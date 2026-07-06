@@ -14,13 +14,13 @@ export interface ProblemDetailsError {
   /** the reason for the error */
   reason?: string;
   /**
-     * the code of the error
-     * @nullable
-     */
+   * the code of the error
+   * @nullable
+   */
   code?: string | null;
   /**
-     * the severity of the error
-     * @nullable
-     */
+   * the severity of the error
+   * @nullable
+   */
   severity?: string | null;
 }

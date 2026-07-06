@@ -7,19 +7,19 @@
 
 export interface SetupRequest {
   /**
-     * @minLength 0
-     * @maxLength 256
-     * @pattern ^[^@]+@[^@]+$
-     */
+   * @minLength 0
+   * @maxLength 256
+   * @pattern ^[^@]+@[^@]+$
+   */
   email: string;
   /**
-     * @minLength 8
-     * @maxLength 100
-     */
+   * @minLength 8
+   * @maxLength 100
+   */
   password: string;
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   displayName: string;
 }

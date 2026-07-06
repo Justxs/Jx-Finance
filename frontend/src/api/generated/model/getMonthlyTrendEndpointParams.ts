@@ -6,5 +6,5 @@
  */
 
 export type GetMonthlyTrendEndpointParams = {
-months: number;
+  months: number;
 };

@@ -4,19 +4,19 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { Scope } from './scope';
+import type { Scope } from "./scope";
 
 export interface UpdateCategoryRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   /**
-     * @minLength 0
-     * @maxLength 50
-     * @nullable
-     */
+   * @minLength 0
+   * @maxLength 50
+   * @nullable
+   */
   icon?: string | null;
   scope?: Scope;
   /** @nullable */

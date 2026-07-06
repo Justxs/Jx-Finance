@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { ProblemDetailsError } from './problemDetailsError';
+import type { ProblemDetailsError } from "./problemDetailsError";
 
 /**
  * RFC7807 compatible problem details/ error response class. this can be used by configuring startup like so:
@@ -17,9 +17,9 @@ export interface ProblemDetails {
   instance?: string;
   traceId?: string;
   /**
-     * the details of the error
-     * @nullable
-     */
+   * the details of the error
+   * @nullable
+   */
   detail?: string | null;
   errors?: ProblemDetailsError[];
 }

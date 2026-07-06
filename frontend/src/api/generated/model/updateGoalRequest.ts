@@ -7,9 +7,9 @@
 
 export interface UpdateGoalRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   targetAmount?: string;
   currentAmount?: string;

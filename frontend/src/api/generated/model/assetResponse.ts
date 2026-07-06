@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { AssetType } from './assetType';
+import type { AssetType } from "./assetType";
 
 export interface AssetResponse {
   id?: string;

@@ -4,30 +4,30 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from './flowType';
+import type { FlowType } from "./flowType";
 
 export type GetTransactionsEndpointParams = {
-page: number;
-pageSize: number;
-/**
- * @nullable
- */
-accountId?: string | null;
-/**
- * @nullable
- */
-categoryId?: string | null;
-type?: FlowType | null;
-/**
- * @nullable
- */
-search?: string | null;
-/**
- * @nullable
- */
-dateFrom?: string | null;
-/**
- * @nullable
- */
-dateTo?: string | null;
+  page: number;
+  pageSize: number;
+  /**
+   * @nullable
+   */
+  accountId?: string | null;
+  /**
+   * @nullable
+   */
+  categoryId?: string | null;
+  type?: FlowType | null;
+  /**
+   * @nullable
+   */
+  search?: string | null;
+  /**
+   * @nullable
+   */
+  dateFrom?: string | null;
+  /**
+   * @nullable
+   */
+  dateTo?: string | null;
 };

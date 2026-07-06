@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { NetWorthSnapshotItem } from './netWorthSnapshotItem';
+import type { NetWorthSnapshotItem } from "./netWorthSnapshotItem";
 
 export interface NetWorthHistoryResponse {
   items?: NetWorthSnapshotItem[];

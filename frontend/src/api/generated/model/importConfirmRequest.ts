@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { ImportConfirmRow } from './importConfirmRow';
+import type { ImportConfirmRow } from "./importConfirmRow";
 
 export interface ImportConfirmRequest {
   accountId?: string;

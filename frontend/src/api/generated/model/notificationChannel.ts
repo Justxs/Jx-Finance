@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type NotificationChannel = typeof NotificationChannel[keyof typeof NotificationChannel];
-
+export type NotificationChannel = (typeof NotificationChannel)[keyof typeof NotificationChannel];
 
 export const NotificationChannel = {
-  InApp: 'inApp',
-  Email: 'email',
+  InApp: "inApp",
+  Email: "email",
 } as const;
