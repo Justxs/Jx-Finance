@@ -10,7 +10,6 @@ public sealed class CreateAccountEndpoint(IAccountService accountService)
     public override void Configure()
     {
         Post("/api/accounts");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateAccountRequest req, CancellationToken ct)

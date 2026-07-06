@@ -9,7 +9,6 @@ public sealed class GetAccountEndpoint(IAccountService accountService)
     public override void Configure()
     {
         Get("/api/accounts/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

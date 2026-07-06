@@ -9,7 +9,6 @@ public sealed class CreateCategoryEndpoint(ICategoryService categoryService)
     public override void Configure()
     {
         Post("/api/categories");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateCategoryRequest req, CancellationToken ct)

@@ -8,7 +8,6 @@ public sealed class DeleteAccountEndpoint(IAccountService accountService) : Endp
     public override void Configure()
     {
         Delete("/api/accounts/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

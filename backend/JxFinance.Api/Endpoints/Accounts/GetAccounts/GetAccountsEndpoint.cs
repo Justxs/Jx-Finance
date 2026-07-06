@@ -8,7 +8,6 @@ public sealed class GetAccountsEndpoint(IAccountService accountService)
     public override void Configure()
     {
         Get("/api/accounts");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)
