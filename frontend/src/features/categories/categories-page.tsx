@@ -1,5 +1,6 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -10,6 +11,8 @@ import {
 } from "@/api/generated";
 import type { FlowType } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AddCategoryForm } from "./add-category-form";
 import { CategoryRow } from "./category-row";
@@ -17,6 +20,7 @@ import { CategoryRow } from "./category-row";
 export function CategoriesPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
 
   const categories = useGetCategoriesEndpoint();
 
@@ -40,12 +44,22 @@ export function CategoriesPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("categories.title")} subtitle={t("categories.subtitle")} />
+      <PageHeader title={t("categories.title")} subtitle={t("categories.subtitle")}>
+        <Button onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("categories.add")}
+        </Button>
+      </PageHeader>
 
-      <section className="card p-6">
-        <h2 className="mb-5 font-semibold">{t("categories.add")}</h2>
-        <AddCategoryForm onCreated={invalidate} />
-      </section>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("categories.addTitle")}>
+        <AddCategoryForm
+          onCreated={() => {
+            invalidate();
+            setAddOpen(false);
+          }}
+          onCancel={() => setAddOpen(false)}
+        />
+      </Dialog>
 
       <div className="grid gap-6 md:grid-cols-2">
         {groups.map((group) => {

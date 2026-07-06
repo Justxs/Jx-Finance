@@ -1,9 +1,12 @@
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUpdateGoalEndpoint } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 
 interface Props {
@@ -43,53 +46,70 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
           ) : null}
         </div>
         <div className="flex items-center gap-3">
-          {editing ? (
-            <>
-              <Input
-                className="w-28"
-                inputMode="decimal"
-                value={currentAmount}
-                onChange={(e) => setCurrentAmount(e.target.value)}
-              />
-              <Button
-                size="sm"
-                disabled={updateMutation.isPending}
-                onClick={() =>
-                  updateMutation.mutate({
-                    id: goal.id!,
-                    data: {
-                      name: goal.name!,
-                      targetAmount: goal.targetAmount!,
-                      currentAmount,
-                      targetDate: goal.targetDate,
-                    },
-                  })
-                }
-              >
-                {t("actions.save")}
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
-                {t("actions.cancel")}
-              </Button>
-            </>
-          ) : (
-            <>
-              <span className="text-sm font-semibold tabular-nums">
-                {money.format(current)} / {money.format(target)}
-              </span>
-              <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>
-                {t("goals.updateProgress")}
-              </Button>
-              <Button variant="ghost" size="sm" disabled={deletePending} onClick={onDelete}>
-                {t("actions.delete")}
-              </Button>
-            </>
-          )}
+          <span className="text-sm font-semibold tabular-nums">
+            {money.format(current)} / {money.format(target)}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setEditing(true)}
+            aria-label={t("goals.updateProgress")}
+            title={t("goals.updateProgress")}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            disabled={deletePending}
+            onClick={onDelete}
+            aria-label={t("actions.delete")}
+            title={t("actions.delete")}
+          >
+            <Trash2 />
+          </Button>
         </div>
       </div>
       <div className="h-2 overflow-hidden rounded-full bg-muted">
         <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
       </div>
+
+      <Dialog open={editing} onOpenChange={setEditing} title={t("goals.updateProgress")}>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor={`goal-current-${goal.id}`}>{t("goals.currentAmount")}</Label>
+            <Input
+              id={`goal-current-${goal.id}`}
+              inputMode="decimal"
+              value={currentAmount}
+              onChange={(e) => setCurrentAmount(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+              {t("actions.cancel")}
+            </Button>
+            <Button
+              disabled={updateMutation.isPending}
+              onClick={() =>
+                updateMutation.mutate({
+                  id: goal.id!,
+                  data: {
+                    name: goal.name!,
+                    targetAmount: goal.targetAmount!,
+                    currentAmount,
+                    targetDate: goal.targetDate,
+                  },
+                })
+              }
+            >
+              {t("actions.save")}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </li>
   );
 }

@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGetHouseholdsEndpoint } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { CategoryIcon } from "@/lib/category-icons";
 import { CategoryEditForm } from "./category-edit-form";
 
@@ -19,21 +20,6 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
   const [editing, setEditing] = useState(false);
   const households = useGetHouseholdsEndpoint();
   const householdNames = new Map(households.data?.map((h) => [h.id, h.name]) ?? []);
-
-  if (editing) {
-    return (
-      <li className="space-y-3 py-3">
-        <CategoryEditForm
-          category={category}
-          onSaved={() => {
-            setEditing(false);
-            onSaved();
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      </li>
-    );
-  }
 
   return (
     <li className="flex items-center justify-between gap-2 py-2.5">
@@ -73,6 +59,17 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
           <Trash2 />
         </Button>
       </div>
+
+      <Dialog open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
+        <CategoryEditForm
+          category={category}
+          onSaved={() => {
+            setEditing(false);
+            onSaved();
+          }}
+          onCancel={() => setEditing(false)}
+        />
+      </Dialog>
     </li>
   );
 }

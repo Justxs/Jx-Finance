@@ -18,9 +18,10 @@ interface FormValues {
 interface Props {
   categories: CategoryResponse[];
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function CreateBudgetForm({ categories, onCreated }: Readonly<Props>) {
+export function CreateBudgetForm({ categories, onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -29,7 +30,7 @@ export function CreateBudgetForm({ categories, onCreated }: Readonly<Props>) {
     limitAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
   });
 
-  const createMutation = useCreateBudgetEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateBudgetEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
     categoryId: expenseCategories[0]?.id ?? "",
@@ -59,57 +60,60 @@ export function CreateBudgetForm({ categories, onCreated }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-3 md:items-start"
+      className="space-y-4"
     >
-      <form.Field name="categoryId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="budget-category">{t("budgets.category")}</Label>
-            <Select
-              id="budget-category"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              {expenseCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
-      </form.Field>
+      <div className="grid gap-4 md:grid-cols-2">
+        <form.Field name="categoryId">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="budget-category">{t("budgets.category")}</Label>
+              <Select
+                id="budget-category"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              >
+                {expenseCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </form.Field>
 
-      <form.Field name="limitAmount">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="budget-limit">{t("budgets.limit")}</Label>
-            <Input
-              id="budget-limit"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.state.meta.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="limitAmount">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="budget-limit">{t("budgets.limit")}</Label>
+              <Input
+                id="budget-limit"
+                inputMode="decimal"
+                placeholder="0.00"
+                value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              <FieldError message={field.state.meta.errors[0]?.message} />
+            </div>
+          )}
+        </form.Field>
+      </div>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button
-            type="submit"
-            disabled={createMutation.isPending || !canSubmit}
-            className="md:mt-6"
-          >
-            {t("budgets.add")}
-          </Button>
-        )}
-      </form.Subscribe>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("budgets.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

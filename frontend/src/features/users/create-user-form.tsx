@@ -19,9 +19,10 @@ interface FormValues {
 
 interface Props {
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function CreateUserForm({ onCreated }: Readonly<Props>) {
+export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -42,7 +43,7 @@ export function CreateUserForm({ onCreated }: Readonly<Props>) {
       .max(100),
   });
 
-  const createMutation = useCreateUserEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateUserEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
     email: "",
@@ -75,89 +76,95 @@ export function CreateUserForm({ onCreated }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-5 md:items-start"
+      className="space-y-4"
     >
-      <form.Field name="displayName">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="user-display-name">{t("users.displayName")}</Label>
-            <Input
-              id="user-display-name"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.state.meta.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+      <div className="grid gap-4 md:grid-cols-2">
+        <form.Field name="displayName">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="user-display-name">{t("users.displayName")}</Label>
+              <Input
+                id="user-display-name"
+                value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                autoFocus
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              <FieldError message={field.state.meta.errors[0]?.message} />
+            </div>
+          )}
+        </form.Field>
 
-      <form.Field name="email">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="user-email">{t("users.email")}</Label>
-            <Input
-              id="user-email"
-              type="email"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.state.meta.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="email">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="user-email">{t("users.email")}</Label>
+              <Input
+                id="user-email"
+                type="email"
+                value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              <FieldError message={field.state.meta.errors[0]?.message} />
+            </div>
+          )}
+        </form.Field>
+      </div>
 
-      <form.Field name="role">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="user-role">{t("users.role")}</Label>
-            <Select
-              id="user-role"
-              value={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as FormValues["role"])}
-            >
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {t(`users.roles.${role}`)}
-                </option>
-              ))}
-            </Select>
-          </div>
-        )}
-      </form.Field>
+      <div className="grid gap-4 md:grid-cols-2">
+        <form.Field name="role">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="user-role">{t("users.role")}</Label>
+              <Select
+                id="user-role"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value as FormValues["role"])}
+              >
+                {roles.map((role) => (
+                  <option key={role} value={role}>
+                    {t(`users.roles.${role}`)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
+        </form.Field>
 
-      <form.Field name="password">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="user-password">{t("users.password")}</Label>
-            <Input
-              id="user-password"
-              type="password"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.state.meta.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="password">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="user-password">{t("users.password")}</Label>
+              <Input
+                id="user-password"
+                type="password"
+                value={field.state.value}
+                aria-invalid={field.state.meta.errors.length > 0}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              />
+              <FieldError message={field.state.meta.errors[0]?.message} />
+            </div>
+          )}
+        </form.Field>
+      </div>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button
-            type="submit"
-            disabled={createMutation.isPending || !canSubmit}
-            className="md:mt-6"
-          >
-            {t("users.add")}
-          </Button>
-        )}
-      </form.Subscribe>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("users.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

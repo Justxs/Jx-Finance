@@ -30,9 +30,10 @@ interface Props {
   accounts: AccountResponse[];
   pending: boolean;
   onSubmit: (values: TransferFormValues) => void;
+  onCancel?: () => void;
 }
 
-export function TransferForm({ accounts, pending, onSubmit }: Readonly<Props>) {
+export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z
@@ -156,13 +157,20 @@ export function TransferForm({ accounts, pending, onSubmit }: Readonly<Props>) {
         )}
       </form.Field>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button type="submit" disabled={pending || !canSubmit} className="md:mt-6">
-            {t("transfers.add")}
+      <div className="flex items-end gap-2 md:mt-6">
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
           </Button>
-        )}
-      </form.Subscribe>
+        ) : null}
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={pending || !canSubmit}>
+              {t("transfers.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
 
       <form.Field name="description">
         {(field) => (

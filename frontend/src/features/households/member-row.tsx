@@ -1,3 +1,4 @@
+import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUpdateMemberRoleEndpoint } from "@/api/generated";
 import type { HouseholdMemberResponse, HouseholdRole } from "@/api/generated/model";
@@ -47,8 +48,16 @@ export function MemberRow({
             <option value="owner">{t("households.roles.owner")}</option>
             <option value="member">{t("households.roles.member")}</option>
           </Select>
-          <Button variant="ghost" size="sm" disabled={removePending} onClick={onRemove}>
-            {t("actions.delete")}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            disabled={removePending}
+            onClick={onRemove}
+            aria-label={t("actions.delete")}
+            title={t("actions.delete")}
+          >
+            <Trash2 />
           </Button>
         </div>
       ) : (

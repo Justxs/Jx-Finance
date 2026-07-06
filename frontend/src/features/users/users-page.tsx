@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -9,12 +11,15 @@ import {
   useUpdateUserRoleEndpoint,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { CreateUserForm } from "./create-user-form";
 import { UsersTable } from "./users-table";
 
 export function UsersPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
 
   const me = useMeEndpoint();
   const users = useGetUsersEndpoint();
@@ -38,12 +43,22 @@ export function UsersPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("users.title")} subtitle={t("users.subtitle")} />
+      <PageHeader title={t("users.title")} subtitle={t("users.subtitle")}>
+        <Button onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("users.add")}
+        </Button>
+      </PageHeader>
 
-      <section className="card p-6">
-        <h2 className="mb-5 font-semibold">{t("users.add")}</h2>
-        <CreateUserForm onCreated={invalidate} />
-      </section>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("users.add")}>
+        <CreateUserForm
+          onCreated={() => {
+            invalidate();
+            setAddOpen(false);
+          }}
+          onCancel={() => setAddOpen(false)}
+        />
+      </Dialog>
 
       <UsersTable
         users={users.data ?? []}

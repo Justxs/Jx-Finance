@@ -1,3 +1,4 @@
+import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
@@ -6,6 +7,7 @@ import type {
   RecurringBillResponse,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
@@ -65,38 +67,61 @@ export function RecurringBillRow({
           <span className="text-sm font-semibold tabular-nums">
             {bill.amount ? money.format(Number(bill.amount)) : t("recurringBills.kinds.variable")}
           </span>
-          {mode === "view" ? (
-            <>
-              <Button size="sm" onClick={() => setMode("confirm")}>
-                {t("recurringBills.confirm")}
-              </Button>
-              <Button variant="ghost" size="sm" onClick={() => setMode("edit")}>
-                {t("actions.edit")}
-              </Button>
-              <Button variant="ghost" size="sm" disabled={deletePending} onClick={onDelete}>
-                {t("actions.delete")}
-              </Button>
-            </>
-          ) : (
-            <Button variant="outline" size="sm" onClick={() => setMode("view")}>
-              {t("actions.cancel")}
-            </Button>
-          )}
+          <Button size="sm" onClick={() => setMode("confirm")}>
+            {t("recurringBills.confirm")}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setMode("edit")}
+            aria-label={t("actions.edit")}
+            title={t("actions.edit")}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            disabled={deletePending}
+            onClick={onDelete}
+            aria-label={t("actions.delete")}
+            title={t("actions.delete")}
+          >
+            <Trash2 />
+          </Button>
         </div>
       </div>
 
-      {mode === "edit" ? (
+      <Dialog
+        open={mode === "edit"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMode("view");
+          }
+        }}
+        title={t("actions.edit")}
+      >
         <RecurringBillEditForm bill={bill} onSaved={onSaved} onDone={() => setMode("view")} />
-      ) : null}
+      </Dialog>
 
-      {mode === "confirm" ? (
+      <Dialog
+        open={mode === "confirm"}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMode("view");
+          }
+        }}
+        title={t("recurringBills.confirm")}
+      >
         <RecurringBillConfirmForm
           bill={bill}
           accounts={accounts}
           onSaved={onSaved}
           onDone={() => setMode("view")}
         />
-      ) : null}
+      </Dialog>
     </li>
   );
 }

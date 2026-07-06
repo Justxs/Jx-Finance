@@ -13,6 +13,7 @@
     "households": "Namų ūkiai",
     "reports": "Ataskaitos",
     "users": "Naudotojai",
+    "profile": "Jūsų profilis",
     "collapse": "Suskleisti šoninę juostą",
     "expand": "Išskleisti šoninę juostą"
   },
@@ -73,6 +74,8 @@
     "title": "Kategorijos",
     "subtitle": "Etiketės, kurios suteikia išlaidoms formą.",
     "add": "Pridėti kategoriją",
+    "addTitle": "Pridėti kategoriją",
+    "editTitle": "Redaguoti kategoriją",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Maistas",
     "icon": "Piktograma",
@@ -314,6 +317,7 @@
   "imports": {
     "title": "Importuoti Swedbank CSV",
     "file": "CSV failas",
+    "chooseFile": "Spustelėkite ir pasirinkite CSV failą",
     "preview": "Peržiūra",
     "confirm": "Patvirtinti importą",
     "confirmed": "Importuota {{imported}} operacijų (praleista {{skipped}} dublikatų)",

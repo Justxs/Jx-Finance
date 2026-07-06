@@ -20,9 +20,10 @@ interface FormValues {
 
 interface Props {
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function AddCategoryForm({ onCreated }: Readonly<Props>) {
+export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useGetHouseholdsEndpoint();
   const householdList = households.data ?? [];
@@ -44,7 +45,7 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
       path: ["householdId"],
     });
 
-  const createMutation = useCreateCategoryEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateCategoryEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
     name: "",
@@ -81,7 +82,7 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
       noValidate
       className="space-y-4"
     >
-      <div className="grid gap-4 md:grid-cols-3 md:items-start">
+      <div className="grid gap-4 md:grid-cols-2">
         <form.Field name="name">
           {(field) => (
             <div className="space-y-1.5">
@@ -91,6 +92,7 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
                 placeholder={t("categories.namePlaceholder")}
                 value={field.state.value}
                 aria-invalid={field.state.meta.errors.length > 0}
+                autoFocus
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
@@ -115,18 +117,6 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
             </div>
           )}
         </form.Field>
-
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button
-              type="submit"
-              disabled={createMutation.isPending || !canSubmit}
-              className="md:mt-6"
-            >
-              {t("actions.add")}
-            </Button>
-          )}
-        </form.Subscribe>
       </div>
 
       {householdList.length > 0 ? (
@@ -186,6 +176,19 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
           </div>
         )}
       </form.Field>
+
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("actions.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetBudgetsEndpointQueryKey,
@@ -9,6 +10,7 @@ import {
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { CreateBudgetForm } from "./create-budget-form";
@@ -17,6 +19,7 @@ export function BudgetsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
+  const [addOpen, setAddOpen] = useState(false);
 
   const categories = useGetCategoriesEndpoint();
   const budgets = useGetBudgetsEndpoint();
@@ -61,11 +64,14 @@ export function BudgetsPage() {
                   </span>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="size-8"
                     disabled={deleteMutation.isPending}
                     onClick={() => deleteMutation.mutate({ id: budget.id! })}
+                    aria-label={t("actions.delete")}
+                    title={t("actions.delete")}
                   >
-                    {t("actions.delete")}
+                    <Trash2 />
                   </Button>
                 </div>
               </div>
@@ -84,12 +90,23 @@ export function BudgetsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("budgets.title")} subtitle={t("budgets.subtitle")} />
+      <PageHeader title={t("budgets.title")} subtitle={t("budgets.subtitle")}>
+        <Button onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("budgets.add")}
+        </Button>
+      </PageHeader>
 
-      <section className="card p-6">
-        <h2 className="mb-5 font-semibold">{t("budgets.add")}</h2>
-        <CreateBudgetForm categories={categoryList} onCreated={invalidate} />
-      </section>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("budgets.add")}>
+        <CreateBudgetForm
+          categories={categoryList}
+          onCreated={() => {
+            invalidate();
+            setAddOpen(false);
+          }}
+          onCancel={() => setAddOpen(false)}
+        />
+      </Dialog>
 
       <section className="card overflow-hidden">{content}</section>
     </div>

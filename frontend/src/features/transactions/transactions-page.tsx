@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { Plus } from "lucide-react";
 import {
   getGetAccountsEndpointQueryKey,
   getGetDashboardSummaryEndpointQueryKey,
@@ -18,6 +19,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { TransactionFormSection } from "./transaction-form-section";
 import type { TransactionFormValues } from "./transaction-form";
@@ -52,6 +54,7 @@ export function TransactionsPage() {
   });
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const listParams = {
     page,
@@ -146,6 +149,7 @@ export function TransactionsPage() {
 
   function handleCreate(values: TransactionFormValues) {
     createMutation.mutate({ data: values });
+    setCreateOpen(false);
   }
 
   function handleUpdate(values: TransactionFormValues) {
@@ -154,12 +158,25 @@ export function TransactionsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("transactions.title")} subtitle={t("transactions.subtitle")} />
+      <PageHeader title={t("transactions.title")} subtitle={t("transactions.subtitle")}>
+        <Button
+          onClick={() => setCreateOpen(true)}
+          disabled={accounts.isPending || categories.isPending || accountList.length === 0}
+        >
+          <Plus />
+          {t("transactions.add")}
+        </Button>
+      </PageHeader>
+
+      {accountList.length === 0 && !accounts.isPending ? (
+        <p className="text-sm text-muted-foreground">{t("transactions.needAccount")}</p>
+      ) : null}
 
       <TransactionFormSection
         accounts={accountList}
         categories={categoryList}
-        isLoadingOptions={accounts.isPending || categories.isPending}
+        createOpen={createOpen}
+        onCreateOpenChange={setCreateOpen}
         editing={editing}
         onCancelEdit={() => setEditing(null)}
         updatePending={updateMutation.isPending}

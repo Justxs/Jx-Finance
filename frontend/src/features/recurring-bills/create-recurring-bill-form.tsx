@@ -31,9 +31,15 @@ interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function CreateRecurringBillForm({ accounts, categories, onCreated }: Readonly<Props>) {
+export function CreateRecurringBillForm({
+  accounts,
+  categories,
+  onCreated,
+  onCancel,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -58,7 +64,7 @@ export function CreateRecurringBillForm({ accounts, categories, onCreated }: Rea
       }
     });
 
-  const createMutation = useCreateRecurringBillEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateRecurringBillEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
     name: "",
@@ -263,17 +269,18 @@ export function CreateRecurringBillForm({ accounts, categories, onCreated }: Rea
         )}
       </form.Field>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button
-            type="submit"
-            disabled={createMutation.isPending || !canSubmit}
-            className="md:mt-6"
-          >
-            {t("recurringBills.add")}
-          </Button>
-        )}
-      </form.Subscribe>
+      <div className="flex justify-end gap-2 pt-2 md:col-span-4">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("recurringBills.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }
