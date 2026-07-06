@@ -54,7 +54,9 @@ export function BudgetsPage() {
               <div className="flex items-center justify-between">
                 <p className="font-medium">{budget.categoryName}</p>
                 <div className="flex items-center gap-3">
-                  <span className={`text-sm font-semibold tabular-nums ${overBudget ? "text-destructive" : ""}`}>
+                  <span
+                    className={`text-sm font-semibold tabular-nums ${overBudget ? "text-destructive" : ""}`}
+                  >
                     {money.format(spent)} / {money.format(limit)}
                   </span>
                   <Button

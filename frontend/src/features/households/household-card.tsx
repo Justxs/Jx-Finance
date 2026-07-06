@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteHouseholdEndpoint, useRemoveMemberEndpoint, useUpdateHouseholdEndpoint } from "@/api/generated";
+import {
+  useDeleteHouseholdEndpoint,
+  useRemoveMemberEndpoint,
+  useUpdateHouseholdEndpoint,
+} from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +38,9 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
             <Button
               size="sm"
               disabled={renameMutation.isPending || !name.trim()}
-              onClick={() => renameMutation.mutate({ id: household.id!, data: { name: name.trim() } })}
+              onClick={() =>
+                renameMutation.mutate({ id: household.id!, data: { name: name.trim() } })
+              }
             >
               {t("actions.save")}
             </Button>

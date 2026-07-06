@@ -22,7 +22,11 @@ export function AddMemberForm({ householdId, onAdded }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
-    email: z.string().trim().min(1, t("validation.required")).regex(/^\S+@\S+$/, t("validation.email")),
+    email: z
+      .string()
+      .trim()
+      .min(1, t("validation.required"))
+      .regex(/^\S+@\S+$/, t("validation.email")),
     role: z.enum(["owner", "member"]),
   });
 
@@ -34,7 +38,10 @@ export function AddMemberForm({ householdId, onAdded }: Readonly<Props>) {
     defaultValues,
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
-      addMutation.mutate({ id: householdId, data: { email: value.email.trim(), role: value.role } });
+      addMutation.mutate({
+        id: householdId,
+        data: { email: value.email.trim(), role: value.role },
+      });
       form.reset();
     },
   });

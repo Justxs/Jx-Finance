@@ -57,9 +57,7 @@ export function AppSidebar() {
             <Wallet className="size-4.5" />
           </span>
           {collapsed ? null : (
-            <span className="truncate text-base font-semibold tracking-tight">
-              {t("appName")}
-            </span>
+            <span className="truncate text-base font-semibold tracking-tight">{t("appName")}</span>
           )}
         </Link>
       </div>

@@ -28,7 +28,11 @@ export function AssetForm({ onCreated }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
-    name: z.string().trim().min(1, t("validation.required")).max(100, t("validation.maxLength", { max: 100 })),
+    name: z
+      .string()
+      .trim()
+      .min(1, t("validation.required"))
+      .max(100, t("validation.maxLength", { max: 100 })),
     type: z.enum(assetTypes),
     currentValue: z.string().refine(isMoney, t("validation.money")),
     asOf: z.string().min(1, t("validation.required")),
@@ -133,7 +137,11 @@ export function AssetForm({ onCreated }: Readonly<Props>) {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit} className="md:mt-6">
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || !canSubmit}
+            className="md:mt-6"
+          >
             {t("netWorth.addAsset")}
           </Button>
         )}

@@ -52,7 +52,9 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   const confirmMutation = useImportConfirmEndpoint({
     mutation: {
       onSuccess: (data) => {
-        toast.success(t("imports.confirmed", { imported: data.imported, skipped: data.skippedDuplicates }));
+        toast.success(
+          t("imports.confirmed", { imported: data.imported, skipped: data.skippedDuplicates }),
+        );
         setRows(null);
         if (fileInputRef.current) {
           fileInputRef.current.value = "";

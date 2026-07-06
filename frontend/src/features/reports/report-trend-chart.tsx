@@ -61,7 +61,9 @@ export function ReportTrendChart({ items, bucket }: Readonly<Props>) {
           }}
         />
         <Legend
-          formatter={(value) => (value === "income" ? t("dashboard.monthIncome") : t("dashboard.monthExpense"))}
+          formatter={(value) =>
+            value === "income" ? t("dashboard.monthIncome") : t("dashboard.monthExpense")
+          }
         />
         <Bar dataKey="income" name="income" fill="var(--secondary)" radius={4} />
         <Bar dataKey="expense" name="expense" fill="var(--destructive)" radius={4} />

@@ -41,7 +41,9 @@ export function RecurringBillsPage() {
       </div>
     );
   } else if (billList.length === 0) {
-    content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>;
+    content = (
+      <p className="px-6 py-8 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>
+    );
   } else {
     content = (
       <ul className="divide-y divide-border">
@@ -66,7 +68,11 @@ export function RecurringBillsPage() {
 
       <section className="card p-6">
         <h2 className="mb-5 font-semibold">{t("recurringBills.add")}</h2>
-        <CreateRecurringBillForm accounts={accountList} categories={categoryList} onCreated={invalidate} />
+        <CreateRecurringBillForm
+          accounts={accountList}
+          categories={categoryList}
+          onCreated={invalidate}
+        />
       </section>
 
       <section className="card overflow-hidden">{content}</section>

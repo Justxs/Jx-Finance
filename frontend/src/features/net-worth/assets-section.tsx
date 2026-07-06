@@ -47,7 +47,9 @@ export function AssetsSection() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="font-semibold tabular-nums">{money.format(Number(asset.currentValue))}</span>
+              <span className="font-semibold tabular-nums">
+                {money.format(Number(asset.currentValue))}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"

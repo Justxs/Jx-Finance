@@ -54,12 +54,21 @@ export function TransactionFormSection({
       />
     );
   } else {
-    content = <TransactionForm accounts={accounts} categories={categories} pending={false} onSubmit={onCreate} />;
+    content = (
+      <TransactionForm
+        accounts={accounts}
+        categories={categories}
+        pending={false}
+        onSubmit={onCreate}
+      />
+    );
   }
 
   return (
     <section className="card p-6">
-      <h2 className="mb-5 font-semibold">{editing ? t("transactions.editTitle") : t("transactions.add")}</h2>
+      <h2 className="mb-5 font-semibold">
+        {editing ? t("transactions.editTitle") : t("transactions.add")}
+      </h2>
       {content}
     </section>
   );

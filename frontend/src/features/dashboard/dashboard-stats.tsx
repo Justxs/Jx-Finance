@@ -47,7 +47,9 @@ export function DashboardStats() {
               </p>
             )}
           </div>
-          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${stat.chip}`}>
+          <span
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full ${stat.chip}`}
+          >
             <stat.icon className="size-5" />
           </span>
         </div>

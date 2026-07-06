@@ -135,7 +135,9 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                 <form.Field name="householdId">
                   {(field) => (
                     <div className="space-y-1.5">
-                      <Label htmlFor={`category-${category.id}-household`}>{t("sharing.household")}</Label>
+                      <Label htmlFor={`category-${category.id}-household`}>
+                        {t("sharing.household")}
+                      </Label>
                       <Select
                         id={`category-${category.id}-household`}
                         value={field.state.value}

@@ -50,7 +50,10 @@ export function ReportsPage() {
 
           <section className="card p-6">
             <h2 className="mb-4 font-semibold">{t("reports.trend")}</h2>
-            <ReportTrendChart items={summary.data.trend ?? []} bucket={summary.data.trendBucket ?? "day"} />
+            <ReportTrendChart
+              items={summary.data.trend ?? []}
+              bucket={summary.data.trendBucket ?? "day"}
+            />
           </section>
 
           <section className="card p-6">

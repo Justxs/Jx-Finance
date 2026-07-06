@@ -29,9 +29,7 @@ export function LoginPage() {
       .regex(/^\S+@\S+$/, t("validation.email")),
     password: z.string().min(1, t("validation.required")),
     rememberMe: z.boolean(),
-    twoFactorCode: twoFactorRequired
-      ? z.string().min(1, t("validation.required"))
-      : z.string(),
+    twoFactorCode: twoFactorRequired ? z.string().min(1, t("validation.required")) : z.string(),
   });
 
   const loginMutation = useLoginEndpoint({

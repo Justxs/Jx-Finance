@@ -1,5 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  LabelList,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { useGetCategoryBreakdownEndpoint } from "@/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
@@ -32,7 +40,13 @@ export function CategoryBreakdownChart() {
       fill: CHART_COLORS[index % CHART_COLORS.length],
     })),
     ...(restTotal > 0
-      ? [{ name: t("dashboard.other"), amount: restTotal, fill: CHART_COLORS[MAX_SLICES % CHART_COLORS.length] }]
+      ? [
+          {
+            name: t("dashboard.other"),
+            amount: restTotal,
+            fill: CHART_COLORS[MAX_SLICES % CHART_COLORS.length],
+          },
+        ]
       : []),
   ];
 
@@ -46,7 +60,11 @@ export function CategoryBreakdownChart() {
 
   return (
     <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 44)}>
-      <BarChart data={chartData} layout="vertical" margin={{ top: 8, right: 48, bottom: 8, left: 8 }}>
+      <BarChart
+        data={chartData}
+        layout="vertical"
+        margin={{ top: 8, right: 48, bottom: 8, left: 8 }}
+      >
         <CartesianGrid horizontal={false} stroke="var(--border)" />
         <XAxis type="number" hide />
         <YAxis

@@ -23,7 +23,9 @@ export function NotificationBell() {
   }
 
   const markReadMutation = useMarkNotificationReadEndpoint({ mutation: { onSettled: invalidate } });
-  const markAllReadMutation = useMarkAllNotificationsReadEndpoint({ mutation: { onSettled: invalidate } });
+  const markAllReadMutation = useMarkAllNotificationsReadEndpoint({
+    mutation: { onSettled: invalidate },
+  });
 
   function handleBlur(event: FocusEvent<HTMLDivElement>) {
     if (!event.currentTarget.contains(event.relatedTarget)) {
@@ -67,7 +69,9 @@ export function NotificationBell() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {unreadList.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">{t("notifications.empty")}</p>
+              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+                {t("notifications.empty")}
+              </p>
             ) : (
               <ul className="divide-y divide-border">
                 {unreadList.map((notification) => (

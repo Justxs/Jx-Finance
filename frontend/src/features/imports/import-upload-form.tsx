@@ -31,7 +31,11 @@ export function ImportUploadForm({
           <label className="text-sm font-medium" htmlFor="import-account">
             {t("transactions.account")}
           </label>
-          <Select id="import-account" value={accountId} onChange={(e) => onAccountChange(e.target.value)}>
+          <Select
+            id="import-account"
+            value={accountId}
+            onChange={(e) => onAccountChange(e.target.value)}
+          >
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}

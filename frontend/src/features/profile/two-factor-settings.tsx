@@ -3,7 +3,12 @@ import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { getMeEndpointQueryKey, useDisableTwoFactorEndpoint, useMeEndpoint, useSetupTwoFactorEndpoint } from "@/api/generated";
+import {
+  getMeEndpointQueryKey,
+  useDisableTwoFactorEndpoint,
+  useMeEndpoint,
+  useSetupTwoFactorEndpoint,
+} from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
@@ -73,7 +78,12 @@ export function TwoFactorSettings() {
 
   if (qrDataUrl && sharedKey) {
     return (
-      <TwoFactorSetup qrDataUrl={qrDataUrl} sharedKey={sharedKey} onEnabled={handleEnabled} onCancel={cancelSetup} />
+      <TwoFactorSetup
+        qrDataUrl={qrDataUrl}
+        sharedKey={sharedKey}
+        onEnabled={handleEnabled}
+        onCancel={cancelSetup}
+      />
     );
   }
 
@@ -81,7 +91,11 @@ export function TwoFactorSettings() {
     <div className="card max-w-md space-y-4 p-6">
       <h2 className="font-semibold">{t("profile.twoFactorTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("profile.twoFactorDisabledSubtitle")}</p>
-      <Button type="button" disabled={setupMutation.isPending} onClick={() => setupMutation.mutate()}>
+      <Button
+        type="button"
+        disabled={setupMutation.isPending}
+        onClick={() => setupMutation.mutate()}
+      >
         {t("profile.enableTwoFactor")}
       </Button>
     </div>
