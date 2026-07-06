@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type Scope = typeof Scope[keyof typeof Scope];
-
+export type Scope = (typeof Scope)[keyof typeof Scope];
 
 export const Scope = {
-  Personal: 'personal',
-  Shared: 'shared',
+  Personal: "personal",
+  Shared: "shared",
 } as const;

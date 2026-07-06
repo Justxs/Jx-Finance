@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { ImportPreviewRow } from './importPreviewRow';
+import type { ImportPreviewRow } from "./importPreviewRow";
 
 export interface ImportPreviewResponse {
   rows?: ImportPreviewRow[];

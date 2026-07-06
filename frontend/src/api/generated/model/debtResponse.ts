@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { DebtType } from './debtType';
+import type { DebtType } from "./debtType";
 
 export interface DebtResponse {
   id?: string;

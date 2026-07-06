@@ -6,8 +6,8 @@
  */
 
 export type GetCategoryBreakdownEndpointParams = {
-/**
- * @nullable
- */
-month?: string | null;
+  /**
+   * @nullable
+   */
+  month?: string | null;
 };

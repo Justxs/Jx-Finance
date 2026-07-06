@@ -4,20 +4,20 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { AccountType } from './accountType';
-import type { Scope } from './scope';
+import type { AccountType } from "./accountType";
+import type { Scope } from "./scope";
 
 export interface CreateAccountRequest {
   /**
-     * @minLength 0
-     * @maxLength 100
-     */
+   * @minLength 0
+   * @maxLength 100
+   */
   name: string;
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
   description?: string | null;
   /** @nullable */
   iban?: string | null;

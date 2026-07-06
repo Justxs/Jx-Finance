@@ -7,9 +7,9 @@
 
 export interface LoginRequest {
   /**
-     * @minLength 1
-     * @pattern ^[^@]+@[^@]+$
-     */
+   * @minLength 1
+   * @pattern ^[^@]+@[^@]+$
+   */
   email: string;
   /** @minLength 1 */
   password: string;

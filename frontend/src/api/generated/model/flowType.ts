@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type FlowType = typeof FlowType[keyof typeof FlowType];
-
+export type FlowType = (typeof FlowType)[keyof typeof FlowType];
 
 export const FlowType = {
-  Income: 'income',
-  Expense: 'expense',
+  Income: "income",
+  Expense: "expense",
 } as const;

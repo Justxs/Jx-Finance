@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type RecurringBillKind = typeof RecurringBillKind[keyof typeof RecurringBillKind];
-
+export type RecurringBillKind = (typeof RecurringBillKind)[keyof typeof RecurringBillKind];
 
 export const RecurringBillKind = {
-  Fixed: 'fixed',
-  Variable: 'variable',
+  Fixed: "fixed",
+  Variable: "variable",
 } as const;

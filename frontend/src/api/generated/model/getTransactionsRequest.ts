@@ -5,4 +5,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface GetTransactionsRequest { [key: string]: unknown }
+export interface GetTransactionsRequest {
+  [key: string]: unknown;
+}

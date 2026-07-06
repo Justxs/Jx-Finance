@@ -5,12 +5,11 @@
  * OpenAPI spec version: v1
  */
 
-export type AccountType = typeof AccountType[keyof typeof AccountType];
-
+export type AccountType = (typeof AccountType)[keyof typeof AccountType];
 
 export const AccountType = {
-  Checking: 'checking',
-  Savings: 'savings',
-  Cash: 'cash',
-  Other: 'other',
+  Checking: "checking",
+  Savings: "savings",
+  Cash: "cash",
+  Other: "other",
 } as const;

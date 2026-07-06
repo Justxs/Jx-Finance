@@ -4,8 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from './flowType';
-import type { Scope } from './scope';
+import type { FlowType } from "./flowType";
+import type { Scope } from "./scope";
 
 export interface CategoryResponse {
   id?: string;

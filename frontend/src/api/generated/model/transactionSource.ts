@@ -5,10 +5,9 @@
  * OpenAPI spec version: v1
  */
 
-export type TransactionSource = typeof TransactionSource[keyof typeof TransactionSource];
-
+export type TransactionSource = (typeof TransactionSource)[keyof typeof TransactionSource];
 
 export const TransactionSource = {
-  Manual: 'manual',
-  Imported: 'imported',
+  Manual: "manual",
+  Imported: "imported",
 } as const;

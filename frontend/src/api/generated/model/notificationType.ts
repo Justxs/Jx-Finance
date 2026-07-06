@@ -5,9 +5,8 @@
  * OpenAPI spec version: v1
  */
 
-export type NotificationType = typeof NotificationType[keyof typeof NotificationType];
-
+export type NotificationType = (typeof NotificationType)[keyof typeof NotificationType];
 
 export const NotificationType = {
-  BillDue: 'billDue',
+  BillDue: "billDue",
 } as const;

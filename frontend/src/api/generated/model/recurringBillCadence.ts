@@ -5,12 +5,11 @@
  * OpenAPI spec version: v1
  */
 
-export type RecurringBillCadence = typeof RecurringBillCadence[keyof typeof RecurringBillCadence];
-
+export type RecurringBillCadence = (typeof RecurringBillCadence)[keyof typeof RecurringBillCadence];
 
 export const RecurringBillCadence = {
-  Weekly: 'weekly',
-  Monthly: 'monthly',
-  Quarterly: 'quarterly',
-  Yearly: 'yearly',
+  Weekly: "weekly",
+  Monthly: "monthly",
+  Quarterly: "quarterly",
+  Yearly: "yearly",
 } as const;

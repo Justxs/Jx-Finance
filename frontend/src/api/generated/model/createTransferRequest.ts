@@ -13,9 +13,9 @@ export interface CreateTransferRequest {
   amount?: string;
   date?: string;
   /**
-     * @minLength 0
-     * @maxLength 500
-     * @nullable
-     */
+   * @minLength 0
+   * @maxLength 500
+   * @nullable
+   */
   description?: string | null;
 }

@@ -4,8 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { HouseholdMemberResponse } from './householdMemberResponse';
-import type { HouseholdRole } from './householdRole';
+import type { HouseholdMemberResponse } from "./householdMemberResponse";
+import type { HouseholdRole } from "./householdRole";
 
 export interface HouseholdResponse {
   id?: string;

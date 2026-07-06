@@ -5,4 +5,6 @@
  * OpenAPI spec version: v1
  */
 
-export interface GetCategoryBreakdownRequest { [key: string]: unknown }
+export interface GetCategoryBreakdownRequest {
+  [key: string]: unknown;
+}

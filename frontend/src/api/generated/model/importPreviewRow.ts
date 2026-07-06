@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from './flowType';
+import type { FlowType } from "./flowType";
 
 export interface ImportPreviewRow {
   importRef?: string;

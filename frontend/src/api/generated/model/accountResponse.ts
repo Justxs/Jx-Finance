@@ -4,8 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { AccountType } from './accountType';
-import type { Scope } from './scope';
+import type { AccountType } from "./accountType";
+import type { Scope } from "./scope";
 
 export interface AccountResponse {
   id?: string;
