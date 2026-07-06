@@ -2,6 +2,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Accounts.CreateAccount;
 using JxFinance.Endpoints.Accounts.UpdateAccount;
 using JxFinance.Infrastructure.Data;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Accounts;
 
-public sealed class AccountService(AppDbContext db) : IAccountService
+public sealed class AccountService(AppDbContext db, ICurrentUser currentUser) : IAccountService
 {
     public async Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -17,7 +18,7 @@ public sealed class AccountService(AppDbContext db) : IAccountService
             .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var movements = await db.Transactions
+        var transactionMovements = await db.Transactions
             .GroupBy(t => t.AccountId)
             .Select(g => new
             {
@@ -26,8 +27,22 @@ public sealed class AccountService(AppDbContext db) : IAccountService
             })
             .ToDictionaryAsync(g => g.AccountId, g => g.Net, cancellationToken);
 
+        var outgoingTransfers = await db.Transfers
+            .GroupBy(t => t.FromAccountId)
+            .Select(g => new { AccountId = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
+            .ToDictionaryAsync(g => g.AccountId, g => g.Total, cancellationToken);
+
+        var incomingTransfers = await db.Transfers
+            .GroupBy(t => t.ToAccountId)
+            .Select(g => new { AccountId = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
+            .ToDictionaryAsync(g => g.AccountId, g => g.Total, cancellationToken);
+
         return accounts
-            .Select(a => ToResponse(a, movements.GetValueOrDefault(a.Id)))
+            .Select(a => ToResponse(
+                a,
+                transactionMovements.GetValueOrDefault(a.Id)
+                    - outgoingTransfers.GetValueOrDefault(a.Id)
+                    + incomingTransfers.GetValueOrDefault(a.Id)))
             .ToList();
     }
 
@@ -48,6 +63,12 @@ public sealed class AccountService(AppDbContext db) : IAccountService
         CreateAccountRequest request,
         CancellationToken cancellationToken)
     {
+        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        if (membershipError is not null)
+        {
+            return Result<AccountResponse>.Failure(ErrorCodes.Validation, membershipError);
+        }
+
         var account = new Account
         {
             Name = request.Name.Trim(),
@@ -55,6 +76,8 @@ public sealed class AccountService(AppDbContext db) : IAccountService
             Iban = Iban.Normalize(request.Iban),
             Type = request.Type,
             StartingBalance = MoneyWire.Parse(request.StartingBalance),
+            Scope = request.Scope,
+            HouseholdId = request.Scope == Scope.Shared ? new HouseholdId(request.HouseholdId!.Value) : null,
         };
 
         db.Accounts.Add(account);
@@ -74,15 +97,41 @@ public sealed class AccountService(AppDbContext db) : IAccountService
             return Result<AccountResponse>.Failure(ErrorCodes.NotFound, "Account not found.");
         }
 
+        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        if (membershipError is not null)
+        {
+            return Result<AccountResponse>.Failure(ErrorCodes.Validation, membershipError);
+        }
+
         account.Name = request.Name.Trim();
         account.Description = NormalizeText(request.Description);
         account.Iban = Iban.Normalize(request.Iban);
         account.Type = request.Type;
         account.StartingBalance = MoneyWire.Parse(request.StartingBalance);
+        account.Scope = request.Scope;
+        account.HouseholdId = request.Scope == Scope.Shared ? new HouseholdId(request.HouseholdId!.Value) : null;
         await db.SaveChangesAsync(cancellationToken);
 
         var net = await NetMovementAsync(accountId, cancellationToken);
         return Result<AccountResponse>.Success(ToResponse(account, net));
+    }
+
+    private async Task<string?> ValidateHouseholdAsync(
+        Scope scope,
+        Guid? householdId,
+        CancellationToken cancellationToken)
+    {
+        if (scope == Scope.Personal || householdId is null)
+        {
+            return null;
+        }
+
+        var typedHouseholdId = new HouseholdId(householdId.Value);
+        var isMember = await db.HouseholdMemberships.AnyAsync(
+            m => m.HouseholdId == typedHouseholdId && m.UserId == currentUser.Id,
+            cancellationToken);
+
+        return isMember ? null : "You are not a member of that household.";
     }
 
     public async Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken)
@@ -99,10 +148,22 @@ public sealed class AccountService(AppDbContext db) : IAccountService
         return Result<Guid>.Success(id);
     }
 
-    private Task<decimal> NetMovementAsync(AccountId accountId, CancellationToken cancellationToken) =>
-        db.Transactions
+    private async Task<decimal> NetMovementAsync(AccountId accountId, CancellationToken cancellationToken)
+    {
+        var transactionNet = await db.Transactions
             .Where(t => t.AccountId == accountId)
             .SumAsync(t => t.Type == FlowType.Income ? (decimal)t.Amount : -(decimal)t.Amount, cancellationToken);
+
+        var outgoing = await db.Transfers
+            .Where(t => t.FromAccountId == accountId)
+            .SumAsync(t => (decimal)t.Amount, cancellationToken);
+
+        var incoming = await db.Transfers
+            .Where(t => t.ToAccountId == accountId)
+            .SumAsync(t => (decimal)t.Amount, cancellationToken);
+
+        return transactionNet - outgoing + incoming;
+    }
 
     private static string? NormalizeText(string? value)
     {
@@ -118,5 +179,7 @@ public sealed class AccountService(AppDbContext db) : IAccountService
         account.Type,
         MoneyWire.ToWire(account.StartingBalance),
         MoneyWire.ToWire(account.StartingBalance + netMovement),
-        account.CreatedAt);
+        account.CreatedAt,
+        account.Scope,
+        account.HouseholdId?.Value);
 }

@@ -1,4 +1,5 @@
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Accounts.UpdateAccount;
 
@@ -8,4 +9,6 @@ public sealed record UpdateAccountRequest(
     string? Description,
     string? Iban,
     AccountType Type,
-    string StartingBalance);
+    string StartingBalance,
+    Scope Scope,
+    Guid? HouseholdId);

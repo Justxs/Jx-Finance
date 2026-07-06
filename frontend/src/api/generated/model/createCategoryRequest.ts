@@ -4,19 +4,23 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from "./flowType";
+import type { FlowType } from './flowType';
+import type { Scope } from './scope';
 
 export interface CreateCategoryRequest {
   /**
-   * @minLength 0
-   * @maxLength 100
-   */
+     * @minLength 0
+     * @maxLength 100
+     */
   name: string;
   type?: FlowType;
   /**
-   * @minLength 0
-   * @maxLength 50
-   * @nullable
-   */
+     * @minLength 0
+     * @maxLength 50
+     * @nullable
+     */
   icon?: string | null;
+  scope?: Scope;
+  /** @nullable */
+  householdId?: string | null;
 }
