@@ -10,7 +10,6 @@ public sealed class CreateTransactionEndpoint(ITransactionService transactionSer
     public override void Configure()
     {
         Post("/api/transactions");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CreateTransactionRequest req, CancellationToken ct)

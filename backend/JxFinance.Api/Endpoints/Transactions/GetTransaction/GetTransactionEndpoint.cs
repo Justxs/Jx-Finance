@@ -9,7 +9,6 @@ public sealed class GetTransactionEndpoint(ITransactionService transactionServic
     public override void Configure()
     {
         Get("/api/transactions/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

@@ -9,7 +9,6 @@ public sealed class UpdateTransactionEndpoint(ITransactionService transactionSer
     public override void Configure()
     {
         Put("/api/transactions/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

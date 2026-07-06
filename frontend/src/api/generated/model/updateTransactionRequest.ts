@@ -4,7 +4,8 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { FlowType } from "./flowType";
+import type { FlowType } from './flowType';
+import type { TransactionLineRequest } from './transactionLineRequest';
 
 export interface UpdateTransactionRequest {
   /** @minLength 1 */
@@ -16,9 +17,11 @@ export interface UpdateTransactionRequest {
   /** @minLength 1 */
   date: string;
   /**
-   * @minLength 0
-   * @maxLength 500
-   * @nullable
-   */
+     * @minLength 0
+     * @maxLength 500
+     * @nullable
+     */
   description?: string | null;
+  /** @nullable */
+  lines?: TransactionLineRequest[] | null;
 }

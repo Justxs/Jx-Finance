@@ -8,7 +8,6 @@ public sealed class DeleteTransactionEndpoint(ITransactionService transactionSer
     public override void Configure()
     {
         Delete("/api/transactions/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

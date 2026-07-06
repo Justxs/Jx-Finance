@@ -8,4 +8,5 @@ public sealed record CreateTransactionRequest(
     FlowType Type,
     string Amount,
     DateOnly Date,
-    string? Description);
+    string? Description,
+    IReadOnlyList<TransactionLineRequest>? Lines);

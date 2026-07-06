@@ -9,4 +9,5 @@ public sealed record UpdateTransactionRequest(
     FlowType Type,
     string Amount,
     DateOnly Date,
-    string? Description);
+    string? Description,
+    IReadOnlyList<TransactionLineRequest>? Lines);

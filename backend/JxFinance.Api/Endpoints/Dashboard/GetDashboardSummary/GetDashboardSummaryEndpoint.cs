@@ -8,7 +8,6 @@ public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardServi
     public override void Configure()
     {
         Get("/api/dashboard/summary");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

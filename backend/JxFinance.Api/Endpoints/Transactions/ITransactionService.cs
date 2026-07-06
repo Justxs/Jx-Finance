@@ -23,4 +23,8 @@ public interface ITransactionService
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<TransactionResponse>> ExportAsync(
+        GetTransactionsRequest request,
+        CancellationToken cancellationToken);
 }
