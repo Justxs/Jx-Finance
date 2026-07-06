@@ -10,7 +10,8 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Net_worth_combines_accounts_assets_and_debts()
     {
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+        var appTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
+        var today = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, appTimeZone).ToString("yyyy-MM-dd");
 
         var before = await Client.GetFromJsonAsync<NetWorthDto>("/api/networth");
 
