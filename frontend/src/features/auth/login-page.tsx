@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { setAuthenticated } from "@/lib/auth-gate";
 
 interface FormValues {
   email: string;
@@ -39,6 +40,7 @@ export function LoginPage() {
           setTwoFactorRequired(true);
           return;
         }
+        setAuthenticated(true);
         navigate({ to: "/" });
       },
     },
