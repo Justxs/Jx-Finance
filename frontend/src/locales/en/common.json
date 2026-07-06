@@ -6,6 +6,12 @@
     "transactions": "Transactions",
     "accounts": "Accounts",
     "categories": "Categories",
+    "budgets": "Budgets",
+    "goals": "Goals",
+    "netWorth": "Net worth",
+    "recurringBills": "Recurring bills",
+    "households": "Households",
+    "users": "Users",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
@@ -26,7 +32,11 @@
     "monthIncome": "Income this month",
     "monthExpense": "Expenses this month",
     "recent": "Recent transactions",
-    "empty": "No transactions yet. Add your first one on the Transactions page."
+    "empty": "No transactions yet. Add your first one on the Transactions page.",
+    "spendingByCategory": "Spending by category (this month)",
+    "monthlyTrend": "Income vs. expenses",
+    "other": "Other",
+    "noSpending": "No spending recorded this month."
   },
   "accounts": {
     "title": "Accounts",
@@ -49,6 +59,14 @@
       "cash": "Cash",
       "other": "Other"
     }
+  },
+  "transfers": {
+    "title": "Transfer money",
+    "from": "From",
+    "to": "To",
+    "add": "Transfer",
+    "empty": "No transfers yet.",
+    "sameAccountError": "Source and destination accounts must differ."
   },
   "categories": {
     "title": "Categories",
@@ -79,10 +97,206 @@
     "descriptionPlaceholder": "e.g. Lidl",
     "empty": "No transactions yet.",
     "pageInfo": "Page {{page}} of {{pages}}",
-    "needAccount": "Create an account first to add transactions."
+    "needAccount": "Create an account first to add transactions.",
+    "searchPlaceholder": "Search description...",
+    "allTypes": "All types",
+    "allAccounts": "All accounts",
+    "allCategories": "All categories",
+    "clearFilters": "Clear filters",
+    "filters": "Filters",
+    "exportCsv": "Export CSV",
+    "split": "Split",
+    "splitTransaction": "Split into categories",
+    "addLine": "Add line",
+    "lineAmount": "Amount",
+    "lineCategory": "Category",
+    "lineDescription": "Label",
+    "removeLine": "Remove line",
+    "splitTotalMismatch": "Lines total {{linesTotal}}, but the transaction is {{total}}."
   },
   "theme": {
     "toggle": "Toggle theme"
+  },
+  "auth": {
+    "signIn": "Sign in",
+    "signInSubtitle": "Sign in to your Jx Finance account.",
+    "email": "Email",
+    "password": "Password",
+    "rememberMe": "Remember me on this device",
+    "logout": "Log out",
+    "setupTitle": "Create the admin account",
+    "setupSubtitle": "One-time setup for this Jx Finance install.",
+    "displayName": "Display name",
+    "displayNamePlaceholder": "e.g. Justas",
+    "createAdmin": "Create admin account",
+    "setupComplete": "Admin account created. Sign in to continue.",
+    "twoFactorCode": "Authenticator code",
+    "twoFactorCodeHint": "Enter the 6-digit code from your authenticator app, or a recovery code.",
+    "verifyCode": "Verify code"
+  },
+  "users": {
+    "title": "Users",
+    "subtitle": "Who can sign in to this install.",
+    "add": "Create user",
+    "email": "Email",
+    "displayName": "Display name",
+    "role": "Role",
+    "password": "Password",
+    "status": "Status",
+    "active": "Active",
+    "deactivated": "Deactivated",
+    "roles": {
+      "Admin": "Admin",
+      "Member": "Member"
+    },
+    "deactivate": "Deactivate",
+    "created": "User created",
+    "deactivated_toast": "User deactivated",
+    "roleUpdated": "Role updated",
+    "empty": "No other users yet."
+  },
+  "profile": {
+    "title": "Your profile",
+    "subtitle": "Update your display name or password.",
+    "currentPassword": "Current password",
+    "newPassword": "New password (optional)",
+    "save": "Save changes",
+    "updated": "Profile updated",
+    "twoFactorTitle": "Two-factor authentication",
+    "twoFactorDisabledSubtitle": "Add an authenticator app for an extra layer of security when signing in.",
+    "twoFactorEnabledSubtitle": "Two-factor authentication is currently enabled for your account.",
+    "enableTwoFactor": "Enable two-factor authentication",
+    "disableTwoFactor": "Disable two-factor authentication",
+    "twoFactorDisabled": "Two-factor authentication disabled",
+    "scanQrSubtitle": "Scan this QR code with your authenticator app, or enter the key manually.",
+    "enterCode": "Enter the 6-digit code",
+    "confirmAndEnable": "Confirm and enable",
+    "recoveryCodesTitle": "Save your recovery codes",
+    "recoveryCodesSubtitle": "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe — they won't be shown again.",
+    "recoveryCodesDone": "I've saved these codes"
+  },
+  "budgets": {
+    "title": "Budgets",
+    "subtitle": "Monthly spending caps by category.",
+    "add": "Add budget",
+    "category": "Category",
+    "limit": "Monthly limit",
+    "empty": "No budgets yet.",
+    "needCategory": "Create an expense category first to set a budget."
+  },
+  "goals": {
+    "title": "Goals",
+    "subtitle": "Savings targets to work toward.",
+    "add": "Add goal",
+    "name": "Name",
+    "namePlaceholder": "e.g. Emergency fund",
+    "targetAmount": "Target amount",
+    "currentAmount": "Current amount",
+    "targetDate": "Target date",
+    "updateProgress": "Update progress",
+    "empty": "No goals yet."
+  },
+  "netWorth": {
+    "title": "Net worth",
+    "subtitle": "What you own, minus what you owe.",
+    "accounts": "Accounts",
+    "assets": "Assets",
+    "debts": "Debts",
+    "netWorth": "Net worth",
+    "trend": "Trend",
+    "notEnoughHistory": "Check back after a couple of snapshots to see a trend.",
+    "name": "Name",
+    "type": "Type",
+    "currentValue": "Current value",
+    "outstandingAmount": "Outstanding amount",
+    "interestRate": "Interest rate %",
+    "asOf": "As of",
+    "addAsset": "Add asset",
+    "addDebt": "Add debt",
+    "noAssets": "No assets yet.",
+    "noDebts": "No debts yet.",
+    "assetTypes": {
+      "property": "Property",
+      "vehicle": "Vehicle",
+      "investment": "Investment",
+      "valuable": "Valuable",
+      "other": "Other"
+    },
+    "debtTypes": {
+      "mortgage": "Mortgage",
+      "loan": "Loan",
+      "other": "Other"
+    }
+  },
+  "recurringBills": {
+    "title": "Recurring bills",
+    "subtitle": "Bills that repeat, so nothing sneaks up on you.",
+    "add": "Add recurring bill",
+    "name": "Name",
+    "namePlaceholder": "e.g. Rent",
+    "kind": "Kind",
+    "kinds": {
+      "fixed": "Fixed amount",
+      "variable": "Variable amount"
+    },
+    "amount": "Amount",
+    "variableAmountHint": "Variable bills don't need an amount upfront — you'll enter it when you confirm.",
+    "category": "Category",
+    "noCategory": "No category",
+    "account": "Account",
+    "noAccount": "No default account",
+    "cadence": "Repeats",
+    "cadences": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "nextDueDate": "Next due date",
+    "remindDaysBefore": "Remind days before",
+    "active": "Active",
+    "inactive": "Inactive",
+    "confirm": "Confirm",
+    "confirmTitle": "Confirm bill payment",
+    "confirmAccountRequired": "Choose the account this was paid from.",
+    "empty": "No recurring bills yet.",
+    "needAccount": "Create an account first to set up recurring bills."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No new notifications.",
+    "markAllRead": "Mark all as read"
+  },
+  "households": {
+    "title": "Households",
+    "subtitle": "Share accounts and categories with people you trust.",
+    "add": "Create household",
+    "namePlaceholder": "e.g. Our home",
+    "empty": "You're not part of any household yet.",
+    "addMember": "Add",
+    "memberEmailPlaceholder": "Member's email",
+    "roles": {
+      "owner": "Owner",
+      "member": "Member"
+    }
+  },
+  "sharing": {
+    "scope": "Visibility",
+    "personal": "Personal",
+    "shared": "Shared",
+    "household": "Household",
+    "selectHousehold": "Select a household",
+    "sharedWith": "Shared · {{household}}"
+  },
+  "imports": {
+    "title": "Import a Swedbank CSV",
+    "file": "CSV file",
+    "preview": "Preview",
+    "confirm": "Confirm import",
+    "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",
+    "noRows": "No importable rows found in this file.",
+    "duplicate": "Already imported",
+    "looksLikeTransfer": "Looks like a transfer"
   },
   "status": {
     "label": "API status",
@@ -98,6 +312,8 @@
     "money": "Enter a valid amount, e.g. 12.34.",
     "positiveMoney": "Enter an amount greater than 0, e.g. 12.34.",
     "iban": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000.",
-    "maxLength": "Must be {{max}} characters or fewer."
+    "maxLength": "Must be {{max}} characters or fewer.",
+    "email": "Enter a valid email address.",
+    "minLength": "Must be at least {{min}} characters."
   }
 }
