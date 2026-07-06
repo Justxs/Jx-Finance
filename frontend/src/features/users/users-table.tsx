@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import { UserX } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
@@ -82,11 +83,14 @@ export function UsersTable({
             <div className="flex justify-end">
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="size-8"
                 disabled={isSelf || !user.isActive || deactivatePending}
                 onClick={() => onDeactivate(user.id!)}
+                aria-label={t("users.deactivate")}
+                title={t("users.deactivate")}
               >
-                {t("users.deactivate")}
+                <UserX />
               </Button>
             </div>
           </td>

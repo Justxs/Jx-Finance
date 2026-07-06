@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetDebtsEndpointQueryKey,
@@ -9,6 +10,7 @@ import {
   useGetDebtsEndpoint,
 } from "@/api/generated";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { DebtForm } from "./debt-form";
@@ -18,6 +20,7 @@ export function DebtsSection() {
   const queryClient = useQueryClient();
   const money = useMoney();
   const date = useDate();
+  const [addOpen, setAddOpen] = useState(false);
 
   const debts = useGetDebtsEndpoint();
 
@@ -53,11 +56,14 @@ export function DebtsSection() {
               </span>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="size-8"
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate({ id: debt.id! })}
+                aria-label={t("actions.delete")}
+                title={t("actions.delete")}
               >
-                {t("actions.delete")}
+                <Trash2 />
               </Button>
             </div>
           </li>
@@ -68,10 +74,22 @@ export function DebtsSection() {
 
   return (
     <section className="card">
-      <div className="border-b p-6">
-        <h2 className="mb-5 font-semibold">{t("netWorth.addDebt")}</h2>
-        <DebtForm onCreated={invalidate} />
+      <div className="flex items-center justify-between border-b p-6">
+        <h2 className="font-semibold">{t("netWorth.addDebt")}</h2>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("actions.add")}
+        </Button>
       </div>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("netWorth.addDebt")}>
+        <DebtForm
+          onCreated={() => {
+            invalidate();
+            setAddOpen(false);
+          }}
+          onCancel={() => setAddOpen(false)}
+        />
+      </Dialog>
       {content}
     </section>
   );

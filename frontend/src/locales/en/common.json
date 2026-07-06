@@ -13,6 +13,7 @@
     "households": "Households",
     "reports": "Reports",
     "users": "Users",
+    "profile": "Your profile",
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar"
   },
@@ -73,6 +74,8 @@
     "title": "Categories",
     "subtitle": "Labels that give your spending shape.",
     "add": "Add category",
+    "addTitle": "Add a category",
+    "editTitle": "Edit category",
     "name": "Name",
     "namePlaceholder": "e.g. Food",
     "icon": "Icon",
@@ -314,6 +317,7 @@
   "imports": {
     "title": "Import a Swedbank CSV",
     "file": "CSV file",
+    "chooseFile": "Click to choose a CSV file",
     "preview": "Preview",
     "confirm": "Confirm import",
     "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",

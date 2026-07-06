@@ -1,9 +1,10 @@
-import { type ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 import { Archive, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGetHouseholdsEndpoint } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
@@ -60,20 +61,9 @@ export function AccountsTable({
       </tr>
     );
   } else {
-    body = accounts.map((account) =>
-      editingId === account.id ? (
-        <tr key={account.id} className="border-b last:border-0">
-          <td colSpan={6} className="bg-muted/30 px-6 py-4">
-            <AccountForm
-              initial={account}
-              pending={updatePending}
-              onSubmit={(values) => onUpdate(account.id!, values)}
-              onCancel={onCancelEdit}
-            />
-          </td>
-        </tr>
-      ) : (
-        <tr key={account.id} className="border-b last:border-0 hover:bg-muted/30">
+    body = accounts.map((account) => (
+      <Fragment key={account.id}>
+        <tr className="border-b last:border-0 hover:bg-muted/30">
           <td className="px-6 py-3">
             <div className="flex items-center gap-3">
               <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
@@ -136,8 +126,22 @@ export function AccountsTable({
             </div>
           </td>
         </tr>
-      ),
-    );
+        <Dialog
+          open={editingId === account.id}
+          onOpenChange={(open) => {
+            if (!open) onCancelEdit();
+          }}
+          title={t("actions.edit")}
+        >
+          <AccountForm
+            initial={account}
+            pending={updatePending}
+            onSubmit={(values) => onUpdate(account.id!, values)}
+            onCancel={onCancelEdit}
+          />
+        </Dialog>
+      </Fragment>
+    ));
   }
 
   return (

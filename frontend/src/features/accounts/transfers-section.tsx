@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetAccountsEndpointQueryKey,
@@ -10,6 +11,7 @@ import {
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { TransferForm } from "./transfer-form";
@@ -23,6 +25,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const queryClient = useQueryClient();
   const money = useMoney();
   const date = useDate();
+  const [addOpen, setAddOpen] = useState(false);
 
   const transfers = useGetTransfersEndpoint({ page: 1, pageSize: 10 });
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
@@ -32,7 +35,12 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
   }
 
-  const createMutation = useCreateTransferEndpoint({ mutation: { onSettled: invalidate } });
+  const createMutation = useCreateTransferEndpoint({
+    mutation: {
+      onSuccess: () => setAddOpen(false),
+      onSettled: invalidate,
+    },
+  });
   const deleteMutation = useDeleteTransferEndpoint({ mutation: { onSettled: invalidate } });
 
   const items = transfers.data?.items ?? [];
@@ -71,11 +79,14 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
               </span>
               <Button
                 variant="ghost"
-                size="sm"
+                size="icon"
+                className="size-8"
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate({ id: transfer.id! })}
+                aria-label={t("actions.delete")}
+                title={t("actions.delete")}
               >
-                {t("actions.delete")}
+                <Trash2 />
               </Button>
             </div>
           </li>
@@ -90,14 +101,21 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
 
   return (
     <section className="card">
-      <div className="border-b p-6">
-        <h2 className="mb-5 font-semibold">{t("transfers.title")}</h2>
+      <div className="flex items-center justify-between border-b p-6">
+        <h2 className="font-semibold">{t("transfers.title")}</h2>
+        <Button size="sm" onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("transfers.add")}
+        </Button>
+      </div>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}
           onSubmit={(values) => createMutation.mutate({ data: values })}
+          onCancel={() => setAddOpen(false)}
         />
-      </div>
+      </Dialog>
       {content}
     </section>
   );

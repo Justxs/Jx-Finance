@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -11,6 +12,8 @@ import {
   useUpdateAccountEndpoint,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { ImportSection } from "@/features/imports/import-section";
 import { AccountForm } from "./account-form";
 import { AccountsTable } from "./accounts-table";
@@ -22,13 +25,19 @@ export function AccountsPage() {
 
   const accounts = useGetAccountsEndpoint();
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
   }
 
-  const createMutation = useCreateAccountEndpoint({ mutation: { onSettled: invalidate } });
+  const createMutation = useCreateAccountEndpoint({
+    mutation: {
+      onSuccess: () => setCreateOpen(false),
+      onSettled: invalidate,
+    },
+  });
   const updateMutation = useUpdateAccountEndpoint({
     mutation: {
       onSuccess: () => setEditingId(null),
@@ -46,15 +55,20 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("accounts.title")} subtitle={t("accounts.subtitle")} />
+      <PageHeader title={t("accounts.title")} subtitle={t("accounts.subtitle")}>
+        <Button onClick={() => setCreateOpen(true)}>
+          <Plus />
+          {t("accounts.add")}
+        </Button>
+      </PageHeader>
 
-      <section className="card p-6">
-        <h2 className="mb-5 font-semibold">{t("accounts.add")}</h2>
+      <Dialog open={createOpen} onOpenChange={setCreateOpen} title={t("accounts.add")}>
         <AccountForm
           pending={createMutation.isPending}
           onSubmit={(values) => createMutation.mutate({ data: values })}
+          onCancel={() => setCreateOpen(false)}
         />
-      </section>
+      </Dialog>
 
       <AccountsTable
         accounts={accountList}

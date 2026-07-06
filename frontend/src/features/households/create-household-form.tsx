@@ -12,9 +12,10 @@ interface FormValues {
 
 interface Props {
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function CreateHouseholdForm({ onCreated }: Readonly<Props>) {
+export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -25,7 +26,7 @@ export function CreateHouseholdForm({ onCreated }: Readonly<Props>) {
       .max(100, t("validation.maxLength", { max: 100 })),
   });
 
-  const createMutation = useCreateHouseholdEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateHouseholdEndpoint({ mutation: { onSuccess: onCreated } });
 
   const form = useForm({
     defaultValues: { name: "" } satisfies FormValues,
@@ -44,15 +45,16 @@ export function CreateHouseholdForm({ onCreated }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="flex items-end gap-2"
+      className="space-y-4"
     >
       <form.Field name="name">
         {(field) => (
-          <div className="w-64 space-y-1.5">
+          <div className="space-y-1.5">
             <Input
               placeholder={t("households.namePlaceholder")}
               value={field.state.value}
               aria-invalid={field.state.meta.errors.length > 0}
+              autoFocus
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
@@ -61,13 +63,18 @@ export function CreateHouseholdForm({ onCreated }: Readonly<Props>) {
         )}
       </form.Field>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
-            {t("households.add")}
-          </Button>
-        )}
-      </form.Subscribe>
+      <div className="flex justify-end gap-2 pt-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("households.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

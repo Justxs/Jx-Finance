@@ -16,9 +16,10 @@ interface FormValues {
 interface Props {
   householdId: string;
   onAdded: () => void;
+  onCancel?: () => void;
 }
 
-export function AddMemberForm({ householdId, onAdded }: Readonly<Props>) {
+export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -82,6 +83,12 @@ export function AddMemberForm({ householdId, onAdded }: Readonly<Props>) {
           </Select>
         )}
       </form.Field>
+
+      {onCancel ? (
+        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+      ) : null}
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (

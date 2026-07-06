@@ -23,9 +23,10 @@ interface FormValues {
 
 interface Props {
   onCreated: () => void;
+  onCancel: () => void;
 }
 
-export function DebtForm({ onCreated }: Readonly<Props>) {
+export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -40,7 +41,7 @@ export function DebtForm({ onCreated }: Readonly<Props>) {
     asOf: z.string().min(1, t("validation.required")),
   });
 
-  const createMutation = useCreateDebtEndpoint({ mutation: { onSettled: onCreated } });
+  const createMutation = useCreateDebtEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
     name: "",
@@ -147,17 +148,18 @@ export function DebtForm({ onCreated }: Readonly<Props>) {
         )}
       </form.Field>
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <Button
-            type="submit"
-            disabled={createMutation.isPending || !canSubmit}
-            className="md:mt-6"
-          >
-            {t("netWorth.addDebt")}
-          </Button>
-        )}
-      </form.Subscribe>
+      <div className="flex items-end justify-end gap-2 md:col-span-5">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          {t("actions.cancel")}
+        </Button>
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+              {t("actions.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

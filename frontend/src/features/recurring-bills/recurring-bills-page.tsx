@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { type ReactNode } from "react";
+import { Plus } from "lucide-react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetRecurringBillsEndpointQueryKey,
@@ -9,6 +10,8 @@ import {
   useGetRecurringBillsEndpoint,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Dialog } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateRecurringBillForm } from "./create-recurring-bill-form";
 import { RecurringBillRow } from "./recurring-bill-row";
@@ -16,6 +19,7 @@ import { RecurringBillRow } from "./recurring-bill-row";
 export function RecurringBillsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [addOpen, setAddOpen] = useState(false);
 
   const accounts = useGetAccountsEndpoint();
   const categories = useGetCategoriesEndpoint();
@@ -64,16 +68,24 @@ export function RecurringBillsPage() {
 
   return (
     <div className="space-y-8">
-      <PageHeader title={t("recurringBills.title")} subtitle={t("recurringBills.subtitle")} />
+      <PageHeader title={t("recurringBills.title")} subtitle={t("recurringBills.subtitle")}>
+        <Button onClick={() => setAddOpen(true)}>
+          <Plus />
+          {t("recurringBills.add")}
+        </Button>
+      </PageHeader>
 
-      <section className="card p-6">
-        <h2 className="mb-5 font-semibold">{t("recurringBills.add")}</h2>
+      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("recurringBills.add")}>
         <CreateRecurringBillForm
           accounts={accountList}
           categories={categoryList}
-          onCreated={invalidate}
+          onCreated={() => {
+            invalidate();
+            setAddOpen(false);
+          }}
+          onCancel={() => setAddOpen(false)}
         />
-      </section>
+      </Dialog>
 
       <section className="card overflow-hidden">{content}</section>
     </div>
