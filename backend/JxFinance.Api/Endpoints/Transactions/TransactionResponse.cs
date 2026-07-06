@@ -13,4 +13,5 @@ public sealed record TransactionResponse(
     string? Description,
     TransactionSource Source,
     bool IsSplit,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    IReadOnlyList<TransactionLineResponse>? Lines);

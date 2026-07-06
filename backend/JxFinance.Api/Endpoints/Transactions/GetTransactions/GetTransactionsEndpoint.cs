@@ -9,7 +9,6 @@ public sealed class GetTransactionsEndpoint(ITransactionService transactionServi
     public override void Configure()
     {
         Get("/api/transactions");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)

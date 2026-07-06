@@ -39,6 +39,20 @@ export function useTransactionColumns({
     columnHelper.accessor("categoryId", {
       header: t("transactions.category"),
       cell: (info) => {
+        const row = info.row.original;
+        if (row.isSplit) {
+          return (
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
+                {t("transactions.split")}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {row.lines?.length ?? 0} {t("transactions.category").toLowerCase()}
+              </span>
+            </span>
+          );
+        }
+
         const category = categoryById.get(info.getValue() ?? "");
         if (!category) {
           return <span className="text-muted-foreground">{t("transactions.uncategorized")}</span>;

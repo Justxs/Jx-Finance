@@ -112,6 +112,40 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         Assert.Equal(HttpStatusCode.BadRequest, mismatchedCategory.StatusCode);
     }
 
+    [Fact]
+    public async Task Export_returns_csv_with_account_and_category_names()
+    {
+        var accountName = $"Export account {Guid.NewGuid():N}";
+        var account = await CreateAccountAsync(accountName);
+
+        var categoryResponse = await Client.PostAsJsonAsync(
+            "/api/categories",
+            new { name = $"Export category {Guid.NewGuid():N}", type = "expense" });
+        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+
+        await Client.PostAsJsonAsync(
+            "/api/transactions",
+            new
+            {
+                accountId = account.Id,
+                categoryId = category!.Id,
+                type = "expense",
+                amount = "12.34",
+                date = "2026-06-05",
+                description = "Export me",
+            });
+
+        var response = await Client.GetAsync($"/api/transactions/export?accountId={account.Id}");
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
+
+        var csv = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Date,Description,Account,Category,Type,Amount", csv);
+        Assert.Contains(accountName, csv);
+        Assert.Contains("Export me", csv);
+        Assert.Contains("12.34", csv);
+    }
+
     private async Task<AccountDto> CreateAccountAsync(string name)
     {
         var response = await Client.PostAsJsonAsync(
