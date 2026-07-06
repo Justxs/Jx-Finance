@@ -57,7 +57,8 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
           <li key={transfer.id} className="flex items-center justify-between gap-3 py-2.5">
             <div>
               <p className="text-sm font-medium">
-                {accountNames.get(transfer.fromAccountId ?? "")} → {accountNames.get(transfer.toAccountId ?? "")}
+                {accountNames.get(transfer.fromAccountId ?? "")} →{" "}
+                {accountNames.get(transfer.toAccountId ?? "")}
               </p>
               <p className="text-xs text-muted-foreground">
                 {transfer.date ? date.format(new Date(transfer.date)) : ""}

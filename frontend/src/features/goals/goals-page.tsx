@@ -1,7 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { getGetGoalsEndpointQueryKey, useDeleteGoalEndpoint, useGetGoalsEndpoint } from "@/api/generated";
+import {
+  getGetGoalsEndpointQueryKey,
+  useDeleteGoalEndpoint,
+  useGetGoalsEndpoint,
+} from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreateGoalForm } from "./create-goal-form";

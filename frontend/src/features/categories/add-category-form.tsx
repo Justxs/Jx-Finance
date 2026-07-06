@@ -46,7 +46,13 @@ export function AddCategoryForm({ onCreated }: Readonly<Props>) {
 
   const createMutation = useCreateCategoryEndpoint({ mutation: { onSettled: onCreated } });
 
-  const defaultValues: FormValues = { name: "", type: "expense", icon: null, scope: "personal", householdId: "" };
+  const defaultValues: FormValues = {
+    name: "",
+    type: "expense",
+    icon: null,
+    scope: "personal",
+    householdId: "",
+  };
 
   const form = useForm({
     defaultValues,

@@ -23,7 +23,11 @@ export function CreateGoalForm({ onCreated }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
-    name: z.string().trim().min(1, t("validation.required")).max(100, t("validation.maxLength", { max: 100 })),
+    name: z
+      .string()
+      .trim()
+      .min(1, t("validation.required"))
+      .max(100, t("validation.maxLength", { max: 100 })),
     targetAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
     currentAmount: z.string().refine((v) => v === "" || isMoney(v), t("validation.money")),
     targetDate: z.string(),
@@ -31,7 +35,12 @@ export function CreateGoalForm({ onCreated }: Readonly<Props>) {
 
   const createMutation = useCreateGoalEndpoint({ mutation: { onSettled: onCreated } });
 
-  const defaultValues: FormValues = { name: "", targetAmount: "", currentAmount: "", targetDate: "" };
+  const defaultValues: FormValues = {
+    name: "",
+    targetAmount: "",
+    currentAmount: "",
+    targetDate: "",
+  };
 
   const form = useForm({
     defaultValues,
@@ -129,7 +138,11 @@ export function CreateGoalForm({ onCreated }: Readonly<Props>) {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit} className="md:mt-6">
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || !canSubmit}
+            className="md:mt-6"
+          >
             {t("goals.add")}
           </Button>
         )}

@@ -11,7 +11,17 @@ import { emptyLine, type FormValues } from "./transaction-form";
 type TransactionFormApi = ReactFormExtendedApi<
   FormValues,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  any, any, any, any, any, any, any, any, any, any, any
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any,
+  any
 >;
 
 interface Props {

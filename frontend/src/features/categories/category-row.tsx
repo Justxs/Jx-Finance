@@ -44,7 +44,9 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
         <span className="text-sm font-medium">{category.name}</span>
         {category.scope === "shared" ? (
           <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-            {t("sharing.sharedWith", { household: householdNames.get(category.householdId ?? "") ?? "" })}
+            {t("sharing.sharedWith", {
+              household: householdNames.get(category.householdId ?? "") ?? "",
+            })}
           </span>
         ) : null}
       </div>

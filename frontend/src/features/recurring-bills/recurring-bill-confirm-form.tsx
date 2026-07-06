@@ -31,7 +31,9 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
 
   return (
     <div className="grid gap-3 rounded-md border bg-muted/30 p-4 md:grid-cols-4 md:items-end">
-      <p className="text-sm text-muted-foreground md:col-span-4">{t("recurringBills.confirmTitle")}</p>
+      <p className="text-sm text-muted-foreground md:col-span-4">
+        {t("recurringBills.confirmTitle")}
+      </p>
       {isVariable ? (
         <div className="space-y-1.5">
           <Label htmlFor={`bill-${bill.id}-confirm-amount`}>{t("recurringBills.amount")}</Label>
@@ -59,7 +61,9 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
               </option>
             ))}
           </Select>
-          <p className="text-xs text-muted-foreground">{t("recurringBills.confirmAccountRequired")}</p>
+          <p className="text-xs text-muted-foreground">
+            {t("recurringBills.confirmAccountRequired")}
+          </p>
         </div>
       ) : null}
       <Button

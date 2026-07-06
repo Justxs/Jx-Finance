@@ -40,7 +40,9 @@ export function CreateBudgetForm({ categories, onCreated }: Readonly<Props>) {
     defaultValues,
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
-      createMutation.mutate({ data: { categoryId: value.categoryId, limitAmount: value.limitAmount } });
+      createMutation.mutate({
+        data: { categoryId: value.categoryId, limitAmount: value.limitAmount },
+      });
       form.reset();
     },
   });
@@ -99,7 +101,11 @@ export function CreateBudgetForm({ categories, onCreated }: Readonly<Props>) {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit} className="md:mt-6">
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || !canSubmit}
+            className="md:mt-6"
+          >
             {t("budgets.add")}
           </Button>
         )}

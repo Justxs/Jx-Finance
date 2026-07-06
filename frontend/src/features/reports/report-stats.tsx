@@ -13,9 +13,27 @@ export function ReportStats({ totalIncome, totalExpense, net }: Readonly<Props>)
   const money = useMoney();
 
   const stats = [
-    { key: "reports.totalIncome", value: totalIncome, icon: TrendingUp, tone: "text-secondary", chip: "bg-secondary/15 text-secondary" },
-    { key: "reports.totalExpense", value: totalExpense, icon: TrendingDown, tone: "text-destructive", chip: "bg-destructive/10 text-destructive" },
-    { key: "reports.net", value: net, icon: Scale, tone: "text-foreground", chip: "bg-primary/10 text-primary" },
+    {
+      key: "reports.totalIncome",
+      value: totalIncome,
+      icon: TrendingUp,
+      tone: "text-secondary",
+      chip: "bg-secondary/15 text-secondary",
+    },
+    {
+      key: "reports.totalExpense",
+      value: totalExpense,
+      icon: TrendingDown,
+      tone: "text-destructive",
+      chip: "bg-destructive/10 text-destructive",
+    },
+    {
+      key: "reports.net",
+      value: net,
+      icon: Scale,
+      tone: "text-foreground",
+      chip: "bg-primary/10 text-primary",
+    },
   ] as const;
 
   return (
@@ -28,7 +46,9 @@ export function ReportStats({ totalIncome, totalExpense, net }: Readonly<Props>)
               {money.format(Number(stat.value))}
             </p>
           </div>
-          <span className={`flex size-10 shrink-0 items-center justify-center rounded-full ${stat.chip}`}>
+          <span
+            className={`flex size-10 shrink-0 items-center justify-center rounded-full ${stat.chip}`}
+          >
             <stat.icon className="size-5" />
           </span>
         </div>

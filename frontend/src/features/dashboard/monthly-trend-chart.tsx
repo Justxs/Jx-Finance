@@ -14,7 +14,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 
 const MONTH_LABELS = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
 ];
 
 export function MonthlyTrendChart() {
@@ -58,7 +69,9 @@ export function MonthlyTrendChart() {
           }}
         />
         <Legend
-          formatter={(value) => (value === "income" ? t("dashboard.monthIncome") : t("dashboard.monthExpense"))}
+          formatter={(value) =>
+            value === "income" ? t("dashboard.monthIncome") : t("dashboard.monthExpense")
+          }
         />
         <Bar dataKey="income" name="income" fill="var(--secondary)" radius={4} />
         <Bar dataKey="expense" name="expense" fill="var(--destructive)" radius={4} />

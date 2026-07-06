@@ -215,14 +215,18 @@ export function TransactionForm({
           isSplit ? (
             <div className="space-y-1.5">
               <Label>{t("transactions.category")}</Label>
-              <p className="pt-2 text-xs text-muted-foreground">{t("transactions.splitTransaction")}</p>
+              <p className="pt-2 text-xs text-muted-foreground">
+                {t("transactions.splitTransaction")}
+              </p>
             </div>
           ) : (
             <form.Field name="type">
               {(typeField) => (
                 <form.Field name="categoryId">
                   {(field) => {
-                    const typeCategories = categories.filter((c) => c.type === typeField.state.value);
+                    const typeCategories = categories.filter(
+                      (c) => c.type === typeField.state.value,
+                    );
                     return (
                       <div className="space-y-1.5">
                         <Label htmlFor="tx-category">{t("transactions.category")}</Label>

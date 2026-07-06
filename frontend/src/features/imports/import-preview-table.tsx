@@ -16,7 +16,13 @@ interface Props {
   confirmPending: boolean;
 }
 
-export function ImportPreviewTable({ rows, categories, onRowChange, onConfirm, confirmPending }: Readonly<Props>) {
+export function ImportPreviewTable({
+  rows,
+  categories,
+  onRowChange,
+  onConfirm,
+  confirmPending,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   if (rows.length === 0) {
@@ -52,12 +58,17 @@ export function ImportPreviewTable({ rows, categories, onRowChange, onConfirm, c
                   </td>
                   <td className="py-2 pr-3">{row.date}</td>
                   <td className="py-2 pr-3">{row.payee || row.description || "—"}</td>
-                  <td className={`py-2 pr-3 text-right tabular-nums ${row.type === "income" ? "text-secondary" : ""}`}>
+                  <td
+                    className={`py-2 pr-3 text-right tabular-nums ${row.type === "income" ? "text-secondary" : ""}`}
+                  >
                     {row.type === "income" ? "+" : "−"}
                     {row.amount}
                   </td>
                   <td className="py-2 pr-3">
-                    <Select value={row.categoryId} onChange={(e) => onRowChange(index, { categoryId: e.target.value })}>
+                    <Select
+                      value={row.categoryId}
+                      onChange={(e) => onRowChange(index, { categoryId: e.target.value })}
+                    >
                       <option value="">{t("transactions.uncategorized")}</option>
                       {rowCategories.map((category) => (
                         <option key={category.id} value={category.id}>

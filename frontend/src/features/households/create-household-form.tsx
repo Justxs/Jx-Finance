@@ -18,7 +18,11 @@ export function CreateHouseholdForm({ onCreated }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
-    name: z.string().trim().min(1, t("validation.required")).max(100, t("validation.maxLength", { max: 100 })),
+    name: z
+      .string()
+      .trim()
+      .min(1, t("validation.required"))
+      .max(100, t("validation.maxLength", { max: 100 })),
   });
 
   const createMutation = useCreateHouseholdEndpoint({ mutation: { onSettled: onCreated } });

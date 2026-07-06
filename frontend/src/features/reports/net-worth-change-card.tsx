@@ -18,7 +18,11 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
     .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
 
   if (items.length < 2) {
-    return <p className="px-6 py-8 text-sm text-muted-foreground">{t("reports.notEnoughNetWorthHistory")}</p>;
+    return (
+      <p className="px-6 py-8 text-sm text-muted-foreground">
+        {t("reports.notEnoughNetWorthHistory")}
+      </p>
+    );
   }
 
   const start = Number(items[0]!.netWorth ?? 0);
@@ -30,7 +34,9 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
     <div className="card flex items-start justify-between p-6">
       <div>
         <p className="text-sm font-medium text-muted-foreground">{t("reports.netWorthChange")}</p>
-        <p className={`mt-2 text-3xl font-semibold tabular-nums tracking-tight ${change >= 0 ? "text-secondary" : "text-destructive"}`}>
+        <p
+          className={`mt-2 text-3xl font-semibold tabular-nums tracking-tight ${change >= 0 ? "text-secondary" : "text-destructive"}`}
+        >
           {change >= 0 ? "+" : ""}
           {money.format(change)}
         </p>

@@ -4,7 +4,10 @@ function toIsoDate(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-export function presetRange(preset: ReportPreset, now = new Date()): { dateFrom: string; dateTo: string } {
+export function presetRange(
+  preset: ReportPreset,
+  now = new Date(),
+): { dateFrom: string; dateTo: string } {
   const year = now.getFullYear();
   const month = now.getMonth();
 

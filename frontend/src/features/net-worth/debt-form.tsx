@@ -29,7 +29,11 @@ export function DebtForm({ onCreated }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
-    name: z.string().trim().min(1, t("validation.required")).max(100, t("validation.maxLength", { max: 100 })),
+    name: z
+      .string()
+      .trim()
+      .min(1, t("validation.required"))
+      .max(100, t("validation.maxLength", { max: 100 })),
     type: z.enum(debtTypes),
     outstandingAmount: z.string().refine(isMoney, t("validation.money")),
     interestRate: z.string(),
@@ -145,7 +149,11 @@ export function DebtForm({ onCreated }: Readonly<Props>) {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit} className="md:mt-6">
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || !canSubmit}
+            className="md:mt-6"
+          >
             {t("netWorth.addDebt")}
           </Button>
         )}

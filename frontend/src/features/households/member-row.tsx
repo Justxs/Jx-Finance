@@ -13,7 +13,14 @@ interface Props {
   onSaved: () => void;
 }
 
-export function MemberRow({ householdId, member, isOwnerView, onRemove, removePending, onSaved }: Readonly<Props>) {
+export function MemberRow({
+  householdId,
+  member,
+  isOwnerView,
+  onRemove,
+  removePending,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   const roleMutation = useUpdateMemberRoleEndpoint({ mutation: { onSettled: onSaved } });

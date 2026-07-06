@@ -2,7 +2,12 @@ import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateRecurringBillEndpoint } from "@/api/generated";
-import type { AccountResponse, CategoryResponse, RecurringBillCadence, RecurringBillKind } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  CategoryResponse,
+  RecurringBillCadence,
+  RecurringBillKind,
+} from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -34,7 +39,11 @@ export function CreateRecurringBillForm({ accounts, categories, onCreated }: Rea
 
   const schema = z
     .object({
-      name: z.string().trim().min(1, t("validation.required")).max(100, t("validation.maxLength", { max: 100 })),
+      name: z
+        .string()
+        .trim()
+        .min(1, t("validation.required"))
+        .max(100, t("validation.maxLength", { max: 100 })),
       kind: z.enum(["fixed", "variable"]),
       amount: z.string(),
       categoryId: z.string(),
@@ -149,7 +158,9 @@ export function CreateRecurringBillForm({ accounts, categories, onCreated }: Rea
                   <FieldError message={field.state.meta.errors[0]?.message} />
                 </div>
               ) : (
-                <p className="pt-6 text-xs text-muted-foreground">{t("recurringBills.variableAmountHint")}</p>
+                <p className="pt-6 text-xs text-muted-foreground">
+                  {t("recurringBills.variableAmountHint")}
+                </p>
               )
             }
           </form.Field>
@@ -254,7 +265,11 @@ export function CreateRecurringBillForm({ accounts, categories, onCreated }: Rea
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={createMutation.isPending || !canSubmit} className="md:mt-6">
+          <Button
+            type="submit"
+            disabled={createMutation.isPending || !canSubmit}
+            className="md:mt-6"
+          >
             {t("recurringBills.add")}
           </Button>
         )}

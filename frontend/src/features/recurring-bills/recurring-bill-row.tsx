@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, RecurringBillResponse } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  CategoryResponse,
+  RecurringBillResponse,
+} from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
@@ -16,7 +20,14 @@ interface Props {
   onSaved: () => void;
 }
 
-export function RecurringBillRow({ bill, accounts, categories, onDelete, deletePending, onSaved }: Readonly<Props>) {
+export function RecurringBillRow({
+  bill,
+  accounts,
+  categories,
+  onDelete,
+  deletePending,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const date = useDate();
@@ -34,15 +45,18 @@ export function RecurringBillRow({ bill, accounts, categories, onDelete, deleteP
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-xs font-medium",
-                bill.isActive ? "bg-secondary/60 text-secondary-foreground" : "bg-muted text-muted-foreground",
+                bill.isActive
+                  ? "bg-secondary/60 text-secondary-foreground"
+                  : "bg-muted text-muted-foreground",
               )}
             >
               {bill.isActive ? t("recurringBills.active") : t("recurringBills.inactive")}
             </span>
           </div>
           <p className="text-xs text-muted-foreground">
-            {t(`recurringBills.kinds.${bill.kind}`)} · {t(`recurringBills.cadences.${bill.cadence}`)} ·{" "}
-            {t("recurringBills.nextDueDate")}: {date.format(new Date(bill.nextDueDate!))}
+            {t(`recurringBills.kinds.${bill.kind}`)} ·{" "}
+            {t(`recurringBills.cadences.${bill.cadence}`)} · {t("recurringBills.nextDueDate")}:{" "}
+            {date.format(new Date(bill.nextDueDate!))}
             {category ? ` · ${category.name}` : ""}
             {account ? ` · ${account.name}` : ""}
           </p>

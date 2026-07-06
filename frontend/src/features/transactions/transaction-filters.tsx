@@ -38,7 +38,9 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
 
       <Select
         value={search.type ?? ""}
-        onChange={(e) => setFilter({ type: (e.target.value || undefined) as "income" | "expense" | undefined })}
+        onChange={(e) =>
+          setFilter({ type: (e.target.value || undefined) as "income" | "expense" | undefined })
+        }
       >
         <option value="">{t("transactions.allTypes")}</option>
         <option value="expense">{t("transactions.expense")}</option>

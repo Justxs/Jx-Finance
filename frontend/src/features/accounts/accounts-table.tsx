@@ -84,7 +84,9 @@ export function AccountsTable({
                   <p className="font-medium">{account.name}</p>
                   {account.scope === "shared" ? (
                     <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-                      {t("sharing.sharedWith", { household: householdNames.get(account.householdId ?? "") ?? "" })}
+                      {t("sharing.sharedWith", {
+                        household: householdNames.get(account.householdId ?? "") ?? "",
+                      })}
                     </span>
                   ) : null}
                 </div>
@@ -94,7 +96,9 @@ export function AccountsTable({
               </div>
             </div>
           </td>
-          <td className="px-6 py-3 font-mono text-xs text-muted-foreground">{account.iban || "—"}</td>
+          <td className="px-6 py-3 font-mono text-xs text-muted-foreground">
+            {account.iban || "—"}
+          </td>
           <td className="px-6 py-3">
             <span className="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
               {t(`accounts.types.${account.type}`)}

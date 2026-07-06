@@ -11,7 +11,12 @@ interface Props {
   exportPdfUrl: string;
 }
 
-export function TransactionsToolbar({ accounts, categories, exportUrl, exportPdfUrl }: Readonly<Props>) {
+export function TransactionsToolbar({
+  accounts,
+  categories,
+  exportUrl,
+  exportPdfUrl,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (

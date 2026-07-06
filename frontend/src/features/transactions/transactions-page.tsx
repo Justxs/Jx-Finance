@@ -39,7 +39,15 @@ export function TransactionsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const { page, search: searchText, accountId, categoryId, type, dateFrom, dateTo } = useSearch({
+  const {
+    page,
+    search: searchText,
+    accountId,
+    categoryId,
+    type,
+    dateFrom,
+    dateTo,
+  } = useSearch({
     from: "/transactions",
   });
   const navigate = useNavigate({ from: "/transactions" });
@@ -162,8 +170,22 @@ export function TransactionsPage() {
       <TransactionsToolbar
         accounts={accountList}
         categories={categoryList}
-        exportUrl={buildExportUrl("/api/transactions/export", { search: searchText, accountId, categoryId, type, dateFrom, dateTo })}
-        exportPdfUrl={buildExportUrl("/api/transactions/export/pdf", { search: searchText, accountId, categoryId, type, dateFrom, dateTo })}
+        exportUrl={buildExportUrl("/api/transactions/export", {
+          search: searchText,
+          accountId,
+          categoryId,
+          type,
+          dateFrom,
+          dateTo,
+        })}
+        exportPdfUrl={buildExportUrl("/api/transactions/export/pdf", {
+          search: searchText,
+          accountId,
+          categoryId,
+          type,
+          dateFrom,
+          dateTo,
+        })}
       />
 
       <TransactionsTable

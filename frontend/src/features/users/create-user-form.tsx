@@ -36,7 +36,10 @@ export function CreateUserForm({ onCreated }: Readonly<Props>) {
       .min(1, t("validation.required"))
       .max(100, t("validation.maxLength", { max: 100 })),
     role: z.enum(roles),
-    password: z.string().min(8, t("validation.minLength", { min: 8 })).max(100),
+    password: z
+      .string()
+      .min(8, t("validation.minLength", { min: 8 }))
+      .max(100),
   });
 
   const createMutation = useCreateUserEndpoint({ mutation: { onSettled: onCreated } });

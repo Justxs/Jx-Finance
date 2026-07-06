@@ -1,7 +1,11 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useGetAccountsEndpoint, useGetCategoriesEndpoint, useGetTransactionsEndpoint } from "@/api/generated";
+import {
+  useGetAccountsEndpoint,
+  useGetCategoriesEndpoint,
+  useGetTransactionsEndpoint,
+} from "@/api/generated";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";

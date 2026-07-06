@@ -13,7 +13,13 @@ interface Props {
   onPageChange: (page: number) => void;
 }
 
-export function TransactionsTable({ table, isPending, page, pageCount, onPageChange }: Readonly<Props>) {
+export function TransactionsTable({
+  table,
+  isPending,
+  page,
+  pageCount,
+  onPageChange,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const columnCount = table.getAllColumns().length;
 
@@ -63,7 +69,9 @@ export function TransactionsTable({ table, isPending, page, pageCount, onPageCha
                     header.column.id === "amount" ? "text-right" : ""
                   }`}
                 >
-                  {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(header.column.columnDef.header, header.getContext())}
                 </th>
               ))}
             </tr>
@@ -73,12 +81,24 @@ export function TransactionsTable({ table, isPending, page, pageCount, onPageCha
       </table>
 
       <div className="flex items-center justify-between border-t px-6 py-3 text-sm">
-        <span className="text-muted-foreground">{t("transactions.pageInfo", { page, pages: pageCount })}</span>
+        <span className="text-muted-foreground">
+          {t("transactions.pageInfo", { page, pages: pageCount })}
+        </span>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => onPageChange(page - 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => onPageChange(page - 1)}
+          >
             {t("actions.previous")}
           </Button>
-          <Button variant="outline" size="sm" disabled={page >= pageCount} onClick={() => onPageChange(page + 1)}>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= pageCount}
+            onClick={() => onPageChange(page + 1)}
+          >
             {t("actions.next")}
           </Button>
         </div>
