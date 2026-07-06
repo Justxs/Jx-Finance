@@ -27,12 +27,12 @@ import { useTransactionColumns } from "./use-transaction-columns";
 
 const PAGE_SIZE = 20;
 
-function buildExportUrl(params: Record<string, string | number | undefined>) {
+function buildExportUrl(path: string, params: Record<string, string | number | undefined>) {
   const search = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (value) search.set(key, String(value));
   }
-  return `/api/transactions/export?${search.toString()}`;
+  return `${path}?${search.toString()}`;
 }
 
 export function TransactionsPage() {
@@ -162,7 +162,8 @@ export function TransactionsPage() {
       <TransactionsToolbar
         accounts={accountList}
         categories={categoryList}
-        exportUrl={buildExportUrl({ search: searchText, accountId, categoryId, type, dateFrom, dateTo })}
+        exportUrl={buildExportUrl("/api/transactions/export", { search: searchText, accountId, categoryId, type, dateFrom, dateTo })}
+        exportPdfUrl={buildExportUrl("/api/transactions/export/pdf", { search: searchText, accountId, categoryId, type, dateFrom, dateTo })}
       />
 
       <TransactionsTable

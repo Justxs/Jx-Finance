@@ -11,6 +11,7 @@
     "netWorth": "Grynoji verte",
     "recurringBills": "Periodinės sąskaitos",
     "households": "Namų ūkiai",
+    "reports": "Ataskaitos",
     "users": "Naudotojai",
     "collapse": "Suskleisti šoninę juostą",
     "expand": "Išskleisti šoninę juostą"
@@ -105,6 +106,7 @@
     "clearFilters": "Išjungti filtrus",
     "filters": "Filtrai",
     "exportCsv": "Eksportuoti CSV",
+    "exportPdf": "Eksportuoti PDF",
     "split": "Skaidyta",
     "splitTransaction": "Skaidyti į kategorijas",
     "addLine": "Pridėti eilutę",
@@ -287,6 +289,27 @@
     "household": "Namų ūkis",
     "selectHousehold": "Pasirinkite namų ūkį",
     "sharedWith": "Bendrinama · {{household}}"
+  },
+  "reports": {
+    "title": "Ataskaitos",
+    "subtitle": "Pajamos, išlaidos ir kategorijų suskirstymas bet kokiam laikotarpiui.",
+    "range": "Laikotarpis",
+    "from": "Nuo",
+    "to": "Iki",
+    "presets": {
+      "thisMonth": "Šis mėnuo",
+      "lastMonth": "Praėjęs mėnuo",
+      "thisYear": "Šie metai",
+      "lastYear": "Praėję metai",
+      "custom": "Pasirinktinai"
+    },
+    "totalIncome": "Pajamos iš viso",
+    "totalExpense": "Išlaidos iš viso",
+    "net": "Balansas",
+    "trend": "Tendencija",
+    "expenseByCategory": "Išlaidos pagal kategoriją",
+    "netWorthChange": "Grynosios vertės pokytis",
+    "notEnoughNetWorthHistory": "Šiam laikotarpiui grynosios vertės istorijos kol kas nepakanka."
   },
   "imports": {
     "title": "Importuoti Swedbank CSV",
