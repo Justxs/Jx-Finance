@@ -2,6 +2,7 @@ import type { RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { FileInput } from "@/components/ui/file-input";
 import { Select } from "@/components/ui/select";
 
 interface Props {
@@ -47,12 +48,11 @@ export function ImportUploadForm({
           <label className="text-sm font-medium" htmlFor="import-file">
             {t("imports.file")}
           </label>
-          <input
+          <FileInput
             id="import-file"
             ref={fileInputRef}
-            type="file"
             accept=".csv,text/csv"
-            className="block w-full text-sm text-muted-foreground"
+            placeholder={t("imports.chooseFile")}
           />
         </div>
       </div>
