@@ -17,9 +17,23 @@ import {
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeEndpoint } from "@/api/generated";
+import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
+
+function initials(name: string | undefined) {
+  const trimmed = name?.trim();
+  if (!trimmed) {
+    return "?";
+  }
+
+  return trimmed
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("");
+}
 
 const navItems = [
   { to: "/", key: "nav.dashboard", icon: LayoutDashboard },
@@ -81,18 +95,60 @@ export function AppSidebar() {
         ))}
       </nav>
 
-      <div className="border-t px-3 py-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className={cn("size-8", !collapsed && "ml-auto flex")}
-          onClick={toggleSidebar}
-          aria-label={collapsed ? t("nav.expand") : t("nav.collapse")}
-          title={collapsed ? t("nav.expand") : t("nav.collapse")}
-        >
-          {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
-        </Button>
+      <div className="border-t p-3">
+        {collapsed ? (
+          <div className="flex flex-col items-center gap-2">
+            <Link
+              to="/profile"
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+              title={me.data?.displayName ?? undefined}
+            >
+              {initials(me.data?.displayName)}
+            </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={toggleSidebar}
+              aria-label={t("nav.expand")}
+              title={t("nav.expand")}
+            >
+              <PanelLeftOpen />
+            </Button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1">
+            <Link
+              to="/profile"
+              className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent"
+            >
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+                {initials(me.data?.displayName)}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium">
+                  {me.data?.displayName || t("nav.profile")}
+                </span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {me.data?.email}
+                </span>
+              </span>
+            </Link>
+            <LogoutButton />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              onClick={toggleSidebar}
+              aria-label={t("nav.collapse")}
+              title={t("nav.collapse")}
+            >
+              <PanelLeftClose />
+            </Button>
+          </div>
+        )}
       </div>
     </aside>
   );

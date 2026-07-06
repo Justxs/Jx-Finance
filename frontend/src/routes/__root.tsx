@@ -1,11 +1,8 @@
-import { Link, Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
-import { UserCog } from "lucide-react";
+import { Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
 import { AppSidebar } from "@/components/app-sidebar";
 import { LanguageToggle } from "@/components/language-toggle";
-import { LogoutButton } from "@/components/logout-button";
 import { NotificationBell } from "@/components/notification-bell";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { buttonVariants } from "@/components/ui/button";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 
 const UNAUTHENTICATED_PATHS = new Set(["/login", "/setup"]);
@@ -59,24 +56,11 @@ function RootLayout() {
           <NotificationBell />
           <LanguageToggle />
           <ThemeToggle />
-          <Link
-            to="/profile"
-            className={buttonVariants({ variant: "outline", size: "icon" })}
-            aria-label="Profile"
-            title="Profile"
-          >
-            <UserCog />
-          </Link>
-          <LogoutButton />
         </header>
 
         <main className="mx-auto w-full max-w-5xl flex-1 px-8 py-10">
           <Outlet />
         </main>
-
-        <footer className="mx-auto w-full max-w-5xl px-8 pb-8 text-xs uppercase tracking-[0.28em] text-muted-foreground">
-          Local-first, self-hosted.
-        </footer>
       </div>
     </div>
   );
