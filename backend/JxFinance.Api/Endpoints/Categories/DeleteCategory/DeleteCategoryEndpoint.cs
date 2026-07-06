@@ -8,7 +8,6 @@ public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : E
     public override void Configure()
     {
         Delete("/api/categories/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

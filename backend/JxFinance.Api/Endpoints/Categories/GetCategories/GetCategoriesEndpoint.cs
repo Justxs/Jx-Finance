@@ -8,7 +8,6 @@ public sealed class GetCategoriesEndpoint(ICategoryService categoryService)
     public override void Configure()
     {
         Get("/api/categories");
-        AllowAnonymous();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

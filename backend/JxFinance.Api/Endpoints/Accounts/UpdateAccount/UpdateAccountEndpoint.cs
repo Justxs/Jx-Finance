@@ -9,7 +9,6 @@ public sealed class UpdateAccountEndpoint(IAccountService accountService)
     public override void Configure()
     {
         Put("/api/accounts/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 

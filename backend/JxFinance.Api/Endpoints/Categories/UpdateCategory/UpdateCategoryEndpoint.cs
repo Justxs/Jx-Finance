@@ -9,7 +9,6 @@ public sealed class UpdateCategoryEndpoint(ICategoryService categoryService)
     public override void Configure()
     {
         Put("/api/categories/{id}");
-        AllowAnonymous();
         Description(d => d.ProducesProblemDetails(404));
     }
 
