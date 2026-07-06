@@ -4,7 +4,7 @@
  * Jx Finance API
  * OpenAPI spec version: v1
  */
-import type { ErrorResponseErrors } from "./errorResponseErrors";
+import type { ErrorResponseErrors } from './errorResponseErrors';
 
 /**
  * the dto used to send an error response to the client

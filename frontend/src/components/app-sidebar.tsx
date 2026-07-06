@@ -1,14 +1,21 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
+  CalendarClock,
+  House,
   LayoutDashboard,
   PanelLeftClose,
   PanelLeftOpen,
+  PiggyBank,
+  Scale,
   Tags,
+  Target,
+  Users,
   Wallet,
   WalletCards,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useMeEndpoint } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
@@ -18,11 +25,22 @@ const navItems = [
   { to: "/transactions", key: "nav.transactions", icon: ArrowLeftRight },
   { to: "/accounts", key: "nav.accounts", icon: WalletCards },
   { to: "/categories", key: "nav.categories", icon: Tags },
+  { to: "/budgets", key: "nav.budgets", icon: PiggyBank },
+  { to: "/goals", key: "nav.goals", icon: Target },
+  { to: "/net-worth", key: "nav.netWorth", icon: Scale },
+  { to: "/recurring-bills", key: "nav.recurringBills", icon: CalendarClock },
+  { to: "/households", key: "nav.households", icon: House },
 ] as const;
 
 export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
+  const me = useMeEndpoint();
+
+  const visibleNavItems =
+    me.data?.role === "Admin"
+      ? [...navItems, { to: "/users" as const, key: "nav.users", icon: Users }]
+      : navItems;
 
   return (
     <aside
@@ -45,7 +63,7 @@ export function AppSidebar() {
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 px-3">
-        {navItems.map((item) => (
+        {visibleNavItems.map((item) => (
           <Link
             key={item.to}
             to={item.to}

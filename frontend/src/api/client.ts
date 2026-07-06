@@ -11,7 +11,7 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string> | undefined),
   };
-  if (options?.body !== undefined && options.body !== null) {
+  if (options?.body !== undefined && options.body !== null && !(options.body instanceof FormData)) {
     headers["Content-Type"] ??= "application/json";
   }
 

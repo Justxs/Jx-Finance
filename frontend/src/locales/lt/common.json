@@ -6,6 +6,12 @@
     "transactions": "Operacijos",
     "accounts": "Sąskaitos",
     "categories": "Kategorijos",
+    "budgets": "Biudžetai",
+    "goals": "Tikslai",
+    "netWorth": "Grynoji verte",
+    "recurringBills": "Periodinės sąskaitos",
+    "households": "Namų ūkiai",
+    "users": "Naudotojai",
     "collapse": "Suskleisti šoninę juostą",
     "expand": "Išskleisti šoninę juostą"
   },
@@ -26,7 +32,11 @@
     "monthIncome": "Šio mėnesio pajamos",
     "monthExpense": "Šio mėnesio išlaidos",
     "recent": "Paskutinės operacijos",
-    "empty": "Operacijų dar nėra. Pridėkite pirmąją Operacijų puslapyje."
+    "empty": "Operacijų dar nėra. Pridėkite pirmąją Operacijų puslapyje.",
+    "spendingByCategory": "Išlaidos pagal kategoriją (šį mėnesį)",
+    "monthlyTrend": "Pajamos ir išlaidos",
+    "other": "Kita",
+    "noSpending": "Šį mėnesį išlaidų nėra."
   },
   "accounts": {
     "title": "Sąskaitos",
@@ -49,6 +59,14 @@
       "cash": "Grynieji",
       "other": "Kita"
     }
+  },
+  "transfers": {
+    "title": "Pervesti pinigus",
+    "from": "Iš",
+    "to": "Į",
+    "add": "Pervesti",
+    "empty": "Pervedimų dar nėra.",
+    "sameAccountError": "Šaltinio ir tikslo sąskaitos turi būti skirtingos."
   },
   "categories": {
     "title": "Kategorijos",
@@ -79,10 +97,206 @@
     "descriptionPlaceholder": "pvz. Lidl",
     "empty": "Operacijų dar nėra.",
     "pageInfo": "Puslapis {{page}} iš {{pages}}",
-    "needAccount": "Pirmiausia sukurkite sąskaitą."
+    "needAccount": "Pirmiausia sukurkite sąskaitą.",
+    "searchPlaceholder": "Ieškoti aprašyme...",
+    "allTypes": "Visi tipai",
+    "allAccounts": "Visos sąskaitos",
+    "allCategories": "Visos kategorijos",
+    "clearFilters": "Išjungti filtrus",
+    "filters": "Filtrai",
+    "exportCsv": "Eksportuoti CSV",
+    "split": "Skaidyta",
+    "splitTransaction": "Skaidyti į kategorijas",
+    "addLine": "Pridėti eilutę",
+    "lineAmount": "Suma",
+    "lineCategory": "Kategorija",
+    "lineDescription": "Žymė",
+    "removeLine": "Pašalinti eilutę",
+    "splitTotalMismatch": "Eilučių suma {{linesTotal}}, bet operacija yra {{total}}."
   },
   "theme": {
     "toggle": "Perjungti temą"
+  },
+  "auth": {
+    "signIn": "Prisijungti",
+    "signInSubtitle": "Prisijunkite prie savo Jx Finance paskyros.",
+    "email": "El. paštas",
+    "password": "Slaptažodis",
+    "rememberMe": "Prisiminti mane šiame įrenginyje",
+    "logout": "Atsijungti",
+    "setupTitle": "Sukurti administratoriaus paskyrą",
+    "setupSubtitle": "Vienkartinis šios Jx Finance instaliacijos nustatymas.",
+    "displayName": "Rodomas vardas",
+    "displayNamePlaceholder": "pvz. Justas",
+    "createAdmin": "Sukurti administratoriaus paskyrą",
+    "setupComplete": "Administratoriaus paskyra sukurta. Prisijunkite, kad tęstumėte.",
+    "twoFactorCode": "Autentifikavimo kodas",
+    "twoFactorCodeHint": "Įveskite 6 skaitmenų kodą iš autentifikavimo programėlės arba atsarginį kodą.",
+    "verifyCode": "Patvirtinti kodą"
+  },
+  "users": {
+    "title": "Naudotojai",
+    "subtitle": "Kas gali prisijungti prie šios instaliacijos.",
+    "add": "Sukurti naudotoją",
+    "email": "El. paštas",
+    "displayName": "Rodomas vardas",
+    "role": "Rolė",
+    "password": "Slaptažodis",
+    "status": "Būsena",
+    "active": "Aktyvus",
+    "deactivated": "Deaktyvuotas",
+    "roles": {
+      "Admin": "Administratorius",
+      "Member": "Narys"
+    },
+    "deactivate": "Deaktyvuoti",
+    "created": "Naudotojas sukurtas",
+    "deactivated_toast": "Naudotojas deaktyvuotas",
+    "roleUpdated": "Rolė atnaujinta",
+    "empty": "Kitų naudotojų dar nėra."
+  },
+  "profile": {
+    "title": "Jūsų profilis",
+    "subtitle": "Atnaujinkite rodomą vardą arba slaptažodį.",
+    "currentPassword": "Dabartinis slaptažodis",
+    "newPassword": "Naujas slaptažodis (nebūtina)",
+    "save": "Išsaugoti pakeitimus",
+    "updated": "Profilis atnaujintas",
+    "twoFactorTitle": "Dvigubas tapatybės patvirtinimas",
+    "twoFactorDisabledSubtitle": "Pridėkite autentifikavimo programėlę papildomam saugumui prisijungiant.",
+    "twoFactorEnabledSubtitle": "Dvigubas tapatybės patvirtinimas šiuo metu yra įjungtas jūsų paskyroje.",
+    "enableTwoFactor": "Įjungti dvigubą tapatybės patvirtinimą",
+    "disableTwoFactor": "Išjungti dvigubą tapatybės patvirtinimą",
+    "twoFactorDisabled": "Dvigubas tapatybės patvirtinimas išjungtas",
+    "scanQrSubtitle": "Nuskaitykite šį QR kodą autentifikavimo programėle arba įveskite raktą rankiniu būdu.",
+    "enterCode": "Įveskite 6 skaitmenų kodą",
+    "confirmAndEnable": "Patvirtinti ir įjungti",
+    "recoveryCodesTitle": "Išsaugokite atsarginius kodus",
+    "recoveryCodesSubtitle": "Kiekvieną kodą galima naudoti vieną kartą, jei prarastumėte prieigą prie autentifikavimo programėlės. Saugokite juos saugioje vietoje — jie nebus rodomi pakartotinai.",
+    "recoveryCodesDone": "Išsaugojau šiuos kodus"
+  },
+  "budgets": {
+    "title": "Biudžetai",
+    "subtitle": "Mėnesinės išlaidų ribos pagal kategoriją.",
+    "add": "Pridėti biudžetą",
+    "category": "Kategorija",
+    "limit": "Mėnesinė riba",
+    "empty": "Biudžetų dar nėra.",
+    "needCategory": "Pirmiausia sukurkite išlaidų kategoriją, kad galėtumėte nustatyti biudžetą."
+  },
+  "goals": {
+    "title": "Tikslai",
+    "subtitle": "Taupymo tikslai, į kuriuos siekti.",
+    "add": "Pridėti tikslą",
+    "name": "Pavadinimas",
+    "namePlaceholder": "pvz. Atsargos fondas",
+    "targetAmount": "Tikslinė suma",
+    "currentAmount": "Dabartinė suma",
+    "targetDate": "Tikslinė data",
+    "updateProgress": "Atnaujinti progresą",
+    "empty": "Tikslų dar nėra."
+  },
+  "netWorth": {
+    "title": "Grynoji vertė",
+    "subtitle": "Kas priklauso jums, atėmus tai, ką skolinate.",
+    "accounts": "Sąskaitos",
+    "assets": "Turtas",
+    "debts": "Skolos",
+    "netWorth": "Grynoji vertė",
+    "trend": "Tendencija",
+    "notEnoughHistory": "Peržiūrėkite po kelių fiksacijų, kad pamatytumėte tendenciją.",
+    "name": "Pavadinimas",
+    "type": "Tipas",
+    "currentValue": "Dabartinė vertė",
+    "outstandingAmount": "Likusi suma",
+    "interestRate": "Palūkanų norma %",
+    "asOf": "Data",
+    "addAsset": "Pridėti turtą",
+    "addDebt": "Pridėti skolą",
+    "noAssets": "Turto dar nėra.",
+    "noDebts": "Skolų dar nėra.",
+    "assetTypes": {
+      "property": "Nekilnojamasis turtas",
+      "vehicle": "Transporto priemonė",
+      "investment": "Investicija",
+      "valuable": "Vertingas daiktas",
+      "other": "Kita"
+    },
+    "debtTypes": {
+      "mortgage": "Hipoteka",
+      "loan": "Paskola",
+      "other": "Kita"
+    }
+  },
+  "recurringBills": {
+    "title": "Periodinės sąskaitos",
+    "subtitle": "Pasikartojančios sąskaitos, kad nieko nepamirštumėte.",
+    "add": "Pridėti periodinę sąskaitą",
+    "name": "Pavadinimas",
+    "namePlaceholder": "pvz. Nuoma",
+    "kind": "Rūšis",
+    "kinds": {
+      "fixed": "Fiksuota suma",
+      "variable": "Kintama suma"
+    },
+    "amount": "Suma",
+    "variableAmountHint": "Kintamos sumos sąskaitoms suma iš anksto nereikalinga — įvesite ją patvirtindami.",
+    "category": "Kategorija",
+    "noCategory": "Be kategorijos",
+    "account": "Sąskaita",
+    "noAccount": "Nėra numatytosios sąskaitos",
+    "cadence": "Pasikartoja",
+    "cadences": {
+      "weekly": "Kas savaitę",
+      "monthly": "Kas mėnesį",
+      "quarterly": "Kas ketvirtį",
+      "yearly": "Kas metus"
+    },
+    "nextDueDate": "Kitas mokėjimo terminas",
+    "remindDaysBefore": "Priminti dienų iš anksto",
+    "active": "Aktyvi",
+    "inactive": "Neaktyvi",
+    "confirm": "Patvirtinti",
+    "confirmTitle": "Patvirtinti mokėjimą",
+    "confirmAccountRequired": "Pasirinkite sąskaitą, iš kurios buvo sumokėta.",
+    "empty": "Periodinių sąskaitų dar nėra.",
+    "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti periodines sąskaitas."
+  },
+  "notifications": {
+    "title": "Pranešimai",
+    "empty": "Naujų pranešimų nėra.",
+    "markAllRead": "Pažymėti visus kaip skaitytus"
+  },
+  "households": {
+    "title": "Namų ūkiai",
+    "subtitle": "Bendrinkite sąskaitas ir kategorijas su žmonėmis, kuriais pasitikite.",
+    "add": "Sukurti namų ūkį",
+    "namePlaceholder": "pvz. Mūsų namai",
+    "empty": "Kol kas nesate priskirti nė vienam namų ūkiui.",
+    "addMember": "Pridėti",
+    "memberEmailPlaceholder": "Nario el. paštas",
+    "roles": {
+      "owner": "Savininkas",
+      "member": "Narys"
+    }
+  },
+  "sharing": {
+    "scope": "Matomumas",
+    "personal": "Asmeninė",
+    "shared": "Bendrinama",
+    "household": "Namų ūkis",
+    "selectHousehold": "Pasirinkite namų ūkį",
+    "sharedWith": "Bendrinama · {{household}}"
+  },
+  "imports": {
+    "title": "Importuoti Swedbank CSV",
+    "file": "CSV failas",
+    "preview": "Peržiūra",
+    "confirm": "Patvirtinti importą",
+    "confirmed": "Importuota {{imported}} operacijų (praleista {{skipped}} dublikatų)",
+    "noRows": "Šiame faile nerasta importuojamų eilučių.",
+    "duplicate": "Jau importuota",
+    "looksLikeTransfer": "Panašu į pervedimą"
   },
   "status": {
     "label": "API būklė",
@@ -98,6 +312,8 @@
     "money": "Įveskite teisingą sumą, pvz. 12.34.",
     "positiveMoney": "Įveskite sumą, didesnę už 0, pvz. 12.34.",
     "iban": "Įveskite teisingą IBAN, pvz. LT12 1000 0111 0100 1000.",
-    "maxLength": "Turi būti ne daugiau nei {{max}} simbolių."
+    "maxLength": "Turi būti ne daugiau nei {{max}} simbolių.",
+    "email": "Įveskite teisingą el. pašto adresą.",
+    "minLength": "Turi būti ne mažiau nei {{min}} simbolių."
   }
 }
