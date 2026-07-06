@@ -13,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { isPositiveMoney } from "@/lib/validation";
+import { SplitLinesEditor } from "./split-lines-editor";
+
+export interface TransactionLineFormValues {
+  categoryId: string | null;
+  amount: string;
+  description: string | null;
+}
 
 export interface TransactionFormValues {
   accountId: string;
@@ -21,15 +28,24 @@ export interface TransactionFormValues {
   amount: string;
   date: string;
   description: string | null;
+  lines: TransactionLineFormValues[] | null;
 }
 
-interface FormValues {
+export interface LineFormValue {
+  categoryId: string;
+  amount: string;
+  description: string;
+}
+
+export interface FormValues {
   type: FlowType;
   accountId: string;
   categoryId: string;
   amount: string;
   date: string;
   description: string;
+  isSplit: boolean;
+  lines: LineFormValue[];
 }
 
 interface Props {
@@ -45,6 +61,10 @@ export function todayIsoDate() {
   return new Date().toLocaleDateString("en-CA");
 }
 
+export function emptyLine(): LineFormValue {
+  return { categoryId: "", amount: "", description: "" };
+}
+
 export function TransactionForm({
   accounts,
   categories,
@@ -55,33 +75,80 @@ export function TransactionForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const schema = z.object({
-    type: z.enum(["income", "expense"]),
-    accountId: z.string().min(1, t("validation.required")),
-    categoryId: z.string(),
-    amount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
-    date: z.string().min(1, t("validation.required")),
-    description: z.string(),
-  });
+  const schema = z
+    .object({
+      type: z.enum(["income", "expense"]),
+      accountId: z.string().min(1, t("validation.required")),
+      categoryId: z.string(),
+      amount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+      date: z.string().min(1, t("validation.required")),
+      description: z.string(),
+      isSplit: z.boolean(),
+      lines: z.array(
+        z.object({ categoryId: z.string(), amount: z.string(), description: z.string() }),
+      ),
+    })
+    .superRefine((value, ctx) => {
+      if (!value.isSplit) {
+        return;
+      }
+
+      if (value.lines.length === 0 || !value.lines.every((line) => isPositiveMoney(line.amount))) {
+        ctx.addIssue({ code: "custom", message: t("validation.positiveMoney"), path: ["lines"] });
+        return;
+      }
+
+      if (isPositiveMoney(value.amount)) {
+        const sum = value.lines.reduce((total, line) => total + Number(line.amount), 0);
+        const total = Number(value.amount);
+        if (Math.round((sum - total) * 100) !== 0) {
+          ctx.addIssue({
+            code: "custom",
+            message: t("transactions.splitTotalMismatch", {
+              linesTotal: sum.toFixed(2),
+              total: value.amount,
+            }),
+            path: ["lines"],
+          });
+        }
+      }
+    });
+
+  const defaultValues: FormValues = {
+    type: initial?.type ?? "expense",
+    accountId: initial?.accountId ?? accounts[0]?.id ?? "",
+    categoryId: initial?.categoryId ?? "",
+    amount: initial?.amount ?? "",
+    date: initial?.date ?? todayIsoDate(),
+    description: initial?.description ?? "",
+    isSplit: initial?.isSplit ?? false,
+    lines: initial?.lines?.length
+      ? initial.lines.map((line) => ({
+          categoryId: line.categoryId ?? "",
+          amount: line.amount ?? "",
+          description: line.description ?? "",
+        }))
+      : [],
+  };
 
   const form = useForm({
-    defaultValues: {
-      type: initial?.type ?? "expense",
-      accountId: initial?.accountId ?? accounts[0]?.id ?? "",
-      categoryId: initial?.categoryId ?? "",
-      amount: initial?.amount ?? "",
-      date: initial?.date ?? todayIsoDate(),
-      description: initial?.description ?? "",
-    } satisfies FormValues,
+    defaultValues,
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
       onSubmit({
         accountId: value.accountId,
-        categoryId: value.categoryId || null,
+        categoryId: value.isSplit ? null : value.categoryId || null,
         type: value.type,
         amount: value.amount,
         date: value.date,
         description: value.description.trim() || null,
+        lines: value.isSplit
+          ? value.lines.map((line) => ({
+              categoryId: line.categoryId || null,
+              amount: line.amount,
+              description: line.description.trim() || null,
+            }))
+          : null,
       });
       if (!initial) {
         form.reset();
@@ -143,33 +210,44 @@ export function TransactionForm({
         )}
       </form.Field>
 
-      <form.Field name="type">
-        {(typeField) => (
-          <form.Field name="categoryId">
-            {(field) => {
-              const typeCategories = categories.filter((c) => c.type === typeField.state.value);
-              return (
-                <div className="space-y-1.5">
-                  <Label htmlFor="tx-category">{t("transactions.category")}</Label>
-                  <Select
-                    id="tx-category"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  >
-                    <option value="">{t("transactions.uncategorized")}</option>
-                    {typeCategories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-              );
-            }}
-          </form.Field>
-        )}
-      </form.Field>
+      <form.Subscribe selector={(state) => state.values.isSplit}>
+        {(isSplit) =>
+          isSplit ? (
+            <div className="space-y-1.5">
+              <Label>{t("transactions.category")}</Label>
+              <p className="pt-2 text-xs text-muted-foreground">{t("transactions.splitTransaction")}</p>
+            </div>
+          ) : (
+            <form.Field name="type">
+              {(typeField) => (
+                <form.Field name="categoryId">
+                  {(field) => {
+                    const typeCategories = categories.filter((c) => c.type === typeField.state.value);
+                    return (
+                      <div className="space-y-1.5">
+                        <Label htmlFor="tx-category">{t("transactions.category")}</Label>
+                        <Select
+                          id="tx-category"
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onChange={(e) => field.handleChange(e.target.value)}
+                        >
+                          <option value="">{t("transactions.uncategorized")}</option>
+                          {typeCategories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </div>
+                    );
+                  }}
+                </form.Field>
+              )}
+            </form.Field>
+          )
+        }
+      </form.Subscribe>
 
       <form.Field name="amount">
         {(field) => (
@@ -235,6 +313,30 @@ export function TransactionForm({
           </div>
         )}
       </form.Field>
+
+      <form.Field name="isSplit">
+        {(splitField) => (
+          <div className="md:col-span-6">
+            <label className="flex items-center gap-2 text-sm text-muted-foreground">
+              <input
+                type="checkbox"
+                className="size-4 rounded border-input accent-primary"
+                checked={splitField.state.value}
+                onChange={(e) => {
+                  const next = e.target.checked;
+                  splitField.handleChange(next);
+                  if (next && form.getFieldValue("lines").length === 0) {
+                    form.setFieldValue("lines", [emptyLine()]);
+                  }
+                }}
+              />
+              {t("transactions.splitTransaction")}
+            </label>
+          </div>
+        )}
+      </form.Field>
+
+      <SplitLinesEditor form={form} categories={categories} />
     </form>
   );
 }
