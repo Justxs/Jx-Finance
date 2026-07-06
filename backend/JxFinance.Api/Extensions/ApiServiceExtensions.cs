@@ -15,6 +15,7 @@ using JxFinance.Endpoints.NetWorth;
 using JxFinance.Endpoints.Notifications;
 using JxFinance.Endpoints.Ping;
 using JxFinance.Endpoints.RecurringBills;
+using JxFinance.Endpoints.Reports;
 using JxFinance.Endpoints.Transactions;
 using JxFinance.Endpoints.Transfers;
 using JxFinance.Endpoints.Users;
@@ -72,6 +73,7 @@ public static class ApiServiceExtensions
         builder.Services.AddScoped<ITransactionService, TransactionService>();
         builder.Services.AddScoped<ITransferService, TransferService>();
         builder.Services.AddScoped<IDashboardService, DashboardService>();
+        builder.Services.AddScoped<IReportService, ReportService>();
         builder.Services.AddScoped<IBudgetService, BudgetService>();
         builder.Services.AddScoped<IGoalService, GoalService>();
         builder.Services.AddScoped<IHouseholdService, HouseholdService>();

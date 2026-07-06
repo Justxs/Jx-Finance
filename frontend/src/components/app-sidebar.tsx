@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   CalendarClock,
+  FileBarChart,
   House,
   LayoutDashboard,
   PanelLeftClose,
@@ -30,6 +31,7 @@ const navItems = [
   { to: "/net-worth", key: "nav.netWorth", icon: Scale },
   { to: "/recurring-bills", key: "nav.recurringBills", icon: CalendarClock },
   { to: "/households", key: "nav.households", icon: House },
+  { to: "/reports", key: "nav.reports", icon: FileBarChart },
 ] as const;
 
 export function AppSidebar() {

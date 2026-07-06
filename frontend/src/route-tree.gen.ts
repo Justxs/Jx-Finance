@@ -10,6 +10,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as RecurringBillsRouteImport } from './routes/recurring-bills'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as NetWorthRouteImport } from './routes/net-worth'
@@ -34,6 +35,11 @@ const TransactionsRoute = TransactionsRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecurringBillsRoute = RecurringBillsRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
+  '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
+  '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
+  '/reports': typeof ReportsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -146,6 +155,7 @@ export interface FileRouteTypes {
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
+    | '/reports'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -161,6 +171,7 @@ export interface FileRouteTypes {
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
+    | '/reports'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -176,6 +187,7 @@ export interface FileRouteTypes {
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
+    | '/reports'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -192,6 +204,7 @@ export interface RootRouteChildren {
   NetWorthRoute: typeof NetWorthRoute
   ProfileRoute: typeof ProfileRoute
   RecurringBillsRoute: typeof RecurringBillsRoute
+  ReportsRoute: typeof ReportsRoute
   SetupRoute: typeof SetupRoute
   TransactionsRoute: typeof TransactionsRoute
   UsersRoute: typeof UsersRoute
@@ -218,6 +231,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recurring-bills': {
@@ -304,6 +324,7 @@ const rootRouteChildren: RootRouteChildren = {
   NetWorthRoute: NetWorthRoute,
   ProfileRoute: ProfileRoute,
   RecurringBillsRoute: RecurringBillsRoute,
+  ReportsRoute: ReportsRoute,
   SetupRoute: SetupRoute,
   TransactionsRoute: TransactionsRoute,
   UsersRoute: UsersRoute,
