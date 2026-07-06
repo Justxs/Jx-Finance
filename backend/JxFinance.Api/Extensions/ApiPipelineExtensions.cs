@@ -16,6 +16,9 @@ public static class ApiPipelineExtensions
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseSerilogRequestLogging();
 
+        app.UseAuthentication();
+        app.UseAuthorization();
+
         app.UseFastEndpoints(c =>
         {
             c.Endpoints.ShortNames = true;

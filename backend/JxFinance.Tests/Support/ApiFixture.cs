@@ -1,3 +1,4 @@
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Testcontainers.PostgreSql;
 
@@ -5,6 +6,9 @@ namespace JxFinance.Tests.Support;
 
 public sealed class ApiFixture : IAsyncLifetime
 {
+    public const string TestAdminEmail = "test-admin@localhost";
+    public const string TestAdminPassword = "Test-Password-123!";
+
     private readonly PostgreSqlContainer _db = new PostgreSqlBuilder()
         .WithImage("postgres:16")
         .Build();
@@ -26,7 +30,23 @@ public sealed class ApiFixture : IAsyncLifetime
         Client = _factory.CreateClient(new WebApplicationFactoryClientOptions
         {
             AllowAutoRedirect = false,
+            HandleCookies = true,
         });
+        Client.DefaultRequestHeaders.Add("X-Forwarded-For", "127.0.0.1");
+
+        await AuthenticateAsync();
+    }
+
+    private async Task AuthenticateAsync()
+    {
+        await Client.PostAsJsonAsync(
+            "/api/setup",
+            new { email = TestAdminEmail, password = TestAdminPassword, displayName = "Test Admin" });
+
+        var loginResponse = await Client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = TestAdminEmail, password = TestAdminPassword, rememberMe = false });
+        loginResponse.EnsureSuccessStatusCode();
     }
 
     public async Task DisposeAsync()
