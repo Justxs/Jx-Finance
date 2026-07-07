@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateGoalEndpoint } from "@/api/generated";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -127,12 +128,11 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor="goal-date">{t("goals.targetDate")}</Label>
-              <Input
+              <DatePicker
                 id="goal-date"
-                type="date"
                 value={field.state.value}
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
+                onChange={field.handleChange}
               />
             </div>
           )}

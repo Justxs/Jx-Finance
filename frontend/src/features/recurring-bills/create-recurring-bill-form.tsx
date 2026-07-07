@@ -9,6 +9,7 @@ import type {
   RecurringBillKind,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -238,13 +239,12 @@ export function CreateRecurringBillForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="bill-due-date">{t("recurringBills.nextDueDate")}</Label>
-            <Input
+            <DatePicker
               id="bill-due-date"
-              type="date"
               value={field.state.value}
               aria-invalid={field.state.meta.errors.length > 0}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
+              onChange={field.handleChange}
             />
             <FieldError message={field.state.meta.errors[0]?.message} />
           </div>

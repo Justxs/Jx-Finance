@@ -27,6 +27,11 @@
     "previous": "Previous",
     "next": "Next"
   },
+  "datePicker": {
+    "placeholder": "Pick a date",
+    "clear": "Clear",
+    "today": "Today"
+  },
   "dashboard": {
     "title": "Dashboard",
     "subtitle": "Where your money stands right now.",
