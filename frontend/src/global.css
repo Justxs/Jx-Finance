@@ -133,6 +133,48 @@
   ::-webkit-scrollbar-thumb:hover {
     background-color: var(--muted-foreground);
   }
+
+  @supports (appearance: base-select) {
+    select {
+      appearance: base-select;
+    }
+
+    ::picker(select) {
+      appearance: base-select;
+      margin-top: 4px;
+      min-width: anchor-size(width);
+      padding: 4px;
+      border: 1px solid var(--border);
+      border-radius: calc(var(--radius) + 4px);
+      background: var(--popover);
+      color: var(--popover-foreground);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    select option {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: calc(var(--radius) - 2px);
+      font-size: 0.875rem;
+    }
+
+    select option:hover,
+    select option:focus-visible {
+      background: var(--accent);
+      color: var(--accent-foreground);
+      outline: none;
+    }
+
+    select option:checked {
+      font-weight: 500;
+    }
+
+    select option::checkmark {
+      color: var(--primary);
+    }
+  }
 }
 
 @layer components {

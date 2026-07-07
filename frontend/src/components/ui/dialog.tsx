@@ -45,7 +45,7 @@ export function Dialog({
         }
       }}
       className={cn(
-        "w-full max-w-lg rounded-xl border bg-card p-0 text-card-foreground shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-sm",
+        "fixed inset-0 m-auto w-full max-w-lg rounded-xl border bg-card p-0 text-card-foreground shadow-lg backdrop:bg-black/50 backdrop:backdrop-blur-sm",
         className,
       )}
     >

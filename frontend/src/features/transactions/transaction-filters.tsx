@@ -2,6 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 
@@ -78,19 +79,19 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         </Select>
       </div>
 
-      <div className="w-36">
-        <Input
-          type="date"
+      <div className="w-40">
+        <DatePicker
           value={search.dateFrom ?? ""}
-          onChange={(e) => setFilter({ dateFrom: e.target.value || undefined })}
+          placeholder={t("reports.from")}
+          onChange={(value) => setFilter({ dateFrom: value || undefined })}
         />
       </div>
 
-      <div className="w-36">
-        <Input
-          type="date"
+      <div className="w-40">
+        <DatePicker
           value={search.dateTo ?? ""}
-          onChange={(e) => setFilter({ dateTo: e.target.value || undefined })}
+          placeholder={t("reports.to")}
+          onChange={(value) => setFilter({ dateTo: value || undefined })}
         />
       </div>
 

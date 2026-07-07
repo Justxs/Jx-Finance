@@ -27,6 +27,11 @@
     "previous": "Ankstesnis",
     "next": "Kitas"
   },
+  "datePicker": {
+    "placeholder": "Pasirinkite datą",
+    "clear": "Išvalyti",
+    "today": "Šiandien"
+  },
   "dashboard": {
     "title": "Suvestinė",
     "subtitle": "Jūsų finansų padėtis šiandien.",

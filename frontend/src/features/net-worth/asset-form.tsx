@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useCreateAssetEndpoint } from "@/api/generated";
 import { AssetType } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -125,12 +126,11 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="asset-as-of">{t("netWorth.asOf")}</Label>
-            <Input
+            <DatePicker
               id="asset-as-of"
-              type="date"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
+              onChange={field.handleChange}
             />
           </div>
         )}

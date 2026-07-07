@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -146,12 +147,11 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="transfer-date">{t("transactions.date")}</Label>
-            <Input
+            <DatePicker
               id="transfer-date"
-              type="date"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
+              onChange={field.handleChange}
             />
           </div>
         )}

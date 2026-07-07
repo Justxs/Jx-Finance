@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { detectPreset, presetRange, type ReportPreset } from "./date-range-presets";
@@ -41,22 +41,20 @@ export function ReportFilters({ dateFrom, dateTo, onChange }: Readonly<Props>) {
 
       <div className="space-y-1.5">
         <Label htmlFor="report-from">{t("reports.from")}</Label>
-        <Input
+        <DatePicker
           id="report-from"
-          type="date"
           value={dateFrom}
-          onChange={(e) => onChange({ dateFrom: e.target.value, dateTo })}
+          onChange={(value) => onChange({ dateFrom: value, dateTo })}
           className="w-40"
         />
       </div>
 
       <div className="space-y-1.5">
         <Label htmlFor="report-to">{t("reports.to")}</Label>
-        <Input
+        <DatePicker
           id="report-to"
-          type="date"
           value={dateTo}
-          onChange={(e) => onChange({ dateFrom, dateTo: e.target.value })}
+          onChange={(value) => onChange({ dateFrom, dateTo: value })}
           className="w-40"
         />
       </div>
