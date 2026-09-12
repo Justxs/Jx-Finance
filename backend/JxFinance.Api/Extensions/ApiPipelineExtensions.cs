@@ -21,7 +21,14 @@ public static class ApiPipelineExtensions
         app.UseFastEndpoints(c =>
         {
             c.Endpoints.ShortNames = true;
+            c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
             c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+            c.Errors.UseProblemDetails(p =>
+            {
+                p.IndicateErrorCode = true;
+                p.AllowDuplicateErrors = false;
+                p.TypeValue = "https://tools.ietf.org/html/rfc9110#section-15.5";
+            });
         });
         app.MapOpenApi();
 

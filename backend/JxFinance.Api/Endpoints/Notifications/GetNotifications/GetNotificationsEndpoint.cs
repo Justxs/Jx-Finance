@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Notifications.Interfaces;
+using JxFinance.Endpoints.Notifications.Shared;
 
 namespace JxFinance.Endpoints.Notifications.GetNotifications;
 
@@ -7,7 +9,8 @@ public sealed class GetNotificationsEndpoint(INotificationService notificationSe
 {
     public override void Configure()
     {
-        Get("/api/notifications");
+        Get("notifications");
+        Group<NotificationsGroup>();
     }
 
     public override async Task HandleAsync(GetNotificationsRequest req, CancellationToken ct)

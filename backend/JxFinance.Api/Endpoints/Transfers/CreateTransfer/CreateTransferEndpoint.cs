@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Transfers.Interfaces;
+using JxFinance.Endpoints.Transfers.Shared;
 
 namespace JxFinance.Endpoints.Transfers.CreateTransfer;
 
@@ -8,18 +10,14 @@ public sealed class CreateTransferEndpoint(ITransferService transferService)
 {
     public override void Configure()
     {
-        Post("/api/transfers");
+        Post("transfers");
+        Group<TransfersGroup>();
+        Description(d => d.ClearDefaultProduces(200).Produces<TransferResponse>(201, "application/json"));
     }
 
     public override async Task HandleAsync(CreateTransferRequest req, CancellationToken ct)
     {
-        var result = await transferService.CreateAsync(req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.ResultAsync(Results.Created($"/api/transfers/{result.Value!.Id}", result.Value));
+        var transfer = (await transferService.CreateAsync(req, ct)).ValueOrThrow();
+        await Send.ResultAsync(TypedResults.Created($"/api/transfers/{transfer.Id}", transfer));
     }
 }

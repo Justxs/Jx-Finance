@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.RecurringBills.Interfaces;
 
 namespace JxFinance.Endpoints.RecurringBills.DeleteRecurringBill;
 
@@ -7,19 +8,14 @@ public sealed class DeleteRecurringBillEndpoint(IRecurringBillService recurringB
 {
     public override void Configure()
     {
-        Delete("/api/recurring-bills/{id}");
+        Delete("recurring-bills/{id}");
+        Group<RecurringBillsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await recurringBillService.DeleteAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await recurringBillService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Goals.Interfaces;
+using JxFinance.Endpoints.Goals.Shared;
 
 namespace JxFinance.Endpoints.Goals.GetGoals;
 
@@ -6,7 +8,8 @@ public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithout
 {
     public override void Configure()
     {
-        Get("/api/goals");
+        Get("goals");
+        Group<GoalsGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

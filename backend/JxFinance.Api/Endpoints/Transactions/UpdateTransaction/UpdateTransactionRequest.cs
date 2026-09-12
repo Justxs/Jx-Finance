@@ -1,4 +1,5 @@
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.UpdateTransaction;
 

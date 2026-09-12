@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Budgets.Interfaces;
+using JxFinance.Endpoints.Budgets.Shared;
 
 namespace JxFinance.Endpoints.Budgets.CreateBudget;
 
@@ -7,18 +9,14 @@ public sealed class CreateBudgetEndpoint(IBudgetService budgetService) : Endpoin
 {
     public override void Configure()
     {
-        Post("/api/budgets");
+        Post("budgets");
+        Group<BudgetsGroup>();
+        Description(d => d.ClearDefaultProduces(200).Produces<BudgetResponse>(201, "application/json"));
     }
 
     public override async Task HandleAsync(CreateBudgetRequest req, CancellationToken ct)
     {
-        var result = await budgetService.CreateAsync(req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.ResultAsync(Results.Created($"/api/budgets/{result.Value!.Id}", result.Value));
+        var budget = (await budgetService.CreateAsync(req, ct)).ValueOrThrow();
+        await Send.ResultAsync(TypedResults.Created($"/api/budgets/{budget.Id}", budget));
     }
 }

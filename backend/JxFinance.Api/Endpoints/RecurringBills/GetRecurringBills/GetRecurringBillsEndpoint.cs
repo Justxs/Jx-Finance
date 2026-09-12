@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.RecurringBills.Interfaces;
+using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.GetRecurringBills;
 
@@ -7,7 +9,8 @@ public sealed class GetRecurringBillsEndpoint(IRecurringBillService recurringBil
 {
     public override void Configure()
     {
-        Get("/api/recurring-bills");
+        Get("recurring-bills");
+        Group<RecurringBillsGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

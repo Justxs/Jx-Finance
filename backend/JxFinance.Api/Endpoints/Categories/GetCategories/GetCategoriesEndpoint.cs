@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Categories.Interfaces;
+using JxFinance.Endpoints.Categories.Shared;
 
 namespace JxFinance.Endpoints.Categories.GetCategories;
 
@@ -7,7 +9,8 @@ public sealed class GetCategoriesEndpoint(ICategoryService categoryService)
 {
     public override void Configure()
     {
-        Get("/api/categories");
+        Get("categories");
+        Group<CategoriesGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Auth.Shared;
 
 namespace JxFinance.Endpoints.Auth.Me;
 
@@ -8,7 +10,9 @@ public sealed class MeEndpoint(IAuthService authService, ICurrentUser currentUse
 {
     public override void Configure()
     {
-        Get("/api/auth/me");
+        Get("auth/me");
+        Group<AuthGroup>();
+        Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.CreateTransaction;
 

@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Dashboard.Interfaces;
+using JxFinance.Endpoints.Dashboard.Shared;
 
 namespace JxFinance.Endpoints.Dashboard.GetDashboardSummary;
 
@@ -7,7 +9,8 @@ public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardServi
 {
     public override void Configure()
     {
-        Get("/api/dashboard/summary");
+        Get("dashboard/summary");
+        Group<DashboardGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

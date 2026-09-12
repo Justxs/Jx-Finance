@@ -1,6 +1,8 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.GetRecurringBill;
+using JxFinance.Endpoints.RecurringBills.Interfaces;
+using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 
@@ -9,14 +11,14 @@ public sealed class CreateRecurringBillEndpoint(IRecurringBillService recurringB
 {
     public override void Configure()
     {
-        Post("/api/recurring-bills");
+        Post("recurring-bills");
+        Group<RecurringBillsGroup>();
+        Description(d => d.ClearDefaultProduces(200).Produces<RecurringBillResponse>(201, "application/json"));
     }
 
     public override async Task HandleAsync(CreateRecurringBillRequest req, CancellationToken ct)
     {
-        var result = await recurringBillService.CreateAsync(req, ct);
-        if (result.IsFailure) { await Send.ResultAsync(result.ToProblemResult()); return; }
-        var bill = result.Value!;
+        var bill = (await recurringBillService.CreateAsync(req, ct)).ValueOrThrow();
         await Send.CreatedAtAsync<GetRecurringBillEndpoint>(new { id = bill.Id }, bill, cancellation: ct);
     }
 }

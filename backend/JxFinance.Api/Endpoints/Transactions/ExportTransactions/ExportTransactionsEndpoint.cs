@@ -1,9 +1,11 @@
 using System.Globalization;
 using System.Text;
 using FastEndpoints;
-using JxFinance.Endpoints.Accounts;
-using JxFinance.Endpoints.Categories;
+using JxFinance.Endpoints.Accounts.Interfaces;
+using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
+using JxFinance.Endpoints.Transactions.Interfaces;
+using JxFinance.Endpoints.Transactions.Shared;
 using QuestPDF.Fluent;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
@@ -15,7 +17,9 @@ public sealed class ExportTransactionsEndpoint(
 {
     public override void Configure()
     {
-        Get("/api/transactions/export");
+        Get("transactions/export");
+        Group<TransactionsGroup>();
+        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, "text/csv"));
     }
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)

@@ -137,7 +137,7 @@ export function AccountsTable({
           aria-label={t("accounts.title")}
           tabIndex={0}
         >
-          <table className="w-full min-w-[40rem] text-sm">
+          <table className="w-full min-w-160 text-sm">
             <thead>
               <tr className="border-b bg-muted/50 text-left">
                 <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">

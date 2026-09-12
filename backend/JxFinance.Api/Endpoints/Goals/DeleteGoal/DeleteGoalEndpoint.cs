@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Goals.Interfaces;
 
 namespace JxFinance.Endpoints.Goals.DeleteGoal;
 
@@ -7,19 +8,14 @@ public sealed class DeleteGoalEndpoint(IGoalService goalService) : EndpointWitho
 {
     public override void Configure()
     {
-        Delete("/api/goals/{id}");
+        Delete("goals/{id}");
+        Group<GoalsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await goalService.DeleteAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await goalService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Goals.Interfaces;
+using JxFinance.Endpoints.Goals.Shared;
 
 namespace JxFinance.Endpoints.Goals.UpdateGoal;
 
@@ -7,19 +9,14 @@ public sealed class UpdateGoalEndpoint(IGoalService goalService) : Endpoint<Upda
 {
     public override void Configure()
     {
-        Put("/api/goals/{id}");
+        Put("goals/{id}");
+        Group<GoalsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(UpdateGoalRequest req, CancellationToken ct)
     {
-        var result = await goalService.UpdateAsync(req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.OkAsync(result.Value!, ct);
+        var goal = (await goalService.UpdateAsync(req, ct)).ValueOrThrow();
+        await Send.OkAsync(goal, ct);
     }
 }
