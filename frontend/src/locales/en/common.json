@@ -15,7 +15,9 @@
     "users": "Users",
     "profile": "Your profile",
     "collapse": "Collapse sidebar",
-    "expand": "Expand sidebar"
+    "expand": "Expand sidebar",
+    "main": "Main navigation",
+    "skip": "Skip to content"
   },
   "actions": {
     "add": "Add",
@@ -25,7 +27,8 @@
     "delete": "Delete",
     "archive": "Archive",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "close": "Close"
   },
   "datePicker": {
     "placeholder": "Pick a date",
@@ -275,7 +278,8 @@
   "notifications": {
     "title": "Notifications",
     "empty": "No new notifications.",
-    "markAllRead": "Mark all as read"
+    "markAllRead": "Mark all as read",
+    "billDue": "Due {{date}}"
   },
   "households": {
     "title": "Households",
@@ -328,7 +332,16 @@
     "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",
     "noRows": "No importable rows found in this file.",
     "duplicate": "Already imported",
-    "looksLikeTransfer": "Looks like a transfer"
+    "looksLikeTransfer": "Looks like a transfer",
+    "recordAs": "Record as",
+    "transaction": "Income / expense",
+    "transferWith": "Transfer · {{account}}",
+    "matchTransfer": "Match a transfer",
+    "newTransfer": "Create transfer",
+    "existingTransfer": "Existing transfer",
+    "matchHelp": "When importing the other account, match the same transfer to avoid counting it twice.",
+    "selectRow": "Select row {{row}}",
+    "flags": "Status"
   },
   "status": {
     "label": "API status",
@@ -347,5 +360,8 @@
     "maxLength": "Must be {{max}} characters or fewer.",
     "email": "Enter a valid email address.",
     "minLength": "Must be at least {{min}} characters."
+  },
+  "pagination": {
+    "pageOf": "Page {{page}} of {{pages}}"
   }
 }

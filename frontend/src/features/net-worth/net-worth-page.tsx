@@ -9,7 +9,7 @@ export function NetWorthPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("netWorth.title")} subtitle={t("netWorth.subtitle")} />
 
       <NetWorthStats />

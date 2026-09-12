@@ -9,6 +9,8 @@ import {
   useMeEndpoint,
   useSetupTwoFactorEndpoint,
 } from "@/api/generated";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
@@ -18,6 +20,7 @@ export function TwoFactorSettings() {
   const queryClient = useQueryClient();
   const me = useMeEndpoint();
 
+  const [password, setPassword] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [sharedKey, setSharedKey] = useState<string | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
@@ -64,11 +67,19 @@ export function TwoFactorSettings() {
       <div className="card max-w-md space-y-4 p-6">
         <h2 className="font-semibold">{t("profile.twoFactorTitle")}</h2>
         <p className="text-sm text-muted-foreground">{t("profile.twoFactorEnabledSubtitle")}</p>
+        <Label htmlFor="two-factor-password">{t("profile.currentPassword")}</Label>
+        <Input
+          id="two-factor-password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
         <Button
           type="button"
           variant="destructive"
-          disabled={disableMutation.isPending}
-          onClick={() => disableMutation.mutate()}
+          disabled={disableMutation.isPending || !password}
+          onClick={() => disableMutation.mutate({ data: { password } })}
         >
           {t("profile.disableTwoFactor")}
         </Button>
@@ -91,10 +102,18 @@ export function TwoFactorSettings() {
     <div className="card max-w-md space-y-4 p-6">
       <h2 className="font-semibold">{t("profile.twoFactorTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("profile.twoFactorDisabledSubtitle")}</p>
+      <Label htmlFor="two-factor-password">{t("profile.currentPassword")}</Label>
+      <Input
+        id="two-factor-password"
+        type="password"
+        autoComplete="current-password"
+        value={password}
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <Button
         type="button"
-        disabled={setupMutation.isPending}
-        onClick={() => setupMutation.mutate()}
+        disabled={setupMutation.isPending || !password}
+        onClick={() => setupMutation.mutate({ data: { password } })}
       >
         {t("profile.enableTwoFactor")}
       </Button>

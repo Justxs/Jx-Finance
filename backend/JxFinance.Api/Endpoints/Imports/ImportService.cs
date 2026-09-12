@@ -6,6 +6,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
+using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Preview;
 using JxFinance.Infrastructure.Data;
@@ -39,7 +40,7 @@ public sealed class ImportService(AppDbContext db) : IImportService
         {
             parsedRows = ParseCsv(fileStream);
         }
-        catch (Exception ex) when (ex is CsvHelperException or FormatException or IndexOutOfRangeException)
+        catch (Exception ex) when (ex is CsvHelperException or FormatException or IndexOutOfRangeException or OverflowException)
         {
             return Result<ImportPreviewResponse>.Failure(
                 ErrorCodes.Validation,
@@ -52,11 +53,14 @@ public sealed class ImportService(AppDbContext db) : IImportService
         }
 
         var importRefs = parsedRows.Select(r => r.ImportRef).ToList();
-        var existingRefs = await db.Transactions
+        var existingRefs = await db.Transactions.IgnoreQueryFilters()
             .Where(t => t.AccountId == typedAccountId && t.ImportRef != null && importRefs.Contains(t.ImportRef))
             .Select(t => t.ImportRef!)
             .ToListAsync(cancellationToken);
-        var existingRefSet = existingRefs.ToHashSet();
+        var receiptRefs = await db.TransferImports
+            .Where(r => r.AccountId == typedAccountId && importRefs.Contains(r.ImportRef))
+            .Select(r => r.ImportRef).ToListAsync(cancellationToken);
+        var existingRefSet = existingRefs.Concat(receiptRefs).ToHashSet();
 
         var rows = parsedRows
             .Select(r => new ImportPreviewRow(
@@ -66,7 +70,7 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 r.Description,
                 MoneyWire.ToWire(new Money(r.Amount)),
                 r.Type,
-                existingRefSet.Contains(r.ImportRef),
+                !existingRefSet.Add(r.ImportRef),
                 LooksLikeTransfer(r.Payee, r.Description)))
             .ToList();
 
@@ -77,6 +81,10 @@ public sealed class ImportService(AppDbContext db) : IImportService
         ImportConfirmRequest request,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        // Serialize imports per account across processes, including concurrent requests.
+        var lockId = BitConverter.ToInt64(request.AccountId.ToByteArray(), 0);
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var accountId = new AccountId(request.AccountId);
         var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
         if (!accountExists)
@@ -85,18 +93,21 @@ public sealed class ImportService(AppDbContext db) : IImportService
         }
 
         var importRefs = request.Rows.Select(r => r.ImportRef).ToList();
-        var existingRefs = await db.Transactions
+        var existingRefs = await db.Transactions.IgnoreQueryFilters()
             .Where(t => t.AccountId == accountId && t.ImportRef != null && importRefs.Contains(t.ImportRef))
             .Select(t => t.ImportRef!)
             .ToListAsync(cancellationToken);
-        var existingRefSet = existingRefs.ToHashSet();
+        var receiptRefs = await db.TransferImports
+            .Where(r => r.AccountId == accountId && importRefs.Contains(r.ImportRef))
+            .Select(r => r.ImportRef).ToListAsync(cancellationToken);
+        var existingRefSet = existingRefs.Concat(receiptRefs).ToHashSet();
 
         var imported = 0;
         var skipped = 0;
 
         foreach (var row in request.Rows)
         {
-            if (existingRefSet.Contains(row.ImportRef))
+            if (!existingRefSet.Add(row.ImportRef))
             {
                 skipped++;
                 continue;
@@ -108,9 +119,38 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
                 if (category is null || category.Type != row.Type)
                 {
-                    categoryId = null;
+                    return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Category does not exist or has the wrong type.");
                 }
             }
+
+            if (row.TransferAccountId is { } otherId)
+            {
+                var otherAccountId = new AccountId(otherId);
+                if (otherAccountId == accountId || !await db.Accounts.AnyAsync(a => a.Id == otherAccountId, cancellationToken))
+                    return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Choose another accessible account for the transfer.");
+                var fromId = row.Type == FlowType.Expense ? accountId : otherAccountId;
+                var toId = row.Type == FlowType.Expense ? otherAccountId : accountId;
+                Transfer transfer;
+                if (row.ExistingTransferId is { } existingId)
+                {
+                    var match = await db.Transfers.FirstOrDefaultAsync(t => t.Id == new TransferId(existingId), cancellationToken);
+                    if (match is null || match.FromAccountId != fromId || match.ToAccountId != toId
+                        || match.Amount != MoneyWire.Parse(row.Amount) || match.Date != row.Date)
+                        return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "The selected transfer does not match this bank entry.");
+                    transfer = match;
+                }
+                else
+                {
+                    transfer = new Transfer { FromAccountId = fromId, ToAccountId = toId,
+                        Amount = MoneyWire.Parse(row.Amount), Date = row.Date, Description = row.Description };
+                    db.Transfers.Add(transfer);
+                }
+                db.TransferImports.Add(new TransferImport { AccountId = accountId, ImportRef = row.ImportRef, TransferId = transfer.Id });
+                imported++;
+                continue;
+            }
+            if (row.ExistingTransferId is not null)
+                return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Choose the other account before matching a transfer.");
 
             db.Transactions.Add(new Transaction
             {
@@ -128,6 +168,7 @@ public sealed class ImportService(AppDbContext db) : IImportService
 
         await db.SaveChangesAsync(cancellationToken);
 
+        await transaction.CommitAsync(cancellationToken);
         return Result<ImportConfirmResponse>.Success(new ImportConfirmResponse(imported, skipped));
     }
 
@@ -138,6 +179,10 @@ public sealed class ImportService(AppDbContext db) : IImportService
 
         csv.Read();
         csv.ReadHeader();
+        string[] expected = ["Sąskaitos Nr.", "", "Data", "Gavėjas", "Paaiškinimai", "Suma", "Valiuta", "D/K", "Įrašo Nr."];
+        if (csv.HeaderRecord is not { Length: >= 9 } headers ||
+            !expected.Select((name, index) => headers[index].Trim() == name).All(matches => matches))
+            throw new FormatException("Unexpected CSV columns.");
 
         var rows = new List<ParsedRow>();
         while (csv.Read())
@@ -154,6 +199,12 @@ public sealed class ImportService(AppDbContext db) : IImportService
             var amount = decimal.Parse(csv.GetField(5)!.Trim(), CultureInfo.InvariantCulture);
             var direction = csv.GetField(7)?.Trim();
             var importRef = csv.GetField(8)!.Trim();
+
+            if (direction is not ("D" or "K") || csv.GetField(6)?.Trim() != "EUR"
+                || string.IsNullOrWhiteSpace(importRef) || importRef.Length > 64
+                || amount <= 0 || !MoneyWire.IsValid(csv.GetField(5)?.Trim()) || description?.Length > 500)
+                throw new FormatException("Invalid bank entry.");
+            if (rows.Count >= 10000) throw new FormatException("At most 10000 entries can be imported at once.");
 
             rows.Add(new ParsedRow(
                 importRef,

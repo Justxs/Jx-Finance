@@ -6,6 +6,7 @@ import type { GoalResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { isPositiveMoney, isMoney, normalizeMoney } from "@/lib/validation";
 import { Label } from "@/components/ui/label";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 
@@ -21,6 +22,9 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
   const money = useMoney();
   const date = useDate();
   const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(goal.name ?? "");
+  const [targetAmount, setTargetAmount] = useState(goal.targetAmount ?? "");
+  const [targetDate, setTargetDate] = useState(goal.targetDate ?? "");
   const [currentAmount, setCurrentAmount] = useState(goal.currentAmount ?? "0.00");
 
   const updateMutation = useUpdateGoalEndpoint({
@@ -36,8 +40,8 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
 
   return (
     <li className="space-y-2 px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 break-words">
           <p className="font-medium">{goal.name}</p>
           {goal.targetDate ? (
             <p className="text-xs text-muted-foreground">
@@ -45,17 +49,23 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
             </p>
           ) : null}
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold tabular-nums">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="break-words text-sm font-semibold tabular-nums">
             {money.format(current)} / {money.format(target)}
           </span>
           <Button
             variant="ghost"
             size="icon"
             className="size-8"
-            onClick={() => setEditing(true)}
-            aria-label={t("goals.updateProgress")}
-            title={t("goals.updateProgress")}
+            onClick={() => {
+              setName(goal.name ?? "");
+              setTargetAmount(goal.targetAmount ?? "");
+              setTargetDate(goal.targetDate ?? "");
+              setCurrentAmount(goal.currentAmount ?? "0.00");
+              setEditing(true);
+            }}
+            aria-label={t("actions.edit")}
+            title={t("actions.edit")}
           >
             <Pencil />
           </Button>
@@ -76,8 +86,28 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
         <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
       </div>
 
-      <Dialog open={editing} onOpenChange={setEditing} title={t("goals.updateProgress")}>
+      <Dialog open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
         <div className="space-y-4">
+          <Label htmlFor={`goal-name-${goal.id}`}>{t("goals.name")}</Label>
+          <Input
+            id={`goal-name-${goal.id}`}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <Label htmlFor={`goal-target-${goal.id}`}>{t("goals.targetAmount")}</Label>
+          <Input
+            id={`goal-target-${goal.id}`}
+            inputMode="decimal"
+            value={targetAmount}
+            onChange={(e) => setTargetAmount(e.target.value)}
+          />
+          <Label htmlFor={`goal-date-${goal.id}`}>{t("goals.targetDate")}</Label>
+          <Input
+            id={`goal-date-${goal.id}`}
+            type="date"
+            value={targetDate}
+            onChange={(e) => setTargetDate(e.target.value)}
+          />
           <div className="space-y-1.5">
             <Label htmlFor={`goal-current-${goal.id}`}>{t("goals.currentAmount")}</Label>
             <Input
@@ -92,15 +122,21 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
               {t("actions.cancel")}
             </Button>
             <Button
-              disabled={updateMutation.isPending}
+              disabled={
+                updateMutation.isPending ||
+                !name.trim() ||
+                !isPositiveMoney(targetAmount) ||
+                !isMoney(currentAmount) ||
+                Number(normalizeMoney(currentAmount)) < 0
+              }
               onClick={() =>
                 updateMutation.mutate({
                   id: goal.id!,
                   data: {
-                    name: goal.name!,
-                    targetAmount: goal.targetAmount!,
+                    name,
+                    targetAmount,
                     currentAmount,
-                    targetDate: goal.targetDate,
+                    targetDate: targetDate || null,
                   },
                 })
               }

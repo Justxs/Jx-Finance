@@ -67,7 +67,7 @@ export function RecurringBillsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("recurringBills.title")} subtitle={t("recurringBills.subtitle")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

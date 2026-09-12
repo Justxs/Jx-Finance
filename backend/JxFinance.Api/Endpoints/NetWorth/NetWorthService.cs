@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.NetWorth;
 
-public sealed class NetWorthService(AppDbContext db, IAccountService accountService, IClock clock) : INetWorthService
+public sealed class NetWorthService(AppDbContext db, IAccountService accountService, IClock clock, ICurrentUser currentUser) : INetWorthService
 {
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
@@ -132,8 +132,12 @@ public sealed class NetWorthService(AppDbContext db, IAccountService accountServ
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var lockId = BitConverter.ToInt64(currentUser.Id.ToByteArray(), 0);
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var (accountsTotal, assetsTotal, debtsTotal, netWorth) = await ComputeTotalsAsync(cancellationToken);
         await UpsertTodaySnapshotAsync(accountsTotal, assetsTotal, debtsTotal, netWorth, cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return new NetWorthResponse(
             MoneyWire.ToWire(new Money(accountsTotal)),
@@ -164,7 +168,7 @@ public sealed class NetWorthService(AppDbContext db, IAccountService accountServ
         CancellationToken cancellationToken)
     {
         var accounts = await accountService.GetAllAsync(cancellationToken);
-        var accountsTotal = accounts.Sum(a => decimal.Parse(a.CurrentBalance));
+        var accountsTotal = accounts.Sum(a => MoneyWire.Parse(a.CurrentBalance).Amount);
 
         var assetsTotal = await db.Assets.SumAsync(a => (decimal)a.CurrentValue, cancellationToken);
         var debtsTotal = await db.Debts.SumAsync(d => (decimal)d.OutstandingAmount, cancellationToken);

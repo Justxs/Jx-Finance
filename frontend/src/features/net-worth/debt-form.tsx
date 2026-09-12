@@ -45,7 +45,7 @@ export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const defaultValues: FormValues = {
     name: "",
-    type: DebtType.Other,
+    type: DebtType.other,
     outstandingAmount: "",
     interestRate: "",
     asOf: todayIsoDate(),
@@ -64,7 +64,6 @@ export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
           asOf: value.asOf,
         },
       });
-      form.reset();
     },
   });
 
@@ -76,7 +75,7 @@ export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-5 md:items-start"
+      className="form-grid"
     >
       <form.Field name="name">
         {(field) => (
@@ -148,7 +147,7 @@ export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
         )}
       </form.Field>
 
-      <div className="flex items-end justify-end gap-2 md:col-span-5">
+      <div className="flex items-end justify-end gap-2 col-span-full">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("actions.cancel")}
         </Button>

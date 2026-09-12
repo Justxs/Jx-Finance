@@ -35,22 +35,25 @@ export function DebtsSection() {
 
   let content: ReactNode;
   if (debts.isPending) {
-    content = <Skeleton className="m-6 h-16 w-full" />;
+    content = <Skeleton className="m-6 h-16" />;
   } else if (debtList.length === 0) {
     content = <p className="px-6 py-6 text-sm text-muted-foreground">{t("netWorth.noDebts")}</p>;
   } else {
     content = (
       <ul className="divide-y divide-border">
         {debtList.map((debt) => (
-          <li key={debt.id} className="flex items-center justify-between px-6 py-3">
-            <div>
+          <li
+            key={debt.id}
+            className="flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0 break-words">
               <p className="font-medium">{debt.name}</p>
               <p className="text-xs text-muted-foreground">
                 {t(`netWorth.debtTypes.${debt.type}`)} · {date.format(new Date(debt.asOf!))}
                 {debt.interestRate ? ` · ${debt.interestRate}%` : ""}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="font-semibold tabular-nums text-destructive">
                 {money.format(Number(debt.outstandingAmount))}
               </span>
@@ -74,7 +77,7 @@ export function DebtsSection() {
 
   return (
     <section className="card">
-      <div className="flex items-center justify-between border-b p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-6">
         <h2 className="font-semibold">{t("netWorth.addDebt")}</h2>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus />

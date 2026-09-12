@@ -1,4 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+import { setAuthenticated } from "@/lib/auth-gate";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
@@ -17,6 +19,15 @@ declare module "@tanstack/react-router" {
 }
 
 export default function App() {
+  useEffect(() => {
+    function expired() {
+      setAuthenticated(false);
+      queryClient.clear();
+      void router.navigate({ to: "/login" });
+    }
+    window.addEventListener("jx:session-expired", expired);
+    return () => window.removeEventListener("jx:session-expired", expired);
+  }, []);
   return (
     <I18nextProvider i18n={i18n}>
       <QueryClientProvider client={queryClient}>

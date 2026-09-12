@@ -26,7 +26,11 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
     <div className="card max-w-md space-y-4 p-6">
       <h2 className="font-semibold">{t("profile.twoFactorTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("profile.scanQrSubtitle")}</p>
-      <img src={qrDataUrl} alt="Authenticator QR code" className="size-48 rounded-md border" />
+      <img
+        src={qrDataUrl}
+        alt="Authenticator QR code"
+        className="h-auto w-48 max-w-full rounded-md border"
+      />
       <p className="break-all rounded-md bg-muted px-3 py-2 font-mono text-xs">{sharedKey}</p>
       <div className="space-y-1.5">
         <Label htmlFor="two-factor-code">{t("profile.enterCode")}</Label>
@@ -38,7 +42,7 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
           maxLength={6}
         />
       </div>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           disabled={enableMutation.isPending || code.length !== 6}

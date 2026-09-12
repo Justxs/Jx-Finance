@@ -62,29 +62,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup nub and Node
+        uses: nubjs/setup-nub@v0
         with:
-          version: 11
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
+          nub-version: "0.8.3"
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          working-directory: frontend
+          cache: true
+          cache-dependency-path: frontend/nub.lock
 
       - name: Install
-        run: pnpm install --frozen-lockfile
+        run: nub ci
 
       - name: Lint
-        run: pnpm lint
+        run: nub run lint
+
+      - name: Test
+        run: nub run test
 
       - name: Format check
-        run: pnpm format:check
+        run: nub run format:check
 
       - name: Build
-        run: pnpm build
+        run: nub run build
 
   client-drift:
     runs-on: ubuntu-latest
@@ -97,26 +97,23 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Setup nub and Node
+        uses: nubjs/setup-nub@v0
         with:
-          version: 11
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
+          nub-version: "0.8.3"
           node-version: 22
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          working-directory: frontend
+          cache: true
+          cache-dependency-path: frontend/nub.lock
 
       - name: Install frontend deps
         working-directory: frontend
-        run: pnpm install --frozen-lockfile
+        run: nub ci
 
       - name: Export OpenAPI document
         env:
           ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
-        run: dotnet run --project backend/JxFinance.Api -c Release --export-swagger-docs true -p:PublishAot=false
+        run: dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true -p:PublishAot=false
 
       - name: Copy spec for codegen
         run: cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
@@ -124,8 +121,8 @@ jobs:
       - name: Regenerate client
         working-directory: frontend
         run: |
-          pnpm orval
-          pnpm exec oxfmt src/api/generated
+          nub run orval
+          nub run format src/api/generated
 
       - name: Fail on client drift
         run: |

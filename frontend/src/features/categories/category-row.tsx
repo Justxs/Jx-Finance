@@ -23,11 +23,11 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
 
   return (
     <li className="flex items-center justify-between gap-2 py-2.5">
-      <div className="flex items-center gap-3">
-        <span className="flex size-8 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <div className="flex min-w-0 items-center gap-3">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
           <CategoryIcon icon={category.icon} />
         </span>
-        <span className="text-sm font-medium">{category.name}</span>
+        <span className="min-w-0 break-words text-sm font-medium">{category.name}</span>
         {category.scope === "shared" ? (
           <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
             {t("sharing.sharedWith", {
@@ -36,7 +36,7 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
           </span>
         ) : null}
       </div>
-      <div className="flex gap-1">
+      <div className="flex shrink-0 gap-1">
         <Button
           variant="ghost"
           size="icon"

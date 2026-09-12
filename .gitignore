@@ -22,8 +22,6 @@ coverage.cobertura.xml
 
 # ---- Node / frontend ----
 node_modules/
-.pnpm-store/
-pnpm-debug.log*
 **/dist/
 **/dist-ssr/
 *.local
@@ -63,3 +61,4 @@ docker-compose.override.yml
 # ---- Misc ----
 *.bak
 *.tmp
+.local/

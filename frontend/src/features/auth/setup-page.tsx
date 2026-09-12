@@ -24,7 +24,7 @@ export function SetupPage() {
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^\S+@\S+$/, t("validation.email")),
+      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
     password: z
       .string()
       .min(8, t("validation.minLength", { min: 8 }))

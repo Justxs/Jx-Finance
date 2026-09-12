@@ -5,8 +5,9 @@ import type { CategoryResponse, TransactionResponse } from "@/api/generated/mode
 import { Button } from "@/components/ui/button";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
+import { transactionTableFeatures } from "./table-features";
 
-const columnHelper = createColumnHelper<TransactionResponse>();
+const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
 
 interface UseTransactionColumnsArgs {
   accountNames: Map<string | undefined, string | undefined>;
@@ -27,7 +28,7 @@ export function useTransactionColumns({
   const money = useMoney();
   const date = useDate();
 
-  return [
+  return columnHelper.columns([
     columnHelper.accessor("date", {
       header: t("transactions.date"),
       cell: (info) => (info.getValue() ? date.format(new Date(info.getValue()!)) : ""),
@@ -121,5 +122,5 @@ export function useTransactionColumns({
         );
       },
     }),
-  ];
+  ]);
 }

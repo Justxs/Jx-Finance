@@ -27,7 +27,7 @@ export function LoginPage() {
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^\S+@\S+$/, t("validation.email")),
+      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
     password: z.string().min(1, t("validation.required")),
     rememberMe: z.boolean(),
     twoFactorCode: twoFactorRequired ? z.string().min(1, t("validation.required")) : z.string(),

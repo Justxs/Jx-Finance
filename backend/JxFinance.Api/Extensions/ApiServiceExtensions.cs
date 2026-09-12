@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FastEndpoints;
-using FastEndpoints.Swagger;
+using FastEndpoints.OpenApi;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Endpoints.Accounts;
 using JxFinance.Endpoints.Auth;
@@ -39,20 +39,13 @@ public static class ApiServiceExtensions
         builder.Services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
         builder.Services.AddFastEndpoints();
-        builder.Services.SwaggerDocument(options =>
+        builder.Services.OpenApiDocument(options =>
         {
             options.ShortSchemaNames = true;
             options.EnableJWTBearerAuth = false;
-            options.SerializerSettings = settings =>
-            {
-                settings.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            };
-            options.DocumentSettings = settings =>
-            {
-                settings.DocumentName = "v1";
-                settings.Title = "Jx Finance API";
-                settings.Version = "v1";
-            };
+            options.DocumentName = "v1";
+            options.Title = "Jx Finance API";
+            options.Version = "v1";
         });
 
         var connectionString = builder.Configuration.GetConnectionString("Default");
@@ -82,7 +75,11 @@ public static class ApiServiceExtensions
         builder.Services.AddScoped<IRecurringBillService, RecurringBillService>();
         builder.Services.AddScoped<INotificationService, NotificationService>();
         builder.Services.AddSingleton<IEmailSender, LoggingEmailSender>();
-        builder.Services.AddHostedService<RecurringBillReminderJob>();
+        if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue("App:BackgroundJobs", true))
+        {
+            builder.Services.AddHostedService<RecurringBillReminderJob>();
+            builder.Services.AddHostedService<NetWorthSnapshotJob>();
+        }
 
         return builder;
     }

@@ -56,7 +56,7 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
 
         var listResponse = await Client.GetFromJsonAsync<PagedTransferDto>("/api/transfers?page=1&pageSize=5");
         Assert.NotNull(listResponse);
-        Assert.True(listResponse!.Total >= 1);
+        Assert.True(listResponse.Total >= 1);
     }
 
     private async Task<AccountDto> CreateAccountAsync(string name, string startingBalance)

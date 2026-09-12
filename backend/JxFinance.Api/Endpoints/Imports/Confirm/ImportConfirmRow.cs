@@ -8,4 +8,6 @@ public sealed record ImportConfirmRow(
     string? Description,
     string Amount,
     FlowType Type,
-    Guid? CategoryId);
+    Guid? CategoryId,
+    Guid? TransferAccountId = null,
+    Guid? ExistingTransferId = null);

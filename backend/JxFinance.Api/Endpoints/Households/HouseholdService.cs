@@ -263,7 +263,7 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser) 
                 m.Role))
             .ToList();
 
-        var myRole = memberships.First(m => m.UserId == currentUser.Id).Role;
+        var myRole = memberships.FirstOrDefault(m => m.UserId == currentUser.Id)?.Role ?? HouseholdRole.Member;
 
         return new HouseholdResponse(household.Id.Value, household.Name, myRole, members);
     }

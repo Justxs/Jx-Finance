@@ -1,13 +1,4 @@
 import { useTranslation } from "react-i18next";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  LabelList,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-} from "recharts";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
 import { useMoney } from "@/hooks/use-formatters";
 
@@ -24,7 +15,7 @@ interface Props {
   items: CategoryBreakdownItem[];
 }
 
-export function ReportCategoryChart({ items }: Readonly<Props>) {
+export function CategoryBreakdown({ items }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
 
@@ -54,35 +45,29 @@ export function ReportCategoryChart({ items }: Readonly<Props>) {
     return <p className="px-6 py-8 text-sm text-muted-foreground">{t("dashboard.noSpending")}</p>;
   }
 
+  const maximum = Math.max(...chartData.map((item) => item.amount));
+
   return (
-    <ResponsiveContainer width="100%" height={Math.max(200, chartData.length * 44)}>
-      <BarChart
-        data={chartData}
-        layout="vertical"
-        margin={{ top: 8, right: 48, bottom: 8, left: 8 }}
-      >
-        <CartesianGrid horizontal={false} stroke="var(--border)" />
-        <XAxis type="number" hide />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={120}
-          tick={{ fill: "var(--muted-foreground)", fontSize: 12 }}
-          axisLine={false}
-          tickLine={false}
-        />
-        <Bar dataKey="amount" radius={4} barSize={20}>
-          <LabelList
-            dataKey="amount"
-            position="right"
-            formatter={(value: string | number | boolean | null | undefined) =>
-              money.format(Number(value ?? 0))
-            }
-            fill="var(--foreground)"
-            fontSize={12}
-          />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <ul className="space-y-4">
+      {chartData.map((item) => (
+        <li key={item.name} className="space-y-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
+            <span className="min-w-0 break-words">{item.name}</span>
+            <span className="break-words font-medium tabular-nums">
+              {money.format(item.amount)}
+            </span>
+          </div>
+          <div aria-hidden="true" className="h-2 rounded-sm bg-muted">
+            <div
+              className="h-full rounded-sm"
+              style={{
+                width: `${maximum > 0 ? (item.amount / maximum) * 100 : 0}%`,
+                backgroundColor: item.fill,
+              }}
+            />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }

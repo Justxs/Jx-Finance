@@ -68,7 +68,6 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
           householdId: value.scope === "shared" ? value.householdId : null,
         },
       });
-      form.reset();
     },
   });
 
@@ -82,7 +81,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
       noValidate
       className="space-y-4"
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="form-grid">
         <form.Field name="name">
           {(field) => (
             <div className="space-y-1.5">
@@ -120,7 +119,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
       </div>
 
       {householdList.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-3 md:items-start">
+        <div className="form-grid">
           <form.Field name="scope">
             {(field) => (
               <div className="space-y-1.5">

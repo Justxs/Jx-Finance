@@ -1,3 +1,4 @@
+using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
@@ -108,7 +109,7 @@ public sealed class DashboardService(AppDbContext db, IClock clock, ICategoryAtt
     {
         DateOnly start;
         if (!string.IsNullOrWhiteSpace(month)
-            && DateTime.TryParseExact(month, "yyyy-MM", null, System.Globalization.DateTimeStyles.None, out var parsed))
+            && DateTime.TryParseExact(month, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
         {
             start = new DateOnly(parsed.Year, parsed.Month, 1);
         }

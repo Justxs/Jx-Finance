@@ -11,6 +11,7 @@ interface Props {
   editing: TransactionResponse | null;
   onCancelEdit: () => void;
   updatePending: boolean;
+  createPending: boolean;
   onCreate: (values: TransactionFormValues) => void;
   onUpdate: (values: TransactionFormValues) => void;
 }
@@ -23,6 +24,7 @@ export function TransactionFormSection({
   editing,
   onCancelEdit,
   updatePending,
+  createPending,
   onCreate,
   onUpdate,
 }: Readonly<Props>) {
@@ -39,7 +41,7 @@ export function TransactionFormSection({
         <TransactionForm
           accounts={accounts}
           categories={categories}
-          pending={false}
+          pending={createPending}
           onSubmit={onCreate}
           onCancel={() => onCreateOpenChange(false)}
         />

@@ -63,6 +63,12 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
             return Result<CategoryResponse>.Failure(ErrorCodes.Validation, membershipError);
         }
 
+        if (category.UserId != currentUser.Id &&
+            (category.Scope != request.Scope || category.HouseholdId?.Value != request.HouseholdId))
+        {
+            return Result<CategoryResponse>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
+        }
+
         category.Name = request.Name.Trim();
         category.Icon = NormalizeIcon(request.Icon);
         category.Scope = request.Scope;
@@ -102,6 +108,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         await db.Transactions
+            .IgnoreQueryFilters()
             .Where(t => t.CategoryId == categoryId)
             .ExecuteUpdateAsync(
                 setters => setters
@@ -109,6 +116,12 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
                     .SetProperty(t => t.UpdatedAt, DateTimeOffset.UtcNow),
                 cancellationToken);
 
+        await db.TransactionLines.Where(l => l.CategoryId == categoryId)
+            .ExecuteUpdateAsync(s => s.SetProperty(l => l.CategoryId, (CategoryId?)null), cancellationToken);
+        await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.CategoryId, (CategoryId?)null), cancellationToken);
+        await db.Budgets.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
+            .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
         db.Categories.Remove(category);
         await db.SaveChangesAsync(cancellationToken);
 

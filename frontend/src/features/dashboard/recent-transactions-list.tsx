@@ -78,7 +78,7 @@ export function RecentTransactionsList() {
 
   return (
     <section className="card">
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-6 py-4">
         <h2 className="font-semibold">{t("dashboard.recent")}</h2>
         <Link to="/transactions" className="text-sm font-medium text-primary hover:underline">
           {t("nav.transactions")} →

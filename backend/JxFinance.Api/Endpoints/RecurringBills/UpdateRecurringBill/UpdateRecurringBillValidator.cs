@@ -9,8 +9,11 @@ public sealed class UpdateRecurringBillValidator : Validator<UpdateRecurringBill
 {
     public UpdateRecurringBillValidator()
     {
+        RuleFor(r => r.Kind).IsInEnum();
+        RuleFor(r => r.Cadence).IsInEnum();
+        RuleFor(r => r.Amount).Null().When(r => r.Kind == RecurringBillKind.Variable);
         RuleFor(r => r.Name).NotEmpty().MaximumLength(100);
-        RuleFor(r => r.RemindDaysBefore).GreaterThanOrEqualTo(0);
+        RuleFor(r => r.RemindDaysBefore).InclusiveBetween(0, 365);
         RuleFor(r => r.NextDueDate).NotEmpty();
         RuleFor(r => r.Amount)
             .Must(a => a is null || (MoneyWire.IsValid(a) && MoneyWire.Parse(a).Amount > 0))

@@ -18,7 +18,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task OpenApi_document_is_served_and_lists_the_ping_endpoint()
     {
-        var response = await Client.GetAsync("/swagger/v1/swagger.json");
+        var response = await Client.GetAsync("/openapi/v1.json");
         response.EnsureSuccessStatusCode();
 
         var json = await response.Content.ReadAsStringAsync();

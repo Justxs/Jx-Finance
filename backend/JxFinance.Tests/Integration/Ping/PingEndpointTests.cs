@@ -14,7 +14,7 @@ public sealed class PingEndpointTests(ApiFixture fixture) : IntegrationTestBase(
 
         var body = await response.Content.ReadFromJsonAsync<PingResponse>();
         Assert.NotNull(body);
-        Assert.Equal("pong", body!.Message);
+        Assert.Equal("pong", body.Message);
         Assert.True(body.UtcNow <= DateTimeOffset.UtcNow);
     }
 

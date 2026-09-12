@@ -23,11 +23,11 @@ export function ReportFilters({ dateFrom, dateTo, onChange }: Readonly<Props>) {
 
   return (
     <div className="flex flex-wrap items-end gap-3">
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label htmlFor="report-preset">{t("reports.range")}</Label>
         <Select
           id="report-preset"
-          className="w-44"
+          className="sm:w-44"
           value={preset}
           onChange={(e) => handlePresetChange(e.target.value)}
         >
@@ -39,23 +39,23 @@ export function ReportFilters({ dateFrom, dateTo, onChange }: Readonly<Props>) {
         </Select>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label htmlFor="report-from">{t("reports.from")}</Label>
         <DatePicker
           id="report-from"
           value={dateFrom}
           onChange={(value) => onChange({ dateFrom: value, dateTo })}
-          className="w-40"
+          className="sm:w-40"
         />
       </div>
 
-      <div className="space-y-1.5">
+      <div className="w-full space-y-1.5 sm:w-auto">
         <Label htmlFor="report-to">{t("reports.to")}</Label>
         <DatePicker
           id="report-to"
           value={dateTo}
           onChange={(value) => onChange({ dateFrom, dateTo: value })}
-          className="w-40"
+          className="sm:w-40"
         />
       </div>
     </div>

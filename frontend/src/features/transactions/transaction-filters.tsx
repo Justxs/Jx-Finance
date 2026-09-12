@@ -38,7 +38,7 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         />
       </div>
 
-      <div className="w-36">
+      <div className="w-full sm:w-36">
         <Select
           value={search.type ?? ""}
           onChange={(e) =>
@@ -51,7 +51,7 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         </Select>
       </div>
 
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <Select
           value={search.accountId ?? ""}
           onChange={(e) => setFilter({ accountId: e.target.value || undefined })}
@@ -65,7 +65,7 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         </Select>
       </div>
 
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <Select
           value={search.categoryId ?? ""}
           onChange={(e) => setFilter({ categoryId: e.target.value || undefined })}
@@ -79,7 +79,7 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         </Select>
       </div>
 
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <DatePicker
           value={search.dateFrom ?? ""}
           placeholder={t("reports.from")}
@@ -87,7 +87,7 @@ export function TransactionFilters({ accounts, categories }: Readonly<Props>) {
         />
       </div>
 
-      <div className="w-40">
+      <div className="w-full sm:w-40">
         <DatePicker
           value={search.dateTo ?? ""}
           placeholder={t("reports.to")}

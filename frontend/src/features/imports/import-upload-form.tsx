@@ -11,6 +11,7 @@ interface Props {
   onAccountChange: (accountId: string) => void;
   fileInputRef: RefObject<HTMLInputElement | null>;
   onPreview: () => void;
+  onFileChange: () => void;
   previewPending: boolean;
 }
 
@@ -20,6 +21,7 @@ export function ImportUploadForm({
   onAccountChange,
   fileInputRef,
   onPreview,
+  onFileChange,
   previewPending,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -27,7 +29,7 @@ export function ImportUploadForm({
   return (
     <div className="border-b p-6">
       <h2 className="mb-5 font-semibold">{t("imports.title")}</h2>
-      <div className="grid gap-4 md:grid-cols-3 md:items-end">
+      <div className="form-grid">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="import-account">
             {t("transactions.account")}
@@ -35,6 +37,7 @@ export function ImportUploadForm({
           <Select
             id="import-account"
             value={accountId}
+            disabled={previewPending}
             onChange={(e) => onAccountChange(e.target.value)}
           >
             {accounts.map((account) => (
@@ -44,7 +47,7 @@ export function ImportUploadForm({
             ))}
           </Select>
         </div>
-        <div className="space-y-1.5 md:col-span-2">
+        <div className="space-y-1.5 col-span-full">
           <label className="text-sm font-medium" htmlFor="import-file">
             {t("imports.file")}
           </label>
@@ -52,6 +55,8 @@ export function ImportUploadForm({
             id="import-file"
             ref={fileInputRef}
             accept=".csv,text/csv"
+            disabled={previewPending}
+            onChange={onFileChange}
             placeholder={t("imports.chooseFile")}
           />
         </div>

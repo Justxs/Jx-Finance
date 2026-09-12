@@ -31,11 +31,11 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
   const Icon = change >= 0 ? TrendingUp : TrendingDown;
 
   return (
-    <div className="card flex items-start justify-between p-6">
-      <div>
+    <div className="card flex flex-wrap items-start justify-between gap-3 p-6">
+      <div className="min-w-0 break-words">
         <p className="text-sm font-medium text-muted-foreground">{t("reports.netWorthChange")}</p>
         <p
-          className={`mt-2 text-3xl font-semibold tabular-nums tracking-tight ${change >= 0 ? "text-secondary" : "text-destructive"}`}
+          className={`mt-2 text-2xl font-semibold tabular-nums tracking-tight ${change >= 0 ? "text-secondary" : "text-destructive"}`}
         >
           {change >= 0 ? "+" : ""}
           {money.format(change)}

@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
@@ -32,7 +33,7 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
         Assert.Equal(expected, decimal.Parse(after!.NetWorth));
 
         var history = await Client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
-        Assert.Contains(history!.Items, i => i.Date == DateOnly.Parse(today));
+        Assert.Contains(history!.Items, i => i.Date == DateOnly.Parse(today, CultureInfo.InvariantCulture));
 
         await Client.DeleteAsync($"/api/assets/{asset!.Id}");
         await Client.DeleteAsync($"/api/debts/{debt!.Id}");

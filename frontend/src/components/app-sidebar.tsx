@@ -35,7 +35,7 @@ function initials(name: string | undefined) {
     .join("");
 }
 
-const navItems = [
+export const navItems = [
   { to: "/", key: "nav.dashboard", icon: LayoutDashboard },
   { to: "/transactions", key: "nav.transactions", icon: ArrowLeftRight },
   { to: "/accounts", key: "nav.accounts", icon: WalletCards },
@@ -61,7 +61,7 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "sticky top-0 flex h-screen shrink-0 flex-col border-r bg-card transition-[width] duration-200",
+        "sticky top-0 hidden h-screen md:flex shrink-0 flex-col border-r bg-card transition-[width] duration-200",
         collapsed ? "w-16" : "w-60",
       )}
     >
@@ -76,7 +76,10 @@ export function AppSidebar() {
         </Link>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 px-3">
+      <nav
+        aria-label={t("nav.main")}
+        className="flex min-h-0 overflow-y-auto flex-1 flex-col gap-1 px-3"
+      >
         {visibleNavItems.map((item) => (
           <Link
             key={item.to}
@@ -85,7 +88,7 @@ export function AppSidebar() {
               "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
               collapsed && "justify-center px-0",
             )}
-            activeProps={{ className: "bg-accent text-accent-foreground" }}
+            activeProps={{ className: "bg-accent text-accent-foreground font-semibold" }}
             activeOptions={{ exact: item.to === "/" }}
             title={collapsed ? t(item.key) : undefined}
           >
@@ -100,7 +103,7 @@ export function AppSidebar() {
           <div className="flex flex-col items-center gap-2">
             <Link
               to="/profile"
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
+              className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-semibold text-primary"
               title={me.data?.displayName ?? undefined}
             >
               {initials(me.data?.displayName)}
@@ -123,7 +126,7 @@ export function AppSidebar() {
               to="/profile"
               className="flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1.5 py-1.5 transition-colors hover:bg-accent"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-sm font-semibold text-primary">
                 {initials(me.data?.displayName)}
               </span>
               <span className="min-w-0 flex-1">

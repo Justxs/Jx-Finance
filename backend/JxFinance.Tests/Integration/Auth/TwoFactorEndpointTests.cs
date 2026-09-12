@@ -27,7 +27,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         Assert.False(initialLoginBody!.TwoFactorRequired);
         Assert.NotNull(initialLoginBody.Profile);
 
-        var setupResponse = await userClient.PostAsync("/api/auth/2fa/setup", null);
+        var setupResponse = await userClient.PostAsJsonAsync("/api/auth/2fa/setup", new { password });
         setupResponse.EnsureSuccessStatusCode();
         var setup = await setupResponse.Content.ReadFromJsonAsync<SetupDto>();
         Assert.False(string.IsNullOrWhiteSpace(setup!.SharedKey));
@@ -76,7 +76,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         var loginWithRecoveryBody = await loginWithRecovery.Content.ReadFromJsonAsync<LoginDto>();
         Assert.False(loginWithRecoveryBody!.TwoFactorRequired);
 
-        var disableResponse = await userClient.PostAsync("/api/auth/2fa/disable", null);
+        var disableResponse = await userClient.PostAsJsonAsync("/api/auth/2fa/disable", new { password });
         Assert.Equal(HttpStatusCode.NoContent, disableResponse.StatusCode);
 
         await userClient.PostAsync("/api/auth/logout", null);

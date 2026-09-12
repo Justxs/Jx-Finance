@@ -33,7 +33,6 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
       createMutation.mutate({ data: { name: value.name.trim() } });
-      form.reset();
     },
   });
 

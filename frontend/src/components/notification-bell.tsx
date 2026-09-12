@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
-import { useState, type FocusEvent } from "react";
+import { useId, useState, type FocusEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetNotificationsEndpointQueryKey,
@@ -9,11 +9,14 @@ import {
   useMarkNotificationReadEndpoint,
 } from "@/api/generated";
 import { Button } from "@/components/ui/button";
+import { useDate } from "@/hooks/use-formatters";
 
 export function NotificationBell() {
   const { t } = useTranslation();
+  const date = useDate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const panelId = useId();
 
   const notifications = useGetNotificationsEndpoint({ unread: true });
   const unreadList = notifications.data ?? [];
@@ -34,7 +37,13 @@ export function NotificationBell() {
   }
 
   return (
-    <div className="relative" onBlur={handleBlur}>
+    <div
+      className="relative"
+      onBlur={handleBlur}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
       <Button
         type="button"
         variant="outline"
@@ -42,6 +51,8 @@ export function NotificationBell() {
         onClick={() => setOpen((prev) => !prev)}
         aria-label={t("notifications.title")}
         title={t("notifications.title")}
+        aria-expanded={open}
+        aria-controls={open ? panelId : undefined}
       >
         <Bell />
       </Button>
@@ -52,8 +63,11 @@ export function NotificationBell() {
       ) : null}
 
       {open ? (
-        <div className="absolute right-0 top-full z-50 mt-2 w-80 rounded-md border bg-card shadow-md">
-          <div className="flex items-center justify-between border-b px-4 py-2.5">
+        <div
+          id={panelId}
+          className="fixed inset-x-4 top-16 z-50 rounded-md border bg-card shadow-md sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
             <span className="text-sm font-semibold">{t("notifications.title")}</span>
             {unreadList.length > 0 ? (
               <Button
@@ -67,7 +81,7 @@ export function NotificationBell() {
               </Button>
             ) : null}
           </div>
-          <div className="max-h-96 overflow-y-auto">
+          <div className="max-h-[min(24rem,calc(100dvh-9rem))] overflow-y-auto overscroll-contain break-words">
             {unreadList.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-muted-foreground">
                 {t("notifications.empty")}
@@ -83,7 +97,14 @@ export function NotificationBell() {
                       onClick={() => markReadMutation.mutate({ id: notification.id! })}
                     >
                       <p className="font-medium">{notification.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">{notification.message}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {notification.type === "billDue" &&
+                        /^\d{4}-\d{2}-\d{2}$/.test(notification.message ?? "")
+                          ? t("notifications.billDue", {
+                              date: date.format(new Date(`${notification.message}T12:00:00`)),
+                            })
+                          : notification.message}
+                      </p>
                     </button>
                   </li>
                 ))}

@@ -7,7 +7,7 @@ public static class Totp
     public static string GenerateCode(string base32Secret, DateTimeOffset? at = null)
     {
         var secretBytes = Base32Decode(base32Secret);
-        var counter = (long)((at ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds() / 30);
+        var counter = (at ?? DateTimeOffset.UtcNow).ToUnixTimeSeconds() / 30;
 
         var counterBytes = BitConverter.GetBytes(counter);
         if (BitConverter.IsLittleEndian)

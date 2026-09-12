@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Pencil } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,6 +8,7 @@ import {
   useGetBudgetsEndpoint,
   useGetCategoriesEndpoint,
 } from "@/api/generated";
+import type { BudgetResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -19,6 +20,7 @@ export function BudgetsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
+  const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
   const categories = useGetCategoriesEndpoint();
@@ -54,14 +56,22 @@ export function BudgetsPage() {
           const overBudget = spent > limit;
           return (
             <li key={budget.id} className="space-y-2 px-6 py-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">{budget.categoryName}</p>
-                <div className="flex items-center gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <p className="min-w-0 break-words font-medium">{budget.categoryName}</p>
+                <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={`text-sm font-semibold tabular-nums ${overBudget ? "text-destructive" : ""}`}
                   >
                     {money.format(spent)} / {money.format(limit)}
                   </span>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={t("actions.edit")}
+                    onClick={() => setEditing(budget)}
+                  >
+                    <Pencil />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -89,7 +99,7 @@ export function BudgetsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("budgets.title")} subtitle={t("budgets.subtitle")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -108,6 +118,23 @@ export function BudgetsPage() {
         />
       </Dialog>
 
+      <Dialog
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) setEditing(null);
+        }}
+        title={t("actions.edit")}
+      >
+        <CreateBudgetForm
+          initial={editing ?? undefined}
+          categories={categoryList}
+          onCreated={() => {
+            invalidate();
+            setEditing(null);
+          }}
+          onCancel={() => setEditing(null)}
+        />
+      </Dialog>
       <section className="card overflow-hidden">{content}</section>
     </div>
   );

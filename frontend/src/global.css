@@ -1,63 +1,62 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f9f9f7;
-  --foreground: #0b0b0b;
+  --background: #f5f6f7;
+  --foreground: #20262d;
   --card: #ffffff;
-  --card-foreground: #0b0b0b;
+  --card-foreground: #20262d;
   --popover: #ffffff;
-  --popover-foreground: #0b0b0b;
-  --primary: #4338ca;
+  --popover-foreground: #20262d;
+  --primary: #253e52;
   --primary-foreground: #ffffff;
-  --secondary: #006300;
+  --secondary: #267051;
   --secondary-foreground: #ffffff;
-  --muted: #f0efec;
-  --muted-foreground: #6b6a63;
-  --accent: #eef2ff;
-  --accent-foreground: #3730a3;
-  --destructive: #d03b3b;
+  --muted: #eef0f2;
+  --muted-foreground: #626e79;
+  --accent: #e9eef2;
+  --accent-foreground: #233e52;
+  --destructive: #bb443d;
   --destructive-foreground: #ffffff;
-  --border: #e5e3dd;
-  --input: #d8d6cf;
-  --ring: #4338ca;
+  --border: #dce1e5;
+  --input: #b9c2ca;
+  --ring: #253e52;
   --chart-1: #2a78d6;
   --chart-2: #1baf7a;
   --chart-3: #eda100;
   --chart-4: #008300;
   --chart-5: #4a3aa7;
-  --radius: 0.5rem;
+  --radius: 0.375rem;
 }
 
 .dark {
-  --background: #0d0d0d;
+  --background: #14191e;
   --foreground: #ffffff;
-  --card: #1a1a19;
+  --card: #1b2229;
   --card-foreground: #ffffff;
-  --popover: #1a1a19;
+  --popover: #1b2229;
   --popover-foreground: #ffffff;
-  --primary: #818cf8;
-  --primary-foreground: #1e1b4b;
-  --secondary: #0ca30c;
+  --primary: #a6c5dc;
+  --primary-foreground: #273b4a;
+  --secondary: #7cbd9c;
   --secondary-foreground: #04260c;
-  --muted: #232322;
-  --muted-foreground: #a8a6a0;
-  --accent: #1e1b4b;
-  --accent-foreground: #c7d2fe;
-  --destructive: #d03b3b;
+  --muted: #252e37;
+  --muted-foreground: #a4afb9;
+  --accent: #273b4a;
+  --accent-foreground: #cbdde9;
+  --destructive: #bb443d;
   --destructive-foreground: #ffffff;
-  --border: #2a2a28;
-  --input: #3a3a37;
-  --ring: #818cf8;
+  --border: #343e48;
+  --input: #45515d;
+  --ring: #a6c5dc;
   --chart-1: #3987e5;
   --chart-2: #199e70;
   --chart-3: #c98500;
   --chart-4: #008300;
   --chart-5: #9085e9;
-  --radius: 0.5rem;
+  --radius: 0.375rem;
 }
 
 @theme inline {
@@ -91,8 +90,8 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
 
-  --font-sans: "Inter", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", monospace;
   --font-serif: Georgia, serif;
 }
 
@@ -107,7 +106,7 @@
     @apply bg-background text-foreground;
     margin: 0;
     min-height: 100vh;
-    letter-spacing: -0.01em;
+    letter-spacing: 0;
   }
 
   #root {
@@ -179,10 +178,30 @@
 
 @layer components {
   .card {
-    @apply rounded-xl border bg-card text-card-foreground shadow-sm;
+    @apply min-w-0 rounded-md border bg-card text-card-foreground;
   }
 
-  .page-shell {
-    @apply min-h-screen px-6 pb-14 pt-8;
+  .form-grid {
+    @apply grid items-start gap-4;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  }
+
+  .form-grid > * {
+    min-width: 0;
+  }
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }

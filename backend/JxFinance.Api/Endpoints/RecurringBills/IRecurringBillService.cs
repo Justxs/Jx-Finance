@@ -11,7 +11,7 @@ public interface IRecurringBillService
 
     Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<RecurringBillResponse> CreateAsync(CreateRecurringBillRequest request, CancellationToken cancellationToken);
+    Task<Result<RecurringBillResponse>> CreateAsync(CreateRecurringBillRequest request, CancellationToken cancellationToken);
 
     Task<Result<RecurringBillResponse>> UpdateAsync(
         UpdateRecurringBillRequest request,

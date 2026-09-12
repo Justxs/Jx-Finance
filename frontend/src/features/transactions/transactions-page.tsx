@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { normalizeMoney } from "@/lib/validation";
 import { Plus } from "lucide-react";
 import {
   getGetAccountsEndpointQueryKey,
@@ -89,11 +89,18 @@ export function TransactionsPage() {
             accountId: data.accountId,
             categoryId: data.categoryId,
             type: data.type,
-            amount: data.amount,
+            amount: normalizeMoney(data.amount ?? ""),
             date: data.date,
             description: data.description,
             source: "manual",
-            isSplit: false,
+            isSplit: (data.lines?.length ?? 0) > 0,
+            lines:
+              data.lines?.map((line, index) => ({
+                id: `optimistic-line-${index}`,
+                categoryId: line.categoryId,
+                amount: line.amount,
+                description: line.description,
+              })) ?? null,
             createdAt: new Date().toISOString(),
           };
           queryClient.setQueryData<PagedResponseOfTransactionResponse>(listKey, {
@@ -109,6 +116,7 @@ export function TransactionsPage() {
           queryClient.setQueryData(listKey, context.previous);
         }
       },
+      onSuccess: () => setCreateOpen(false),
       onSettled: invalidateLedger,
     },
   });
@@ -135,13 +143,6 @@ export function TransactionsPage() {
     deletePending: deleteMutation.isPending,
   });
 
-  const table = useReactTable({
-    data: transactions.data?.items ?? [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    manualPagination: true,
-  });
-
   const total = transactions.data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const accountList = accounts.data ?? [];
@@ -149,15 +150,15 @@ export function TransactionsPage() {
 
   function handleCreate(values: TransactionFormValues) {
     createMutation.mutate({ data: values });
-    setCreateOpen(false);
   }
 
   function handleUpdate(values: TransactionFormValues) {
-    updateMutation.mutate({ id: editing!.id!, data: values });
+    if (!editing?.id) return;
+    updateMutation.mutate({ id: editing.id, data: values });
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("transactions.title")} subtitle={t("transactions.subtitle")}>
         <Button
           onClick={() => setCreateOpen(true)}
@@ -180,6 +181,7 @@ export function TransactionsPage() {
         editing={editing}
         onCancelEdit={() => setEditing(null)}
         updatePending={updateMutation.isPending}
+        createPending={createMutation.isPending}
         onCreate={handleCreate}
         onUpdate={handleUpdate}
       />
@@ -206,7 +208,8 @@ export function TransactionsPage() {
       />
 
       <TransactionsTable
-        table={table}
+        data={transactions.data?.items ?? []}
+        columns={columns}
         isPending={transactions.isPending}
         page={page}
         pageCount={pageCount}

@@ -6,6 +6,7 @@ import {
   getGetAccountsEndpointQueryKey,
   getGetDashboardSummaryEndpointQueryKey,
   getGetTransactionsEndpointQueryKey,
+  getGetTransfersEndpointQueryKey,
   useGetCategoriesEndpoint,
   useImportConfirmEndpoint,
   useImportPreviewEndpoint,
@@ -24,6 +25,7 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
+  const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
   const categories = useGetCategoriesEndpoint();
@@ -33,6 +35,7 @@ export function ImportSection({ accounts }: Readonly<Props>) {
     queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetTransfersEndpointQueryKey() });
   }
 
   const previewMutation = useImportPreviewEndpoint({
@@ -41,7 +44,9 @@ export function ImportSection({ accounts }: Readonly<Props>) {
         setRows(
           (data.rows ?? []).map((row) => ({
             ...row,
-            selected: !row.isDuplicate,
+            selected: !row.isDuplicate && !row.looksLikeTransfer,
+            transferAccountId: "",
+            existingTransferId: "",
             categoryId: "",
           })),
         );
@@ -56,9 +61,7 @@ export function ImportSection({ accounts }: Readonly<Props>) {
           t("imports.confirmed", { imported: data.imported, skipped: data.skippedDuplicates }),
         );
         setRows(null);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        setUploadKey((key) => key + 1);
         invalidate();
       },
     },
@@ -90,7 +93,9 @@ export function ImportSection({ accounts }: Readonly<Props>) {
           description: row.description,
           amount: row.amount!,
           type: row.type!,
-          categoryId: row.categoryId || null,
+          categoryId: row.transferAccountId ? null : row.categoryId || null,
+          transferAccountId: row.transferAccountId || null,
+          existingTransferId: row.existingTransferId || null,
         })),
       },
     });
@@ -99,18 +104,25 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   return (
     <section className="card">
       <ImportUploadForm
+        key={uploadKey}
         accounts={accounts}
         accountId={accountId}
-        onAccountChange={setAccountId}
+        onAccountChange={(id) => {
+          setAccountId(id);
+          setRows(null);
+        }}
         fileInputRef={fileInputRef}
         onPreview={handlePreview}
-        previewPending={previewMutation.isPending}
+        onFileChange={() => setRows(null)}
+        previewPending={previewMutation.isPending || confirmMutation.isPending}
       />
 
       {rows ? (
         <div className="space-y-4 p-6">
           <ImportPreviewTable
             rows={rows}
+            accountId={accountId}
+            accounts={accounts}
             categories={categoryList}
             onRowChange={updateRow}
             onConfirm={handleConfirm}

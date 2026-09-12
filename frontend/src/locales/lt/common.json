@@ -8,14 +8,16 @@
     "categories": "Kategorijos",
     "budgets": "Biudžetai",
     "goals": "Tikslai",
-    "netWorth": "Grynoji verte",
+    "netWorth": "Grynoji vertė",
     "recurringBills": "Periodinės sąskaitos",
     "households": "Namų ūkiai",
     "reports": "Ataskaitos",
     "users": "Naudotojai",
     "profile": "Jūsų profilis",
     "collapse": "Suskleisti šoninę juostą",
-    "expand": "Išskleisti šoninę juostą"
+    "expand": "Išskleisti šoninę juostą",
+    "main": "Pagrindinė navigacija",
+    "skip": "Pereiti prie turinio"
   },
   "actions": {
     "add": "Pridėti",
@@ -25,7 +27,8 @@
     "delete": "Ištrinti",
     "archive": "Archyvuoti",
     "previous": "Ankstesnis",
-    "next": "Kitas"
+    "next": "Kitas",
+    "close": "Uždaryti"
   },
   "datePicker": {
     "placeholder": "Pasirinkite datą",
@@ -196,7 +199,7 @@
   },
   "goals": {
     "title": "Tikslai",
-    "subtitle": "Taupymo tikslai, į kuriuos siekti.",
+    "subtitle": "Planuokite ir stebėkite savo santaupas.",
     "add": "Pridėti tikslą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Atsargos fondas",
@@ -275,7 +278,8 @@
   "notifications": {
     "title": "Pranešimai",
     "empty": "Naujų pranešimų nėra.",
-    "markAllRead": "Pažymėti visus kaip skaitytus"
+    "markAllRead": "Pažymėti visus kaip skaitytus",
+    "billDue": "Mokėjimo data: {{date}}"
   },
   "households": {
     "title": "Namų ūkiai",
@@ -328,7 +332,16 @@
     "confirmed": "Importuota {{imported}} operacijų (praleista {{skipped}} dublikatų)",
     "noRows": "Šiame faile nerasta importuojamų eilučių.",
     "duplicate": "Jau importuota",
-    "looksLikeTransfer": "Panašu į pervedimą"
+    "looksLikeTransfer": "Panašu į pervedimą",
+    "recordAs": "Įrašyti kaip",
+    "transaction": "Pajamos / išlaidos",
+    "transferWith": "Pervedimas · {{account}}",
+    "matchTransfer": "Susieti pervedimą",
+    "newTransfer": "Sukurti pervedimą",
+    "existingTransfer": "Esamas pervedimas",
+    "matchHelp": "Importuodami kitą sąskaitą, susiekite tą patį pervedimą, kad jis nebūtų įskaitytas du kartus.",
+    "selectRow": "Pasirinkti {{row}} eilutę",
+    "flags": "Būsena"
   },
   "status": {
     "label": "API būklė",
@@ -347,5 +360,8 @@
     "maxLength": "Turi būti ne daugiau nei {{max}} simbolių.",
     "email": "Įveskite teisingą el. pašto adresą.",
     "minLength": "Turi būti ne mažiau nei {{min}} simbolių."
+  },
+  "pagination": {
+    "pageOf": "{{page}} puslapis iš {{pages}}"
   }
 }
