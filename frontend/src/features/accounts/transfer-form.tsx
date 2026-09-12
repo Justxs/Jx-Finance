@@ -69,7 +69,6 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         date: value.date,
         description: value.description.trim() || null,
       });
-      form.reset();
     },
   });
 
@@ -81,7 +80,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-5 md:items-start"
+      className="form-grid"
     >
       <form.Field name="fromAccountId">
         {(field) => (
@@ -174,7 +173,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
 
       <form.Field name="description">
         {(field) => (
-          <div className="space-y-1.5 md:col-span-5">
+          <div className="space-y-1.5 col-span-full">
             <Label htmlFor="transfer-description">{t("transactions.description")}</Label>
             <Input
               id="transfer-description"

@@ -9,12 +9,12 @@ export function DashboardPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("dashboard.title")} subtitle={t("dashboard.subtitle")} />
 
       <DashboardStats />
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <section className="card p-6">
           <h2 className="mb-4 font-semibold">{t("dashboard.spendingByCategory")}</h2>
           <CategoryBreakdownChart />

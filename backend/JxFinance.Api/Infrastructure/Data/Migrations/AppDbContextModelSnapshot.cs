@@ -374,7 +374,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId", "Date");
+                    b.HasIndex("UserId", "Date")
+                        .IsUnique();
 
                     b.ToTable("NetWorthSnapshots");
                 });
@@ -465,6 +466,7 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(100)");
 
                     b.Property<DateOnly>("NextDueDate")
+                        .IsConcurrencyToken()
                         .HasColumnType("date");
 
                     b.Property<int>("RemindDaysBefore")
@@ -624,6 +626,33 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("UserId", "Date");
 
                     b.ToTable("Transfers");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transfers.TransferImport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("AccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ImportRef")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<Guid>("TransferId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TransferId");
+
+                    b.HasIndex("AccountId", "ImportRef")
+                        .IsUnique();
+
+                    b.ToTable("TransferImports");
                 });
 
             modelBuilder.Entity("JxFinance.Infrastructure.Auth.AppRole", b =>
@@ -999,6 +1028,21 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Transfers.TransferImport", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Accounts.Account", null)
+                        .WithMany()
+                        .HasForeignKey("AccountId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Transfers.Transfer", null)
+                        .WithMany()
+                        .HasForeignKey("TransferId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

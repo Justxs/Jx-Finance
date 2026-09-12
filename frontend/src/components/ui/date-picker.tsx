@@ -117,10 +117,12 @@ export function DatePicker({
         ref={buttonRef}
         id={id}
         type="button"
+        role="combobox"
         disabled={disabled}
         aria-invalid={ariaInvalid}
         aria-expanded={open}
         aria-haspopup="dialog"
+        aria-controls={panelId}
         popoverTarget={panelId}
         onBlur={onBlur}
         className={cn(
@@ -141,7 +143,7 @@ export function DatePicker({
         popover="auto"
         role="dialog"
         onToggle={handleToggle}
-        className="fixed inset-auto m-0 w-72 rounded-xl border bg-popover p-3 text-popover-foreground shadow-lg"
+        className="fixed inset-auto m-0 max-h-[calc(100dvh-1rem)] w-72 max-w-[calc(100vw-1rem)] overflow-y-auto rounded-md border bg-popover p-3 text-popover-foreground shadow-lg"
       >
         <div className="flex items-center justify-between">
           <Button
@@ -187,7 +189,7 @@ export function DatePicker({
                 type="button"
                 onClick={() => pick(iso)}
                 className={cn(
-                  "flex size-9 items-center justify-center rounded-md text-sm tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground",
+                  "flex h-9 w-full items-center justify-center rounded-md text-sm tabular-nums transition-colors hover:bg-accent hover:text-accent-foreground",
                   !inMonth && "text-muted-foreground/50",
                   isToday && !isSelected && "font-semibold text-primary",
                   isSelected &&

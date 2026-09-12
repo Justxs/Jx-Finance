@@ -44,7 +44,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const defaultValues: FormValues = {
     name: "",
-    type: AssetType.Other,
+    type: AssetType.other,
     currentValue: "",
     asOf: todayIsoDate(),
   };
@@ -54,7 +54,6 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
       createMutation.mutate({ data: value });
-      form.reset();
     },
   });
 
@@ -66,7 +65,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-5 md:items-start"
+      className="form-grid"
     >
       <form.Field name="name">
         {(field) => (
@@ -136,7 +135,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
         )}
       </form.Field>
 
-      <div className="flex items-end justify-end gap-2 md:col-span-5">
+      <div className="flex items-end justify-end gap-2 col-span-full">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("actions.cancel")}
         </Button>

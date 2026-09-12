@@ -5,12 +5,13 @@ using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Users;
 
-public sealed class UserService(UserManager<AppUser> userManager, IAuthService authService) : IUserService
+public sealed class UserService(UserManager<AppUser> userManager, IAuthService authService, AppDbContext db) : IUserService
 {
     public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -45,6 +46,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         }
 
         await userManager.AddToRoleAsync(user, request.Role);
+        await DevDataSeeder.SeedUserCategoriesAsync(db, user.Id, cancellationToken);
         return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
     }
 
@@ -69,6 +71,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         await userManager.RemoveFromRolesAsync(user, currentRoles);
         await userManager.AddToRoleAsync(user, request.Role);
 
+        await userManager.UpdateSecurityStampAsync(user);
         return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
     }
 
@@ -87,6 +90,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
 
         user.LockoutEnabled = true;
         await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.MaxValue);
+        await userManager.UpdateSecurityStampAsync(user);
 
         return Result<Guid>.Success(id);
     }
@@ -102,8 +106,11 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
             return Result<UserProfileResponse>.Failure(ErrorCodes.NotFound, "User not found.");
         }
 
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         user.DisplayName = request.DisplayName;
-        await userManager.UpdateAsync(user);
+        var profileResult = await userManager.UpdateAsync(user);
+        if (!profileResult.Succeeded)
+            return Result<UserProfileResponse>.Failure(ErrorCodes.Validation, string.Join("; ", profileResult.Errors.Select(e => e.Description)));
 
         if (request.NewPassword is not null)
         {
@@ -119,6 +126,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
             }
         }
 
+        await transaction.CommitAsync(cancellationToken);
         return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
     }
 }

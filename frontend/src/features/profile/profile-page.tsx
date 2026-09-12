@@ -11,7 +11,7 @@ export function ProfilePage() {
 
   if (me.isPending || !me.data) {
     return (
-      <div className="space-y-8">
+      <div className="space-y-6">
         <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
         <div className="card max-w-md space-y-4 p-6">
           <Skeleton className="h-9 w-full" />
@@ -22,7 +22,7 @@ export function ProfilePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("profile.title")} subtitle={t("profile.subtitle")} />
       <ProfileForm profile={me.data} />
       <TwoFactorSettings />

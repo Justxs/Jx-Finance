@@ -21,9 +21,9 @@ export function TransactionsToolbar({
 
   return (
     <section className="card p-6">
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-semibold">{t("transactions.filters")}</h2>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <a href={exportUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
             <Download />
             {t("transactions.exportCsv")}

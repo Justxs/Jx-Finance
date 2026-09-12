@@ -20,6 +20,7 @@ public sealed class TransferService(AppDbContext db) : ITransferService
         var pageSize = Math.Clamp(request.PageSize, 1, 200);
 
         var query = db.Transfers.AsQueryable();
+        if (request.Date is { } date) query = query.Where(t => t.Date == date);
         var total = await query.CountAsync(cancellationToken);
         var items = await query
             .OrderByDescending(t => t.Date)
@@ -72,6 +73,13 @@ public sealed class TransferService(AppDbContext db) : ITransferService
         if (transfer is null)
         {
             return Result<Guid>.Failure(ErrorCodes.NotFound, "Transfer not found.");
+        }
+
+        var visibleAccounts = await db.Accounts.CountAsync(
+            a => a.Id == transfer.FromAccountId || a.Id == transfer.ToAccountId, cancellationToken);
+        if (visibleAccounts != 2)
+        {
+            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Access to both accounts is required.");
         }
 
         db.Transfers.Remove(transfer);

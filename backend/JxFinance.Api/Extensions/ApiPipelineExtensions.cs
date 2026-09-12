@@ -1,7 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FastEndpoints;
-using FastEndpoints.Swagger;
 using JxFinance.Common.Middleware;
 using Scalar.AspNetCore;
 using Serilog;
@@ -24,12 +23,12 @@ public static class ApiPipelineExtensions
             c.Endpoints.ShortNames = true;
             c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
         });
-        app.UseSwaggerGen();
+        app.MapOpenApi();
 
         app.MapScalarApiReference(options =>
         {
             options.WithTitle("Jx Finance API")
-                .WithOpenApiRoutePattern("/swagger/{documentName}/swagger.json");
+                .WithOpenApiRoutePattern("/openapi/{documentName}.json");
         });
 
         app.MapHealthChecks("/health");

@@ -23,6 +23,16 @@ public static class DevDataSeeder
         ("Other", FlowType.Expense, "shapes"),
     ];
 
+    public static async Task SeedUserCategoriesAsync(AppDbContext db, Guid userId, CancellationToken cancellationToken)
+    {
+        if (await db.Categories.IgnoreQueryFilters().AnyAsync(c => c.UserId == userId, cancellationToken)) return;
+        db.Categories.AddRange(StarterCategories.Select(starter => new Category
+        {
+            UserId = userId, Name = starter.Name, Type = starter.Type, Icon = starter.Icon, IsDefault = true,
+        }));
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
     public static async Task SeedAsync(
         AppDbContext db,
         UserManager<AppUser> userManager,

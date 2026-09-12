@@ -30,10 +30,12 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
             : Result<RecurringBillResponse>.Success(ToResponse(bill));
     }
 
-    public async Task<RecurringBillResponse> CreateAsync(
+    public async Task<Result<RecurringBillResponse>> CreateAsync(
         CreateRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
+        var error = await ValidateReferencesAsync(request.AccountId, request.CategoryId, cancellationToken);
+        if (error is not null) return Result<RecurringBillResponse>.Failure(ErrorCodes.Validation, error);
         var bill = new RecurringBill
         {
             Name = request.Name.Trim(),
@@ -49,7 +51,7 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return ToResponse(bill);
+        return Result<RecurringBillResponse>.Success(ToResponse(bill));
     }
 
     public async Task<Result<RecurringBillResponse>> UpdateAsync(
@@ -63,6 +65,8 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
             return Result<RecurringBillResponse>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
         }
 
+        var error = await ValidateReferencesAsync(request.AccountId, request.CategoryId, cancellationToken);
+        if (error is not null) return Result<RecurringBillResponse>.Failure(ErrorCodes.Validation, error);
         bill.Name = request.Name.Trim();
         bill.Kind = request.Kind;
         bill.Amount = request.Amount is null ? null : MoneyWire.Parse(request.Amount);
@@ -96,12 +100,20 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
         ConfirmRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var lockId = BitConverter.ToInt64(request.Id.ToByteArray(), 0);
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var billId = new RecurringBillId(request.Id);
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
             return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
         }
+
+        if (!bill.IsActive)
+            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "This bill is inactive.");
+        if (request.ExpectedDueDate != bill.NextDueDate)
+            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Conflict, "This occurrence has changed or was already confirmed. Refresh the bill.");
 
         Money amount;
         if (bill.Kind == RecurringBillKind.Fixed)
@@ -110,7 +122,7 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(request.Amount) || !MoneyWire.IsValid(request.Amount))
+            if (string.IsNullOrWhiteSpace(request.Amount) || (!MoneyWire.IsValid(request.Amount) || MoneyWire.Parse(request.Amount).Amount <= 0))
             {
                 return Result<ConfirmRecurringBillResponse>.Failure(
                     ErrorCodes.Validation,
@@ -134,6 +146,9 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
             return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "Account does not exist.");
         }
 
+        if (bill.CategoryId is { } categoryId && !await db.Categories.AnyAsync(c => c.Id == categoryId && c.Type == FlowType.Expense, cancellationToken))
+            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "The bill category is no longer available.");
+
         var transaction = new Transaction
         {
             AccountId = accountId.Value,
@@ -148,10 +163,21 @@ public sealed class RecurringBillService(AppDbContext db) : IRecurringBillServic
 
         bill.NextDueDate = RecurringBill.Advance(bill.NextDueDate, bill.Cadence);
 
+        await db.Notifications.Where(n => n.RelatedType == "RecurringBill" && n.RelatedId == request.Id && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
+
         await db.SaveChangesAsync(cancellationToken);
 
+        await dbTransaction.CommitAsync(cancellationToken);
         return Result<ConfirmRecurringBillResponse>.Success(
             new ConfirmRecurringBillResponse(ToResponse(bill), transaction.Id.Value));
+    }
+
+    private async Task<string?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)
+    {
+        if (accountId is { } a && !await db.Accounts.AnyAsync(x => x.Id == new AccountId(a), ct)) return "Account does not exist.";
+        if (categoryId is { } c && !await db.Categories.AnyAsync(x => x.Id == new CategoryId(c) && x.Type == FlowType.Expense, ct)) return "Choose an accessible expense category.";
+        return null;
     }
 
     private static RecurringBillResponse ToResponse(RecurringBill bill) => new(

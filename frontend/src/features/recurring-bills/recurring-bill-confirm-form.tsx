@@ -30,8 +30,8 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
   const accountRequired = !bill.accountId && !accountId;
 
   return (
-    <div className="grid gap-3 rounded-md border bg-muted/30 p-4 md:grid-cols-4 md:items-end">
-      <p className="text-sm text-muted-foreground md:col-span-4">
+    <div className="form-grid rounded-md border bg-muted/30 p-4">
+      <p className="text-sm text-muted-foreground col-span-full">
         {t("recurringBills.confirmTitle")}
       </p>
       {isVariable ? (
@@ -73,6 +73,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
           confirmMutation.mutate({
             id: bill.id!,
             data: {
+              expectedDueDate: bill.nextDueDate!,
               amount: isVariable ? amount : null,
               accountId: bill.accountId ? null : accountId,
             },

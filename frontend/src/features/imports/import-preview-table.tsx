@@ -1,15 +1,21 @@
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, ImportPreviewRow } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, ImportPreviewRow } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 
+import { ImportTransferPicker } from "./import-transfer-picker";
+
 export interface PreviewRowState extends ImportPreviewRow {
+  transferAccountId: string;
+  existingTransferId: string;
   selected: boolean;
   categoryId: string;
 }
 
 interface Props {
   rows: PreviewRowState[];
+  accountId: string;
+  accounts: AccountResponse[];
   categories: CategoryResponse[];
   onRowChange: (index: number, patch: Partial<PreviewRowState>) => void;
   onConfirm: () => void;
@@ -18,6 +24,8 @@ interface Props {
 
 export function ImportPreviewTable({
   rows,
+  accounts,
+  accountId,
   categories,
   onRowChange,
   onConfirm,
@@ -31,15 +39,16 @@ export function ImportPreviewTable({
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto" role="region" aria-label={t("imports.preview")} tabIndex={0}>
+        <table className="w-full min-w-[48rem] text-sm">
           <thead>
-            <tr className="border-b text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            <tr className="border-b text-left text-xs font-medium tracking-wide text-muted-foreground">
               <th className="py-2 pr-3" />
               <th className="py-2 pr-3">{t("transactions.date")}</th>
               <th className="py-2 pr-3">{t("transactions.description")}</th>
               <th className="py-2 pr-3 text-right">{t("transactions.amount")}</th>
               <th className="py-2 pr-3">{t("transactions.category")}</th>
+              <th className="py-2 pr-3">{t("imports.recordAs")}</th>
               <th className="py-2 pr-3">{t("imports.flags")}</th>
             </tr>
           </thead>
@@ -47,9 +56,10 @@ export function ImportPreviewTable({
             {rows.map((row, index) => {
               const rowCategories = categories.filter((c) => c.type === row.type);
               return (
-                <tr key={row.importRef} className="border-b last:border-0">
+                <tr key={`${row.importRef}-${index}`} className="border-b last:border-0">
                   <td className="py-2 pr-3">
                     <input
+                      aria-label={t("imports.selectRow", { row: index + 1 })}
                       type="checkbox"
                       className="size-4 rounded border-input accent-primary"
                       checked={row.selected}
@@ -66,6 +76,8 @@ export function ImportPreviewTable({
                   </td>
                   <td className="py-2 pr-3">
                     <Select
+                      aria-label={t("transactions.category")}
+                      disabled={!!row.transferAccountId}
                       value={row.categoryId}
                       onChange={(e) => onRowChange(index, { categoryId: e.target.value })}
                     >
@@ -76,6 +88,14 @@ export function ImportPreviewTable({
                         </option>
                       ))}
                     </Select>
+                  </td>
+                  <td className="py-2 pr-3">
+                    <ImportTransferPicker
+                      row={row}
+                      accounts={accounts}
+                      accountId={accountId}
+                      onChange={(patch) => onRowChange(index, patch)}
+                    />
                   </td>
                   <td className="py-2 pr-3">
                     <div className="flex gap-1">
@@ -97,7 +117,7 @@ export function ImportPreviewTable({
           </tbody>
         </table>
       </div>
-      <Button disabled={confirmPending} onClick={onConfirm}>
+      <Button disabled={confirmPending || !rows.some((row) => row.selected)} onClick={onConfirm}>
         {t("imports.confirm")}
       </Button>
     </>

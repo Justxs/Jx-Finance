@@ -33,7 +33,7 @@ export function UsersTable({
   if (isPending) {
     body = Array.from({ length: 3 }, (_, index) => (
       <tr key={index} className="border-b last:border-0">
-        <td colSpan={5} className="px-6 py-3.5">
+        <td colSpan={4} className="px-6 py-3.5">
           <Skeleton className="h-4 w-full" />
         </td>
       </tr>
@@ -41,7 +41,7 @@ export function UsersTable({
   } else if (users.length === 0) {
     body = (
       <tr>
-        <td colSpan={5} className="px-6 py-10 text-center text-muted-foreground">
+        <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
           {t("users.empty")}
         </td>
       </tr>
@@ -101,23 +101,25 @@ export function UsersTable({
 
   return (
     <section className="card overflow-hidden">
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b bg-muted/50 text-left">
-            <th className="px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {t("users.displayName")}
-            </th>
-            <th className="px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {t("users.role")}
-            </th>
-            <th className="px-6 py-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
-              {t("users.status")}
-            </th>
-            <th className="px-6 py-3" />
-          </tr>
-        </thead>
-        <tbody>{body}</tbody>
-      </table>
+      <div className="overflow-x-auto" role="region" aria-label={t("users.title")} tabIndex={0}>
+        <table className="w-full min-w-[40rem] text-sm">
+          <thead>
+            <tr className="border-b bg-muted/50 text-left">
+              <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                {t("users.displayName")}
+              </th>
+              <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                {t("users.role")}
+              </th>
+              <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                {t("users.status")}
+              </th>
+              <th className="px-6 py-3" />
+            </tr>
+          </thead>
+          <tbody>{body}</tbody>
+        </table>
+      </div>
     </section>
   );
 }

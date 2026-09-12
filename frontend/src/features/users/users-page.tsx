@@ -42,7 +42,7 @@ export function UsersPage() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("users.title")} subtitle={t("users.subtitle")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

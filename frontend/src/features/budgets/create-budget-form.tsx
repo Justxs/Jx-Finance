@@ -1,8 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateBudgetEndpoint } from "@/api/generated";
-import type { CategoryResponse } from "@/api/generated/model";
+import { useCreateBudgetEndpoint, useUpdateBudgetEndpoint } from "@/api/generated";
+import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -17,11 +17,12 @@ interface FormValues {
 
 interface Props {
   categories: CategoryResponse[];
+  initial?: BudgetResponse;
   onCreated: () => void;
   onCancel: () => void;
 }
 
-export function CreateBudgetForm({ categories, onCreated, onCancel }: Readonly<Props>) {
+export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -32,19 +33,20 @@ export function CreateBudgetForm({ categories, onCreated, onCancel }: Readonly<P
 
   const createMutation = useCreateBudgetEndpoint({ mutation: { onSuccess: onCreated } });
 
+  const updateMutation = useUpdateBudgetEndpoint({ mutation: { onSuccess: onCreated } });
+
   const defaultValues: FormValues = {
-    categoryId: expenseCategories[0]?.id ?? "",
-    limitAmount: "",
+    categoryId: initial?.categoryId ?? expenseCategories[0]?.id ?? "",
+    limitAmount: initial?.limitAmount ?? "",
   };
 
   const form = useForm({
     defaultValues,
     validators: { onChange: schema },
     onSubmit: ({ value }) => {
-      createMutation.mutate({
-        data: { categoryId: value.categoryId, limitAmount: value.limitAmount },
-      });
-      form.reset();
+      const data = { categoryId: value.categoryId, limitAmount: value.limitAmount };
+      if (initial?.id) updateMutation.mutate({ id: initial.id, data });
+      else createMutation.mutate({ data });
     },
   });
 
@@ -62,7 +64,7 @@ export function CreateBudgetForm({ categories, onCreated, onCancel }: Readonly<P
       noValidate
       className="space-y-4"
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="form-grid">
         <form.Field name="categoryId">
           {(field) => (
             <div className="space-y-1.5">
@@ -108,8 +110,11 @@ export function CreateBudgetForm({ categories, onCreated, onCancel }: Readonly<P
         </Button>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
-              {t("budgets.add")}
+            <Button
+              type="submit"
+              disabled={createMutation.isPending || updateMutation.isPending || !canSubmit}
+            >
+              {t(initial ? "actions.save" : "budgets.add")}
             </Button>
           )}
         </form.Subscribe>

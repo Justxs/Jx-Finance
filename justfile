@@ -6,9 +6,8 @@ dev:
 
 # Regenerate the frontend API client from the running API's OpenAPI spec.
 gen:
-    Invoke-WebRequest http://localhost:8091/swagger/v1/swagger.json -OutFile frontend/openapi.json
-    pnpm --prefix frontend orval
-    pnpm --prefix frontend exec oxfmt src/api/generated
+    Invoke-WebRequest http://localhost:8091/openapi/v1.json -OutFile frontend/openapi.json
+    nub run --cwd frontend orval
 
 # Run backend tests (needs Docker for Testcontainers).
 test:
@@ -16,8 +15,8 @@ test:
 
 # Auto-fix lint issues and format the frontend (Oxc).
 fix:
-    pnpm --prefix frontend lint --fix
-    pnpm --prefix frontend format
+    nub run --cwd frontend lint --fix
+    nub run --cwd frontend format
 
 # Build and start the full Docker stack.
 up:

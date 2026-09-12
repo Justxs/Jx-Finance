@@ -18,11 +18,12 @@ foreach ($line in Get-Content ".env") {
 $env:ConnectionStrings__Default = "Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])"
 $env:ASPNETCORE_URLS = "http://localhost:8091"
 
-docker compose up -d db
+docker compose up -d --wait db
+if ($LASTEXITCODE -ne 0) { throw "PostgreSQL did not start." }
 
-$api = Start-Process dotnet -ArgumentList "watch --project backend/JxFinance.Api" -PassThru
+$api = Start-Process dotnet -ArgumentList "watch --project backend/JxFinance.Api" -WindowStyle Hidden -PassThru
 try {
-    pnpm --prefix frontend dev --host
+    nub run --cwd frontend dev --host
 }
 finally {
     if ($api -and -not $api.HasExited) {

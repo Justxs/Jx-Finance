@@ -1,4 +1,9 @@
 .git
+.env
+.env.*
+.local
+.claude
+**/*.log
 **/node_modules
 **/dist
 **/bin

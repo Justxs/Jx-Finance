@@ -11,7 +11,7 @@ public sealed class RecurringBillReminderJob(
     ILogger<RecurringBillReminderJob> logger) : BackgroundService
 {
     private const string RelatedType = "RecurringBill";
-    private static readonly TimeSpan Interval = TimeSpan.FromHours(24);
+    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(15);
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -32,15 +32,18 @@ public sealed class RecurringBillReminderJob(
             }
             catch (OperationCanceledException)
             {
+                break;
             }
         }
     }
 
-    private async Task ScanAsync(CancellationToken cancellationToken)
+    public async Task ScanAsync(CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192435)", cancellationToken);
 
         var appNow = clock.ToAppTime(clock.UtcNow);
         var todayLocal = new DateTime(appNow.Year, appNow.Month, appNow.Day, 0, 0, 0, DateTimeKind.Unspecified);
@@ -80,8 +83,8 @@ public sealed class RecurringBillReminderJob(
             {
                 UserId = bill.UserId,
                 Type = NotificationType.BillDue,
-                Title = $"{bill.Name} is due",
-                Message = BuildMessage(bill, today),
+                Title = bill.Name,
+                Message = bill.NextDueDate.ToString("yyyy-MM-dd"),
                 RelatedType = RelatedType,
                 RelatedId = bill.Id.Value,
                 Channel = NotificationChannel.InApp,
@@ -89,10 +92,7 @@ public sealed class RecurringBillReminderJob(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
     }
 
-    private static string BuildMessage(RecurringBill bill, DateOnly today) =>
-        bill.NextDueDate <= today
-            ? $"{bill.Name} was due on {bill.NextDueDate:yyyy-MM-dd}."
-            : $"{bill.Name} is due on {bill.NextDueDate:yyyy-MM-dd}.";
 }

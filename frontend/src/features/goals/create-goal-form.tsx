@@ -56,7 +56,6 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
           targetDate: value.targetDate || null,
         },
       });
-      form.reset();
     },
   });
 
@@ -70,7 +69,7 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
       noValidate
       className="space-y-4"
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="form-grid">
         <form.Field name="name">
           {(field) => (
             <div className="space-y-1.5">

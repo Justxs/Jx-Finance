@@ -30,7 +30,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^\S+@\S+$/, t("validation.email")),
+      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
     displayName: z
       .string()
       .trim()
@@ -64,7 +64,6 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
           password: value.password,
         },
       });
-      form.reset();
     },
   });
 
@@ -78,7 +77,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
       noValidate
       className="space-y-4"
     >
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="form-grid">
         <form.Field name="displayName">
           {(field) => (
             <div className="space-y-1.5">
@@ -114,7 +113,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
         </form.Field>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="form-grid">
         <form.Field name="role">
           {(field) => (
             <div className="space-y-1.5">

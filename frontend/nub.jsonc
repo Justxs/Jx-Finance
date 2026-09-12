@@ -1,0 +1,5 @@
+{
+  "$schema": "https://nubjs.com/schema/v0.8.json",
+  // Vite and the test scripts manage their own loaders and environment files.
+  "nodeCompat": true,
+}

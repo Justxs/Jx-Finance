@@ -1,3 +1,4 @@
+import { Pagination } from "@/components/pagination";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
@@ -27,7 +28,9 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const date = useDate();
   const [addOpen, setAddOpen] = useState(false);
 
-  const transfers = useGetTransfersEndpoint({ page: 1, pageSize: 10 });
+  const [page, setPage] = useState(1);
+  const transfers = useGetTransfersEndpoint({ page, pageSize: 10 });
+  const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / 10));
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
 
   function invalidate() {
@@ -62,8 +65,11 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     content = (
       <ul className="divide-y divide-border px-6">
         {items.map((transfer) => (
-          <li key={transfer.id} className="flex items-center justify-between gap-3 py-2.5">
-            <div>
+          <li
+            key={transfer.id}
+            className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0 break-words">
               <p className="text-sm font-medium">
                 {accountNames.get(transfer.fromAccountId ?? "")} →{" "}
                 {accountNames.get(transfer.toAccountId ?? "")}
@@ -73,7 +79,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
                 {transfer.description ? ` · ${transfer.description}` : ""}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="font-semibold tabular-nums">
                 {money.format(Number(transfer.amount))}
               </span>
@@ -95,15 +101,11 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     );
   }
 
-  if (accounts.length < 2) {
-    return null;
-  }
-
   return (
     <section className="card">
-      <div className="flex items-center justify-between border-b p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-6">
         <h2 className="font-semibold">{t("transfers.title")}</h2>
-        <Button size="sm" onClick={() => setAddOpen(true)}>
+        <Button disabled={accounts.length < 2} size="sm" onClick={() => setAddOpen(true)}>
           <Plus />
           {t("transfers.add")}
         </Button>
@@ -117,6 +119,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
         />
       </Dialog>
       {content}
+      <Pagination page={page} pages={pages} onPageChange={setPage} />
     </section>
   );
 }

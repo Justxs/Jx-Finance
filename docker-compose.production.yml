@@ -1,0 +1,16 @@
+services:
+  api:
+    environment:
+      App__SecureCookies: "true"
+  frontend:
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:443:443"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-finance.internal}
+    volumes:
+      - ./frontend/Caddyfile.production:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+volumes:
+  caddy_data:
+  caddy_config:

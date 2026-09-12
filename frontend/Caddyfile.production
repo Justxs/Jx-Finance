@@ -1,0 +1,17 @@
+{$SITE_ADDRESS:finance.internal} {
+  tls internal
+  encode zstd gzip
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy same-origin
+    X-Frame-Options DENY
+  }
+  handle /api/* {
+    reverse_proxy api:8080
+  }
+  handle {
+    root * /usr/share/caddy
+    try_files {path} /index.html
+    file_server
+  }
+}

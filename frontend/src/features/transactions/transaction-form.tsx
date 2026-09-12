@@ -13,7 +13,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
-import { isPositiveMoney } from "@/lib/validation";
+import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
 import { SplitLinesEditor } from "./split-lines-editor";
 
 export interface TransactionLineFormValues {
@@ -33,12 +33,13 @@ export interface TransactionFormValues {
 }
 
 export interface LineFormValue {
+  id: string;
   categoryId: string;
   amount: string;
   description: string;
 }
 
-export interface FormValues {
+interface FormValues {
   type: FlowType;
   accountId: string;
   categoryId: string;
@@ -47,6 +48,11 @@ export interface FormValues {
   description: string;
   isSplit: boolean;
   lines: LineFormValue[];
+}
+
+interface CategoryFieldProps {
+  form: TransactionFormApi;
+  categories: CategoryResponse[];
 }
 
 interface Props {
@@ -63,17 +69,12 @@ export function todayIsoDate() {
 }
 
 export function emptyLine(): LineFormValue {
-  return { categoryId: "", amount: "", description: "" };
+  return { id: crypto.randomUUID(), categoryId: "", amount: "", description: "" };
 }
 
-export function TransactionForm({
-  accounts,
-  categories,
-  initial,
-  pending,
-  onSubmit,
-  onCancel,
-}: Readonly<Props>) {
+type FormSource = Pick<Props, "accounts" | "initial" | "onSubmit">;
+
+function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource>) {
   const { t } = useTranslation();
 
   const schema = z
@@ -86,7 +87,12 @@ export function TransactionForm({
       description: z.string(),
       isSplit: z.boolean(),
       lines: z.array(
-        z.object({ categoryId: z.string(), amount: z.string(), description: z.string() }),
+        z.object({
+          id: z.string(),
+          categoryId: z.string(),
+          amount: z.string(),
+          description: z.string(),
+        }),
       ),
     })
     .superRefine((value, ctx) => {
@@ -100,8 +106,11 @@ export function TransactionForm({
       }
 
       if (isPositiveMoney(value.amount)) {
-        const sum = value.lines.reduce((total, line) => total + Number(line.amount), 0);
-        const total = Number(value.amount);
+        const sum = value.lines.reduce(
+          (total, line) => total + Number(normalizeMoney(line.amount)),
+          0,
+        );
+        const total = Number(normalizeMoney(value.amount));
         if (Math.round((sum - total) * 100) !== 0) {
           ctx.addIssue({
             code: "custom",
@@ -125,6 +134,7 @@ export function TransactionForm({
     isSplit: initial?.isSplit ?? false,
     lines: initial?.lines?.length
       ? initial.lines.map((line) => ({
+          id: line.id,
           categoryId: line.categoryId ?? "",
           amount: line.amount ?? "",
           description: line.description ?? "",
@@ -151,11 +161,57 @@ export function TransactionForm({
             }))
           : null,
       });
-      if (!initial) {
-        form.reset();
-      }
     },
   });
+
+  return form;
+}
+
+export type TransactionFormApi = ReturnType<typeof useTransactionForm>;
+
+function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
+  const { t } = useTranslation();
+
+  return (
+    <form.Field name="type">
+      {(typeField) => (
+        <form.Field name="categoryId">
+          {(field) => (
+            <div className="space-y-1.5">
+              <Label htmlFor="tx-category">{t("transactions.category")}</Label>
+              <Select
+                id="tx-category"
+                value={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+              >
+                <option value="">{t("transactions.uncategorized")}</option>
+                {categories
+                  .filter((c) => c.type === typeField.state.value)
+                  .map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+              </Select>
+            </div>
+          )}
+        </form.Field>
+      )}
+    </form.Field>
+  );
+}
+
+export function TransactionForm({
+  accounts,
+  categories,
+  initial,
+  pending,
+  onSubmit,
+  onCancel,
+}: Readonly<Props>) {
+  const { t } = useTranslation();
+  const form = useTransactionForm({ accounts, initial, onSubmit });
 
   return (
     <form
@@ -165,7 +221,7 @@ export function TransactionForm({
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-6 md:items-start"
+      className="form-grid"
     >
       <form.Field name="type">
         {(field) => (
@@ -221,35 +277,7 @@ export function TransactionForm({
               </p>
             </div>
           ) : (
-            <form.Field name="type">
-              {(typeField) => (
-                <form.Field name="categoryId">
-                  {(field) => {
-                    const typeCategories = categories.filter(
-                      (c) => c.type === typeField.state.value,
-                    );
-                    return (
-                      <div className="space-y-1.5">
-                        <Label htmlFor="tx-category">{t("transactions.category")}</Label>
-                        <Select
-                          id="tx-category"
-                          value={field.state.value}
-                          onBlur={field.handleBlur}
-                          onChange={(e) => field.handleChange(e.target.value)}
-                        >
-                          <option value="">{t("transactions.uncategorized")}</option>
-                          {typeCategories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
-                            </option>
-                          ))}
-                        </Select>
-                      </div>
-                    );
-                  }}
-                </form.Field>
-              )}
-            </form.Field>
+            <CategoryField form={form} categories={categories} />
           )
         }
       </form.Subscribe>
@@ -288,7 +316,7 @@ export function TransactionForm({
         )}
       </form.Field>
 
-      <div className="flex gap-2 pt-6">
+      <div className="flex flex-wrap items-end gap-2 self-end">
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
             <Button type="submit" disabled={pending || !canSubmit} className="flex-1">
@@ -305,7 +333,7 @@ export function TransactionForm({
 
       <form.Field name="description">
         {(field) => (
-          <div className="space-y-1.5 md:col-span-6">
+          <div className="space-y-1.5 col-span-full">
             <Label htmlFor="tx-description">{t("transactions.description")}</Label>
             <Input
               id="tx-description"
@@ -320,7 +348,7 @@ export function TransactionForm({
 
       <form.Field name="isSplit">
         {(splitField) => (
-          <div className="md:col-span-6">
+          <div className="col-span-full">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <input
                 type="checkbox"

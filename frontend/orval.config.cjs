@@ -17,5 +17,8 @@ module.exports = {
         },
       },
     },
+    hooks: {
+      afterAllFilesWrite: "oxfmt",
+    },
   },
 };

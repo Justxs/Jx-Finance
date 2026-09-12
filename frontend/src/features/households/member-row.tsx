@@ -27,8 +27,8 @@ export function MemberRow({
   const roleMutation = useUpdateMemberRoleEndpoint({ mutation: { onSettled: onSaved } });
 
   return (
-    <li className="flex items-center justify-between gap-3 py-2.5">
-      <div>
+    <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+      <div className="min-w-0 break-words">
         <p className="text-sm font-medium">{member.displayName}</p>
         <p className="text-xs text-muted-foreground">{member.email}</p>
       </div>

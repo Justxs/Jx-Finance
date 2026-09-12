@@ -40,7 +40,7 @@ export function RecurringBillRow({
 
   return (
     <li className="space-y-3 px-6 py-4">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <p className="font-medium">{bill.name}</p>
@@ -63,11 +63,11 @@ export function RecurringBillRow({
             {account ? ` · ${account.name}` : ""}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-3">
-          <span className="text-sm font-semibold tabular-nums">
+        <div className="flex shrink-0 flex-wrap items-center gap-3">
+          <span className="whitespace-nowrap text-sm font-semibold tabular-nums">
             {bill.amount ? money.format(Number(bill.amount)) : t("recurringBills.kinds.variable")}
           </span>
-          <Button size="sm" onClick={() => setMode("confirm")}>
+          <Button size="sm" disabled={!bill.isActive} onClick={() => setMode("confirm")}>
             {t("recurringBills.confirm")}
           </Button>
           <Button

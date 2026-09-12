@@ -27,7 +27,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^\S+@\S+$/, t("validation.email")),
+      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
     role: z.enum(["owner", "member"]),
   });
 
@@ -43,7 +43,6 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
         id: householdId,
         data: { email: value.email.trim(), role: value.role },
       });
-      form.reset();
     },
   });
 
@@ -55,7 +54,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
         void form.handleSubmit();
       }}
       noValidate
-      className="flex items-end gap-2"
+      className="flex flex-col gap-2 sm:flex-row sm:items-end"
     >
       <form.Field name="email">
         {(field) => (

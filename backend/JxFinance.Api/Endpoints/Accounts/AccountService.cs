@@ -103,6 +103,12 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser) : 
             return Result<AccountResponse>.Failure(ErrorCodes.Validation, membershipError);
         }
 
+        if (account.UserId != currentUser.Id &&
+            (account.Scope != request.Scope || account.HouseholdId?.Value != request.HouseholdId))
+        {
+            return Result<AccountResponse>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
+        }
+
         account.Name = request.Name.Trim();
         account.Description = NormalizeText(request.Description);
         account.Iban = Iban.Normalize(request.Iban);
@@ -140,6 +146,11 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser) : 
         if (account is null)
         {
             return Result<Guid>.Failure(ErrorCodes.NotFound, "Account not found.");
+        }
+
+        if (account.UserId != currentUser.Id)
+        {
+            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Only the owner can archive an account.");
         }
 
         db.Accounts.Remove(account);

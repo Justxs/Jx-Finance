@@ -11,6 +11,7 @@ public sealed class SetupEndpoint(IAuthService authService) : Endpoint<SetupRequ
         AllowAnonymous();
         Throttle(hitLimit: 5, durationSeconds: 300);
         Description(d => d.ProducesProblemDetails(409));
+        Summary(s => s.Responses[409] = "Conflict");
     }
 
     public override async Task HandleAsync(SetupRequest req, CancellationToken ct)

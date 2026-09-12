@@ -54,7 +54,7 @@ export function AccountsPage() {
   const accountList = accounts.data ?? [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("accounts.title")} subtitle={t("accounts.subtitle")}>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus />

@@ -8,9 +8,4 @@ public sealed class AppOptions
 
     public string DefaultCulture { get; set; } = "en";
 
-    public bool BackupBeforeMigrate { get; set; } = true;
-
-    public bool RequireBackup { get; set; }
-
-    public string BackupDirectory { get; set; } = "backups";
 }

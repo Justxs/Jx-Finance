@@ -84,9 +84,6 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         scope: value.scope,
         householdId: value.scope === "shared" ? value.householdId : null,
       });
-      if (!initial) {
-        form.reset();
-      }
     },
   });
 
@@ -98,7 +95,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-4 md:items-start"
+      className="form-grid"
     >
       <form.Field name="name">
         {(field) => (
@@ -173,7 +170,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
 
       <form.Field name="description">
         {(field) => (
-          <div className="space-y-1.5 md:col-span-3">
+          <div className="space-y-1.5 col-span-full">
             <Label htmlFor="account-description">{t("accounts.description")}</Label>
             <Input
               id="account-description"
@@ -237,7 +234,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         </>
       ) : null}
 
-      <div className="flex gap-2 pt-6">
+      <div className="flex flex-wrap items-end gap-2 self-end">
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
             <Button type="submit" disabled={pending || !canSubmit} className="flex-1">

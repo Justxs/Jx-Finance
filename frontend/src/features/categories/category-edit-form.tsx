@@ -81,10 +81,11 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       noValidate
       className="space-y-3"
     >
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <form.Field name="name">
           {(field) => (
             <Input
+              className="w-full sm:w-auto sm:flex-1"
               value={field.state.value}
               aria-invalid={field.state.meta.errors.length > 0}
               onBlur={field.handleBlur}
@@ -112,7 +113,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       </form.Field>
 
       {householdList.length > 0 ? (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <form.Field name="scope">
             {(field) => (
               <div className="space-y-1.5">

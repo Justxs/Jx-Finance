@@ -1,3 +1,3 @@
 namespace JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 
-public sealed record ConfirmRecurringBillRequest(Guid Id, string? Amount, Guid? AccountId);
+public sealed record ConfirmRecurringBillRequest(Guid Id, string? Amount, Guid? AccountId, DateOnly ExpectedDueDate);

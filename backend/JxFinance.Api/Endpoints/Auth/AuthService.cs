@@ -2,12 +2,13 @@ using System.Text.Encodings.Web;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Auth;
 
-public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager) : IAuthService
+public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, AppDbContext db) : IAuthService
 {
     public Task<bool> IsSetupNeededAsync(CancellationToken cancellationToken) =>
         userManager.Users.AllAsync(u => u.PasswordHash == null, cancellationToken);
@@ -18,6 +19,8 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         string displayName,
         CancellationToken cancellationToken)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192436)", cancellationToken);
         if (!await IsSetupNeededAsync(cancellationToken))
         {
             return Result<AppUser>.Failure(ErrorCodes.Conflict, "Setup has already been completed.");
@@ -55,6 +58,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
 
         await EnsureRolesExistAsync();
         await userManager.AddToRoleAsync(user, AppRoles.Admin);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result<AppUser>.Success(user);
     }

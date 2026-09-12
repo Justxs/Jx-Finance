@@ -66,7 +66,8 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
         if (request.CategoryId is { } categoryId)
         {
             var typedCategoryId = new CategoryId(categoryId);
-            query = query.Where(t => t.CategoryId == typedCategoryId);
+            query = query.Where(t => t.CategoryId == typedCategoryId ||
+                (t.IsSplit && db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == typedCategoryId)));
         }
 
         if (request.Type is { } type)
@@ -136,7 +137,7 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
         var transaction = new Transaction
         {
             AccountId = new AccountId(request.AccountId),
-            CategoryId = isSplit ? null : request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
+            CategoryId = ResolveCategoryId(request.CategoryId, isSplit),
             Type = request.Type,
             Amount = MoneyWire.Parse(request.Amount),
             Date = request.Date,
@@ -200,7 +201,7 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
         }
 
         transaction.AccountId = new AccountId(request.AccountId);
-        transaction.CategoryId = isSplit ? null : request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
+        transaction.CategoryId = ResolveCategoryId(request.CategoryId, isSplit);
         transaction.Type = request.Type;
         transaction.Amount = MoneyWire.Parse(request.Amount);
         transaction.Date = request.Date;
@@ -314,6 +315,16 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
 
         var lines = await db.TransactionLines.Where(l => ids.Contains(l.TransactionId)).ToListAsync(cancellationToken);
         return lines.GroupBy(l => l.TransactionId).ToDictionary(g => g.Key, g => g.ToList());
+    }
+
+    private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
+    {
+        if (isSplit || categoryId is not { } value)
+        {
+            return null;
+        }
+
+        return new CategoryId(value);
     }
 
     private static string? NormalizeDescription(string? description)

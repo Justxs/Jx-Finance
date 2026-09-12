@@ -43,7 +43,7 @@ export function CategoriesPage() {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("categories.title")} subtitle={t("categories.subtitle")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -61,7 +61,7 @@ export function CategoriesPage() {
         />
       </Dialog>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         {groups.map((group) => {
           const items = categoryList.filter((c) => c.type === group.type);
 

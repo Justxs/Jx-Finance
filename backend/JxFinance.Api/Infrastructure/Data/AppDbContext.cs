@@ -26,6 +26,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
+    public DbSet<TransferImport> TransferImports => Set<TransferImport>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<Goal> Goals => Set<Goal>();
@@ -135,6 +136,16 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             line.HasOne<Domain.Categories.Category>().WithMany().HasForeignKey(l => l.CategoryId).OnDelete(DeleteBehavior.Restrict);
         });
 
+        builder.Entity<TransferImport>(receipt =>
+        {
+            receipt.Property(r => r.AccountId).HasConversion(id => id.Value, value => new AccountId(value));
+            receipt.Property(r => r.TransferId).HasConversion(id => id.Value, value => new TransferId(value));
+            receipt.Property(r => r.ImportRef).HasMaxLength(64);
+            receipt.HasIndex(r => new { r.AccountId, r.ImportRef }).IsUnique();
+            receipt.HasOne<Account>().WithMany().HasForeignKey(r => r.AccountId).OnDelete(DeleteBehavior.Restrict);
+            receipt.HasOne<Transfer>().WithMany().HasForeignKey(r => r.TransferId).OnDelete(DeleteBehavior.Restrict);
+        });
+
         builder.Entity<Transfer>(transfer =>
         {
             transfer.Property(t => t.Id).HasConversion(id => id.Value, value => new TransferId(value));
@@ -214,7 +225,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             snapshot.Property(s => s.NetWorthValue)
                 .HasConversion(money => money.Amount, value => new Money(value))
                 .HasPrecision(18, 2);
-            snapshot.HasIndex(s => new { s.UserId, s.Date });
+            snapshot.HasIndex(s => new { s.UserId, s.Date }).IsUnique();
             snapshot.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -233,6 +244,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             bill.Property(b => b.AccountId).HasConversion(
                 id => id.HasValue ? id.Value.Value : (Guid?)null,
                 value => value.HasValue ? new AccountId(value.Value) : (AccountId?)null);
+            bill.Property(b => b.NextDueDate).IsConcurrencyToken();
             bill.HasIndex(b => b.UserId);
             bill.HasOne<AppUser>().WithMany().HasForeignKey(b => b.UserId).OnDelete(DeleteBehavior.Restrict);
             bill.HasOne<Domain.Categories.Category>().WithMany().HasForeignKey(b => b.CategoryId).OnDelete(DeleteBehavior.Restrict);
@@ -294,7 +306,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 case EntityState.Unchanged:
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException();
+                    throw new InvalidOperationException($"Unhandled entity state: {entry.State}.");
             }
         }
     }
@@ -354,19 +366,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     private Expression<Func<Transaction, bool>> TransactionFilter() =>
         t => !t.IsDeleted &&
-            (t.UserId == CurrentUserId ||
-                Accounts.Any(a => a.Id == t.AccountId
-                    && a.Scope == Scope.Shared
-                    && a.HouseholdId != null
-                    && HouseholdMemberships.Any(m => m.HouseholdId == a.HouseholdId && m.UserId == CurrentUserId)));
+            Accounts.Any(a => a.Id == t.AccountId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
         t => !t.IsDeleted &&
-            (t.UserId == CurrentUserId ||
-                Accounts.Any(a => (a.Id == t.FromAccountId || a.Id == t.ToAccountId)
-                    && a.Scope == Scope.Shared
-                    && a.HouseholdId != null
-                    && HouseholdMemberships.Any(m => m.HouseholdId == a.HouseholdId && m.UserId == CurrentUserId)));
+            Accounts.Any(a => a.Id == t.FromAccountId || a.Id == t.ToAccountId);
 
     private Expression<Func<Household, bool>> HouseholdFilter() =>
         h => !h.IsDeleted && HouseholdMemberships.Any(m => m.HouseholdId == h.Id && m.UserId == CurrentUserId);

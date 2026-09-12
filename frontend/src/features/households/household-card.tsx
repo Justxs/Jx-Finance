@@ -35,8 +35,8 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
 
   return (
     <section className="card">
-      <div className="flex items-center justify-between gap-3 border-b p-6">
-        <h2 className="font-semibold">{household.name}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-6">
+        <h2 className="min-w-0 break-words font-semibold">{household.name}</h2>
 
         {isOwner ? (
           <div className="flex gap-1">

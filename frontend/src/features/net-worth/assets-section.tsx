@@ -35,21 +35,24 @@ export function AssetsSection() {
 
   let content: ReactNode;
   if (assets.isPending) {
-    content = <Skeleton className="m-6 h-16 w-full" />;
+    content = <Skeleton className="m-6 h-16" />;
   } else if (assetList.length === 0) {
     content = <p className="px-6 py-6 text-sm text-muted-foreground">{t("netWorth.noAssets")}</p>;
   } else {
     content = (
       <ul className="divide-y divide-border">
         {assetList.map((asset) => (
-          <li key={asset.id} className="flex items-center justify-between px-6 py-3">
-            <div>
+          <li
+            key={asset.id}
+            className="flex flex-col gap-3 px-6 py-3 sm:flex-row sm:items-center sm:justify-between"
+          >
+            <div className="min-w-0 break-words">
               <p className="font-medium">{asset.name}</p>
               <p className="text-xs text-muted-foreground">
                 {t(`netWorth.assetTypes.${asset.type}`)} · {date.format(new Date(asset.asOf!))}
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="font-semibold tabular-nums">
                 {money.format(Number(asset.currentValue))}
               </span>
@@ -73,7 +76,7 @@ export function AssetsSection() {
 
   return (
     <section className="card">
-      <div className="flex items-center justify-between border-b p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b p-6">
         <h2 className="font-semibold">{t("netWorth.addAsset")}</h2>
         <Button size="sm" onClick={() => setAddOpen(true)}>
           <Plus />

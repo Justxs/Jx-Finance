@@ -28,7 +28,7 @@ export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>
   const amountInvalid = bill.kind === "fixed" && !isPositiveMoney(amount);
 
   return (
-    <div className="grid gap-3 rounded-md border bg-muted/30 p-4 md:grid-cols-4 md:items-end">
+    <div className="form-grid rounded-md border bg-muted/30 p-4">
       <div className="space-y-1.5">
         <Label htmlFor={`bill-${bill.id}-name`}>{t("recurringBills.name")}</Label>
         <Input id={`bill-${bill.id}-name`} value={name} onChange={(e) => setName(e.target.value)} />

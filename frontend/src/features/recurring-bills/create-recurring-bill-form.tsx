@@ -94,7 +94,6 @@ export function CreateRecurringBillForm({
           remindDaysBefore: Number(value.remindDaysBefore),
         },
       });
-      form.reset();
     },
   });
 
@@ -110,7 +109,7 @@ export function CreateRecurringBillForm({
         void form.handleSubmit();
       }}
       noValidate
-      className="grid gap-4 md:grid-cols-4 md:items-start"
+      className="form-grid"
     >
       <form.Field name="name">
         {(field) => (
@@ -269,7 +268,7 @@ export function CreateRecurringBillForm({
         )}
       </form.Field>
 
-      <div className="flex justify-end gap-2 pt-2 md:col-span-4">
+      <div className="flex justify-end gap-2 pt-2 col-span-full">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("actions.cancel")}
         </Button>

@@ -57,7 +57,7 @@ export function GoalsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader title={t("goals.title")} subtitle={t("goals.subtitle")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

@@ -92,7 +92,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
 
         var confirmResponse = await Client.PostAsJsonAsync(
             $"/api/recurring-bills/{created.Id}/confirm",
-            new { });
+            new { expectedDueDate = created.NextDueDate });
         confirmResponse.EnsureSuccessStatusCode();
         var confirmed = await confirmResponse.Content.ReadFromJsonAsync<ConfirmDto>();
         Assert.NotEqual(Guid.Empty, confirmed!.TransactionId);
@@ -108,7 +108,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
     {
         var created = await CreateVariableBillAsync("Groceries", "2026-08-01");
 
-        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{created.Id}/confirm", new { });
+        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{created.Id}/confirm", new { expectedDueDate = created.NextDueDate });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
