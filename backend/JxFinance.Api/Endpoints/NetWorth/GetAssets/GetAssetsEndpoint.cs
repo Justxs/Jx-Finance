@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.GetAssets;
 
@@ -6,7 +8,8 @@ public sealed class GetAssetsEndpoint(INetWorthService netWorthService) : Endpoi
 {
     public override void Configure()
     {
-        Get("/api/assets");
+        Get("assets");
+        Group<NetWorthGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

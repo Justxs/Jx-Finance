@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Budgets.Interfaces;
+using JxFinance.Endpoints.Budgets.Shared;
 
 namespace JxFinance.Endpoints.Budgets.GetBudgets;
 
@@ -6,7 +8,8 @@ public sealed class GetBudgetsEndpoint(IBudgetService budgetService) : EndpointW
 {
     public override void Configure()
     {
-        Get("/api/budgets");
+        Get("budgets");
+        Group<BudgetsGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

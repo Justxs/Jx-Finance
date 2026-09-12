@@ -1,28 +1,25 @@
+using FastEndpoints;
+using FluentValidation;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Common.Errors;
 
 public static class ResultExtensions
 {
-    public static IResult ToProblemResult<T>(this Result<T> result)
+    public static T ValueOrThrow<T>(this Result<T> result)
     {
-        if (result.IsSuccess)
-        {
-            throw new InvalidOperationException("Cannot convert a successful result to a problem response.");
-        }
-
-        return Results.Problem(
-            detail: result.ErrorMessage,
-            statusCode: StatusCodeFor(result.ErrorCode),
-            extensions: new Dictionary<string, object?> { ["errorCode"] = result.ErrorCode });
+        result.EnsureSuccess();
+        return result.Value!;
     }
 
-    private static int StatusCodeFor(string? errorCode) => errorCode switch
+    public static void EnsureSuccess<T>(this Result<T> result)
     {
-        ErrorCodes.NotFound => StatusCodes.Status404NotFound,
-        ErrorCodes.Conflict => StatusCodes.Status409Conflict,
-        ErrorCodes.Forbidden => StatusCodes.Status403Forbidden,
-        ErrorCodes.Unauthorized => StatusCodes.Status401Unauthorized,
-        _ => StatusCodes.Status400BadRequest,
-    };
+        if (result.IsSuccess) return;
+
+        ValidationContext.Instance.ThrowError(
+            result.ErrorMessage ?? "The request could not be completed.",
+            result.ErrorCode ?? ErrorCodes.Validation,
+            Severity.Error,
+            ErrorCodes.StatusCodeFor(result.ErrorCode));
+    }
 }

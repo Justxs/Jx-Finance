@@ -1,4 +1,4 @@
-using JxFinance.Endpoints.Auth;
+using JxFinance.Endpoints.Auth.Shared;
 
 namespace JxFinance.Endpoints.Auth.Login;
 

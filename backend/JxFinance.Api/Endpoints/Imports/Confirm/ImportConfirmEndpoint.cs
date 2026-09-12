@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Imports.Interfaces;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -8,18 +9,13 @@ public sealed class ImportConfirmEndpoint(IImportService importService)
 {
     public override void Configure()
     {
-        Post("/api/import/swedbank/confirm");
+        Post("import/swedbank/confirm");
+        Group<ImportsGroup>();
     }
 
     public override async Task HandleAsync(ImportConfirmRequest req, CancellationToken ct)
     {
-        var result = await importService.ConfirmAsync(req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.OkAsync(result.Value!, ct);
+        var result = (await importService.ConfirmAsync(req, ct)).ValueOrThrow();
+        await Send.OkAsync(result, ct);
     }
 }

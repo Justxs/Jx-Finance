@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Transfers.Interfaces;
 
 namespace JxFinance.Endpoints.Transfers.DeleteTransfer;
 
@@ -7,19 +8,14 @@ public sealed class DeleteTransferEndpoint(ITransferService transferService) : E
 {
     public override void Configure()
     {
-        Delete("/api/transfers/{id}");
+        Delete("transfers/{id}");
+        Group<TransfersGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await transferService.DeleteAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await transferService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

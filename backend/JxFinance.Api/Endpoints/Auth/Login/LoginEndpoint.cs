@@ -1,6 +1,7 @@
 using FastEndpoints;
+using FluentValidation;
 using JxFinance.Common.Errors;
-using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
@@ -15,22 +16,16 @@ public sealed class LoginEndpoint(IAuthService authService, SignInManager<AppUse
 
     public override void Configure()
     {
-        Post("/api/auth/login");
+        Post("auth/login");
+        Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ProducesProblemDetails(401));
+        Description(d => d.Produces(429));
     }
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
-        var result = await authService.ValidateCredentialsAsync(req.Email.Trim(), req.Password, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        var user = result.Value!;
+        var user = (await authService.ValidateCredentialsAsync(req.Email.Trim(), req.Password, ct)).ValueOrThrow();
 
         if (user.TwoFactorEnabled)
         {
@@ -42,9 +37,11 @@ public sealed class LoginEndpoint(IAuthService authService, SignInManager<AppUse
 
             if (!await authService.ConsumeTwoFactorCodeAsync(user, req.TwoFactorCode))
             {
-                await Send.ResultAsync(
-                    Result<object>.Failure(ErrorCodes.Unauthorized, "Invalid authenticator code.").ToProblemResult());
-                return;
+                ThrowError(
+                    "Invalid authenticator code.",
+                    ErrorCodes.Unauthorized,
+                    Severity.Error,
+                    StatusCodes.Status401Unauthorized);
             }
         }
 

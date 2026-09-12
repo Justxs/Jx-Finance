@@ -1,7 +1,8 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Auth;
+using JxFinance.Endpoints.Auth.Shared;
+using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity;
 
@@ -12,23 +13,20 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUs
 {
     public override void Configure()
     {
-        Put("/api/users/me");
+        Put("users/me");
+        Group<UsersGroup>();
     }
 
     public override async Task HandleAsync(UpdateMyProfileRequest req, CancellationToken ct)
     {
-        var result = await userService.UpdateOwnProfileAsync(currentUser.Id, req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
+        var profile = (await userService.UpdateOwnProfileAsync(currentUser.Id, req, ct)).ValueOrThrow();
 
         if (req.NewPassword is not null)
         {
             var user = await users.FindByIdAsync(currentUser.Id.ToString());
             if (user is not null) await signIn.RefreshSignInAsync(user);
         }
-        await Send.OkAsync(result.Value!, ct);
+
+        await Send.OkAsync(profile, ct);
     }
 }

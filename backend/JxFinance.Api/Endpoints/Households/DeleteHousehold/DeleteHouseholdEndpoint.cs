@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Households.Interfaces;
 
 namespace JxFinance.Endpoints.Households.DeleteHousehold;
 
@@ -7,19 +8,14 @@ public sealed class DeleteHouseholdEndpoint(IHouseholdService householdService) 
 {
     public override void Configure()
     {
-        Delete("/api/households/{id}");
+        Delete("households/{id}");
+        Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await householdService.DeleteAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await householdService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

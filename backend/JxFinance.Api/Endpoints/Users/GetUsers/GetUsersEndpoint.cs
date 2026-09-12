@@ -1,5 +1,6 @@
 using FastEndpoints;
-using JxFinance.Endpoints.Auth;
+using JxFinance.Endpoints.Auth.Shared;
+using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.GetUsers;
@@ -8,8 +9,10 @@ public sealed class GetUsersEndpoint(IUserService userService) : EndpointWithout
 {
     public override void Configure()
     {
-        Get("/api/users");
+        Get("users");
+        Group<UsersGroup>();
         Roles(AppRoles.Admin);
+        Description(d => d.ProducesProblemDetails(403));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

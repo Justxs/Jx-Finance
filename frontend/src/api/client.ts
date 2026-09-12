@@ -1,8 +1,14 @@
+export interface ApiErrorDetail {
+  name: string;
+  reason: string;
+  code?: string | null;
+}
+
 export interface ApiError {
   status: number;
   title?: string;
   detail?: string;
-  errors?: Record<string, string[]>;
+  errors?: ApiErrorDetail[];
 }
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -48,11 +54,12 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
       window.dispatchEvent(new Event("jx:session-expired"));
     }
     const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiError>;
+    const errors = Array.isArray(problem.errors) ? problem.errors : undefined;
     const apiError: ApiError = {
       status: response.status,
       title: problem.title ?? response.statusText,
-      detail: problem.detail,
-      errors: problem.errors,
+      detail: problem.detail ?? errors?.map((error) => error.reason).join(" "),
+      errors,
     };
     throw apiError;
   }

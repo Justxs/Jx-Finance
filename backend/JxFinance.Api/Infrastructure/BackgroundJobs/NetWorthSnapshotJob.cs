@@ -1,6 +1,8 @@
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Accounts;
-using JxFinance.Endpoints.NetWorth;
+using JxFinance.Endpoints.Accounts.Mappers;
+using JxFinance.Endpoints.Accounts.Services;
+using JxFinance.Endpoints.NetWorth.Mappers;
+using JxFinance.Endpoints.NetWorth.Services;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,6 +27,9 @@ public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<Net
         var source = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
         var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>();
+        var accountMapper = scope.ServiceProvider.GetRequiredService<AccountMapper>();
+        var assetMapper = scope.ServiceProvider.GetRequiredService<AssetMapper>();
+        var debtMapper = scope.ServiceProvider.GetRequiredService<DebtMapper>();
         var ids = await source.Users.Where(u => u.PasswordHash != null &&
             (u.LockoutEnd == null || u.LockoutEnd < clock.UtcNow)).Select(u => u.Id).ToListAsync(ct);
         foreach (var id in ids)
@@ -32,7 +37,13 @@ public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<Net
             // Each user gets a separate context; normal ownership filters still apply.
             var user = new SnapshotUser(id);
             await using var db = new AppDbContext(options, user);
-            var service = new NetWorthService(db, new AccountService(db, user), clock, user);
+            var service = new NetWorthService(
+                db,
+                new AccountService(db, user, accountMapper),
+                clock,
+                user,
+                assetMapper,
+                debtMapper);
             await service.GetCurrentAsync(ct);
         }
     }

@@ -10,8 +10,7 @@ function isApiError(error: unknown): error is ApiError {
 function toastError(error: unknown) {
   if (isApiError(error)) {
     toast.error(error.title ?? i18n.t("errors.generic"), {
-      description:
-        error.detail ?? (error.errors ? Object.values(error.errors).flat().join(" ") : undefined),
+      description: error.detail ?? error.errors?.map((detail) => detail.reason).join(" "),
     });
     return;
   }

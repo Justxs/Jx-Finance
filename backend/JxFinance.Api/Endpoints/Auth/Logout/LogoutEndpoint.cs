@@ -8,7 +8,8 @@ public sealed class LogoutEndpoint(SignInManager<AppUser> signInManager) : Endpo
 {
     public override void Configure()
     {
-        Post("/api/auth/logout");
+        Post("auth/logout");
+        Group<AuthGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

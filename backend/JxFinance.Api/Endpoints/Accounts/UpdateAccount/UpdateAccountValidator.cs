@@ -2,6 +2,7 @@ using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Accounts.Shared;
 
 namespace JxFinance.Endpoints.Accounts.UpdateAccount;
 

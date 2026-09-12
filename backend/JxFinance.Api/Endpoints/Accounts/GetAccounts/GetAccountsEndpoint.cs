@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Accounts.Interfaces;
+using JxFinance.Endpoints.Accounts.Shared;
 
 namespace JxFinance.Endpoints.Accounts.GetAccounts;
 
@@ -7,7 +9,8 @@ public sealed class GetAccountsEndpoint(IAccountService accountService)
 {
     public override void Configure()
     {
-        Get("/api/accounts");
+        Get("accounts");
+        Group<AccountsGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

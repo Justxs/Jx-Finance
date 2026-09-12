@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
@@ -9,7 +10,9 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
 {
     public override void Configure()
     {
-        Post("/api/auth/2fa/enable");
+        Post("auth/2fa/enable");
+        Group<AuthGroup>();
+        Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(EnableTwoFactorRequest req, CancellationToken ct)
@@ -21,13 +24,7 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
             return;
         }
 
-        var result = await authService.EnableTwoFactorAsync(user, req.Code);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.OkAsync(new EnableTwoFactorResponse(result.Value!), ct);
+        var recoveryCodes = (await authService.EnableTwoFactorAsync(user, req.Code)).ValueOrThrow();
+        await Send.OkAsync(new EnableTwoFactorResponse(recoveryCodes), ct);
     }
 }

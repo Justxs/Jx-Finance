@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity;
 
@@ -10,8 +12,10 @@ public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUse
 {
     public override void Configure()
     {
-        Post("/api/auth/2fa/setup");
+        Post("auth/2fa/setup");
+        Group<AuthGroup>();
         Throttle(5, 300);
+        Description(d => d.Produces(429).ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(ReauthenticateRequest req, CancellationToken ct)

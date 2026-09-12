@@ -1,5 +1,6 @@
 using System.Globalization;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transactions.Shared;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;

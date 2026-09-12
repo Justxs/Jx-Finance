@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Notifications.Interfaces;
 
 namespace JxFinance.Endpoints.Notifications.MarkNotificationRead;
 
@@ -7,19 +8,14 @@ public sealed class MarkNotificationReadEndpoint(INotificationService notificati
 {
     public override void Configure()
     {
-        Patch("/api/notifications/{id}/read");
+        Patch("notifications/{id}/read");
+        Group<NotificationsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await notificationService.MarkReadAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await notificationService.MarkReadAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

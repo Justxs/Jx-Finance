@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
-using JxFinance.Endpoints.Auth;
+using JxFinance.Endpoints.Auth.Shared;
+using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.CreateUser;
@@ -9,19 +10,16 @@ public sealed class CreateUserEndpoint(IUserService userService) : Endpoint<Crea
 {
     public override void Configure()
     {
-        Post("/api/users");
+        Post("users");
+        Group<UsersGroup>();
         Roles(AppRoles.Admin);
+        Description(d => d.ProducesProblemDetails(403));
+        Description(d => d.ClearDefaultProduces(200).Produces<UserProfileResponse>(201, "application/json"));
     }
 
     public override async Task HandleAsync(CreateUserRequest req, CancellationToken ct)
     {
-        var result = await userService.CreateAsync(req, ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
-        await Send.ResultAsync(Results.Created($"/api/users/{result.Value!.Id}", result.Value));
+        var user = (await userService.CreateAsync(req, ct)).ValueOrThrow();
+        await Send.ResultAsync(TypedResults.Created($"/api/users/{user.Id}", user));
     }
 }

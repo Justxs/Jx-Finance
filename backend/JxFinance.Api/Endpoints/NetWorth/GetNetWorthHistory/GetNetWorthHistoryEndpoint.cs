@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.GetNetWorthHistory;
 
@@ -7,7 +9,8 @@ public sealed class GetNetWorthHistoryEndpoint(INetWorthService netWorthService)
 {
     public override void Configure()
     {
-        Get("/api/networth/history");
+        Get("networth/history");
+        Group<NetWorthGroup>();
     }
 
     public override async Task HandleAsync(CancellationToken ct)

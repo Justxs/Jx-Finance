@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Budgets.Interfaces;
 
 namespace JxFinance.Endpoints.Budgets.DeleteBudget;
 
@@ -7,19 +8,14 @@ public sealed class DeleteBudgetEndpoint(IBudgetService budgetService) : Endpoin
 {
     public override void Configure()
     {
-        Delete("/api/budgets/{id}");
+        Delete("budgets/{id}");
+        Group<BudgetsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var result = await budgetService.DeleteAsync(Route<Guid>("id"), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
-
+        (await budgetService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
         await Send.NoContentAsync(ct);
     }
 }

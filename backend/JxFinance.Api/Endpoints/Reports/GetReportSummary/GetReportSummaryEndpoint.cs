@@ -1,4 +1,6 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Reports.Interfaces;
+using JxFinance.Endpoints.Reports.Shared;
 
 namespace JxFinance.Endpoints.Reports.GetReportSummary;
 
@@ -6,7 +8,8 @@ public sealed class GetReportSummaryEndpoint(IReportService reportService) : End
 {
     public override void Configure()
     {
-        Get("/api/reports/summary");
+        Get("reports/summary");
+        Group<ReportsGroup>();
     }
 
     public override async Task HandleAsync(GetReportSummaryRequest req, CancellationToken ct)

@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Auth.Shared;
 
 namespace JxFinance.Endpoints.Auth.Setup;
 
@@ -7,23 +9,19 @@ public sealed class SetupEndpoint(IAuthService authService) : Endpoint<SetupRequ
 {
     public override void Configure()
     {
-        Post("/api/setup");
+        Post("setup");
+        Group<SetupGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 5, durationSeconds: 300);
-        Description(d => d.ProducesProblemDetails(409));
-        Summary(s => s.Responses[409] = "Conflict");
+        Description(d => d.Produces(429).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(SetupRequest req, CancellationToken ct)
     {
-        var result = await authService.ProvisionAdminAsync(req.Email.Trim(), req.Password, req.DisplayName.Trim(), ct);
-        if (result.IsFailure)
-        {
-            await Send.ResultAsync(result.ToProblemResult());
-            return;
-        }
+        var user = (await authService.ProvisionAdminAsync(req.Email.Trim(), req.Password, req.DisplayName.Trim(), ct))
+            .ValueOrThrow();
 
-        var profile = await authService.ToProfileAsync(result.Value!);
+        var profile = await authService.ToProfileAsync(user);
         await Send.OkAsync(profile, ct);
     }
 }
