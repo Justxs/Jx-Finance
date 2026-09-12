@@ -19,6 +19,7 @@ interface Props {
   categories: CategoryResponse[];
   onDelete: () => void;
   deletePending: boolean;
+  deleteDisabled: boolean;
   onSaved: () => void;
 }
 
@@ -28,6 +29,7 @@ export function RecurringBillRow({
   categories,
   onDelete,
   deletePending,
+  deleteDisabled,
   onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -84,7 +86,8 @@ export function RecurringBillRow({
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled={deletePending}
+            pending={deletePending}
+            disabled={deleteDisabled}
             onClick={onDelete}
             aria-label={t("actions.delete")}
             title={t("actions.delete")}

@@ -10,6 +10,11 @@ export const transactionsSearchSchema = z.object({
   type: z.enum(["income", "expense"]).optional().catch(undefined),
   dateFrom: z.string().optional().catch(undefined),
   dateTo: z.string().optional().catch(undefined),
+  sort: z
+    .enum(["date", "description", "category", "account", "amount"])
+    .optional()
+    .catch(undefined),
+  direction: z.enum(["asc", "desc"]).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/transactions")({

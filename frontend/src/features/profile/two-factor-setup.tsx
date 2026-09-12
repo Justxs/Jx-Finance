@@ -45,7 +45,8 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          disabled={enableMutation.isPending || code.length !== 6}
+          pending={enableMutation.isPending}
+          disabled={code.length !== 6}
           onClick={() => enableMutation.mutate({ data: { code } })}
         >
           {t("profile.confirmAndEnable")}

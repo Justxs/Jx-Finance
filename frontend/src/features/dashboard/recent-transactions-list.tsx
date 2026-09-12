@@ -2,11 +2,10 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
-  useGetAccountsEndpoint,
-  useGetCategoriesEndpoint,
-  useGetTransactionsEndpoint,
+  useGetAccountsEndpointSuspense,
+  useGetCategoriesEndpointSuspense,
+  useGetTransactionsEndpointSuspense,
 } from "@/api/generated";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 
@@ -15,31 +14,16 @@ export function RecentTransactionsList() {
   const money = useMoney();
   const date = useDate();
 
-  const recent = useGetTransactionsEndpoint({ page: 1, pageSize: 6 });
-  const categories = useGetCategoriesEndpoint();
-  const accounts = useGetAccountsEndpoint();
+  const recent = useGetTransactionsEndpointSuspense({ page: 1, pageSize: 6 });
+  const categories = useGetCategoriesEndpointSuspense();
+  const accounts = useGetAccountsEndpointSuspense();
 
   const categoryById = new Map(categories.data?.map((c) => [c.id, c]) ?? []);
   const accountNames = new Map(accounts.data?.map((a) => [a.id, a.name]) ?? []);
   const recentItems = recent.data?.items ?? [];
 
   let content: ReactNode;
-  if (recent.isPending) {
-    content = (
-      <ul className="divide-y divide-border px-6">
-        {Array.from({ length: 4 }, (_, index) => (
-          <li key={index} className="flex items-center gap-4 py-3.5">
-            <Skeleton className="size-9 shrink-0 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-3 w-28" />
-            </div>
-            <Skeleton className="h-4 w-16" />
-          </li>
-        ))}
-      </ul>
-    );
-  } else if (recentItems.length === 0) {
+  if (recentItems.length === 0) {
     content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("dashboard.empty")}</p>;
   } else {
     content = (

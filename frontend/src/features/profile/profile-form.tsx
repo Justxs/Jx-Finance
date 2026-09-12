@@ -133,7 +133,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" disabled={updateMutation.isPending || !canSubmit}>
+          <Button type="submit" pending={updateMutation.isPending} disabled={!canSubmit}>
             {t("profile.save")}
           </Button>
         )}

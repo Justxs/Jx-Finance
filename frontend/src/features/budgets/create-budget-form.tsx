@@ -112,7 +112,8 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
           {(canSubmit) => (
             <Button
               type="submit"
-              disabled={createMutation.isPending || updateMutation.isPending || !canSubmit}
+              pending={createMutation.isPending || updateMutation.isPending}
+              disabled={!canSubmit}
             >
               {t(initial ? "actions.save" : "budgets.add")}
             </Button>

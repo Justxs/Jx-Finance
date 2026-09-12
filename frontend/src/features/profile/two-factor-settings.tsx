@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   getMeEndpointQueryKey,
   useDisableTwoFactorEndpoint,
-  useMeEndpoint,
+  useMeEndpointSuspense,
   useSetupTwoFactorEndpoint,
 } from "@/api/generated";
 import { Input } from "@/components/ui/input";
@@ -18,7 +18,7 @@ import { TwoFactorSetup } from "./two-factor-setup";
 export function TwoFactorSettings() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const me = useMeEndpoint();
+  const me = useMeEndpointSuspense();
 
   const [password, setPassword] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -78,7 +78,8 @@ export function TwoFactorSettings() {
         <Button
           type="button"
           variant="destructive"
-          disabled={disableMutation.isPending || !password}
+          pending={disableMutation.isPending}
+          disabled={!password}
           onClick={() => disableMutation.mutate({ data: { password } })}
         >
           {t("profile.disableTwoFactor")}
@@ -112,7 +113,8 @@ export function TwoFactorSettings() {
       />
       <Button
         type="button"
-        disabled={setupMutation.isPending || !password}
+        pending={setupMutation.isPending}
+        disabled={!password}
         onClick={() => setupMutation.mutate({ data: { password } })}
       >
         {t("profile.enableTwoFactor")}

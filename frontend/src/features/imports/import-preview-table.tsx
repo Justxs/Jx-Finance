@@ -117,7 +117,11 @@ export function ImportPreviewTable({
           </tbody>
         </table>
       </div>
-      <Button disabled={confirmPending || !rows.some((row) => row.selected)} onClick={onConfirm}>
+      <Button
+        pending={confirmPending}
+        disabled={!rows.some((row) => row.selected)}
+        onClick={onConfirm}
+      >
         {t("imports.confirm")}
       </Button>
     </>

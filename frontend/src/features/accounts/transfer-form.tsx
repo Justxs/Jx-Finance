@@ -164,7 +164,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         ) : null}
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={pending || !canSubmit}>
+            <Button type="submit" pending={pending} disabled={!canSubmit}>
               {t("transfers.add")}
             </Button>
           )}

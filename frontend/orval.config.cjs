@@ -8,6 +8,9 @@ module.exports = {
       target: "./src/api/generated/index.ts",
       schemas: "./src/api/generated/model",
       override: {
+        query: {
+          useSuspenseQuery: true,
+        },
         mutator: {
           path: "./src/api/client.ts",
           name: "customFetch",

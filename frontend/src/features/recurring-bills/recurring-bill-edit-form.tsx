@@ -65,7 +65,8 @@ export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>
       </label>
       <Button
         size="sm"
-        disabled={updateMutation.isPending || amountInvalid}
+        pending={updateMutation.isPending}
+        disabled={amountInvalid}
         onClick={() =>
           updateMutation.mutate({
             id: bill.id!,

@@ -46,6 +46,9 @@ export function ImportTransferPicker({
         <Select
           aria-label={t("imports.matchTransfer")}
           value={row.existingTransferId}
+          className={transfers.isLoading ? "is-stale" : undefined}
+          aria-busy={transfers.isLoading}
+          disabled={transfers.isLoading}
           onChange={(e) => onChange({ existingTransferId: e.target.value })}
         >
           <option value="">{t("imports.newTransfer")}</option>

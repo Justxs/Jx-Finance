@@ -5,7 +5,8 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.GetUsers;
 
-public sealed class GetUsersEndpoint(IUserService userService) : EndpointWithoutRequest<IReadOnlyList<UserProfileResponse>>
+public sealed class GetUsersEndpoint(IUserService userService)
+    : Endpoint<GetUsersRequest, IReadOnlyList<UserProfileResponse>>
 {
     public override void Configure()
     {
@@ -15,9 +16,9 @@ public sealed class GetUsersEndpoint(IUserService userService) : EndpointWithout
         Description(d => d.ProducesProblemDetails(403));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(GetUsersRequest req, CancellationToken ct)
     {
-        var users = await userService.GetAllAsync(ct);
+        var users = await userService.GetAllAsync(req, ct);
         await Send.OkAsync(users, ct);
     }
 }

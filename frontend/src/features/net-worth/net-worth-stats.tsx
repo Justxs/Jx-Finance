@@ -1,10 +1,10 @@
 import { SummaryStats } from "@/components/summary-stats";
 import { useTranslation } from "react-i18next";
-import { useGetNetWorthEndpoint } from "@/api/generated";
+import { useGetNetWorthEndpointSuspense } from "@/api/generated";
 
 export function NetWorthStats() {
   const { t } = useTranslation();
-  const netWorth = useGetNetWorthEndpoint();
+  const netWorth = useGetNetWorthEndpointSuspense();
 
   const stats = [
     { key: "netWorth.accounts", value: netWorth.data?.accounts },
@@ -13,10 +13,5 @@ export function NetWorthStats() {
     { key: "netWorth.netWorth", value: netWorth.data?.netWorth },
   ] as const;
 
-  return (
-    <SummaryStats
-      items={stats.map((stat) => ({ ...stat, label: t(stat.key) }))}
-      pending={netWorth.isPending}
-    />
-  );
+  return <SummaryStats items={stats.map((stat) => ({ ...stat, label: t(stat.key) }))} />;
 }

@@ -1,4 +1,3 @@
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 
@@ -10,10 +9,9 @@ interface SummaryStat {
 
 interface Props {
   items: readonly SummaryStat[];
-  pending?: boolean;
 }
 
-export function SummaryStats({ items, pending }: Readonly<Props>) {
+export function SummaryStats({ items }: Readonly<Props>) {
   const money = useMoney();
 
   function formatValue(value: string | undefined) {
@@ -31,7 +29,7 @@ export function SummaryStats({ items, pending }: Readonly<Props>) {
               item.tone,
             )}
           >
-            {pending ? <Skeleton className="h-8 w-24" /> : formatValue(item.value)}
+            {formatValue(item.value)}
           </dd>
         </div>
       ))}

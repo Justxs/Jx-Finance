@@ -7,13 +7,12 @@ import {
   getGetCategoriesEndpointQueryKey,
   getGetTransactionsEndpointQueryKey,
   useDeleteCategoryEndpoint,
-  useGetCategoriesEndpoint,
+  useGetCategoriesEndpointSuspense,
 } from "@/api/generated";
 import type { FlowType } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { AddCategoryForm } from "./add-category-form";
 import { CategoryRow } from "./category-row";
 
@@ -22,7 +21,7 @@ export function CategoriesPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const categories = useGetCategoriesEndpoint();
+  const categories = useGetCategoriesEndpointSuspense();
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetCategoriesEndpointQueryKey() });
@@ -37,6 +36,7 @@ export function CategoriesPage() {
   });
 
   const categoryList = categories.data ?? [];
+  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
   const groups: { type: FlowType; labelKey: string }[] = [
     { type: "income", labelKey: "categories.income" },
     { type: "expense", labelKey: "categories.expense" },
@@ -44,7 +44,7 @@ export function CategoriesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("categories.title")} subtitle={t("categories.subtitle")}>
+      <PageHeader title={t("categories.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           {t("categories.add")}
@@ -66,18 +66,7 @@ export function CategoriesPage() {
           const items = categoryList.filter((c) => c.type === group.type);
 
           let groupContent: ReactNode;
-          if (categories.isPending) {
-            groupContent = (
-              <ul className="divide-y divide-border px-6">
-                {Array.from({ length: 3 }, (_, index) => (
-                  <li key={index} className="flex items-center gap-3 py-2.5">
-                    <Skeleton className="size-8 shrink-0 rounded-full" />
-                    <Skeleton className="h-4 w-28" />
-                  </li>
-                ))}
-              </ul>
-            );
-          } else if (items.length === 0) {
+          if (items.length === 0) {
             groupContent = (
               <p className="px-6 py-6 text-sm text-muted-foreground">{t("categories.empty")}</p>
             );
@@ -89,7 +78,8 @@ export function CategoriesPage() {
                     key={category.id}
                     category={category}
                     onDelete={() => deleteMutation.mutate({ id: category.id! })}
-                    deletePending={deleteMutation.isPending}
+                    deletePending={deletingId === category.id}
+                    deleteDisabled={deleteMutation.isPending}
                     onSaved={invalidate}
                   />
                 ))}

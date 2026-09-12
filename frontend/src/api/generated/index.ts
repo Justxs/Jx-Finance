@@ -5,7 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -19,6 +19,8 @@ import type {
   UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
+  UseSuspenseQueryOptions,
+  UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 
 import type {
@@ -47,6 +49,7 @@ import type {
   EnableTwoFactorResponse,
   ExportTransactionsEndpointParams,
   ExportTransactionsPdfEndpointParams,
+  GetAccountsEndpointParams,
   GetCategoryBreakdownEndpointParams,
   GetMonthlyTrendEndpointParams,
   GetNotificationsEndpointParams,
@@ -54,6 +57,7 @@ import type {
   GetReportSummaryEndpointParams,
   GetTransactionsEndpointParams,
   GetTransfersEndpointParams,
+  GetUsersEndpointParams,
   GoalResponse,
   HouseholdResponse,
   IReadOnlyListOfAccountResponse,
@@ -226,40 +230,56 @@ export const useCreateAccountEndpoint = <TError = ProblemDetails, TContext = unk
   return useMutation(getCreateAccountEndpointMutationOptions(options), queryClient);
 };
 
-export const getGetAccountsEndpointUrl = () => {
-  return `/api/accounts`;
+export const getGetAccountsEndpointUrl = (params?: GetAccountsEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/accounts?${stringifiedParams}` : `/api/accounts`;
 };
 
 /**
- * Returns every account you can see: your own personal accounts plus the shared accounts of the households you belong to. Archived accounts are left out. Each account carries its starting balance and the balance derived from the transactions posted to it.
+ * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.
  * @summary List accounts
  */
 export const getAccountsEndpoint = async (
+  params?: GetAccountsEndpointParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<IReadOnlyListOfAccountResponse> => {
-  return customFetch<IReadOnlyListOfAccountResponse>(getGetAccountsEndpointUrl(), {
+  return customFetch<IReadOnlyListOfAccountResponse>(getGetAccountsEndpointUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAccountsEndpointQueryKey = () => {
-  return [`/api/accounts`] as const;
+export const getGetAccountsEndpointQueryKey = (params?: GetAccountsEndpointParams) => {
+  return [`/api/accounts`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetAccountsEndpointQueryOptions = <
   TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
   TError = ProblemDetails,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetAccountsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAccountsEndpointQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetAccountsEndpointQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountsEndpoint>>> = ({ signal }) =>
-    getAccountsEndpoint({ signal, ...requestOptions });
+    getAccountsEndpoint(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getAccountsEndpoint>>,
@@ -277,6 +297,7 @@ export function useGetAccountsEndpoint<
   TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
   TError = ProblemDetails,
 >(
+  params: undefined | GetAccountsEndpointParams,
   options: {
     query: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
@@ -297,6 +318,7 @@ export function useGetAccountsEndpoint<
   TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetAccountsEndpointParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
@@ -317,6 +339,7 @@ export function useGetAccountsEndpoint<
   TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetAccountsEndpointParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
@@ -333,6 +356,7 @@ export function useGetAccountsEndpoint<
   TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetAccountsEndpointParams,
   options?: {
     query?: Partial<
       UseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
@@ -341,11 +365,108 @@ export function useGetAccountsEndpoint<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAccountsEndpointQueryOptions(options);
+  const queryOptions = getGetAccountsEndpointQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetAccountsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetAccountsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccountsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountsEndpoint>>> = ({ signal }) =>
+    getAccountsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getAccountsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAccountsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountsEndpoint>>
+>;
+export type GetAccountsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetAccountsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetAccountsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetAccountsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetAccountsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List accounts
+ */
+
+export function useGetAccountsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetAccountsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccountsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -561,6 +682,103 @@ export function useGetAccountEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetAccountEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAccountEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccountEndpoint>>> = ({ signal }) =>
+    getAccountEndpoint(id, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getAccountEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAccountEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAccountEndpoint>>
+>;
+export type GetAccountEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetAccountEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAccountEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get one account
+ */
+
+export function useGetAccountEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAccountEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccountEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAccountEndpointSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -892,6 +1110,96 @@ export function useGetAssetsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetAssetsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getAssetsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssetsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetAssetsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssetsEndpoint>>> = ({ signal }) =>
+    getAssetsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getAssetsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetAssetsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getAssetsEndpoint>>
+>;
+export type GetAssetsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetAssetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAssetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAssetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAssetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetAssetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAssetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List assets
+ */
+
+export function useGetAssetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getAssetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetAssetsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -1692,6 +2000,84 @@ export function useMeEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getMeEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof meEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof meEndpoint>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getMeEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof meEndpoint>>> = ({ signal }) =>
+    meEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof meEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type MeEndpointSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof meEndpoint>>>;
+export type MeEndpointSuspenseQueryError = ProblemDetails;
+
+export function useMeEndpointSuspense<
+  TData = Awaited<ReturnType<typeof meEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof meEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMeEndpointSuspense<
+  TData = Awaited<ReturnType<typeof meEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof meEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMeEndpointSuspense<
+  TData = Awaited<ReturnType<typeof meEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof meEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the signed-in profile
+ */
+
+export function useMeEndpointSuspense<
+  TData = Awaited<ReturnType<typeof meEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof meEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getMeEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getCreateBudgetEndpointUrl = () => {
   return `/api/budgets`;
 };
@@ -1913,6 +2299,96 @@ export function useGetBudgetsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetBudgetsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgetsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetBudgetsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBudgetsEndpoint>>> = ({ signal }) =>
+    getBudgetsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetBudgetsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBudgetsEndpoint>>
+>;
+export type GetBudgetsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetBudgetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBudgetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBudgetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List budgets
+ */
+
+export function useGetBudgetsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBudgetsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgetsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetBudgetsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -2344,6 +2820,96 @@ export function useGetCategoriesEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetCategoriesEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCategoriesEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoriesEndpoint>>> = ({ signal }) =>
+    getCategoriesEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCategoriesEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCategoriesEndpoint>>
+>;
+export type GetCategoriesEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetCategoriesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoriesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoriesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List categories
+ */
+
+export function useGetCategoriesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoriesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoriesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCategoriesEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getDeleteCategoryEndpointUrl = (id: string) => {
   return `/api/categories/${id}`;
 };
@@ -2687,6 +3253,124 @@ export function useGetCategoryBreakdownEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetCategoryBreakdownEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetCategoryBreakdownEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCategoryBreakdownEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>> = ({
+    signal,
+  }) => getCategoryBreakdownEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCategoryBreakdownEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>
+>;
+export type GetCategoryBreakdownEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetCategoryBreakdownEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetCategoryBreakdownEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoryBreakdownEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetCategoryBreakdownEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCategoryBreakdownEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetCategoryBreakdownEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get spending split by category
+ */
+
+export function useGetCategoryBreakdownEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetCategoryBreakdownEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getCategoryBreakdownEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCategoryBreakdownEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getGetMonthlyTrendEndpointUrl = (params: GetMonthlyTrendEndpointParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -2834,6 +3518,104 @@ export function useGetMonthlyTrendEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetMonthlyTrendEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetMonthlyTrendEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetMonthlyTrendEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>> = ({
+    signal,
+  }) => getMonthlyTrendEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetMonthlyTrendEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>
+>;
+export type GetMonthlyTrendEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetMonthlyTrendEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetMonthlyTrendEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMonthlyTrendEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetMonthlyTrendEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetMonthlyTrendEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetMonthlyTrendEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the monthly income and expense trend
+ */
+
+export function useGetMonthlyTrendEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetMonthlyTrendEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrendEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetMonthlyTrendEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getGetDashboardSummaryEndpointUrl = () => {
   return `/api/dashboard/summary`;
 };
@@ -2957,6 +3739,113 @@ export function useGetDashboardSummaryEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetDashboardSummaryEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>> = ({
+    signal,
+  }) => getDashboardSummaryEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetDashboardSummaryEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>
+>;
+export type GetDashboardSummaryEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetDashboardSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDashboardSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDashboardSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the dashboard summary
+ */
+
+export function useGetDashboardSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getDashboardSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetDashboardSummaryEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3178,6 +4067,96 @@ export function useGetDebtsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetDebtsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getDebtsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebtsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetDebtsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDebtsEndpoint>>> = ({ signal }) =>
+    getDebtsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getDebtsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetDebtsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getDebtsEndpoint>>
+>;
+export type GetDebtsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetDebtsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDebtsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebtsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDebtsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDebtsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebtsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetDebtsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDebtsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebtsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List debts
+ */
+
+export function useGetDebtsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getDebtsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebtsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetDebtsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -3593,6 +4572,96 @@ export function useGetGoalsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetGoalsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getGoalsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoalsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetGoalsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGoalsEndpoint>>> = ({ signal }) =>
+    getGoalsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getGoalsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetGoalsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getGoalsEndpoint>>
+>;
+export type GetGoalsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetGoalsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getGoalsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoalsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetGoalsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getGoalsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoalsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetGoalsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getGoalsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoalsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List savings goals
+ */
+
+export function useGetGoalsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getGoalsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoalsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetGoalsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4024,6 +5093,96 @@ export function useGetHouseholdsEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetHouseholdsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHouseholdsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHouseholdsEndpoint>>> = ({ signal }) =>
+    getHouseholdsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetHouseholdsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getHouseholdsEndpoint>>
+>;
+export type GetHouseholdsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetHouseholdsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHouseholdsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHouseholdsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List households
+ */
+
+export function useGetHouseholdsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHouseholdsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getDeleteHouseholdEndpointUrl = (id: string) => {
   return `/api/households/${id}`;
 };
@@ -4243,6 +5402,103 @@ export function useGetHouseholdEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetHouseholdEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetHouseholdEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHouseholdEndpoint>>> = ({ signal }) =>
+    getHouseholdEndpoint(id, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetHouseholdEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getHouseholdEndpoint>>
+>;
+export type GetHouseholdEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetHouseholdEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHouseholdEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetHouseholdEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get one household
+ */
+
+export function useGetHouseholdEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getHouseholdEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholdEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetHouseholdEndpointSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -4989,6 +6245,96 @@ export function useGetNetWorthEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetNetWorthEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNetWorthEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorthEndpoint>>> = ({ signal }) =>
+    getNetWorthEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetNetWorthEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNetWorthEndpoint>>
+>;
+export type GetNetWorthEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetNetWorthEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNetWorthEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNetWorthEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get current net worth
+ */
+
+export function useGetNetWorthEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetNetWorthEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getGetNetWorthHistoryEndpointUrl = () => {
   return `/api/networth/history`;
 };
@@ -5112,6 +6458,97 @@ export function useGetNetWorthHistoryEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetNetWorthHistoryEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNetWorthHistoryEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>> = ({
+    signal,
+  }) => getNetWorthHistoryEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetNetWorthHistoryEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>
+>;
+export type GetNetWorthHistoryEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetNetWorthHistoryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNetWorthHistoryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNetWorthHistoryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the net worth history
+ */
+
+export function useGetNetWorthHistoryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistoryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetNetWorthHistoryEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5259,6 +6696,104 @@ export function useGetNotificationsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetNotificationsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetNotificationsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotificationsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNotificationsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotificationsEndpoint>>> = ({
+    signal,
+  }) => getNotificationsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetNotificationsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNotificationsEndpoint>>
+>;
+export type GetNotificationsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetNotificationsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetNotificationsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotificationsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetNotificationsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotificationsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetNotificationsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetNotificationsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotificationsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List notifications
+ */
+
+export function useGetNotificationsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getNotificationsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetNotificationsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotificationsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetNotificationsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -5547,6 +7082,96 @@ export function useGetPingEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetPingEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPingEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPingEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPingEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPingEndpoint>>> = ({ signal }) =>
+    getPingEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getPingEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPingEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPingEndpoint>>
+>;
+export type GetPingEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetPingEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPingEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPingEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPingEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPingEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPingEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPingEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPingEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPingEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Ping the API
+ */
+
+export function useGetPingEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPingEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPingEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPingEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getCreateRecurringBillEndpointUrl = () => {
   return `/api/recurring-bills`;
 };
@@ -5782,6 +7407,97 @@ export function useGetRecurringBillsEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetRecurringBillsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>> = ({
+    signal,
+  }) => getRecurringBillsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetRecurringBillsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecurringBillsEndpoint>>
+>;
+export type GetRecurringBillsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetRecurringBillsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRecurringBillsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRecurringBillsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List recurring bills
+ */
+
+export function useGetRecurringBillsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRecurringBillsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getDeleteRecurringBillEndpointUrl = (id: string) => {
   return `/api/recurring-bills/${id}`;
 };
@@ -6003,6 +7719,104 @@ export function useGetRecurringBillEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetRecurringBillEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBillEndpoint>>> = ({
+    signal,
+  }) => getRecurringBillEndpoint(id, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetRecurringBillEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getRecurringBillEndpoint>>
+>;
+export type GetRecurringBillEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetRecurringBillEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRecurringBillEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetRecurringBillEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get one recurring bill
+ */
+
+export function useGetRecurringBillEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getRecurringBillEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBillEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetRecurringBillEndpointSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6378,6 +8192,104 @@ export function useGetReportSummaryEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetReportSummaryEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetReportSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetReportSummaryEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportSummaryEndpoint>>> = ({
+    signal,
+  }) => getReportSummaryEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetReportSummaryEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getReportSummaryEndpoint>>
+>;
+export type GetReportSummaryEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetReportSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetReportSummaryEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReportSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetReportSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetReportSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetReportSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Summarise income and expenses over a range
+ */
+
+export function useGetReportSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getReportSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetReportSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetReportSummaryEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getSetupEndpointUrl = () => {
   return `/api/setup`;
 };
@@ -6605,6 +8517,96 @@ export function useGetSetupStatusEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetSetupStatusEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatusEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSetupStatusEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSetupStatusEndpoint>>> = ({ signal }) =>
+    getSetupStatusEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSetupStatusEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSetupStatusEndpoint>>
+>;
+export type GetSetupStatusEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetSetupStatusEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatusEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSetupStatusEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatusEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSetupStatusEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatusEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Check whether first-run setup is needed
+ */
+
+export function useGetSetupStatusEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSetupStatusEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatusEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSetupStatusEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -6863,6 +8865,104 @@ export function useGetTransactionsEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetTransactionsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsEndpoint>>> = ({
+    signal,
+  }) => getTransactionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransactionsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionsEndpoint>>
+>;
+export type GetTransactionsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransactionsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List transactions
+ */
+
+export function useGetTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getExportTransactionsEndpointUrl = (params: ExportTransactionsEndpointParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -7008,6 +9108,104 @@ export function useExportTransactionsEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getExportTransactionsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportTransactionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactionsEndpoint>>> = ({
+    signal,
+  }) => exportTransactionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportTransactionsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportTransactionsEndpoint>>
+>;
+export type ExportTransactionsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useExportTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export transactions as CSV
+ */
+
+export function useExportTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportTransactionsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7159,6 +9357,124 @@ export function useExportTransactionsPdfEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getExportTransactionsPdfEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsPdfEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportTransactionsPdfEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>> = ({
+    signal,
+  }) => exportTransactionsPdfEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportTransactionsPdfEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>
+>;
+export type ExportTransactionsPdfEndpointSuspenseQueryError = ProblemDetails;
+
+export function useExportTransactionsPdfEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsPdfEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTransactionsPdfEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsPdfEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTransactionsPdfEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsPdfEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export transactions as PDF
+ */
+
+export function useExportTransactionsPdfEndpointSuspense<
+  TData = Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: ExportTransactionsPdfEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof exportTransactionsPdfEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportTransactionsPdfEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7382,6 +9698,103 @@ export function useGetTransactionEndpoint<
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetTransactionEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionEndpointQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionEndpoint>>> = ({ signal }) =>
+    getTransactionEndpoint(id, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getTransactionEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransactionEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionEndpoint>>
+>;
+export type GetTransactionEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetTransactionEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get one transaction
+ */
+
+export function useGetTransactionEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionEndpoint>>,
+  TError = ProblemDetails,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionEndpointSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }
@@ -7748,6 +10161,103 @@ export function useGetTransfersEndpoint<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetTransfersEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransfersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransfersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransfersEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransfersEndpoint>>> = ({ signal }) =>
+    getTransfersEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getTransfersEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransfersEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransfersEndpoint>>
+>;
+export type GetTransfersEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetTransfersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransfersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransfersEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransfersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransfersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransfersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransfersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransfersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransfersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List transfers
+ */
+
+export function useGetTransfersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransfersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetTransfersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransfersEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getDeleteTransferEndpointUrl = (id: string) => {
   return `/api/transfers/${id}`;
 };
@@ -7941,40 +10451,54 @@ export const useCreateUserEndpoint = <TError = ProblemDetails, TContext = unknow
   return useMutation(getCreateUserEndpointMutationOptions(options), queryClient);
 };
 
-export const getGetUsersEndpointUrl = () => {
-  return `/api/users`;
+export const getGetUsersEndpointUrl = (params?: GetUsersEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/users?${stringifiedParams}` : `/api/users`;
 };
 
 /**
- * Returns every user account with its role and whether it is still active. Administrators only.
+ * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
  * @summary List users
  */
 export const getUsersEndpoint = async (
+  params?: GetUsersEndpointParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<IReadOnlyListOfUserProfileResponse> => {
-  return customFetch<IReadOnlyListOfUserProfileResponse>(getGetUsersEndpointUrl(), {
+  return customFetch<IReadOnlyListOfUserProfileResponse>(getGetUsersEndpointUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetUsersEndpointQueryKey = () => {
-  return [`/api/users`] as const;
+export const getGetUsersEndpointQueryKey = (params?: GetUsersEndpointParams) => {
+  return [`/api/users`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetUsersEndpointQueryOptions = <
   TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
   TError = ProblemDetails,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetUsersEndpointParams,
+  options?: {
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetUsersEndpointQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetUsersEndpointQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsersEndpoint>>> = ({ signal }) =>
-    getUsersEndpoint({ signal, ...requestOptions });
+    getUsersEndpoint(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getUsersEndpoint>>,
@@ -7990,6 +10514,7 @@ export function useGetUsersEndpoint<
   TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
   TError = ProblemDetails,
 >(
+  params: undefined | GetUsersEndpointParams,
   options: {
     query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>> &
       Pick<
@@ -8008,6 +10533,7 @@ export function useGetUsersEndpoint<
   TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetUsersEndpointParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>> &
       Pick<
@@ -8026,6 +10552,7 @@ export function useGetUsersEndpoint<
   TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetUsersEndpointParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
@@ -8040,17 +10567,115 @@ export function useGetUsersEndpoint<
   TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
   TError = ProblemDetails,
 >(
+  params?: GetUsersEndpointParams,
   options?: {
     query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetUsersEndpointQueryOptions(options);
+  const queryOptions = getGetUsersEndpointQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
   };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetUsersEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetUsersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetUsersEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsersEndpoint>>> = ({ signal }) =>
+    getUsersEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getUsersEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetUsersEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getUsersEndpoint>>
+>;
+export type GetUsersEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetUsersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetUsersEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUsersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetUsersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetUsersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetUsersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List users
+ */
+
+export function useGetUsersEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getUsersEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetUsersEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsersEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetUsersEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
 
   return withQueryKey(query, queryOptions.queryKey);
 }

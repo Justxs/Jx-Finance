@@ -5,12 +5,11 @@ import { useTranslation } from "react-i18next";
 import {
   getGetGoalsEndpointQueryKey,
   useDeleteGoalEndpoint,
-  useGetGoalsEndpoint,
+  useGetGoalsEndpointSuspense,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CreateGoalForm } from "./create-goal-form";
 import { GoalRow } from "./goal-row";
 
@@ -19,7 +18,7 @@ export function GoalsPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const goals = useGetGoalsEndpoint();
+  const goals = useGetGoalsEndpointSuspense();
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetGoalsEndpointQueryKey() });
@@ -29,16 +28,10 @@ export function GoalsPage() {
 
   const goalList = goals.data ?? [];
 
+  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+
   let content: ReactNode;
-  if (goals.isPending) {
-    content = (
-      <div className="space-y-4 p-6">
-        {Array.from({ length: 2 }, (_, index) => (
-          <Skeleton key={index} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  } else if (goalList.length === 0) {
+  if (goalList.length === 0) {
     content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("goals.empty")}</p>;
   } else {
     content = (
@@ -48,7 +41,8 @@ export function GoalsPage() {
             key={goal.id}
             goal={goal}
             onDelete={() => deleteMutation.mutate({ id: goal.id! })}
-            deletePending={deleteMutation.isPending}
+            deletePending={deletingId === goal.id}
+            deleteDisabled={deleteMutation.isPending}
             onSaved={invalidate}
           />
         ))}
@@ -58,7 +52,7 @@ export function GoalsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("goals.title")} subtitle={t("goals.subtitle")}>
+      <PageHeader title={t("goals.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           {t("goals.add")}

@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetHouseholdsEndpoint } from "@/api/generated";
+import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -11,14 +11,21 @@ import { CategoryEditForm } from "./category-edit-form";
 interface Props {
   category: CategoryResponse;
   deletePending: boolean;
+  deleteDisabled: boolean;
   onDelete: () => void;
   onSaved: () => void;
 }
 
-export function CategoryRow({ category, deletePending, onDelete, onSaved }: Readonly<Props>) {
+export function CategoryRow({
+  category,
+  deletePending,
+  deleteDisabled,
+  onDelete,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
-  const households = useGetHouseholdsEndpoint();
+  const households = useGetHouseholdsEndpointSuspense();
   const householdNames = new Map(households.data?.map((h) => [h.id, h.name]) ?? []);
 
   return (
@@ -51,7 +58,8 @@ export function CategoryRow({ category, deletePending, onDelete, onSaved }: Read
           variant="ghost"
           size="icon"
           className="size-8"
-          disabled={deletePending}
+          pending={deletePending}
+          disabled={deleteDisabled}
           onClick={onDelete}
           aria-label={t("actions.delete")}
           title={t("actions.delete")}

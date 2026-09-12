@@ -27,9 +27,7 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
         var query = Filtered(request);
 
         var total = await query.CountAsync(cancellationToken);
-        var items = await query
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
+        var items = await Sorted(query, request)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -47,15 +45,42 @@ public sealed class TransactionService(AppDbContext db, ICurrentUser currentUser
         GetTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var items = await Filtered(request)
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var items = await Sorted(Filtered(request), request).ToListAsync(cancellationToken);
 
         var linesByTransaction = await LoadLinesAsync(items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
 
         return items.Select(t => mapper.FromEntity(t, linesByTransaction.GetValueOrDefault(t.Id))).ToList();
     }
+
+    private IOrderedQueryable<Transaction> Sorted(IQueryable<Transaction> query, GetTransactionsRequest request)
+    {
+        var descending = (request.Direction ?? SortDirection.Desc) == SortDirection.Desc;
+
+        return (request.Sort ?? TransactionSortField.Date) switch
+        {
+            TransactionSortField.Description => Order(query, t => t.Description, descending),
+            TransactionSortField.Category => Order(
+                query,
+                t => db.Categories.Where(c => c.Id == t.CategoryId).Select(c => c.Name).FirstOrDefault(),
+                descending),
+            TransactionSortField.Account => Order(
+                query,
+                t => db.Accounts.Where(a => a.Id == t.AccountId).Select(a => a.Name).FirstOrDefault(),
+                descending),
+            TransactionSortField.Amount => Order(query, t => (decimal)t.Amount, descending),
+            _ => descending
+                ? query.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt)
+                : query.OrderBy(t => t.Date).ThenBy(t => t.CreatedAt),
+        };
+    }
+
+    private static IOrderedQueryable<Transaction> Order<TKey>(
+        IQueryable<Transaction> query,
+        System.Linq.Expressions.Expression<Func<Transaction, TKey>> key,
+        bool descending) =>
+        descending
+            ? query.OrderByDescending(key).ThenByDescending(t => t.CreatedAt)
+            : query.OrderBy(key).ThenByDescending(t => t.CreatedAt);
 
     private IQueryable<Transaction> Filtered(GetTransactionsRequest request)
     {

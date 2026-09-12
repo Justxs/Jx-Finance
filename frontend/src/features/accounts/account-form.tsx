@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsEndpoint } from "@/api/generated";
+import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { AccountResponse, AccountType, Scope } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -41,7 +41,7 @@ interface Props {
 
 export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpoint();
+  const households = useGetHouseholdsEndpointSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
@@ -237,7 +237,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       <div className="flex flex-wrap items-end gap-2 self-end">
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={pending || !canSubmit} className="flex-1">
+            <Button type="submit" pending={pending} disabled={!canSubmit} className="flex-1">
               {initial ? t("actions.save") : t("actions.add")}
             </Button>
           )}

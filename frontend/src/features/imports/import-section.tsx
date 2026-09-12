@@ -7,7 +7,7 @@ import {
   getGetDashboardSummaryEndpointQueryKey,
   getGetTransactionsEndpointQueryKey,
   getGetTransfersEndpointQueryKey,
-  useGetCategoriesEndpoint,
+  useGetCategoriesEndpointSuspense,
   useImportConfirmEndpoint,
   useImportPreviewEndpoint,
 } from "@/api/generated";
@@ -28,7 +28,7 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
-  const categories = useGetCategoriesEndpoint();
+  const categories = useGetCategoriesEndpointSuspense();
   const categoryList = categories.data ?? [];
 
   function invalidate() {

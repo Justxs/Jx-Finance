@@ -1,5 +1,6 @@
 import type { ComponentProps } from "react";
 import { type VariantProps, cva } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
@@ -28,10 +29,31 @@ const buttonVariants = cva(
   },
 );
 
-type Props = ComponentProps<"button"> & VariantProps<typeof buttonVariants>;
+type Props = ComponentProps<"button"> &
+  VariantProps<typeof buttonVariants> & {
+    pending?: boolean;
+  };
 
-function Button({ className, variant, size, ...props }: Readonly<Props>) {
-  return <button className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+function Button({
+  className,
+  variant,
+  size,
+  pending,
+  disabled,
+  children,
+  ...props
+}: Readonly<Props>) {
+  return (
+    <button
+      className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || pending}
+      aria-busy={pending || undefined}
+      {...props}
+    >
+      {pending ? <Loader2 className="animate-spin" aria-hidden="true" /> : null}
+      {pending && size === "icon" ? null : children}
+    </button>
+  );
 }
 
 export { Button, buttonVariants };

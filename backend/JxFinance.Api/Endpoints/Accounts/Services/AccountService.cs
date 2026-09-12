@@ -3,6 +3,7 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Accounts.CreateAccount;
+using JxFinance.Endpoints.Accounts.GetAccounts;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Shared;
@@ -14,9 +15,33 @@ namespace JxFinance.Endpoints.Accounts.Services;
 
 public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, AccountMapper mapper) : IAccountService
 {
-    public async Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken) =>
+        GetAllAsync(new GetAccountsRequest(), cancellationToken);
+
+    public async Task<IReadOnlyList<AccountResponse>> GetAllAsync(
+        GetAccountsRequest request,
+        CancellationToken cancellationToken)
     {
-        var accounts = await db.Accounts
+        var query = db.Accounts.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(a => EF.Functions.ILike(a.Name, $"%{search}%"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Iban))
+        {
+            var iban = request.Iban.Trim();
+            query = query.Where(a => a.Iban != null && EF.Functions.ILike(a.Iban, $"%{iban}%"));
+        }
+
+        if (request.Type is { } type)
+        {
+            query = query.Where(a => a.Type == type);
+        }
+
+        var accounts = await query
             .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -39,13 +64,43 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
             .Select(g => new { AccountId = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
             .ToDictionaryAsync(g => g.AccountId, g => g.Total, cancellationToken);
 
-        return accounts
+        var responses = accounts
             .Select(a => mapper.FromEntity(
                 a,
                 transactionMovements.GetValueOrDefault(a.Id)
                     - outgoingTransfers.GetValueOrDefault(a.Id)
                     + incomingTransfers.GetValueOrDefault(a.Id)))
             .ToList();
+
+        return Sort(responses, request);
+    }
+
+    private static IReadOnlyList<AccountResponse> Sort(
+        List<AccountResponse> accounts,
+        GetAccountsRequest request)
+    {
+        var sort = request.Sort ?? AccountSortField.Created;
+        var descending = request.Direction == SortDirection.Desc;
+
+        if (sort == AccountSortField.Created)
+        {
+            return descending
+                ? accounts.OrderByDescending(a => a.CreatedAt).ToList()
+                : accounts;
+        }
+
+        Func<AccountResponse, IComparable?> key = sort switch
+        {
+            AccountSortField.Name => a => a.Name,
+            AccountSortField.Iban => a => a.Iban ?? string.Empty,
+            AccountSortField.Type => a => a.Type.ToString(),
+            AccountSortField.StartingBalance => a => decimal.Parse(
+                a.StartingBalance,
+                System.Globalization.CultureInfo.InvariantCulture),
+            _ => a => decimal.Parse(a.CurrentBalance, System.Globalization.CultureInfo.InvariantCulture),
+        };
+
+        return descending ? accounts.OrderByDescending(key).ToList() : accounts.OrderBy(key).ToList();
     }
 
     public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)

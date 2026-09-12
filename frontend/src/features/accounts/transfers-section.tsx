@@ -1,19 +1,18 @@
 import { Pagination } from "@/components/pagination";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetAccountsEndpointQueryKey,
   getGetTransfersEndpointQueryKey,
   useCreateTransferEndpoint,
   useDeleteTransferEndpoint,
-  useGetTransfersEndpoint,
+  useGetTransfersEndpointSuspense,
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { TransferForm } from "./transfer-form";
 
@@ -29,7 +28,9 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const [addOpen, setAddOpen] = useState(false);
 
   const [page, setPage] = useState(1);
-  const transfers = useGetTransfersEndpoint({ page, pageSize: 10 });
+  const shownPage = useDeferredValue(page);
+  const stale = shownPage !== page;
+  const transfers = useGetTransfersEndpointSuspense({ page: shownPage, pageSize: 10 });
   const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / 10));
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
 
@@ -48,18 +49,10 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
 
   const items = transfers.data?.items ?? [];
 
+  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+
   let content: ReactNode;
-  if (transfers.isPending) {
-    content = (
-      <ul className="divide-y divide-border px-6">
-        {Array.from({ length: 2 }, (_, index) => (
-          <li key={index} className="py-3">
-            <Skeleton className="h-4 w-full" />
-          </li>
-        ))}
-      </ul>
-    );
-  } else if (items.length === 0) {
+  if (items.length === 0) {
     content = <p className="px-6 py-6 text-sm text-muted-foreground">{t("transfers.empty")}</p>;
   } else {
     content = (
@@ -87,6 +80,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
                 variant="ghost"
                 size="icon"
                 className="size-8"
+                pending={deletingId === transfer.id}
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate({ id: transfer.id! })}
                 aria-label={t("actions.delete")}
@@ -118,7 +112,9 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
           onCancel={() => setAddOpen(false)}
         />
       </Dialog>
-      {content}
+      <div className={stale ? "is-stale" : undefined} aria-busy={stale}>
+        {content}
+      </div>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
     </section>
   );

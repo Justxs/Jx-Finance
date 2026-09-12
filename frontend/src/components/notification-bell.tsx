@@ -4,7 +4,7 @@ import { useId, useState, type FocusEvent } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetNotificationsEndpointQueryKey,
-  useGetNotificationsEndpoint,
+  useGetNotificationsEndpointSuspense,
   useMarkAllNotificationsReadEndpoint,
   useMarkNotificationReadEndpoint,
 } from "@/api/generated";
@@ -18,7 +18,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const panelId = useId();
 
-  const notifications = useGetNotificationsEndpoint({ unread: true });
+  const notifications = useGetNotificationsEndpointSuspense({ unread: true });
   const unreadList = notifications.data ?? [];
 
   function invalidate() {
@@ -74,14 +74,14 @@ export function NotificationBell() {
                 type="button"
                 variant="ghost"
                 size="sm"
-                disabled={markAllReadMutation.isPending}
+                pending={markAllReadMutation.isPending}
                 onClick={() => markAllReadMutation.mutate()}
               >
                 {t("notifications.markAllRead")}
               </Button>
             ) : null}
           </div>
-          <div className="max-h-[min(24rem,calc(100dvh-9rem))] overflow-y-auto overscroll-contain break-words">
+          <div className="max-h-[min(24rem,calc(100dvh-9rem))] overflow-y-auto overscroll-contain wrap-break-word">
             {unreadList.length === 0 ? (
               <p className="px-4 py-6 text-center text-sm text-muted-foreground">
                 {t("notifications.empty")}
@@ -92,7 +92,9 @@ export function NotificationBell() {
                   <li key={notification.id}>
                     <button
                       type="button"
-                      className="w-full px-4 py-3 text-left text-sm hover:bg-accent"
+                      className={`w-full px-4 py-3 text-left text-sm hover:bg-accent ${
+                        markReadMutation.variables?.id === notification.id ? "is-stale" : ""
+                      }`}
                       disabled={markReadMutation.isPending}
                       onClick={() => markReadMutation.mutate({ id: notification.id! })}
                     >

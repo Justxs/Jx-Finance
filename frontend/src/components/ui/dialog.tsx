@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { X } from "lucide-react";
-import { type ReactNode, useEffect, useId, useRef } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+
+const CLOSE_MS = 140;
 
 interface Props {
   open: boolean;
@@ -24,6 +26,15 @@ export function Dialog({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const descriptionId = useId();
+  const [mounted, setMounted] = useState(open);
+  const [wasOpen, setWasOpen] = useState(open);
+
+  if (open !== wasOpen) {
+    setWasOpen(open);
+    if (open) {
+      setMounted(true);
+    }
+  }
 
   useEffect(() => {
     const dialog = ref.current;
@@ -31,11 +42,22 @@ export function Dialog({
       return;
     }
 
-    if (open && !dialog.open) {
-      dialog.showModal();
-    } else if (!open && dialog.open) {
-      dialog.close();
+    if (open) {
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+      return;
     }
+
+    if (!dialog.open) {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      dialog.close();
+      setMounted(false);
+    }, CLOSE_MS);
+    return () => clearTimeout(timer);
   }, [open]);
 
   return (
@@ -43,8 +65,12 @@ export function Dialog({
       ref={ref}
       aria-labelledby={titleId}
       aria-describedby={description ? descriptionId : undefined}
+      data-state={open ? "open" : "closed"}
       onClose={() => onOpenChange(false)}
-      onCancel={() => onOpenChange(false)}
+      onCancel={(e) => {
+        e.preventDefault();
+        onOpenChange(false);
+      }}
       onClick={(e) => {
         if (e.target === ref.current) {
           onOpenChange(false);
@@ -55,10 +81,10 @@ export function Dialog({
         className,
       )}
     >
-      {open ? (
+      {mounted ? (
         <div className="flex max-h-[calc(100dvh-2rem)] flex-col">
           <div className="flex shrink-0 items-start justify-between gap-4 border-b px-4 py-4 sm:px-6">
-            <div className="min-w-0 break-words">
+            <div className="min-w-0 wrap-break-word">
               <h2 id={titleId} className="text-lg font-semibold">
                 {title}
               </h2>

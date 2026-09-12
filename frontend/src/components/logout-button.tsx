@@ -26,7 +26,7 @@ export function LogoutButton() {
       type="button"
       variant="outline"
       size="icon"
-      disabled={logoutMutation.isPending}
+      pending={logoutMutation.isPending}
       onClick={() => logoutMutation.mutate()}
       aria-label={t("auth.logout")}
       title={t("auth.logout")}

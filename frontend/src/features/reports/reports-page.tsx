@@ -1,8 +1,9 @@
+import { ViewTransition } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useGetReportSummaryEndpoint } from "@/api/generated";
+import { useGetReportSummaryEndpointSuspense } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { detectPreset, presetRange } from "./date-range-presets";
 import { NetWorthChangeCard } from "./net-worth-change-card";
 import { CategoryBreakdown } from "@/components/category-breakdown";
@@ -20,7 +21,8 @@ export function ReportsPage() {
   const dateTo = searchTo ?? fallback.dateTo;
   const preset = detectPreset(dateFrom, dateTo);
 
-  const summary = useGetReportSummaryEndpoint({ dateFrom, dateTo });
+  const [shown, stale] = useDeferredParams({ dateFrom, dateTo });
+  const summary = useGetReportSummaryEndpointSuspense(shown);
 
   function handleRangeChange(range: { dateFrom: string; dateTo: string }) {
     navigate({ search: () => range });
@@ -28,39 +30,39 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("reports.title")} subtitle={t("reports.subtitle")} />
+      <PageHeader title={t("reports.title")} />
 
       <section className="card p-6">
         <ReportFilters dateFrom={dateFrom} dateTo={dateTo} onChange={handleRangeChange} />
       </section>
 
-      {summary.isPending ? <Skeleton className="h-32 w-full" /> : null}
-
       {summary.data ? (
-        <>
-          <ReportStats
-            totalIncome={summary.data.totalIncome ?? "0"}
-            totalExpense={summary.data.totalExpense ?? "0"}
-            net={summary.data.net ?? "0"}
-          />
-
-          {(preset === "thisYear" || preset === "lastYear") && (
-            <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
-          )}
-
-          <section className="card p-6">
-            <h2 className="mb-4 font-semibold">{t("reports.trend")}</h2>
-            <ReportTrendChart
-              items={summary.data.trend ?? []}
-              bucket={summary.data.trendBucket ?? "day"}
+        <ViewTransition name="report-results" enter="none" exit="none">
+          <div className={`space-y-6 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+            <ReportStats
+              totalIncome={summary.data.totalIncome ?? "0"}
+              totalExpense={summary.data.totalExpense ?? "0"}
+              net={summary.data.net ?? "0"}
             />
-          </section>
 
-          <section className="card p-6">
-            <h2 className="mb-4 font-semibold">{t("reports.expenseByCategory")}</h2>
-            <CategoryBreakdown items={summary.data.expenseByCategory ?? []} />
-          </section>
-        </>
+            {(preset === "thisYear" || preset === "lastYear") && (
+              <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
+            )}
+
+            <section className="card p-6">
+              <h2 className="mb-4 font-semibold">{t("reports.trend")}</h2>
+              <ReportTrendChart
+                items={summary.data.trend ?? []}
+                bucket={summary.data.trendBucket ?? "day"}
+              />
+            </section>
+
+            <section className="card p-6">
+              <h2 className="mb-4 font-semibold">{t("reports.expenseByCategory")}</h2>
+              <CategoryBreakdown items={summary.data.expenseByCategory ?? []} />
+            </section>
+          </div>
+        </ViewTransition>
       ) : null}
     </div>
   );

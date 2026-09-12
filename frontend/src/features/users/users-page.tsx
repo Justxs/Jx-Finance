@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   getGetUsersEndpointQueryKey,
   useDeactivateUserEndpoint,
-  useGetUsersEndpoint,
-  useMeEndpoint,
+  useGetUsersEndpointSuspense,
+  useMeEndpointSuspense,
   useUpdateUserRoleEndpoint,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { CreateUserForm } from "./create-user-form";
@@ -21,8 +23,15 @@ export function UsersPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const me = useMeEndpoint();
-  const users = useGetUsersEndpoint();
+  const me = useMeEndpointSuspense();
+  const [shown, stale] = useDeferredParams(useSearch({ from: "/users" }));
+  const users = useGetUsersEndpointSuspense({
+    search: shown.search,
+    role: shown.role,
+    isActive: shown.isActive,
+    sort: shown.sort,
+    direction: shown.direction,
+  });
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetUsersEndpointQueryKey() });
@@ -43,7 +52,7 @@ export function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("users.title")} subtitle={t("users.subtitle")}>
+      <PageHeader title={t("users.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           {t("users.add")}
@@ -62,12 +71,14 @@ export function UsersPage() {
 
       <UsersTable
         users={users.data ?? []}
-        isPending={users.isPending}
+        stale={stale}
         currentUserId={me.data?.id}
         onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
-        rolePending={roleMutation.isPending}
+        rolePendingId={roleMutation.isPending ? (roleMutation.variables?.id ?? null) : null}
         onDeactivate={(id) => deactivateMutation.mutate({ id })}
-        deactivatePending={deactivateMutation.isPending}
+        deactivatePendingId={
+          deactivateMutation.isPending ? (deactivateMutation.variables?.id ?? null) : null
+        }
       />
     </div>
   );

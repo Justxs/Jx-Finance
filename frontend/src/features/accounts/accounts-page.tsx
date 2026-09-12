@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -8,10 +9,13 @@ import {
   getGetDashboardSummaryEndpointQueryKey,
   useCreateAccountEndpoint,
   useDeleteAccountEndpoint,
-  useGetAccountsEndpoint,
+  useGetAccountsEndpointSuspense,
   useUpdateAccountEndpoint,
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
+import { QueryBoundary } from "@/components/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { ImportSection } from "@/features/imports/import-section";
@@ -23,7 +27,14 @@ export function AccountsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const accounts = useGetAccountsEndpoint();
+  const [shown, stale] = useDeferredParams(useSearch({ from: "/accounts" }));
+  const accounts = useGetAccountsEndpointSuspense({
+    search: shown.search,
+    iban: shown.iban,
+    type: shown.type,
+    sort: shown.sort,
+    direction: shown.direction,
+  });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
 
@@ -55,7 +66,7 @@ export function AccountsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("accounts.title")} subtitle={t("accounts.subtitle")}>
+      <PageHeader title={t("accounts.title")}>
         <Button onClick={() => setCreateOpen(true)}>
           <Plus />
           {t("accounts.add")}
@@ -72,19 +83,25 @@ export function AccountsPage() {
 
       <AccountsTable
         accounts={accountList}
-        isPending={accounts.isPending}
+        stale={stale}
         editingId={editingId}
         onEdit={setEditingId}
         onCancelEdit={() => setEditingId(null)}
         updatePending={updateMutation.isPending}
         onUpdate={(id, values) => updateMutation.mutate({ id, data: values })}
-        deletePending={deleteMutation.isPending}
+        deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
         onDelete={(id) => deleteMutation.mutate({ id })}
       />
 
-      <TransfersSection accounts={accountList} />
+      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+        <TransfersSection accounts={accountList} />
+      </QueryBoundary>
 
-      {accountList.length > 0 ? <ImportSection accounts={accountList} /> : null}
+      {accountList.length > 0 ? (
+        <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+          <ImportSection accounts={accountList} />
+        </QueryBoundary>
+      ) : null}
     </div>
   );
 }

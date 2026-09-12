@@ -91,7 +91,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
 
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" size="sm" disabled={addMutation.isPending || !canSubmit}>
+          <Button type="submit" size="sm" pending={addMutation.isPending} disabled={!canSubmit}>
             {t("households.addMember")}
           </Button>
         )}

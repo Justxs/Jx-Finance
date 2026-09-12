@@ -158,7 +158,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
         </Button>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
               {t("users.add")}
             </Button>
           )}

@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsEndpoint, useUpdateCategoryEndpoint } from "@/api/generated";
+import { useGetHouseholdsEndpointSuspense, useUpdateCategoryEndpoint } from "@/api/generated";
 import type { CategoryResponse, Scope } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -25,7 +25,7 @@ interface Props {
 
 export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpoint();
+  const households = useGetHouseholdsEndpointSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
@@ -96,7 +96,12 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
         </form.Field>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" size="sm" disabled={updateMutation.isPending || !canSubmit}>
+            <Button
+              type="submit"
+              size="sm"
+              pending={updateMutation.isPending}
+              disabled={!canSubmit}
+            >
               {t("actions.save")}
             </Button>
           )}

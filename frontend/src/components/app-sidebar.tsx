@@ -16,7 +16,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useMeEndpoint } from "@/api/generated";
+import { useMeEndpointSuspense } from "@/api/generated";
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -51,7 +51,7 @@ export const navItems = [
 export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
-  const me = useMeEndpoint();
+  const me = useMeEndpointSuspense();
 
   const visibleNavItems =
     me.data?.role === "Admin"

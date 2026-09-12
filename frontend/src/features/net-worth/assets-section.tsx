@@ -7,11 +7,10 @@ import {
   getGetNetWorthEndpointQueryKey,
   getGetNetWorthHistoryEndpointQueryKey,
   useDeleteAssetEndpoint,
-  useGetAssetsEndpoint,
+  useGetAssetsEndpointSuspense,
 } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AssetForm } from "./asset-form";
 
@@ -22,7 +21,7 @@ export function AssetsSection() {
   const date = useDate();
   const [addOpen, setAddOpen] = useState(false);
 
-  const assets = useGetAssetsEndpoint();
+  const assets = useGetAssetsEndpointSuspense();
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetAssetsEndpointQueryKey() });
@@ -33,10 +32,10 @@ export function AssetsSection() {
   const deleteMutation = useDeleteAssetEndpoint({ mutation: { onSettled: invalidate } });
   const assetList = assets.data ?? [];
 
+  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+
   let content: ReactNode;
-  if (assets.isPending) {
-    content = <Skeleton className="m-6 h-16" />;
-  } else if (assetList.length === 0) {
+  if (assetList.length === 0) {
     content = <p className="px-6 py-6 text-sm text-muted-foreground">{t("netWorth.noAssets")}</p>;
   } else {
     content = (
@@ -60,6 +59,7 @@ export function AssetsSection() {
                 variant="ghost"
                 size="icon"
                 className="size-8"
+                pending={deletingId === asset.id}
                 disabled={deleteMutation.isPending}
                 onClick={() => deleteMutation.mutate({ id: asset.id! })}
                 aria-label={t("actions.delete")}

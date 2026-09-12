@@ -1,6 +1,5 @@
 {
   "appName": "Jx Finance",
-  "tagline": "Fast entry. Trusted numbers.",
   "nav": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
@@ -33,11 +32,13 @@
   "datePicker": {
     "placeholder": "Pick a date",
     "clear": "Clear",
-    "today": "Today"
+    "today": "Today",
+    "anyDate": "Any date",
+    "pickStart": "Pick a start date",
+    "pickEnd": "Pick an end date"
   },
   "dashboard": {
     "title": "Dashboard",
-    "subtitle": "Where your money stands right now.",
     "totalBalance": "Total balance",
     "monthIncome": "Income this month",
     "monthExpense": "Expenses this month",
@@ -50,7 +51,6 @@
   },
   "accounts": {
     "title": "Accounts",
-    "subtitle": "Every place your money lives.",
     "add": "Add account",
     "name": "Name",
     "namePlaceholder": "e.g. Swedbank checking",
@@ -68,7 +68,8 @@
       "savings": "Savings",
       "cash": "Cash",
       "other": "Other"
-    }
+    },
+    "allTypes": "All types"
   },
   "transfers": {
     "title": "Transfer money",
@@ -80,7 +81,6 @@
   },
   "categories": {
     "title": "Categories",
-    "subtitle": "Labels that give your spending shape.",
     "add": "Add category",
     "addTitle": "Add a category",
     "editTitle": "Edit category",
@@ -94,7 +94,6 @@
   },
   "transactions": {
     "title": "Transactions",
-    "subtitle": "Income and expenses, as they happen.",
     "add": "Add transaction",
     "editTitle": "Edit transaction",
     "account": "Account",
@@ -115,7 +114,6 @@
     "allAccounts": "All accounts",
     "allCategories": "All categories",
     "clearFilters": "Clear filters",
-    "filters": "Filters",
     "exportCsv": "Export CSV",
     "exportPdf": "Export PDF",
     "split": "Split",
@@ -149,7 +147,6 @@
   },
   "users": {
     "title": "Users",
-    "subtitle": "Who can sign in to this install.",
     "add": "Create user",
     "email": "Email",
     "displayName": "Display name",
@@ -166,11 +163,12 @@
     "created": "User created",
     "deactivated_toast": "User deactivated",
     "roleUpdated": "Role updated",
-    "empty": "No other users yet."
+    "empty": "No other users yet.",
+    "allRoles": "All roles",
+    "allStatuses": "All statuses"
   },
   "profile": {
     "title": "Your profile",
-    "subtitle": "Update your display name or password.",
     "currentPassword": "Current password",
     "newPassword": "New password (optional)",
     "save": "Save changes",
@@ -190,7 +188,6 @@
   },
   "budgets": {
     "title": "Budgets",
-    "subtitle": "Monthly spending caps by category.",
     "add": "Add budget",
     "category": "Category",
     "limit": "Monthly limit",
@@ -199,7 +196,6 @@
   },
   "goals": {
     "title": "Goals",
-    "subtitle": "Savings targets to work toward.",
     "add": "Add goal",
     "name": "Name",
     "namePlaceholder": "e.g. Emergency fund",
@@ -211,7 +207,6 @@
   },
   "netWorth": {
     "title": "Net worth",
-    "subtitle": "What you own, minus what you owe.",
     "accounts": "Accounts",
     "assets": "Assets",
     "debts": "Debts",
@@ -243,7 +238,6 @@
   },
   "recurringBills": {
     "title": "Recurring bills",
-    "subtitle": "Bills that repeat, so nothing sneaks up on you.",
     "add": "Add recurring bill",
     "name": "Name",
     "namePlaceholder": "e.g. Rent",
@@ -283,7 +277,6 @@
   },
   "households": {
     "title": "Households",
-    "subtitle": "Share accounts and categories with people you trust.",
     "add": "Create household",
     "namePlaceholder": "e.g. Our home",
     "empty": "You're not part of any household yet.",
@@ -304,10 +297,7 @@
   },
   "reports": {
     "title": "Reports",
-    "subtitle": "Income, expenses and category breakdown for any date range.",
     "range": "Range",
-    "from": "From",
-    "to": "To",
     "presets": {
       "thisMonth": "This month",
       "lastMonth": "Last month",
@@ -321,7 +311,8 @@
     "trend": "Trend",
     "expenseByCategory": "Expense by category",
     "netWorthChange": "Net worth change",
-    "notEnoughNetWorthHistory": "Not enough net worth history in this period yet."
+    "notEnoughNetWorthHistory": "Not enough net worth history in this period yet.",
+    "customRange": "Custom range"
   },
   "imports": {
     "title": "Import a Swedbank CSV",
@@ -350,7 +341,11 @@
     "error": "Unavailable"
   },
   "errors": {
-    "generic": "Something went wrong. Please try again."
+    "generic": "Something went wrong. Please try again.",
+    "loadFailed": "Could not load this.",
+    "retry": "Try again",
+    "retrying": "Trying…",
+    "loading": "Loading"
   },
   "validation": {
     "required": "This field is required.",
@@ -363,5 +358,12 @@
   },
   "pagination": {
     "pageOf": "Page {{page}} of {{pages}}"
+  },
+  "filters": {
+    "filterBy": "Filter by {{column}}",
+    "clear": "Clear",
+    "noMatches": "No rows match these filters.",
+    "sortAsc": "Sort {{column}} ascending",
+    "sortDesc": "Sort {{column}} descending"
   }
 }
