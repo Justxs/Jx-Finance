@@ -14,7 +14,7 @@ interface UseTransactionColumnsArgs {
   categoryById: Map<string | undefined, CategoryResponse | undefined>;
   onEdit: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
-  deletePending: boolean;
+  deletingId: string | null;
 }
 
 export function useTransactionColumns({
@@ -22,7 +22,7 @@ export function useTransactionColumns({
   categoryById,
   onEdit,
   onDelete,
-  deletePending,
+  deletingId,
 }: UseTransactionColumnsArgs) {
   const { t } = useTranslation();
   const money = useMoney();
@@ -111,7 +111,8 @@ export function useTransactionColumns({
               variant="ghost"
               size="icon"
               className="size-8"
-              disabled={isOptimistic || deletePending}
+              pending={deletingId === row.id}
+              disabled={isOptimistic || deletingId !== null}
               onClick={() => onDelete(row.id!)}
               aria-label={t("actions.delete")}
               title={t("actions.delete")}

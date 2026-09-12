@@ -1,3 +1,7 @@
+import { ViewTransition } from "react";
+import { QueryBoundary } from "@/components/query-boundary";
+import { RoutePending } from "@/components/route-pending";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Link, Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
 import { AppSidebar, navItems } from "@/components/app-sidebar";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -54,7 +58,9 @@ function RootLayout() {
 
   return (
     <div className="flex min-h-screen">
-      <AppSidebar />
+      <QueryBoundary fallback={<Skeleton className="hidden h-screen w-60 shrink-0 md:block" />}>
+        <AppSidebar />
+      </QueryBoundary>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:p-3">
@@ -62,7 +68,9 @@ function RootLayout() {
         </a>
         <header className="flex h-14 shrink-0 items-center gap-1.5 border-b bg-card px-4 sm:px-6">
           <span className="mr-auto text-sm font-medium text-muted-foreground">{t("appName")}</span>
-          <NotificationBell />
+          <QueryBoundary fallback={<Skeleton className="size-9 rounded-md" />}>
+            <NotificationBell />
+          </QueryBoundary>
           <LanguageToggle />
           <ThemeToggle />
           <div className="md:hidden">
@@ -98,7 +106,11 @@ function RootLayout() {
           id="main-content"
           className="mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-6 sm:px-6 sm:py-8"
         >
-          <Outlet />
+          <QueryBoundary fallback={<RoutePending />}>
+            <ViewTransition key={location.pathname} name="page" update="none">
+              <Outlet />
+            </ViewTransition>
+          </QueryBoundary>
         </main>
       </div>
     </div>

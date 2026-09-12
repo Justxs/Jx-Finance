@@ -1,6 +1,6 @@
 import { TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useGetNetWorthHistoryEndpoint } from "@/api/generated";
+import { useGetNetWorthHistoryEndpointSuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const history = useGetNetWorthHistoryEndpoint();
+  const history = useGetNetWorthHistoryEndpointSuspense();
 
   const items = (history.data?.items ?? [])
     .filter((item) => (item.date ?? "") >= dateFrom && (item.date ?? "") <= dateTo)
@@ -19,7 +19,7 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
 
   if (items.length < 2) {
     return (
-      <p className="px-6 py-8 text-sm text-muted-foreground">
+      <p className="card px-6 py-8 text-sm text-muted-foreground">
         {t("reports.notEnoughNetWorthHistory")}
       </p>
     );

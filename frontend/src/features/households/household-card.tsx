@@ -36,7 +36,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
   return (
     <section className="card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b p-6">
-        <h2 className="min-w-0 break-words font-semibold">{household.name}</h2>
+        <h2 className="min-w-0 wrap-break-word font-semibold">{household.name}</h2>
 
         {isOwner ? (
           <div className="flex gap-1">
@@ -54,7 +54,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
               variant="ghost"
               size="icon"
               className="size-8"
-              disabled={deleteMutation.isPending}
+              pending={deleteMutation.isPending}
               onClick={() => deleteMutation.mutate({ id: household.id! })}
               aria-label={t("actions.delete")}
               title={t("actions.delete")}
@@ -79,11 +79,17 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setRenaming(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={renameMutation.isPending}
+              onClick={() => setRenaming(false)}
+            >
               {t("actions.cancel")}
             </Button>
             <Button
-              disabled={renameMutation.isPending || !name.trim()}
+              pending={renameMutation.isPending}
+              disabled={!name.trim()}
               onClick={() =>
                 renameMutation.mutate({ id: household.id!, data: { name: name.trim() } })
               }
@@ -101,7 +107,10 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
             householdId={household.id!}
             member={member}
             isOwnerView={isOwner}
-            removePending={removeMutation.isPending}
+            removePending={
+              removeMutation.isPending && removeMutation.variables?.userId === member.userId
+            }
+            removeDisabled={removeMutation.isPending}
             onRemove={() => removeMutation.mutate({ id: household.id!, userId: member.userId! })}
             onSaved={onChanged}
           />

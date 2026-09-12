@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateCategoryEndpoint, useGetHouseholdsEndpoint } from "@/api/generated";
+import { useCreateCategoryEndpoint, useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { FlowType, Scope } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -25,7 +25,7 @@ interface Props {
 
 export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpoint();
+  const households = useGetHouseholdsEndpointSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
@@ -182,7 +182,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
         </Button>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={createMutation.isPending || !canSubmit}>
+            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
               {t("actions.add")}
             </Button>
           )}

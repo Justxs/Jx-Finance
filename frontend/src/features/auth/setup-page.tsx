@@ -130,7 +130,8 @@ export function SetupPage() {
           {(canSubmit) => (
             <Button
               type="submit"
-              disabled={setupMutation.isPending || !canSubmit}
+              pending={setupMutation.isPending}
+              disabled={!canSubmit}
               className="w-full"
             >
               {t("auth.createAdmin")}

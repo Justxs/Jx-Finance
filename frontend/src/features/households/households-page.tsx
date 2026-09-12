@@ -2,11 +2,13 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getGetHouseholdsEndpointQueryKey, useGetHouseholdsEndpoint } from "@/api/generated";
+import {
+  getGetHouseholdsEndpointQueryKey,
+  useGetHouseholdsEndpointSuspense,
+} from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { CreateHouseholdForm } from "./create-household-form";
 import { HouseholdCard } from "./household-card";
 
@@ -15,7 +17,7 @@ export function HouseholdsPage() {
   const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const households = useGetHouseholdsEndpoint();
+  const households = useGetHouseholdsEndpointSuspense();
   const householdList = households.data ?? [];
 
   function invalidate() {
@@ -23,16 +25,12 @@ export function HouseholdsPage() {
   }
 
   let content: ReactNode;
-  if (households.isPending) {
+  if (householdList.length === 0) {
     content = (
-      <div className="space-y-4">
-        {Array.from({ length: 2 }, (_, index) => (
-          <Skeleton key={index} className="h-24 w-full" />
-        ))}
-      </div>
+      <section className="card">
+        <p className="px-6 py-8 text-sm text-muted-foreground">{t("households.empty")}</p>
+      </section>
     );
-  } else if (householdList.length === 0) {
-    content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("households.empty")}</p>;
   } else {
     content = (
       <div className="space-y-6">
@@ -45,7 +43,7 @@ export function HouseholdsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("households.title")} subtitle={t("households.subtitle")}>
+      <PageHeader title={t("households.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           {t("households.add")}
@@ -61,7 +59,6 @@ export function HouseholdsPage() {
           onCancel={() => setAddOpen(false)}
         />
       </Dialog>
-
       {content}
     </div>
   );

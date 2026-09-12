@@ -9,9 +9,9 @@ import {
   getGetTransactionsEndpointQueryKey,
   useCreateTransactionEndpoint,
   useDeleteTransactionEndpoint,
-  useGetAccountsEndpoint,
-  useGetCategoriesEndpoint,
-  useGetTransactionsEndpoint,
+  useGetAccountsEndpointSuspense,
+  useGetCategoriesEndpointSuspense,
+  useGetTransactionsEndpointSuspense,
   useUpdateTransactionEndpoint,
 } from "@/api/generated";
 import type {
@@ -19,6 +19,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { TransactionFormSection } from "./transaction-form-section";
@@ -26,6 +27,7 @@ import type { TransactionFormValues } from "./transaction-form";
 import { TransactionsTable } from "./transactions-table";
 import { TransactionsToolbar } from "./transactions-toolbar";
 import { useTransactionColumns } from "./use-transaction-columns";
+import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
 
 const PAGE_SIZE = 20;
 
@@ -41,6 +43,8 @@ export function TransactionsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
+  const [shown, stale] = useDeferredParams(useSearch({ from: "/transactions" }));
+
   const {
     page,
     search: searchText,
@@ -49,9 +53,9 @@ export function TransactionsPage() {
     type,
     dateFrom,
     dateTo,
-  } = useSearch({
-    from: "/transactions",
-  });
+    sort,
+    direction,
+  } = shown;
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -65,12 +69,14 @@ export function TransactionsPage() {
     type,
     dateFrom,
     dateTo,
+    sort,
+    direction,
   };
   const listKey = getGetTransactionsEndpointQueryKey(listParams);
 
-  const accounts = useGetAccountsEndpoint();
-  const categories = useGetCategoriesEndpoint();
-  const transactions = useGetTransactionsEndpoint(listParams);
+  const accounts = useGetAccountsEndpointSuspense();
+  const categories = useGetCategoriesEndpointSuspense();
+  const transactions = useGetTransactionsEndpointSuspense(listParams);
 
   function invalidateLedger() {
     queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
@@ -132,21 +138,26 @@ export function TransactionsPage() {
     mutation: { onSettled: invalidateLedger },
   });
 
-  const accountNames = new Map(accounts.data?.map((a) => [a.id, a.name]) ?? []);
-  const categoryById = new Map(categories.data?.map((c) => [c.id, c]) ?? []);
+  const accountList = accounts.data ?? [];
+  const categoryList = categories.data ?? [];
+  const accountNames = new Map(accountList.map((a) => [a.id, a.name]));
+  const categoryById = new Map(categoryList.map((c) => [c.id, c]));
+
+  const columnHeaders = useTransactionColumnHeaders({
+    accounts: accountList,
+    categories: categoryList,
+  });
 
   const columns = useTransactionColumns({
     accountNames,
     categoryById,
     onEdit: setEditing,
     onDelete: (id) => deleteMutation.mutate({ id }),
-    deletePending: deleteMutation.isPending,
+    deletingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
   });
 
   const total = transactions.data?.total ?? 0;
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const accountList = accounts.data ?? [];
-  const categoryList = categories.data ?? [];
 
   function handleCreate(values: TransactionFormValues) {
     createMutation.mutate({ data: values });
@@ -159,17 +170,14 @@ export function TransactionsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("transactions.title")} subtitle={t("transactions.subtitle")}>
-        <Button
-          onClick={() => setCreateOpen(true)}
-          disabled={accounts.isPending || categories.isPending || accountList.length === 0}
-        >
+      <PageHeader title={t("transactions.title")}>
+        <Button onClick={() => setCreateOpen(true)} disabled={accountList.length === 0}>
           <Plus />
           {t("transactions.add")}
         </Button>
       </PageHeader>
 
-      {accountList.length === 0 && !accounts.isPending ? (
+      {accountList.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("transactions.needAccount")}</p>
       ) : null}
 
@@ -187,8 +195,8 @@ export function TransactionsPage() {
       />
 
       <TransactionsToolbar
-        accounts={accountList}
-        categories={categoryList}
+        filtered={columnHeaders.active}
+        onClearFilters={columnHeaders.clearAll}
         exportUrl={buildExportUrl("/api/transactions/export", {
           search: searchText,
           accountId,
@@ -210,7 +218,9 @@ export function TransactionsPage() {
       <TransactionsTable
         data={transactions.data?.items ?? []}
         columns={columns}
-        isPending={transactions.isPending}
+        isPlaceholder={stale}
+        columnFilters={columnHeaders.byColumn}
+        filtered={columnHeaders.active}
         page={page}
         pageCount={pageCount}
         onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}

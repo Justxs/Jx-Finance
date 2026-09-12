@@ -6,6 +6,8 @@
  * OpenAPI spec version: v1
  */
 import type { FlowType } from "./flowType";
+import type { SortDirection } from "./sortDirection";
+import type { TransactionSortField } from "./transactionSortField";
 
 export type ExportTransactionsPdfEndpointParams = {
   page: number;
@@ -39,4 +41,6 @@ export type ExportTransactionsPdfEndpointParams = {
    * @nullable
    */
   dateTo?: string | null;
+  sort?: TransactionSortField;
+  direction?: SortDirection;
 };

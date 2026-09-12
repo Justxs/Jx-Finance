@@ -68,7 +68,8 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
       ) : null}
       <Button
         size="sm"
-        disabled={confirmMutation.isPending || amountRequired || accountRequired}
+        pending={confirmMutation.isPending}
+        disabled={amountRequired || accountRequired}
         onClick={() =>
           confirmMutation.mutate({
             id: bill.id!,

@@ -1,6 +1,7 @@
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
+using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 
@@ -8,7 +9,9 @@ namespace JxFinance.Endpoints.Users.Interfaces;
 
 public interface IUserService
 {
-    Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(
+        GetUsersRequest request,
+        CancellationToken cancellationToken);
 
     Task<Result<UserProfileResponse>> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken);
 

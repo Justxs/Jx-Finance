@@ -61,7 +61,7 @@ export function ImportUploadForm({
           />
         </div>
       </div>
-      <Button className="mt-4" disabled={previewPending || !accountId} onClick={onPreview}>
+      <Button className="mt-4" pending={previewPending} disabled={!accountId} onClick={onPreview}>
         {t("imports.preview")}
       </Button>
     </div>

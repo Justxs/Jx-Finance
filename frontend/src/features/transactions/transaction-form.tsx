@@ -319,7 +319,7 @@ export function TransactionForm({
       <div className="flex flex-wrap items-end gap-2 self-end">
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" disabled={pending || !canSubmit} className="flex-1">
+            <Button type="submit" pending={pending} disabled={!canSubmit} className="flex-1">
               {initial ? t("actions.save") : t("actions.add")}
             </Button>
           )}

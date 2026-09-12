@@ -9,8 +9,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetMonthlyTrendEndpoint } from "@/api/generated";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useGetMonthlyTrendEndpointSuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
 
 const MONTH_LABELS = [
@@ -31,11 +30,7 @@ const MONTH_LABELS = [
 export function MonthlyTrendChart() {
   const { t } = useTranslation();
   const money = useMoney();
-  const trend = useGetMonthlyTrendEndpoint({ months: 6 });
-
-  if (trend.isPending) {
-    return <Skeleton className="h-64 w-full" />;
-  }
+  const trend = useGetMonthlyTrendEndpointSuspense({ months: 6 });
 
   const items = trend.data?.items ?? [];
   const chartData = items.map((item) => ({

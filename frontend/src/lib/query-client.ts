@@ -23,6 +23,7 @@ export const queryClient = new QueryClient({
     queries: {
       refetchOnWindowFocus: true,
       retry: 1,
+      throwOnError: true,
     },
   },
   queryCache: new QueryCache({ onError: toastError }),

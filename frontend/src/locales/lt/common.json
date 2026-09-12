@@ -1,6 +1,5 @@
 {
   "appName": "Jx Finance",
-  "tagline": "Greita įvestis. Patikimi skaičiai.",
   "nav": {
     "dashboard": "Suvestinė",
     "transactions": "Operacijos",
@@ -33,11 +32,13 @@
   "datePicker": {
     "placeholder": "Pasirinkite datą",
     "clear": "Išvalyti",
-    "today": "Šiandien"
+    "today": "Šiandien",
+    "anyDate": "Bet kuri data",
+    "pickStart": "Pasirinkite pradžios datą",
+    "pickEnd": "Pasirinkite pabaigos datą"
   },
   "dashboard": {
     "title": "Suvestinė",
-    "subtitle": "Jūsų finansų padėtis šiandien.",
     "totalBalance": "Bendras likutis",
     "monthIncome": "Šio mėnesio pajamos",
     "monthExpense": "Šio mėnesio išlaidos",
@@ -50,7 +51,6 @@
   },
   "accounts": {
     "title": "Sąskaitos",
-    "subtitle": "Visos vietos, kur laikomi jūsų pinigai.",
     "add": "Pridėti sąskaitą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Swedbank sąskaita",
@@ -68,7 +68,8 @@
       "savings": "Taupomoji",
       "cash": "Grynieji",
       "other": "Kita"
-    }
+    },
+    "allTypes": "Visi tipai"
   },
   "transfers": {
     "title": "Pervesti pinigus",
@@ -80,7 +81,6 @@
   },
   "categories": {
     "title": "Kategorijos",
-    "subtitle": "Etiketės, kurios suteikia išlaidoms formą.",
     "add": "Pridėti kategoriją",
     "addTitle": "Pridėti kategoriją",
     "editTitle": "Redaguoti kategoriją",
@@ -94,7 +94,6 @@
   },
   "transactions": {
     "title": "Operacijos",
-    "subtitle": "Pajamos ir išlaidos realiu laiku.",
     "add": "Pridėti operaciją",
     "editTitle": "Redaguoti operaciją",
     "account": "Sąskaita",
@@ -115,7 +114,6 @@
     "allAccounts": "Visos sąskaitos",
     "allCategories": "Visos kategorijos",
     "clearFilters": "Išjungti filtrus",
-    "filters": "Filtrai",
     "exportCsv": "Eksportuoti CSV",
     "exportPdf": "Eksportuoti PDF",
     "split": "Skaidyta",
@@ -149,7 +147,6 @@
   },
   "users": {
     "title": "Naudotojai",
-    "subtitle": "Kas gali prisijungti prie šios instaliacijos.",
     "add": "Sukurti naudotoją",
     "email": "El. paštas",
     "displayName": "Rodomas vardas",
@@ -166,11 +163,12 @@
     "created": "Naudotojas sukurtas",
     "deactivated_toast": "Naudotojas deaktyvuotas",
     "roleUpdated": "Rolė atnaujinta",
-    "empty": "Kitų naudotojų dar nėra."
+    "empty": "Kitų naudotojų dar nėra.",
+    "allRoles": "Visos rolės",
+    "allStatuses": "Visos būsenos"
   },
   "profile": {
     "title": "Jūsų profilis",
-    "subtitle": "Atnaujinkite rodomą vardą arba slaptažodį.",
     "currentPassword": "Dabartinis slaptažodis",
     "newPassword": "Naujas slaptažodis (nebūtina)",
     "save": "Išsaugoti pakeitimus",
@@ -190,7 +188,6 @@
   },
   "budgets": {
     "title": "Biudžetai",
-    "subtitle": "Mėnesinės išlaidų ribos pagal kategoriją.",
     "add": "Pridėti biudžetą",
     "category": "Kategorija",
     "limit": "Mėnesinė riba",
@@ -199,7 +196,6 @@
   },
   "goals": {
     "title": "Tikslai",
-    "subtitle": "Planuokite ir stebėkite savo santaupas.",
     "add": "Pridėti tikslą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Atsargos fondas",
@@ -211,7 +207,6 @@
   },
   "netWorth": {
     "title": "Grynoji vertė",
-    "subtitle": "Kas priklauso jums, atėmus tai, ką skolinate.",
     "accounts": "Sąskaitos",
     "assets": "Turtas",
     "debts": "Skolos",
@@ -243,7 +238,6 @@
   },
   "recurringBills": {
     "title": "Periodinės sąskaitos",
-    "subtitle": "Pasikartojančios sąskaitos, kad nieko nepamirštumėte.",
     "add": "Pridėti periodinę sąskaitą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Nuoma",
@@ -283,7 +277,6 @@
   },
   "households": {
     "title": "Namų ūkiai",
-    "subtitle": "Bendrinkite sąskaitas ir kategorijas su žmonėmis, kuriais pasitikite.",
     "add": "Sukurti namų ūkį",
     "namePlaceholder": "pvz. Mūsų namai",
     "empty": "Kol kas nesate priskirti nė vienam namų ūkiui.",
@@ -304,10 +297,7 @@
   },
   "reports": {
     "title": "Ataskaitos",
-    "subtitle": "Pajamos, išlaidos ir kategorijų suskirstymas bet kokiam laikotarpiui.",
     "range": "Laikotarpis",
-    "from": "Nuo",
-    "to": "Iki",
     "presets": {
       "thisMonth": "Šis mėnuo",
       "lastMonth": "Praėjęs mėnuo",
@@ -321,7 +311,8 @@
     "trend": "Tendencija",
     "expenseByCategory": "Išlaidos pagal kategoriją",
     "netWorthChange": "Grynosios vertės pokytis",
-    "notEnoughNetWorthHistory": "Šiam laikotarpiui grynosios vertės istorijos kol kas nepakanka."
+    "notEnoughNetWorthHistory": "Šiam laikotarpiui grynosios vertės istorijos kol kas nepakanka.",
+    "customRange": "Pasirinktas laikotarpis"
   },
   "imports": {
     "title": "Importuoti Swedbank CSV",
@@ -350,7 +341,11 @@
     "error": "Neprieinama"
   },
   "errors": {
-    "generic": "Kažkas nepavyko. Bandykite dar kartą."
+    "generic": "Kažkas nepavyko. Bandykite dar kartą.",
+    "loadFailed": "Nepavyko įkelti.",
+    "retry": "Bandyti dar kartą",
+    "retrying": "Bandoma…",
+    "loading": "Kraunama"
   },
   "validation": {
     "required": "Šis laukas privalomas.",
@@ -363,5 +358,12 @@
   },
   "pagination": {
     "pageOf": "{{page}} puslapis iš {{pages}}"
+  },
+  "filters": {
+    "filterBy": "Filtruoti pagal: {{column}}",
+    "clear": "Išvalyti",
+    "noMatches": "Nėra eilučių, atitinkančių filtrus.",
+    "sortAsc": "Rikiuoti {{column}} didėjančiai",
+    "sortDesc": "Rikiuoti {{column}} mažėjančiai"
   }
 }

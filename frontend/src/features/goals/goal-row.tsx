@@ -14,10 +14,17 @@ interface Props {
   goal: GoalResponse;
   onDelete: () => void;
   deletePending: boolean;
+  deleteDisabled: boolean;
   onSaved: () => void;
 }
 
-export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Props>) {
+export function GoalRow({
+  goal,
+  onDelete,
+  deletePending,
+  deleteDisabled,
+  onSaved,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const date = useDate();
@@ -73,7 +80,8 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled={deletePending}
+            pending={deletePending}
+            disabled={deleteDisabled}
             onClick={onDelete}
             aria-label={t("actions.delete")}
             title={t("actions.delete")}
@@ -118,12 +126,17 @@ export function GoalRow({ goal, onDelete, deletePending, onSaved }: Readonly<Pro
             />
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setEditing(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={updateMutation.isPending}
+              onClick={() => setEditing(false)}
+            >
               {t("actions.cancel")}
             </Button>
             <Button
+              pending={updateMutation.isPending}
               disabled={
-                updateMutation.isPending ||
                 !name.trim() ||
                 !isPositiveMoney(targetAmount) ||
                 !isMoney(currentAmount) ||

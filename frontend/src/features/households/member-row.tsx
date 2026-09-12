@@ -11,6 +11,7 @@ interface Props {
   isOwnerView: boolean;
   onRemove: () => void;
   removePending: boolean;
+  removeDisabled: boolean;
   onSaved: () => void;
 }
 
@@ -20,6 +21,7 @@ export function MemberRow({
   isOwnerView,
   onRemove,
   removePending,
+  removeDisabled,
   onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -36,6 +38,8 @@ export function MemberRow({
         <div className="flex items-center gap-2">
           <Select
             value={member.role}
+            className={roleMutation.isPending ? "is-stale" : undefined}
+            aria-busy={roleMutation.isPending}
             disabled={roleMutation.isPending}
             onChange={(e) =>
               roleMutation.mutate({
@@ -52,7 +56,8 @@ export function MemberRow({
             variant="ghost"
             size="icon"
             className="size-8"
-            disabled={removePending}
+            pending={removePending}
+            disabled={removeDisabled}
             onClick={onRemove}
             aria-label={t("actions.delete")}
             title={t("actions.delete")}

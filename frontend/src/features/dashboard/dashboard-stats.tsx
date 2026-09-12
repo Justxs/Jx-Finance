@@ -1,10 +1,10 @@
 import { SummaryStats } from "@/components/summary-stats";
 import { useTranslation } from "react-i18next";
-import { useGetDashboardSummaryEndpoint } from "@/api/generated";
+import { useGetDashboardSummaryEndpointSuspense } from "@/api/generated";
 
 export function DashboardStats() {
   const { t } = useTranslation();
-  const summary = useGetDashboardSummaryEndpoint();
+  const summary = useGetDashboardSummaryEndpointSuspense();
 
   const stats = [
     {
@@ -24,10 +24,5 @@ export function DashboardStats() {
     },
   ] as const;
 
-  return (
-    <SummaryStats
-      items={stats.map((stat) => ({ ...stat, label: t(stat.key) }))}
-      pending={summary.isPending}
-    />
-  );
+  return <SummaryStats items={stats.map((stat) => ({ ...stat, label: t(stat.key) }))} />;
 }

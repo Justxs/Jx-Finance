@@ -6,6 +6,8 @@
  * OpenAPI spec version: v1
  */
 import type { FlowType } from "./flowType";
+import type { SortDirection } from "./sortDirection";
+import type { TransactionSortField } from "./transactionSortField";
 
 export type GetTransactionsEndpointParams = {
   /**
@@ -45,4 +47,6 @@ export type GetTransactionsEndpointParams = {
    * @nullable
    */
   dateTo?: string | null;
+  sort?: TransactionSortField;
+  direction?: SortDirection;
 };

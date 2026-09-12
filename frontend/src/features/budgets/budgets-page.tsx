@@ -5,14 +5,13 @@ import { useTranslation } from "react-i18next";
 import {
   getGetBudgetsEndpointQueryKey,
   useDeleteBudgetEndpoint,
-  useGetBudgetsEndpoint,
-  useGetCategoriesEndpoint,
+  useGetBudgetsEndpointSuspense,
+  useGetCategoriesEndpointSuspense,
 } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
 import { CreateBudgetForm } from "./create-budget-form";
 
@@ -23,8 +22,8 @@ export function BudgetsPage() {
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [addOpen, setAddOpen] = useState(false);
 
-  const categories = useGetCategoriesEndpoint();
-  const budgets = useGetBudgetsEndpoint();
+  const categories = useGetCategoriesEndpointSuspense();
+  const budgets = useGetBudgetsEndpointSuspense();
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetBudgetsEndpointQueryKey() });
@@ -35,16 +34,10 @@ export function BudgetsPage() {
   const budgetList = budgets.data ?? [];
   const categoryList = categories.data ?? [];
 
+  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+
   let content: ReactNode;
-  if (budgets.isPending) {
-    content = (
-      <div className="space-y-4 p-6">
-        {Array.from({ length: 2 }, (_, index) => (
-          <Skeleton key={index} className="h-16 w-full" />
-        ))}
-      </div>
-    );
-  } else if (budgetList.length === 0) {
+  if (budgetList.length === 0) {
     content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("budgets.empty")}</p>;
   } else {
     content = (
@@ -57,7 +50,7 @@ export function BudgetsPage() {
           return (
             <li key={budget.id} className="space-y-2 px-6 py-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <p className="min-w-0 break-words font-medium">{budget.categoryName}</p>
+                <p className="min-w-0 wrap-break-word font-medium">{budget.categoryName}</p>
                 <div className="flex flex-wrap items-center gap-2">
                   <span
                     className={`text-sm font-semibold tabular-nums ${overBudget ? "text-destructive" : ""}`}
@@ -76,6 +69,7 @@ export function BudgetsPage() {
                     variant="ghost"
                     size="icon"
                     className="size-8"
+                    pending={deletingId === budget.id}
                     disabled={deleteMutation.isPending}
                     onClick={() => deleteMutation.mutate({ id: budget.id! })}
                     aria-label={t("actions.delete")}
@@ -100,7 +94,7 @@ export function BudgetsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("budgets.title")} subtitle={t("budgets.subtitle")}>
+      <PageHeader title={t("budgets.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
           {t("budgets.add")}

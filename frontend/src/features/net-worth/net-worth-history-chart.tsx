@@ -8,24 +8,17 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetNetWorthHistoryEndpoint } from "@/api/generated";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useGetNetWorthHistoryEndpointSuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
 
 export function NetWorthHistoryChart() {
   const { t } = useTranslation();
   const money = useMoney();
-  const history = useGetNetWorthHistoryEndpoint();
-
-  if (history.isPending) {
-    return <Skeleton className="h-56 w-full" />;
-  }
+  const history = useGetNetWorthHistoryEndpointSuspense();
 
   const items = history.data?.items ?? [];
   if (items.length < 2) {
-    return (
-      <p className="px-6 py-8 text-sm text-muted-foreground">{t("netWorth.notEnoughHistory")}</p>
-    );
+    return <p className="py-8 text-sm text-muted-foreground">{t("netWorth.notEnoughHistory")}</p>;
   }
 
   const chartData = items.map((item) => ({

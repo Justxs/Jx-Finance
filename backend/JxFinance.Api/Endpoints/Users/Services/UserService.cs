@@ -3,6 +3,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
+using JxFinance.Endpoints.Users.GetUsers;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
@@ -15,16 +16,49 @@ namespace JxFinance.Endpoints.Users.Services;
 
 public sealed class UserService(UserManager<AppUser> userManager, IAuthService authService, AppDbContext db) : IUserService
 {
-    public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(
+        GetUsersRequest request,
+        CancellationToken cancellationToken)
     {
-        var users = await userManager.Users.OrderBy(u => u.Email).ToListAsync(cancellationToken);
+        var query = userManager.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.Trim();
+            query = query.Where(u =>
+                EF.Functions.ILike(u.DisplayName, $"%{search}%") ||
+                (u.Email != null && EF.Functions.ILike(u.Email, $"%{search}%")));
+        }
+
+        var users = await query.OrderBy(u => u.Email).ToListAsync(cancellationToken);
         var profiles = new List<UserProfileResponse>(users.Count);
         foreach (var user in users)
         {
             profiles.Add(await authService.ToProfileAsync(user));
         }
 
-        return profiles;
+        IEnumerable<UserProfileResponse> filtered = profiles;
+        if (!string.IsNullOrWhiteSpace(request.Role))
+        {
+            filtered = filtered.Where(p => string.Equals(p.Role, request.Role, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (request.IsActive is { } isActive)
+        {
+            filtered = filtered.Where(p => p.IsActive == isActive);
+        }
+
+        Func<UserProfileResponse, IComparable> key = request.Sort switch
+        {
+            UserSortField.Email => p => p.Email,
+            UserSortField.Role => p => p.Role,
+            UserSortField.Status => p => p.IsActive,
+            _ => p => p.DisplayName,
+        };
+
+        return request.Direction == SortDirection.Desc
+            ? filtered.OrderByDescending(key).ToList()
+            : filtered.OrderBy(key).ToList();
     }
 
     public async Task<Result<UserProfileResponse>> CreateAsync(

@@ -9,8 +9,16 @@ import { routeTree } from "./route-tree.gen";
 import { queryClient } from "@/lib/query-client";
 import i18n from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
+import { RoutePending } from "@/components/route-pending";
+import { RouteError } from "@/components/route-error";
 
-const router = createRouter({ routeTree });
+const router = createRouter({
+  routeTree,
+  defaultPendingComponent: RoutePending,
+  defaultErrorComponent: RouteError,
+  defaultPendingMs: 200,
+  defaultPendingMinMs: 400,
+});
 
 declare module "@tanstack/react-router" {
   interface Register {

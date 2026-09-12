@@ -109,8 +109,39 @@
     letter-spacing: 0;
   }
 
+  button:not(:disabled),
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  label:has(input[type="checkbox"]:not(:disabled)) {
+    cursor: pointer;
+  }
+
+  [popover]:popover-open {
+    animation: popover-in 120ms ease-out;
+  }
+
+  dialog[data-state="open"] {
+    animation: dialog-in 160ms ease-out;
+  }
+
+  dialog[data-state="open"]::backdrop {
+    animation: backdrop-in 160ms ease-out;
+  }
+
+  dialog[data-state="closed"] {
+    animation: dialog-out 140ms ease-in forwards;
+  }
+
+  dialog[data-state="closed"]::backdrop {
+    animation: backdrop-out 140ms ease-in forwards;
+  }
+
   #root {
     min-height: 100vh;
+  }
+
+  :root {
+    view-transition-name: none;
   }
 
   ::-webkit-scrollbar {
@@ -189,6 +220,10 @@
   .form-grid > * {
     min-width: 0;
   }
+
+  .is-stale {
+    @apply opacity-55 transition-opacity duration-150;
+  }
 }
 
 @layer base {
@@ -203,5 +238,101 @@
       animation-duration: 0.01ms !important;
       transition-duration: 0.01ms !important;
     }
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+@keyframes dialog-out {
+  to {
+    opacity: 0;
+    translate: 0 0.5rem;
+  }
+}
+
+@keyframes backdrop-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes backdrop-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+    translate: 0 -0.25rem;
+  }
+}
+
+::view-transition-old(page) {
+  animation: page-out 130ms ease-in both;
+}
+
+::view-transition-new(page) {
+  animation: page-in 220ms ease-out both;
+}
+
+::view-transition-old(transactions-rows),
+::view-transition-old(accounts-rows),
+::view-transition-old(users-rows),
+::view-transition-old(report-results) {
+  animation: rows-out 90ms ease-in both;
+}
+
+::view-transition-new(transactions-rows),
+::view-transition-new(accounts-rows),
+::view-transition-new(users-rows),
+::view-transition-new(report-results) {
+  animation: rows-in 160ms ease-out both;
+}
+
+@keyframes rows-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes rows-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(page),
+  ::view-transition-new(page),
+  ::view-transition-old(transactions-rows),
+  ::view-transition-new(transactions-rows),
+  ::view-transition-old(accounts-rows),
+  ::view-transition-new(accounts-rows),
+  ::view-transition-old(users-rows),
+  ::view-transition-new(users-rows),
+  ::view-transition-old(report-results),
+  ::view-transition-new(report-results) {
+    animation-duration: 0.01ms !important;
   }
 }

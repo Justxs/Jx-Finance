@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Accounts.Shared;
 namespace JxFinance.Endpoints.Accounts.GetAccounts;
 
 public sealed class GetAccountsEndpoint(IAccountService accountService)
-    : EndpointWithoutRequest<IReadOnlyList<AccountResponse>>
+    : Endpoint<GetAccountsRequest, IReadOnlyList<AccountResponse>>
 {
     public override void Configure()
     {
@@ -13,9 +13,9 @@ public sealed class GetAccountsEndpoint(IAccountService accountService)
         Group<AccountsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(GetAccountsRequest req, CancellationToken ct)
     {
-        var accounts = await accountService.GetAllAsync(ct);
+        var accounts = await accountService.GetAllAsync(req, ct);
         await Send.OkAsync(accounts, ct);
     }
 }

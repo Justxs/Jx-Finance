@@ -42,7 +42,7 @@ export function CategoryBreakdown({ items }: Readonly<Props>) {
   ];
 
   if (chartData.length === 0) {
-    return <p className="px-6 py-8 text-sm text-muted-foreground">{t("dashboard.noSpending")}</p>;
+    return <p className="py-8 text-sm text-muted-foreground">{t("dashboard.noSpending")}</p>;
   }
 
   const maximum = Math.max(...chartData.map((item) => item.amount));
@@ -52,8 +52,8 @@ export function CategoryBreakdown({ items }: Readonly<Props>) {
       {chartData.map((item) => (
         <li key={item.name} className="space-y-2">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 text-sm">
-            <span className="min-w-0 break-words">{item.name}</span>
-            <span className="break-words font-medium tabular-nums">
+            <span className="min-w-0 wrap-break-word">{item.name}</span>
+            <span className="wrap-break-word font-medium tabular-nums">
               {money.format(item.amount)}
             </span>
           </div>

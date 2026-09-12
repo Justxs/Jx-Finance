@@ -19,4 +19,8 @@ public sealed class GetTransactionsRequest
     public DateOnly? DateFrom { get; init; }
 
     public DateOnly? DateTo { get; init; }
+
+    public TransactionSortField? Sort { get; init; }
+
+    public SortDirection? Direction { get; init; }
 }

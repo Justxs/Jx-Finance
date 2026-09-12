@@ -158,7 +158,8 @@ export function LoginPage() {
           {(canSubmit) => (
             <Button
               type="submit"
-              disabled={loginMutation.isPending || !canSubmit}
+              pending={loginMutation.isPending}
+              disabled={!canSubmit}
               className="w-full"
             >
               {twoFactorRequired ? t("auth.verifyCode") : t("auth.signIn")}
