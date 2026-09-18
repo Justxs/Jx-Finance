@@ -55,7 +55,7 @@ jobs:
 
   frontend:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: frontend
@@ -85,6 +85,9 @@ jobs:
 
       - name: Build
         run: nub run build
+
+      - name: Build Storybook
+        run: nub run build-storybook
 
   client-drift:
     runs-on: ubuntu-latest

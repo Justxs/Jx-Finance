@@ -54,6 +54,8 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
     "babel-plugin-react-compiler": "^1.0.0",
+    "msw": "^2.15.0",
+    "msw-storybook-addon": "^3.0.3",
     "orval": "^8.33.0",
     "oxfmt": "^0.68.0",
     "oxlint": "^1.83.0",

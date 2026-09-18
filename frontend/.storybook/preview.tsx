@@ -1,10 +1,14 @@
 import { withThemeByClassName } from "@storybook/addon-themes";
 import type { Preview } from "@storybook/react-vite";
+import { mswLoader } from "msw-storybook-addon/csf3";
 import { I18nextProvider } from "react-i18next";
 import i18n from "../src/lib/i18n";
+import { withAppProviders } from "../src/storybook/decorators";
+import { handlers } from "../src/storybook/handlers";
 import "../src/global.css";
 
 const preview: Preview = {
+  loaders: [mswLoader()],
   globalTypes: {
     locale: {
       description: "Language",
@@ -23,8 +27,10 @@ const preview: Preview = {
     layout: "centered",
     a11y: { test: "todo" },
     controls: { expanded: true },
+    msw: { handlers },
   },
   decorators: [
+    withAppProviders,
     withThemeByClassName({
       themes: { light: "", dark: "dark" },
       defaultTheme: "light",
@@ -35,7 +41,13 @@ const preview: Preview = {
       }
       return (
         <I18nextProvider i18n={i18n}>
-          <div className="bg-background p-6 text-foreground">
+          <div
+            className={
+              context.parameters.layout === "fullscreen"
+                ? "bg-background text-foreground"
+                : "bg-background p-6 text-foreground"
+            }
+          >
             <Story />
           </div>
         </I18nextProvider>
