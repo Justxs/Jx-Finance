@@ -29,6 +29,10 @@
     "next": "Kitas",
     "close": "Uždaryti"
   },
+  "confirmDelete": {
+    "title": "Ištrinti šį įrašą?",
+    "description": "Šio veiksmo atšaukti nepavyks."
+  },
   "datePicker": {
     "placeholder": "Pasirinkite datą",
     "clear": "Išvalyti",

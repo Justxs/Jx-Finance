@@ -3,7 +3,7 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { transactionTableFeatures } from "./table-features";
 
@@ -26,12 +26,12 @@ export function useTransactionColumns({
 }: UseTransactionColumnsArgs) {
   const { t } = useTranslation();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
 
   return columnHelper.columns([
     columnHelper.accessor("date", {
       header: t("transactions.date"),
-      cell: (info) => (info.getValue() ? date.format(new Date(info.getValue()!)) : ""),
+      cell: (info) => formatDate(info.getValue()),
     }),
     columnHelper.accessor("description", {
       header: t("transactions.description"),

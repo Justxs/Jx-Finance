@@ -10,7 +10,7 @@ public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : E
     {
         Delete("categories/{id}");
         Group<CategoriesGroup>();
-        Description(d => d.ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct)

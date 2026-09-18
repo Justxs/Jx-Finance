@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import type { ReportTrendPoint } from "@/api/generated/model";
 import { useMoney } from "@/hooks/use-formatters";
+import { parseIso } from "@/lib/calendar";
 
 interface Props {
   items: ReportTrendPoint[];
@@ -18,15 +19,16 @@ interface Props {
 }
 
 export function ReportTrendChart({ items, bucket }: Readonly<Props>) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const money = useMoney();
+  const labelFormat = new Intl.DateTimeFormat(
+    i18n.language,
+    bucket === "month" ? { month: "short", year: "2-digit" } : { day: "2-digit", month: "short" },
+  );
 
   const chartData = items.map((item) => {
-    const date = new Date(item.bucketStart ?? "");
-    const label =
-      bucket === "month"
-        ? date.toLocaleDateString(undefined, { month: "short", year: "2-digit" })
-        : date.toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+    const date = parseIso(item.bucketStart ?? "");
+    const label = date ? labelFormat.format(date) : "";
 
     return {
       label,

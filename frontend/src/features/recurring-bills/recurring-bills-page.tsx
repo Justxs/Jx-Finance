@@ -9,6 +9,7 @@ import {
   useGetCategoriesEndpointSuspense,
   useGetRecurringBillsEndpointSuspense,
 } from "@/api/generated";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -27,6 +28,8 @@ export function RecurringBillsPage() {
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetRecurringBillsEndpointQueryKey() });
   }
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteRecurringBillEndpoint({ mutation: { onSettled: invalidate } });
 
@@ -50,7 +53,7 @@ export function RecurringBillsPage() {
             bill={bill}
             accounts={accountList}
             categories={categoryList}
-            onDelete={() => deleteMutation.mutate({ id: bill.id! })}
+            onDelete={() => setDeleteTarget(bill.id!)}
             deletePending={deletingId === bill.id}
             deleteDisabled={deleteMutation.isPending}
             onSaved={invalidate}
@@ -82,6 +85,11 @@ export function RecurringBillsPage() {
       </Dialog>
 
       <section className="card overflow-hidden">{content}</section>
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </div>
   );
 }

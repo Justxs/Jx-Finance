@@ -7,6 +7,7 @@ import {
   useDeleteGoalEndpoint,
   useGetGoalsEndpointSuspense,
 } from "@/api/generated";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -24,6 +25,8 @@ export function GoalsPage() {
     queryClient.invalidateQueries({ queryKey: getGetGoalsEndpointQueryKey() });
   }
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const deleteMutation = useDeleteGoalEndpoint({ mutation: { onSettled: invalidate } });
 
   const goalList = goals.data ?? [];
@@ -40,7 +43,7 @@ export function GoalsPage() {
           <GoalRow
             key={goal.id}
             goal={goal}
-            onDelete={() => deleteMutation.mutate({ id: goal.id! })}
+            onDelete={() => setDeleteTarget(goal.id!)}
             deletePending={deletingId === goal.id}
             deleteDisabled={deleteMutation.isPending}
             onSaved={invalidate}
@@ -70,6 +73,11 @@ export function GoalsPage() {
       </Dialog>
 
       <section className="card overflow-hidden">{content}</section>
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </div>
   );
 }

@@ -9,6 +9,7 @@ import {
   useGetCategoriesEndpointSuspense,
 } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -28,6 +29,8 @@ export function BudgetsPage() {
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetBudgetsEndpointQueryKey() });
   }
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteBudgetEndpoint({ mutation: { onSettled: invalidate } });
 
@@ -71,7 +74,7 @@ export function BudgetsPage() {
                     className="size-8"
                     pending={deletingId === budget.id}
                     disabled={deleteMutation.isPending}
-                    onClick={() => deleteMutation.mutate({ id: budget.id! })}
+                    onClick={() => setDeleteTarget(budget.id!)}
                     aria-label={t("actions.delete")}
                     title={t("actions.delete")}
                   >
@@ -130,6 +133,11 @@ export function BudgetsPage() {
         />
       </Dialog>
       <section className="card overflow-hidden">{content}</section>
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </div>
   );
 }

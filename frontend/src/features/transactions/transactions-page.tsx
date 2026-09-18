@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { normalizeMoney } from "@/lib/validation";
 import { Plus } from "lucide-react";
 import {
@@ -104,7 +105,7 @@ export function TransactionsPage() {
               data.lines?.map((line, index) => ({
                 id: `optimistic-line-${index}`,
                 categoryId: line.categoryId,
-                amount: line.amount,
+                amount: normalizeMoney(line.amount ?? ""),
                 description: line.description,
               })) ?? null,
             createdAt: new Date().toISOString(),
@@ -134,6 +135,8 @@ export function TransactionsPage() {
     },
   });
 
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const deleteMutation = useDeleteTransactionEndpoint({
     mutation: { onSettled: invalidateLedger },
   });
@@ -152,7 +155,7 @@ export function TransactionsPage() {
     accountNames,
     categoryById,
     onEdit: setEditing,
-    onDelete: (id) => deleteMutation.mutate({ id }),
+    onDelete: (id) => setDeleteTarget(id),
     deletingId: deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null,
   });
 
@@ -224,6 +227,11 @@ export function TransactionsPage() {
         page={page}
         pageCount={pageCount}
         onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}
+      />
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
       />
     </div>
   );

@@ -146,7 +146,7 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         };
         db.Transactions.Add(transaction);
 
-        bill.NextDueDate = RecurringBill.Advance(bill.NextDueDate, bill.Cadence);
+        bill.Advance();
 
         await db.Notifications.Where(n => n.RelatedType == "RecurringBill" && n.RelatedId == request.Id && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);

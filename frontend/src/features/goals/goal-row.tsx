@@ -8,7 +8,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { isPositiveMoney, isMoney, normalizeMoney } from "@/lib/validation";
 import { Label } from "@/components/ui/label";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 
 interface Props {
   goal: GoalResponse;
@@ -27,7 +27,7 @@ export function GoalRow({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(goal.name ?? "");
   const [targetAmount, setTargetAmount] = useState(goal.targetAmount ?? "");
@@ -52,7 +52,7 @@ export function GoalRow({
           <p className="font-medium">{goal.name}</p>
           {goal.targetDate ? (
             <p className="text-xs text-muted-foreground">
-              {t("goals.targetDate")}: {date.format(new Date(goal.targetDate))}
+              {t("goals.targetDate")}: {formatDate(goal.targetDate)}
             </p>
           ) : null}
         </div>

@@ -10,6 +10,7 @@ import {
   useGetCategoriesEndpointSuspense,
 } from "@/api/generated";
 import type { FlowType } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
@@ -27,6 +28,8 @@ export function CategoriesPage() {
     queryClient.invalidateQueries({ queryKey: getGetCategoriesEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
   }
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteCategoryEndpoint({
     mutation: {
@@ -77,7 +80,7 @@ export function CategoriesPage() {
                   <CategoryRow
                     key={category.id}
                     category={category}
-                    onDelete={() => deleteMutation.mutate({ id: category.id! })}
+                    onDelete={() => setDeleteTarget(category.id!)}
                     deletePending={deletingId === category.id}
                     deleteDisabled={deleteMutation.isPending}
                     onSaved={invalidate}
@@ -100,6 +103,11 @@ export function CategoriesPage() {
           );
         })}
       </div>
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </div>
   );
 }

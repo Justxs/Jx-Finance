@@ -12,29 +12,15 @@ import {
 import { useGetMonthlyTrendEndpointSuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-
 export function MonthlyTrendChart() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const money = useMoney();
   const trend = useGetMonthlyTrendEndpointSuspense({ months: 6 });
+  const monthFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", year: "numeric" });
 
   const items = trend.data?.items ?? [];
   const chartData = items.map((item) => ({
-    label: `${MONTH_LABELS[(item.month ?? 1) - 1]} ${item.year}`,
+    label: monthFormat.format(new Date(item.year ?? 0, (item.month ?? 1) - 1, 1)),
     income: Number(item.income ?? 0),
     expense: Number(item.expense ?? 0),
   }));

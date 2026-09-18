@@ -12,6 +12,7 @@ import {
   useGetAccountsEndpointSuspense,
   useUpdateAccountEndpoint,
 } from "@/api/generated";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -55,6 +56,8 @@ export function AccountsPage() {
       onSettled: invalidate,
     },
   });
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const deleteMutation = useDeleteAccountEndpoint({
     mutation: {
       onSuccess: () => toast.success(t("accounts.archived")),
@@ -90,7 +93,7 @@ export function AccountsPage() {
         updatePending={updateMutation.isPending}
         onUpdate={(id, values) => updateMutation.mutate({ id, data: values })}
         deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
-        onDelete={(id) => deleteMutation.mutate({ id })}
+        onDelete={(id) => setDeleteTarget(id)}
       />
 
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
@@ -102,6 +105,11 @@ export function AccountsPage() {
           <ImportSection accounts={accountList} />
         </QueryBoundary>
       ) : null}
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </div>
   );
 }

@@ -6,13 +6,13 @@ import {
   useGetCategoriesEndpointSuspense,
   useGetTransactionsEndpointSuspense,
 } from "@/api/generated";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 
 export function RecentTransactionsList() {
   const { t } = useTranslation();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
 
   const recent = useGetTransactionsEndpointSuspense({ page: 1, pageSize: 6 });
   const categories = useGetCategoriesEndpointSuspense();
@@ -40,7 +40,7 @@ export function RecentTransactionsList() {
                   {transaction.description || category?.name || t("transactions.uncategorized")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {transaction.date ? date.format(new Date(transaction.date)) : ""}
+                  {formatDate(transaction.date)}
                   {" · "}
                   {accountNames.get(transaction.accountId) ?? ""}
                 </p>

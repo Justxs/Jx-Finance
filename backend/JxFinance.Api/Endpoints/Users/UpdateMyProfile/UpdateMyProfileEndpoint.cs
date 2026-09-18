@@ -15,6 +15,7 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUs
     {
         Put("users/me");
         Group<UsersGroup>();
+        Throttle(hitLimit: 10, durationSeconds: 300);
     }
 
     public override async Task HandleAsync(UpdateMyProfileRequest req, CancellationToken ct)

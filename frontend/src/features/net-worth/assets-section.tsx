@@ -9,16 +9,17 @@ import {
   useDeleteAssetEndpoint,
   useGetAssetsEndpointSuspense,
 } from "@/api/generated";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { AssetForm } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
   const [addOpen, setAddOpen] = useState(false);
 
   const assets = useGetAssetsEndpointSuspense();
@@ -28,6 +29,8 @@ export function AssetsSection() {
     queryClient.invalidateQueries({ queryKey: getGetNetWorthEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetNetWorthHistoryEndpointQueryKey() });
   }
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteAssetEndpoint({ mutation: { onSettled: invalidate } });
   const assetList = assets.data ?? [];
@@ -48,7 +51,7 @@ export function AssetsSection() {
             <div className="min-w-0 break-words">
               <p className="font-medium">{asset.name}</p>
               <p className="text-xs text-muted-foreground">
-                {t(`netWorth.assetTypes.${asset.type}`)} · {date.format(new Date(asset.asOf!))}
+                {t(`netWorth.assetTypes.${asset.type}`)} · {formatDate(asset.asOf)}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
@@ -61,7 +64,7 @@ export function AssetsSection() {
                 className="size-8"
                 pending={deletingId === asset.id}
                 disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate({ id: asset.id! })}
+                onClick={() => setDeleteTarget(asset.id!)}
                 aria-label={t("actions.delete")}
                 title={t("actions.delete")}
               >
@@ -93,6 +96,11 @@ export function AssetsSection() {
         />
       </Dialog>
       {content}
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </section>
   );
 }
