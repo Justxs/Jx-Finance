@@ -18,7 +18,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { ImportSection } from "@/features/imports/import-section";
 import { AccountForm } from "./account-form";
 import { AccountsTable } from "./accounts-table";
@@ -76,13 +76,13 @@ export function AccountsPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={createOpen} onOpenChange={setCreateOpen} title={t("accounts.add")}>
+      <Modal open={createOpen} onOpenChange={setCreateOpen} title={t("accounts.add")}>
         <AccountForm
           pending={createMutation.isPending}
           onSubmit={(values) => createMutation.mutate({ data: values })}
           onCancel={() => setCreateOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
       <AccountsTable
         accounts={accountList}

@@ -7,12 +7,13 @@ import type {
   FlowType,
   TransactionResponse,
 } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
 import { SplitLinesEditor } from "./split-lines-editor";
 
@@ -179,21 +180,18 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor="tx-category">{t("transactions.category")}</Label>
-              <Select
+              <SelectField
                 id="tx-category"
                 value={field.state.value}
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              >
-                <option value="">{t("transactions.uncategorized")}</option>
-                {categories
-                  .filter((c) => c.type === typeField.state.value)
-                  .map((category) => (
-                    <option key={category.id} value={category.id}>
-                      {category.name}
-                    </option>
-                  ))}
-              </Select>
+                onChange={(value) => field.handleChange(value)}
+                options={[
+                  { value: "", label: t("transactions.uncategorized") },
+                  ...categories
+                    .filter((c) => c.type === typeField.state.value)
+                    .map((category) => ({ value: category.id!, label: category.name })),
+                ]}
+              />
             </div>
           )}
         </form.Field>
@@ -227,22 +225,22 @@ export function TransactionForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="tx-type">{t("transactions.type")}</Label>
-            <Select
+            <SelectField
               id="tx-type"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => {
-                const next = e.target.value as FlowType;
+              onChange={(next) => {
                 field.handleChange(next);
                 const categoryId = form.getFieldValue("categoryId");
                 if (categoryId && !categories.some((c) => c.id === categoryId && c.type === next)) {
                   form.setFieldValue("categoryId", "");
                 }
               }}
-            >
-              <option value="expense">{t("transactions.expense")}</option>
-              <option value="income">{t("transactions.income")}</option>
-            </Select>
+              options={[
+                { value: "expense", label: t("transactions.expense") },
+                { value: "income", label: t("transactions.income") },
+              ]}
+            />
           </div>
         )}
       </form.Field>
@@ -251,18 +249,13 @@ export function TransactionForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="tx-account">{t("transactions.account")}</Label>
-            <Select
+            <SelectField
               id="tx-account"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+            />
           </div>
         )}
       </form.Field>
@@ -350,12 +343,9 @@ export function TransactionForm({
         {(splitField) => (
           <div className="col-span-full">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <input
-                type="checkbox"
-                className="size-4 rounded border-input accent-primary"
+              <Checkbox
                 checked={splitField.state.value}
-                onChange={(e) => {
-                  const next = e.target.checked;
+                onCheckedChange={(next) => {
                   splitField.handleChange(next);
                   if (next && form.getFieldValue("lines").length === 0) {
                     form.setFieldValue("lines", [emptyLine()]);

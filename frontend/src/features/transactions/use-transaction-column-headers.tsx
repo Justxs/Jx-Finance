@@ -2,10 +2,10 @@ import type { ReactNode } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Select } from "@/components/ui/select";
 
 interface Args {
   accounts: AccountResponse[];
@@ -84,17 +84,15 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         active={!!search.categoryId}
         onClear={() => setFilter({ categoryId: undefined })}
       >
-        <Select
+        <SelectField
+          aria-label={t("transactions.category")}
           value={search.categoryId ?? ""}
-          onChange={(e) => setFilter({ categoryId: e.target.value || undefined })}
-        >
-          <option value="">{t("transactions.allCategories")}</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </Select>
+          onChange={(value) => setFilter({ categoryId: value || undefined })}
+          options={[
+            { value: "", label: t("transactions.allCategories") },
+            ...categories.map((category) => ({ value: category.id!, label: category.name })),
+          ]}
+        />
       </ColumnFilter>,
     ),
     accountId: header(
@@ -105,17 +103,15 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         active={!!search.accountId}
         onClear={() => setFilter({ accountId: undefined })}
       >
-        <Select
+        <SelectField
+          aria-label={t("transactions.account")}
           value={search.accountId ?? ""}
-          onChange={(e) => setFilter({ accountId: e.target.value || undefined })}
-        >
-          <option value="">{t("transactions.allAccounts")}</option>
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {account.name}
-            </option>
-          ))}
-        </Select>
+          onChange={(value) => setFilter({ accountId: value || undefined })}
+          options={[
+            { value: "", label: t("transactions.allAccounts") },
+            ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+          ]}
+        />
       </ColumnFilter>,
     ),
     amount: header(
@@ -126,16 +122,16 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         active={!!search.type}
         onClear={() => setFilter({ type: undefined })}
       >
-        <Select
+        <SelectField<"" | "income" | "expense">
+          aria-label={t("transactions.amount")}
           value={search.type ?? ""}
-          onChange={(e) =>
-            setFilter({ type: (e.target.value || undefined) as "income" | "expense" | undefined })
-          }
-        >
-          <option value="">{t("transactions.allTypes")}</option>
-          <option value="expense">{t("transactions.expense")}</option>
-          <option value="income">{t("transactions.income")}</option>
-        </Select>
+          onChange={(value) => setFilter({ type: value || undefined })}
+          options={[
+            { value: "", label: t("transactions.allTypes") },
+            { value: "expense", label: t("transactions.expense") },
+            { value: "income", label: t("transactions.income") },
+          ]}
+        />
       </ColumnFilter>,
     ),
   };

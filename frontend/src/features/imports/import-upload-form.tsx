@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FileInput } from "@/components/ui/file-input";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 
 interface Props {
   accounts: AccountResponse[];
@@ -34,18 +34,13 @@ export function ImportUploadForm({
           <label className="text-sm font-medium" htmlFor="import-account">
             {t("transactions.account")}
           </label>
-          <Select
+          <SelectField
             id="import-account"
             value={accountId}
             disabled={previewPending}
-            onChange={(e) => onAccountChange(e.target.value)}
-          >
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </Select>
+            onChange={onAccountChange}
+            options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+          />
         </div>
         <div className="space-y-1.5 col-span-full">
           <label className="text-sm font-medium" htmlFor="import-file">

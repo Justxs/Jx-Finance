@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { CategoryIcon } from "@/lib/category-icons";
 import { CategoryEditForm } from "./category-edit-form";
 
@@ -68,7 +68,7 @@ export function CategoryRow({
         </Button>
       </div>
 
-      <Dialog open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
+      <Modal open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
         <CategoryEditForm
           category={category}
           onSaved={() => {
@@ -77,7 +77,7 @@ export function CategoryRow({
           }}
           onCancel={() => setEditing(false)}
         />
-      </Dialog>
+      </Modal>
     </li>
   );
 }

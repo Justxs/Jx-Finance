@@ -1,4 +1,12 @@
 import { Pagination } from "@/components/pagination";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTable } from "@tanstack/react-table";
 import { transactionTableFeatures } from "./table-features";
 import type { useTransactionColumns } from "./use-transaction-columns";
@@ -39,27 +47,25 @@ export function TransactionsTable({
   let body: ReactNode;
   if (table.getRowModel().rows.length === 0) {
     body = (
-      <tr>
-        <td colSpan={columnCount} className="px-6 py-10 text-center text-muted-foreground">
+      <TableRow className="hover:bg-transparent">
+        <TableCell colSpan={columnCount} className="px-6 py-10 text-center text-muted-foreground">
           {filtered ? t("filters.noMatches") : t("transactions.empty")}
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
     );
   } else {
     body = table.getRowModel().rows.map((row) => (
-      <tr
+      <TableRow
         key={row.id}
-        className={`border-b last:border-0 hover:bg-muted/30 ${
-          row.original.id?.startsWith("optimistic-") ? "is-stale" : ""
-        }`}
+        className={row.original.id?.startsWith("optimistic-") ? "is-stale" : undefined}
         aria-busy={row.original.id?.startsWith("optimistic-") || undefined}
       >
         {row.getAllCells().map((cell) => (
-          <td key={cell.id} className="px-6 py-3">
+          <TableCell key={cell.id} className="px-6 py-3 whitespace-normal">
             <table.FlexRender cell={cell} />
-          </td>
+          </TableCell>
         ))}
-      </tr>
+      </TableRow>
     ));
   }
 
@@ -72,30 +78,30 @@ export function TransactionsTable({
           aria-label={t("transactions.title")}
           tabIndex={0}
         >
-          <table
-            className={`w-full min-w-[44rem] text-sm ${isPlaceholder ? "is-stale" : ""}`}
+          <Table
+            className={`min-w-[44rem] ${isPlaceholder ? "is-stale" : ""}`}
             aria-busy={isPlaceholder}
           >
-            <thead>
+            <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b bg-muted/50 text-left">
+                <TableRow key={headerGroup.id} className="bg-muted/50">
                   {headerGroup.headers.map((header) => (
-                    <th
+                    <TableHead
                       key={header.id}
-                      className={`px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground ${
+                      className={`px-6 py-3 text-xs tracking-wide text-muted-foreground ${
                         header.column.id === "amount" ? "text-right" : ""
                       }`}
                     >
                       {header.isPlaceholder
                         ? null
                         : (columnFilters[header.column.id] ?? <table.FlexRender header={header} />)}
-                    </th>
+                    </TableHead>
                   ))}
-                </tr>
+                </TableRow>
               ))}
-            </thead>
-            <tbody>{body}</tbody>
-          </table>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+          </Table>
         </div>
       </ViewTransition>
 

@@ -13,7 +13,7 @@ import {
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { TransferForm } from "./transfer-form";
 
@@ -107,14 +107,14 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
           {t("transfers.add")}
         </Button>
       </div>
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}
           onSubmit={(values) => createMutation.mutate({ data: values })}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
       <div className={stale ? "is-stale" : undefined} aria-busy={stale}>
         {content}
       </div>

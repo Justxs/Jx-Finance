@@ -1,8 +1,6 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { setAuthenticated } from "@/lib/auth-gate";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { I18nextProvider } from "react-i18next";
 import { routeTree } from "./route-tree.gen";
 import { queryClient } from "@/lib/query-client";
@@ -39,12 +37,6 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
         <Toaster />
-        {import.meta.env.DEV ? (
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-        ) : null}
-        {import.meta.env.DEV ? (
-          <TanStackRouterDevtools router={router} position="bottom-right" />
-        ) : null}
       </QueryClientProvider>
     </I18nextProvider>
   );

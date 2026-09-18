@@ -10,7 +10,7 @@ import {
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { CreateGoalForm } from "./create-goal-form";
 import { GoalRow } from "./goal-row";
 
@@ -62,7 +62,7 @@ export function GoalsPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("goals.add")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("goals.add")}>
         <CreateGoalForm
           onCreated={() => {
             invalidate();
@@ -70,7 +70,7 @@ export function GoalsPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
       <section className="card overflow-hidden">{content}</section>
       <ConfirmDeleteDialog

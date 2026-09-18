@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 
 const roles = ["Member", "Admin"] as const;
 
@@ -118,18 +118,13 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor="user-role">{t("users.role")}</Label>
-              <Select
+              <SelectField
                 id="user-role"
                 value={field.state.value}
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value as FormValues["role"])}
-              >
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {t(`users.roles.${role}`)}
-                  </option>
-                ))}
-              </Select>
+                onChange={field.handleChange}
+                options={roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }))}
+              />
             </div>
           )}
         </form.Field>

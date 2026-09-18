@@ -1,8 +1,16 @@
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, ImportPreviewRow } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
-
+import { Checkbox } from "@/components/ui/checkbox";
+import { SelectField } from "@/components/select-field";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { ImportTransferPicker } from "./import-transfer-picker";
 
 export interface PreviewRowState extends ImportPreviewRow {
@@ -40,64 +48,76 @@ export function ImportPreviewTable({
   return (
     <>
       <div className="overflow-x-auto" role="region" aria-label={t("imports.preview")} tabIndex={0}>
-        <table className="w-full min-w-[48rem] text-sm">
-          <thead>
-            <tr className="border-b text-left text-xs font-medium tracking-wide text-muted-foreground">
-              <th className="py-2 pr-3" />
-              <th className="py-2 pr-3">{t("transactions.date")}</th>
-              <th className="py-2 pr-3">{t("transactions.description")}</th>
-              <th className="py-2 pr-3 text-right">{t("transactions.amount")}</th>
-              <th className="py-2 pr-3">{t("transactions.category")}</th>
-              <th className="py-2 pr-3">{t("imports.recordAs")}</th>
-              <th className="py-2 pr-3">{t("imports.flags")}</th>
-            </tr>
-          </thead>
-          <tbody>
+        <Table className="min-w-[48rem]">
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground" />
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground">
+                {t("transactions.date")}
+              </TableHead>
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground">
+                {t("transactions.description")}
+              </TableHead>
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground text-right">
+                {t("transactions.amount")}
+              </TableHead>
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground">
+                {t("transactions.category")}
+              </TableHead>
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground">
+                {t("imports.recordAs")}
+              </TableHead>
+              <TableHead className="py-2 pr-3 pl-0 text-xs tracking-wide text-muted-foreground">
+                {t("imports.flags")}
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {rows.map((row, index) => {
               const rowCategories = categories.filter((c) => c.type === row.type);
               return (
-                <tr key={`${row.importRef}-${index}`} className="border-b last:border-0">
-                  <td className="py-2 pr-3">
-                    <input
+                <TableRow key={`${row.importRef}-${index}`}>
+                  <TableCell className="py-2 pr-3 pl-0">
+                    <Checkbox
                       aria-label={t("imports.selectRow", { row: index + 1 })}
-                      type="checkbox"
-                      className="size-4 rounded border-input accent-primary"
                       checked={row.selected}
-                      onChange={(e) => onRowChange(index, { selected: e.target.checked })}
+                      onCheckedChange={(checked) => onRowChange(index, { selected: checked })}
                     />
-                  </td>
-                  <td className="py-2 pr-3">{row.date}</td>
-                  <td className="py-2 pr-3">{row.payee || row.description || "—"}</td>
-                  <td
-                    className={`py-2 pr-3 text-right tabular-nums ${row.type === "income" ? "text-secondary" : ""}`}
+                  </TableCell>
+                  <TableCell className="py-2 pr-3 pl-0">{row.date}</TableCell>
+                  <TableCell className="py-2 pr-3 pl-0 whitespace-normal">
+                    {row.payee || row.description || "—"}
+                  </TableCell>
+                  <TableCell
+                    className={`py-2 pr-3 pl-0 text-right tabular-nums ${row.type === "income" ? "text-secondary" : ""}`}
                   >
                     {row.type === "income" ? "+" : "−"}
                     {row.amount}
-                  </td>
-                  <td className="py-2 pr-3">
-                    <Select
+                  </TableCell>
+                  <TableCell className="py-2 pr-3 pl-0">
+                    <SelectField
                       aria-label={t("transactions.category")}
                       disabled={!!row.transferAccountId}
                       value={row.categoryId}
-                      onChange={(e) => onRowChange(index, { categoryId: e.target.value })}
-                    >
-                      <option value="">{t("transactions.uncategorized")}</option>
-                      {rowCategories.map((category) => (
-                        <option key={category.id} value={category.id}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </Select>
-                  </td>
-                  <td className="py-2 pr-3">
+                      onChange={(categoryId) => onRowChange(index, { categoryId })}
+                      options={[
+                        { value: "", label: t("transactions.uncategorized") },
+                        ...rowCategories.map((category) => ({
+                          value: category.id!,
+                          label: category.name,
+                        })),
+                      ]}
+                    />
+                  </TableCell>
+                  <TableCell className="py-2 pr-3 pl-0">
                     <ImportTransferPicker
                       row={row}
                       accounts={accounts}
                       accountId={accountId}
                       onChange={(patch) => onRowChange(index, patch)}
                     />
-                  </td>
-                  <td className="py-2 pr-3">
+                  </TableCell>
+                  <TableCell className="py-2 pr-3 pl-0">
                     <div className="flex gap-1">
                       {row.isDuplicate ? (
                         <span className="rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -110,12 +130,12 @@ export function ImportPreviewTable({
                         </span>
                       ) : null}
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               );
             })}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       <Button
         pending={confirmPending}

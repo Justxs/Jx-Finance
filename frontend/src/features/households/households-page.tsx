@@ -8,7 +8,7 @@ import {
 } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { CreateHouseholdForm } from "./create-household-form";
 import { HouseholdCard } from "./household-card";
 
@@ -50,7 +50,7 @@ export function HouseholdsPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("households.add")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("households.add")}>
         <CreateHouseholdForm
           onCreated={() => {
             invalidate();
@@ -58,7 +58,7 @@ export function HouseholdsPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
       {content}
     </div>
   );

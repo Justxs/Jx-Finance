@@ -4,10 +4,10 @@ A self-hosted EUR finance tracker: accounts, transactions and splits, transfers,
 
 ## Local development (Windows)
 
-Install .NET 10 SDK, Node.js 22.18+ and [nub 0.8.3](https://nubjs.com/docs/install), Docker Desktop with Linux containers, and optionally `just`.
+Install .NET 10 SDK, Node.js 24+ and [nub 0.9.2](https://nubjs.com/docs/install), Docker Desktop with Linux containers, and optionally `just`.
 
 ```powershell
-npm install --global @nubjs/nub@0.8.3
+npm install --global @nubjs/nub@0.9.2
 Copy-Item .env.example .env
 # Edit .env and choose a database password; keep its connection string consistent.
 nub install -C frontend --frozen-lockfile

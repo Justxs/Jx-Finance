@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TransactionResponse } from "@/api/generated/model";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { TransactionForm, type TransactionFormValues } from "./transaction-form";
 
 interface Props {
@@ -32,7 +32,7 @@ export function TransactionFormSection({
 
   return (
     <>
-      <Dialog
+      <Modal
         open={createOpen}
         onOpenChange={onCreateOpenChange}
         title={t("transactions.add")}
@@ -45,9 +45,9 @@ export function TransactionFormSection({
           onSubmit={onCreate}
           onCancel={() => onCreateOpenChange(false)}
         />
-      </Dialog>
+      </Modal>
 
-      <Dialog
+      <Modal
         open={editing !== null}
         onOpenChange={(open) => {
           if (!open) {
@@ -68,7 +68,7 @@ export function TransactionFormSection({
             onCancel={onCancelEdit}
           />
         ) : null}
-      </Dialog>
+      </Modal>
     </>
   );
 }

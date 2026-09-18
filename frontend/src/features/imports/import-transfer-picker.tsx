@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useGetTransfersEndpoint } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import type { PreviewRowState } from "./import-preview-table";
 
 export function ImportTransferPicker({
@@ -28,37 +28,37 @@ export function ImportTransferPicker({
   );
   return (
     <div className="min-w-44 space-y-2">
-      <Select
+      <SelectField
         aria-label={t("imports.recordAs")}
         value={row.transferAccountId}
-        onChange={(e) => onChange({ transferAccountId: e.target.value, existingTransferId: "" })}
-      >
-        <option value="">{t("imports.transaction")}</option>
-        {accounts
-          .filter((a) => a.id !== accountId)
-          .map((a) => (
-            <option key={a.id} value={a.id}>
-              {t("imports.transferWith", { account: a.name })}
-            </option>
-          ))}
-      </Select>
+        onChange={(transferAccountId) => onChange({ transferAccountId, existingTransferId: "" })}
+        options={[
+          { value: "", label: t("imports.transaction") },
+          ...accounts
+            .filter((a) => a.id !== accountId)
+            .map((a) => ({
+              value: a.id!,
+              label: t("imports.transferWith", { account: a.name }),
+            })),
+        ]}
+      />
       {row.transferAccountId ? (
-        <Select
-          aria-label={t("imports.matchTransfer")}
-          value={row.existingTransferId}
-          className={transfers.isLoading ? "is-stale" : undefined}
-          aria-busy={transfers.isLoading}
-          disabled={transfers.isLoading}
-          onChange={(e) => onChange({ existingTransferId: e.target.value })}
-        >
-          <option value="">{t("imports.newTransfer")}</option>
-          {matches.map((transfer) => (
-            <option key={transfer.id} value={transfer.id}>
-              {transfer.date} · {transfer.amount} ·{" "}
-              {transfer.description || t("imports.existingTransfer")}
-            </option>
-          ))}
-        </Select>
+        <div aria-busy={transfers.isLoading}>
+          <SelectField
+            aria-label={t("imports.matchTransfer")}
+            value={row.existingTransferId}
+            className={transfers.isLoading ? "is-stale" : undefined}
+            disabled={transfers.isLoading}
+            onChange={(existingTransferId) => onChange({ existingTransferId })}
+            options={[
+              { value: "", label: t("imports.newTransfer") },
+              ...matches.map((transfer) => ({
+                value: transfer.id!,
+                label: `${transfer.date} · ${transfer.amount} · ${transfer.description || t("imports.existingTransfer")}`,
+              })),
+            ]}
+          />
+        </div>
       ) : null}
       {row.transferAccountId ? (
         <p className="max-w-56 text-xs text-muted-foreground">{t("imports.matchHelp")}</p>

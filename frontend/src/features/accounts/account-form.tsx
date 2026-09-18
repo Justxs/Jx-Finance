@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import { isIban, isMoney } from "@/lib/validation";
 
 const accountTypes: AccountType[] = ["checking", "savings", "cash", "other"];
@@ -118,18 +118,16 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="account-type">{t("accounts.type")}</Label>
-            <Select
+            <SelectField
               id="account-type"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as AccountType)}
-            >
-              {accountTypes.map((accountType) => (
-                <option key={accountType} value={accountType}>
-                  {t(`accounts.types.${accountType}`)}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={accountTypes.map((accountType) => ({
+                value: accountType,
+                label: t(`accounts.types.${accountType}`),
+              }))}
+            />
           </div>
         )}
       </form.Field>
@@ -191,14 +189,15 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             {(field) => (
               <div className="space-y-1.5">
                 <Label htmlFor="account-scope">{t("sharing.scope")}</Label>
-                <Select
+                <SelectField
                   id="account-scope"
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value as FormValues["scope"])}
-                >
-                  <option value="personal">{t("sharing.personal")}</option>
-                  <option value="shared">{t("sharing.shared")}</option>
-                </Select>
+                  onChange={(value) => field.handleChange(value)}
+                  options={[
+                    { value: "personal", label: t("sharing.personal") },
+                    { value: "shared", label: t("sharing.shared") },
+                  ]}
+                />
               </div>
             )}
           </form.Field>
@@ -210,20 +209,20 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
                   {(field) => (
                     <div className="space-y-1.5">
                       <Label htmlFor="account-household">{t("sharing.household")}</Label>
-                      <Select
+                      <SelectField
                         id="account-household"
                         value={field.state.value}
                         aria-invalid={field.state.meta.errors.length > 0}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      >
-                        <option value="">{t("sharing.selectHousehold")}</option>
-                        {householdList.map((household) => (
-                          <option key={household.id} value={household.id}>
-                            {household.name}
-                          </option>
-                        ))}
-                      </Select>
+                        onChange={(value) => field.handleChange(value)}
+                        options={[
+                          { value: "", label: t("sharing.selectHousehold") },
+                          ...householdList.map((household) => ({
+                            value: household.id!,
+                            label: household.name,
+                          })),
+                        ]}
+                      />
                       <FieldError message={field.state.meta.errors[0]?.message} />
                     </div>
                   )}

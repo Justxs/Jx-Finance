@@ -1,9 +1,9 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUpdateMemberRoleEndpoint } from "@/api/generated";
-import type { HouseholdMemberResponse, HouseholdRole } from "@/api/generated/model";
+import type { HouseholdMemberResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 
 interface Props {
   householdId: string;
@@ -36,22 +36,24 @@ export function MemberRow({
       </div>
       {isOwnerView ? (
         <div className="flex items-center gap-2">
-          <Select
-            value={member.role}
-            className={roleMutation.isPending ? "is-stale" : undefined}
-            aria-busy={roleMutation.isPending}
-            disabled={roleMutation.isPending}
-            onChange={(e) =>
-              roleMutation.mutate({
-                id: householdId,
-                userId: member.userId!,
-                data: { role: e.target.value as HouseholdRole },
-              })
-            }
-          >
-            <option value="owner">{t("households.roles.owner")}</option>
-            <option value="member">{t("households.roles.member")}</option>
-          </Select>
+          <div aria-busy={roleMutation.isPending}>
+            <SelectField
+              value={member.role}
+              className={roleMutation.isPending ? "w-auto is-stale" : "w-auto"}
+              disabled={roleMutation.isPending}
+              onChange={(role) =>
+                roleMutation.mutate({
+                  id: householdId,
+                  userId: member.userId!,
+                  data: { role },
+                })
+              }
+              options={[
+                { value: "owner", label: t("households.roles.owner") },
+                { value: "member", label: t("households.roles.member") },
+              ]}
+            />
+          </div>
           <Button
             variant="ghost"
             size="icon"

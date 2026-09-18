@@ -65,8 +65,8 @@ jobs:
       - name: Setup nub and Node
         uses: nubjs/setup-nub@v0
         with:
-          nub-version: "0.8.3"
-          node-version: 22
+          nub-version: "0.9.2"
+          node-version: 24
           working-directory: frontend
           cache: true
           cache-dependency-path: frontend/nub.lock
@@ -100,8 +100,8 @@ jobs:
       - name: Setup nub and Node
         uses: nubjs/setup-nub@v0
         with:
-          nub-version: "0.8.3"
-          node-version: 22
+          nub-version: "0.9.2"
+          node-version: 24
           working-directory: frontend
           cache: true
           cache-dependency-path: frontend/nub.lock

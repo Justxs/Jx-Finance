@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useUpdateGoalEndpoint } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { Input } from "@/components/ui/input";
 import { isPositiveMoney, isMoney, normalizeMoney } from "@/lib/validation";
 import { Label } from "@/components/ui/label";
@@ -94,7 +94,7 @@ export function GoalRow({
         <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
       </div>
 
-      <Dialog open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
+      <Modal open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
         <div className="space-y-4">
           <Label htmlFor={`goal-name-${goal.id}`}>{t("goals.name")}</Label>
           <Input
@@ -158,7 +158,7 @@ export function GoalRow({
             </Button>
           </div>
         </div>
-      </Dialog>
+      </Modal>
     </li>
   );
 }

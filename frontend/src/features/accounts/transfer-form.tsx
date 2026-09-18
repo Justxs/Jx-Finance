@@ -7,7 +7,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import { isPositiveMoney } from "@/lib/validation";
 import { todayIsoDate } from "@/features/transactions/transaction-form";
 
@@ -86,18 +86,13 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="transfer-from">{t("transfers.from")}</Label>
-            <Select
+            <SelectField
               id="transfer-from"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+            />
           </div>
         )}
       </form.Field>
@@ -106,19 +101,14 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="transfer-to">{t("transfers.to")}</Label>
-            <Select
+            <SelectField
               id="transfer-to"
               value={field.state.value}
               aria-invalid={field.state.meta.errors.length > 0}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+            />
             <FieldError message={field.state.meta.errors[0]?.message} />
           </div>
         )}

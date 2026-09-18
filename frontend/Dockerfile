@@ -1,5 +1,5 @@
-FROM node:22-alpine AS build
-RUN apk add --no-cache libgcc libstdc++ && npm install --global @nubjs/nub@0.8.3
+FROM node:24-alpine AS build
+RUN apk add --no-cache libgcc libstdc++ && npm install --global @nubjs/nub@0.9.2
 WORKDIR /app
 
 COPY frontend/package.json frontend/nub.lock frontend/nub.jsonc ./

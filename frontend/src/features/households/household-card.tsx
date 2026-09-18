@@ -9,7 +9,7 @@ import {
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AddMemberForm } from "./add-member-form";
@@ -68,7 +68,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
         ) : null}
       </div>
 
-      <Dialog open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
+      <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor={`household-${household.id}-name`}>
@@ -101,7 +101,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
             </Button>
           </div>
         </div>
-      </Dialog>
+      </Modal>
 
       <ul className="divide-y divide-border px-6">
         {household.members?.map((member) => (
@@ -129,11 +129,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
         </div>
       ) : null}
 
-      <Dialog
-        open={addMemberOpen}
-        onOpenChange={setAddMemberOpen}
-        title={t("households.addMember")}
-      >
+      <Modal open={addMemberOpen} onOpenChange={setAddMemberOpen} title={t("households.addMember")}>
         <AddMemberForm
           householdId={household.id!}
           onAdded={() => {
@@ -142,7 +138,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
           }}
           onCancel={() => setAddMemberOpen(false)}
         />
-      </Dialog>
+      </Modal>
       <ConfirmDeleteDialog
         target={deleteTarget}
         onCancel={() => setDeleteTarget(null)}

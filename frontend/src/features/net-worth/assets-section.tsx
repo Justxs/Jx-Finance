@@ -11,7 +11,7 @@ import {
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { AssetForm } from "./asset-form";
 
@@ -86,7 +86,7 @@ export function AssetsSection() {
           {t("actions.add")}
         </Button>
       </div>
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("netWorth.addAsset")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("netWorth.addAsset")}>
         <AssetForm
           onCreated={() => {
             invalidate();
@@ -94,7 +94,7 @@ export function AssetsSection() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
       {content}
       <ConfirmDeleteDialog
         target={deleteTarget}

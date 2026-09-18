@@ -1,0 +1,110 @@
+name: Update packages
+
+on:
+  schedule:
+    - cron: "0 5 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: update-packages
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  DOTNET_NOLOGO: "true"
+  DOTNET_CLI_TELEMETRY_OPTOUT: "true"
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
+  UPDATE_BRANCH: chore/package-updates
+  BASE_BRANCH: master
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          token: ${{ secrets.PACKAGE_UPDATE_TOKEN }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Setup nub and Node
+        uses: nubjs/setup-nub@v0
+        with:
+          nub-version: "0.9.2"
+          node-version: 24
+          working-directory: frontend
+
+      - name: Update NuGet packages
+        run: |
+          dotnet tool install --global dotnet-outdated-tool
+          export PATH="$PATH:$HOME/.dotnet/tools"
+          for project in backend/*/*.csproj; do
+            dotnet outdated "$project" --upgrade
+          done
+          dotnet restore backend/JxFinance.slnx
+
+      - name: Update frontend packages
+        working-directory: frontend
+        run: |
+          nub update --latest
+          nub install
+
+      - name: Regenerate API client
+        env:
+          ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
+        run: |
+          dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true -p:PublishAot=false
+          cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
+          cd frontend
+          nub run orval
+          nub run format src/api/generated
+
+      - name: Detect changes
+        id: changes
+        run: |
+          git add -A backend frontend
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Push update branch
+        if: steps.changes.outputs.changed == 'true'
+        run: |
+          git config user.name "package-updater"
+          git config user.email "package-updater@noreply.${GITHUB_SERVER_URL#https://}"
+          git checkout -B "$UPDATE_BRANCH"
+          git commit -m "chore(deps): update NuGet and frontend packages"
+          git push --force origin "$UPDATE_BRANCH"
+
+      - name: Open pull request
+        if: steps.changes.outputs.changed == 'true'
+        env:
+          TOKEN: ${{ secrets.PACKAGE_UPDATE_TOKEN }}
+        run: |
+          manifest_diff=$(git diff "origin/$BASE_BRANCH" HEAD --unified=0 -- 'backend/**/*.csproj' frontend/package.json | grep -E '^[+-][^+-]' || true)
+          body=$(printf 'Automated package update.\n\nCI runs on this pull request. Review the changelogs of any major version bumps before merging.\n\n```diff\n%s\n```\n' "$manifest_diff")
+          payload=$(jq -n --arg title "chore(deps): update packages" --arg head "$UPDATE_BRANCH" --arg base "$BASE_BRANCH" --arg body "$body" '{title: $title, head: $head, base: $base, body: $body}')
+          status=$(curl -sS -o response.json -w '%{http_code}' -X POST \
+            -H "Authorization: token $TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$GITHUB_SERVER_URL/api/v1/repos/$GITHUB_REPOSITORY/pulls")
+          if [ "$status" = "201" ]; then
+            echo "Pull request opened: $(jq -r .html_url response.json)"
+          elif [ "$status" = "409" ]; then
+            echo "Pull request already open; branch was refreshed."
+          else
+            echo "::error::Gitea returned $status"
+            cat response.json
+            exit 1
+          fi
