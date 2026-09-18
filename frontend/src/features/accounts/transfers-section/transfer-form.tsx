@@ -60,7 +60,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       onSubmit({
         fromAccountId: value.fromAccountId,
@@ -88,7 +88,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
             <Label htmlFor="transfer-from">{t("transfers.from")}</Label>
             <SelectField
               id="transfer-from"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
@@ -103,13 +103,13 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
             <Label htmlFor="transfer-to">{t("transfers.to")}</Label>
             <SelectField
               id="transfer-to"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -122,12 +122,12 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
               id="transfer-amount"
               inputMode="decimal"
               placeholder="0.00"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -138,7 +138,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
             <Label htmlFor="transfer-date">{t("transactions.date")}</Label>
             <DatePicker
               id="transfer-date"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />
@@ -167,7 +167,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
             <Label htmlFor="transfer-description">{t("transactions.description")}</Label>
             <Input
               id="transfer-description"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />

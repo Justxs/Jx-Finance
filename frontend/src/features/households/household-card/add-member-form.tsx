@@ -37,7 +37,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       addMutation.mutate({
         id: householdId,
@@ -61,12 +61,12 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
           <div className="flex-1 space-y-1.5">
             <Input
               placeholder={t("households.memberEmailPlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -74,7 +74,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
       <form.Field name="role">
         {(field) => (
           <SelectField
-            value={field.state.value}
+            value={field.value}
             className="sm:w-auto"
             onChange={(value) => field.handleChange(value)}
             options={[

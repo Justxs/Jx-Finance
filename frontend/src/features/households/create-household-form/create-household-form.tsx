@@ -30,7 +30,7 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const form = useForm({
     defaultValues: { name: "" } satisfies FormValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({ data: { name: value.name.trim() } });
     },
@@ -51,13 +51,13 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
           <div className="space-y-1.5">
             <Input
               placeholder={t("households.namePlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               autoFocus
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>

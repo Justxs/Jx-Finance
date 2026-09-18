@@ -54,7 +54,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({
         data: {
@@ -84,13 +84,13 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <Label htmlFor="user-display-name">{t("users.displayName")}</Label>
               <Input
                 id="user-display-name"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 autoFocus
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -102,12 +102,12 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <Input
                 id="user-email"
                 type="email"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -120,7 +120,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <Label htmlFor="user-role">{t("users.role")}</Label>
               <SelectField
                 id="user-role"
-                value={field.state.value}
+                value={field.value}
                 onBlur={field.handleBlur}
                 onChange={field.handleChange}
                 options={roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }))}
@@ -136,12 +136,12 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <Input
                 id="user-password"
                 type="password"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>

@@ -145,7 +145,7 @@ function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       onSubmit({
         accountId: value.accountId,
@@ -182,13 +182,13 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
               <Label htmlFor="tx-category">{t("transactions.category")}</Label>
               <SelectField
                 id="tx-category"
-                value={field.state.value}
+                value={field.value}
                 onBlur={field.handleBlur}
                 onChange={(value) => field.handleChange(value)}
                 options={[
                   { value: "", label: t("transactions.uncategorized") },
                   ...categories
-                    .filter((c) => c.type === typeField.state.value)
+                    .filter((c) => c.type === typeField.value)
                     .map((category) => ({ value: category.id!, label: category.name })),
                 ]}
               />
@@ -227,7 +227,7 @@ export function TransactionForm({
             <Label htmlFor="tx-type">{t("transactions.type")}</Label>
             <SelectField
               id="tx-type"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(next) => {
                 field.handleChange(next);
@@ -251,7 +251,7 @@ export function TransactionForm({
             <Label htmlFor="tx-account">{t("transactions.account")}</Label>
             <SelectField
               id="tx-account"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
@@ -283,12 +283,12 @@ export function TransactionForm({
               id="tx-amount"
               inputMode="decimal"
               placeholder="0.00"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -299,12 +299,12 @@ export function TransactionForm({
             <Label htmlFor="tx-date">{t("transactions.date")}</Label>
             <DatePicker
               id="tx-date"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -331,7 +331,7 @@ export function TransactionForm({
             <Input
               id="tx-description"
               placeholder={t("transactions.descriptionPlaceholder")}
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
@@ -344,7 +344,7 @@ export function TransactionForm({
           <div className="col-span-full">
             <label className="flex items-center gap-2 text-sm text-muted-foreground">
               <Checkbox
-                checked={splitField.state.value}
+                checked={splitField.value}
                 onCheckedChange={(next) => {
                   splitField.handleChange(next);
                   if (next && form.getFieldValue("lines").length === 0) {

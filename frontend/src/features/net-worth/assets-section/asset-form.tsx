@@ -51,7 +51,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({ data: value });
     },
@@ -73,12 +73,12 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
             <Label htmlFor="asset-name">{t("netWorth.name")}</Label>
             <Input
               id="asset-name"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -89,7 +89,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
             <Label htmlFor="asset-type">{t("netWorth.type")}</Label>
             <SelectField
               id="asset-type"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
               options={assetTypes.map((type) => ({
@@ -109,12 +109,12 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
               id="asset-value"
               inputMode="decimal"
               placeholder="0.00"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -125,7 +125,7 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
             <Label htmlFor="asset-as-of">{t("netWorth.asOf")}</Label>
             <DatePicker
               id="asset-as-of"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />

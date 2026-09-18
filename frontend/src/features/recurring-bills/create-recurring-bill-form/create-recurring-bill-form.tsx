@@ -80,7 +80,7 @@ export function CreateRecurringBillForm({
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({
         data: {
@@ -118,12 +118,12 @@ export function CreateRecurringBillForm({
             <Input
               id="bill-name"
               placeholder={t("recurringBills.namePlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -134,7 +134,7 @@ export function CreateRecurringBillForm({
             <Label htmlFor="bill-kind">{t("recurringBills.kind")}</Label>
             <SelectField
               id="bill-kind"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={[
@@ -157,12 +157,12 @@ export function CreateRecurringBillForm({
                     id="bill-amount"
                     inputMode="decimal"
                     placeholder="0.00"
-                    value={field.state.value}
-                    aria-invalid={field.state.meta.errors.length > 0}
+                    value={field.value}
+                    aria-invalid={field.errors.length > 0}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
-                  <FieldError message={field.state.meta.errors[0]?.message} />
+                  <FieldError message={field.errors[0]?.message} />
                 </div>
               ) : (
                 <p className="pt-6 text-xs text-muted-foreground">
@@ -180,7 +180,7 @@ export function CreateRecurringBillForm({
             <Label htmlFor="bill-cadence">{t("recurringBills.cadence")}</Label>
             <SelectField
               id="bill-cadence"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={[
@@ -200,7 +200,7 @@ export function CreateRecurringBillForm({
             <Label htmlFor="bill-category">{t("recurringBills.category")}</Label>
             <SelectField
               id="bill-category"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={[
@@ -221,7 +221,7 @@ export function CreateRecurringBillForm({
             <Label htmlFor="bill-account">{t("recurringBills.account")}</Label>
             <SelectField
               id="bill-account"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={[
@@ -239,12 +239,12 @@ export function CreateRecurringBillForm({
             <Label htmlFor="bill-due-date">{t("recurringBills.nextDueDate")}</Label>
             <DatePicker
               id="bill-due-date"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -257,12 +257,12 @@ export function CreateRecurringBillForm({
               id="bill-remind"
               type="number"
               min={0}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
