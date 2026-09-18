@@ -7,6 +7,7 @@ import {
   useUpdateHouseholdEndpoint,
 } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,8 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
   const renameMutation = useUpdateHouseholdEndpoint({
     mutation: { onSuccess: () => setRenaming(false), onSettled: onChanged },
   });
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const deleteMutation = useDeleteHouseholdEndpoint({ mutation: { onSettled: onChanged } });
   const removeMutation = useRemoveMemberEndpoint({ mutation: { onSettled: onChanged } });
 
@@ -55,7 +58,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
               size="icon"
               className="size-8"
               pending={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate({ id: household.id! })}
+              onClick={() => setDeleteTarget(household.id!)}
               aria-label={t("actions.delete")}
               title={t("actions.delete")}
             >
@@ -140,6 +143,11 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
           onCancel={() => setAddMemberOpen(false)}
         />
       </Dialog>
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </section>
   );
 }

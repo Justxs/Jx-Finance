@@ -8,7 +8,7 @@ import type {
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 import { RecurringBillEditForm } from "./recurring-bill-edit-form";
@@ -34,7 +34,7 @@ export function RecurringBillRow({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
   const [mode, setMode] = useState<"view" | "edit" | "confirm">("view");
 
   const category = categories.find((c) => c.id === bill.categoryId);
@@ -60,7 +60,7 @@ export function RecurringBillRow({
           <p className="text-xs text-muted-foreground">
             {t(`recurringBills.kinds.${bill.kind}`)} ·{" "}
             {t(`recurringBills.cadences.${bill.cadence}`)} · {t("recurringBills.nextDueDate")}:{" "}
-            {date.format(new Date(bill.nextDueDate!))}
+            {formatDate(bill.nextDueDate)}
             {category ? ` · ${category.name}` : ""}
             {account ? ` · ${account.name}` : ""}
           </p>

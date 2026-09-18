@@ -9,16 +9,17 @@ import {
   useDeleteDebtEndpoint,
   useGetDebtsEndpointSuspense,
 } from "@/api/generated";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { DebtForm } from "./debt-form";
 
 export function DebtsSection() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
   const [addOpen, setAddOpen] = useState(false);
 
   const debts = useGetDebtsEndpointSuspense();
@@ -28,6 +29,8 @@ export function DebtsSection() {
     queryClient.invalidateQueries({ queryKey: getGetNetWorthEndpointQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetNetWorthHistoryEndpointQueryKey() });
   }
+
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteDebtEndpoint({ mutation: { onSettled: invalidate } });
   const debtList = debts.data ?? [];
@@ -48,7 +51,7 @@ export function DebtsSection() {
             <div className="min-w-0 break-words">
               <p className="font-medium">{debt.name}</p>
               <p className="text-xs text-muted-foreground">
-                {t(`netWorth.debtTypes.${debt.type}`)} · {date.format(new Date(debt.asOf!))}
+                {t(`netWorth.debtTypes.${debt.type}`)} · {formatDate(debt.asOf)}
                 {debt.interestRate ? ` · ${debt.interestRate}%` : ""}
               </p>
             </div>
@@ -62,7 +65,7 @@ export function DebtsSection() {
                 className="size-8"
                 pending={deletingId === debt.id}
                 disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate({ id: debt.id! })}
+                onClick={() => setDeleteTarget(debt.id!)}
                 aria-label={t("actions.delete")}
                 title={t("actions.delete")}
               >
@@ -94,6 +97,11 @@ export function DebtsSection() {
         />
       </Dialog>
       {content}
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </section>
   );
 }

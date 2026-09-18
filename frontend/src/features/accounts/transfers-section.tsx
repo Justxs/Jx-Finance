@@ -1,3 +1,4 @@
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Pagination } from "@/components/pagination";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
@@ -13,7 +14,7 @@ import {
 import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { useDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { TransferForm } from "./transfer-form";
 
 interface Props {
@@ -24,7 +25,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
-  const date = useDate();
+  const formatDate = useIsoDate();
   const [addOpen, setAddOpen] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -45,6 +46,8 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
       onSettled: invalidate,
     },
   });
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
   const deleteMutation = useDeleteTransferEndpoint({ mutation: { onSettled: invalidate } });
 
   const items = transfers.data?.items ?? [];
@@ -68,7 +71,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
                 {accountNames.get(transfer.toAccountId ?? "")}
               </p>
               <p className="text-xs text-muted-foreground">
-                {transfer.date ? date.format(new Date(transfer.date)) : ""}
+                {formatDate(transfer.date)}
                 {transfer.description ? ` · ${transfer.description}` : ""}
               </p>
             </div>
@@ -82,7 +85,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
                 className="size-8"
                 pending={deletingId === transfer.id}
                 disabled={deleteMutation.isPending}
-                onClick={() => deleteMutation.mutate({ id: transfer.id! })}
+                onClick={() => setDeleteTarget(transfer.id!)}
                 aria-label={t("actions.delete")}
                 title={t("actions.delete")}
               >
@@ -116,6 +119,11 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
         {content}
       </div>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <ConfirmDeleteDialog
+        target={deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={(id) => deleteMutation.mutate({ id })}
+      />
     </section>
   );
 }

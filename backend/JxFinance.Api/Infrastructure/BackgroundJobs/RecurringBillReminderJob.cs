@@ -50,12 +50,10 @@ public sealed class RecurringBillReminderJob(
         var today = DateOnly.FromDateTime(todayLocal);
         var todayStartUtc = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(todayLocal, clock.TimeZone), TimeSpan.Zero);
 
-        var activeBills = await db.RecurringBills
+        var dueBills = await db.RecurringBills
             .IgnoreQueryFilters()
-            .Where(b => !b.IsDeleted && b.IsActive)
+            .Where(b => !b.IsDeleted && b.IsActive && b.NextDueDate <= today.AddDays(b.RemindDaysBefore))
             .ToListAsync(cancellationToken);
-
-        var dueBills = activeBills.Where(b => b.NextDueDate <= today.AddDays(b.RemindDaysBefore)).ToList();
         if (dueBills.Count == 0)
         {
             return;

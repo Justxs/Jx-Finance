@@ -14,15 +14,27 @@ public sealed class RecurringBill : OwnableEntity
     public AccountId? AccountId { get; set; }
     public RecurringBillCadence Cadence { get; set; }
     public DateOnly NextDueDate { get; set; }
+    public int AnchorDay { get; set; }
     public int RemindDaysBefore { get; set; } = 3;
     public bool IsActive { get; set; } = true;
 
-    public static DateOnly Advance(DateOnly date, RecurringBillCadence cadence) => cadence switch
+    public void Schedule(DateOnly nextDueDate)
+    {
+        NextDueDate = nextDueDate;
+        AnchorDay = nextDueDate.Day;
+    }
+
+    public void Advance() => NextDueDate = Advance(NextDueDate, Cadence, AnchorDay);
+
+    public static DateOnly Advance(DateOnly date, RecurringBillCadence cadence, int anchorDay) => cadence switch
     {
         RecurringBillCadence.Weekly => date.AddDays(7),
-        RecurringBillCadence.Monthly => date.AddMonths(1),
-        RecurringBillCadence.Quarterly => date.AddMonths(3),
-        RecurringBillCadence.Yearly => date.AddYears(1),
+        RecurringBillCadence.Monthly => Anchor(date.AddMonths(1), anchorDay),
+        RecurringBillCadence.Quarterly => Anchor(date.AddMonths(3), anchorDay),
+        RecurringBillCadence.Yearly => Anchor(date.AddYears(1), anchorDay),
         _ => throw new ArgumentOutOfRangeException(nameof(cadence)),
     };
+
+    private static DateOnly Anchor(DateOnly date, int anchorDay) =>
+        new(date.Year, date.Month, Math.Clamp(anchorDay, 1, DateTime.DaysInMonth(date.Year, date.Month)));
 }

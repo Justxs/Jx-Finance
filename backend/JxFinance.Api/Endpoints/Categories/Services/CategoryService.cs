@@ -98,6 +98,11 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, C
             return Result<Guid>.Failure(ErrorCodes.NotFound, "Category not found.");
         }
 
+        if (category.UserId != currentUser.Id)
+        {
+            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Only the owner can delete a shared category.");
+        }
+
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         await db.Transactions
@@ -109,7 +114,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, C
                     .SetProperty(t => t.UpdatedAt, DateTimeOffset.UtcNow),
                 cancellationToken);
 
-        await db.TransactionLines.Where(l => l.CategoryId == categoryId)
+        await db.TransactionLines.IgnoreQueryFilters().Where(l => l.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(l => l.CategoryId, (CategoryId?)null), cancellationToken);
         await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.CategoryId, (CategoryId?)null), cancellationToken);

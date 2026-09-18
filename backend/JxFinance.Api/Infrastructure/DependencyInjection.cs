@@ -79,7 +79,6 @@ public static class DependencyInjection
                     context.RejectPrincipal();
                     await context.HttpContext.SignOutAsync(IdentityConstants.ApplicationScheme);
                 }
-                // Do not renew valid tickets: both normal and remembered sessions have absolute expiry.
             };
             options.Events.OnRedirectToAccessDenied = context =>
             {

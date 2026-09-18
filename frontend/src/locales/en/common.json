@@ -29,6 +29,10 @@
     "next": "Next",
     "close": "Close"
   },
+  "confirmDelete": {
+    "title": "Delete this item?",
+    "description": "This can't be undone."
+  },
   "datePicker": {
     "placeholder": "Pick a date",
     "clear": "Clear",

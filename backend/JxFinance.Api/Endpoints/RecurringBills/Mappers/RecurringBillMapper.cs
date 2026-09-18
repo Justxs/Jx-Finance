@@ -20,6 +20,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
         AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null,
         Cadence = request.Cadence,
         NextDueDate = request.NextDueDate,
+        AnchorDay = request.NextDueDate.Day,
         RemindDaysBefore = request.RemindDaysBefore,
     };
 
@@ -31,7 +32,11 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
         bill.CategoryId = request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
         bill.AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null;
         bill.Cadence = request.Cadence;
-        bill.NextDueDate = request.NextDueDate;
+        if (bill.NextDueDate != request.NextDueDate)
+        {
+            bill.Schedule(request.NextDueDate);
+        }
+
         bill.RemindDaysBefore = request.RemindDaysBefore;
         bill.IsActive = request.IsActive;
     }
