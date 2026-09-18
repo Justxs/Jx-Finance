@@ -3,7 +3,6 @@
     "justfile": "plaintext",
     "Justfile": "plaintext"
   },
-  "sonarlint.analysisExcludesStandalone": "**/src/api/generated/**,**/Infrastructure/Data/Migrations/**",
   "files.watcherExclude": {
     "**/src/api/generated/**": true
   }
