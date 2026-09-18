@@ -1,8 +1,6 @@
-export type ReportPreset = "thisMonth" | "lastMonth" | "thisYear" | "lastYear" | "custom";
+import { toIso } from "../../../lib/calendar.ts";
 
-function toIsoDate(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
+export type ReportPreset = "thisMonth" | "lastMonth" | "thisYear" | "lastYear" | "custom";
 
 export function presetRange(
   preset: ReportPreset,
@@ -15,27 +13,31 @@ export function presetRange(
     case "lastMonth": {
       const start = new Date(year, month - 1, 1);
       const end = new Date(year, month, 0);
-      return { dateFrom: toIsoDate(start), dateTo: toIsoDate(end) };
+      return { dateFrom: toIso(start), dateTo: toIso(end) };
     }
     case "thisYear":
-      return { dateFrom: `${year}-01-01`, dateTo: toIsoDate(now) };
+      return { dateFrom: `${year}-01-01`, dateTo: toIso(now) };
     case "lastYear":
       return { dateFrom: `${year - 1}-01-01`, dateTo: `${year - 1}-12-31` };
     case "thisMonth":
     default: {
       const start = new Date(year, month, 1);
-      return { dateFrom: toIsoDate(start), dateTo: toIsoDate(now) };
+      return { dateFrom: toIso(start), dateTo: toIso(now) };
     }
   }
 }
 
 export function detectPreset(dateFrom?: string, dateTo?: string, now = new Date()): ReportPreset {
-  if (!dateFrom || !dateTo) return "thisMonth";
+  if (!dateFrom || !dateTo) {
+    return "thisMonth";
+  }
 
   const presets: ReportPreset[] = ["thisMonth", "lastMonth", "thisYear", "lastYear"];
   for (const preset of presets) {
     const range = presetRange(preset, now);
-    if (range.dateFrom === dateFrom && range.dateTo === dateTo) return preset;
+    if (range.dateFrom === dateFrom && range.dateTo === dateTo) {
+      return preset;
+    }
   }
 
   return "custom";

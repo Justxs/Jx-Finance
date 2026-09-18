@@ -3,8 +3,8 @@ import { useState } from "react";
 import type { ImportPreviewRow } from "@/api/generated/model";
 import { accounts, checkingAccount, ids, importPreviewRows } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
-import type { PreviewRowState } from "./import-preview-table";
 import { ImportTransferPicker } from "./import-transfer-picker";
+import type { PreviewRowState } from "./preview-rows";
 
 interface HarnessProps {
   row: PreviewRowState;
@@ -26,6 +26,7 @@ const fallbackRow: ImportPreviewRow = {
   type: "expense",
   isDuplicate: false,
   looksLikeTransfer: true,
+  currency: "eur",
 };
 
 function toState(
@@ -38,6 +39,7 @@ function toState(
     transferAccountId: "",
     existingTransferId: "",
     categoryId: "",
+    categorySuggested: false,
     ...patch,
   };
 }

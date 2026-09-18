@@ -1,150 +1,36 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
-import { z } from "zod";
 import { useCreateAssetEndpoint } from "@/api/generated";
 import { AssetType } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/select-field";
-import { isMoney } from "@/lib/validation";
-import { todayIsoDate } from "@/features/transactions/transaction-form";
+import { HoldingForm, type HoldingFormProps } from "../holdings-section";
 
 const assetTypes = Object.values(AssetType);
 
-interface FormValues {
-  name: string;
-  type: AssetType;
-  currentValue: string;
-  asOf: string;
-}
-
-interface Props {
-  onCreated: () => void;
-  onCancel: () => void;
-}
-
-export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
+export function AssetForm({ onCreated, onCancel }: Readonly<HoldingFormProps>) {
   const { t } = useTranslation();
-
-  const schema = z.object({
-    name: z
-      .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
-    type: z.enum(assetTypes),
-    currentValue: z.string().refine(isMoney, t("validation.money")),
-    asOf: z.string().min(1, t("validation.required")),
-  });
-
   const createMutation = useCreateAssetEndpoint({ mutation: { onSuccess: onCreated } });
 
-  const defaultValues: FormValues = {
-    name: "",
-    type: AssetType.other,
-    currentValue: "",
-    asOf: todayIsoDate(),
-  };
-
-  const form = useForm({
-    defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      createMutation.mutate({ data: value });
-    },
-  });
-
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
+    <HoldingForm
+      idPrefix="asset"
+      typeOptions={assetTypes.map((type) => ({
+        value: type,
+        label: t(`netWorth.assetTypes.${type}`),
+      }))}
+      defaultType={AssetType.other}
+      amountLabel={t("netWorth.currentValue")}
+      withAsOf
+      pending={createMutation.isPending}
+      onSubmit={(values) => {
+        createMutation.mutate({
+          data: {
+            name: values.name,
+            type: assetTypes.find((type) => type === values.type) ?? AssetType.other,
+            currentValue: values.amount,
+            asOf: values.asOf,
+          },
+        });
       }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="name">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="asset-name">{t("netWorth.name")}</Label>
-            <Input
-              id="asset-name"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="type">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="asset-type">{t("netWorth.type")}</Label>
-            <SelectField
-              id="asset-type"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-              options={assetTypes.map((type) => ({
-                value: type,
-                label: t(`netWorth.assetTypes.${type}`),
-              }))}
-            />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="currentValue">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="asset-value">{t("netWorth.currentValue")}</Label>
-            <Input
-              id="asset-value"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="asOf">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="asset-as-of">{t("netWorth.asOf")}</Label>
-            <DatePicker
-              id="asset-as-of"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            />
-          </div>
-        )}
-      </form.Field>
-
-      <div className="flex items-end justify-end gap-2 col-span-full">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
-              {t("actions.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+      onCancel={onCancel}
+    />
   );
 }

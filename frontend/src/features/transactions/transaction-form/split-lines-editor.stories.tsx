@@ -1,9 +1,10 @@
-import { useForm } from "@tanstack/react-form";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useForm } from "@tanstack/react-form";
 import type { CategoryResponse, FlowType } from "@/api/generated/model";
 import { categories, splitTransactionLines } from "@/storybook/fixtures";
+import type { LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
-import type { LineFormValue, TransactionFormApi } from "./transaction-form";
+import type { TransactionFormApi } from "./transaction-form";
 
 interface HarnessProps {
   type?: FlowType;

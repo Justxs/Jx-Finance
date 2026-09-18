@@ -1,23 +1,25 @@
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
+using JxFinance.Common.ExchangeRates;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 
 namespace JxFinance.Tests.Support;
 
-public sealed class ApiFixture : IAsyncLifetime
+public sealed class ApiFixture : AppFixture<Program>
 {
     public const string TestAdminEmail = "test-admin@localhost";
     public const string TestAdminPassword = "Test-Password-123!";
 
     private PostgreSqlContainer? _db;
+    private string _connectionString = default!;
+    private readonly string _keyDirectory = Path.Combine(Path.GetTempPath(), "jx-test-keys", Guid.NewGuid().ToString("N"));
 
-    private WebApplicationFactory<Program> _factory = default!;
+    public HttpClient Api { get; private set; } = default!;
 
-    public WebApplicationFactory<Program> Factory => _factory;
-
-    public HttpClient Client { get; private set; } = default!;
-
-    public async Task InitializeAsync()
+    protected override async ValueTask PreSetupAsync()
     {
         var externalConnection = Environment.GetEnvironmentVariable("JX_TEST_POSTGRES");
         if (string.IsNullOrWhiteSpace(externalConnection))
@@ -28,48 +30,47 @@ public sealed class ApiFixture : IAsyncLifetime
         else if (!new Npgsql.NpgsqlConnectionStringBuilder(externalConnection).Database!.StartsWith("jx_test_", StringComparison.Ordinal))
             throw new InvalidOperationException("External integration databases must use the disposable jx_test_ prefix.");
 
-        Environment.SetEnvironmentVariable("ConnectionStrings__Default", _db?.GetConnectionString() ?? externalConnection!);
-        Environment.SetEnvironmentVariable("App__BackgroundJobs", "false");
-        Environment.SetEnvironmentVariable("App__DataProtectionDirectory", Path.Combine(Path.GetTempPath(), "jx-test-keys", Guid.NewGuid().ToString("N")));
-
-        _factory = new WebApplicationFactory<Program>();
-
-        Client = _factory.CreateClient(new WebApplicationFactoryClientOptions
-        {
-            AllowAutoRedirect = false,
-            HandleCookies = true,
-        });
-        Client.DefaultRequestHeaders.Add("X-Forwarded-For", "127.0.0.1");
-
-        await AuthenticateAsync();
+        _connectionString = _db?.GetConnectionString() ?? externalConnection!;
     }
 
-    private async Task AuthenticateAsync()
+    protected override void ConfigureApp(IWebHostBuilder builder)
     {
-        await Client.PostAsJsonAsync(
+        builder.UseSetting("ConnectionStrings:Default", _connectionString);
+        builder.UseSetting("App:BackgroundJobs", "false");
+        builder.UseSetting("App:DataProtectionDirectory", _keyDirectory);
+    }
+
+    protected override void ConfigureServices(IServiceCollection services)
+    {
+        services.RemoveAll<IExchangeRateProvider>();
+        services.AddSingleton<IExchangeRateProvider, FixedRateProvider>();
+    }
+
+    protected override async ValueTask SetupAsync()
+    {
+        Api = CreateSessionClient();
+
+        await Api.PostAsJsonAsync(
             "/api/setup",
             new { email = TestAdminEmail, password = TestAdminPassword, displayName = "Test Admin" });
 
-        var loginResponse = await Client.PostAsJsonAsync(
+        var loginResponse = await Api.PostAsJsonAsync(
             "/api/auth/login",
             new { email = TestAdminEmail, password = TestAdminPassword, rememberMe = false });
         loginResponse.EnsureSuccessStatusCode();
     }
 
-    public async Task DisposeAsync()
+    public HttpClient CreateSessionClient() =>
+        CreateClient(
+            client => client.DefaultRequestHeaders.Add("X-Forwarded-For", "127.0.0.1"),
+            new ClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+
+    protected override async ValueTask TearDownAsync()
     {
-        Client?.Dispose();
-        await _factory.DisposeAsync();
-        Environment.SetEnvironmentVariable("ConnectionStrings__Default", null);
-        Environment.SetEnvironmentVariable("App__BackgroundJobs", null);
-        Environment.SetEnvironmentVariable("App__DataProtectionDirectory", null);
+        Api?.Dispose();
         if (_db is not null)
             await _db.DisposeAsync();
     }
 }
 
-[CollectionDefinition(Name)]
-public sealed class IntegrationCollection : ICollectionFixture<ApiFixture>
-{
-    public const string Name = "Integration";
-}
+public sealed class IntegrationCollection : TestCollection<ApiFixture>;

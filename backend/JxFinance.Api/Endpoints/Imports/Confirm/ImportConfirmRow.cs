@@ -10,4 +10,5 @@ public sealed record ImportConfirmRow(
     FlowType Type,
     Guid? CategoryId,
     Guid? TransferAccountId = null,
-    Guid? ExistingTransferId = null);
+    Guid? ExistingTransferId = null,
+    Currency? Currency = null);

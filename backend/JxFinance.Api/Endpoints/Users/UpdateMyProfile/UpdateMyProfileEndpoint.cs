@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -8,7 +9,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Endpoints.Users.UpdateMyProfile;
 
-public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUser currentUser, UserManager<AppUser> users, SignInManager<AppUser> signIn)
+public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUser currentUser, UserManager<AppUser> users, ISessionService sessions)
     : Endpoint<UpdateMyProfileRequest, UserProfileResponse>
 {
     public override void Configure()
@@ -25,7 +26,7 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUs
         if (req.NewPassword is not null)
         {
             var user = await users.FindByIdAsync(currentUser.Id.ToString());
-            if (user is not null) await signIn.RefreshSignInAsync(user);
+            if (user is not null) await sessions.RenewAsync(user, ct);
         }
 
         await Send.OkAsync(profile, ct);

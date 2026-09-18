@@ -53,11 +53,12 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
               placeholder={t("households.namePlaceholder")}
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "household-name-error" : undefined}
               autoFocus
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="household-name-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>

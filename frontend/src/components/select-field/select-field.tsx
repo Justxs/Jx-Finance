@@ -24,6 +24,7 @@ interface Props<T extends string> {
   className?: string;
   "aria-invalid"?: boolean;
   "aria-label"?: string;
+  "aria-describedby"?: string;
   "aria-busy"?: boolean;
   onBlur?: FocusEventHandler<HTMLButtonElement>;
 }
@@ -38,6 +39,7 @@ export function SelectField<T extends string>({
   className,
   "aria-invalid": ariaInvalid,
   "aria-label": ariaLabel,
+  "aria-describedby": ariaDescribedBy,
   "aria-busy": ariaBusy,
   onBlur,
 }: Readonly<Props<T>>) {
@@ -53,6 +55,7 @@ export function SelectField<T extends string>({
           id={id}
           aria-invalid={ariaInvalid}
           aria-label={ariaLabel}
+          aria-describedby={ariaDescribedBy}
           aria-busy={ariaBusy}
           onBlur={onBlur}
           className={cn("w-full min-w-0", className)}

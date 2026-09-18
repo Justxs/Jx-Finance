@@ -1,3 +1,4 @@
+using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -14,6 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Users.Services;
 
+[RegisterService<IUserService>(LifeTime.Scoped)]
 public sealed class UserService(UserManager<AppUser> userManager, IAuthService authService, AppDbContext db) : IUserService
 {
     public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(

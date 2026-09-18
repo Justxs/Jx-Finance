@@ -10,8 +10,13 @@ public sealed class HttpCurrentUser(IHttpContextAccessor httpContextAccessor) : 
     {
         get
         {
-            var value = httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Guid.TryParse(value, out var id) ? id : Guid.Empty;
+            var principal = httpContextAccessor.HttpContext?.User;
+            if (principal?.Identity?.IsAuthenticated is not true)
+                return Guid.Empty;
+
+            return Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id != Guid.Empty
+                ? id
+                : throw new InvalidOperationException("The authenticated principal carries no valid user id.");
         }
     }
 }

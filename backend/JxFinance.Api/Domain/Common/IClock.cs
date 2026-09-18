@@ -8,5 +8,5 @@ public interface IClock
 
     DateTimeOffset ToAppTime(DateTimeOffset instant);
 
-    DateRange CurrentMonth();
+    DateOnly Today { get; }
 }

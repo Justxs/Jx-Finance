@@ -10,7 +10,7 @@ public sealed class UpdateGoalValidator : Validator<UpdateGoalRequest>
     {
         RuleFor(r => r.Name).NotEmpty().MaximumLength(100);
         RuleFor(r => r.TargetAmount)
-            .Must(amount => MoneyWire.IsValid(amount) && MoneyWire.Parse(amount).Amount > 0)
+            .Must(MoneyWire.IsPositive)
             .WithMessage("Target amount must be a positive decimal with at most 2 decimal places.");
         RuleFor(r => r.CurrentAmount)
             .Must(MoneyWire.IsValid)

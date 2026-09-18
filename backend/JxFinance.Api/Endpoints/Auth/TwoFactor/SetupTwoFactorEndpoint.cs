@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, UserManager<AppUser> users, SignInManager<AppUser> signIn)
+public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, UserManager<AppUser> users, ISessionService sessions)
     : Endpoint<ReauthenticateRequest, TwoFactorSetupResponse>
 {
     public override void Configure()
@@ -33,7 +33,7 @@ public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUse
             return;
         }
         var setup = await authService.BeginTwoFactorSetupAsync(user);
-        await signIn.RefreshSignInAsync(user);
+        await sessions.RenewAsync(user, ct);
         await Send.OkAsync(setup, ct);
     }
 }

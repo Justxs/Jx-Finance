@@ -11,8 +11,9 @@ public sealed class UpdateTransactionValidator : Validator<UpdateTransactionRequ
     {
         RuleFor(r => r.AccountId).NotEmpty();
         RuleFor(r => r.Amount)
-            .Must(amount => MoneyWire.IsValid(amount) && MoneyWire.Parse(amount).Amount > 0)
+            .Must(MoneyWire.IsPositive)
             .WithMessage("Amount must be a positive decimal with at most 2 decimal places.");
+        RuleFor(r => r.Currency).IsInEnum();
         RuleFor(r => r.Date).NotEmpty();
         RuleFor(r => r.Description).MaximumLength(500);
 
@@ -20,7 +21,7 @@ public sealed class UpdateTransactionValidator : Validator<UpdateTransactionRequ
             .ChildRules(line =>
             {
                 line.RuleFor(l => l.Amount)
-                    .Must(amount => MoneyWire.IsValid(amount) && MoneyWire.Parse(amount).Amount > 0)
+                    .Must(MoneyWire.IsPositive)
                     .WithMessage("Each line's amount must be a positive decimal with at most 2 decimal places.");
                 line.RuleFor(l => l.Description).MaximumLength(500);
             })

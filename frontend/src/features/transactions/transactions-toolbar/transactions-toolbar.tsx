@@ -18,17 +18,17 @@ export function TransactionsToolbar({
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center gap-1">
       {filtered ? (
         <Button type="button" variant="ghost" size="sm" onClick={onClearFilters}>
           {t("transactions.clearFilters")}
         </Button>
       ) : null}
-      <a href={exportUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
+      <a href={exportUrl} className={buttonVariants({ variant: "ghost", size: "sm" })}>
         <Download />
         {t("transactions.exportCsv")}
       </a>
-      <a href={exportPdfUrl} className={buttonVariants({ variant: "outline", size: "sm" })}>
+      <a href={exportPdfUrl} className={buttonVariants({ variant: "ghost", size: "sm" })}>
         <Download />
         {t("transactions.exportPdf")}
       </a>

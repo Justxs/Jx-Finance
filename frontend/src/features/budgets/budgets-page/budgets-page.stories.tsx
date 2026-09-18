@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HttpResponse, delay, http } from "msw";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
 import { budgets, ids, overLimitBudget } from "@/storybook/fixtures";
@@ -36,9 +36,27 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText(/spent this month|išleista šį mėnesį/i)).toBeVisible();
+    await expect(canvas.getByText(/^(budgeted|suplanuota)$/i)).toBeVisible();
+    const links = canvas.getAllByRole("link");
+    await expect(links[0]).toHaveAttribute(
+      "href",
+      expect.stringMatching(/\/transactions\?.*categoryId=.*type=expense.*dateFrom=/),
+    );
+  },
+};
 
-export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
+export const Empty: Story = {
+  parameters: { msw: { handlers: emptyHandlers } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText(/no budgets yet|biudžetų dar nėra/i);
+    await expect(canvas.queryByText(/spent this month|išleista šį mėnesį/i)).toBeNull();
+  },
+};
 
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
@@ -64,6 +82,11 @@ export const AllOverLimit: Story = {
         ...handlers,
       ],
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const label = await canvas.findByText(/^(over by|viršyta)$/i);
+    await expect(label.nextElementSibling).toHaveClass("text-expense");
   },
 };
 
@@ -94,16 +117,18 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add budget|pridėti/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    const dialog = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(dialog).toBeVisible());
   },
 };
 
 export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti)$/i });
+    const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i });
     await userEvent.click(editButtons[0]!);
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    const dialog = await within(document.body).findByRole("dialog");
+    await waitFor(() => expect(dialog).toBeVisible());
   },
 };
 
@@ -121,7 +146,7 @@ export const DeletePending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const deleteButtons = await canvas.findAllByRole("button", { name: /^(delete|ištrinti)$/i });
+    const deleteButtons = await canvas.findAllByRole("button", { name: /^(delete|ištrinti):/i });
     await userEvent.click(deleteButtons[0]!);
     const dialog = await within(document.body).findByRole("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));

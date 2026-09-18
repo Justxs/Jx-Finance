@@ -10,10 +10,11 @@ export function ThemeToggle() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon"
       onClick={toggleTheme}
       aria-label={t("theme.toggle")}
+      tooltip={t("theme.toggle")}
     >
       {theme === "dark" ? <Sun /> : <Moon />}
     </Button>

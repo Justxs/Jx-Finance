@@ -1,11 +1,13 @@
-import type { ReactNode } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
+
+type AriaSort = "ascending" | "descending" | undefined;
 
 interface Args {
   accounts: AccountResponse[];
@@ -28,12 +30,12 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
   }
 
   const active =
-    !!search.search ||
-    !!search.accountId ||
-    !!search.categoryId ||
-    !!search.type ||
-    !!search.dateFrom ||
-    !!search.dateTo;
+    Boolean(search.search) ||
+    Boolean(search.accountId) ||
+    Boolean(search.categoryId) ||
+    Boolean(search.type) ||
+    Boolean(search.dateFrom) ||
+    Boolean(search.dateTo);
 
   function header(sortKey: string, label: string, filter: ReactNode) {
     return (
@@ -48,13 +50,29 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
     );
   }
 
+  function ariaSort(sortKey: string): AriaSort {
+    if (search.sort !== sortKey) {
+      return undefined;
+    }
+
+    return search.direction === "desc" ? "descending" : "ascending";
+  }
+
+  const ariaSortByColumn: Record<string, AriaSort> = {
+    date: ariaSort("date"),
+    description: ariaSort("description"),
+    categoryId: ariaSort("category"),
+    accountId: ariaSort("account"),
+    amount: ariaSort("amount"),
+  };
+
   const byColumn: Record<string, ReactNode> = {
     date: header(
       "date",
       t("transactions.date"),
       <ColumnFilter
         label={t("transactions.date")}
-        active={!!search.dateFrom || !!search.dateTo}
+        active={Boolean(search.dateFrom) || Boolean(search.dateTo)}
         onClear={() => setFilter({ dateFrom: undefined, dateTo: undefined })}
       >
         <DateRangePicker
@@ -73,6 +91,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         value={search.search ?? ""}
         placeholder={t("transactions.searchPlaceholder")}
         debounceMs={300}
+        shortcut="search"
         onChange={(value) => setFilter({ search: value || undefined })}
       />,
     ),
@@ -81,7 +100,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
       t("transactions.category"),
       <ColumnFilter
         label={t("transactions.category")}
-        active={!!search.categoryId}
+        active={Boolean(search.categoryId)}
         onClear={() => setFilter({ categoryId: undefined })}
       >
         <SelectField
@@ -90,7 +109,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
           onChange={(value) => setFilter({ categoryId: value || undefined })}
           options={[
             { value: "", label: t("transactions.allCategories") },
-            ...categories.map((category) => ({ value: category.id!, label: category.name })),
+            ...categories.map((category) => ({ value: category.id, label: category.name })),
           ]}
         />
       </ColumnFilter>,
@@ -100,7 +119,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
       t("transactions.account"),
       <ColumnFilter
         label={t("transactions.account")}
-        active={!!search.accountId}
+        active={Boolean(search.accountId)}
         onClear={() => setFilter({ accountId: undefined })}
       >
         <SelectField
@@ -109,7 +128,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
           onChange={(value) => setFilter({ accountId: value || undefined })}
           options={[
             { value: "", label: t("transactions.allAccounts") },
-            ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+            ...accounts.map((account) => ({ value: account.id, label: account.name })),
           ]}
         />
       </ColumnFilter>,
@@ -119,7 +138,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
       t("transactions.amount"),
       <ColumnFilter
         label={t("transactions.amount")}
-        active={!!search.type}
+        active={Boolean(search.type)}
         onClear={() => setFilter({ type: undefined })}
       >
         <SelectField<"" | "income" | "expense">
@@ -138,6 +157,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
 
   return {
     byColumn,
+    ariaSortByColumn,
     active,
     clearAll: () => navigate({ search: { page: 1 } }),
   };

@@ -3,7 +3,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class TransactionSortEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

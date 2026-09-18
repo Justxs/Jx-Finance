@@ -8,28 +8,50 @@ import {
   getGetTransactionsEndpointQueryKey,
   getGetTransfersEndpointQueryKey,
   useGetCategoriesEndpointSuspense,
+  useGetTransactionsEndpointSuspense,
   useImportConfirmEndpoint,
   useImportPreviewEndpoint,
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { ImportPreviewTable, type PreviewRowState } from "../import-preview-table";
+import {
+  importDateRange,
+  ImportPreviewTable,
+  type PreviewRowState,
+  toPreviewRows,
+} from "../import-preview-table";
+import { ImportPreviewError } from "./import-preview-error";
+import { type ImportResult, ImportResultLine } from "./import-result";
 import { ImportUploadForm } from "./import-upload-form";
+
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const RECALL_PAGE_SIZE = 200;
 
 interface Props {
   accounts: AccountResponse[];
+  initialAccountId?: string;
 }
 
-export function ImportSection({ accounts }: Readonly<Props>) {
+export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [accountId, setAccountId] = useState(accounts[0]?.id ?? "");
+  const [accountId, setAccountId] = useState(
+    accounts.find((account) => account.id === initialAccountId)?.id ?? accounts[0]?.id ?? "",
+  );
+  const [fileError, setFileError] = useState<string | undefined>(undefined);
+  const [result, setResult] = useState<ImportResult | null>(null);
   const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
   const categories = useGetCategoriesEndpointSuspense();
   const categoryList = categories.data ?? [];
+  const history = useGetTransactionsEndpointSuspense({
+    page: 1,
+    pageSize: RECALL_PAGE_SIZE,
+    sort: "date",
+    direction: "desc",
+  });
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
@@ -41,25 +63,24 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   const previewMutation = useImportPreviewEndpoint({
     mutation: {
       onSuccess: (data) => {
-        setRows(
-          (data.rows ?? []).map((row) => ({
-            ...row,
-            selected: !row.isDuplicate && !row.looksLikeTransfer,
-            transferAccountId: "",
-            existingTransferId: "",
-            categoryId: "",
-          })),
-        );
+        setRows(toPreviewRows(data.rows ?? [], history.data?.items ?? [], categoryList));
       },
     },
   });
 
   const confirmMutation = useImportConfirmEndpoint({
     mutation: {
-      onSuccess: (data) => {
+      onSuccess: (data, variables) => {
+        const confirmed = (rows ?? []).filter((row) => row.selected);
         toast.success(
           t("imports.confirmed", { imported: data.imported, skipped: data.skippedDuplicates }),
         );
+        setResult({
+          imported: data.imported,
+          skipped: data.skippedDuplicates,
+          accountId: variables.data.accountId,
+          ...importDateRange(confirmed),
+        });
         setRows(null);
         setUploadKey((key) => key + 1);
         invalidate();
@@ -67,11 +88,31 @@ export function ImportSection({ accounts }: Readonly<Props>) {
     },
   });
 
+  function clearPreview() {
+    setRows(null);
+    setFileError(undefined);
+    previewMutation.reset();
+  }
+
   function handlePreview() {
     const file = fileInputRef.current?.files?.[0];
-    if (!file || !accountId) {
+    if (!accountId) {
       return;
     }
+    if (!file) {
+      setFileError(t("imports.fileRequired"));
+      return;
+    }
+    if (file.size === 0) {
+      setFileError(t("imports.fileEmpty"));
+      return;
+    }
+    if (file.size > MAX_FILE_BYTES) {
+      setFileError(t("imports.fileTooLarge"));
+      return;
+    }
+    setFileError(undefined);
+    setResult(null);
     previewMutation.mutate({ data: { file, accountId } });
   }
 
@@ -88,11 +129,12 @@ export function ImportSection({ accounts }: Readonly<Props>) {
       data: {
         accountId,
         rows: selectedRows.map((row) => ({
-          importRef: row.importRef!,
-          date: row.date!,
+          importRef: row.importRef,
+          currency: row.currency,
+          date: row.date,
           description: row.description,
-          amount: row.amount!,
-          type: row.type!,
+          amount: row.amount,
+          type: row.type,
           categoryId: row.transferAccountId ? null : row.categoryId || null,
           transferAccountId: row.transferAccountId || null,
           existingTransferId: row.existingTransferId || null,
@@ -102,34 +144,49 @@ export function ImportSection({ accounts }: Readonly<Props>) {
   }
 
   return (
-    <section className="card">
-      <ImportUploadForm
-        key={uploadKey}
-        accounts={accounts}
-        accountId={accountId}
-        onAccountChange={(id) => {
-          setAccountId(id);
-          setRows(null);
-        }}
-        fileInputRef={fileInputRef}
-        onPreview={handlePreview}
-        onFileChange={() => setRows(null)}
-        previewPending={previewMutation.isPending || confirmMutation.isPending}
-      />
+    <div className="space-y-10">
+      <section className="section space-y-4">
+        <ImportUploadForm
+          key={uploadKey}
+          accounts={accounts}
+          accountId={accountId}
+          onAccountChange={(id) => {
+            setAccountId(id);
+            clearPreview();
+          }}
+          fileInputRef={fileInputRef}
+          onPreview={handlePreview}
+          onFileChange={clearPreview}
+          previewPending={previewMutation.isPending}
+          disabled={confirmMutation.isPending}
+          fileError={fileError}
+          secondary={Boolean(rows?.length)}
+        />
+        {previewMutation.isError ? <ImportPreviewError error={previewMutation.error} /> : null}
+        {result ? <ImportResultLine result={result} /> : null}
+      </section>
 
       {rows ? (
-        <div className="space-y-4 p-6">
+        <section className="section space-y-4" aria-labelledby="import-review-title">
+          <h2 id="import-review-title" className="section-title">
+            {t("imports.reviewSection")}
+          </h2>
           <ImportPreviewTable
             rows={rows}
             accountId={accountId}
             accounts={accounts}
             categories={categoryList}
             onRowChange={updateRow}
+            onRowsChange={setRows}
             onConfirm={handleConfirm}
+            onCancel={() => {
+              clearPreview();
+              setUploadKey((key) => key + 1);
+            }}
             confirmPending={confirmMutation.isPending}
           />
-        </div>
+        </section>
       ) : null}
-    </section>
+    </div>
   );
 }

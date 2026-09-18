@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class RecurringBillEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

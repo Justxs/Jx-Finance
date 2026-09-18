@@ -1,10 +1,12 @@
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
 
 namespace JxFinance.Tests.Support;
 
 public abstract class IntegrationTestBase(ApiFixture fixture)
 {
-    protected HttpClient Client => fixture.Client;
+    protected HttpClient Client => fixture.Api;
 
-    protected WebApplicationFactory<Program> Factory => fixture.Factory;
+    protected IServiceProvider Services => fixture.Services;
+
+    protected HttpClient CreateClient(ClientOptions options) => fixture.CreateClient(options);
 }

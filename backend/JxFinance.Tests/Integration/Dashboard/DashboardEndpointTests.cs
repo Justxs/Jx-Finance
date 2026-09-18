@@ -5,7 +5,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

@@ -1,6 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FastEndpoints;
+using JxFinance.Api;
 using JxFinance.Common.Middleware;
 using Scalar.AspNetCore;
 using Serilog;
@@ -17,10 +18,12 @@ public static class ApiPipelineExtensions
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseMiddleware<FeatureGateMiddleware>();
 
         app.UseFastEndpoints(c =>
         {
             c.Endpoints.ShortNames = true;
+            c.Binding.ReflectionCache.AddFromJxFinanceApi();
             c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
             c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             c.Errors.UseProblemDetails(p =>

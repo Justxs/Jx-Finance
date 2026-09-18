@@ -39,7 +39,7 @@ public class LayeringTests
         Assert.True(result.IsSuccessful, FailureMessage(result));
     }
 
-    private static string FailureMessage(TestResult result)
+    private static string FailureMessage(NetArchTest.Rules.TestResult result)
     {
         var failing = result.FailingTypes?.Select(type => type.FullName) ?? [];
         return $"Layering violation in: {string.Join(", ", failing)}";

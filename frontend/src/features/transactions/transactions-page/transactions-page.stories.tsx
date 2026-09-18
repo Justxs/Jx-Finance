@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { delay, http, HttpResponse } from "msw";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -40,6 +41,34 @@ export const FilteredByDateRange: Story = {
 
 export const NoSearchMatches: Story = {
   parameters: { route: "/transactions?search=does-not-exist" },
+};
+
+export const AddDialogFromUrl: Story = { parameters: { route: "/transactions?new=true" } };
+
+export const SaveAndAddAnother: Story = {
+  parameters: { route: "/transactions?new=true" },
+  play: async ({ canvasElement }) => {
+    const page = within(canvasElement.ownerDocument.body);
+    const dialog = within(await page.findByRole("dialog"));
+    const amount = await dialog.findByLabelText("Amount");
+    fireEvent.change(amount, { target: { value: "12,50" } });
+    await userEvent.click(dialog.getByRole("button", { name: "Save and add another" }));
+    await waitFor(() => expect(amount).toHaveValue(""));
+    await expect(page.getByRole("dialog")).not.toHaveAttribute("data-closed");
+    await waitFor(() => expect(amount).toHaveFocus());
+  },
+};
+
+export const BulkSelection: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
+    const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
+    await userEvent.click(enabled[0]!);
+    await userEvent.click(enabled[1]!);
+    await expect(enabled[1]).toHaveFocus();
+    await expect(await canvas.findByText("2 selected")).toBeVisible();
+  },
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };

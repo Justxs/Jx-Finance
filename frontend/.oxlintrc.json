@@ -1,16 +1,217 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "import"],
+  "plugins": ["react", "typescript", "import", "jsx-a11y", "unicorn", "oxc", "promise"],
   "env": {
     "browser": true,
     "es2024": true
   },
-  "ignorePatterns": ["dist", "storybook-static", "src/api/generated", "src/route-tree.gen.ts"],
+  "settings": {
+    "react": {
+      "version": "19.3.0"
+    }
+  },
+  "ignorePatterns": [
+    "dist",
+    "storybook-static",
+    "src/api/generated",
+    "src/route-tree.gen.ts",
+    "public",
+    ".storybook/public"
+  ],
   "categories": {
-    "correctness": "error"
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "error"
   },
   "rules": {
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
-  }
+    "react-hooks/exhaustive-deps": "error",
+    "eqeqeq": [
+      "error",
+      "always",
+      {
+        "null": "ignore"
+      }
+    ],
+    "no-var": "error",
+    "prefer-const": "error",
+    "no-console": [
+      "error",
+      {
+        "allow": ["warn", "error"]
+      }
+    ],
+    "no-alert": "error",
+    "no-eval": "error",
+    "no-param-reassign": "error",
+    "no-else-return": "error",
+    "no-useless-return": "error",
+    "no-lonely-if": "error",
+    "no-nested-ternary": "error",
+    "no-unneeded-ternary": "error",
+    "no-implicit-coercion": "error",
+    "no-throw-literal": "error",
+    "no-empty-function": "error",
+    "no-return-assign": "error",
+    "no-sequences": "error",
+    "no-template-curly-in-string": "error",
+    "prefer-template": "error",
+    "prefer-object-spread": "error",
+    "prefer-rest-params": "error",
+    "prefer-spread": "error",
+    "object-shorthand": "error",
+    "default-case-last": "error",
+    "default-param-last": "error",
+    "guard-for-in": "error",
+    "radix": "error",
+    "yoda": "error",
+    "curly": ["error", "all"],
+    "func-style": [
+      "error",
+      "declaration",
+      {
+        "allowArrowFunctions": false
+      }
+    ],
+    "typescript/no-explicit-any": "error",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/consistent-type-imports": "error",
+    "typescript/consistent-type-definitions": ["error", "interface"],
+    "typescript/array-type": [
+      "error",
+      {
+        "default": "array"
+      }
+    ],
+    "typescript/no-import-type-side-effects": "error",
+    "typescript/no-inferrable-types": "error",
+    "typescript/no-require-imports": "error",
+    "typescript/no-empty-object-type": "error",
+    "typescript/no-unsafe-function-type": "error",
+    "typescript/no-namespace": "error",
+    "typescript/prefer-as-const": "error",
+    "typescript/prefer-for-of": "error",
+    "typescript/prefer-function-type": "error",
+    "typescript/ban-ts-comment": "error",
+    "react/button-has-type": "error",
+    "react/jsx-no-useless-fragment": "error",
+    "react/jsx-boolean-value": "error",
+    "react/jsx-curly-brace-presence": "error",
+    "react/self-closing-comp": "error",
+    "react/no-array-index-key": "error",
+    "react/no-danger": "error",
+    "react/no-unknown-property": "error",
+    "react/jsx-no-target-blank": "error",
+    "react/jsx-fragments": "error",
+    "react/react-in-jsx-scope": "off",
+    "import/no-cycle": [
+      "error",
+      {
+        "ignoreTypes": true
+      }
+    ],
+    "import/no-duplicates": "error",
+    "import/no-self-import": "error",
+    "import/no-default-export": "error",
+    "import/no-mutable-exports": "error",
+    "import/first": "error",
+    "import/no-commonjs": "error",
+    "promise/no-return-wrap": "error",
+    "promise/no-nesting": "error",
+    "promise/no-multiple-resolved": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-array-some": "error",
+    "unicorn/prefer-array-find": "error",
+    "unicorn/prefer-array-flat-map": "error",
+    "unicorn/prefer-includes": "error",
+    "unicorn/prefer-string-slice": "error",
+    "unicorn/prefer-string-starts-ends-with": "error",
+    "unicorn/prefer-number-properties": "error",
+    "unicorn/prefer-optional-catch-binding": "error",
+    "unicorn/prefer-date-now": "error",
+    "unicorn/prefer-structured-clone": "error",
+    "unicorn/prefer-at": "error",
+    "unicorn/no-array-for-each": "error",
+    "unicorn/no-array-reduce": "error",
+    "unicorn/no-lonely-if": "error",
+    "unicorn/no-negated-condition": "error",
+    "unicorn/no-typeof-undefined": "error",
+    "unicorn/throw-new-error": "error",
+    "unicorn/error-message": "error",
+    "unicorn/consistent-function-scoping": "error",
+    "unicorn/filename-case": [
+      "error",
+      {
+        "case": "kebabCase"
+      }
+    ],
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ],
+    "oxc/no-async-endpoint-handlers": "off",
+    "jsx-a11y/no-autofocus": "off",
+    "jsx-a11y/prefer-tag-over-role": "off",
+    "jsx-a11y/no-noninteractive-tabindex": [
+      "error",
+      {
+        "roles": ["region", "tabpanel"],
+        "tags": []
+      }
+    ],
+    "oxc/no-map-spread": "off",
+    "import/no-named-as-default-member": "off",
+    "jsx-a11y/label-has-associated-control": [
+      "error",
+      {
+        "assert": "either",
+        "controlComponents": ["Checkbox", "Input", "Select", "SelectField", "Textarea", "Switch"]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.stories.tsx",
+        ".storybook/**",
+        "*.config.ts",
+        "*.config.cjs",
+        "src/routes/**"
+      ],
+      "rules": {
+        "import/no-default-export": "off"
+      }
+    },
+    {
+      "files": ["*.config.cjs"],
+      "rules": {
+        "import/no-commonjs": "off",
+        "typescript/no-require-imports": "off"
+      }
+    },
+    {
+      "files": ["tests/**", "src/mocks/**", "**/*.stories.tsx"],
+      "rules": {
+        "no-console": "off",
+        "no-empty-function": "off",
+        "typescript/no-non-null-assertion": "off"
+      }
+    },
+    {
+      "files": ["src/components/ui/**"],
+      "rules": {
+        "no-shadow": "off",
+        "react/no-unstable-nested-components": "off",
+        "jsx-a11y/label-has-associated-control": "off"
+      }
+    },
+    {
+      "files": ["src/features/imports/import-preview-table/import-preview-table.tsx"],
+      "rules": {
+        "react/no-array-index-key": "off"
+      }
+    }
+  ]
 }

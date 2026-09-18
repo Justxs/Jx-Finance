@@ -3,7 +3,7 @@ import type { StorybookConfig } from "@storybook/react-vite";
 const config: StorybookConfig = {
   stories: ["../src/**/*.stories.tsx"],
   addons: ["@storybook/addon-a11y", "@storybook/addon-themes", "msw-storybook-addon"],
-  staticDirs: ["./public"],
+  staticDirs: ["./public", { from: "../public/favicon.svg", to: "/favicon.svg" }],
   framework: { name: "@storybook/react-vite", options: {} },
   core: { disableTelemetry: true },
   viteFinal(viteConfig) {

@@ -1,8 +1,9 @@
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactions;
 
-public sealed class GetTransactionsRequest
+public sealed class GetTransactionsRequest : ITransactionFilter
 {
     public int Page { get; init; } = 1;
 

@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Goals;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class GoalEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

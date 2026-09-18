@@ -27,9 +27,9 @@ const meta = {
   parameters: { route: "/reports" },
   args: { ...presetRange("thisMonth"), onChange: fn() },
   render: (args) => (
-    <section className="card w-[40rem] max-w-full p-6">
+    <div className="w-[40rem] max-w-full">
       <StatefulFilters {...args} />
-    </section>
+    </div>
   ),
 } satisfies Meta<typeof ReportFilters>;
 
@@ -48,8 +48,8 @@ export const CustomRange: Story = { args: { dateFrom: "2026-03-10", dateTo: "202
 
 export const Narrow: Story = {
   render: (args) => (
-    <section className="card w-72 p-4">
+    <div className="w-72">
       <StatefulFilters {...args} />
-    </section>
+    </div>
   ),
 };

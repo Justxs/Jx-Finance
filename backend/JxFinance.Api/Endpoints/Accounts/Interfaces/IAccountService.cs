@@ -10,6 +10,8 @@ public interface IAccountService
 {
     Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken);
 
+    Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken);
+
     Task<IReadOnlyList<AccountResponse>> GetAllAsync(
         GetAccountsRequest request,
         CancellationToken cancellationToken);

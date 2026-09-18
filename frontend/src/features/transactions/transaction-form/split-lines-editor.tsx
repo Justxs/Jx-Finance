@@ -5,7 +5,8 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
-import { emptyLine, type TransactionFormApi } from "./transaction-form";
+import { emptyLine } from "./line-form-value";
+import type { TransactionFormApi } from "./transaction-form";
 
 interface Props {
   form: TransactionFormApi;
@@ -33,7 +34,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
             onChange={(value) => field.handleChange(value)}
             options={[
               { value: "", label: t("transactions.uncategorized") },
-              ...categories.map((category) => ({ value: category.id!, label: category.name })),
+              ...categories.map((category) => ({ value: category.id, label: category.name })),
             ]}
           />
         )}
@@ -66,6 +67,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
         variant="ghost"
         size="icon"
         aria-label={t("transactions.removeLine")}
+        tooltip={t("transactions.removeLine")}
         onClick={onRemove}
       >
         <X />
@@ -80,7 +82,7 @@ function SplitLineList({ form, categories }: Readonly<Props>) {
   return (
     <form.ArrayField name="lines">
       {(linesField) => (
-        <div className="space-y-3 col-span-full">
+        <div className="col-span-full space-y-3">
           <form.Field name="lines">
             {(errorField) => <FieldError message={errorField.errors[0]?.message} />}
           </form.Field>

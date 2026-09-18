@@ -1,19 +1,20 @@
 import type {
+  Currency,
+  ConversionResponse,
+  CurrenciesResponse,
+  SettingsResponse,
   AccountResponse,
   AssetResponse,
   BudgetResponse,
   CategoryBreakdownItem,
   CategoryBreakdownResponse,
   CategoryResponse,
-  ConfirmRecurringBillResponse,
   DashboardSummaryResponse,
   DebtResponse,
   EnableTwoFactorResponse,
-  GetPingResponse,
   GoalResponse,
   HouseholdMemberResponse,
   HouseholdResponse,
-  ImportConfirmResponse,
   ImportPreviewResponse,
   ImportPreviewRow,
   LoginResponse,
@@ -23,8 +24,6 @@ import type {
   NetWorthResponse,
   NetWorthSnapshotItem,
   NotificationResponse,
-  PagedResponseOfTransactionResponse,
-  PagedResponseOfTransferResponse,
   ProblemDetails,
   RecurringBillResponse,
   ReportSummaryResponse,
@@ -32,6 +31,7 @@ import type {
   SetupStatusResponse,
   TransactionLineResponse,
   TransactionResponse,
+  TransactionsSummaryResponse,
   TransferResponse,
   TwoFactorSetupResponse,
   UserProfileResponse,
@@ -71,6 +71,7 @@ export const ids = {
     savings: uid("33333333", 2),
     cash: uid("33333333", 3),
     shared: uid("33333333", 4),
+    broker: uid("33333333", 5),
   },
   categories: {
     salary: uid("44444444", 1),
@@ -99,6 +100,11 @@ export const ids = {
     toSavings: uid("66666666", 1),
     toShared: uid("66666666", 2),
     cashWithdrawal: uid("66666666", 3),
+    toBroker: uid("66666666", 4),
+  },
+  conversions: {
+    eurToUsd: uid("67676767", 1),
+    usdToGbp: uid("67676767", 2),
   },
   budgets: {
     food: uid("77777777", 1),
@@ -239,6 +245,9 @@ export const checkingAccount: AccountResponse = {
   currentBalance: "2843.17",
   createdAt: "2025-01-04T09:15:00Z",
   scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "2843.17" }],
+  reportingBalance: "2843.17",
   householdId: null,
 };
 
@@ -252,6 +261,9 @@ export const savingsAccount: AccountResponse = {
   currentBalance: "12500.00",
   createdAt: "2025-01-04T09:20:00Z",
   scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "12500.00" }],
+  reportingBalance: "12500.00",
   householdId: null,
 };
 
@@ -265,6 +277,9 @@ export const cashAccount: AccountResponse = {
   currentBalance: "185.50",
   createdAt: "2025-02-11T17:42:00Z",
   scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "185.50" }],
+  reportingBalance: "185.50",
   householdId: null,
 };
 
@@ -279,7 +294,30 @@ export const sharedAccount: AccountResponse = {
   currentBalance: "1620.40",
   createdAt: "2025-03-01T08:00:00Z",
   scope: "shared",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "1620.40" }],
+  reportingBalance: "1620.40",
   householdId: ids.households.family,
+};
+
+export const brokerAccount: AccountResponse = {
+  id: ids.accounts.broker,
+  name: "Interactive Brokers",
+  description: "Investicinė sąskaita keliomis valiutomis",
+  iban: null,
+  type: "other",
+  startingBalance: "5000.00",
+  currentBalance: "5412.63",
+  createdAt: "2025-05-19T10:05:00Z",
+  scope: "personal",
+  currency: "eur",
+  balances: [
+    { currency: "eur", amount: "2498.00" },
+    { currency: "usd", amount: "2710.40" },
+    { currency: "gbp", amount: "350.00" },
+  ],
+  reportingBalance: "5412.63",
+  householdId: null,
 };
 
 export const accounts: AccountResponse[] = [
@@ -287,6 +325,7 @@ export const accounts: AccountResponse[] = [
   savingsAccount,
   cashAccount,
   sharedAccount,
+  brokerAccount,
 ];
 
 function category(
@@ -356,6 +395,8 @@ function transaction(
     categoryId,
     type,
     amount,
+    currency: "eur",
+    reportingAmount: amount,
     date,
     description,
     source,
@@ -422,6 +463,49 @@ export const uncategorisedTransaction: TransactionResponse = transaction(
   null,
   "manual",
 );
+
+export const foreignCurrencyTransactions: TransactionResponse[] = [
+  {
+    ...transaction(
+      801,
+      "2026-09-15",
+      ids.accounts.broker,
+      null,
+      "income",
+      "42.50",
+      "VUSA dividendai",
+      "manual",
+    ),
+    currency: "usd",
+    reportingAmount: "39.20",
+  },
+  {
+    ...transaction(
+      802,
+      "2026-09-08",
+      ids.accounts.broker,
+      null,
+      "expense",
+      "2.00",
+      "Conversion fee EUR to USD",
+      "manual",
+    ),
+  },
+  {
+    ...transaction(
+      803,
+      "2026-08-22",
+      ids.accounts.broker,
+      null,
+      "expense",
+      "1250.00",
+      "London hotel",
+      "manual",
+    ),
+    currency: "gbp",
+    reportingAmount: "1485.09",
+  },
+];
 
 export const transactions: TransactionResponse[] = [
   transaction(
@@ -659,21 +743,31 @@ export const transactions: TransactionResponse[] = [
   ),
 ];
 
-export const transactionsPage: PagedResponseOfTransactionResponse = {
-  items: transactions.slice(0, 20),
-  page: 1,
-  pageSize: 20,
-  total: transactions.length,
+export function buildTransactionsSummary(
+  items: TransactionResponse[],
+): TransactionsSummaryResponse {
+  function sumOfType(type: TransactionResponse["type"]): string {
+    return fromCents(
+      items
+        .filter((item) => item.type === type)
+        .reduce((sum, item) => sum + toCents(item.amount), 0),
+    );
+  }
+
+  return {
+    count: items.length,
+    totalIncome: sumOfType("income"),
+    totalExpense: sumOfType("expense"),
+  };
+}
+
+export const emptyTransactionsSummary: TransactionsSummaryResponse = {
+  count: 0,
+  totalIncome: "0.00",
+  totalExpense: "0.00",
 };
 
-export const emptyTransactionsPage: PagedResponseOfTransactionResponse = {
-  items: [],
-  page: 1,
-  pageSize: 20,
-  total: 0,
-};
-
-export const transfers: TransferResponse[] = [
+export const sameCurrencyTransfers: TransferResponse[] = [
   {
     id: ids.transfers.toSavings,
     fromAccountId: ids.accounts.checking,
@@ -681,6 +775,9 @@ export const transfers: TransferResponse[] = [
     amount: "400.00",
     date: "2026-09-11",
     description: "Mėnesio taupymas",
+    currency: "eur",
+    receivedAmount: "400.00",
+    receivedCurrency: "eur",
     createdAt: "2026-09-11T07:05:00Z",
   },
   {
@@ -691,6 +788,9 @@ export const transfers: TransferResponse[] = [
     date: "2026-09-10",
     description:
       "Rugsėjo įnašas į bendrą šeimos sąskaitą (maistas, komunaliniai, paskola, vaikų būreliai)",
+    currency: "eur",
+    receivedAmount: "900.00",
+    receivedCurrency: "eur",
     createdAt: "2026-09-10T18:22:00Z",
   },
   {
@@ -700,22 +800,98 @@ export const transfers: TransferResponse[] = [
     amount: "100.00",
     date: "2026-08-29",
     description: null,
+    currency: "eur",
+    receivedAmount: "100.00",
+    receivedCurrency: "eur",
     createdAt: "2026-08-29T12:40:00Z",
   },
 ];
 
-export const transfersPage: PagedResponseOfTransferResponse = {
-  items: transfers,
-  page: 1,
-  pageSize: 20,
-  total: transfers.length,
+export const crossCurrencyTransfer: TransferResponse = {
+  id: ids.transfers.toBroker,
+  fromAccountId: ids.accounts.checking,
+  toAccountId: ids.accounts.broker,
+  amount: "1000.00",
+  currency: "eur",
+  receivedAmount: "1084.20",
+  receivedCurrency: "usd",
+  date: "2026-09-12",
+  description: "Papildymas doleriais",
+  createdAt: "2026-09-12T09:10:00Z",
 };
 
-export const emptyTransfersPage: PagedResponseOfTransferResponse = {
-  items: [],
-  page: 1,
-  pageSize: 20,
-  total: 0,
+export const transfers: TransferResponse[] = [crossCurrencyTransfer, ...sameCurrencyTransfers];
+
+export const conversions: ConversionResponse[] = [
+  {
+    id: ids.conversions.eurToUsd,
+    accountId: ids.accounts.broker,
+    fromAmount: "2500.00",
+    fromCurrency: "eur",
+    toAmount: "2710.40",
+    toCurrency: "usd",
+    rate: "1.084160",
+    date: "2026-09-08",
+    description: "USD akcijoms",
+    feeAmount: "2.00",
+    feeCurrency: "eur",
+    feeTransactionId: uid("55555555", 900),
+    createdAt: "2026-09-08T14:31:00Z",
+  },
+  {
+    id: ids.conversions.usdToGbp,
+    accountId: ids.accounts.broker,
+    fromAmount: "470.00",
+    fromCurrency: "usd",
+    toAmount: "350.00",
+    toCurrency: "gbp",
+    rate: "0.744681",
+    date: "2026-08-21",
+    description: null,
+    feeAmount: null,
+    feeCurrency: null,
+    feeTransactionId: null,
+    createdAt: "2026-08-21T11:02:00Z",
+  },
+];
+
+export const settings: SettingsResponse = {
+  instanceName: null,
+  features: {
+    budgets: true,
+    goals: true,
+    recurringBills: true,
+    netWorth: true,
+    reports: true,
+    import: true,
+    households: true,
+    multiCurrency: true,
+  },
+  reportingCurrency: "eur",
+  enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],
+  exchangeRateSyncEnabled: true,
+  ratesAsOf: "2026-09-18",
+  defaultLanguage: "en",
+  timeZone: "Europe/Vilnius",
+  firstDayOfWeek: "monday",
+  defaultAccountId: null,
+  defaultPageSize: 20,
+};
+
+export const currencies: CurrenciesResponse = {
+  reportingCurrency: "eur",
+  currencies: settings.enabledCurrencies,
+  ratesAsOf: "2026-09-18",
+};
+
+export const ratesPerEuro: Partial<Record<Currency, number>> = {
+  eur: 1,
+  usd: 1.0842,
+  gbp: 0.8417,
+  pln: 4.2615,
+  chf: 0.9388,
+  sek: 11.042,
+  nok: 11.618,
 };
 
 interface CategorisedAmount {
@@ -944,11 +1120,6 @@ export const recurringBills: RecurringBillResponse[] = [
   inactiveBill,
 ];
 
-export const confirmRecurringBillResult: ConfirmRecurringBillResponse = {
-  bill: { ...dueSoonBill, nextDueDate: "2026-10-20" },
-  transactionId: uid("55555555", 101),
-};
-
 function billNotification(
   id: string,
   bill: RecurringBillResponse,
@@ -985,10 +1156,6 @@ export const notifications: NotificationResponse[] = [
     createdAt: "2026-09-02T06:00:00Z",
   },
 ];
-
-export const unreadNotifications: NotificationResponse[] = notifications.filter(
-  (item) => !item.isRead,
-);
 
 export const assets: AssetResponse[] = [
   {
@@ -1211,6 +1378,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: true,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091800000003",
@@ -1221,6 +1389,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: false,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091800000004",
@@ -1231,6 +1400,18 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: false,
     looksLikeTransfer: true,
+    currency: "eur",
+  },
+  {
+    importRef: "2026091700000031",
+    date: "2026-09-17",
+    payee: "TRAFI UAB",
+    description: "TRAFI – mėnesinis viešojo transporto bilietas",
+    amount: "29.00",
+    type: "expense",
+    isDuplicate: false,
+    looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091600000021",
@@ -1241,6 +1422,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: true,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091500000008",
@@ -1252,6 +1434,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: false,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091500000009",
@@ -1262,6 +1445,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "expense",
     isDuplicate: false,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091200000015",
@@ -1272,6 +1456,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "income",
     isDuplicate: false,
     looksLikeTransfer: false,
+    currency: "eur",
   },
   {
     importRef: "2026091000000002",
@@ -1282,14 +1467,22 @@ export const importPreviewRows: ImportPreviewRow[] = [
     type: "income",
     isDuplicate: false,
     looksLikeTransfer: true,
+    currency: "eur",
   },
 ];
 
 export const importPreview: ImportPreviewResponse = { rows: importPreviewRows };
 
-export const importConfirmResult: ImportConfirmResponse = {
-  imported: 6,
-  skippedDuplicates: 2,
+export const importPreviewAllDuplicates: ImportPreviewResponse = {
+  rows: importPreviewRows.map((row) => ({ ...row, isDuplicate: true })),
+};
+
+export const importFormatProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/import/swedbank/preview",
+  detail: "The file doesn't match the expected Swedbank CSV export shape.",
 };
 
 export const twoFactorSetup: TwoFactorSetupResponse = {
@@ -1324,13 +1517,6 @@ export const loginTwoFactorRequired: LoginResponse = {
 };
 
 export const setupStatus: SetupStatusResponse = { needsSetup: false };
-
-export const setupStatusNeeded: SetupStatusResponse = { needsSetup: true };
-
-export const ping: GetPingResponse = {
-  message: "pong",
-  utcNow: "2026-09-18T07:30:00Z",
-};
 
 export const serverErrorProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1",

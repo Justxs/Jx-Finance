@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
+import { Link, useSearch } from "@tanstack/react-router";
+import { FileUp, Plus } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -13,20 +13,22 @@ import {
   useUpdateAccountEndpoint,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { PageHeader } from "@/components/page-header";
-import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal";
-import { ImportSection } from "@/features/imports/import-section";
+import { PageHeader } from "@/components/page-header";
+import { QueryBoundary } from "@/components/query-boundary";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
+import { useSettings } from "@/hooks/use-settings";
 import { AccountForm } from "../account-form";
 import { AccountsTable } from "../accounts-table";
+import { ConversionsSection } from "../conversions-section";
 import { TransfersSection } from "../transfers-section";
 
 export function AccountsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { features } = useSettings();
 
   const [shown, stale] = useDeferredParams(useSearch({ from: "/accounts" }));
   const accounts = useGetAccountsEndpointSuspense({
@@ -36,8 +38,10 @@ export function AccountsPage() {
     sort: shown.sort,
     direction: shown.direction,
   });
+  const allAccounts = useGetAccountsEndpointSuspense();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [convertAccountId, setConvertAccountId] = useState<string | null>(null);
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
@@ -66,10 +70,17 @@ export function AccountsPage() {
   });
 
   const accountList = accounts.data ?? [];
+  const allAccountList = allAccounts.data ?? [];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("accounts.title")}>
+        {features.import ? (
+          <Link to="/import" className={buttonVariants({ variant: "outline", size: "sm" })}>
+            <FileUp />
+            {t("nav.import")}
+          </Link>
+        ) : null}
         <Button onClick={() => setCreateOpen(true)}>
           <Plus />
           {t("accounts.add")}
@@ -94,19 +105,26 @@ export function AccountsPage() {
         onUpdate={(id, values) => updateMutation.mutate({ id, data: values })}
         deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
         onDelete={(id) => setDeleteTarget(id)}
+        onConvert={features.multiCurrency ? setConvertAccountId : undefined}
       />
 
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <TransfersSection accounts={accountList} />
+        <TransfersSection accounts={allAccountList} />
       </QueryBoundary>
 
-      {accountList.length > 0 ? (
+      {features.multiCurrency ? (
         <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-          <ImportSection accounts={accountList} />
+          <ConversionsSection
+            accounts={allAccountList}
+            convertAccountId={convertAccountId}
+            onConvertAccountChange={setConvertAccountId}
+          />
         </QueryBoundary>
       ) : null}
+
       <ConfirmDeleteDialog
         target={deleteTarget}
+        itemLabel={accountList.find((account) => account.id === deleteTarget)?.name ?? undefined}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
-import { useId, useState, type FocusEvent } from "react";
+import { Bell, BellOff } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetNotificationsEndpointQueryKey,
@@ -8,18 +8,50 @@ import {
   useMarkAllNotificationsReadEndpoint,
   useMarkNotificationReadEndpoint,
 } from "@/api/generated";
+import type { NotificationResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useDate } from "@/hooks/use-formatters";
+import { parseIso } from "@/lib/calendar";
 
-export function NotificationBell() {
+export function NotificationBellUnavailable() {
+  const { t } = useTranslation();
+
+  return (
+    <Tooltip content={t("notifications.unavailable")}>
+      <span className="inline-flex">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          disabled
+          aria-label={t("notifications.unavailable")}
+        >
+          <BellOff />
+        </Button>
+      </span>
+    </Tooltip>
+  );
+}
+
+interface Props {
+  placement?: "below" | "above";
+}
+
+export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const { t } = useTranslation();
   const date = useDate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
-  const panelId = useId();
 
   const notifications = useGetNotificationsEndpointSuspense({ unread: true });
   const unreadList = notifications.data ?? [];
+
+  const bellLabel =
+    unreadList.length > 0
+      ? t("notifications.titleWithCount", { count: unreadList.length })
+      : t("notifications.title");
 
   function invalidate() {
     queryClient.invalidateQueries({ queryKey: getGetNotificationsEndpointQueryKey() });
@@ -30,45 +62,39 @@ export function NotificationBell() {
     mutation: { onSettled: invalidate },
   });
 
-  function handleBlur(event: FocusEvent<HTMLDivElement>) {
-    if (!event.currentTarget.contains(event.relatedTarget)) {
-      setOpen(false);
-    }
+  function describe(notification: NotificationResponse) {
+    const dueDate = notification.type === "billDue" ? parseIso(notification.message ?? "") : null;
+    return dueDate
+      ? t("notifications.billDue", { date: date.format(dueDate) })
+      : notification.message;
   }
 
   return (
-    <div
-      className="relative"
-      onBlur={handleBlur}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") setOpen(false);
-      }}
-    >
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-label={t("notifications.title")}
-        title={t("notifications.title")}
-        aria-expanded={open}
-        aria-controls={open ? panelId : undefined}
-      >
-        <Bell />
-      </Button>
-      {unreadList.length > 0 ? (
-        <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground">
-          {unreadList.length > 9 ? "9+" : unreadList.length}
-        </span>
-      ) : null}
-
-      {open ? (
-        <div
-          id={panelId}
-          className="fixed inset-x-4 top-16 z-50 rounded-md border bg-card shadow-md sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80"
+    <div className="relative">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={bellLabel}
+              tooltip={bellLabel}
+            >
+              <Bell />
+            </Button>
+          }
+        />
+        <PopoverContent
+          side={placement === "below" ? "bottom" : "top"}
+          align={placement === "below" ? "end" : "start"}
+          sideOffset={8}
+          className="w-[min(20rem,calc(100vw-2rem))] gap-0 p-0"
         >
           <div className="flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
-            <span className="text-sm font-semibold">{t("notifications.title")}</span>
+            <PopoverTitle className="text-sm font-semibold">
+              {t("notifications.title")}
+            </PopoverTitle>
             {unreadList.length > 0 ? (
               <Button
                 type="button"
@@ -100,12 +126,7 @@ export function NotificationBell() {
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        {notification.type === "billDue" &&
-                        /^\d{4}-\d{2}-\d{2}$/.test(notification.message ?? "")
-                          ? t("notifications.billDue", {
-                              date: date.format(new Date(`${notification.message}T12:00:00`)),
-                            })
-                          : notification.message}
+                        {describe(notification)}
                       </p>
                     </button>
                   </li>
@@ -113,7 +134,15 @@ export function NotificationBell() {
               </ul>
             )}
           </div>
-        </div>
+        </PopoverContent>
+      </Popover>
+      {unreadList.length > 0 ? (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
+        >
+          {unreadList.length > 9 ? "9+" : unreadList.length}
+        </span>
       ) : null}
     </div>
   );

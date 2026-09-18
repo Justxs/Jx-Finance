@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { AccountType } from "./accountType";
+import type { Currency } from "./currency";
 import type { Scope } from "./scope";
 
 export interface UpdateAccountRequest {
@@ -27,4 +28,5 @@ export interface UpdateAccountRequest {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  currency?: null | Currency;
 }

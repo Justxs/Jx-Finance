@@ -1,5 +1,5 @@
-import { SummaryStats } from "@/components/summary-stats";
 import { useTranslation } from "react-i18next";
+import { SummaryStats } from "@/components/summary-stats";
 
 interface Props {
   totalIncome: string;
@@ -14,17 +14,21 @@ export function ReportStats({ totalIncome, totalExpense, net }: Readonly<Props>)
     {
       key: "reports.totalIncome",
       value: totalIncome,
-      tone: "text-secondary",
+      tone: "text-income",
+      sign: "+",
     },
     {
       key: "reports.totalExpense",
       value: totalExpense,
-      tone: "text-destructive",
+      tone: "text-expense",
+      sign: "−",
     },
     {
       key: "reports.net",
       value: net,
       tone: "text-foreground",
+      lead: true,
+      sign: "auto",
     },
   ] as const;
 

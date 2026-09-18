@@ -65,3 +65,4 @@ docker-compose.override.yml
 .claude
 .agents
 .codex
+.impeccable

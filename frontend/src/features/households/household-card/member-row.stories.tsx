@@ -19,7 +19,7 @@ const meta = {
     onSaved: fn(),
   },
   render: (args) => (
-    <ul className="card w-[36rem] max-w-full divide-y divide-border px-6">
+    <ul className="rows w-[36rem] max-w-full">
       <MemberRow {...args} />
     </ul>
   ),
@@ -43,7 +43,7 @@ export const LongNameAndEmail: Story = { args: { member: gardenHousehold.members
 export const LongNameMemberViewNarrow: Story = {
   args: { isOwnerView: false, member: gardenHousehold.members![0]! },
   render: (args) => (
-    <ul className="card w-72 divide-y divide-border px-4">
+    <ul className="rows w-72">
       <MemberRow {...args} />
     </ul>
   ),

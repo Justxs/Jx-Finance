@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

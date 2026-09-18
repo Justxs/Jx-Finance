@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
 
 namespace JxFinance.Tests.Integration.Auth;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
@@ -17,7 +17,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
             "/api/users",
             new { email, displayName = "Two Factor User", role = "Member", password });
 
-        using var userClient = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var userClient = CreateClient(new ClientOptions { HandleCookies = true });
         userClient.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.1.0.{Random.Shared.Next(2, 254)}");
 
         var initialLogin = await userClient.PostAsJsonAsync(

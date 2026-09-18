@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

@@ -1,3 +1,4 @@
+import { Tooltip } from "@/components/ui/tooltip";
 import { CategoryIcon, categoryIconNames } from "@/lib/category-icons";
 import { cn } from "@/lib/utils";
 
@@ -10,18 +11,19 @@ export function IconPicker({ value, onChange }: Readonly<Props>) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {categoryIconNames.map((name) => (
-        <button
-          key={name}
-          type="button"
-          title={name}
-          onClick={() => onChange(value === name ? null : name)}
-          className={cn(
-            "flex size-8 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
-            value === name && "border-primary bg-primary/10 text-primary",
-          )}
-        >
-          <CategoryIcon icon={name} />
-        </button>
+        <Tooltip key={name} content={name}>
+          <button
+            type="button"
+            aria-label={name}
+            onClick={() => onChange(value === name ? null : name)}
+            className={cn(
+              "flex size-8 items-center justify-center rounded-md border text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground",
+              value === name && "border-primary bg-primary/10 text-primary",
+            )}
+          >
+            <CategoryIcon icon={name} />
+          </button>
+        </Tooltip>
       ))}
     </div>
   );

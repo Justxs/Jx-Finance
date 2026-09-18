@@ -13,11 +13,13 @@ import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HouseholdsRouteImport } from './routes/households'
+import { Route as ImportRouteImport } from './routes/import'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NetWorthRouteImport } from './routes/net-worth'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecurringBillsRouteImport } from './routes/recurring-bills'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as UsersRouteImport } from './routes/users'
@@ -52,6 +54,11 @@ const HouseholdsRoute = HouseholdsRouteImport.update({
   path: '/households',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImportRoute = ImportRouteImport.update({
+  id: '/import',
+  path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -77,6 +84,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
@@ -100,11 +112,13 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -116,11 +130,13 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -133,11 +149,13 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
+  '/import': typeof ImportRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
@@ -151,11 +169,13 @@ export interface FileRouteTypes {
     | '/categories'
     | '/goals'
     | '/households'
+    | '/import'
     | '/login'
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/settings'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -167,11 +187,13 @@ export interface FileRouteTypes {
     | '/categories'
     | '/goals'
     | '/households'
+    | '/import'
     | '/login'
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/settings'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -183,11 +205,13 @@ export interface FileRouteTypes {
     | '/categories'
     | '/goals'
     | '/households'
+    | '/import'
     | '/login'
     | '/net-worth'
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/settings'
     | '/setup'
     | '/transactions'
     | '/users'
@@ -200,11 +224,13 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   GoalsRoute: typeof GoalsRoute
   HouseholdsRoute: typeof HouseholdsRoute
+  ImportRoute: typeof ImportRoute
   LoginRoute: typeof LoginRoute
   NetWorthRoute: typeof NetWorthRoute
   ProfileRoute: typeof ProfileRoute
   RecurringBillsRoute: typeof RecurringBillsRoute
   ReportsRoute: typeof ReportsRoute
+  SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
   TransactionsRoute: typeof TransactionsRoute
   UsersRoute: typeof UsersRoute
@@ -254,6 +280,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HouseholdsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/import': {
+      id: '/import'
+      path: '/import'
+      fullPath: '/import'
+      preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -289,6 +322,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/setup': {
       id: '/setup'
       path: '/setup'
@@ -320,11 +360,13 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   GoalsRoute: GoalsRoute,
   HouseholdsRoute: HouseholdsRoute,
+  ImportRoute: ImportRoute,
   LoginRoute: LoginRoute,
   NetWorthRoute: NetWorthRoute,
   ProfileRoute: ProfileRoute,
   RecurringBillsRoute: RecurringBillsRoute,
   ReportsRoute: ReportsRoute,
+  SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
   TransactionsRoute: TransactionsRoute,
   UsersRoute: UsersRoute,

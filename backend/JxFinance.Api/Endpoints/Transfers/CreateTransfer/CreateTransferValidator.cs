@@ -14,11 +14,11 @@ public sealed class CreateTransferValidator : Validator<CreateTransferRequest>
             .NotEqual(r => r.FromAccountId)
             .WithMessage("Source and destination accounts must differ.");
         RuleFor(r => r.Amount)
-            .Must(MoneyWire.IsValid)
-            .WithMessage("Amount must be a decimal with at most 2 decimal places.");
-        RuleFor(r => r.Amount)
-            .Must(a => MoneyWire.IsValid(a) && MoneyWire.Parse(a).Amount > 0)
-            .WithMessage("Amount must be greater than 0.");
+            .Must(MoneyWire.IsPositive)
+            .WithMessage("Amount must be a decimal greater than 0 with at most 2 decimal places.");
+        RuleFor(r => r.ReceivedAmount)
+            .Must(a => a is null || MoneyWire.IsPositive(a))
+            .WithMessage("Received amount must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.Description).MaximumLength(500);
     }
 }

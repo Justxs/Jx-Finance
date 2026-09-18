@@ -14,8 +14,8 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToday } from "@/hooks/use-settings";
 import { isPositiveMoney } from "@/lib/validation";
-import { todayIsoDate } from "@/features/transactions/transaction-form";
 
 interface FormValues {
   name: string;
@@ -42,6 +42,7 @@ export function CreateRecurringBillForm({
   onCancel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const today = useToday();
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
   const schema = z
@@ -74,7 +75,7 @@ export function CreateRecurringBillForm({
     categoryId: "",
     accountId: "",
     cadence: "monthly",
-    nextDueDate: todayIsoDate(),
+    nextDueDate: today,
     remindDaysBefore: "3",
   };
 
@@ -120,10 +121,11 @@ export function CreateRecurringBillForm({
               placeholder={t("recurringBills.namePlaceholder")}
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "bill-name-error" : undefined}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="bill-name-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -159,10 +161,11 @@ export function CreateRecurringBillForm({
                     placeholder="0.00"
                     value={field.value}
                     aria-invalid={field.errors.length > 0}
+                    aria-describedby={field.errors.length > 0 ? "bill-amount-error" : undefined}
                     onBlur={field.handleBlur}
                     onChange={(e) => field.handleChange(e.target.value)}
                   />
-                  <FieldError message={field.errors[0]?.message} />
+                  <FieldError id="bill-amount-error" message={field.errors[0]?.message} />
                 </div>
               ) : (
                 <p className="pt-6 text-xs text-muted-foreground">
@@ -241,10 +244,11 @@ export function CreateRecurringBillForm({
               id="bill-due-date"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "bill-due-date-error" : undefined}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="bill-due-date-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -259,15 +263,16 @@ export function CreateRecurringBillForm({
               min={0}
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "bill-remind-error" : undefined}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="bill-remind-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
 
-      <div className="flex justify-end gap-2 pt-2 col-span-full">
+      <div className="col-span-full flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("actions.cancel")}
         </Button>

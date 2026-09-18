@@ -1,28 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
 import { userEvent, within } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { accounts, checkingAccount, transactionsCsv } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { accounts, checkingAccount, ids } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  importAllDuplicatesHandlers,
+  importFormatErrorHandlers,
+  importPendingHandlers,
+  loadingHandlers,
+} from "@/storybook/handlers";
+import { uploadAndPreview } from "@/storybook/import-play";
 import { ImportSection } from "./import-section";
-
-async function neverResolve() {
-  await delay("infinite");
-  return new HttpResponse(null, { status: 204 });
-}
-
-async function uploadAndPreview(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement);
-  const previewButton = await canvas.findByRole("button", { name: /preview|peržiūra/i });
-  const fileInput = canvasElement.querySelector<HTMLInputElement>("#import-file");
-  if (!fileInput) {
-    return;
-  }
-  const file = new File([transactionsCsv], "swedbank-2026-09.csv", { type: "text/csv" });
-  await userEvent.upload(fileInput, file);
-  await userEvent.click(previewButton);
-}
 
 const meta = {
   title: "Features/Imports/ImportSection",
@@ -63,10 +53,47 @@ export const PreviewedEmptyFile: Story = {
 };
 
 export const PreviewPending: Story = {
-  parameters: {
-    msw: { handlers: [http.post("*/api/import/swedbank/preview", neverResolve), ...handlers] },
-  },
+  parameters: { msw: { handlers: importPendingHandlers } },
   play: async ({ canvasElement }) => {
     await uploadAndPreview(canvasElement);
+  },
+};
+
+export const PreselectedAccount: Story = { args: { initialAccountId: ids.accounts.savings } };
+
+export const FormatError: Story = {
+  parameters: { msw: { handlers: importFormatErrorHandlers } },
+  play: async ({ canvasElement }) => {
+    await uploadAndPreview(canvasElement);
+  },
+};
+
+export const EmptyFileChosen: Story = {
+  play: async ({ canvasElement }) => {
+    await uploadAndPreview(canvasElement, "");
+  },
+};
+
+export const NoFileChosen: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūra)$/i }));
+  },
+};
+
+export const AllDuplicates: Story = {
+  parameters: { msw: { handlers: importAllDuplicatesHandlers } },
+  play: async ({ canvasElement }) => {
+    await uploadAndPreview(canvasElement);
+  },
+};
+
+export const Confirmed: Story = {
+  play: async ({ canvasElement }) => {
+    await uploadAndPreview(canvasElement);
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /^(import \d+ rows?|importuoti \d+ eilu)/i }),
+    );
   },
 };

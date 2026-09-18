@@ -30,7 +30,7 @@ function showWithAction() {
 function showWithCancel() {
   toast.warning("Budget almost used up", {
     description: "Food is at 94% of its monthly limit.",
-    cancel: { label: "Dismiss", onClick: () => undefined },
+    cancel: { label: "Dismiss", onClick: () => {} },
   });
 }
 

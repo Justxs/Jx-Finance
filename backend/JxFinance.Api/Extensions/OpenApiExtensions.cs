@@ -1,6 +1,6 @@
 using FastEndpoints.OpenApi;
 using JxFinance.Common.OpenApi;
-using Microsoft.AspNetCore.Identity;
+using JxFinance.Infrastructure.Auth;
 using Microsoft.OpenApi;
 
 namespace JxFinance.Extensions;
@@ -30,13 +30,13 @@ public static class OpenApiExtensions
             options.AutoTagPathSegmentIndex = 0;
             options.TagDescriptions = AddTagDescriptions;
             options.AddAuth(
-                IdentityConstants.ApplicationScheme,
+                "Cookie",
                 new OpenApiSecurityScheme
                 {
                     Type = SecuritySchemeType.ApiKey,
                     In = ParameterLocation.Cookie,
-                    Name = ".AspNetCore.Identity.Application",
-                    Description = "Session cookie issued by POST /api/auth/login. Send requests with credentials included.",
+                    Name = AuthCookies.AccessToken,
+                    Description = "JWT access token cookie issued by POST /api/auth/login and renewed by POST /api/auth/refresh. Send requests with credentials included.",
                 });
             options.ConfigureOpenApi = openApi => openApi.AddDocumentTransformer((document, _, _) =>
             {
@@ -66,7 +66,9 @@ public static class OpenApiExtensions
         tags["Reports"] = "Income and expense summaries over an arbitrary date range.";
         tags["Setup"] = "First-run provisioning of the administrator account.";
         tags["Transactions"] = "The ledger: single and split transactions, plus CSV and PDF exports.";
-        tags["Transfers"] = "Money moved between two of your own accounts.";
+        tags["Transfers"] = "Money moved between two of your own accounts, in one currency or across two.";
+        tags["Conversions"] = "One currency exchanged for another inside a single account.";
+        tags["Currencies"] = "Supported currencies, the reporting currency, and reference exchange rates.";
         tags["Users"] = "Administration of user accounts and roles.";
     }
 }

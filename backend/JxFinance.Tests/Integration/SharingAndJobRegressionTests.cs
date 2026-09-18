@@ -3,13 +3,13 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class SharingAndJobRegressionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     private static string Id(JsonObject row) => row["id"]!.GetValue<string>();
@@ -24,7 +24,7 @@ public sealed class SharingAndJobRegressionTests(ApiFixture fixture) : Integrati
         var email = $"sharing-{Guid.NewGuid():N}@localhost";
         const string password = "Sharing-Regression-123!";
         var user = await Post(Client, "/api/users", new { email, password, role, displayName = "Sharing test" });
-        var client = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true, AllowAutoRedirect = false });
+        var client = CreateClient(new ClientOptions { HandleCookies = true, AllowAutoRedirect = false });
         client.DefaultRequestHeaders.Add("X-Forwarded-For", Guid.NewGuid().ToString());
         await Post(client, "/api/auth/login", new { email, password });
         return (client, user);
@@ -83,7 +83,7 @@ public sealed class SharingAndJobRegressionTests(ApiFixture fixture) : Integrati
     {
         var account = await Account();
         var bill = await Post(Client, "/api/recurring-bills", new { name = "Deduplicated reminder", kind = "fixed", amount = "5.00", accountId = Id(account), cadence = "monthly", nextDueDate = "2026-01-01" });
-        var scopes = Factory.Services.GetRequiredService<IServiceScopeFactory>();
+        var scopes = Services.GetRequiredService<IServiceScopeFactory>();
         var job = new RecurringBillReminderJob(scopes, NullLogger<RecurringBillReminderJob>.Instance);
         await Task.WhenAll(job.ScanAsync(default), job.ScanAsync(default));
         var notifications = await Client.GetFromJsonAsync<JsonArray>("/api/notifications?unread=true");
@@ -96,7 +96,7 @@ public sealed class SharingAndJobRegressionTests(ApiFixture fixture) : Integrati
     [Fact]
     public async Task Scheduled_snapshot_and_concurrent_views_keep_one_point_per_day()
     {
-        var scopes = Factory.Services.GetRequiredService<IServiceScopeFactory>();
+        var scopes = Services.GetRequiredService<IServiceScopeFactory>();
         var job = new NetWorthSnapshotJob(scopes, NullLogger<NetWorthSnapshotJob>.Instance);
         await job.RunOnceAsync(default);
         var responses = await Task.WhenAll(Client.GetAsync("/api/networth"), Client.GetAsync("/api/networth"));

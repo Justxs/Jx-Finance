@@ -1,10 +1,12 @@
-import { useMoney } from "@/hooks/use-formatters";
+import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 
 interface SummaryStat {
   label: string;
   value: string | undefined;
   tone?: string;
+  lead?: boolean;
+  sign?: MoneySign;
 }
 
 interface Props {
@@ -13,26 +15,43 @@ interface Props {
 
 export function SummaryStats({ items }: Readonly<Props>) {
   const money = useMoney();
+  const lead = items.find((item) => item.lead) ?? items[0];
+  const rest = items.filter((item) => item !== lead);
 
-  function formatValue(value: string | undefined) {
-    return value === undefined ? "—" : money.format(Number(value));
+  function formatValue(item: SummaryStat) {
+    if (item.value === undefined) {
+      return EMPTY_VALUE;
+    }
+
+    const amount = Number(item.value);
+    return item.sign ? money.formatSigned(amount, item.sign) : money.format(amount);
   }
 
   return (
-    <dl className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,13rem),1fr))] gap-px overflow-hidden rounded-md border bg-border">
-      {items.map((item) => (
-        <div key={item.label} className="min-w-0 bg-card p-5">
-          <dt className="text-sm font-medium text-muted-foreground">{item.label}</dt>
+    <div className="split-columns gap-y-6 lg:items-end">
+      {lead ? (
+        <dl className="min-w-0">
+          <dt className="text-sm text-muted-foreground">{lead.label}</dt>
           <dd
             className={cn(
-              "mt-2 break-words text-2xl font-semibold tabular-nums tracking-tight",
-              item.tone,
+              "figure total-rule mt-1 inline-block max-w-full pb-1.5 text-[2.5rem] leading-[1.1] break-words",
+              lead.tone,
             )}
           >
-            {formatValue(item.value)}
+            {formatValue(lead)}
           </dd>
-        </div>
-      ))}
-    </dl>
+        </dl>
+      ) : null}
+      <dl className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-8 gap-y-4">
+        {rest.map((item) => (
+          <div key={item.label} className="min-w-0 border-t pt-2.5">
+            <dt className="text-sm text-muted-foreground">{item.label}</dt>
+            <dd className={cn("mt-0.5 text-xl font-semibold break-words tabular-nums", item.tone)}>
+              {formatValue(item)}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </div>
   );
 }

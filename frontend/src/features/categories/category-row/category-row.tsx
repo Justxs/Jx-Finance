@@ -3,8 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal";
+import { RowTransition } from "@/components/row-transition";
+import { Button } from "@/components/ui/button";
+import { Tag } from "@/components/ui/tag";
 import { CategoryIcon } from "@/lib/category-icons";
 import { CategoryEditForm } from "./category-edit-form";
 
@@ -29,55 +31,57 @@ export function CategoryRow({
   const householdNames = new Map(households.data?.map((h) => [h.id, h.name]) ?? []);
 
   return (
-    <li className="flex items-center justify-between gap-2 py-2.5">
-      <div className="flex min-w-0 items-center gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
-          <CategoryIcon icon={category.icon} />
-        </span>
-        <span className="min-w-0 break-words text-sm font-medium">{category.name}</span>
-        {category.scope === "shared" ? (
-          <span className="rounded-full bg-secondary/60 px-2 py-0.5 text-xs font-medium text-secondary-foreground">
-            {t("sharing.sharedWith", {
-              household: householdNames.get(category.householdId ?? "") ?? "",
-            })}
-          </span>
-        ) : null}
-      </div>
-      <div className="flex shrink-0 gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          onClick={() => setEditing(true)}
-          aria-label={t("actions.edit")}
-          title={t("actions.edit")}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-8"
-          pending={deletePending}
-          disabled={deleteDisabled}
-          onClick={onDelete}
-          aria-label={t("actions.delete")}
-          title={t("actions.delete")}
-        >
-          <Trash2 />
-        </Button>
-      </div>
+    <RowTransition>
+      <li className="flex items-center justify-between gap-2 py-1.5">
+        <div className="flex min-w-0 items-center gap-3">
+          <CategoryIcon icon={category.icon} className="shrink-0 text-muted-foreground" />
+          <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
+            <span className="min-w-0 text-sm font-medium wrap-break-word">{category.name}</span>
+            {category.scope === "shared" ? (
+              <Tag tone="accent">
+                {t("sharing.sharedWith", {
+                  household: householdNames.get(category.householdId ?? "") ?? "",
+                })}
+              </Tag>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex shrink-0 gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            onClick={() => setEditing(true)}
+            aria-label={`${t("actions.edit")}: ${category.name}`}
+            tooltip={`${t("actions.edit")}: ${category.name}`}
+          >
+            <Pencil />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            pending={deletePending}
+            disabled={deleteDisabled}
+            onClick={onDelete}
+            aria-label={`${t("actions.delete")}: ${category.name}`}
+            tooltip={`${t("actions.delete")}: ${category.name}`}
+          >
+            <Trash2 />
+          </Button>
+        </div>
 
-      <Modal open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
-        <CategoryEditForm
-          category={category}
-          onSaved={() => {
-            setEditing(false);
-            onSaved();
-          }}
-          onCancel={() => setEditing(false)}
-        />
-      </Modal>
-    </li>
+        <Modal open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
+          <CategoryEditForm
+            category={category}
+            onSaved={() => {
+              setEditing(false);
+              onSaved();
+            }}
+            onCancel={() => setEditing(false)}
+          />
+        </Modal>
+      </li>
+    </RowTransition>
   );
 }

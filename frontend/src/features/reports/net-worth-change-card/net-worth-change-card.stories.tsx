@@ -16,7 +16,7 @@ const decliningHistory = {
 const hugeHistory = {
   items: [
     { ...netWorthHistoryItems[0]!, netWorth: "1250000.10" },
-    { ...netWorthHistoryItems[netWorthHistoryItems.length - 1]!, netWorth: "98765432.99" },
+    { ...netWorthHistoryItems.at(-1)!, netWorth: "98765432.99" },
   ],
 };
 

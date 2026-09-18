@@ -1,4 +1,3 @@
-import { TrendingDown, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useGetNetWorthHistoryEndpointSuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
@@ -15,42 +14,36 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
 
   const items = (history.data?.items ?? [])
     .filter((item) => (item.date ?? "") >= dateFrom && (item.date ?? "") <= dateTo)
-    .sort((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
+    .toSorted((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
 
   if (items.length < 2) {
     return (
-      <p className="card px-6 py-8 text-sm text-muted-foreground">
-        {t("reports.notEnoughNetWorthHistory")}
-      </p>
+      <section className="section">
+        <h2 className="section-title">{t("reports.netWorthChange")}</h2>
+        <p className="py-6 text-sm text-muted-foreground">
+          {t("reports.notEnoughNetWorthHistory")}
+        </p>
+      </section>
     );
   }
 
   const start = Number(items[0]!.netWorth ?? 0);
-  const end = Number(items[items.length - 1]!.netWorth ?? 0);
+  const end = Number(items.at(-1)!.netWorth ?? 0);
   const change = end - start;
-  const Icon = change >= 0 ? TrendingUp : TrendingDown;
 
   return (
-    <div className="card flex flex-wrap items-start justify-between gap-3 p-6">
-      <div className="min-w-0 break-words">
-        <p className="text-sm font-medium text-muted-foreground">{t("reports.netWorthChange")}</p>
+    <section className="section">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+        <h2 className="section-title">{t("reports.netWorthChange")}</h2>
         <p
-          className={`mt-2 text-2xl font-semibold tabular-nums tracking-tight ${change >= 0 ? "text-secondary" : "text-destructive"}`}
+          className={`text-xl font-semibold whitespace-nowrap tabular-nums ${change >= 0 ? "text-income" : "text-expense"}`}
         >
-          {change >= 0 ? "+" : ""}
-          {money.format(change)}
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          {money.format(start)} → {money.format(end)}
+          {money.formatSigned(change)}
         </p>
       </div>
-      <span
-        className={`flex size-10 shrink-0 items-center justify-center rounded-full ${
-          change >= 0 ? "bg-secondary/15 text-secondary" : "bg-destructive/10 text-destructive"
-        }`}
-      >
-        <Icon className="size-5" />
-      </span>
-    </div>
+      <p className="mt-1 text-xs text-muted-foreground tabular-nums sm:text-right">
+        {money.format(start)} → {money.format(end)}
+      </p>
+    </section>
   );
 }

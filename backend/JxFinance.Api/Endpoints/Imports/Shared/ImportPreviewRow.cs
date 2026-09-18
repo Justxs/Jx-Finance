@@ -10,4 +10,5 @@ public sealed record ImportPreviewRow(
     string Amount,
     FlowType Type,
     bool IsDuplicate,
-    bool LooksLikeTransfer);
+    bool LooksLikeTransfer,
+    Currency Currency);

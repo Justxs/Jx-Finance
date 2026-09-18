@@ -1,5 +1,5 @@
-import test from "node:test";
 import assert from "node:assert/strict";
+import test from "node:test";
 import {
   presetRange,
   detectPreset,
@@ -29,8 +29,11 @@ for (const zone of ["Europe/Vilnius", "America/Los_Angeles", "UTC"]) {
       });
       assert.equal(detectPreset("2026-09-01", "2026-09-06", today), "thisMonth");
     } finally {
-      if (previous === undefined) delete process.env.TZ;
-      else process.env.TZ = previous;
+      if (previous === undefined) {
+        delete process.env.TZ;
+      } else {
+        process.env.TZ = previous;
+      }
     }
   });
 }

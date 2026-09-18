@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetGoalsEndpointQueryKey,
@@ -8,9 +8,9 @@ import {
   useGetGoalsEndpointSuspense,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/modal";
 import { CreateGoalForm } from "../create-goal-form";
 import { GoalRow } from "../goal-row";
 
@@ -29,16 +29,16 @@ export function GoalsPage() {
 
   const deleteMutation = useDeleteGoalEndpoint({ mutation: { onSettled: invalidate } });
 
-  const goalList = goals.data ?? [];
+  const goalList = useDeferredValue(goals.data) ?? [];
 
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   let content: ReactNode;
   if (goalList.length === 0) {
-    content = <p className="px-6 py-8 text-sm text-muted-foreground">{t("goals.empty")}</p>;
+    content = <p className="py-6 text-sm text-muted-foreground">{t("goals.empty")}</p>;
   } else {
     content = (
-      <ul className="divide-y divide-border">
+      <ul className="rows border-t border-t-rule">
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}
@@ -54,7 +54,7 @@ export function GoalsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("goals.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -72,9 +72,10 @@ export function GoalsPage() {
         />
       </Modal>
 
-      <section className="card overflow-hidden">{content}</section>
+      {content}
       <ConfirmDeleteDialog
         target={deleteTarget}
+        itemLabel={goalList.find((goal) => goal.id === deleteTarget)?.name ?? undefined}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />

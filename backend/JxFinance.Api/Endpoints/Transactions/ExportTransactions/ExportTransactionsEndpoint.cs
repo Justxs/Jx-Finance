@@ -1,12 +1,12 @@
 using System.Globalization;
 using System.Text;
 using FastEndpoints;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
-using QuestPDF.Fluent;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
@@ -24,18 +24,14 @@ public sealed class ExportTransactionsEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var transactions = await transactionService.ExportAsync(req, ct);
-        var accounts = await accountService.GetAllAsync(ct);
-        var categories = await categoryService.GetAllAsync(ct);
-
-        var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
-        var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
+        var (transactions, accountNames, categoryNames) =
+            await LoadAsync(transactionService, accountService, categoryService, req, ct);
 
         var csv = BuildCsv(transactions, accountNames, categoryNames);
         await Send.BytesAsync(Encoding.UTF8.GetBytes(csv), "transactions.csv", "text/csv", cancellation: ct);
     }
 
-    public static async Task<byte[]> BuildPdfAsync(
+    public static async Task<(IReadOnlyList<TransactionResponse>, Dictionary<Guid, string>, Dictionary<Guid, string>)> LoadAsync(
         ITransactionService transactionService,
         IAccountService accountService,
         ICategoryService categoryService,
@@ -46,11 +42,10 @@ public sealed class ExportTransactionsEndpoint(
         var accounts = await accountService.GetAllAsync(ct);
         var categories = await categoryService.GetAllAsync(ct);
 
-        var accountNames = accounts.ToDictionary(a => a.Id, a => a.Name);
-        var categoryNames = categories.ToDictionary(c => c.Id, c => c.Name);
-
-        var document = new TransactionsPdfDocument(transactions, accountNames, categoryNames, req.DateFrom, req.DateTo);
-        return document.GeneratePdf();
+        return (
+            transactions,
+            accounts.ToDictionary(a => a.Id, a => a.Name),
+            categories.ToDictionary(c => c.Id.Value, c => c.Name));
     }
 
     private static string BuildCsv(
@@ -59,7 +54,7 @@ public sealed class ExportTransactionsEndpoint(
         Dictionary<Guid, string> categoryNames)
     {
         var builder = new StringBuilder();
-        builder.AppendLine("Date,Description,Account,Category,Type,Amount");
+        builder.AppendLine("Date,Description,Account,Category,Type,Amount,Currency");
 
         foreach (var transaction in transactions)
         {
@@ -71,7 +66,8 @@ public sealed class ExportTransactionsEndpoint(
                 Escape(accountNames.GetValueOrDefault(transaction.AccountId) ?? ""),
                 Escape(category ?? ""),
                 Escape(transaction.Type.ToString()),
-                Escape(transaction.Amount)));
+                Escape(transaction.Amount),
+                Escape(transaction.Currency.ToCode())));
         }
 
         return builder.ToString();

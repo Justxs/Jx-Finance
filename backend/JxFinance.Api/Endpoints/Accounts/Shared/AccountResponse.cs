@@ -13,4 +13,7 @@ public sealed record AccountResponse(
     string CurrentBalance,
     DateTimeOffset CreatedAt,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    Currency Currency,
+    IReadOnlyList<CurrencyBalance> Balances,
+    string ReportingBalance);

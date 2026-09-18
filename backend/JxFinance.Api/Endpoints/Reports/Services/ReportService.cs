@@ -1,3 +1,4 @@
+using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
@@ -9,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Reports.Services;
 
+[RegisterService<IReportService>(LifeTime.Scoped)]
 public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttributionService attributions) : IReportService
 {
     public async Task<ReportSummaryResponse> GetSummaryAsync(
@@ -16,7 +18,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
         DateOnly? dateTo,
         CancellationToken cancellationToken)
     {
-        var nowLocal = DateOnly.FromDateTime(clock.ToAppTime(clock.UtcNow).DateTime);
+        var nowLocal = clock.Today;
         var periodEnd = dateTo ?? nowLocal;
         var periodStart = dateFrom ?? new DateOnly(periodEnd.Year, periodEnd.Month, 1);
         var exclusiveEnd = periodEnd.AddDays(1);
@@ -24,7 +26,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
         var totals = await db.Transactions
             .Where(t => t.Date >= periodStart && t.Date < exclusiveEnd)
             .GroupBy(t => t.Type)
-            .Select(g => new { Type = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
+            .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
         var totalIncome = totals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m;
@@ -75,7 +77,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
 
         var raw = await db.Transactions
             .Where(t => t.Date >= periodStart && t.Date < exclusiveEnd)
-            .Select(t => new { t.Date, t.Type, Amount = (decimal)t.Amount })
+            .Select(t => new { t.Date, t.Type, Amount = t.ReportingAmount })
             .ToListAsync(cancellationToken);
 
         var points = new List<ReportTrendPoint>();

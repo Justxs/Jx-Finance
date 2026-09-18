@@ -1,10 +1,9 @@
 using FastEndpoints;
-using JxFinance.Infrastructure.Auth;
-using Microsoft.AspNetCore.Identity;
+using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Logout;
 
-public sealed class LogoutEndpoint(SignInManager<AppUser> signInManager) : EndpointWithoutRequest
+public sealed class LogoutEndpoint(ISessionService sessionService) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -14,7 +13,7 @@ public sealed class LogoutEndpoint(SignInManager<AppUser> signInManager) : Endpo
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await signInManager.SignOutAsync();
+        await sessionService.SignOutAsync(ct);
         await Send.NoContentAsync(ct);
     }
 }

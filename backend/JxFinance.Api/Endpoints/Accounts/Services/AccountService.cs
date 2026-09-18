@@ -1,4 +1,6 @@
+using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -13,7 +15,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Accounts.Services;
 
-public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, AccountMapper mapper) : IAccountService
+[RegisterService<IAccountService>(LifeTime.Scoped)]
+public sealed class AccountService(
+    AppDbContext db,
+    ICurrentUser currentUser,
+    AccountMapper mapper,
+    IExchangeRateService rates) : IAccountService
 {
     public Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken) =>
         GetAllAsync(new GetAccountsRequest(), cancellationToken);
@@ -45,62 +52,34 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
             .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);
 
-        var transactionMovements = await db.Transactions
-            .GroupBy(t => t.AccountId)
-            .Select(g => new
-            {
-                AccountId = g.Key,
-                Net = g.Sum(t => t.Type == FlowType.Income ? (decimal)t.Amount : -(decimal)t.Amount),
-            })
-            .ToDictionaryAsync(g => g.AccountId, g => g.Net, cancellationToken);
+        var balances = await BalancesAsync(accounts, cancellationToken);
 
-        var outgoingTransfers = await db.Transfers
-            .GroupBy(t => t.FromAccountId)
-            .Select(g => new { AccountId = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
-            .ToDictionaryAsync(g => g.AccountId, g => g.Total, cancellationToken);
-
-        var incomingTransfers = await db.Transfers
-            .GroupBy(t => t.ToAccountId)
-            .Select(g => new { AccountId = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
-            .ToDictionaryAsync(g => g.AccountId, g => g.Total, cancellationToken);
-
-        var responses = accounts
-            .Select(a => mapper.FromEntity(
-                a,
-                transactionMovements.GetValueOrDefault(a.Id)
-                    - outgoingTransfers.GetValueOrDefault(a.Id)
-                    + incomingTransfers.GetValueOrDefault(a.Id)))
-            .ToList();
-
-        return Sort(responses, request);
+        return Sort(accounts, balances, request).Select(a => mapper.FromEntity(a, balances[a.Id])).ToList();
     }
 
-    private static IReadOnlyList<AccountResponse> Sort(
-        List<AccountResponse> accounts,
+    public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken)
+    {
+        var accounts = await db.Accounts.ToListAsync(cancellationToken);
+        var balances = (await BalancesAsync(accounts, cancellationToken)).Values;
+        return (balances.Sum(b => b.Reporting.Amount), balances.All(b => b.IsComplete));
+    }
+
+    private static IEnumerable<Account> Sort(
+        List<Account> accounts,
+        Dictionary<AccountId, AccountBalance> balances,
         GetAccountsRequest request)
     {
-        var sort = request.Sort ?? AccountSortField.Created;
-        var descending = request.Direction == SortDirection.Desc;
-
-        if (sort == AccountSortField.Created)
-        {
-            return descending
-                ? accounts.OrderByDescending(a => a.CreatedAt).ToList()
-                : accounts;
-        }
-
-        Func<AccountResponse, IComparable?> key = sort switch
+        Func<Account, IComparable?>? key = request.Sort switch
         {
             AccountSortField.Name => a => a.Name,
             AccountSortField.Iban => a => a.Iban ?? string.Empty,
             AccountSortField.Type => a => a.Type.ToString(),
-            AccountSortField.StartingBalance => a => decimal.Parse(
-                a.StartingBalance,
-                System.Globalization.CultureInfo.InvariantCulture),
-            _ => a => decimal.Parse(a.CurrentBalance, System.Globalization.CultureInfo.InvariantCulture),
+            AccountSortField.StartingBalance => a => balances[a.Id].StartingReporting,
+            AccountSortField.CurrentBalance => a => balances[a.Id].Reporting.Amount,
+            _ => a => a.CreatedAt,
         };
 
-        return descending ? accounts.OrderByDescending(key).ToList() : accounts.OrderBy(key).ToList();
+        return request.Direction == SortDirection.Desc ? accounts.OrderByDescending(key) : accounts.OrderBy(key);
     }
 
     public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -112,8 +91,7 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
             return Result<AccountResponse>.Failure(ErrorCodes.NotFound, "Account not found.");
         }
 
-        var net = await NetMovementAsync(accountId, cancellationToken);
-        return Result<AccountResponse>.Success(mapper.FromEntity(account, net));
+        return Result<AccountResponse>.Success(mapper.FromEntity(account, await BalanceAsync(account, cancellationToken)));
     }
 
     public async Task<Result<AccountResponse>> CreateAsync(
@@ -127,11 +105,15 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
         }
 
         var account = mapper.ToEntity(request);
+        if (rates.UnusableReason(account.Currency) is { } currencyError)
+        {
+            return Result<AccountResponse>.Failure(ErrorCodes.Validation, currencyError);
+        }
 
         db.Accounts.Add(account);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<AccountResponse>.Success(mapper.FromEntity(account, 0m));
+        return Result<AccountResponse>.Success(mapper.FromEntity(account, await BalanceAsync(account, cancellationToken)));
     }
 
     public async Task<Result<AccountResponse>> UpdateAsync(
@@ -157,11 +139,15 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
             return Result<AccountResponse>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
         }
 
+        if (request.Currency is { } currency && currency != account.Currency && rates.UnusableReason(currency) is { } currencyError)
+        {
+            return Result<AccountResponse>.Failure(ErrorCodes.Validation, currencyError);
+        }
+
         mapper.UpdateEntity(request, account);
         await db.SaveChangesAsync(cancellationToken);
 
-        var net = await NetMovementAsync(accountId, cancellationToken);
-        return Result<AccountResponse>.Success(mapper.FromEntity(account, net));
+        return Result<AccountResponse>.Success(mapper.FromEntity(account, await BalanceAsync(account, cancellationToken)));
     }
 
     private async Task<string?> ValidateHouseholdAsync(
@@ -201,20 +187,86 @@ public sealed class AccountService(AppDbContext db, ICurrentUser currentUser, Ac
         return Result<Guid>.Success(id);
     }
 
-    private async Task<decimal> NetMovementAsync(AccountId accountId, CancellationToken cancellationToken)
+    private async Task<AccountBalance> BalanceAsync(Account account, CancellationToken cancellationToken) =>
+        (await BalancesAsync([account], cancellationToken))[account.Id];
+
+    private async Task<Dictionary<AccountId, AccountBalance>> BalancesAsync(
+        IReadOnlyList<Account> accounts,
+        CancellationToken cancellationToken)
     {
-        var transactionNet = await db.Transactions
-            .Where(t => t.AccountId == accountId)
-            .SumAsync(t => t.Type == FlowType.Income ? (decimal)t.Amount : -(decimal)t.Amount, cancellationToken);
+        var ids = accounts.Select(a => a.Id).ToList();
+        var movements = new Dictionary<(AccountId Account, Currency Currency), decimal>();
+
+        void Apply(AccountId account, Currency currency, decimal amount) =>
+            movements[(account, currency)] = movements.GetValueOrDefault((account, currency)) + amount;
+
+        foreach (var account in accounts)
+        {
+            Apply(account.Id, account.Currency, account.StartingBalance.Amount);
+        }
+
+        var transactions = await db.Transactions
+            .Where(t => ids.Contains(t.AccountId))
+            .GroupBy(t => new { t.AccountId, t.Amount.Currency })
+            .Select(g => new
+            {
+                g.Key.AccountId,
+                g.Key.Currency,
+                Net = g.Sum(t => t.Type == FlowType.Income ? t.Amount.Amount : -t.Amount.Amount),
+            })
+            .ToListAsync(cancellationToken);
+        transactions.ForEach(m => Apply(m.AccountId, m.Currency, m.Net));
 
         var outgoing = await db.Transfers
-            .Where(t => t.FromAccountId == accountId)
-            .SumAsync(t => (decimal)t.Amount, cancellationToken);
+            .Where(t => ids.Contains(t.FromAccountId))
+            .GroupBy(t => new { AccountId = t.FromAccountId, t.Amount.Currency })
+            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.Amount.Amount) })
+            .ToListAsync(cancellationToken);
+        outgoing.ForEach(m => Apply(m.AccountId, m.Currency, -m.Total));
 
         var incoming = await db.Transfers
-            .Where(t => t.ToAccountId == accountId)
-            .SumAsync(t => (decimal)t.Amount, cancellationToken);
+            .Where(t => ids.Contains(t.ToAccountId))
+            .GroupBy(t => new { AccountId = t.ToAccountId, t.ReceivedAmount.Currency })
+            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.ReceivedAmount.Amount) })
+            .ToListAsync(cancellationToken);
+        incoming.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
 
-        return transactionNet - outgoing + incoming;
+        var sold = await db.CurrencyConversions
+            .Where(c => ids.Contains(c.AccountId))
+            .GroupBy(c => new { c.AccountId, c.FromAmount.Currency })
+            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(c => c.FromAmount.Amount) })
+            .ToListAsync(cancellationToken);
+        sold.ForEach(m => Apply(m.AccountId, m.Currency, -m.Total));
+
+        var bought = await db.CurrencyConversions
+            .Where(c => ids.Contains(c.AccountId))
+            .GroupBy(c => new { c.AccountId, c.ToAmount.Currency })
+            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(c => c.ToAmount.Amount) })
+            .ToListAsync(cancellationToken);
+        bought.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
+
+        var latest = await rates.GetLatestAsync(cancellationToken);
+        var reporting = rates.ReportingCurrency;
+
+        return accounts.ToDictionary(
+            account => account.Id,
+            account =>
+            {
+                var held = movements
+                    .Where(m => m.Key.Account == account.Id && (m.Value != 0m || m.Key.Currency == account.Currency))
+                    .Select(m => new Money(m.Value, m.Key.Currency))
+                    .OrderBy(m => m.Currency == account.Currency ? 0 : 1)
+                    .ThenBy(m => m.Currency.ToCode(), StringComparer.Ordinal)
+                    .ToList();
+
+                decimal? In(Money money, Currency currency) => latest.Convert(money.Amount, money.Currency, currency);
+
+                return new AccountBalance(
+                    held,
+                    new Money(held.Sum(m => In(m, account.Currency) ?? 0m), account.Currency),
+                    new Money(held.Sum(m => In(m, reporting) ?? 0m), reporting),
+                    In(account.StartingBalance, reporting) ?? 0m,
+                    held.All(m => In(m, reporting) is not null));
+            });
     }
 }

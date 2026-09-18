@@ -45,8 +45,11 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
     validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       const data = { categoryId: value.categoryId, limitAmount: value.limitAmount };
-      if (initial?.id) updateMutation.mutate({ id: initial.id, data });
-      else createMutation.mutate({ data });
+      if (initial?.id) {
+        updateMutation.mutate({ id: initial.id, data });
+      } else {
+        createMutation.mutate({ data });
+      }
     },
   });
 
@@ -93,10 +96,11 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
                 placeholder="0.00"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "budget-limit-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="budget-limit-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
