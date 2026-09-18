@@ -49,7 +49,7 @@ export function SetupPage() {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       setupMutation.mutate({
         data: {
@@ -82,12 +82,12 @@ export function SetupPage() {
               <Input
                 id="setup-display-name"
                 placeholder={t("auth.displayNamePlaceholder")}
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -99,12 +99,12 @@ export function SetupPage() {
               <Input
                 id="setup-email"
                 type="email"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -116,12 +116,12 @@ export function SetupPage() {
               <Input
                 id="setup-password"
                 type="password"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>

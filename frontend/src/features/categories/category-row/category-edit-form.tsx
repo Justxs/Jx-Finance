@@ -57,7 +57,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       scope: category.scope ?? "personal",
       householdId: category.householdId ?? "",
     } satisfies FormValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       updateMutation.mutate({
         id: category.id!,
@@ -86,8 +86,8 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
           {(field) => (
             <Input
               className="w-full sm:w-auto sm:flex-1"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
               autoFocus
@@ -111,10 +111,10 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
         </Button>
       </div>
       <form.Field name="name">
-        {(field) => <FieldError message={field.state.meta.errors[0]?.message} />}
+        {(field) => <FieldError message={field.errors[0]?.message} />}
       </form.Field>
       <form.Field name="icon">
-        {(field) => <IconPicker value={field.state.value} onChange={field.handleChange} />}
+        {(field) => <IconPicker value={field.value} onChange={field.handleChange} />}
       </form.Field>
 
       {householdList.length > 0 ? (
@@ -125,7 +125,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                 <Label htmlFor={`category-${category.id}-scope`}>{t("sharing.scope")}</Label>
                 <SelectField
                   id={`category-${category.id}-scope`}
-                  value={field.state.value}
+                  value={field.value}
                   onChange={(value) => field.handleChange(value)}
                   options={[
                     { value: "personal", label: t("sharing.personal") },
@@ -147,8 +147,8 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                       </Label>
                       <SelectField
                         id={`category-${category.id}-household`}
-                        value={field.state.value}
-                        aria-invalid={field.state.meta.errors.length > 0}
+                        value={field.value}
+                        aria-invalid={field.errors.length > 0}
                         onBlur={field.handleBlur}
                         onChange={(value) => field.handleChange(value)}
                         options={[
@@ -159,7 +159,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                           })),
                         ]}
                       />
-                      <FieldError message={field.state.meta.errors[0]?.message} />
+                      <FieldError message={field.errors[0]?.message} />
                     </div>
                   )}
                 </form.Field>

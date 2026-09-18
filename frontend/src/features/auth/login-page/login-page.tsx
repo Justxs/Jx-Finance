@@ -56,7 +56,7 @@ export function LoginPage() {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       loginMutation.mutate({
         data: {
@@ -92,12 +92,12 @@ export function LoginPage() {
                 type="email"
                 autoFocus={!twoFactorRequired}
                 disabled={twoFactorRequired}
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -110,12 +110,12 @@ export function LoginPage() {
                 id="login-password"
                 type="password"
                 disabled={twoFactorRequired}
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -129,12 +129,12 @@ export function LoginPage() {
                   id="login-two-factor-code"
                   autoFocus
                   inputMode="numeric"
-                  value={field.state.value}
-                  aria-invalid={field.state.meta.errors.length > 0}
+                  value={field.value}
+                  aria-invalid={field.errors.length > 0}
                   onBlur={field.handleBlur}
                   onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError message={field.state.meta.errors[0]?.message} />
+                <FieldError message={field.errors[0]?.message} />
                 <p className="text-xs text-muted-foreground">{t("auth.twoFactorCodeHint")}</p>
               </div>
             )}
@@ -144,7 +144,7 @@ export function LoginPage() {
             {(field) => (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Checkbox
-                  checked={field.state.value}
+                  checked={field.value}
                   onCheckedChange={(checked) => field.handleChange(checked)}
                 />
                 {t("auth.rememberMe")}

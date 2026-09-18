@@ -46,7 +46,7 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({
         data: {
@@ -77,12 +77,12 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
               <Input
                 id="goal-name"
                 placeholder={t("goals.namePlaceholder")}
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -95,12 +95,12 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
                 id="goal-target"
                 inputMode="decimal"
                 placeholder="0.00"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -113,12 +113,12 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
                 id="goal-current"
                 inputMode="decimal"
                 placeholder="0.00"
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -129,7 +129,7 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
               <Label htmlFor="goal-date">{t("goals.targetDate")}</Label>
               <DatePicker
                 id="goal-date"
-                value={field.state.value}
+                value={field.value}
                 onBlur={field.handleBlur}
                 onChange={field.handleChange}
               />

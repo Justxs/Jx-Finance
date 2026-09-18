@@ -55,6 +55,7 @@ jobs:
         working-directory: frontend
         run: |
           nub update --latest
+          nub add @tanstack/react-form@alpha
           nub install
 
       - name: Regenerate API client

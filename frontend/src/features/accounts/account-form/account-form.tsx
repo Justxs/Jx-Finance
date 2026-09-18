@@ -73,7 +73,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       scope: initial?.scope ?? "personal",
       householdId: initial?.householdId ?? "",
     } satisfies FormValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       onSubmit({
         name: value.name.trim(),
@@ -104,12 +104,12 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             <Input
               id="account-name"
               placeholder={t("accounts.namePlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -120,7 +120,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             <Label htmlFor="account-type">{t("accounts.type")}</Label>
             <SelectField
               id="account-type"
-              value={field.state.value}
+              value={field.value}
               onBlur={field.handleBlur}
               onChange={(value) => field.handleChange(value)}
               options={accountTypes.map((accountType) => ({
@@ -139,12 +139,12 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             <Input
               id="account-balance"
               inputMode="decimal"
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -156,12 +156,12 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             <Input
               id="account-iban"
               placeholder={t("accounts.ibanPlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -173,12 +173,12 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             <Input
               id="account-description"
               placeholder={t("accounts.descriptionPlaceholder")}
-              value={field.state.value}
-              aria-invalid={field.state.meta.errors.length > 0}
+              value={field.value}
+              aria-invalid={field.errors.length > 0}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.state.meta.errors[0]?.message} />
+            <FieldError message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -191,7 +191,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
                 <Label htmlFor="account-scope">{t("sharing.scope")}</Label>
                 <SelectField
                   id="account-scope"
-                  value={field.state.value}
+                  value={field.value}
                   onChange={(value) => field.handleChange(value)}
                   options={[
                     { value: "personal", label: t("sharing.personal") },
@@ -211,8 +211,8 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
                       <Label htmlFor="account-household">{t("sharing.household")}</Label>
                       <SelectField
                         id="account-household"
-                        value={field.state.value}
-                        aria-invalid={field.state.meta.errors.length > 0}
+                        value={field.value}
+                        aria-invalid={field.errors.length > 0}
                         onBlur={field.handleBlur}
                         onChange={(value) => field.handleChange(value)}
                         options={[
@@ -223,7 +223,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
                           })),
                         ]}
                       />
-                      <FieldError message={field.state.meta.errors[0]?.message} />
+                      <FieldError message={field.errors[0]?.message} />
                     </div>
                   )}
                 </form.Field>

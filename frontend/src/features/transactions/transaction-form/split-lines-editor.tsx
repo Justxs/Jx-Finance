@@ -28,7 +28,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
         {(field) => (
           <SelectField
             aria-label={t("transactions.lineCategory")}
-            value={field.state.value}
+            value={field.value}
             onBlur={field.handleBlur}
             onChange={(value) => field.handleChange(value)}
             options={[
@@ -44,7 +44,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
             aria-label={t("transactions.lineAmount")}
             inputMode="decimal"
             placeholder="0.00"
-            value={field.state.value}
+            value={field.value}
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
@@ -55,7 +55,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
           <Input
             aria-label={t("transactions.lineDescription")}
             placeholder={t("transactions.lineDescription")}
-            value={field.state.value}
+            value={field.value}
             onBlur={field.handleBlur}
             onChange={(e) => field.handleChange(e.target.value)}
           />
@@ -78,11 +78,13 @@ function SplitLineList({ form, categories }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <form.Field name="lines" mode="array">
+    <form.ArrayField name="lines">
       {(linesField) => (
         <div className="space-y-3 col-span-full">
-          <FieldError message={linesField.state.meta.errors[0]?.message} />
-          {linesField.state.value.map((line, index) => (
+          <form.Field name="lines">
+            {(errorField) => <FieldError message={errorField.errors[0]?.message} />}
+          </form.Field>
+          {linesField.value.map((line, index) => (
             <SplitLineRow
               key={line.id}
               form={form}
@@ -102,7 +104,7 @@ function SplitLineList({ form, categories }: Readonly<Props>) {
           </Button>
         </div>
       )}
-    </form.Field>
+    </form.ArrayField>
   );
 }
 
@@ -115,7 +117,7 @@ export function SplitLinesEditor({ form, categories }: Readonly<Props>) {
             {(typeField) => (
               <SplitLineList
                 form={form}
-                categories={categories.filter((c) => c.type === typeField.state.value)}
+                categories={categories.filter((c) => c.type === typeField.value)}
               />
             )}
           </form.Field>

@@ -57,7 +57,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
 
   const form = useForm({
     defaultValues,
-    validators: { onChange: schema },
+    validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       createMutation.mutate({
         data: {
@@ -89,13 +89,13 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
               <Input
                 id="category-name"
                 placeholder={t("categories.namePlaceholder")}
-                value={field.state.value}
-                aria-invalid={field.state.meta.errors.length > 0}
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
                 autoFocus
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.state.meta.errors[0]?.message} />
+              <FieldError message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -106,7 +106,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
               <Label htmlFor="category-type">{t("transactions.type")}</Label>
               <SelectField
                 id="category-type"
-                value={field.state.value}
+                value={field.value}
                 onBlur={field.handleBlur}
                 onChange={(value) => field.handleChange(value)}
                 options={[
@@ -127,7 +127,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                 <Label htmlFor="category-scope">{t("sharing.scope")}</Label>
                 <SelectField
                   id="category-scope"
-                  value={field.state.value}
+                  value={field.value}
                   onChange={(value) => field.handleChange(value)}
                   options={[
                     { value: "personal", label: t("sharing.personal") },
@@ -147,8 +147,8 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                       <Label htmlFor="category-household">{t("sharing.household")}</Label>
                       <SelectField
                         id="category-household"
-                        value={field.state.value}
-                        aria-invalid={field.state.meta.errors.length > 0}
+                        value={field.value}
+                        aria-invalid={field.errors.length > 0}
                         onBlur={field.handleBlur}
                         onChange={(value) => field.handleChange(value)}
                         options={[
@@ -159,7 +159,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                           })),
                         ]}
                       />
-                      <FieldError message={field.state.meta.errors[0]?.message} />
+                      <FieldError message={field.errors[0]?.message} />
                     </div>
                   )}
                 </form.Field>
@@ -173,7 +173,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
         {(field) => (
           <div className="space-y-1.5">
             <Label>{t("categories.icon")}</Label>
-            <IconPicker value={field.state.value} onChange={field.handleChange} />
+            <IconPicker value={field.value} onChange={field.handleChange} />
           </div>
         )}
       </form.Field>
