@@ -5,7 +5,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string SampleCsv =

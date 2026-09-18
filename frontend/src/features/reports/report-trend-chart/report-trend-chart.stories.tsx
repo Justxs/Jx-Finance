@@ -8,7 +8,7 @@ const meta = {
   parameters: { layout: "padded", route: "/reports" },
   args: { items: reportSummaryMonth.trend ?? [], bucket: "day" },
   render: (args) => (
-    <section className="card p-6">
+    <section className="section">
       <h2 className="mb-4 font-semibold">Income and expense trend</h2>
       <ReportTrendChart {...args} />
     </section>
@@ -50,7 +50,7 @@ export const LargeAmounts: Story = {
 export const Narrow: Story = {
   args: { items: reportSummaryYear.trend ?? [], bucket: "month" },
   render: (args) => (
-    <section className="card w-80 p-4">
+    <section className="section w-80">
       <ReportTrendChart {...args} />
     </section>
   ),

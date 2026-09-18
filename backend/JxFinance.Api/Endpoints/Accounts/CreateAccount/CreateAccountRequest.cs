@@ -10,4 +10,5 @@ public sealed record CreateAccountRequest(
     AccountType Type,
     string StartingBalance,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    Currency? Currency = null);

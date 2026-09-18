@@ -2,8 +2,8 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { useGetAccountsEndpointSuspense } from "@/api/generated";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
-import { QueryBoundary } from "./query-boundary";
 import { Skeleton } from "../ui/skeleton";
+import { QueryBoundary } from "./query-boundary";
 
 function AccountNames() {
   const accounts = useGetAccountsEndpointSuspense();

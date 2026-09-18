@@ -1,17 +1,15 @@
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Goals.CreateGoal;
-using JxFinance.Endpoints.Goals.Shared;
-using JxFinance.Endpoints.Goals.UpdateGoal;
+using JxFinance.Domain.Goals;
 
 namespace JxFinance.Endpoints.Goals.Interfaces;
 
 public interface IGoalService
 {
-    Task<IReadOnlyList<GoalResponse>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<Goal>> GetAllAsync(CancellationToken cancellationToken);
 
-    Task<GoalResponse> CreateAsync(CreateGoalRequest request, CancellationToken cancellationToken);
+    Task<Goal> CreateAsync(Goal goal, CancellationToken cancellationToken);
 
-    Task<Result<GoalResponse>> UpdateAsync(UpdateGoalRequest request, CancellationToken cancellationToken);
+    Task<Result<Goal>> UpdateAsync(Guid id, Action<Goal> apply, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 }

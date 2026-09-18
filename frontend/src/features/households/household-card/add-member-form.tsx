@@ -3,10 +3,11 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useAddMemberEndpoint } from "@/api/generated";
 import type { HouseholdRole } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
-import { SelectField } from "@/components/select-field";
+import { isEmail } from "@/lib/validation";
 
 interface FormValues {
   email: string;
@@ -27,7 +28,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
+      .refine(isEmail, t("validation.email")),
     role: z.enum(["owner", "member"]),
   });
 
@@ -63,10 +64,16 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
               placeholder={t("households.memberEmailPlaceholder")}
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={
+                field.errors.length > 0 ? `member-email-${householdId}-error` : undefined
+              }
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError
+              id={`member-email-${householdId}-error`}
+              message={field.errors[0]?.message}
+            />
           </div>
         )}
       </form.Field>
@@ -74,6 +81,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
       <form.Field name="role">
         {(field) => (
           <SelectField
+            aria-label={t("users.role")}
             value={field.value}
             className="sm:w-auto"
             onChange={(value) => field.handleChange(value)}

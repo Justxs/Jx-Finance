@@ -1,8 +1,12 @@
 {
+  "brand": {
+    "wordmark": "Finance"
+  },
   "appName": "Jx Finance",
   "nav": {
     "dashboard": "Suvestinė",
     "transactions": "Operacijos",
+    "import": "CSV importas",
     "accounts": "Sąskaitos",
     "categories": "Kategorijos",
     "budgets": "Biudžetai",
@@ -16,7 +20,8 @@
     "collapse": "Suskleisti šoninę juostą",
     "expand": "Išskleisti šoninę juostą",
     "main": "Pagrindinė navigacija",
-    "skip": "Pereiti prie turinio"
+    "skip": "Pereiti prie turinio",
+    "settings": "Nustatymai"
   },
   "actions": {
     "add": "Pridėti",
@@ -28,6 +33,9 @@
     "previous": "Ankstesnis",
     "next": "Kitas",
     "close": "Uždaryti"
+  },
+  "common": {
+    "actions": "Veiksmai"
   },
   "confirmDelete": {
     "title": "Ištrinti šį įrašą?",
@@ -51,7 +59,8 @@
     "spendingByCategory": "Išlaidos pagal kategoriją (šį mėnesį)",
     "monthlyTrend": "Pajamos ir išlaidos",
     "other": "Kita",
-    "noSpending": "Šį mėnesį išlaidų nėra."
+    "noSpending": "Šį mėnesį išlaidų nėra.",
+    "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas"
   },
   "accounts": {
     "title": "Sąskaitos",
@@ -73,7 +82,9 @@
       "cash": "Grynieji",
       "other": "Kita"
     },
-    "allTypes": "Visi tipai"
+    "allTypes": "Visi tipai",
+    "currency": "Pagrindinė valiuta",
+    "currencyHint": "Pradinis likutis ir sąskaitos suma rodomi šia valiuta. Sąskaitoje gali būti ir kitų valiutų."
   },
   "transfers": {
     "title": "Pervesti pinigus",
@@ -81,7 +92,32 @@
     "to": "Į",
     "add": "Pervesti",
     "empty": "Pervedimų dar nėra.",
-    "sameAccountError": "Šaltinio ir tikslo sąskaitos turi būti skirtingos."
+    "sameAccountError": "Šaltinio ir tikslo sąskaitos turi būti skirtingos.",
+    "heading": "Pervedimai",
+    "received": "Gauta",
+    "sameAsSent": "Tiek pat, kiek išsiųsta",
+    "sentCurrency": "Išsiųsta valiuta",
+    "receivedCurrency": "Gauta valiuta"
+  },
+  "conversions": {
+    "heading": "Valiutos keitimai",
+    "add": "Keisti valiutą",
+    "title": "Valiutos keitimas",
+    "description": "Iškeiskite vieną valiutą į kitą toje pačioje sąskaitoje. Likučiai pasikeičia, bet tai nėra nei pajamos, nei išlaidos.",
+    "sold": "Parduota",
+    "bought": "Nupirkta",
+    "soldCurrency": "Parduota valiuta",
+    "boughtCurrency": "Nupirkta valiuta",
+    "yourRate": "Jūsų kursas",
+    "referenceRate": "ECB kursas",
+    "fee": "Mokestis (neprivaloma)",
+    "feeCurrency": "Mokesčio valiuta",
+    "feeHint": "Įrašomas kaip šios sąskaitos išlaida.",
+    "submit": "Keisti",
+    "empty": "Valiutos keitimų dar nėra.",
+    "sameCurrencyError": "Pasirinkite dvi skirtingas valiutas.",
+    "rateLine": "1 {{from}} = {{rate}} {{to}}",
+    "feeLine": "mokestis {{fee}}"
   },
   "categories": {
     "title": "Kategorijos",
@@ -111,7 +147,6 @@
     "description": "Aprašymas",
     "descriptionPlaceholder": "pvz. Lidl",
     "empty": "Operacijų dar nėra.",
-    "pageInfo": "Puslapis {{page}} iš {{pages}}",
     "needAccount": "Pirmiausia sukurkite sąskaitą.",
     "searchPlaceholder": "Ieškoti aprašyme...",
     "allTypes": "Visi tipai",
@@ -121,13 +156,51 @@
     "exportCsv": "Eksportuoti CSV",
     "exportPdf": "Eksportuoti PDF",
     "split": "Skaidyta",
+    "splitCategories_one": "{{count}} kategorija",
+    "splitCategories_few": "{{count}} kategorijos",
+    "splitCategories_many": "{{count}} kategorijos",
+    "splitCategories_other": "{{count}} kategorijų",
     "splitTransaction": "Skaidyti į kategorijas",
     "addLine": "Pridėti eilutę",
     "lineAmount": "Suma",
     "lineCategory": "Kategorija",
     "lineDescription": "Žymė",
     "removeLine": "Pašalinti eilutę",
-    "splitTotalMismatch": "Eilučių suma {{linesTotal}}, bet operacija yra {{total}}."
+    "splitTotalMismatch": "Eilučių suma {{linesTotal}}, bet operacija yra {{total}}.",
+    "count_one": "{{count}} operacija",
+    "count_few": "{{count}} operacijos",
+    "count_many": "{{count}} operacijos",
+    "count_other": "{{count}} operacijų",
+    "totalIncome": "pajamų",
+    "totalExpense": "išlaidų",
+    "totalsLabel": "Sumos pagal dabartinius filtrus",
+    "saveAndAddAnother": "Išsaugoti ir pridėti kitą",
+    "created": "Operacija pridėta",
+    "updated": "Operacija atnaujinta",
+    "deleted": "Operacija ištrinta",
+    "selectRow": "Pasirinkti: {{row}}",
+    "selectPage": "Pasirinkti visas šio puslapio operacijas",
+    "splitNotSelectable": "Skaidytų operacijų kategorijos saugomos eilutėse, todėl jų negalima keisti grupėje",
+    "selectedCount_one": "Pasirinkta {{count}}",
+    "selectedCount_few": "Pasirinktos {{count}}",
+    "selectedCount_many": "Pasirinkta {{count}}",
+    "selectedCount_other": "Pasirinkta {{count}}",
+    "bulkCategory": "Nauja kategorija",
+    "setCategory": "Priskirti kategoriją",
+    "clearSelection": "Atšaukti pasirinkimą",
+    "mixedTypesHint": "Pasirinktos ir pajamos, ir išlaidos. Kategorijai priskirti pasirinkite vieno tipo eilutes.",
+    "recategorized_one": "Kategorija pakeista {{count}} operacijai",
+    "recategorized_few": "Kategorija pakeista {{count}} operacijoms",
+    "recategorized_many": "Kategorija pakeista {{count}} operacijos",
+    "recategorized_other": "Kategorija pakeista {{count}} operacijų",
+    "selectionToolbar": "Pasirinktos operacijos",
+    "filters": "Filtrai",
+    "filtersTitle": "Filtrai ir rikiavimas",
+    "sortBy": "Rikiuoti pagal",
+    "sortAscending": "{{column}}, didėjančiai",
+    "sortDescending": "{{column}}, mažėjančiai",
+    "done": "Baigti",
+    "currency": "Valiuta"
   },
   "theme": {
     "toggle": "Perjungti temą"
@@ -144,7 +217,6 @@
     "displayName": "Rodomas vardas",
     "displayNamePlaceholder": "pvz. Justas",
     "createAdmin": "Sukurti administratoriaus paskyrą",
-    "setupComplete": "Administratoriaus paskyra sukurta. Prisijunkite, kad tęstumėte.",
     "twoFactorCode": "Autentifikavimo kodas",
     "twoFactorCodeHint": "Įveskite 6 skaitmenų kodą iš autentifikavimo programėlės arba atsarginį kodą.",
     "verifyCode": "Patvirtinti kodą"
@@ -164,7 +236,6 @@
       "Member": "Narys"
     },
     "deactivate": "Deaktyvuoti",
-    "created": "Naudotojas sukurtas",
     "deactivated_toast": "Naudotojas deaktyvuotas",
     "roleUpdated": "Rolė atnaujinta",
     "empty": "Kitų naudotojų dar nėra.",
@@ -172,7 +243,9 @@
     "allStatuses": "Visos būsenos"
   },
   "profile": {
+    "qrCodeAlt": "Autentifikavimo programėlės QR kodas",
     "title": "Jūsų profilis",
+    "detailsTitle": "Vardas ir slaptažodis",
     "currentPassword": "Dabartinis slaptažodis",
     "newPassword": "Naujas slaptažodis (nebūtina)",
     "save": "Išsaugoti pakeitimus",
@@ -190,13 +263,136 @@
     "recoveryCodesSubtitle": "Kiekvieną kodą galima naudoti vieną kartą, jei prarastumėte prieigą prie autentifikavimo programėlės. Saugokite juos saugioje vietoje — jie nebus rodomi pakartotinai.",
     "recoveryCodesDone": "Išsaugojau šiuos kodus"
   },
+  "settings": {
+    "title": "Nustatymai",
+    "description": "Galioja visiems šios sistemos naudotojams.",
+    "unsaved": "Yra neišsaugotų pakeitimų.",
+    "saved": "Visi pakeitimai išsaugoti.",
+    "savedToast": "Nustatymai išsaugoti",
+    "discard": "Atmesti pakeitimus",
+    "general": {
+      "title": "Bendri",
+      "instanceName": "Sistemos pavadinimas",
+      "instanceNameHint": "Rodomas šalia logotipo ir naršyklės skirtuke. Palikus tuščią, naudojamas produkto pavadinimas."
+    },
+    "featureGroups": {
+      "plan": "Planavimas",
+      "review": "Apžvalga",
+      "ledger": "Apskaita"
+    },
+    "features": {
+      "title": "Funkcijos",
+      "description": "Išjungta funkcija dingsta iš meniu, o jos puslapiai nebeatsidaro. Duomenys išlieka ir sugrįžta funkciją vėl įjungus.",
+      "items": {
+        "budgets": {
+          "name": "Biudžetai",
+          "hint": "Mėnesio limitai pagal kategoriją."
+        },
+        "goals": {
+          "name": "Tikslai",
+          "hint": "Taupymo tikslai ir pažanga."
+        },
+        "recurringBills": {
+          "name": "Periodinės sąskaitos",
+          "hint": "Mokėjimo terminai ir priminimai. Išjungus priminimai nebesiunčiami."
+        },
+        "netWorth": {
+          "name": "Grynasis turtas",
+          "hint": "Turtas, skolos ir istorija. Išjungus kasdienė momentinė kopija nebekuriama."
+        },
+        "reports": {
+          "name": "Ataskaitos",
+          "hint": "Pajamų ir išlaidų suvestinės bet kuriam laikotarpiui."
+        },
+        "import": {
+          "name": "CSV importas",
+          "hint": "Banko išrašo įkėlimas."
+        },
+        "households": {
+          "name": "Namų ūkiai",
+          "hint": "Sąskaitų ir kategorijų dalijimasis su kitais naudotojais."
+        },
+        "multiCurrency": {
+          "name": "Kelios valiutos",
+          "hint": "Valiutos pasirinkimas, keitimai ir pervedimai tarp valiutų."
+        }
+      }
+    },
+    "currencies": {
+      "title": "Valiutos",
+      "reporting": "Ataskaitų valiuta",
+      "reportingHint": "Sumos, biudžetai ir ataskaitos rodomi šia valiuta.",
+      "reportingChangeWarning": "Išsaugojus kiekviena operacija bus perskaičiuota pagal jos dienos kursą. Biudžetų, tikslų, turto, skolų, sąskaitų ir grynojo turto istorijos skaičiai nesikeis, todėl vėliau juos peržiūrėkite.",
+      "enabled": "Naudojamos valiutos",
+      "enabledHint_one": "Įvedant duomenis siūloma {{count}} valiuta. Ataskaitų valiuta įtraukiama visada.",
+      "enabledHint_few": "Įvedant duomenis siūlomos {{count}} valiutos. Ataskaitų valiuta įtraukiama visada.",
+      "enabledHint_many": "Įvedant duomenis siūloma {{count}} valiutos. Ataskaitų valiuta įtraukiama visada.",
+      "enabledHint_other": "Įvedant duomenis siūloma {{count}} valiutų. Ataskaitų valiuta įtraukiama visada.",
+      "enabledOff": "Kelios valiutos išjungtos, todėl siūloma tik ataskaitų valiuta.",
+      "selectAll": "Pažymėti visas",
+      "selectNone": "Tik ataskaitų valiuta"
+    },
+    "rates": {
+      "title": "Valiutų kursai",
+      "autoSync": "Kursus gauti automatiškai",
+      "autoSyncHint": "Europos Centrinio Banko orientaciniai kursai, paleidžiant ir kas šešias valandas. Išjunkite, jei šis serveris negali siųsti išeinančių užklausų.",
+      "newest": "Naujausi kursai:",
+      "none": "dar nėra",
+      "syncNow": "Sinchronizuoti dabar",
+      "synced_one": "Pridėtas {{count}} kursas",
+      "synced_few": "Pridėti {{count}} kursai",
+      "synced_many": "Pridėta {{count}} kurso",
+      "synced_other": "Pridėta {{count}} kursų",
+      "upToDate": "Kursai jau naujausi"
+    },
+    "regional": {
+      "title": "Regionas",
+      "language": "Numatytoji kalba",
+      "languageHint": "Naudojama, kol naudotojas pats nepasirenka kalbos.",
+      "languages": {
+        "en": "English",
+        "lt": "Lietuvių"
+      },
+      "timeZone": "Laiko juosta",
+      "timeZoneHint": "Nuo jos priklauso, kas laikoma šiandiena ir šiuo mėnesiu.",
+      "firstDayOfWeek": "Savaitė prasideda",
+      "days": {
+        "monday": "Pirmadienį",
+        "sunday": "Sekmadienį"
+      }
+    },
+    "defaults": {
+      "title": "Numatytosios reikšmės",
+      "account": "Numatytoji sąskaita",
+      "accountHint": "Parenkama pridedant operaciją tiems naudotojams, kurie ją mato.",
+      "firstAccount": "Pirmoji sąrašo sąskaita",
+      "pageSize": "Eilučių puslapyje",
+      "pageSizeHint": "Naudojama operacijų sąraše."
+    }
+  },
   "budgets": {
     "title": "Biudžetai",
     "add": "Pridėti biudžetą",
     "category": "Kategorija",
     "limit": "Mėnesinė riba",
+    "ofLimit": "iš {{amount}}",
+    "left": "Liko {{amount}}",
+    "over": "Viršyta {{amount}}",
     "empty": "Biudžetų dar nėra.",
-    "needCategory": "Pirmiausia sukurkite išlaidų kategoriją, kad galėtumėte nustatyti biudžetą."
+    "needCategory": "Pirmiausia sukurkite išlaidų kategoriją, kad galėtumėte nustatyti biudžetą.",
+    "spentThisMonth": "Išleista šį mėnesį",
+    "budgeted": "Suplanuota",
+    "remaining": "Liko",
+    "overBy": "Viršyta"
+  },
+  "shortcuts": {
+    "title": "Spartieji klavišai",
+    "actions": "Veiksmai",
+    "goTo": "Eiti į",
+    "then": "tada",
+    "newTransaction": "Nauja operacija",
+    "search": "Ieškoti operacijų",
+    "help": "Rodyti sparčiuosius klavišus"
   },
   "goals": {
     "title": "Tikslai",
@@ -206,7 +402,8 @@
     "targetAmount": "Tikslinė suma",
     "currentAmount": "Dabartinė suma",
     "targetDate": "Tikslinė data",
-    "updateProgress": "Atnaujinti progresą",
+    "ofTarget": "iš {{amount}}",
+    "reached": "Pasiekta",
     "empty": "Tikslų dar nėra."
   },
   "netWorth": {
@@ -271,15 +468,20 @@
     "confirmTitle": "Patvirtinti mokėjimą",
     "confirmAccountRequired": "Pasirinkite sąskaitą, iš kurios buvo sumokėta.",
     "empty": "Periodinių sąskaitų dar nėra.",
-    "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti periodines sąskaitas."
+    "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti periodines sąskaitas.",
+    "overdue": "Vėluoja",
+    "recordPayment": "Registruoti mokėjimą"
   },
   "notifications": {
     "title": "Pranešimai",
     "empty": "Naujų pranešimų nėra.",
     "markAllRead": "Pažymėti visus kaip skaitytus",
-    "billDue": "Mokėjimo data: {{date}}"
+    "billDue": "Mokėjimo data: {{date}}",
+    "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
+    "unavailable": "Nepavyko įkelti pranešimų"
   },
   "households": {
+    "name": "Namų ūkio pavadinimas",
     "title": "Namų ūkiai",
     "add": "Sukurti namų ūkį",
     "namePlaceholder": "pvz. Mūsų namai",
@@ -319,11 +521,9 @@
     "customRange": "Pasirinktas laikotarpis"
   },
   "imports": {
-    "title": "Importuoti Swedbank CSV",
     "file": "CSV failas",
     "chooseFile": "Spustelėkite ir pasirinkite CSV failą",
     "preview": "Peržiūra",
-    "confirm": "Patvirtinti importą",
     "confirmed": "Importuota {{imported}} operacijų (praleista {{skipped}} dublikatų)",
     "noRows": "Šiame faile nerasta importuojamų eilučių.",
     "duplicate": "Jau importuota",
@@ -335,23 +535,68 @@
     "newTransfer": "Sukurti pervedimą",
     "existingTransfer": "Esamas pervedimas",
     "matchHelp": "Importuodami kitą sąskaitą, susiekite tą patį pervedimą, kad jis nebūtų įskaitytas du kartus.",
-    "selectRow": "Pasirinkti {{row}} eilutę",
-    "flags": "Būsena"
-  },
-  "status": {
-    "label": "API būklė",
-    "loading": "Tikrinama...",
-    "ok": "Prisijungta",
-    "error": "Neprieinama"
+    "selectRow": "Pasirinkti: {{row}}",
+    "flags": "Būsena",
+    "pageTitle": "CSV importas",
+    "pageDescription": "Įkelkite Swedbank išrašą, peržiūrėkite eilutes ir patvirtinkite, kas pateks į apskaitą.",
+    "fileSection": "Išrašo failas",
+    "reviewSection": "Eilučių peržiūra",
+    "fileHint": "Swedbank sąskaitos išrašas, eksportuotas CSV formatu, eurais, iki 5 MB. Niekas neišsaugoma, kol nepatvirtinate peržiūrėtų eilučių.",
+    "fileRequired": "Pirmiausia pasirinkite CSV failą.",
+    "fileEmpty": "Šis failas tuščias. Eksportuokite išrašą dar kartą ir pasirinkite naują failą.",
+    "fileTooLarge": "Šis failas didesnis nei 5 MB. Eksportuokite trumpesnį laikotarpį.",
+    "errorFormat": "Šis failas neatitinka Swedbank CSV išrašo formato.",
+    "errorFileSize": "Failas turi būti netuščias CSV, ne didesnis nei 5 MB.",
+    "errorGeneric": "Nepavyko įkelti peržiūros. Bandykite dar kartą.",
+    "errorFix": "Eksportuokite sąskaitos išrašą iš Swedbank CSV formatu, sumos eurais, ir įkelkite jo nekeisdami. Peržiūra tikrina stulpelių tvarką, valiutą, debeto ir kredito kryptį, datas, sumas ir nuorodas.",
+    "noAccountsTitle": "Sąskaitų dar nėra",
+    "noAccounts": "Importui reikia sąskaitos, kurioje bus įrašomos eilutės.",
+    "goToAccounts": "Pridėkite ją puslapyje „Sąskaitos“",
+    "allDuplicates": "Visos šio failo eilutės jau importuotos į šią sąskaitą. Naujų įrašų nėra.",
+    "selectAll": "Pasirinkti visas eilutes",
+    "selectAllHint": "Pažymi visas eilutes, išskyrus jau importuotas",
+    "selectedOf": "Pasirinkta {{selected}} iš {{total}}",
+    "duplicateCount_one": "{{count}} dublikatas",
+    "duplicateCount_few": "{{count}} dublikatai",
+    "duplicateCount_many": "{{count}} dublikato",
+    "duplicateCount_other": "{{count}} dublikatų",
+    "transferCount_one": "{{count}} pervedimas",
+    "transferCount_few": "{{count}} pervedimai",
+    "transferCount_many": "{{count}} pervedimo",
+    "transferCount_other": "{{count}} pervedimų",
+    "netSelected": "Pasirinktų eilučių balansas",
+    "bulkCategory": "Priskirti kategoriją pasirinktoms",
+    "bulkCategoryPlaceholder": "Pasirinkite kategoriją",
+    "bulkApply": "Taikyti",
+    "bulkApplyCount_one": "Taikyti {{count}} eilutei",
+    "bulkApplyCount_few": "Taikyti {{count}} eilutėms",
+    "bulkApplyCount_many": "Taikyti {{count}} eilutės",
+    "bulkApplyCount_other": "Taikyti {{count}} eilučių",
+    "confirmCount_one": "Importuoti {{count}} eilutę",
+    "confirmCount_few": "Importuoti {{count}} eilutes",
+    "confirmCount_many": "Importuoti {{count}} eilutės",
+    "confirmCount_other": "Importuoti {{count}} eilučių",
+    "suggested": "Siūloma kategorija",
+    "suggestedHint": "Užpildyta pagal naujausią operaciją su tokiu pačiu aprašymu. Jei netinka, pakeiskite.",
+    "categoryFor": "Kategorija: {{row}}",
+    "resultImported_one": "Importuota {{count}} eilutė.",
+    "resultImported_few": "Importuotos {{count}} eilutės.",
+    "resultImported_many": "Importuota {{count}} eilutės.",
+    "resultImported_other": "Importuota {{count}} eilučių.",
+    "resultSkipped_one": "Praleistas {{count}} dublikatas.",
+    "resultSkipped_few": "Praleisti {{count}} dublikatai.",
+    "resultSkipped_many": "Praleista {{count}} dublikato.",
+    "resultSkipped_other": "Praleista {{count}} dublikatų.",
+    "resultLink": "Peržiūrėti operacijose"
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
     "loadFailed": "Nepavyko įkelti.",
     "retry": "Bandyti dar kartą",
-    "retrying": "Bandoma…",
     "loading": "Kraunama"
   },
   "validation": {
+    "rate": "Įveskite teisingą palūkanų normą, pvz. 4.5.",
     "required": "Šis laukas privalomas.",
     "money": "Įveskite teisingą sumą, pvz. 12.34.",
     "positiveMoney": "Įveskite sumą, didesnę už 0, pvz. 12.34.",
@@ -369,5 +614,13 @@
     "noMatches": "Nėra eilučių, atitinkančių filtrus.",
     "sortAsc": "Rikiuoti {{column}} didėjančiai",
     "sortDesc": "Rikiuoti {{column}} mažėjančiai"
+  },
+  "charts": {
+    "income": "Pajamos",
+    "expense": "Išlaidos",
+    "trendLabel": "Pajamos ir išlaidos pagal laikotarpį",
+    "netWorthLabel": "Grynosios vertės kitimas",
+    "net": "Balansas",
+    "netWorth": "Grynoji vertė"
   }
 }

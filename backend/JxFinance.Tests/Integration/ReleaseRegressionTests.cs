@@ -2,11 +2,11 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
 
 namespace JxFinance.Tests.Integration;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class ReleaseRegressionTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     private static async Task<JsonObject> Post(HttpClient client, string url, object data)
@@ -101,7 +101,7 @@ public sealed class ReleaseRegressionTests(ApiFixture fixture) : IntegrationTest
         var email = $"revoke-{Guid.NewGuid():N}@localhost";
         const string password = "Regression-Password-123!";
         var user = await Post(Client, "/api/users", new { email, password, displayName = "Revoke", role = "Member" });
-        using var other = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true, AllowAutoRedirect = false });
+        using var other = CreateClient(new ClientOptions { HandleCookies = true, AllowAutoRedirect = false });
         other.DefaultRequestHeaders.Add("X-Forwarded-For", Guid.NewGuid().ToString());
         await Post(other, "/api/auth/login", new { email, password });
         var categories = await other.GetFromJsonAsync<JsonArray>("/api/categories");

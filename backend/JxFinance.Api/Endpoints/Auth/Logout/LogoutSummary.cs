@@ -7,7 +7,7 @@ public sealed class LogoutSummary : Summary<LogoutEndpoint>
     public LogoutSummary()
     {
         Summary = "Sign out";
-        Description = "Clears the session cookie. Safe to call when already signed out.";
+        Description = "Ends the session and clears its cookies. Safe to call when already signed out.";
         Responses[204] = "The session is gone.";
     }
 }

@@ -10,7 +10,7 @@ public sealed class CreateAssetValidator : Validator<CreateAssetRequest>
     {
         RuleFor(r => r.Name).NotEmpty().MaximumLength(100);
         RuleFor(r => r.CurrentValue)
-            .Must(v => MoneyWire.IsValid(v) && MoneyWire.Parse(v).Amount >= 0)
+            .Must(MoneyWire.IsNonNegative)
             .WithMessage("Current value must be a non-negative decimal with at most 2 decimal places.");
         RuleFor(r => r.AsOf).NotEmpty();
     }

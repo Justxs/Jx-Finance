@@ -1,3 +1,5 @@
+<img src="frontend/public/brand/mark.svg" alt="" width="56" height="56" align="left" />
+
 # Jx Finance
 
 A self-hosted EUR finance tracker: accounts, transactions and splits, transfers, budgets, goals, recurring bills, household sharing, net worth, reports and Swedbank CSV import. React/TypeScript frontend, ASP.NET Core 10 API and PostgreSQL 16.
@@ -21,7 +23,7 @@ Nub is pinned in `frontend/package.json`; commit `frontend/nub.lock` when depend
 ## Checks
 
 ```powershell
-dotnet test backend/JxFinance.slnx
+dotnet test --solution backend/JxFinance.slnx
 nub run --cwd frontend test
 nub run --cwd frontend lint
 nub run --cwd frontend format:check

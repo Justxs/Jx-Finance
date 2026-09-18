@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import { accounts, checkingAccount } from "@/storybook/fixtures";
+import { accounts, brokerAccount, checkingAccount } from "@/storybook/fixtures";
 import { TransferForm } from "./transfer-form";
 
 const meta = {
@@ -24,6 +24,12 @@ export const Pending: Story = { args: { pending: true } };
 export const WithoutCancel: Story = { args: { onCancel: undefined } };
 
 export const SingleAccount: Story = { args: { accounts: [checkingAccount] } };
+
+export const CrossCurrency: Story = {
+  args: {
+    accounts: [checkingAccount, { ...brokerAccount, currency: "usd" }],
+  },
+};
 
 export const NoAccounts: Story = { args: { accounts: [] } };
 

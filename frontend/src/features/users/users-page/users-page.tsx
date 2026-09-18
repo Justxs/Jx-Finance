@@ -1,7 +1,7 @@
-import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -11,10 +11,10 @@ import {
   useMeEndpointSuspense,
   useUpdateUserRoleEndpoint,
 } from "@/api/generated";
-import { PageHeader } from "@/components/page-header";
-import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { CreateUserForm } from "../create-user-form";
 import { UsersTable } from "../users-table";
 
@@ -51,7 +51,7 @@ export function UsersPage() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("users.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

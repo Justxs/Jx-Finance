@@ -1,7 +1,9 @@
 using System.Globalization;
+using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Infrastructure.Data;
@@ -9,32 +11,33 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Dashboard.Services;
 
-public sealed class DashboardService(AppDbContext db, IClock clock, ICategoryAttributionService attributions)
+[RegisterService<IDashboardService>(LifeTime.Scoped)]
+public sealed class DashboardService(
+    AppDbContext db,
+    IClock clock,
+    ICategoryAttributionService attributions,
+    IAccountService accountService)
     : IDashboardService
 {
     public async Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken)
     {
-        var nowLocal = clock.ToAppTime(clock.UtcNow);
+        var nowLocal = clock.Today;
         var monthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
         var monthEnd = monthStart.AddMonths(1);
 
-        var startingBalances = await db.Accounts.SumAsync(a => (decimal)a.StartingBalance, cancellationToken);
-        var activeAccountIds = db.Accounts.Select(a => a.Id);
-        var netMovement = await db.Transactions
-            .Where(t => activeAccountIds.Contains(t.AccountId))
-            .SumAsync(t => t.Type == FlowType.Income ? (decimal)t.Amount : -(decimal)t.Amount, cancellationToken);
+        var (totalBalance, _) = await accountService.GetReportingTotalAsync(cancellationToken);
 
         var monthTotals = await db.Transactions
             .Where(t => t.Date >= monthStart && t.Date < monthEnd)
             .GroupBy(t => t.Type)
-            .Select(g => new { Type = g.Key, Total = g.Sum(t => (decimal)t.Amount) })
+            .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
         var monthIncome = monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m;
         var monthExpense = monthTotals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m;
 
         return new DashboardSummaryResponse(
-            MoneyWire.ToWire(new Money(startingBalances + netMovement)),
+            MoneyWire.ToWire(new Money(totalBalance)),
             MoneyWire.ToWire(new Money(monthIncome)),
             MoneyWire.ToWire(new Money(monthExpense)),
             monthStart,
@@ -45,8 +48,8 @@ public sealed class DashboardService(AppDbContext db, IClock clock, ICategoryAtt
         string? month,
         CancellationToken cancellationToken)
     {
-        var nowLocal = clock.ToAppTime(clock.UtcNow);
-        var (periodStart, periodEnd) = ResolveMonth(month, DateOnly.FromDateTime(nowLocal.DateTime));
+        var nowLocal = clock.Today;
+        var (periodStart, periodEnd) = ResolveMonth(month, nowLocal);
 
         var categoryAttributions = await attributions.GetAttributionsAsync(
             periodStart,
@@ -76,14 +79,14 @@ public sealed class DashboardService(AppDbContext db, IClock clock, ICategoryAtt
     public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(int months, CancellationToken cancellationToken)
     {
         var clamped = Math.Clamp(months, 1, 24);
-        var nowLocal = clock.ToAppTime(clock.UtcNow);
+        var nowLocal = clock.Today;
         var currentMonthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
         var earliestStart = currentMonthStart.AddMonths(-(clamped - 1));
 
         var totals = await db.Transactions
             .Where(t => t.Date >= earliestStart && t.Date < currentMonthStart.AddMonths(1))
             .GroupBy(t => new { t.Date.Year, t.Date.Month, t.Type })
-            .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Type, Total = g.Sum(t => (decimal)t.Amount) })
+            .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
         var items = new List<MonthlyTrendItem>();

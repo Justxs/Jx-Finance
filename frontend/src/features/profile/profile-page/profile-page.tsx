@@ -9,7 +9,7 @@ export function ProfilePage() {
   const me = useMeEndpointSuspense();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("profile.title")} />
       <ProfileForm profile={me.data} />
       <TwoFactorSettings />

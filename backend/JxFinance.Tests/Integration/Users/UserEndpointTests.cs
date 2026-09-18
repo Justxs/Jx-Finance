@@ -1,10 +1,11 @@
+using FastEndpoints.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Users;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
@@ -38,8 +39,8 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
             new { email, displayName = "To Deactivate", role = "Member", password });
         var created = await createResponse.Content.ReadFromJsonAsync<UserDto>();
 
-        using var otherClient = Factory.CreateClient(
-            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var otherClient = CreateClient(
+            new ClientOptions { HandleCookies = true });
         otherClient.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.0.0.{Random.Shared.Next(2, 254)}");
 
         var loginBefore = await otherClient.PostAsJsonAsync(
@@ -77,8 +78,8 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
             "/api/users",
             new { email, displayName = "Non Admin", role = "Member", password });
 
-        using var otherClient = Factory.CreateClient(
-            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var otherClient = CreateClient(
+            new ClientOptions { HandleCookies = true });
         otherClient.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.0.1.{Random.Shared.Next(2, 254)}");
         var loginResponse = await otherClient.PostAsJsonAsync(
             "/api/auth/login",
@@ -98,8 +99,8 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
             "/api/users",
             new { email, displayName = "Original Name", role = "Member", password });
 
-        using var otherClient = Factory.CreateClient(
-            new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { HandleCookies = true });
+        using var otherClient = CreateClient(
+            new ClientOptions { HandleCookies = true });
         otherClient.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.0.2.{Random.Shared.Next(2, 254)}");
         await otherClient.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
 

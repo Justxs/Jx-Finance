@@ -1,3 +1,4 @@
+using FastEndpoints;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Budgets;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Budgets.Services;
 
+[RegisterService<IBudgetService>(LifeTime.Scoped)]
 public sealed class BudgetService(
     AppDbContext db,
     ICategoryAttributionService attributions,
@@ -28,7 +30,7 @@ public sealed class BudgetService(
             return [];
         }
 
-        var nowLocal = clock.ToAppTime(clock.UtcNow);
+        var nowLocal = clock.Today;
         var monthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
         var monthEnd = monthStart.AddMonths(1);
 
@@ -117,7 +119,7 @@ public sealed class BudgetService(
 
     private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken)
     {
-        var nowLocal = clock.ToAppTime(clock.UtcNow);
+        var nowLocal = clock.Today;
         var monthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
         var monthEnd = monthStart.AddMonths(1);
 

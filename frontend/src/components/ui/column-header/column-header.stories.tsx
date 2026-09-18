@@ -4,7 +4,7 @@ import { TextColumnFilter } from "../column-filter";
 import { ColumnHeader, type SortDirection } from "./column-header";
 
 function SortableExample({ withFilter }: Readonly<{ withFilter?: boolean }>) {
-  const [sort, setSort] = useState<string | undefined>(undefined);
+  const [sort, setSort] = useState<string | undefined>();
   const [direction, setDirection] = useState<SortDirection>("asc");
   const [search, setSearch] = useState("");
 
@@ -41,7 +41,7 @@ function SortableExample({ withFilter }: Readonly<{ withFilter?: boolean }>) {
 const meta = {
   title: "UI/ColumnHeader",
   component: ColumnHeader,
-  args: { label: "Amount", sortKey: "amount", onSort: () => undefined },
+  args: { label: "Amount", sortKey: "amount", onSort: () => {} },
   decorators: [
     (Story) => (
       <div className="text-sm font-medium text-muted-foreground">
@@ -64,7 +64,7 @@ export const NotSortable: Story = { args: { sortKey: undefined, onSort: undefine
 
 export const WithFilter: Story = {
   args: {
-    filter: <TextColumnFilter label="Amount" value="" onChange={() => undefined} />,
+    filter: <TextColumnFilter label="Amount" value="" onChange={() => {}} />,
   },
 };
 
@@ -72,7 +72,7 @@ export const WithActiveFilter: Story = {
   args: {
     activeSort: "amount",
     direction: "desc",
-    filter: <TextColumnFilter label="Amount" value="42" onChange={() => undefined} />,
+    filter: <TextColumnFilter label="Amount" value="42" onChange={() => {}} />,
   },
 };
 

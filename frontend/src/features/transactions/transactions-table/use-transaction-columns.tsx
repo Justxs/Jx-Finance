@@ -3,11 +3,25 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { Tag } from "@/components/ui/tag";
+import { useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
-import { transactionTableFeatures } from "./table-features";
+import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
+import type { transactionTableFeatures } from "./table-features";
 
 const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
+
+export interface TransactionSelection {
+  selectedIds: ReadonlySet<string>;
+  selectableIds: string[];
+  rowLabel: (row: TransactionResponse) => string;
+  onToggle: (id: string, selected: boolean) => void;
+  onTogglePage: (selected: boolean) => void;
+}
+
+export function isSelectableTransaction(row: TransactionResponse) {
+  return !row.isSplit && !isOptimistic(row);
+}
 
 interface UseTransactionColumnsArgs {
   accountNames: Map<string | undefined, string | undefined>;
@@ -25,17 +39,34 @@ export function useTransactionColumns({
   deletingId,
 }: UseTransactionColumnsArgs) {
   const { t } = useTranslation();
-  const money = useMoney();
   const formatDate = useIsoDate();
+
+  function rowName(row: TransactionResponse) {
+    return transactionName(row, categoryById, t);
+  }
 
   return columnHelper.columns([
     columnHelper.accessor("date", {
       header: t("transactions.date"),
-      cell: (info) => formatDate(info.getValue()),
+      cell: (info) => (
+        <span className="whitespace-nowrap text-muted-foreground tabular-nums">
+          {formatDate(info.getValue())}
+        </span>
+      ),
     }),
     columnHelper.accessor("description", {
       header: t("transactions.description"),
-      cell: (info) => info.getValue() || "—",
+      cell: (info) => {
+        const description = info.getValue();
+        if (!description) {
+          return <span className="text-muted-foreground">—</span>;
+        }
+        return (
+          <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
+            {description}
+          </span>
+        );
+      },
     }),
     columnHelper.accessor("categoryId", {
       header: t("transactions.category"),
@@ -44,11 +75,9 @@ export function useTransactionColumns({
         if (row.isSplit) {
           return (
             <span className="inline-flex items-center gap-2">
-              <span className="inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground">
-                {t("transactions.split")}
-              </span>
-              <span className="text-xs text-muted-foreground">
-                {row.lines?.length ?? 0} {t("transactions.category").toLowerCase()}
+              <Tag tone="accent">{t("transactions.split")}</Tag>
+              <span className="text-xs whitespace-nowrap text-muted-foreground tabular-nums">
+                {t("transactions.splitCategories", { count: row.lines?.length ?? 0 })}
               </span>
             </span>
           );
@@ -59,51 +88,53 @@ export function useTransactionColumns({
           return <span className="text-muted-foreground">{t("transactions.uncategorized")}</span>;
         }
         return (
-          <span className="inline-flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-full bg-muted text-muted-foreground">
-              <CategoryIcon icon={category.icon} className="size-3.5" />
-            </span>
-            {category.name}
+          <span className="flex min-w-0 items-center gap-1.5" title={category.name}>
+            <CategoryIcon
+              icon={category.icon}
+              className="size-3.5 shrink-0 text-muted-foreground"
+            />
+            <span className="truncate">{category.name}</span>
           </span>
         );
       },
     }),
     columnHelper.accessor("accountId", {
       header: t("transactions.account"),
-      cell: (info) => accountNames.get(info.getValue()) ?? "",
-    }),
-    columnHelper.accessor("amount", {
-      header: t("transactions.amount"),
       cell: (info) => {
-        const row = info.row.original;
+        const name = accountNames.get(info.getValue()) ?? "";
         return (
-          <span
-            className={`block text-right font-semibold tabular-nums ${
-              row.type === "income" ? "text-secondary" : "text-foreground"
-            }`}
-          >
-            {row.type === "income" ? "+" : "−"}
-            {money.format(Number(info.getValue()))}
+          <span className="block truncate text-muted-foreground" title={name}>
+            {name}
           </span>
         );
       },
     }),
+    columnHelper.accessor("amount", {
+      header: t("transactions.amount"),
+      cell: (info) => (
+        <TransactionAmount
+          transaction={info.row.original}
+          showReporting
+          className="block text-right"
+        />
+      ),
+    }),
     columnHelper.display({
       id: "actions",
-      header: "",
+      header: () => <span className="sr-only">{t("common.actions")}</span>,
       cell: (info) => {
         const row = info.row.original;
-        const isOptimistic = row.id?.startsWith("optimistic-");
+        const optimistic = isOptimistic(row);
         return (
           <div className="flex justify-end gap-1">
             <Button
               variant="ghost"
               size="icon"
               className="size-8"
-              disabled={isOptimistic}
+              disabled={optimistic}
               onClick={() => onEdit(row)}
-              aria-label={t("actions.edit")}
-              title={t("actions.edit")}
+              aria-label={`${t("actions.edit")}: ${rowName(row)}`}
+              tooltip={`${t("actions.edit")}: ${rowName(row)}`}
             >
               <Pencil />
             </Button>
@@ -112,10 +143,10 @@ export function useTransactionColumns({
               size="icon"
               className="size-8"
               pending={deletingId === row.id}
-              disabled={isOptimistic || deletingId !== null}
-              onClick={() => onDelete(row.id!)}
-              aria-label={t("actions.delete")}
-              title={t("actions.delete")}
+              disabled={optimistic || deletingId !== null}
+              onClick={() => onDelete(row.id)}
+              aria-label={`${t("actions.delete")}: ${rowName(row)}`}
+              tooltip={`${t("actions.delete")}: ${rowName(row)}`}
             >
               <Trash2 />
             </Button>

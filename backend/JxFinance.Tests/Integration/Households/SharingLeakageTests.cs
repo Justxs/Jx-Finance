@@ -1,11 +1,11 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Microsoft.AspNetCore.Mvc.Testing;
+using FastEndpoints.Testing;
 
 namespace JxFinance.Tests.Integration.Households;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
@@ -115,7 +115,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
 
     private async Task<HttpClient> LoginAsAsync(string email, string password, string ipPrefix)
     {
-        var client = Factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = true });
+        var client = CreateClient(new ClientOptions { HandleCookies = true });
         client.DefaultRequestHeaders.Add("X-Forwarded-For", $"{ipPrefix}.{Random.Shared.Next(2, 254)}");
         var response = await client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
         response.EnsureSuccessStatusCode();

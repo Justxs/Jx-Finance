@@ -79,8 +79,9 @@ export function ProfileForm({ profile }: Readonly<Props>) {
         void form.handleSubmit();
       }}
       noValidate
-      className="card max-w-md space-y-4 p-6"
+      className="section max-w-md space-y-4"
     >
+      <h2 className="section-title">{t("profile.detailsTitle")}</h2>
       <form.Field name="displayName">
         {(field) => (
           <div className="space-y-1.5">
@@ -89,10 +90,11 @@ export function ProfileForm({ profile }: Readonly<Props>) {
               id="profile-display-name"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "profile-display-name-error" : undefined}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="profile-display-name-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -106,10 +108,13 @@ export function ProfileForm({ profile }: Readonly<Props>) {
               type="password"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={
+                field.errors.length > 0 ? "profile-current-password-error" : undefined
+              }
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="profile-current-password-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
@@ -123,10 +128,11 @@ export function ProfileForm({ profile }: Readonly<Props>) {
               type="password"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "profile-new-password-error" : undefined}
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="profile-new-password-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>

@@ -1,3 +1,4 @@
+using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -13,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Households.Services;
 
+[RegisterService<IHouseholdService>(LifeTime.Scoped)]
 public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, HouseholdMapper mapper) : IHouseholdService
 {
     public async Task<IReadOnlyList<HouseholdResponse>> GetAllAsync(CancellationToken cancellationToken)

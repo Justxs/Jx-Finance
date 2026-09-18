@@ -1,10 +1,11 @@
 using FastEndpoints;
 using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.CreateAsset;
 
-public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endpoint<CreateAssetRequest, AssetResponse>
+public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endpoint<CreateAssetRequest, AssetResponse, AssetMapper>
 {
     public override void Configure()
     {
@@ -15,7 +16,7 @@ public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endp
 
     public override async Task HandleAsync(CreateAssetRequest req, CancellationToken ct)
     {
-        var asset = await netWorthService.CreateAssetAsync(req, ct);
+        var asset = Map.FromEntity(await netWorthService.CreateAssetAsync(Map.ToEntity(req), ct));
         await Send.ResultAsync(TypedResults.Created($"/api/assets/{asset.Id}", asset));
     }
 }

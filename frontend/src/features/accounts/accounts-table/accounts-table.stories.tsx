@@ -19,6 +19,7 @@ const meta = {
     onUpdate: fn(),
     deletingId: null,
     onDelete: fn(),
+    onConvert: fn(),
   },
   render: (args) => (
     <div className="mx-auto max-w-6xl p-6">

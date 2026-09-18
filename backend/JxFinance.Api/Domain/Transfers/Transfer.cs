@@ -9,6 +9,7 @@ public sealed class Transfer : OwnableEntity
     public AccountId FromAccountId { get; set; }
     public AccountId ToAccountId { get; set; }
     public Money Amount { get; set; }
+    public Money ReceivedAmount { get; set; }
     public DateOnly Date { get; set; }
     public string? Description { get; set; }
 }

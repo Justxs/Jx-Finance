@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCalendarLocale, useDate } from "@/hooks/use-formatters";
+import { useToday } from "@/hooks/use-settings";
 import { parseIso, toIso } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
@@ -33,21 +34,23 @@ export function DateRangePicker({
   const { t } = useTranslation();
   const dateFormat = useDate();
   const locale = useCalendarLocale();
+  const today = useToday();
+  const todayDate = parseIso(today) ?? new Date();
   const [open, setOpen] = useState(false);
 
   const from = parseIso(value.from) ?? undefined;
   const to = parseIso(value.to) ?? undefined;
-  const [month, setMonth] = useState(from ?? new Date());
+  const [month, setMonth] = useState(from ?? todayDate);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      setMonth(from ?? new Date());
+      setMonth(from ?? todayDate);
     }
   }
 
   function pick(iso: string) {
-    const startingOver = !value.from || !!value.to;
+    const startingOver = !value.from || Boolean(value.to);
     if (startingOver) {
       onChange({ from: iso, to: "" });
       return;
@@ -93,7 +96,6 @@ export function DateRangePicker({
         <Calendar
           mode="range"
           locale={locale}
-          weekStartsOn={1}
           selected={{ from, to }}
           month={month}
           onMonthChange={setMonth}

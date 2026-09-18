@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -9,7 +10,8 @@ using JxFinance.Endpoints.Accounts.UpdateAccount;
 
 namespace JxFinance.Endpoints.Accounts.Mappers;
 
-public sealed class AccountMapper : Mapper<CreateAccountRequest, AccountResponse, Account>
+[RegisterService<AccountMapper>(LifeTime.Singleton)]
+public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<CreateAccountRequest, AccountResponse, Account>
 {
     public override Account ToEntity(CreateAccountRequest request) => new()
     {
@@ -17,7 +19,7 @@ public sealed class AccountMapper : Mapper<CreateAccountRequest, AccountResponse
         Description = OptionalText.Normalize(request.Description),
         Iban = Iban.Normalize(request.Iban),
         Type = request.Type,
-        StartingBalance = MoneyWire.Parse(request.StartingBalance),
+        StartingBalance = MoneyWire.Parse(request.StartingBalance, request.Currency ?? settings.Current.ReportingCurrency),
         Scope = request.Scope,
         HouseholdId = HouseholdFor(request.Scope, request.HouseholdId),
     };
@@ -28,22 +30,27 @@ public sealed class AccountMapper : Mapper<CreateAccountRequest, AccountResponse
         account.Description = OptionalText.Normalize(request.Description);
         account.Iban = Iban.Normalize(request.Iban);
         account.Type = request.Type;
-        account.StartingBalance = MoneyWire.Parse(request.StartingBalance);
+        account.StartingBalance = MoneyWire.Parse(request.StartingBalance, request.Currency ?? account.Currency);
         account.Scope = request.Scope;
         account.HouseholdId = HouseholdFor(request.Scope, request.HouseholdId);
     }
 
-    public AccountResponse FromEntity(Account account, decimal netMovement) => new(
+    public AccountResponse FromEntity(Account account, AccountBalance balance) => new(
         account.Id.Value,
         account.Name,
         account.Description,
         account.Iban,
         account.Type,
         MoneyWire.ToWire(account.StartingBalance),
-        MoneyWire.ToWire(account.StartingBalance + netMovement),
+        MoneyWire.ToWire(balance.Total),
         account.CreatedAt,
         account.Scope,
-        account.HouseholdId?.Value);
+        account.HouseholdId?.Value,
+        account.Currency,
+        balance.ByCurrency
+            .Select(entry => new CurrencyBalance(entry.Currency, MoneyWire.ToWire(entry)))
+            .ToList(),
+        MoneyWire.ToWire(balance.Reporting));
 
     private static HouseholdId? HouseholdFor(Scope scope, Guid? householdId) =>
         scope == Scope.Shared ? new HouseholdId(householdId!.Value) : null;

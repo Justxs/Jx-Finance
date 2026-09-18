@@ -1,5 +1,7 @@
+import type { Decorator } from "@storybook/react-vite";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  type AnyRouter,
   Outlet,
   RouterProvider,
   createMemoryHistory,
@@ -7,12 +9,14 @@ import {
   createRoute,
   createRouter,
 } from "@tanstack/react-router";
-import type { Decorator } from "@storybook/react-vite";
 import { type FunctionComponent, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { pageViewTransition } from "@/lib/page-transition";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
+import { importSearchSchema } from "@/routes/import";
 import { reportsSearchSchema } from "@/routes/reports";
 import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
@@ -21,6 +25,7 @@ const STORY_ROUTES = [
   { path: "/" },
   { path: "/accounts", validateSearch: accountsSearchSchema },
   { path: "/transactions", validateSearch: transactionsSearchSchema },
+  { path: "/import", validateSearch: importSearchSchema },
   { path: "/reports", validateSearch: reportsSearchSchema },
   { path: "/users", validateSearch: usersSearchSchema },
   { path: "/budgets" },
@@ -30,6 +35,7 @@ const STORY_ROUTES = [
   { path: "/net-worth" },
   { path: "/profile" },
   { path: "/recurring-bills" },
+  { path: "/settings" },
   { path: "/login" },
   { path: "/setup" },
 ] as const;
@@ -57,6 +63,20 @@ function createStoryRouter(Story: FunctionComponent, initialPath: string) {
   });
 }
 
+function ProviderTree({
+  queryClient,
+  router,
+}: Readonly<{ queryClient: QueryClient; router: AnyRouter }>) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <RouterProvider router={router as never} />
+      </TooltipProvider>
+      <Toaster />
+    </QueryClientProvider>
+  );
+}
+
 function StoryProviders({
   Story,
   initialPath,
@@ -64,20 +84,16 @@ function StoryProviders({
   const [queryClient] = useState(createStoryQueryClient);
   const [router] = useState(() => createStoryRouter(Story, initialPath));
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router as never} />
-      <Toaster />
-    </QueryClientProvider>
-  );
+  return <ProviderTree queryClient={queryClient} router={router} />;
 }
 
-export const withAppProviders: Decorator = (Story, context) =>
-  context.parameters.providers === "none" ? (
+export function withAppProviders(...[Story, context]: Parameters<Decorator>) {
+  return context.parameters.providers === "none" ? (
     <Story />
   ) : (
     <StoryProviders Story={Story} initialPath={(context.parameters.route as string) ?? "/"} />
   );
+}
 
 export function AppAt({
   path,
@@ -91,13 +107,9 @@ export function AppAt({
     return createRouter({
       routeTree,
       history: createMemoryHistory({ initialEntries: [path] }),
+      defaultViewTransition: pageViewTransition,
     });
   });
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router as never} />
-      <Toaster />
-    </QueryClientProvider>
-  );
+  return <ProviderTree queryClient={queryClient} router={router} />;
 }

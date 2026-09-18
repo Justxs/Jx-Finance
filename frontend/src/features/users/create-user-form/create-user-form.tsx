@@ -2,11 +2,12 @@ import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateUserEndpoint } from "@/api/generated";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/select-field";
+import { isEmail } from "@/lib/validation";
 
 const roles = ["Member", "Admin"] as const;
 
@@ -30,7 +31,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
       .string()
       .trim()
       .min(1, t("validation.required"))
-      .regex(/^[^\s@]+@[^\s@]+$/, t("validation.email")),
+      .refine(isEmail, t("validation.email")),
     displayName: z
       .string()
       .trim()
@@ -40,7 +41,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
     password: z
       .string()
       .min(8, t("validation.minLength", { min: 8 }))
-      .max(100),
+      .max(100, t("validation.maxLength", { max: 100 })),
   });
 
   const createMutation = useCreateUserEndpoint({ mutation: { onSuccess: onCreated } });
@@ -86,11 +87,12 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
                 id="user-display-name"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "user-display-name-error" : undefined}
                 autoFocus
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="user-display-name-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -104,10 +106,11 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
                 type="email"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "user-email-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="user-email-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -138,10 +141,11 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
                 type="password"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "user-password-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="user-password-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>

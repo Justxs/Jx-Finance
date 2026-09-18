@@ -1,12 +1,15 @@
 import { useForm } from "@tanstack/react-form";
+import { type RefObject, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import type {
-  AccountResponse,
-  CategoryResponse,
-  FlowType,
-  TransactionResponse,
+import {
+  type AccountResponse,
+  type CategoryResponse,
+  Currency,
+  type FlowType,
+  type TransactionResponse,
 } from "@/api/generated/model";
+import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,10 +17,13 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { heldCurrencies } from "@/features/accounts/held-currencies";
+import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
 import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
+import { emptyLine, type LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
 
-export interface TransactionLineFormValues {
+interface TransactionLineFormValues {
   categoryId: string | null;
   amount: string;
   description: string | null;
@@ -28,16 +34,10 @@ export interface TransactionFormValues {
   categoryId: string | null;
   type: FlowType;
   amount: string;
+  currency: Currency;
   date: string;
   description: string | null;
   lines: TransactionLineFormValues[] | null;
-}
-
-export interface LineFormValue {
-  id: string;
-  categoryId: string;
-  amount: string;
-  description: string;
 }
 
 interface FormValues {
@@ -45,6 +45,7 @@ interface FormValues {
   accountId: string;
   categoryId: string;
   amount: string;
+  currency: Currency;
   date: string;
   description: string;
   isSplit: boolean;
@@ -62,21 +63,32 @@ interface Props {
   initial?: TransactionResponse;
   pending: boolean;
   onSubmit: (values: TransactionFormValues) => void;
+  onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onCancel?: () => void;
 }
 
-export function todayIsoDate() {
-  return new Date().toLocaleDateString("en-CA");
+type SubmitIntent = "save" | "another";
+
+interface FormSource extends Pick<
+  Props,
+  "accounts" | "initial" | "onSubmit" | "onSubmitAndAddAnother"
+> {
+  intent: RefObject<SubmitIntent>;
+  amountInput: RefObject<HTMLInputElement | null>;
+  onAnotherSettled: () => void;
 }
 
-export function emptyLine(): LineFormValue {
-  return { id: crypto.randomUUID(), categoryId: "", amount: "", description: "" };
-}
-
-type FormSource = Pick<Props, "accounts" | "initial" | "onSubmit">;
-
-function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource>) {
+function useTransactionForm({
+  accounts,
+  initial,
+  onSubmit,
+  onSubmitAndAddAnother,
+  intent,
+  amountInput,
+  onAnotherSettled,
+}: Readonly<FormSource>) {
   const { t } = useTranslation();
+  const today = useToday();
 
   const schema = z
     .object({
@@ -84,6 +96,7 @@ function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource
       accountId: z.string().min(1, t("validation.required")),
       categoryId: z.string(),
       amount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+      currency: z.enum(Currency),
       date: z.string().min(1, t("validation.required")),
       description: z.string(),
       isSplit: z.boolean(),
@@ -125,12 +138,16 @@ function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource
       }
     });
 
+  const { defaultAccountId } = useSettingsSuspense();
+  const defaultAccount = accounts.find((account) => account.id === defaultAccountId) ?? accounts[0];
+
   const defaultValues: FormValues = {
     type: initial?.type ?? "expense",
-    accountId: initial?.accountId ?? accounts[0]?.id ?? "",
+    accountId: initial?.accountId ?? defaultAccount?.id ?? "",
     categoryId: initial?.categoryId ?? "",
     amount: initial?.amount ?? "",
-    date: initial?.date ?? todayIsoDate(),
+    currency: initial?.currency ?? defaultAccount?.currency ?? "eur",
+    date: initial?.date ?? today,
     description: initial?.description ?? "",
     isSplit: initial?.isSplit ?? false,
     lines: initial?.lines?.length
@@ -146,12 +163,13 @@ function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource
   const form = useForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      onSubmit({
+    onSubmit: async ({ value, formApi }) => {
+      const values: TransactionFormValues = {
         accountId: value.accountId,
         categoryId: value.isSplit ? null : value.categoryId || null,
         type: value.type,
         amount: value.amount,
+        currency: value.currency,
         date: value.date,
         description: value.description.trim() || null,
         lines: value.isSplit
@@ -161,7 +179,25 @@ function useTransactionForm({ accounts, initial, onSubmit }: Readonly<FormSource
               description: line.description.trim() || null,
             }))
           : null,
-      });
+      };
+
+      if (intent.current !== "another" || !onSubmitAndAddAnother) {
+        onSubmit(values);
+        return;
+      }
+
+      const saved = await onSubmitAndAddAnother(values);
+      onAnotherSettled();
+      if (saved) {
+        formApi.reset({
+          ...defaultValues,
+          type: value.type,
+          accountId: value.accountId,
+          currency: value.currency,
+          date: value.date,
+        });
+        amountInput.current?.focus();
+      }
     },
   });
 
@@ -189,7 +225,7 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
                   { value: "", label: t("transactions.uncategorized") },
                   ...categories
                     .filter((c) => c.type === typeField.value)
-                    .map((category) => ({ value: category.id!, label: category.name })),
+                    .map((category) => ({ value: category.id, label: category.name })),
                 ]}
               />
             </div>
@@ -206,16 +242,30 @@ export function TransactionForm({
   initial,
   pending,
   onSubmit,
+  onSubmitAndAddAnother,
   onCancel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const form = useTransactionForm({ accounts, initial, onSubmit });
+  const intent = useRef<SubmitIntent>("save");
+  const amountInput = useRef<HTMLInputElement>(null);
+  const [anotherPending, setAnotherPending] = useState(false);
+  const form = useTransactionForm({
+    accounts,
+    initial,
+    onSubmit,
+    onSubmitAndAddAnother,
+    intent,
+    amountInput,
+    onAnotherSettled: () => setAnotherPending(false),
+  });
 
   return (
     <form
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
+        intent.current = "save";
+        setAnotherPending(false);
         void form.handleSubmit();
       }}
       noValidate
@@ -253,8 +303,18 @@ export function TransactionForm({
               id="tx-account"
               value={field.value}
               onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
-              options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+              onChange={(value) => {
+                const previous = accounts.find((account) => account.id === field.value);
+                const next = accounts.find((account) => account.id === value);
+                field.handleChange(value);
+                if (
+                  next &&
+                  form.getFieldValue("currency") === (previous?.currency ?? next.currency)
+                ) {
+                  form.setFieldValue("currency", next.currency);
+                }
+              }}
+              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
             />
           </div>
         )}
@@ -275,23 +335,31 @@ export function TransactionForm({
         }
       </form.Subscribe>
 
-      <form.Field name="amount">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-amount">{t("transactions.amount")}</Label>
-            <Input
-              id="tx-amount"
-              inputMode="decimal"
-              placeholder="0.00"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError message={field.errors[0]?.message} />
-          </div>
+      <form.Subscribe selector={(state) => state.values.accountId}>
+        {(accountId) => (
+          <form.Field name="amount">
+            {(field) => (
+              <form.Field name="currency">
+                {(currencyField) => (
+                  <MoneyField
+                    id="tx-amount"
+                    ref={amountInput}
+                    label={t("transactions.amount")}
+                    value={field.value}
+                    error={field.errors[0]?.message}
+                    onBlur={field.handleBlur}
+                    onChange={field.handleChange}
+                    currency={currencyField.value}
+                    currencyLabel={t("transactions.currency")}
+                    preferred={heldCurrencies(accounts.find((account) => account.id === accountId))}
+                    onCurrencyChange={currencyField.handleChange}
+                  />
+                )}
+              </form.Field>
+            )}
+          </form.Field>
         )}
-      </form.Field>
+      </form.Subscribe>
 
       <form.Field name="date">
         {(field) => (
@@ -301,32 +369,18 @@ export function TransactionForm({
               id="tx-date"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={field.errors.length > 0 ? "tx-date-error" : undefined}
               onBlur={field.handleBlur}
               onChange={field.handleChange}
             />
-            <FieldError message={field.errors[0]?.message} />
+            <FieldError id="tx-date-error" message={field.errors[0]?.message} />
           </div>
         )}
       </form.Field>
 
-      <div className="flex flex-wrap items-end gap-2 self-end">
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit} className="flex-1">
-              {initial ? t("actions.save") : t("actions.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
-      </div>
-
       <form.Field name="description">
         {(field) => (
-          <div className="space-y-1.5 col-span-full">
+          <div className="col-span-full space-y-1.5">
             <Label htmlFor="tx-description">{t("transactions.description")}</Label>
             <Input
               id="tx-description"
@@ -359,6 +413,42 @@ export function TransactionForm({
       </form.Field>
 
       <SplitLinesEditor form={form} categories={categories} />
+
+      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+        ) : null}
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <>
+              {onSubmitAndAddAnother && !initial ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  pending={pending && anotherPending}
+                  disabled={!canSubmit || pending}
+                  onClick={() => {
+                    intent.current = "another";
+                    setAnotherPending(true);
+                    void form.handleSubmit();
+                  }}
+                >
+                  {t("transactions.saveAndAddAnother")}
+                </Button>
+              ) : null}
+              <Button
+                type="submit"
+                pending={pending && !anotherPending}
+                disabled={!canSubmit || pending}
+              >
+                {initial ? t("actions.save") : t("actions.add")}
+              </Button>
+            </>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

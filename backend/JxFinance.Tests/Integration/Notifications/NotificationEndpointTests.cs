@@ -8,7 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
@@ -53,7 +53,7 @@ public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationT
     {
         var me = await Client.GetFromJsonAsync<MeDto>("/api/auth/me");
 
-        using var scope = Factory.Services.CreateScope();
+        using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var notification = new Notification

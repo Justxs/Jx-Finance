@@ -3,9 +3,9 @@ import { HttpResponse, http } from "msw";
 import type { NotificationResponse } from "@/api/generated/model";
 import { notifications } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
-import { NotificationBell } from "./notification-bell";
 import { QueryBoundary } from "../query-boundary";
 import { Skeleton } from "../ui/skeleton";
+import { NotificationBell } from "./notification-bell";
 
 function notificationsHandler(items: NotificationResponse[]) {
   return http.get("*/api/notifications", ({ request }) => {

@@ -1,11 +1,11 @@
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Notifications.Shared;
+using JxFinance.Domain.Notifications;
 
 namespace JxFinance.Endpoints.Notifications.Interfaces;
 
 public interface INotificationService
 {
-    Task<IReadOnlyList<NotificationResponse>> GetAllAsync(bool? unreadOnly, CancellationToken cancellationToken);
+    Task<IReadOnlyList<Notification>> GetAllAsync(bool? unreadOnly, CancellationToken cancellationToken);
 
     Task<Result<Guid>> MarkReadAsync(Guid id, CancellationToken cancellationToken);
 

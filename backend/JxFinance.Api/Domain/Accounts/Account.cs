@@ -11,6 +11,7 @@ public sealed class Account : OwnableEntity, IShareable
     public string? Iban { get; set; }
     public AccountType Type { get; set; }
     public Money StartingBalance { get; set; }
+    public Currency Currency => StartingBalance.Currency;
     public Scope Scope { get; set; } = Scope.Personal;
     public HouseholdId? HouseholdId { get; set; }
 }

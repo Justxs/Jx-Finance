@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, UserManager<AppUser> users, SignInManager<AppUser> signIn)
+public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, UserManager<AppUser> users, ISessionService sessions)
     : Endpoint<ReauthenticateRequest>
 {
     public override void Configure()
@@ -33,7 +33,7 @@ public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentU
             return;
         }
         await authService.DisableTwoFactorAsync(user);
-        await signIn.RefreshSignInAsync(user);
+        await sessions.RenewAsync(user, ct);
         await Send.NoContentAsync(ct);
     }
 }

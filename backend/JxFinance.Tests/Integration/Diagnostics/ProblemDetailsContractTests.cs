@@ -6,7 +6,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class ProblemDetailsContractTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

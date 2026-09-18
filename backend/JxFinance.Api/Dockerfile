@@ -9,7 +9,7 @@ RUN dotnet publish backend/JxFinance.Api/JxFinance.Api.csproj -c Release -o /app
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
+    && apt-get install -y --no-install-recommends curl fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 RUN mkdir /keys && chown app:app /keys
 WORKDIR /app

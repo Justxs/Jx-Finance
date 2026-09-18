@@ -1,10 +1,11 @@
 using FastEndpoints;
 using JxFinance.Endpoints.Goals.Interfaces;
+using JxFinance.Endpoints.Goals.Mappers;
 using JxFinance.Endpoints.Goals.Shared;
 
 namespace JxFinance.Endpoints.Goals.GetGoals;
 
-public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithoutRequest<IReadOnlyList<GoalResponse>>
+public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithoutRequest<IReadOnlyList<GoalResponse>, GoalMapper>
 {
     public override void Configure()
     {
@@ -15,6 +16,6 @@ public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithout
     public override async Task HandleAsync(CancellationToken ct)
     {
         var goals = await goalService.GetAllAsync(ct);
-        await Send.OkAsync(goals, ct);
+        await Send.OkAsync(goals.Select(Map.FromEntity).ToList(), ct);
     }
 }

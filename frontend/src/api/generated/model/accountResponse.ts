@@ -6,6 +6,8 @@
  * OpenAPI spec version: v1
  */
 import type { AccountType } from "./accountType";
+import type { Currency } from "./currency";
+import type { IReadOnlyListOfCurrencyBalance } from "./iReadOnlyListOfCurrencyBalance";
 import type { Scope } from "./scope";
 
 export interface AccountResponse {
@@ -22,4 +24,7 @@ export interface AccountResponse {
   scope: Scope;
   /** @nullable */
   householdId: string | null;
+  currency: Currency;
+  balances: IReadOnlyListOfCurrencyBalance;
+  reportingBalance: string;
 }

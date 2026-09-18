@@ -15,7 +15,7 @@ public sealed class CreateRecurringBillValidator : Validator<CreateRecurringBill
         RuleFor(r => r.RemindDaysBefore).InclusiveBetween(0, 365);
         RuleFor(r => r.NextDueDate).NotEmpty();
         RuleFor(r => r.Amount)
-            .Must(a => a is null || (MoneyWire.IsValid(a) && MoneyWire.Parse(a).Amount > 0))
+            .Must(a => a is null || MoneyWire.IsPositive(a))
             .WithMessage("Amount must be a positive decimal with at most 2 decimal places.");
         RuleFor(r => r.Amount)
             .NotNull()

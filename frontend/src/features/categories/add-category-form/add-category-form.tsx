@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateCategoryEndpoint, useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { FlowType, Scope } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/select-field";
 import { IconPicker } from "../icon-picker";
 
 interface FormValues {
@@ -91,11 +91,12 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                 placeholder={t("categories.namePlaceholder")}
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "category-name-error" : undefined}
                 autoFocus
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="category-name-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -149,6 +150,9 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                         id="category-household"
                         value={field.value}
                         aria-invalid={field.errors.length > 0}
+                        aria-describedby={
+                          field.errors.length > 0 ? "category-household-error" : undefined
+                        }
                         onBlur={field.handleBlur}
                         onChange={(value) => field.handleChange(value)}
                         options={[
@@ -159,7 +163,10 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                           })),
                         ]}
                       />
-                      <FieldError message={field.errors[0]?.message} />
+                      <FieldError
+                        id="category-household-error"
+                        message={field.errors[0]?.message}
+                      />
                     </div>
                   )}
                 </form.Field>

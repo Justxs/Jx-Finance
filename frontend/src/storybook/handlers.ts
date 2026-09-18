@@ -1,6 +1,9 @@
-import { HttpResponse, delay, http } from "msw";
+import { HttpHandler, HttpResponse, delay, http } from "msw";
 import type { RequestHandler } from "msw";
 import type {
+  ConversionResponse,
+  Currency,
+  ExchangeRateResponse,
   AccountResponse,
   AssetResponse,
   BudgetResponse,
@@ -28,6 +31,7 @@ import {
   FIXTURE_MONTH_START,
   FIXTURE_TODAY,
   accounts,
+  buildTransactionsSummary,
   assets,
   budgets,
   buildCategoryBreakdownItems,
@@ -43,10 +47,13 @@ import {
   emptyDashboardSummary,
   emptyNetWorth,
   emptyReportSummary,
+  emptyTransactionsSummary,
   familyHousehold,
   goals,
   households,
+  importFormatProblem,
   importPreview,
+  importPreviewAllDuplicates,
   loginSuccess,
   loginTwoFactorRequired,
   monthlyTrendItems,
@@ -54,7 +61,6 @@ import {
   netWorthHistory,
   notFoundProblem,
   notifications,
-  ping,
   recurringBills,
   reportSummaryYear,
   serverErrorProblem,
@@ -64,6 +70,10 @@ import {
   transactionsBetween,
   transactionsCsv,
   transfers,
+  conversions,
+  currencies,
+  ratesPerEuro,
+  settings,
   twoFactorRecoveryCodes,
   twoFactorSetup,
   unauthorizedProblem,
@@ -362,7 +372,12 @@ const accountHandlers = [
     };
     const merged = mergeAccount(created, await readBody(request));
     return HttpResponse.json(
-      { ...merged, currentBalance: merged.startingBalance },
+      {
+        ...merged,
+        currentBalance: merged.startingBalance,
+        reportingBalance: merged.startingBalance,
+        balances: [{ currency: merged.currency, amount: merged.startingBalance }],
+      },
       { status: 201 },
     );
   }),
@@ -570,10 +585,13 @@ const importHandlers = [
   http.post(api("/import/swedbank/preview"), () => HttpResponse.json(importPreview)),
   http.post(api("/import/swedbank/confirm"), async ({ request }) => {
     const body = await readBody(request);
-    const rows = Array.isArray(body.rows) ? body.rows.length : 0;
+    const rows: Body[] = Array.isArray(body.rows) ? body.rows : [];
+    const skipped = rows.filter((row) =>
+      importPreview.rows.some((item) => item.importRef === row.importRef && item.isDuplicate),
+    ).length;
     const result: ImportConfirmResponse = {
-      imported: rows,
-      skippedDuplicates: Math.max(0, importPreview.rows.length - rows),
+      imported: rows.length - skipped,
+      skippedDuplicates: skipped,
     };
     return HttpResponse.json(result);
   }),
@@ -595,8 +613,6 @@ const notificationHandlers = [
   http.post(api("/notifications/read-all"), noContent),
   http.patch(api("/notifications/:id/read"), noContent),
 ];
-
-const pingHandlers = [http.get(api("/ping"), () => HttpResponse.json(ping))];
 
 const recurringBillHandlers = [
   http.get(api("/recurring-bills"), () => HttpResponse.json(recurringBills)),
@@ -667,6 +683,20 @@ const transactionHandlers = [
       },
     }),
   ),
+  http.get(api("/transactions/summary"), ({ request }) =>
+    HttpResponse.json(
+      buildTransactionsSummary(filterTransactions(new URL(request.url).searchParams)),
+    ),
+  ),
+  http.post(api("/transactions/bulk-category"), async ({ request }) => {
+    const body = await readBody(request);
+    const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
+    const found = requested.map((id) => byId(transactions, id));
+    if (found.some((item) => item === undefined)) {
+      return notFound();
+    }
+    return HttpResponse.json({ updated: found.length });
+  }),
   http.get(api("/transactions"), ({ request }) => {
     const params = new URL(request.url).searchParams;
     return HttpResponse.json(paginate(filterTransactions(params), params));
@@ -678,6 +708,8 @@ const transactionHandlers = [
       categoryId: null,
       type: "expense",
       amount: "0.00",
+      currency: "eur",
+      reportingAmount: "0.00",
       date: FIXTURE_TODAY,
       description: null,
       source: "manual",
@@ -715,14 +747,85 @@ const transferHandlers = [
       fromAccountId: checkingAccount.id,
       toAccountId: checkingAccount.id,
       amount: "0.00",
+      currency: "eur",
+      receivedAmount: "0.00",
+      receivedCurrency: "eur",
       date: FIXTURE_TODAY,
       description: null,
       createdAt: CREATED_AT,
       ...(await readBody(request)),
     };
-    return HttpResponse.json(created, { status: 201 });
+    return HttpResponse.json(
+      { ...created, receivedAmount: created.receivedAmount ?? created.amount },
+      { status: 201 },
+    );
   }),
   http.delete(api("/transfers/:id"), noContent),
+];
+
+const conversionHandlers = [
+  http.get(api("/conversions"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const accountId = params.get("accountId");
+    return HttpResponse.json(
+      paginate(
+        conversions.filter((item) => !accountId || item.accountId === accountId),
+        params,
+      ),
+    );
+  }),
+  http.post(api("/conversions"), async ({ request }) => {
+    const body = await readBody(request);
+    const created: ConversionResponse = {
+      ...conversions[0]!,
+      id: NEW_ID,
+      description: null,
+      feeAmount: null,
+      feeCurrency: null,
+      feeTransactionId: null,
+      createdAt: CREATED_AT,
+      ...body,
+    };
+    const rate = Number(created.toAmount) / Number(created.fromAmount);
+    return HttpResponse.json({ ...created, rate: rate.toFixed(6) }, { status: 201 });
+  }),
+  http.delete(api("/conversions/:id"), noContent),
+];
+
+const settingsHandlers = [
+  http.get(api("/settings/public"), () =>
+    HttpResponse.json({
+      instanceName: settings.instanceName,
+      defaultLanguage: settings.defaultLanguage,
+    }),
+  ),
+  http.get(api("/settings"), () => HttpResponse.json(settings)),
+  http.put(api("/settings"), async ({ request }) =>
+    HttpResponse.json({ ...settings, ...(await readBody(request)) }),
+  ),
+  http.post(api("/settings/exchange-rates/sync"), () =>
+    HttpResponse.json({ added: 62, ratesAsOf: FIXTURE_TODAY }),
+  ),
+];
+
+const currencyHandlers = [
+  http.get(api("/currencies"), () => HttpResponse.json(currencies)),
+  http.get(api("/exchange-rates"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const from = ratesPerEuro[params.get("from") as Currency];
+    const to = ratesPerEuro[params.get("to") as Currency];
+    if (!from || !to) {
+      return notFound();
+    }
+
+    const response: ExchangeRateResponse = {
+      from: params.get("from") as Currency,
+      to: params.get("to") as Currency,
+      rate: (to / from).toFixed(6),
+      asOf: currencies.ratesAsOf ?? FIXTURE_TODAY,
+    };
+    return HttpResponse.json(response);
+  }),
 ];
 
 const userHandlers = [
@@ -758,6 +861,8 @@ export const handlers: RequestHandler[] = [
   ...authHandlers,
   ...budgetHandlers,
   ...categoryHandlers,
+  ...conversionHandlers,
+  ...currencyHandlers,
   ...dashboardHandlers,
   ...debtHandlers,
   ...goalHandlers,
@@ -765,46 +870,27 @@ export const handlers: RequestHandler[] = [
   ...importHandlers,
   ...netWorthHandlers,
   ...notificationHandlers,
-  ...pingHandlers,
   ...recurringBillHandlers,
   ...reportHandlers,
+  ...settingsHandlers,
   ...setupHandlers,
   ...transactionHandlers,
   ...transferHandlers,
   ...userHandlers,
 ];
 
-const SESSION_GET_PATHS = ["/auth/me", "/setup/status"];
+const SESSION_GET_PATHS = new Set([api("/auth/me"), api("/setup/status")]);
 
-export const GET_PATHS = [
-  "/accounts",
-  "/accounts/:id",
-  "/assets",
-  "/auth/me",
-  "/budgets",
-  "/categories",
-  "/dashboard/summary",
-  "/dashboard/monthly-trend",
-  "/dashboard/category-breakdown",
-  "/debts",
-  "/goals",
-  "/households",
-  "/households/:id",
-  "/networth",
-  "/networth/history",
-  "/notifications",
-  "/ping",
-  "/recurring-bills",
-  "/recurring-bills/:id",
-  "/reports/summary",
-  "/setup/status",
-  "/transactions/export/pdf",
-  "/transactions/export",
-  "/transactions",
-  "/transactions/:id",
-  "/transfers",
-  "/users",
-];
+function dataGetPaths(): string[] {
+  const paths = handlers.flatMap((handler) => {
+    if (!(handler instanceof HttpHandler) || handler.info.method !== "GET") {
+      return [];
+    }
+    const { path } = handler.info;
+    return typeof path === "string" && !SESSION_GET_PATHS.has(path) ? [path] : [];
+  });
+  return [...new Set(paths)];
+}
 
 function emptyPage(request: Request) {
   return HttpResponse.json(paginate([], new URL(request.url).searchParams));
@@ -827,8 +913,10 @@ export const emptyHandlers: RequestHandler[] = [
     "/recurring-bills",
   ].map((path) => http.get(api(path), emptyList)),
   http.get(api("/users"), () => HttpResponse.json([currentUser])),
+  http.get(api("/transactions/summary"), () => HttpResponse.json(emptyTransactionsSummary)),
   http.get(api("/transactions"), ({ request }) => emptyPage(request)),
   http.get(api("/transfers"), ({ request }) => emptyPage(request)),
+  http.get(api("/conversions"), ({ request }) => emptyPage(request)),
   http.get(api("/dashboard/summary"), () => HttpResponse.json(emptyDashboardSummary)),
   http.get(api("/dashboard/monthly-trend"), () => HttpResponse.json({ items: [] })),
   http.get(api("/dashboard/category-breakdown"), () => HttpResponse.json(emptyCategoryBreakdown)),
@@ -846,13 +934,9 @@ export const emptyHandlers: RequestHandler[] = [
   ...handlers,
 ];
 
-function dataGetPaths(): string[] {
-  return GET_PATHS.filter((path) => !SESSION_GET_PATHS.includes(path));
-}
-
 export const errorHandlers: RequestHandler[] = [
   ...dataGetPaths().map((path) =>
-    http.get(api(path), ({ request }) =>
+    http.get(path, ({ request }) =>
       problem({ ...serverErrorProblem, instance: new URL(request.url).pathname }, 500),
     ),
   ),
@@ -861,11 +945,29 @@ export const errorHandlers: RequestHandler[] = [
 
 export const loadingHandlers: RequestHandler[] = [
   ...dataGetPaths().map((path) =>
-    http.get(api(path), async () => {
+    http.get(path, async () => {
       await delay("infinite");
       return noContent();
     }),
   ),
+  ...handlers,
+];
+
+export const importFormatErrorHandlers: RequestHandler[] = [
+  http.post(api("/import/swedbank/preview"), () => problem(importFormatProblem, 400)),
+  ...handlers,
+];
+
+export const importAllDuplicatesHandlers: RequestHandler[] = [
+  http.post(api("/import/swedbank/preview"), () => HttpResponse.json(importPreviewAllDuplicates)),
+  ...handlers,
+];
+
+export const importPendingHandlers: RequestHandler[] = [
+  http.post(api("/import/swedbank/preview"), async () => {
+    await delay("infinite");
+    return noContent();
+  }),
   ...handlers,
 ];
 

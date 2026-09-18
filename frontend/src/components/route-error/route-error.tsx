@@ -5,7 +5,7 @@ export function RouteError() {
   const router = useRouter();
 
   return (
-    <section className="card">
+    <section className="section">
       <ErrorState onRetry={() => void router.invalidate()} />
     </section>
   );

@@ -6,9 +6,9 @@ import {
   getGetHouseholdsEndpointQueryKey,
   useGetHouseholdsEndpointSuspense,
 } from "@/api/generated";
+import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/modal";
 import { CreateHouseholdForm } from "../create-household-form";
 import { HouseholdCard } from "../household-card";
 
@@ -26,14 +26,10 @@ export function HouseholdsPage() {
 
   let content: ReactNode;
   if (householdList.length === 0) {
-    content = (
-      <section className="card">
-        <p className="px-6 py-8 text-sm text-muted-foreground">{t("households.empty")}</p>
-      </section>
-    );
+    content = <p className="py-6 text-sm text-muted-foreground">{t("households.empty")}</p>;
   } else {
     content = (
-      <div className="space-y-6">
+      <div className="space-y-10">
         {householdList.map((household) => (
           <HouseholdCard key={household.id} household={household} onChanged={invalidate} />
         ))}
@@ -42,7 +38,7 @@ export function HouseholdsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("households.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

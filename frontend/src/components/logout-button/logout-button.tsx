@@ -24,12 +24,12 @@ export function LogoutButton() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
       size="icon"
       pending={logoutMutation.isPending}
       onClick={() => logoutMutation.mutate()}
       aria-label={t("auth.logout")}
-      title={t("auth.logout")}
+      tooltip={t("auth.logout")}
     >
       <LogOut />
     </Button>

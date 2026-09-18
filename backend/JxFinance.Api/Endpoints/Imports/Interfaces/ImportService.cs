@@ -1,7 +1,9 @@
 using System.Globalization;
 using CsvHelper;
+using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -15,7 +17,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Imports.Interfaces;
 
-public sealed class ImportService(AppDbContext db) : IImportService
+[RegisterService<IImportService>(LifeTime.Scoped)]
+public sealed class ImportService(AppDbContext db, IExchangeRateService rates) : IImportService
 {
     private const string TransactionRowType = "20";
 
@@ -53,15 +56,7 @@ public sealed class ImportService(AppDbContext db) : IImportService
             return Result<ImportPreviewResponse>.Success(new ImportPreviewResponse([]));
         }
 
-        var importRefs = parsedRows.Select(r => r.ImportRef).ToList();
-        var existingRefs = await db.Transactions.IgnoreQueryFilters()
-            .Where(t => t.AccountId == typedAccountId && t.ImportRef != null && importRefs.Contains(t.ImportRef))
-            .Select(t => t.ImportRef!)
-            .ToListAsync(cancellationToken);
-        var receiptRefs = await db.TransferImports
-            .Where(r => r.AccountId == typedAccountId && importRefs.Contains(r.ImportRef))
-            .Select(r => r.ImportRef).ToListAsync(cancellationToken);
-        var existingRefSet = existingRefs.Concat(receiptRefs).ToHashSet();
+        var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
 
         var rows = parsedRows
             .Select(r => new ImportPreviewRow(
@@ -72,7 +67,8 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 MoneyWire.ToWire(new Money(r.Amount)),
                 r.Type,
                 !existingRefSet.Add(r.ImportRef),
-                LooksLikeTransfer(r.Payee, r.Description)))
+                LooksLikeTransfer(r.Payee, r.Description),
+                r.Currency))
             .ToList();
 
         return Result<ImportPreviewResponse>.Success(new ImportPreviewResponse(rows));
@@ -87,21 +83,21 @@ public sealed class ImportService(AppDbContext db) : IImportService
         var lockId = BitConverter.ToInt64(request.AccountId.ToByteArray(), 0);
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var accountId = new AccountId(request.AccountId);
-        var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
-        if (!accountExists)
+        var accountCurrency = await db.Accounts
+            .Where(a => a.Id == accountId)
+            .Select(a => (Currency?)a.StartingBalance.Currency)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (accountCurrency is null)
         {
             return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Account does not exist.");
         }
 
-        var importRefs = request.Rows.Select(r => r.ImportRef).ToList();
-        var existingRefs = await db.Transactions.IgnoreQueryFilters()
-            .Where(t => t.AccountId == accountId && t.ImportRef != null && importRefs.Contains(t.ImportRef))
-            .Select(t => t.ImportRef!)
-            .ToListAsync(cancellationToken);
-        var receiptRefs = await db.TransferImports
-            .Where(r => r.AccountId == accountId && importRefs.Contains(r.ImportRef))
-            .Select(r => r.ImportRef).ToListAsync(cancellationToken);
-        var existingRefSet = existingRefs.Concat(receiptRefs).ToHashSet();
+        var existingRefSet = await ExistingRefsAsync(accountId, request.Rows.Select(r => r.ImportRef), cancellationToken);
+
+        var categoryIds = request.Rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
+        var categoryTypes = await db.Categories
+            .Where(c => categoryIds.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, c => (FlowType?)c.Type, cancellationToken);
 
         var imported = 0;
         var skipped = 0;
@@ -114,14 +110,11 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 continue;
             }
 
+            var amount = MoneyWire.Parse(row.Amount, row.Currency ?? accountCurrency.Value);
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
-            if (categoryId is not null)
+            if (categoryId is { } chosen && categoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
-                var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
-                if (category is null || category.Type != row.Type)
-                {
-                    return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Category does not exist or has the wrong type.");
-                }
+                return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Category does not exist or has the wrong type.");
             }
 
             if (row.TransferAccountId is { } otherId)
@@ -136,14 +129,14 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 {
                     var match = await db.Transfers.FirstOrDefaultAsync(t => t.Id == new TransferId(existingId), cancellationToken);
                     if (match is null || match.FromAccountId != fromId || match.ToAccountId != toId
-                        || match.Amount != MoneyWire.Parse(row.Amount) || match.Date != row.Date)
+                        || (row.Type == FlowType.Expense ? match.Amount : match.ReceivedAmount) != amount || match.Date != row.Date)
                         return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "The selected transfer does not match this bank entry.");
                     transfer = match;
                 }
                 else
                 {
                     transfer = new Transfer { FromAccountId = fromId, ToAccountId = toId,
-                        Amount = MoneyWire.Parse(row.Amount), Date = row.Date, Description = row.Description };
+                        Amount = amount, ReceivedAmount = amount, Date = row.Date, Description = row.Description };
                     db.Transfers.Add(transfer);
                 }
                 db.TransferImports.Add(new TransferImport { AccountId = accountId, ImportRef = row.ImportRef, TransferId = transfer.Id });
@@ -153,12 +146,19 @@ public sealed class ImportService(AppDbContext db) : IImportService
             if (row.ExistingTransferId is not null)
                 return Result<ImportConfirmResponse>.Failure(ErrorCodes.Validation, "Choose the other account before matching a transfer.");
 
+            var reporting = await rates.ToReportingAsync(amount, row.Date, cancellationToken);
+            if (reporting.IsFailure)
+            {
+                return Result<ImportConfirmResponse>.FailureFrom(reporting);
+            }
+
             db.Transactions.Add(new Transaction
             {
                 AccountId = accountId,
                 CategoryId = categoryId,
                 Type = row.Type,
-                Amount = MoneyWire.Parse(row.Amount),
+                Amount = amount,
+                ReportingAmount = reporting.Value,
                 Date = row.Date,
                 Description = string.IsNullOrWhiteSpace(row.Description) ? null : row.Description.Trim(),
                 Source = TransactionSource.Imported,
@@ -201,7 +201,7 @@ public sealed class ImportService(AppDbContext db) : IImportService
             var direction = csv.GetField(7)?.Trim();
             var importRef = csv.GetField(8)!.Trim();
 
-            if (direction is not ("D" or "K") || csv.GetField(6)?.Trim() != "EUR"
+            if (direction is not ("D" or "K") || !CurrencyCode.TryParse(csv.GetField(6), out var currency)
                 || string.IsNullOrWhiteSpace(importRef) || importRef.Length > 64
                 || amount <= 0 || !MoneyWire.IsValid(csv.GetField(5)?.Trim()) || description?.Length > 500)
                 throw new FormatException("Invalid bank entry.");
@@ -213,7 +213,8 @@ public sealed class ImportService(AppDbContext db) : IImportService
                 payee,
                 description,
                 amount,
-                direction == "K" ? FlowType.Income : FlowType.Expense));
+                direction == "K" ? FlowType.Income : FlowType.Expense,
+                currency));
         }
 
         return rows;
@@ -231,5 +232,23 @@ public sealed class ImportService(AppDbContext db) : IImportService
         string? Payee,
         string? Description,
         decimal Amount,
-        FlowType Type);
+        FlowType Type,
+        Currency Currency);
+
+    private async Task<HashSet<string>> ExistingRefsAsync(
+        AccountId accountId,
+        IEnumerable<string> refs,
+        CancellationToken cancellationToken)
+    {
+        var importRefs = refs.ToList();
+        var transactionRefs = await db.Transactions.IgnoreQueryFilters()
+            .Where(t => t.AccountId == accountId && t.ImportRef != null && importRefs.Contains(t.ImportRef))
+            .Select(t => t.ImportRef!)
+            .ToListAsync(cancellationToken);
+        var transferRefs = await db.TransferImports
+            .Where(r => r.AccountId == accountId && importRefs.Contains(r.ImportRef))
+            .Select(r => r.ImportRef)
+            .ToListAsync(cancellationToken);
+        return transactionRefs.Concat(transferRefs).ToHashSet();
+    }
 }

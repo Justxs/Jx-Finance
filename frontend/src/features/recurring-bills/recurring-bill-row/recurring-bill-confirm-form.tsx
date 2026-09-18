@@ -31,7 +31,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
 
   return (
     <div className="form-grid rounded-md border bg-muted/30 p-4">
-      <p className="text-sm text-muted-foreground col-span-full">
+      <p className="col-span-full text-sm text-muted-foreground">
         {t("recurringBills.confirmTitle")}
       </p>
       {isVariable ? (
@@ -46,7 +46,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
           />
         </div>
       ) : null}
-      {!bill.accountId ? (
+      {bill.accountId ? null : (
         <div className="space-y-1.5">
           <Label htmlFor={`bill-${bill.id}-confirm-account`}>{t("recurringBills.account")}</Label>
           <SelectField
@@ -62,7 +62,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
             {t("recurringBills.confirmAccountRequired")}
           </p>
         </div>
-      ) : null}
+      )}
       <Button
         size="sm"
         pending={confirmMutation.isPending}

@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -9,9 +10,10 @@ using JxFinance.Endpoints.Transactions.UpdateTransaction;
 
 namespace JxFinance.Endpoints.Transactions.Mappers;
 
+[RegisterService<TransactionMapper>(LifeTime.Singleton)]
 public sealed class TransactionMapper : Mapper<CreateTransactionRequest, TransactionResponse, Transaction>
 {
-    public override Transaction ToEntity(CreateTransactionRequest request)
+    public Transaction ToEntity(CreateTransactionRequest request, Currency currency, decimal reportingAmount)
     {
         var isSplit = request.Lines is { Count: > 0 };
         return new Transaction
@@ -19,7 +21,8 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             AccountId = new AccountId(request.AccountId),
             CategoryId = ResolveCategoryId(request.CategoryId, isSplit),
             Type = request.Type,
-            Amount = MoneyWire.Parse(request.Amount),
+            Amount = MoneyWire.Parse(request.Amount, currency),
+            ReportingAmount = reportingAmount,
             Date = request.Date,
             Description = OptionalText.Normalize(request.Description),
             Source = TransactionSource.Manual,
@@ -27,13 +30,14 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
         };
     }
 
-    public void UpdateEntity(UpdateTransactionRequest request, Transaction transaction)
+    public void UpdateEntity(UpdateTransactionRequest request, Transaction transaction, Currency currency, decimal reportingAmount)
     {
         var isSplit = request.Lines is { Count: > 0 };
         transaction.AccountId = new AccountId(request.AccountId);
         transaction.CategoryId = ResolveCategoryId(request.CategoryId, isSplit);
         transaction.Type = request.Type;
-        transaction.Amount = MoneyWire.Parse(request.Amount);
+        transaction.Amount = MoneyWire.Parse(request.Amount, currency);
+        transaction.ReportingAmount = reportingAmount;
         transaction.Date = request.Date;
         transaction.Description = OptionalText.Normalize(request.Description);
         transaction.IsSplit = isSplit;
@@ -42,13 +46,14 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
     public List<TransactionLine> ToLines(
         TransactionId transactionId,
         Guid userId,
-        IReadOnlyList<TransactionLineRequest> lines) =>
+        IReadOnlyList<TransactionLineRequest> lines,
+        Currency currency) =>
         lines.Select(line => new TransactionLine
         {
             UserId = userId,
             TransactionId = transactionId,
             CategoryId = line.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
-            Amount = MoneyWire.Parse(line.Amount),
+            Amount = MoneyWire.Parse(line.Amount, currency),
             Description = OptionalText.Normalize(line.Description),
         }).ToList();
 
@@ -69,7 +74,9 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
                 line.CategoryId?.Value,
                 MoneyWire.ToWire(line.Amount),
                 line.Description)).ToList()
-            : null);
+            : null,
+        transaction.Amount.Currency,
+        MoneyWire.ToWire(new Money(transaction.ReportingAmount)));
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {

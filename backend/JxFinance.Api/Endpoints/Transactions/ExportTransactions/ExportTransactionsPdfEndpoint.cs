@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
@@ -9,7 +10,8 @@ namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 public sealed class ExportTransactionsPdfEndpoint(
     ITransactionService transactionService,
     IAccountService accountService,
-    ICategoryService categoryService) : Endpoint<GetTransactionsRequest>
+    ICategoryService categoryService,
+    IInstanceSettingsStore settings) : Endpoint<GetTransactionsRequest>
 {
     public override void Configure()
     {
@@ -20,7 +22,16 @@ public sealed class ExportTransactionsPdfEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var pdf = await ExportTransactionsEndpoint.BuildPdfAsync(transactionService, accountService, categoryService, req, ct);
+        var (transactions, accountNames, categoryNames) =
+            await ExportTransactionsEndpoint.LoadAsync(transactionService, accountService, categoryService, req, ct);
+
+        var pdf = new TransactionsPdfDocument(
+            transactions,
+            accountNames,
+            categoryNames,
+            req.DateFrom,
+            req.DateTo,
+            settings.Current.ReportingCurrency).GeneratePdf();
         await Send.BytesAsync(pdf, "transactions.pdf", "application/pdf", cancellation: ct);
     }
 }

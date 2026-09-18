@@ -1,9 +1,10 @@
-import * as React from "react";
-import { cn } from "@/lib/utils";
-import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
-
-import { Button, buttonVariants } from "@/components/ui/button";
 import { ChevronLeftIcon, ChevronRightIcon, ChevronDownIcon } from "lucide-react";
+import * as React from "react";
+import { DayPicker, getDefaultClassNames, type DayButton, type Locale } from "react-day-picker";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { useToday, useWeekStartsOn } from "@/hooks/use-settings";
+import { parseIso } from "@/lib/calendar";
+import { cn } from "@/lib/utils";
 
 function Calendar({
   className,
@@ -14,15 +15,21 @@ function Calendar({
   locale,
   formatters,
   components,
+  weekStartsOn,
+  today,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const defaultWeekStartsOn = useWeekStartsOn();
+  const defaultToday = parseIso(useToday()) ?? undefined;
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      weekStartsOn={weekStartsOn ?? defaultWeekStartsOn}
+      today={today ?? defaultToday}
       className={cn(
         "group/calendar bg-background p-2 [--cell-radius:var(--radius-md)] [--cell-size:--spacing(7)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -73,15 +80,12 @@ function Calendar({
         month_grid: cn("w-full border-collapse", defaultClassNames.month_grid),
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
-          "flex-1 rounded-(--cell-radius) text-[0.8rem] font-normal text-muted-foreground select-none",
+          "flex-1 rounded-(--cell-radius) text-xs font-normal text-muted-foreground select-none",
           defaultClassNames.weekday,
         ),
         week: cn("mt-2 flex w-full", defaultClassNames.week),
         week_number_header: cn("w-(--cell-size) select-none", defaultClassNames.week_number_header),
-        week_number: cn(
-          "text-[0.8rem] text-muted-foreground select-none",
-          defaultClassNames.week_number,
-        ),
+        week_number: cn("text-xs text-muted-foreground select-none", defaultClassNames.week_number),
         day: cn(
           "group/day relative aspect-square h-full w-full rounded-(--cell-radius) p-0 text-center select-none [&:last-child[data-selected=true]_button]:rounded-r-(--cell-radius)",
           props.showWeekNumber
@@ -151,13 +155,13 @@ function CalendarDayButton({
 }: React.ComponentProps<typeof DayButton> & { locale?: Partial<Locale> }) {
   const defaultClassNames = getDefaultClassNames();
 
-  const ref = React.useRef<HTMLButtonElement>(null);
-  React.useEffect(() => {
-    if (modifiers.focused) ref.current?.focus();
-  }, [modifiers.focused]);
-
   return (
     <Button
+      ref={(node: HTMLButtonElement | null) => {
+        if (modifiers.focused) {
+          node?.focus();
+        }
+      }}
       variant="ghost"
       size="icon"
       data-day={day.date.toLocaleDateString(locale?.code)}

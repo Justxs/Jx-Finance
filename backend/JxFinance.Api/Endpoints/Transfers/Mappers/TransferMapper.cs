@@ -1,19 +1,22 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.Transfers.CreateTransfer;
 using JxFinance.Endpoints.Transfers.Shared;
 
 namespace JxFinance.Endpoints.Transfers.Mappers;
 
+[RegisterService<TransferMapper>(LifeTime.Singleton)]
 public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferResponse, Transfer>
 {
-    public override Transfer ToEntity(CreateTransferRequest request) => new()
+    public Transfer ToEntity(CreateTransferRequest request, Money sent, Money received) => new()
     {
         FromAccountId = new AccountId(request.FromAccountId),
         ToAccountId = new AccountId(request.ToAccountId),
-        Amount = MoneyWire.Parse(request.Amount),
+        Amount = sent,
+        ReceivedAmount = received,
         Date = request.Date,
         Description = OptionalText.Normalize(request.Description),
     };
@@ -25,5 +28,8 @@ public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferRespo
         MoneyWire.ToWire(transfer.Amount),
         transfer.Date,
         transfer.Description,
-        transfer.CreatedAt);
+        transfer.CreatedAt,
+        transfer.Amount.Currency,
+        MoneyWire.ToWire(transfer.ReceivedAmount),
+        transfer.ReceivedAmount.Currency);
 }

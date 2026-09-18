@@ -11,4 +11,5 @@ public sealed record UpdateAccountRequest(
     AccountType Type,
     string StartingBalance,
     Scope Scope,
-    Guid? HouseholdId);
+    Guid? HouseholdId,
+    Currency? Currency = null);

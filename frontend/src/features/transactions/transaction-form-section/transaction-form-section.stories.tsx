@@ -41,6 +41,10 @@ function FormSectionHarness({
           toast.success("Created");
           setCreateOpen(false);
         }}
+        onCreateAnother={async () => {
+          toast.success("Created");
+          return true;
+        }}
         onUpdate={() => {
           toast.success("Updated");
           setEditing(null);

@@ -1,11 +1,11 @@
+import "../src/global.css";
 import { withThemeByClassName } from "@storybook/addon-themes";
 import type { Preview } from "@storybook/react-vite";
 import { mswLoader } from "msw-storybook-addon/csf3";
 import { I18nextProvider } from "react-i18next";
-import i18n from "../src/lib/i18n";
+import { i18n } from "../src/lib/i18n";
 import { withAppProviders } from "../src/storybook/decorators";
 import { handlers } from "../src/storybook/handlers";
-import "../src/global.css";
 
 const preview: Preview = {
   loaders: [mswLoader()],

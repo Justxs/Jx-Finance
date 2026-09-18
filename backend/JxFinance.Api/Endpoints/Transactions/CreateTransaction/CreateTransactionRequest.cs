@@ -10,4 +10,5 @@ public sealed record CreateTransactionRequest(
     string Amount,
     DateOnly Date,
     string? Description,
-    IReadOnlyList<TransactionLineRequest>? Lines);
+    IReadOnlyList<TransactionLineRequest>? Lines,
+    Currency? Currency = null);

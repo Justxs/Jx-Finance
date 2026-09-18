@@ -15,6 +15,7 @@ export const transactionsSearchSchema = z.object({
     .optional()
     .catch(undefined),
   direction: z.enum(["asc", "desc"]).optional().catch(undefined),
+  new: z.boolean().optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/transactions")({

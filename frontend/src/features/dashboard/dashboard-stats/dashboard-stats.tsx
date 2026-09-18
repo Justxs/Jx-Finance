@@ -1,6 +1,6 @@
-import { SummaryStats } from "@/components/summary-stats";
 import { useTranslation } from "react-i18next";
 import { useGetDashboardSummaryEndpointSuspense } from "@/api/generated";
+import { SummaryStats } from "@/components/summary-stats";
 
 export function DashboardStats() {
   const { t } = useTranslation();
@@ -15,12 +15,14 @@ export function DashboardStats() {
     {
       key: "dashboard.monthIncome",
       value: summary.data?.monthIncome,
-      tone: "text-secondary",
+      tone: "text-income",
+      sign: "+",
     },
     {
       key: "dashboard.monthExpense",
       value: summary.data?.monthExpense,
-      tone: "text-destructive",
+      tone: "text-expense",
+      sign: "−",
     },
   ] as const;
 

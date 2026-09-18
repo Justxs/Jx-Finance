@@ -5,7 +5,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

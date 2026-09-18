@@ -13,6 +13,7 @@ interface Props {
   updatePending: boolean;
   createPending: boolean;
   onCreate: (values: TransactionFormValues) => void;
+  onCreateAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onUpdate: (values: TransactionFormValues) => void;
 }
 
@@ -26,6 +27,7 @@ export function TransactionFormSection({
   updatePending,
   createPending,
   onCreate,
+  onCreateAnother,
   onUpdate,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -43,6 +45,7 @@ export function TransactionFormSection({
           categories={categories}
           pending={createPending}
           onSubmit={onCreate}
+          onSubmitAndAddAnother={onCreateAnother}
           onCancel={() => onCreateOpenChange(false)}
         />
       </Modal>

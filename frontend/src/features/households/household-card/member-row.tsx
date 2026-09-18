@@ -2,8 +2,10 @@ import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUpdateMemberRoleEndpoint } from "@/api/generated";
 import type { HouseholdMemberResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
+import { RowTransition } from "@/components/row-transition";
 import { SelectField } from "@/components/select-field";
+import { Button } from "@/components/ui/button";
+import { Tag } from "@/components/ui/tag";
 
 interface Props {
   householdId: string;
@@ -29,17 +31,19 @@ export function MemberRow({
   const roleMutation = useUpdateMemberRoleEndpoint({ mutation: { onSettled: onSaved } });
 
   return (
-    <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-      <div className="min-w-0 break-words">
-        <p className="text-sm font-medium">{member.displayName}</p>
-        <p className="text-xs text-muted-foreground">{member.email}</p>
-      </div>
-      {isOwnerView ? (
-        <div className="flex items-center gap-2">
-          <div aria-busy={roleMutation.isPending}>
+    <RowTransition>
+      <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 break-words">
+          <p className="text-sm font-medium">{member.displayName}</p>
+          <p className="text-xs text-muted-foreground">{member.email}</p>
+        </div>
+        {isOwnerView ? (
+          <div className="flex items-center gap-2">
             <SelectField
+              aria-label={`${t("users.role")}: ${member.displayName || member.email}`}
+              aria-busy={roleMutation.isPending}
               value={member.role}
-              className={roleMutation.isPending ? "w-auto is-stale" : "w-auto"}
+              className={roleMutation.isPending ? "is-stale w-auto" : "w-auto"}
               disabled={roleMutation.isPending}
               onChange={(role) =>
                 roleMutation.mutate({
@@ -53,25 +57,28 @@ export function MemberRow({
                 { value: "member", label: t("households.roles.member") },
               ]}
             />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8"
+              pending={removePending}
+              disabled={removeDisabled}
+              onClick={onRemove}
+              aria-label={`${t("actions.delete")}: ${member.displayName || member.email}`}
+              tooltip={`${t("actions.delete")}: ${member.displayName || member.email}`}
+            >
+              <Trash2 />
+            </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            pending={removePending}
-            disabled={removeDisabled}
-            onClick={onRemove}
-            aria-label={t("actions.delete")}
-            title={t("actions.delete")}
+        ) : (
+          <Tag
+            tone={member.role === "owner" ? "accent" : "neutral"}
+            className="self-start sm:self-auto"
           >
-            <Trash2 />
-          </Button>
-        </div>
-      ) : (
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
-          {t(`households.roles.${member.role}`)}
-        </span>
-      )}
-    </li>
+            {t(`households.roles.${member.role}`)}
+          </Tag>
+        )}
+      </li>
+    </RowTransition>
   );
 }

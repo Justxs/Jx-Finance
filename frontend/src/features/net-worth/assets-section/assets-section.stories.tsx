@@ -51,7 +51,7 @@ export const LongList: Story = {
 export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole("button", { name: /^(add|pridėti)$/i }));
+    await userEvent.click(await canvas.findByRole("button", { name: /add asset|pridėti turtą/i }));
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };

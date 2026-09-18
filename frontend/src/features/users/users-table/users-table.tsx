@@ -1,11 +1,12 @@
-import { type ReactNode, ViewTransition } from "react";
-import { UserX } from "lucide-react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { UserX } from "lucide-react";
+import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { ColumnHeader } from "@/components/ui/column-header";
+import { SortableTableHead } from "@/components/ui/column-header";
 import {
   Table,
   TableBody,
@@ -14,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { SelectField } from "@/components/select-field";
+import { Tag } from "@/components/ui/tag";
 
 const roles = ["Member", "Admin"] as const;
 
@@ -51,30 +52,30 @@ export function UsersTable({
     navigate({ search: (prev) => ({ ...prev, sort, direction }) });
   }
 
-  const filtered = !!search.search || !!search.role || search.isActive !== undefined;
-  const rows = users;
+  const filtered = Boolean(search.search) || Boolean(search.role) || search.isActive !== undefined;
   const roleOptions = roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }));
 
   let body: ReactNode;
-  if (rows.length === 0) {
+  if (users.length === 0) {
     body = (
-      <TableRow>
-        <TableCell colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+      <TableRow className="hover:bg-transparent">
+        <TableCell colSpan={4} className="py-6 whitespace-normal text-muted-foreground">
           {filtered ? t("filters.noMatches") : t("users.empty")}
         </TableCell>
       </TableRow>
     );
   } else {
-    body = rows.map((user) => {
+    body = users.map((user) => {
       const isSelf = user.id === currentUserId;
       return (
-        <TableRow key={user.id} className="hover:bg-muted/30">
-          <TableCell className="px-6 py-3">
+        <TableRow key={user.id}>
+          <TableCell>
             <p className="font-medium">{user.displayName}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{user.email}</p>
           </TableCell>
-          <TableCell className="px-6 py-3">
+          <TableCell>
             <SelectField
+              aria-label={`${t("users.role")}: ${user.displayName || user.email}`}
               value={user.role}
               className={rolePendingId === user.id ? "is-stale" : undefined}
               aria-busy={rolePendingId === user.id}
@@ -83,18 +84,12 @@ export function UsersTable({
               options={roleOptions}
             />
           </TableCell>
-          <TableCell className="px-6 py-3">
-            <span
-              className={
-                user.isActive
-                  ? "inline-flex rounded-full bg-accent px-2.5 py-0.5 text-xs font-medium text-accent-foreground"
-                  : "inline-flex rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive"
-              }
-            >
+          <TableCell>
+            <Tag tone={user.isActive ? "neutral" : "negative"}>
               {user.isActive ? t("users.active") : t("users.deactivated")}
-            </span>
+            </Tag>
           </TableCell>
-          <TableCell className="px-6 py-3">
+          <TableCell>
             <div className="flex justify-end">
               <Button
                 variant="ghost"
@@ -103,8 +98,8 @@ export function UsersTable({
                 pending={deactivatePendingId === user.id}
                 disabled={isSelf || !user.isActive || deactivatePendingId !== null}
                 onClick={() => onDeactivate(user.id!)}
-                aria-label={t("users.deactivate")}
-                title={t("users.deactivate")}
+                aria-label={`${t("users.deactivate")}: ${user.displayName || user.email}`}
+                tooltip={`${t("users.deactivate")}: ${user.displayName || user.email}`}
               >
                 <UserX />
               </Button>
@@ -116,80 +111,78 @@ export function UsersTable({
   }
 
   return (
-    <section className="card overflow-hidden">
+    <section className="-mx-3">
       <ViewTransition name="users-rows" enter="none" exit="none">
         <div className="overflow-x-auto" role="region" aria-label={t("users.title")} tabIndex={0}>
           <Table className={`min-w-160 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
             <TableHeader>
-              <TableRow className="bg-muted/50">
-                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
-                  <ColumnHeader
-                    label={t("users.displayName")}
-                    sortKey="displayName"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
-                    filter={
-                      <TextColumnFilter
-                        label={t("users.displayName")}
-                        value={search.search ?? ""}
-                        debounceMs={300}
-                        onChange={(value) => setFilter({ search: value || undefined })}
+              <TableRow>
+                <SortableTableHead
+                  label={t("users.displayName")}
+                  sortKey="displayName"
+                  activeSort={search.sort}
+                  direction={search.direction}
+                  onSort={toggleSort}
+                  filter={
+                    <TextColumnFilter
+                      label={t("users.displayName")}
+                      value={search.search ?? ""}
+                      debounceMs={300}
+                      onChange={(value) => setFilter({ search: value || undefined })}
+                    />
+                  }
+                />
+                <SortableTableHead
+                  label={t("users.role")}
+                  sortKey="role"
+                  activeSort={search.sort}
+                  direction={search.direction}
+                  onSort={toggleSort}
+                  filter={
+                    <ColumnFilter
+                      label={t("users.role")}
+                      active={Boolean(search.role)}
+                      onClear={() => setFilter({ role: undefined })}
+                    >
+                      <SelectField
+                        aria-label={t("users.role")}
+                        value={search.role ?? ""}
+                        onChange={(role) => setFilter({ role: role || undefined })}
+                        options={[{ value: "", label: t("users.allRoles") }, ...roleOptions]}
                       />
-                    }
-                  />
+                    </ColumnFilter>
+                  }
+                />
+                <SortableTableHead
+                  label={t("users.status")}
+                  sortKey="status"
+                  activeSort={search.sort}
+                  direction={search.direction}
+                  onSort={toggleSort}
+                  filter={
+                    <ColumnFilter
+                      label={t("users.status")}
+                      active={search.isActive !== undefined}
+                      onClear={() => setFilter({ isActive: undefined })}
+                    >
+                      <SelectField
+                        aria-label={t("users.status")}
+                        value={search.isActive === undefined ? "" : String(search.isActive)}
+                        onChange={(value) =>
+                          setFilter({ isActive: value === "" ? undefined : value === "true" })
+                        }
+                        options={[
+                          { value: "", label: t("users.allStatuses") },
+                          { value: "true", label: t("users.active") },
+                          { value: "false", label: t("users.deactivated") },
+                        ]}
+                      />
+                    </ColumnFilter>
+                  }
+                />
+                <TableHead>
+                  <span className="sr-only">{t("common.actions")}</span>
                 </TableHead>
-                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
-                  <ColumnHeader
-                    label={t("users.role")}
-                    sortKey="role"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
-                    filter={
-                      <ColumnFilter
-                        label={t("users.role")}
-                        active={!!search.role}
-                        onClear={() => setFilter({ role: undefined })}
-                      >
-                        <SelectField
-                          value={search.role ?? ""}
-                          onChange={(role) => setFilter({ role: role || undefined })}
-                          options={[{ value: "", label: t("users.allRoles") }, ...roleOptions]}
-                        />
-                      </ColumnFilter>
-                    }
-                  />
-                </TableHead>
-                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
-                  <ColumnHeader
-                    label={t("users.status")}
-                    sortKey="status"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
-                    filter={
-                      <ColumnFilter
-                        label={t("users.status")}
-                        active={search.isActive !== undefined}
-                        onClear={() => setFilter({ isActive: undefined })}
-                      >
-                        <SelectField
-                          value={search.isActive === undefined ? "" : String(search.isActive)}
-                          onChange={(value) =>
-                            setFilter({ isActive: value === "" ? undefined : value === "true" })
-                          }
-                          options={[
-                            { value: "", label: t("users.allStatuses") },
-                            { value: "true", label: t("users.active") },
-                            { value: "false", label: t("users.deactivated") },
-                          ]}
-                        />
-                      </ColumnFilter>
-                    }
-                  />
-                </TableHead>
-                <TableHead className="h-auto px-6 py-3" />
               </TableRow>
             </TableHeader>
             <TableBody>{body}</TableBody>

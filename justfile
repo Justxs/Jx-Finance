@@ -11,7 +11,7 @@ gen:
 
 # Run backend tests (needs Docker for Testcontainers).
 test:
-    dotnet test backend/JxFinance.slnx
+    dotnet test --solution backend/JxFinance.slnx
 
 # Auto-fix lint issues and format the frontend (Oxc).
 fix:

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useCalendarLocale, useDate } from "@/hooks/use-formatters";
+import { useToday } from "@/hooks/use-settings";
 import { parseIso, toIso } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ interface Props {
   disabled?: boolean;
   className?: string;
   "aria-invalid"?: boolean;
+  "aria-describedby"?: string;
   onBlur?: FocusEventHandler<HTMLButtonElement>;
 }
 
@@ -27,19 +29,22 @@ export function DatePicker({
   disabled,
   className,
   "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
   onBlur,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const dateFormat = useDate();
   const locale = useCalendarLocale();
+  const today = useToday();
+  const todayDate = parseIso(today) ?? new Date();
   const [open, setOpen] = useState(false);
   const selected = parseIso(value) ?? undefined;
-  const [month, setMonth] = useState(selected ?? new Date());
+  const [month, setMonth] = useState(selected ?? todayDate);
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      setMonth(selected ?? new Date());
+      setMonth(selected ?? todayDate);
     }
   }
 
@@ -58,6 +63,7 @@ export function DatePicker({
             variant="outline"
             disabled={disabled}
             aria-invalid={ariaInvalid}
+            aria-describedby={ariaDescribedBy}
             onBlur={onBlur}
             className={cn(
               "w-full min-w-0 justify-between border-input bg-muted/40 px-3 text-base font-normal hover:bg-muted/60 aria-expanded:border-ring aria-expanded:bg-background md:text-sm dark:bg-input/30",
@@ -75,7 +81,6 @@ export function DatePicker({
         <Calendar
           mode="single"
           locale={locale}
-          weekStartsOn={1}
           selected={selected}
           month={month}
           onMonthChange={setMonth}
@@ -85,7 +90,7 @@ export function DatePicker({
           <Button type="button" variant="ghost" size="sm" onClick={() => pick("")}>
             {t("datePicker.clear")}
           </Button>
-          <Button type="button" variant="ghost" size="sm" onClick={() => pick(toIso(new Date()))}>
+          <Button type="button" variant="ghost" size="sm" onClick={() => pick(today)}>
             {t("datePicker.today")}
           </Button>
         </div>

@@ -1,4 +1,5 @@
 using System.Text.Encodings.Web;
+using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -10,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Auth.Services;
 
+[RegisterService<IAuthService>(LifeTime.Scoped)]
 public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, AppDbContext db) : IAuthService
 {
     public Task<bool> IsSetupNeededAsync(CancellationToken cancellationToken) =>

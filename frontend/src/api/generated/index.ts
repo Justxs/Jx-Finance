@@ -22,20 +22,24 @@ import type {
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
-
+import { customFetch } from "../client";
 import type {
   AccountResponse,
   AddMemberRequest,
   AssetResponse,
   BudgetResponse,
+  BulkCategorizeTransactionsRequest,
+  BulkCategorizeTransactionsResponse,
   CategoryBreakdownResponse,
   CategoryResponse,
   ConfirmRecurringBillRequest,
   ConfirmRecurringBillResponse,
+  ConversionResponse,
   CreateAccountRequest,
   CreateAssetRequest,
   CreateBudgetRequest,
   CreateCategoryRequest,
+  CreateConversionRequest,
   CreateDebtRequest,
   CreateGoalRequest,
   CreateHouseholdRequest,
@@ -43,19 +47,25 @@ import type {
   CreateTransactionRequest,
   CreateTransferRequest,
   CreateUserRequest,
+  CurrenciesResponse,
   DashboardSummaryResponse,
   DebtResponse,
   EnableTwoFactorRequest,
   EnableTwoFactorResponse,
+  ExchangeRateResponse,
+  ExchangeRateSyncResponse,
   ExportTransactionsEndpointParams,
   ExportTransactionsPdfEndpointParams,
   GetAccountsEndpointParams,
   GetCategoryBreakdownEndpointParams,
+  GetConversionsEndpointParams,
+  GetExchangeRateEndpointParams,
   GetMonthlyTrendEndpointParams,
   GetNotificationsEndpointParams,
   GetPingResponse,
   GetReportSummaryEndpointParams,
   GetTransactionsEndpointParams,
+  GetTransactionsSummaryEndpointParams,
   GetTransfersEndpointParams,
   GetUsersEndpointParams,
   GoalResponse,
@@ -79,15 +89,19 @@ import type {
   MonthlyTrendResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
+  PagedResponseOfConversionResponse,
   PagedResponseOfTransactionResponse,
   PagedResponseOfTransferResponse,
   ProblemDetails,
+  PublicSettingsResponse,
   ReauthenticateRequest,
   RecurringBillResponse,
   ReportSummaryResponse,
+  SettingsResponse,
   SetupRequest,
   SetupStatusResponse,
   TransactionResponse,
+  TransactionsSummaryResponse,
   TransferResponse,
   TwoFactorSetupResponse,
   UpdateAccountRequest,
@@ -100,12 +114,11 @@ import type {
   UpdateMemberRoleRequest,
   UpdateMyProfileRequest,
   UpdateRecurringBillRequest,
+  UpdateSettingsRequest,
   UpdateTransactionRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
 } from "./model";
-
-import { customFetch } from "../client";
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKey: K } => {
@@ -1724,7 +1737,7 @@ export const getLoginEndpointUrl = () => {
 };
 
 /**
- * Exchanges an email and password for a session cookie. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client.
+ * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client.
  * @summary Sign in
  */
 export const loginEndpoint = async (
@@ -1829,7 +1842,7 @@ export const getLogoutEndpointUrl = () => {
 };
 
 /**
- * Clears the session cookie. Safe to call when already signed out.
+ * Ends the session and clears its cookies. Safe to call when already signed out.
  * @summary Sign out
  */
 export const logoutEndpoint = async (
@@ -2077,6 +2090,75 @@ export function useMeEndpointSuspense<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getRefreshEndpointUrl = () => {
+  return `/api/auth/refresh`;
+};
+
+/**
+ * Exchanges the refresh cookie for a new access token cookie and a rotated refresh cookie. Call it when a request answers 401, then retry that request once. The session keeps its original absolute expiry; renewing never extends it. A session whose user was deactivated, locked out, or had their role or password changed elsewhere is rejected.
+ * @summary Renew the access token
+ */
+export const refreshEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRefreshEndpointUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRefreshEndpointMutationKey = () => ["refreshEndpoint"] as const;
+
+export const getRefreshEndpointMutationOptions = <
+  TError = ProblemDetails | void,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof refreshEndpoint>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof refreshEndpoint>>, TError, void, TContext> => {
+  const mutationKey = getRefreshEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof refreshEndpoint>>, void> = () => {
+    return refreshEndpoint(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RefreshEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof refreshEndpoint>>
+>;
+
+export type RefreshEndpointMutationError = ProblemDetails | void;
+
+/**
+ * @summary Renew the access token
+ */
+export const useRefreshEndpoint = <TError = ProblemDetails | void, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof refreshEndpoint>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof refreshEndpoint>>, TError, void, TContext> => {
+  return useMutation(getRefreshEndpointMutationOptions(options), queryClient);
+};
 
 export const getCreateBudgetEndpointUrl = () => {
   return `/api/budgets`;
@@ -3103,6 +3185,658 @@ export const useUpdateCategoryEndpoint = <TError = ProblemDetails, TContext = un
 > => {
   return useMutation(getUpdateCategoryEndpointMutationOptions(options), queryClient);
 };
+
+export const getCreateConversionEndpointUrl = () => {
+  return `/api/conversions`;
+};
+
+/**
+ * Records an exchange of one currency for another inside a single account, such as selling euros for dollars at a broker. The sold balance drops, the bought balance rises, and neither side counts as income or expense. An optional fee is booked as an ordinary expense transaction on the same account so it shows in reports and budgets.
+ * @summary Convert currency inside an account
+ */
+export const createConversionEndpoint = async (
+  createConversionRequest: CreateConversionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ConversionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<ConversionResponse>(getCreateConversionEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createConversionRequest),
+  });
+};
+
+export const getCreateConversionEndpointMutationKey = () => ["createConversionEndpoint"] as const;
+
+export const getCreateConversionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createConversionEndpoint>>,
+    TError,
+    CreateConversionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createConversionEndpoint>>,
+  TError,
+  CreateConversionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateConversionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createConversionEndpoint>>,
+    CreateConversionEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createConversionEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateConversionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createConversionEndpoint>>
+>;
+export type CreateConversionEndpointMutationBody = CreateConversionRequest;
+export type CreateConversionEndpointMutationError = ProblemDetails;
+export type CreateConversionEndpointMutationVariables = { data: CreateConversionRequest };
+
+/**
+ * @summary Convert currency inside an account
+ */
+export const useCreateConversionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createConversionEndpoint>>,
+      TError,
+      CreateConversionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createConversionEndpoint>>,
+  TError,
+  CreateConversionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateConversionEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetConversionsEndpointUrl = (params: GetConversionsEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/conversions?${stringifiedParams}`
+    : `/api/conversions`;
+};
+
+/**
+ * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
+ * @summary List currency conversions
+ */
+export const getConversionsEndpoint = async (
+  params: GetConversionsEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfConversionResponse> => {
+  return customFetch<PagedResponseOfConversionResponse>(getGetConversionsEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetConversionsEndpointQueryKey = (params?: GetConversionsEndpointParams) => {
+  return [`/api/conversions`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetConversionsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetConversionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversionsEndpoint>>> = ({ signal }) =>
+    getConversionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getConversionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetConversionsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getConversionsEndpoint>>
+>;
+export type GetConversionsEndpointQueryError = ProblemDetails;
+
+export function useGetConversionsEndpoint<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getConversionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getConversionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetConversionsEndpoint<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getConversionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getConversionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetConversionsEndpoint<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List currency conversions
+ */
+
+export function useGetConversionsEndpoint<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetConversionsEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetConversionsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetConversionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversionsEndpoint>>> = ({ signal }) =>
+    getConversionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getConversionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetConversionsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getConversionsEndpoint>>
+>;
+export type GetConversionsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetConversionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetConversionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetConversionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List currency conversions
+ */
+
+export function useGetConversionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getConversionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetConversionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetConversionsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteConversionEndpointUrl = (id: string) => {
+  return `/api/conversions/${id}`;
+};
+
+/**
+ * Removes the conversion and the fee transaction it created, restoring both balances.
+ * @summary Delete a currency conversion
+ */
+export const deleteConversionEndpoint = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteConversionEndpointUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteConversionEndpointMutationKey = () => ["deleteConversionEndpoint"] as const;
+
+export const getDeleteConversionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteConversionEndpoint>>,
+    TError,
+    DeleteConversionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteConversionEndpoint>>,
+  TError,
+  DeleteConversionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteConversionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteConversionEndpoint>>,
+    DeleteConversionEndpointMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteConversionEndpoint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteConversionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteConversionEndpoint>>
+>;
+
+export type DeleteConversionEndpointMutationError = ProblemDetails;
+export type DeleteConversionEndpointMutationVariables = { id: string };
+
+/**
+ * @summary Delete a currency conversion
+ */
+export const useDeleteConversionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteConversionEndpoint>>,
+      TError,
+      DeleteConversionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteConversionEndpoint>>,
+  TError,
+  DeleteConversionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteConversionEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetCurrenciesEndpointUrl = () => {
+  return `/api/currencies`;
+};
+
+/**
+ * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
+ * @summary List supported currencies
+ */
+export const getCurrenciesEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<CurrenciesResponse> => {
+  return customFetch<CurrenciesResponse>(getGetCurrenciesEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetCurrenciesEndpointQueryKey = () => {
+  return [`/api/currencies`] as const;
+};
+
+export const getGetCurrenciesEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCurrenciesEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrenciesEndpoint>>> = ({ signal }) =>
+    getCurrenciesEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCurrenciesEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCurrenciesEndpoint>>
+>;
+export type GetCurrenciesEndpointQueryError = ProblemDetails;
+
+export function useGetCurrenciesEndpoint<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrenciesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrenciesEndpoint<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getCurrenciesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrenciesEndpoint<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List supported currencies
+ */
+
+export function useGetCurrenciesEndpoint<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCurrenciesEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetCurrenciesEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetCurrenciesEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrenciesEndpoint>>> = ({ signal }) =>
+    getCurrenciesEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetCurrenciesEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getCurrenciesEndpoint>>
+>;
+export type GetCurrenciesEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetCurrenciesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrenciesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetCurrenciesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List supported currencies
+ */
+
+export function useGetCurrenciesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getCurrenciesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrenciesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetCurrenciesEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getGetCategoryBreakdownEndpointUrl = (params?: GetCategoryBreakdownEndpointParams) => {
   const normalizedParams = new URLSearchParams();
@@ -4354,6 +5088,251 @@ export const useUpdateDebtEndpoint = <TError = ProblemDetails, TContext = unknow
 > => {
   return useMutation(getUpdateDebtEndpointMutationOptions(options), queryClient);
 };
+
+export const getGetExchangeRateEndpointUrl = (params: GetExchangeRateEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/exchange-rates?${stringifiedParams}`
+    : `/api/exchange-rates`;
+};
+
+/**
+ * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
+ * @summary Look up an exchange rate
+ */
+export const getExchangeRateEndpoint = async (
+  params: GetExchangeRateEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ExchangeRateResponse> => {
+  return customFetch<ExchangeRateResponse>(getGetExchangeRateEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetExchangeRateEndpointQueryKey = (params?: GetExchangeRateEndpointParams) => {
+  return [`/api/exchange-rates`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetExchangeRateEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetExchangeRateEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getExchangeRateEndpoint>>> = ({
+    signal,
+  }) => getExchangeRateEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetExchangeRateEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getExchangeRateEndpoint>>
+>;
+export type GetExchangeRateEndpointQueryError = ProblemDetails;
+
+export function useGetExchangeRateEndpoint<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getExchangeRateEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetExchangeRateEndpoint<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getExchangeRateEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetExchangeRateEndpoint<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Look up an exchange rate
+ */
+
+export function useGetExchangeRateEndpoint<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetExchangeRateEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetExchangeRateEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetExchangeRateEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getExchangeRateEndpoint>>> = ({
+    signal,
+  }) => getExchangeRateEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetExchangeRateEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getExchangeRateEndpoint>>
+>;
+export type GetExchangeRateEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetExchangeRateEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetExchangeRateEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetExchangeRateEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Look up an exchange rate
+ */
+
+export function useGetExchangeRateEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getExchangeRateEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetExchangeRateEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRateEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetExchangeRateEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
 
 export const getCreateGoalEndpointUrl = () => {
   return `/api/goals`;
@@ -8290,6 +9269,627 @@ export function useGetReportSummaryEndpointSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getGetSettingsEndpointUrl = () => {
+  return `/api/settings`;
+};
+
+/**
+ * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
+ * @summary Read installation settings
+ */
+export const getSettingsEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SettingsResponse> => {
+  return customFetch<SettingsResponse>(getGetSettingsEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSettingsEndpointQueryKey = () => {
+  return [`/api/settings`] as const;
+};
+
+export const getGetSettingsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSettingsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettingsEndpoint>>> = ({ signal }) =>
+    getSettingsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSettingsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSettingsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSettingsEndpoint>>
+>;
+export type GetSettingsEndpointQueryError = ProblemDetails;
+
+export function useGetSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSettingsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getSettingsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSettingsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getSettingsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read installation settings
+ */
+
+export function useGetSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSettingsEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetSettingsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSettingsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettingsEndpoint>>> = ({ signal }) =>
+    getSettingsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getSettingsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSettingsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSettingsEndpoint>>
+>;
+export type GetSettingsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read installation settings
+ */
+
+export function useGetSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSettingsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateSettingsEndpointUrl = () => {
+  return `/api/settings`;
+};
+
+/**
+ * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature_disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
+ * @summary Update installation settings
+ */
+export const updateSettingsEndpoint = async (
+  updateSettingsRequest: UpdateSettingsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SettingsResponse>(getUpdateSettingsEndpointUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateSettingsRequest),
+  });
+};
+
+export const getUpdateSettingsEndpointMutationKey = () => ["updateSettingsEndpoint"] as const;
+
+export const getUpdateSettingsEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSettingsEndpoint>>,
+    TError,
+    UpdateSettingsEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSettingsEndpoint>>,
+  TError,
+  UpdateSettingsEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSettingsEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSettingsEndpoint>>,
+    UpdateSettingsEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSettingsEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSettingsEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSettingsEndpoint>>
+>;
+export type UpdateSettingsEndpointMutationBody = UpdateSettingsRequest;
+export type UpdateSettingsEndpointMutationError = ProblemDetails;
+export type UpdateSettingsEndpointMutationVariables = { data: UpdateSettingsRequest };
+
+/**
+ * @summary Update installation settings
+ */
+export const useUpdateSettingsEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSettingsEndpoint>>,
+      TError,
+      UpdateSettingsEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSettingsEndpoint>>,
+  TError,
+  UpdateSettingsEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSettingsEndpointMutationOptions(options), queryClient);
+};
+
+export const getSyncExchangeRatesEndpointUrl = () => {
+  return `/api/settings/exchange-rates/sync`;
+};
+
+/**
+ * Administrators only. Fetches reference rates published since the newest stored date. It works even when automatic sync is turned off.
+ * @summary Fetch exchange rates now
+ */
+export const syncExchangeRatesEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ExchangeRateSyncResponse> => {
+  return customFetch<ExchangeRateSyncResponse>(getSyncExchangeRatesEndpointUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncExchangeRatesEndpointMutationKey = () => ["syncExchangeRatesEndpoint"] as const;
+
+export const getSyncExchangeRatesEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getSyncExchangeRatesEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>,
+    void
+  > = () => {
+    return syncExchangeRatesEndpoint(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncExchangeRatesEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>
+>;
+
+export type SyncExchangeRatesEndpointMutationError = ProblemDetails;
+
+/**
+ * @summary Fetch exchange rates now
+ */
+export const useSyncExchangeRatesEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof syncExchangeRatesEndpoint>>,
+  TError,
+  void,
+  TContext
+> => {
+  return useMutation(getSyncExchangeRatesEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetPublicSettingsEndpointUrl = () => {
+  return `/api/settings/public`;
+};
+
+/**
+ * Anonymous. Returns only the installation name and the default language.
+ * @summary Read the settings the sign-in page needs
+ */
+export const getPublicSettingsEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PublicSettingsResponse> => {
+  return customFetch<PublicSettingsResponse>(getGetPublicSettingsEndpointUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPublicSettingsEndpointQueryKey = () => {
+  return [`/api/settings/public`] as const;
+};
+
+export const getGetPublicSettingsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPublicSettingsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>> = ({
+    signal,
+  }) => getPublicSettingsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPublicSettingsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPublicSettingsEndpoint>>
+>;
+export type GetPublicSettingsEndpointQueryError = ProblemDetails;
+
+export function useGetPublicSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicSettingsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPublicSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getPublicSettingsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPublicSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the settings the sign-in page needs
+ */
+
+export function useGetPublicSettingsEndpoint<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPublicSettingsEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetPublicSettingsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPublicSettingsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>> = ({
+    signal,
+  }) => getPublicSettingsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPublicSettingsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPublicSettingsEndpoint>>
+>;
+export type GetPublicSettingsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetPublicSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPublicSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPublicSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the settings the sign-in page needs
+ */
+
+export function useGetPublicSettingsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPublicSettingsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettingsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPublicSettingsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getSetupEndpointUrl = () => {
   return `/api/setup`;
 };
@@ -8963,6 +10563,119 @@ export function useGetTransactionsEndpointSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getBulkCategorizeTransactionsEndpointUrl = () => {
+  return `/api/transactions/bulk-category`;
+};
+
+/**
+ * Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once.
+ * @summary Set the category of several transactions
+ */
+export const bulkCategorizeTransactionsEndpoint = async (
+  bulkCategorizeTransactionsRequest: BulkCategorizeTransactionsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BulkCategorizeTransactionsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<BulkCategorizeTransactionsResponse>(
+    getBulkCategorizeTransactionsEndpointUrl(),
+    {
+      ...options,
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+      body: JSON.stringify(bulkCategorizeTransactionsRequest),
+    },
+  );
+};
+
+export const getBulkCategorizeTransactionsEndpointMutationKey = () =>
+  ["bulkCategorizeTransactionsEndpoint"] as const;
+
+export const getBulkCategorizeTransactionsEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>,
+    TError,
+    BulkCategorizeTransactionsEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>,
+  TError,
+  BulkCategorizeTransactionsEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getBulkCategorizeTransactionsEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>,
+    BulkCategorizeTransactionsEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkCategorizeTransactionsEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkCategorizeTransactionsEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>
+>;
+export type BulkCategorizeTransactionsEndpointMutationBody = BulkCategorizeTransactionsRequest;
+export type BulkCategorizeTransactionsEndpointMutationError = ProblemDetails;
+export type BulkCategorizeTransactionsEndpointMutationVariables = {
+  data: BulkCategorizeTransactionsRequest;
+};
+
+/**
+ * @summary Set the category of several transactions
+ */
+export const useBulkCategorizeTransactionsEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>,
+      TError,
+      BulkCategorizeTransactionsEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof bulkCategorizeTransactionsEndpoint>>,
+  TError,
+  BulkCategorizeTransactionsEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getBulkCategorizeTransactionsEndpointMutationOptions(options), queryClient);
+};
+
 export const getExportTransactionsEndpointUrl = (params: ExportTransactionsEndpointParams) => {
   const normalizedParams = new URLSearchParams();
 
@@ -9470,6 +11183,275 @@ export function useExportTransactionsPdfEndpointSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getExportTransactionsPdfEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetTransactionsSummaryEndpointUrl = (
+  params?: GetTransactionsSummaryEndpointParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions/summary?${stringifiedParams}`
+    : `/api/transactions/summary`;
+};
+
+/**
+ * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
+ * @summary Total the filtered transactions
+ */
+export const getTransactionsSummaryEndpoint = async (
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TransactionsSummaryResponse> => {
+  return customFetch<TransactionsSummaryResponse>(getGetTransactionsSummaryEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTransactionsSummaryEndpointQueryKey = (
+  params?: GetTransactionsSummaryEndpointParams,
+) => {
+  return [`/api/transactions/summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetTransactionsSummaryEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionsSummaryEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>> = ({
+    signal,
+  }) => getTransactionsSummaryEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransactionsSummaryEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>
+>;
+export type GetTransactionsSummaryEndpointQueryError = ProblemDetails;
+
+export function useGetTransactionsSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetTransactionsSummaryEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Total the filtered transactions
+ */
+
+export function useGetTransactionsSummaryEndpoint<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionsSummaryEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetTransactionsSummaryEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTransactionsSummaryEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>> = ({
+    signal,
+  }) => getTransactionsSummaryEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetTransactionsSummaryEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>
+>;
+export type GetTransactionsSummaryEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetTransactionsSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetTransactionsSummaryEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetTransactionsSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Total the filtered transactions
+ */
+
+export function useGetTransactionsSummaryEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetTransactionsSummaryEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getTransactionsSummaryEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetTransactionsSummaryEndpointSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

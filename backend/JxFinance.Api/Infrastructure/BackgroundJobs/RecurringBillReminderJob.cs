@@ -1,4 +1,6 @@
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Infrastructure.Data;
@@ -40,6 +42,11 @@ public sealed class RecurringBillReminderJob(
     public async Task ScanAsync(CancellationToken cancellationToken)
     {
         using var scope = scopeFactory.CreateScope();
+        if (!scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>().Current.IsEnabled(Feature.RecurringBills))
+        {
+            return;
+        }
+
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var clock = scope.ServiceProvider.GetRequiredService<IClock>();
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);

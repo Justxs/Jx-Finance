@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { FieldError } from "./field-error";
 import { Input } from "../input";
 import { Label } from "../label";
+import { FieldError } from "./field-error";
 
 const meta = {
   title: "UI/FieldError",
@@ -34,8 +34,13 @@ export const BelowInput: Story = {
   render: (args) => (
     <div className="w-64 space-y-1.5">
       <Label htmlFor="field-error-story">Amount</Label>
-      <Input id="field-error-story" defaultValue="-5" aria-invalid />
-      <FieldError {...args} />
+      <Input
+        id="field-error-story"
+        defaultValue="-5"
+        aria-invalid
+        aria-describedby={args.message ? "field-error-story-error" : undefined}
+      />
+      <FieldError {...args} id="field-error-story-error" />
     </div>
   ),
 };

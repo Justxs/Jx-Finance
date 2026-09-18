@@ -10,9 +10,15 @@ interface Props {
 export function Pagination({ page, pages, onPageChange }: Readonly<Props>) {
   const { t } = useTranslation();
 
+  if (pages <= 1) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm sm:px-6">
-      <span className="text-muted-foreground">{t("pagination.pageOf", { page, pages })}</span>
+    <div className="flex flex-wrap items-center justify-between gap-3 pt-3 text-sm">
+      <span className="text-muted-foreground tabular-nums">
+        {t("pagination.pageOf", { page, pages })}
+      </span>
       <div className="flex flex-wrap gap-2">
         <Button
           variant="outline"

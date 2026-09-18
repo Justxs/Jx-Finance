@@ -5,6 +5,7 @@ import type { TransactionResponse } from "@/api/generated/model";
 import {
   accounts,
   categories,
+  foreignCurrencyTransactions,
   longDescriptionTransaction,
   splitTransaction,
   transactions,
@@ -12,25 +13,27 @@ import {
 } from "@/storybook/fixtures";
 import { TransactionsTable } from "./transactions-table";
 import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
-import { useTransactionColumns } from "./use-transaction-columns";
+import { isSelectableTransaction, useTransactionColumns } from "./use-transaction-columns";
 
 interface HarnessProps {
   data?: TransactionResponse[];
   isPlaceholder?: boolean;
-  pageCount?: number;
   deletingId?: string | null;
+  initialSelectedIds?: string[];
 }
 
+const NO_IDS: string[] = [];
 const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
 const categoryById = new Map(categories.map((category) => [category.id, category]));
 
 function TransactionsTableHarness({
   data = transactions.slice(0, 10),
   isPlaceholder = false,
-  pageCount = 4,
   deletingId = null,
+  initialSelectedIds = NO_IDS,
 }: Readonly<HarnessProps>) {
-  const [page, setPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set(initialSelectedIds));
+  const selectableIds = data.filter(isSelectableTransaction).map((item) => item.id);
   const columnHeaders = useTransactionColumnHeaders({ accounts, categories });
   const columns = useTransactionColumns({
     accountNames,
@@ -47,10 +50,23 @@ function TransactionsTableHarness({
         columns={columns}
         isPlaceholder={isPlaceholder}
         columnFilters={columnHeaders.byColumn}
+        columnAriaSort={columnHeaders.ariaSortByColumn}
         filtered={columnHeaders.active}
-        page={page}
-        pageCount={pageCount}
-        onPageChange={setPage}
+        selection={{
+          selectedIds,
+          selectableIds,
+          rowLabel: (row) => `${row.date} ${row.description ?? ""}`,
+          onToggle: (id, selected) => {
+            const next = new Set(selectedIds);
+            if (selected) {
+              next.add(id);
+            } else {
+              next.delete(id);
+            }
+            setSelectedIds(next);
+          },
+          onTogglePage: (selected) => setSelectedIds(new Set(selected ? selectableIds : [])),
+        }}
       />
     </div>
   );
@@ -67,10 +83,14 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Empty: Story = { args: { data: [], pageCount: 1 } };
+export const Empty: Story = { args: { data: [] } };
+
+export const ForeignCurrency: Story = {
+  args: { data: [...foreignCurrencyTransactions, ...transactions.slice(0, 3)] },
+};
 
 export const FilteredNoMatches: Story = {
-  args: { data: [], pageCount: 1 },
+  args: { data: [] },
   parameters: { route: "/transactions?type=expense&search=nothing" },
 };
 
@@ -82,7 +102,13 @@ export const WithActiveFilters: Story = {
   },
 };
 
-export const SinglePage: Story = { args: { pageCount: 1 } };
+export const SomeSelected: Story = {
+  args: { initialSelectedIds: transactions.slice(0, 3).map((item) => item.id) },
+};
+
+export const AllSelected: Story = {
+  args: { initialSelectedIds: transactions.slice(0, 10).map((item) => item.id) },
+};
 
 export const Placeholder: Story = { args: { isPlaceholder: true } };
 
@@ -101,6 +127,5 @@ export const OptimisticRow: Story = {
 export const SpecialRows: Story = {
   args: {
     data: [splitTransaction, longDescriptionTransaction, uncategorisedTransaction],
-    pageCount: 1,
   },
 };

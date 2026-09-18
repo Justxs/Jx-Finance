@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
@@ -144,6 +144,30 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         Assert.Contains(accountName, csv);
         Assert.Contains("Export me", csv);
         Assert.Contains("12.34", csv);
+    }
+
+    [Fact]
+    public async Task Export_pdf_returns_pdf_document()
+    {
+        var account = await CreateAccountAsync($"Pdf account {Guid.NewGuid():N}");
+
+        await Client.PostAsJsonAsync(
+            "/api/transactions",
+            new
+            {
+                accountId = account.Id,
+                type = "expense",
+                amount = "56.78",
+                date = "2026-06-05",
+                description = "Pdf me — ąčęėįšųūž",
+            });
+
+        var response = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account.Id}");
+        response.EnsureSuccessStatusCode();
+        Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
+
+        var pdf = await response.Content.ReadAsByteArrayAsync();
+        Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
     }
 
     private async Task<AccountDto> CreateAccountAsync(string name)

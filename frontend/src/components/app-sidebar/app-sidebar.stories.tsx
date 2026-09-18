@@ -4,8 +4,8 @@ import { Suspense } from "react";
 import { toggleSidebar } from "@/stores/sidebar-store";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
-import { AppSidebar } from "./app-sidebar";
 import { Skeleton } from "../ui/skeleton";
+import { AppSidebar } from "./app-sidebar";
 
 const COLLAPSED_KEY = "jx-sidebar-collapsed";
 

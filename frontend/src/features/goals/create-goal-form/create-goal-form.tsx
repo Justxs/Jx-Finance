@@ -1,13 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateGoalEndpoint } from "@/api/generated";
+import { useCreateGoalEndpoint, useUpdateGoalEndpoint } from "@/api/generated";
+import type { GoalResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isMoney, isPositiveMoney } from "@/lib/validation";
+import { isMoney, isPositiveMoney, normalizeMoney } from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -17,11 +18,16 @@ interface FormValues {
 }
 
 interface Props {
+  initial?: GoalResponse;
   onCreated: () => void;
   onCancel: () => void;
 }
 
-export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
+function isCurrentAmount(value: string) {
+  return value === "" || (isMoney(value) && Number(normalizeMoney(value)) >= 0);
+}
+
+export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -31,31 +37,46 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
       .min(1, t("validation.required"))
       .max(100, t("validation.maxLength", { max: 100 })),
     targetAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
-    currentAmount: z.string().refine((v) => v === "" || isMoney(v), t("validation.money")),
+    currentAmount: z.string().refine(isCurrentAmount, t("validation.money")),
     targetDate: z.string(),
   });
 
   const createMutation = useCreateGoalEndpoint({ mutation: { onSuccess: onCreated } });
+  const updateMutation = useUpdateGoalEndpoint({ mutation: { onSuccess: onCreated } });
 
   const defaultValues: FormValues = {
-    name: "",
-    targetAmount: "",
-    currentAmount: "",
-    targetDate: "",
+    name: initial?.name ?? "",
+    targetAmount: initial?.targetAmount ?? "",
+    currentAmount: initial?.currentAmount ?? "",
+    targetDate: initial?.targetDate ?? "",
   };
 
   const form = useForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
-      createMutation.mutate({
-        data: {
-          name: value.name.trim(),
-          targetAmount: value.targetAmount,
-          currentAmount: value.currentAmount || null,
-          targetDate: value.targetDate || null,
-        },
-      });
+      const name = value.name.trim();
+      const targetDate = value.targetDate || null;
+      if (initial?.id) {
+        updateMutation.mutate({
+          id: initial.id,
+          data: {
+            name,
+            targetAmount: value.targetAmount,
+            currentAmount: value.currentAmount || "0",
+            targetDate,
+          },
+        });
+      } else {
+        createMutation.mutate({
+          data: {
+            name,
+            targetAmount: value.targetAmount,
+            currentAmount: value.currentAmount || null,
+            targetDate,
+          },
+        });
+      }
     },
   });
 
@@ -79,10 +100,11 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
                 placeholder={t("goals.namePlaceholder")}
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "goal-name-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="goal-name-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -97,10 +119,11 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
                 placeholder="0.00"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "goal-target-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="goal-target-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -115,10 +138,11 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
                 placeholder="0.00"
                 value={field.value}
                 aria-invalid={field.errors.length > 0}
+                aria-describedby={field.errors.length > 0 ? "goal-current-error" : undefined}
                 onBlur={field.handleBlur}
                 onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError message={field.errors[0]?.message} />
+              <FieldError id="goal-current-error" message={field.errors[0]?.message} />
             </div>
           )}
         </form.Field>
@@ -144,8 +168,12 @@ export function CreateGoalForm({ onCreated, onCancel }: Readonly<Props>) {
         </Button>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
-              {t("goals.add")}
+            <Button
+              type="submit"
+              pending={createMutation.isPending || updateMutation.isPending}
+              disabled={!canSubmit}
+            >
+              {initial ? t("actions.save") : t("goals.add")}
             </Button>
           )}
         </form.Subscribe>

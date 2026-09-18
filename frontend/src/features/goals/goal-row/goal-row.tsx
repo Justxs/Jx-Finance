@@ -1,14 +1,14 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useUpdateGoalEndpoint } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/modal";
-import { Input } from "@/components/ui/input";
-import { isPositiveMoney, isMoney, normalizeMoney } from "@/lib/validation";
-import { Label } from "@/components/ui/label";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { RowTransition } from "@/components/row-transition";
+import { Button } from "@/components/ui/button";
+import { Meter } from "@/components/ui/meter";
+import { Tag } from "@/components/ui/tag";
+import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
+import { CreateGoalForm } from "../create-goal-form";
 
 interface Props {
   goal: GoalResponse;
@@ -29,136 +29,80 @@ export function GoalRow({
   const money = useMoney();
   const formatDate = useIsoDate();
   const [editing, setEditing] = useState(false);
-  const [name, setName] = useState(goal.name ?? "");
-  const [targetAmount, setTargetAmount] = useState(goal.targetAmount ?? "");
-  const [targetDate, setTargetDate] = useState(goal.targetDate ?? "");
-  const [currentAmount, setCurrentAmount] = useState(goal.currentAmount ?? "0.00");
-
-  const updateMutation = useUpdateGoalEndpoint({
-    mutation: {
-      onSuccess: () => setEditing(false),
-      onSettled: onSaved,
-    },
-  });
 
   const target = Number(goal.targetAmount);
   const current = Number(goal.currentAmount);
-  const pct = target > 0 ? Math.min(100, (current / target) * 100) : 0;
+  const reached = target > 0 && current >= target;
+  const percent = usePercent();
 
   return (
-    <li className="space-y-2 px-6 py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 break-words">
-          <p className="font-medium">{goal.name}</p>
-          {goal.targetDate ? (
-            <p className="text-xs text-muted-foreground">
-              {t("goals.targetDate")}: {formatDate(goal.targetDate)}
+    <RowTransition>
+      <li className="py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+          <div className="min-w-0">
+            <p className="line-clamp-2 font-medium wrap-break-word" title={goal.name ?? undefined}>
+              {goal.name}
             </p>
-          ) : null}
+            {goal.targetDate ? (
+              <p className="text-xs text-muted-foreground tabular-nums">
+                {t("goals.targetDate")}: {formatDate(goal.targetDate)}
+              </p>
+            ) : null}
+          </div>
+          <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:text-right">
+            <p className="whitespace-nowrap tabular-nums">
+              <span className="font-semibold">{money.format(current)}</span>{" "}
+              <span className="text-muted-foreground">
+                {t("goals.ofTarget", { amount: money.format(target) })}
+              </span>
+            </p>
+            <p className="flex items-center gap-2 text-xs text-muted-foreground tabular-nums sm:justify-end">
+              {percent.format(target > 0 ? current / target : 0)}
+              {reached ? <Tag tone="positive">{t("goals.reached")}</Tag> : null}
+            </p>
+          </div>
+          <div className="col-start-2 row-start-1 flex items-center sm:col-start-3">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setEditing(true)}
+              aria-label={`${t("actions.edit")}: ${goal.name}`}
+              tooltip={`${t("actions.edit")}: ${goal.name}`}
+            >
+              <Pencil />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              pending={deletePending}
+              disabled={deleteDisabled}
+              onClick={onDelete}
+              aria-label={`${t("actions.delete")}: ${goal.name}`}
+              tooltip={`${t("actions.delete")}: ${goal.name}`}
+            >
+              <Trash2 />
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <span className="break-words text-sm font-semibold tabular-nums">
-            {money.format(current)} / {money.format(target)}
-          </span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            onClick={() => {
-              setName(goal.name ?? "");
-              setTargetAmount(goal.targetAmount ?? "");
-              setTargetDate(goal.targetDate ?? "");
-              setCurrentAmount(goal.currentAmount ?? "0.00");
-              setEditing(true);
-            }}
-            aria-label={t("actions.edit")}
-            title={t("actions.edit")}
-          >
-            <Pencil />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8"
-            pending={deletePending}
-            disabled={deleteDisabled}
-            onClick={onDelete}
-            aria-label={t("actions.delete")}
-            title={t("actions.delete")}
-          >
-            <Trash2 />
-          </Button>
-        </div>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-muted">
-        <div className="h-full rounded-full bg-secondary" style={{ width: `${pct}%` }} />
-      </div>
+        <Meter
+          value={current}
+          max={target}
+          tone="positive"
+          label={goal.name ?? undefined}
+          className="mt-2"
+        />
 
-      <Modal open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
-        <div className="space-y-4">
-          <Label htmlFor={`goal-name-${goal.id}`}>{t("goals.name")}</Label>
-          <Input
-            id={`goal-name-${goal.id}`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+        <Modal open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
+          <CreateGoalForm
+            initial={goal}
+            onCreated={() => {
+              setEditing(false);
+              onSaved();
+            }}
+            onCancel={() => setEditing(false)}
           />
-          <Label htmlFor={`goal-target-${goal.id}`}>{t("goals.targetAmount")}</Label>
-          <Input
-            id={`goal-target-${goal.id}`}
-            inputMode="decimal"
-            value={targetAmount}
-            onChange={(e) => setTargetAmount(e.target.value)}
-          />
-          <Label htmlFor={`goal-date-${goal.id}`}>{t("goals.targetDate")}</Label>
-          <Input
-            id={`goal-date-${goal.id}`}
-            type="date"
-            value={targetDate}
-            onChange={(e) => setTargetDate(e.target.value)}
-          />
-          <div className="space-y-1.5">
-            <Label htmlFor={`goal-current-${goal.id}`}>{t("goals.currentAmount")}</Label>
-            <Input
-              id={`goal-current-${goal.id}`}
-              inputMode="decimal"
-              value={currentAmount}
-              onChange={(e) => setCurrentAmount(e.target.value)}
-            />
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={updateMutation.isPending}
-              onClick={() => setEditing(false)}
-            >
-              {t("actions.cancel")}
-            </Button>
-            <Button
-              pending={updateMutation.isPending}
-              disabled={
-                !name.trim() ||
-                !isPositiveMoney(targetAmount) ||
-                !isMoney(currentAmount) ||
-                Number(normalizeMoney(currentAmount)) < 0
-              }
-              onClick={() =>
-                updateMutation.mutate({
-                  id: goal.id!,
-                  data: {
-                    name,
-                    targetAmount,
-                    currentAmount,
-                    targetDate: targetDate || null,
-                  },
-                })
-              }
-            >
-              {t("actions.save")}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </li>
+        </Modal>
+      </li>
+    </RowTransition>
   );
 }

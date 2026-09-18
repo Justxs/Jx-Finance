@@ -1,3 +1,5 @@
+using JxFinance.Domain.Common;
+
 namespace JxFinance.Endpoints.Transfers.Shared;
 
 public sealed record TransferResponse(
@@ -7,4 +9,7 @@ public sealed record TransferResponse(
     string Amount,
     DateOnly Date,
     string? Description,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Currency Currency,
+    string ReceivedAmount,
+    Currency ReceivedCurrency);

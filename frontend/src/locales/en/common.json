@@ -1,8 +1,12 @@
 {
+  "brand": {
+    "wordmark": "Finance"
+  },
   "appName": "Jx Finance",
   "nav": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
+    "import": "Import CSV",
     "accounts": "Accounts",
     "categories": "Categories",
     "budgets": "Budgets",
@@ -16,7 +20,8 @@
     "collapse": "Collapse sidebar",
     "expand": "Expand sidebar",
     "main": "Main navigation",
-    "skip": "Skip to content"
+    "skip": "Skip to content",
+    "settings": "Settings"
   },
   "actions": {
     "add": "Add",
@@ -28,6 +33,9 @@
     "previous": "Previous",
     "next": "Next",
     "close": "Close"
+  },
+  "common": {
+    "actions": "Actions"
   },
   "confirmDelete": {
     "title": "Delete this item?",
@@ -51,7 +59,8 @@
     "spendingByCategory": "Spending by category (this month)",
     "monthlyTrend": "Income vs. expenses",
     "other": "Other",
-    "noSpending": "No spending recorded this month."
+    "noSpending": "No spending recorded this month.",
+    "showTransactions": "Show {{category}} transactions"
   },
   "accounts": {
     "title": "Accounts",
@@ -73,7 +82,9 @@
       "cash": "Cash",
       "other": "Other"
     },
-    "allTypes": "All types"
+    "allTypes": "All types",
+    "currency": "Main currency",
+    "currencyHint": "The starting balance and the account total use this currency. The account can still hold others."
   },
   "transfers": {
     "title": "Transfer money",
@@ -81,7 +92,32 @@
     "to": "To",
     "add": "Transfer",
     "empty": "No transfers yet.",
-    "sameAccountError": "Source and destination accounts must differ."
+    "sameAccountError": "Source and destination accounts must differ.",
+    "heading": "Transfers",
+    "received": "Received",
+    "sameAsSent": "Same as sent",
+    "sentCurrency": "Sent currency",
+    "receivedCurrency": "Received currency"
+  },
+  "conversions": {
+    "heading": "Currency conversions",
+    "add": "Convert currency",
+    "title": "Convert currency",
+    "description": "Exchange one currency for another inside the same account. Balances move; nothing counts as income or an expense.",
+    "sold": "Sold",
+    "bought": "Bought",
+    "soldCurrency": "Sold currency",
+    "boughtCurrency": "Bought currency",
+    "yourRate": "Your rate",
+    "referenceRate": "ECB reference",
+    "fee": "Fee (optional)",
+    "feeCurrency": "Fee currency",
+    "feeHint": "Recorded as an expense on this account.",
+    "submit": "Convert",
+    "empty": "No conversions yet.",
+    "sameCurrencyError": "Choose two different currencies.",
+    "rateLine": "1 {{from}} = {{rate}} {{to}}",
+    "feeLine": "fee {{fee}}"
   },
   "categories": {
     "title": "Categories",
@@ -111,7 +147,6 @@
     "description": "Description",
     "descriptionPlaceholder": "e.g. Lidl",
     "empty": "No transactions yet.",
-    "pageInfo": "Page {{page}} of {{pages}}",
     "needAccount": "Create an account first to add transactions.",
     "searchPlaceholder": "Search description...",
     "allTypes": "All types",
@@ -121,13 +156,43 @@
     "exportCsv": "Export CSV",
     "exportPdf": "Export PDF",
     "split": "Split",
+    "splitCategories_one": "{{count}} category",
+    "splitCategories_other": "{{count}} categories",
     "splitTransaction": "Split into categories",
     "addLine": "Add line",
     "lineAmount": "Amount",
     "lineCategory": "Category",
     "lineDescription": "Label",
     "removeLine": "Remove line",
-    "splitTotalMismatch": "Lines total {{linesTotal}}, but the transaction is {{total}}."
+    "splitTotalMismatch": "Lines total {{linesTotal}}, but the transaction is {{total}}.",
+    "count_one": "{{count}} transaction",
+    "count_other": "{{count}} transactions",
+    "totalIncome": "income",
+    "totalExpense": "expenses",
+    "totalsLabel": "Totals for the current filters",
+    "saveAndAddAnother": "Save and add another",
+    "created": "Transaction added",
+    "updated": "Transaction updated",
+    "deleted": "Transaction deleted",
+    "selectRow": "Select: {{row}}",
+    "selectPage": "Select all transactions on this page",
+    "splitNotSelectable": "Split transactions keep their categories on the lines, so they cannot be recategorized in bulk",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "bulkCategory": "New category",
+    "setCategory": "Set category",
+    "clearSelection": "Clear selection",
+    "mixedTypesHint": "The selection mixes income and expenses. Select rows of one type to set a category.",
+    "recategorized_one": "{{count}} transaction recategorized",
+    "recategorized_other": "{{count}} transactions recategorized",
+    "selectionToolbar": "Selected transactions",
+    "filters": "Filters",
+    "filtersTitle": "Filter and sort",
+    "sortBy": "Sort by",
+    "sortAscending": "{{column}}, ascending",
+    "sortDescending": "{{column}}, descending",
+    "done": "Done",
+    "currency": "Currency"
   },
   "theme": {
     "toggle": "Toggle theme"
@@ -144,7 +209,6 @@
     "displayName": "Display name",
     "displayNamePlaceholder": "e.g. Justas",
     "createAdmin": "Create admin account",
-    "setupComplete": "Admin account created. Sign in to continue.",
     "twoFactorCode": "Authenticator code",
     "twoFactorCodeHint": "Enter the 6-digit code from your authenticator app, or a recovery code.",
     "verifyCode": "Verify code"
@@ -164,7 +228,6 @@
       "Member": "Member"
     },
     "deactivate": "Deactivate",
-    "created": "User created",
     "deactivated_toast": "User deactivated",
     "roleUpdated": "Role updated",
     "empty": "No other users yet.",
@@ -172,7 +235,9 @@
     "allStatuses": "All statuses"
   },
   "profile": {
+    "qrCodeAlt": "Authenticator QR code",
     "title": "Your profile",
+    "detailsTitle": "Name and password",
     "currentPassword": "Current password",
     "newPassword": "New password (optional)",
     "save": "Save changes",
@@ -190,13 +255,132 @@
     "recoveryCodesSubtitle": "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe — they won't be shown again.",
     "recoveryCodesDone": "I've saved these codes"
   },
+  "settings": {
+    "title": "Settings",
+    "description": "Apply to everyone who uses this installation.",
+    "unsaved": "You have unsaved changes.",
+    "saved": "All changes saved.",
+    "savedToast": "Settings saved",
+    "discard": "Discard changes",
+    "general": {
+      "title": "General",
+      "instanceName": "Installation name",
+      "instanceNameHint": "Shown beside the logo and in the browser tab. Leave empty to use the product name."
+    },
+    "featureGroups": {
+      "plan": "Plan",
+      "review": "Review",
+      "ledger": "Ledger"
+    },
+    "features": {
+      "title": "Features",
+      "description": "A feature that is off disappears from the navigation and its pages stop loading. Its data is kept and returns when you turn it back on.",
+      "items": {
+        "budgets": {
+          "name": "Budgets",
+          "hint": "Monthly limits per category."
+        },
+        "goals": {
+          "name": "Goals",
+          "hint": "Savings targets and progress."
+        },
+        "recurringBills": {
+          "name": "Recurring bills",
+          "hint": "Due dates and reminders. Off also stops the reminders."
+        },
+        "netWorth": {
+          "name": "Net worth",
+          "hint": "Assets, debts and history. Off also stops the daily snapshot."
+        },
+        "reports": {
+          "name": "Reports",
+          "hint": "Income and expense summaries over any period."
+        },
+        "import": {
+          "name": "CSV import",
+          "hint": "Bank statement upload."
+        },
+        "households": {
+          "name": "Households",
+          "hint": "Sharing accounts and categories with other users."
+        },
+        "multiCurrency": {
+          "name": "Multiple currencies",
+          "hint": "Currency pickers, conversions and cross-currency transfers."
+        }
+      }
+    },
+    "currencies": {
+      "title": "Currencies",
+      "reporting": "Reporting currency",
+      "reportingHint": "Totals, budgets and reports are shown in this currency.",
+      "reportingChangeWarning": "Saving revalues every transaction at the rate on its own date. Budgets, goals, assets, debts, bills and net worth history keep their numbers, so review them afterwards.",
+      "enabled": "Currencies you use",
+      "enabledHint_one": "{{count}} currency is offered when entering data. The reporting currency is always included.",
+      "enabledHint_other": "{{count}} currencies are offered when entering data. The reporting currency is always included.",
+      "enabledOff": "Multiple currencies is off, so only the reporting currency is offered.",
+      "selectAll": "Select all",
+      "selectNone": "Only reporting currency"
+    },
+    "rates": {
+      "title": "Exchange rates",
+      "autoSync": "Fetch rates automatically",
+      "autoSyncHint": "European Central Bank reference rates, at startup and every six hours. Turn off if this server must not make outbound requests.",
+      "newest": "Newest rates:",
+      "none": "none stored yet",
+      "syncNow": "Sync now",
+      "synced_one": "{{count}} rate added",
+      "synced_other": "{{count}} rates added",
+      "upToDate": "Rates are already up to date"
+    },
+    "regional": {
+      "title": "Regional",
+      "language": "Default language",
+      "languageHint": "Used until someone picks a language themselves.",
+      "languages": {
+        "en": "English",
+        "lt": "Lietuvių"
+      },
+      "timeZone": "Time zone",
+      "timeZoneHint": "Decides what counts as today and this month.",
+      "firstDayOfWeek": "Week starts on",
+      "days": {
+        "monday": "Monday",
+        "sunday": "Sunday"
+      }
+    },
+    "defaults": {
+      "title": "Defaults",
+      "account": "Default account",
+      "accountHint": "Preselected when adding a transaction, for users who can see it.",
+      "firstAccount": "First account in the list",
+      "pageSize": "Rows per page",
+      "pageSizeHint": "Used by the transactions list."
+    }
+  },
   "budgets": {
     "title": "Budgets",
     "add": "Add budget",
     "category": "Category",
     "limit": "Monthly limit",
+    "ofLimit": "of {{amount}}",
+    "left": "{{amount}} left",
+    "over": "{{amount}} over",
     "empty": "No budgets yet.",
-    "needCategory": "Create an expense category first to set a budget."
+    "needCategory": "Create an expense category first to set a budget.",
+    "spentThisMonth": "Spent this month",
+    "budgeted": "Budgeted",
+    "remaining": "Remaining",
+    "overBy": "Over by"
+  },
+  "shortcuts": {
+    "title": "Keyboard shortcuts",
+    "actions": "Actions",
+    "goTo": "Go to",
+    "then": "then",
+    "newTransaction": "New transaction",
+    "search": "Search transactions",
+    "help": "Show keyboard shortcuts"
   },
   "goals": {
     "title": "Goals",
@@ -206,7 +390,8 @@
     "targetAmount": "Target amount",
     "currentAmount": "Current amount",
     "targetDate": "Target date",
-    "updateProgress": "Update progress",
+    "ofTarget": "of {{amount}}",
+    "reached": "Reached",
     "empty": "No goals yet."
   },
   "netWorth": {
@@ -271,15 +456,20 @@
     "confirmTitle": "Confirm bill payment",
     "confirmAccountRequired": "Choose the account this was paid from.",
     "empty": "No recurring bills yet.",
-    "needAccount": "Create an account first to set up recurring bills."
+    "needAccount": "Create an account first to set up recurring bills.",
+    "overdue": "Overdue",
+    "recordPayment": "Record payment"
   },
   "notifications": {
     "title": "Notifications",
     "empty": "No new notifications.",
     "markAllRead": "Mark all as read",
-    "billDue": "Due {{date}}"
+    "billDue": "Due {{date}}",
+    "titleWithCount": "Notifications, {{count}} unread",
+    "unavailable": "Notifications could not be loaded"
   },
   "households": {
+    "name": "Household name",
     "title": "Households",
     "add": "Create household",
     "namePlaceholder": "e.g. Our home",
@@ -319,11 +509,9 @@
     "customRange": "Custom range"
   },
   "imports": {
-    "title": "Import a Swedbank CSV",
     "file": "CSV file",
     "chooseFile": "Click to choose a CSV file",
     "preview": "Preview",
-    "confirm": "Confirm import",
     "confirmed": "Imported {{imported}} transactions ({{skipped}} duplicates skipped)",
     "noRows": "No importable rows found in this file.",
     "duplicate": "Already imported",
@@ -335,23 +523,56 @@
     "newTransfer": "Create transfer",
     "existingTransfer": "Existing transfer",
     "matchHelp": "When importing the other account, match the same transfer to avoid counting it twice.",
-    "selectRow": "Select row {{row}}",
-    "flags": "Status"
-  },
-  "status": {
-    "label": "API status",
-    "loading": "Checking API...",
-    "ok": "Connected",
-    "error": "Unavailable"
+    "selectRow": "Select: {{row}}",
+    "flags": "Status",
+    "pageTitle": "Import CSV",
+    "pageDescription": "Upload a Swedbank statement, review the rows, then confirm what enters the ledger.",
+    "fileSection": "Statement file",
+    "reviewSection": "Review rows",
+    "fileHint": "Swedbank account statement exported as CSV, in EUR, up to 5 MB. Nothing is saved until you confirm the reviewed rows.",
+    "fileRequired": "Choose a CSV file first.",
+    "fileEmpty": "This file is empty. Export the statement again and choose the new file.",
+    "fileTooLarge": "This file is larger than 5 MB. Export a shorter period.",
+    "errorFormat": "This file does not match the Swedbank CSV statement format.",
+    "errorFileSize": "The file must be a non-empty CSV no larger than 5 MB.",
+    "errorGeneric": "The preview could not be loaded. Try again.",
+    "errorFix": "Export the account statement from Swedbank as CSV with amounts in EUR and upload it unchanged. The preview checks column order, currency, debit and credit direction, dates, amounts and references.",
+    "noAccountsTitle": "No accounts yet",
+    "noAccounts": "An import needs an account to record the rows in.",
+    "goToAccounts": "Add one in Accounts",
+    "allDuplicates": "Every row in this file has already been imported into this account. There is nothing new to add.",
+    "selectAll": "Select all rows",
+    "selectAllHint": "Selects every row except those already imported",
+    "selectedOf": "{{selected}} of {{total}} selected",
+    "duplicateCount_one": "{{count}} duplicate",
+    "duplicateCount_other": "{{count}} duplicates",
+    "transferCount_one": "{{count}} transfer",
+    "transferCount_other": "{{count}} transfers",
+    "netSelected": "Net of selected",
+    "bulkCategory": "Set category for selected",
+    "bulkCategoryPlaceholder": "Choose a category",
+    "bulkApply": "Apply",
+    "bulkApplyCount_one": "Apply to {{count}} row",
+    "bulkApplyCount_other": "Apply to {{count}} rows",
+    "confirmCount_one": "Import {{count}} row",
+    "confirmCount_other": "Import {{count}} rows",
+    "suggested": "Suggested category",
+    "suggestedHint": "Filled from your most recent transaction with the same description. Change it if it does not fit.",
+    "categoryFor": "Category: {{row}}",
+    "resultImported_one": "Imported {{count}} row.",
+    "resultImported_other": "Imported {{count}} rows.",
+    "resultSkipped_one": "{{count}} duplicate skipped.",
+    "resultSkipped_other": "{{count}} duplicates skipped.",
+    "resultLink": "View them in Transactions"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "loadFailed": "Could not load this.",
     "retry": "Try again",
-    "retrying": "Trying…",
     "loading": "Loading"
   },
   "validation": {
+    "rate": "Enter a valid rate, e.g. 4.5.",
     "required": "This field is required.",
     "money": "Enter a valid amount, e.g. 12.34.",
     "positiveMoney": "Enter an amount greater than 0, e.g. 12.34.",
@@ -369,5 +590,13 @@
     "noMatches": "No rows match these filters.",
     "sortAsc": "Sort {{column}} ascending",
     "sortDesc": "Sort {{column}} descending"
+  },
+  "charts": {
+    "income": "Income",
+    "expense": "Expenses",
+    "trendLabel": "Income and expenses by period",
+    "netWorthLabel": "Net worth over time",
+    "net": "Net",
+    "netWorth": "Net worth"
   }
 }

@@ -11,7 +11,7 @@ function PaginationExample({ pages }: Readonly<{ pages: number }>) {
 const meta = {
   title: "Components/Pagination",
   component: Pagination,
-  args: { page: 1, pages: 7, onPageChange: () => undefined },
+  args: { page: 1, pages: 7, onPageChange: () => {} },
   decorators: [
     (Story) => (
       <section className="card w-[min(90vw,36rem)]">

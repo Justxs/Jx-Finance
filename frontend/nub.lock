@@ -14,6 +14,12 @@ importers:
       '@tanstack/react-form':
         specifier: ^2.0.0-alpha.2
         version: 2.0.0-alpha.2(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
+      '@tanstack/react-hotkeys':
+        specifier: ^0.10.0
+        version: 0.10.0(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
+      '@tanstack/react-pacer':
+        specifier: ^0.23.0
+        version: 0.23.0(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
       '@tanstack/react-query':
         specifier: ^5.103.1
         version: 5.103.1(react@19.3.0)
@@ -35,9 +41,6 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
-      country-flag-icons:
-        specifier: ^1.6.20
-        version: 1.6.20
       date-fns:
         specifier: ^4.4.0
         version: 4.4.0
@@ -1566,6 +1569,16 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6 || ^7 || ^8
 
+  '@tanstack/devtools-event-client@0.5.0':
+    resolution: {integrity: sha512-H+OH3zC6Vhu/K0NaVfQKknEKawc/+2PT+D3SB3Ox0V8SiMlTo0abbmH2rH0721R2aNYbjdMXA1oENOd8E2UVoA==}
+    engines: {node: '>=18'}
+    hasBin: true
+    peerDependencies:
+      '@tanstack/intent': '*'
+    peerDependenciesMeta:
+      '@tanstack/intent':
+        optional: true
+
   '@tanstack/form-core@2.0.0-alpha.2':
     resolution: {integrity: sha512-u/2s1rJ1pSdFgU/oKz2zt/Wdb3XQK9LY1IIL2pLMu0AVYK5f8Ue5UwaCjcUxEAI8g6XJpbmEuy2wLIwHZbZnwA==}
     engines: {node: '>=18'}
@@ -1574,8 +1587,16 @@ packages:
     resolution: {integrity: sha512-utTS5L2OkeYUzXGohL1Z8sefu1GLNOJcxe8Hd6iIdc/Xo1K1nDB2JEp4iSFhvYh33xKC9V91TxrS8qfrpoKobQ==}
     engines: {node: '>=20.19'}
 
+  '@tanstack/hotkeys@0.8.0':
+    resolution: {integrity: sha512-vqH7X9nb0MTJ/O08++dB5bP9jgj4+BIPOUu/U+6myG86lDsirZSVSobpq5UQpE7nBuk62i8eIYeOhd+OMl/UrA==}
+    engines: {node: '>=18'}
+
   '@tanstack/pacer-lite@0.2.2':
     resolution: {integrity: sha512-eQ1MyLKCHyXiH7NbdmB80W77OhiMgGBUb+qDx/8WMGbwg5Lf/NlfD0TfNYAqY77i8V3AxoDoYdICrQE5ADw4Yw==}
+    engines: {node: '>=18'}
+
+  '@tanstack/pacer@0.22.0':
+    resolution: {integrity: sha512-Zq23KOn30tFiA6ZYWihs5x++ttHkOIcnIIjRrJq05tGrYx9+iHsmVaj8jb7UJVemEI+JRWGzJ9C+50YV4nRz0w==}
     engines: {node: '>=18'}
 
   '@tanstack/query-core@5.103.1':
@@ -1586,6 +1607,20 @@ packages:
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
+
+  '@tanstack/react-hotkeys@0.10.0':
+    resolution: {integrity: sha512-GwOSndI5j3qBVYTmgP1mYyRTnlxb2MS17cwGlsavSxMQPSnmDf+m3LzMIpRMs+3zzQMjg3cYhHsFYizYlFI2tw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
+
+  '@tanstack/react-pacer@0.23.0':
+    resolution: {integrity: sha512-Ec3h+kT8kYlpGb1M8F7836q+udE/M2RmE8KLr1rhs+UDBgvxjfmyR2bIUeaDEe9Zn1YXNI986RbErXyr5fEJIg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      react: '>=16.8'
+      react-dom: '>=16.8'
 
   '@tanstack/react-query@5.103.1':
     resolution: {integrity: sha512-rmAPPApNEK17VXRJhtE1rja53n23VV5w30C0saCgJhhX+EpdUnVqMGV/s5nnzV43X75KTHKzuoiuxSzGTBIkag==}
@@ -2066,9 +2101,6 @@ packages:
   cookie@1.1.1:
     resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
     engines: {node: '>=18'}
-
-  country-flag-icons@1.6.20:
-    resolution: {integrity: sha512-py8JiEKzjhYw6HPJ0L7SxLgCYim36UPRTZX43/kqGueUCZLSvnrqAiwW8HtQibur7mdkFQUkjOgdK+o/9FBtaw==}
 
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
@@ -4481,6 +4513,8 @@ snapshots:
       tailwindcss: 4.3.3
       vite: 8.3.0(@types/node@26.6.1)(esbuild@0.28.0)(jiti@2.7.0)(yaml@2.9.0)
 
+  '@tanstack/devtools-event-client@0.5.0': {}
+
   '@tanstack/form-core@2.0.0-alpha.2':
     dependencies:
       '@tanstack/pacer-lite': 0.2.2
@@ -4488,7 +4522,18 @@ snapshots:
 
   '@tanstack/history@1.162.4': {}
 
+  '@tanstack/hotkeys@0.8.0':
+    dependencies:
+      '@tanstack/store': 0.11.1
+
   '@tanstack/pacer-lite@0.2.2': {}
+
+  '@tanstack/pacer@0.22.0':
+    dependencies:
+      '@tanstack/devtools-event-client': 0.5.0
+      '@tanstack/store': 0.11.1
+    transitivePeerDependencies:
+      - '@tanstack/intent'
 
   '@tanstack/query-core@5.103.1': {}
 
@@ -4497,6 +4542,22 @@ snapshots:
       '@tanstack/form-core': 2.0.0-alpha.2
       '@tanstack/react-store': 0.11.1(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
       react: 19.3.0
+
+  '@tanstack/react-hotkeys@0.10.0(react@19.3.0)(react-dom@19.3.0(react@19.3.0))':
+    dependencies:
+      '@tanstack/hotkeys': 0.8.0
+      '@tanstack/react-store': 0.11.1(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+
+  '@tanstack/react-pacer@0.23.0(react@19.3.0)(react-dom@19.3.0(react@19.3.0))':
+    dependencies:
+      '@tanstack/pacer': 0.22.0
+      '@tanstack/react-store': 0.11.1(react@19.3.0)(react-dom@19.3.0(react@19.3.0))
+      react: 19.3.0
+      react-dom: 19.3.0(react@19.3.0)
+    transitivePeerDependencies:
+      - '@tanstack/intent'
 
   '@tanstack/react-query@5.103.1(react@19.3.0)':
     dependencies:
@@ -4929,8 +4990,6 @@ snapshots:
   cookie-es@3.1.1: {}
 
   cookie@1.1.1: {}
-
-  country-flag-icons@1.6.20: {}
 
   cross-spawn@7.0.6:
     dependencies:

@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGetRecurringBillsEndpointQueryKey,
@@ -10,9 +10,9 @@ import {
   useGetRecurringBillsEndpointSuspense,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Modal } from "@/components/modal";
 import { CreateRecurringBillForm } from "../create-recurring-bill-form";
 import { RecurringBillRow } from "../recurring-bill-row";
 
@@ -35,18 +35,16 @@ export function RecurringBillsPage() {
 
   const accountList = accounts.data ?? [];
   const categoryList = categories.data ?? [];
-  const billList = bills.data ?? [];
+  const billList = useDeferredValue(bills.data) ?? [];
 
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   let content: ReactNode;
   if (billList.length === 0) {
-    content = (
-      <p className="px-6 py-8 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>
-    );
+    content = <p className="py-6 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>;
   } else {
     content = (
-      <ul className="divide-y divide-border">
+      <ul className="rows border-t border-t-rule">
         {billList.map((bill) => (
           <RecurringBillRow
             key={bill.id}
@@ -64,7 +62,7 @@ export function RecurringBillsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader title={t("recurringBills.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -84,9 +82,10 @@ export function RecurringBillsPage() {
         />
       </Modal>
 
-      <section className="card overflow-hidden">{content}</section>
+      {content}
       <ConfirmDeleteDialog
         target={deleteTarget}
+        itemLabel={billList.find((bill) => bill.id === deleteTarget)?.name ?? undefined}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />

@@ -4,7 +4,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transfers;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

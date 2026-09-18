@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { accounts, categories, ids, importPreviewRows } from "@/storybook/fixtures";
-import { ImportPreviewTable, type PreviewRowState } from "./import-preview-table";
+import { accounts, categories, ids, importPreviewRows, transactions } from "@/storybook/fixtures";
+import { ImportPreviewTable } from "./import-preview-table";
+import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
 interface HarnessProps {
   rows?: PreviewRowState[];
@@ -10,13 +11,9 @@ interface HarnessProps {
   withCategories?: boolean;
 }
 
-const defaultRows: PreviewRowState[] = importPreviewRows.map((row) => ({
-  ...row,
-  selected: !row.isDuplicate && !row.looksLikeTransfer,
-  transferAccountId: "",
-  existingTransferId: "",
-  categoryId: "",
-}));
+const defaultRows: PreviewRowState[] = toPreviewRows(importPreviewRows, [], categories);
+
+const recalledRows: PreviewRowState[] = toPreviewRows(importPreviewRows, transactions, categories);
 
 const duplicateRows = defaultRows.map((row) => ({ ...row, isDuplicate: true, selected: false }));
 
@@ -56,6 +53,8 @@ function PreviewTableHarness({
         accounts={accounts}
         categories={withCategories ? categories : []}
         onRowChange={handleRowChange}
+        onRowsChange={setRows}
+        onCancel={() => toast.message("Cancelled")}
         onConfirm={() =>
           toast.success(`Confirmed ${rows.filter((row) => row.selected).length} rows`)
         }
@@ -75,6 +74,12 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const WithSuggestedCategories: Story = { args: { rows: recalledRows } };
+
+export const IncomeOnlySelected: Story = {
+  args: { rows: defaultRows.map((row) => ({ ...row, selected: row.type === "income" })) },
+};
 
 export const Empty: Story = { args: { rows: [] } };
 

@@ -7,6 +7,7 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Households.Mappers;
 
+[RegisterService<HouseholdMapper>(LifeTime.Singleton)]
 public sealed class HouseholdMapper : Mapper<CreateHouseholdRequest, HouseholdResponse, Household>
 {
     public override Household ToEntity(CreateHouseholdRequest request) => new() { Name = request.Name.Trim() };

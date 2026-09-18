@@ -1,7 +1,7 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import type { ApiError } from "@/api/client";
-import i18n from "@/lib/i18n";
+import { i18n } from "@/lib/i18n";
 
 function isApiError(error: unknown): error is ApiError {
   return typeof error === "object" && error !== null && "status" in error;

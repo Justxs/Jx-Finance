@@ -1,11 +1,12 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.UpdateDebt;
 
-public sealed class UpdateDebtEndpoint(INetWorthService netWorthService) : Endpoint<UpdateDebtRequest, DebtResponse>
+public sealed class UpdateDebtEndpoint(INetWorthService netWorthService) : Endpoint<UpdateDebtRequest, DebtResponse, DebtMapper>
 {
     public override void Configure()
     {
@@ -16,7 +17,7 @@ public sealed class UpdateDebtEndpoint(INetWorthService netWorthService) : Endpo
 
     public override async Task HandleAsync(UpdateDebtRequest req, CancellationToken ct)
     {
-        var debt = (await netWorthService.UpdateDebtAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(debt, ct);
+        var debt = (await netWorthService.UpdateDebtAsync(req.Id, entity => Map.UpdateEntity(req, entity), ct)).ValueOrThrow();
+        await Send.OkAsync(Map.FromEntity(debt), ct);
     }
 }

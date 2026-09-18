@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   accounts,
   categories,
@@ -62,6 +62,27 @@ export const WithoutCancel: Story = { args: { onCancel: undefined } };
 export const NoCategories: Story = { args: { categories: [] } };
 
 export const NoAccounts: Story = { args: { accounts: [] } };
+
+export const WithAddAnother: Story = {
+  args: { onSubmitAndAddAnother: fn(async () => true) },
+};
+
+export const SaveAndAddAnother: Story = {
+  args: { onSubmitAndAddAnother: fn(async () => true) },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const amount = await canvas.findByLabelText("Amount");
+    const description = canvas.getByLabelText("Description");
+    fireEvent.change(amount, { target: { value: "12,50" } });
+    fireEvent.change(description, { target: { value: "Lidl" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Save and add another" }));
+    await waitFor(() => expect(args.onSubmitAndAddAnother).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(amount).toHaveValue(""));
+    await expect(description).toHaveValue("");
+    await expect(amount).toHaveFocus();
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
 
 export const ValidationErrors: Story = {
   play: async ({ canvasElement, args }) => {

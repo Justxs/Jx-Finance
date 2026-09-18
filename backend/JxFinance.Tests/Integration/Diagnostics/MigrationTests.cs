@@ -5,13 +5,13 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
     public async Task Migrations_are_applied_on_startup()
     {
-        using var scope = Factory.Services.CreateScope();
+        using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         var applied = await db.Database.GetAppliedMigrationsAsync();

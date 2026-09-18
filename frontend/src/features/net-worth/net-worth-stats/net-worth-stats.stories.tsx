@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HttpResponse, http } from "msw";
+import type { NetWorthResponse } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { NetWorthResponse } from "@/api/generated/model";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthStats } from "./net-worth-stats";
 
 function NetWorthStatsStory() {
   return (
-    <div className="w-[min(64rem,calc(100vw-3rem))]">
+    <div className="w-[min(64rem,calc(100vw-5rem))]">
       <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
         <NetWorthStats />
       </QueryBoundary>

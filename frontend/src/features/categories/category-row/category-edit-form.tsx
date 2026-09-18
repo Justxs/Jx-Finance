@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useGetHouseholdsEndpointSuspense, useUpdateCategoryEndpoint } from "@/api/generated";
 import type { CategoryResponse, Scope } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SelectField } from "@/components/select-field";
 import { IconPicker } from "../icon-picker";
 
 interface FormValues {
@@ -85,9 +85,13 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
         <form.Field name="name">
           {(field) => (
             <Input
+              aria-label={t("categories.name")}
               className="w-full sm:w-auto sm:flex-1"
               value={field.value}
               aria-invalid={field.errors.length > 0}
+              aria-describedby={
+                field.errors.length > 0 ? `category-${category.id}-name-error` : undefined
+              }
               onBlur={field.handleBlur}
               onChange={(e) => field.handleChange(e.target.value)}
               autoFocus
@@ -111,7 +115,12 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
         </Button>
       </div>
       <form.Field name="name">
-        {(field) => <FieldError message={field.errors[0]?.message} />}
+        {(field) => (
+          <FieldError
+            id={`category-${category.id}-name-error`}
+            message={field.errors[0]?.message}
+          />
+        )}
       </form.Field>
       <form.Field name="icon">
         {(field) => <IconPicker value={field.value} onChange={field.handleChange} />}
@@ -149,6 +158,11 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                         id={`category-${category.id}-household`}
                         value={field.value}
                         aria-invalid={field.errors.length > 0}
+                        aria-describedby={
+                          field.errors.length > 0
+                            ? `category-${category.id}-household-error`
+                            : undefined
+                        }
                         onBlur={field.handleBlur}
                         onChange={(value) => field.handleChange(value)}
                         options={[
@@ -159,7 +173,10 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                           })),
                         ]}
                       />
-                      <FieldError message={field.errors[0]?.message} />
+                      <FieldError
+                        id={`category-${category.id}-household-error`}
+                        message={field.errors[0]?.message}
+                      />
                     </div>
                   )}
                 </form.Field>

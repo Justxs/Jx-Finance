@@ -28,7 +28,7 @@ const meta = {
   decorators: [
     function withList(Story) {
       return (
-        <ul className="card w-[min(56rem,calc(100vw-3rem))] divide-y divide-border">
+        <ul className="rows w-[min(56rem,calc(100vw-3rem))]">
           <Story />
         </ul>
       );

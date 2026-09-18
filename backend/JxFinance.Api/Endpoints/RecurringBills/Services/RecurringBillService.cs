@@ -1,69 +1,66 @@
+using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
-using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
-using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
-using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.RecurringBills.Services;
 
-public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper mapper) : IRecurringBillService
+[RegisterService<IRecurringBillService>(LifeTime.Scoped)]
+public sealed class RecurringBillService(
+    AppDbContext db,
+    IExchangeRateService rates) : IRecurringBillService
 {
-    public async Task<IReadOnlyList<RecurringBillResponse>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<RecurringBill>> GetAllAsync(CancellationToken cancellationToken)
     {
         var bills = await db.RecurringBills.OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
-        return bills.Select(mapper.FromEntity).ToList();
+        return bills;
     }
 
-    public async Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<RecurringBill>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         return bill is null
-            ? Result<RecurringBillResponse>.Failure(ErrorCodes.NotFound, "Recurring bill not found.")
-            : Result<RecurringBillResponse>.Success(mapper.FromEntity(bill));
+            ? Result<RecurringBill>.Failure(ErrorCodes.NotFound, "Recurring bill not found.")
+            : Result<RecurringBill>.Success(bill);
     }
 
-    public async Task<Result<RecurringBillResponse>> CreateAsync(
-        CreateRecurringBillRequest request,
-        CancellationToken cancellationToken)
+    public async Task<Result<RecurringBill>> CreateAsync(RecurringBill bill, CancellationToken cancellationToken)
     {
-        var error = await ValidateReferencesAsync(request.AccountId, request.CategoryId, cancellationToken);
-        if (error is not null) return Result<RecurringBillResponse>.Failure(ErrorCodes.Validation, error);
-        var bill = mapper.ToEntity(request);
+        var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
+        if (error is not null) return Result<RecurringBill>.Failure(ErrorCodes.Validation, error);
 
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<RecurringBillResponse>.Success(mapper.FromEntity(bill));
+        return Result<RecurringBill>.Success(bill);
     }
 
-    public async Task<Result<RecurringBillResponse>> UpdateAsync(
-        UpdateRecurringBillRequest request,
-        CancellationToken cancellationToken)
+    public async Task<Result<RecurringBill>> UpdateAsync(Guid id, Action<RecurringBill> apply, CancellationToken cancellationToken)
     {
-        var billId = new RecurringBillId(request.Id);
+        var billId = new RecurringBillId(id);
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<RecurringBillResponse>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
+            return Result<RecurringBill>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
         }
 
-        var error = await ValidateReferencesAsync(request.AccountId, request.CategoryId, cancellationToken);
-        if (error is not null) return Result<RecurringBillResponse>.Failure(ErrorCodes.Validation, error);
-        mapper.UpdateEntity(request, bill);
+        apply(bill);
+        var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
+        if (error is not null) return Result<RecurringBill>.Failure(ErrorCodes.Validation, error);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<RecurringBillResponse>.Success(mapper.FromEntity(bill));
+        return Result<RecurringBill>.Success(bill);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -81,7 +78,7 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         return Result<Guid>.Success(id);
     }
 
-    public async Task<Result<ConfirmRecurringBillResponse>> ConfirmAsync(
+    public async Task<Result<RecurringBillConfirmation>> ConfirmAsync(
         ConfirmRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
@@ -92,13 +89,13 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
         }
 
         if (!bill.IsActive)
-            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "This bill is inactive.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "This bill is inactive.");
         if (request.ExpectedDueDate != bill.NextDueDate)
-            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Conflict, "This occurrence has changed or was already confirmed. Refresh the bill.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Conflict, "This occurrence has changed or was already confirmed. Refresh the bill.");
 
         Money amount;
         if (bill.Kind == RecurringBillKind.Fixed)
@@ -109,7 +106,7 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         {
             if (string.IsNullOrWhiteSpace(request.Amount) || (!MoneyWire.IsValid(request.Amount) || MoneyWire.Parse(request.Amount).Amount <= 0))
             {
-                return Result<ConfirmRecurringBillResponse>.Failure(
+                return Result<RecurringBillConfirmation>.Failure(
                     ErrorCodes.Validation,
                     "A variable bill needs an amount to confirm.");
             }
@@ -120,7 +117,7 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         var accountId = request.AccountId is { } requestAccountId ? new AccountId(requestAccountId) : bill.AccountId;
         if (accountId is null)
         {
-            return Result<ConfirmRecurringBillResponse>.Failure(
+            return Result<RecurringBillConfirmation>.Failure(
                 ErrorCodes.Validation,
                 "An account is required to confirm this bill.");
         }
@@ -128,18 +125,19 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
         if (!accountExists)
         {
-            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "Account does not exist.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "Account does not exist.");
         }
 
         if (bill.CategoryId is { } categoryId && !await db.Categories.AnyAsync(c => c.Id == categoryId && c.Type == FlowType.Expense, cancellationToken))
-            return Result<ConfirmRecurringBillResponse>.Failure(ErrorCodes.Validation, "The bill category is no longer available.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "The bill category is no longer available.");
 
         var transaction = new Transaction
         {
             AccountId = accountId.Value,
             CategoryId = bill.CategoryId,
             Type = FlowType.Expense,
-            Amount = amount,
+            Amount = new Money(amount.Amount, rates.ReportingCurrency),
+            ReportingAmount = amount.Amount,
             Date = bill.NextDueDate,
             Description = bill.Name,
             Source = TransactionSource.Manual,
@@ -154,8 +152,8 @@ public sealed class RecurringBillService(AppDbContext db, RecurringBillMapper ma
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
-        return Result<ConfirmRecurringBillResponse>.Success(
-            new ConfirmRecurringBillResponse(mapper.FromEntity(bill), transaction.Id.Value));
+        return Result<RecurringBillConfirmation>.Success(
+            new RecurringBillConfirmation(bill, transaction.Id.Value));
     }
 
     private async Task<string?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)

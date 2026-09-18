@@ -1,5 +1,7 @@
+using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transfers;
@@ -13,7 +15,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Transfers.Services;
 
-public sealed class TransferService(AppDbContext db, TransferMapper mapper) : ITransferService
+[RegisterService<ITransferService>(LifeTime.Scoped)]
+public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExchangeRateService rates) : ITransferService
 {
     public async Task<PagedResponse<TransferResponse>> GetPageAsync(
         GetTransfersRequest request,
@@ -42,19 +45,43 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper) : IT
         var fromAccountId = new AccountId(request.FromAccountId);
         var toAccountId = new AccountId(request.ToAccountId);
 
-        var fromExists = await db.Accounts.AnyAsync(a => a.Id == fromAccountId, cancellationToken);
-        if (!fromExists)
+        var currencies = await db.Accounts
+            .Where(a => a.Id == fromAccountId || a.Id == toAccountId)
+            .Select(a => new { a.Id, a.StartingBalance.Currency })
+            .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
+        if (!currencies.TryGetValue(fromAccountId, out var fromCurrency))
         {
             return Result<TransferResponse>.Failure(ErrorCodes.Validation, "Source account does not exist.");
         }
 
-        var toExists = await db.Accounts.AnyAsync(a => a.Id == toAccountId, cancellationToken);
-        if (!toExists)
+        if (!currencies.TryGetValue(toAccountId, out var toCurrency))
         {
             return Result<TransferResponse>.Failure(ErrorCodes.Validation, "Destination account does not exist.");
         }
 
-        var transfer = mapper.ToEntity(request);
+        var sent = MoneyWire.Parse(request.Amount, request.Currency ?? fromCurrency);
+        var receivedCurrency = request.ReceivedCurrency ?? (request.Currency is null ? toCurrency : sent.Currency);
+        if (receivedCurrency != sent.Currency && request.ReceivedAmount is null)
+        {
+            return Result<TransferResponse>.Failure(
+                ErrorCodes.Validation,
+                "A transfer between currencies needs the received amount.");
+        }
+
+        var received = request.ReceivedAmount is null ? sent : MoneyWire.Parse(request.ReceivedAmount, receivedCurrency);
+        if (received.Currency == sent.Currency && received.Amount != sent.Amount)
+        {
+            return Result<TransferResponse>.Failure(
+                ErrorCodes.Validation,
+                "Sent and received amounts must match when the currency is the same.");
+        }
+
+        if (rates.UnusableReason(sent.Currency, received.Currency) is { } currencyError)
+        {
+            return Result<TransferResponse>.Failure(ErrorCodes.Validation, currencyError);
+        }
+
+        var transfer = mapper.ToEntity(request, sent, received);
 
         db.Transfers.Add(transfer);
         await db.SaveChangesAsync(cancellationToken);

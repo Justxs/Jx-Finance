@@ -9,15 +9,13 @@ public readonly record struct Money
 
     public Money(decimal amount, Currency currency = Currency.Eur)
     {
-        Amount = decimal.Round(amount, 2);
+        Amount = Round(amount);
         Currency = currency;
     }
 
-    public static Money Zero => new(0m);
+    public static decimal Round(decimal amount) => decimal.Round(amount, 2, MidpointRounding.AwayFromZero);
 
     public static explicit operator decimal(Money money) => money.Amount;
-
-    public static explicit operator Money(decimal amount) => new(amount);
 
     public static Money operator +(Money left, Money right)
     {

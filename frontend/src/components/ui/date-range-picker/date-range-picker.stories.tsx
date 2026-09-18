@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { type DateRange, DateRangePicker } from "./date-range-picker";
 import { Label } from "../label";
+import { type DateRange, DateRangePicker } from "./date-range-picker";
 
 const emptyRange: DateRange = { from: "", to: "" };
 
@@ -12,8 +12,10 @@ interface ExampleProps {
   className?: string;
 }
 
+const defaultRange = { from: "2026-09-01", to: "2026-09-18" };
+
 function DateRangePickerExample({
-  initialValue = { from: "2026-09-01", to: "2026-09-18" },
+  initialValue = defaultRange,
   placeholder,
   disabled,
   className = "w-72",

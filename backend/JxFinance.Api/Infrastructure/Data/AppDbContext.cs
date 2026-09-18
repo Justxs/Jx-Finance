@@ -4,11 +4,14 @@ using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Conversions;
+using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Infrastructure.Auth;
@@ -28,6 +31,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransferImport> TransferImports => Set<TransferImport>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
+    public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();
+    public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+    public DbSet<InstanceSettings> InstanceSettings => Set<InstanceSettings>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<Goal> Goals => Set<Goal>();
     public DbSet<Asset> Assets => Set<Asset>();
@@ -37,6 +43,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<NetWorthSnapshot> NetWorthSnapshots => Set<NetWorthSnapshot>();
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
+    public DbSet<UserSession> UserSessions => Set<UserSession>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
@@ -66,15 +73,22 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             user.Property(u => u.DisplayName).HasMaxLength(100);
         });
 
+        builder.Entity<UserSession>(session =>
+        {
+            session.Property(s => s.TokenHash).HasMaxLength(64);
+            session.Property(s => s.SecurityStamp).HasMaxLength(256);
+            session.HasIndex(s => s.UserId);
+            session.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<Account>(account =>
         {
             account.Property(a => a.Id).HasConversion(id => id.Value, value => new AccountId(value));
             account.Property(a => a.Name).HasMaxLength(100);
             account.Property(a => a.Description).HasMaxLength(500);
             account.Property(a => a.Iban).HasMaxLength(34);
-            account.Property(a => a.StartingBalance)
-                .HasConversion(money => money.Amount, value => new Money(value))
-                .HasPrecision(18, 2);
+            account.ComplexProperty(a => a.StartingBalance, money => ConfigureMoney(money, "StartingBalance", "Currency"));
+            account.Ignore(a => a.Currency);
             account.Property(a => a.HouseholdId).HasConversion(
                 id => id.HasValue ? id.Value.Value : (Guid?)null,
                 value => value.HasValue ? new HouseholdId(value.Value) : (HouseholdId?)null);
@@ -105,9 +119,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             transaction.Property(t => t.CategoryId).HasConversion(
                 id => id.HasValue ? id.Value.Value : (Guid?)null,
                 value => value.HasValue ? new CategoryId(value.Value) : (CategoryId?)null);
-            transaction.Property(t => t.Amount)
-                .HasConversion(money => money.Amount, value => new Money(value))
-                .HasPrecision(18, 2);
+            transaction.ComplexProperty(t => t.Amount, money => ConfigureMoney(money, "Amount", "Currency"));
+            transaction.Property(t => t.ReportingAmount).HasPrecision(18, 2);
             transaction.Property(t => t.Description).HasMaxLength(500);
             transaction.Property(t => t.ImportRef).HasMaxLength(64);
             transaction.HasIndex(t => new { t.UserId, t.Date });
@@ -151,14 +164,48 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             transfer.Property(t => t.Id).HasConversion(id => id.Value, value => new TransferId(value));
             transfer.Property(t => t.FromAccountId).HasConversion(id => id.Value, value => new AccountId(value));
             transfer.Property(t => t.ToAccountId).HasConversion(id => id.Value, value => new AccountId(value));
-            transfer.Property(t => t.Amount)
-                .HasConversion(money => money.Amount, value => new Money(value))
-                .HasPrecision(18, 2);
+            transfer.ComplexProperty(t => t.Amount, money => ConfigureMoney(money, "Amount", "Currency"));
+            transfer.ComplexProperty(t => t.ReceivedAmount, money => ConfigureMoney(money, "ReceivedAmount", "ReceivedCurrency"));
             transfer.Property(t => t.Description).HasMaxLength(500);
             transfer.HasIndex(t => new { t.UserId, t.Date });
             transfer.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Restrict);
             transfer.HasOne<Domain.Accounts.Account>().WithMany().HasForeignKey(t => t.FromAccountId).OnDelete(DeleteBehavior.Restrict);
             transfer.HasOne<Domain.Accounts.Account>().WithMany().HasForeignKey(t => t.ToAccountId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<CurrencyConversion>(conversion =>
+        {
+            conversion.Property(c => c.Id).HasConversion(id => id.Value, value => new CurrencyConversionId(value));
+            conversion.Property(c => c.AccountId).HasConversion(id => id.Value, value => new AccountId(value));
+            conversion.Property(c => c.FeeTransactionId).HasConversion(
+                id => id.HasValue ? id.Value.Value : (Guid?)null,
+                value => value.HasValue ? new TransactionId(value.Value) : (TransactionId?)null);
+            conversion.ComplexProperty(c => c.FromAmount, money => ConfigureMoney(money, "FromAmount", "FromCurrency"));
+            conversion.ComplexProperty(c => c.ToAmount, money => ConfigureMoney(money, "ToAmount", "ToCurrency"));
+            conversion.Property(c => c.Description).HasMaxLength(500);
+            conversion.HasIndex(c => new { c.AccountId, c.Date });
+            conversion.HasOne<AppUser>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
+            conversion.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
+            conversion.HasOne<Transaction>().WithMany().HasForeignKey(c => c.FeeTransactionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<ExchangeRate>(rate =>
+        {
+            rate.HasKey(r => new { r.Date, r.Currency });
+            rate.Property(r => r.Currency).HasConversion(CurrencyToCode, CodeToCurrency).HasMaxLength(3);
+            rate.Property(r => r.Rate).HasPrecision(18, 8);
+        });
+
+        builder.Entity<InstanceSettings>(settings =>
+        {
+            settings.Property(s => s.Id).ValueGeneratedNever();
+            settings.ComplexProperty(s => s.Features);
+            settings.Property(s => s.InstanceName).HasMaxLength(40);
+            settings.Property(s => s.ReportingCurrency).HasConversion(CurrencyToCode, CodeToCurrency).HasMaxLength(3);
+            settings.Property(s => s.EnabledCurrencyCodes).HasMaxLength(200);
+            settings.Property(s => s.DefaultLanguage).HasMaxLength(5);
+            settings.Property(s => s.TimeZone).HasMaxLength(64);
+            settings.Property(s => s.FirstDayOfWeek).HasConversion<string>().HasMaxLength(10);
         });
 
         builder.Entity<Budget>(budget =>
@@ -279,6 +326,24 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         });
     }
 
+    private static readonly Expression<Func<Currency, string>> CurrencyToCode =
+        currency => currency.ToCode();
+
+    private static readonly Expression<Func<string, Currency>> CodeToCurrency =
+        code => CurrencyCode.Parse(code);
+
+    private static void ConfigureMoney(
+        Microsoft.EntityFrameworkCore.Metadata.Builders.ComplexPropertyBuilder<Money> money,
+        string amountColumn,
+        string currencyColumn)
+    {
+        money.Property(m => m.Amount).HasColumnName(amountColumn).HasPrecision(18, 2);
+        money.Property(m => m.Currency)
+            .HasColumnName(currencyColumn)
+            .HasConversion(CurrencyToCode, CodeToCurrency)
+            .HasMaxLength(3);
+    }
+
     private void ApplyEntityRules()
     {
         var now = DateTimeOffset.UtcNow;
@@ -322,6 +387,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             if (clrType == typeof(Transaction))
             {
                 entityType.SetQueryFilter(TransactionFilter());
+            }
+            else if (clrType == typeof(CurrencyConversion))
+            {
+                entityType.SetQueryFilter(ConversionFilter());
             }
             else if (clrType == typeof(Transfer))
             {
@@ -367,6 +436,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private Expression<Func<Transaction, bool>> TransactionFilter() =>
         t => !t.IsDeleted &&
             Accounts.Any(a => a.Id == t.AccountId);
+
+    private Expression<Func<CurrencyConversion, bool>> ConversionFilter() =>
+        c => !c.IsDeleted &&
+            Accounts.Any(a => a.Id == c.AccountId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
         t => !t.IsDeleted &&

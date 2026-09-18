@@ -21,11 +21,13 @@ const meta = {
     deleteDisabled: false,
   },
   render: (args) => (
-    <ul className="card w-[min(32rem,calc(100vw-3rem))] divide-y divide-border px-6">
+    <div className="w-[min(32rem,calc(100vw-3rem))]">
       <QueryBoundary fallback={<Skeleton className="my-2.5 h-8 w-full" />}>
-        <CategoryRow {...args} />
+        <ul className="rows">
+          <CategoryRow {...args} />
+        </ul>
       </QueryBoundary>
-    </ul>
+    </div>
   ),
 } satisfies Meta<typeof CategoryRow>;
 

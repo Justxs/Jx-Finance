@@ -1,7 +1,9 @@
 using JxFinance.Common;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.GetTransactions;
+using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Endpoints.Transactions.UpdateTransaction;
 
@@ -13,6 +15,10 @@ public interface ITransactionService
         GetTransactionsRequest request,
         CancellationToken cancellationToken);
 
+    Task<TransactionsSummaryResponse> GetSummaryAsync(
+        GetTransactionsSummaryRequest request,
+        CancellationToken cancellationToken);
+
     Task<Result<TransactionResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Result<TransactionResponse>> CreateAsync(
@@ -21,6 +27,10 @@ public interface ITransactionService
 
     Task<Result<TransactionResponse>> UpdateAsync(
         UpdateTransactionRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<int>> BulkCategorizeAsync(
+        BulkCategorizeTransactionsRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);

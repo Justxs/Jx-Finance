@@ -9,6 +9,7 @@ using JxFinance.Endpoints.Budgets.UpdateBudget;
 
 namespace JxFinance.Endpoints.Budgets.Mappers;
 
+[RegisterService<BudgetMapper>(LifeTime.Singleton)]
 public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, Budget>
 {
     public override Budget ToEntity(CreateBudgetRequest request) => new()

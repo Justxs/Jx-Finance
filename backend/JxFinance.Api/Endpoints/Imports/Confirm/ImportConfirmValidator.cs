@@ -15,8 +15,9 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.ImportRef).NotEmpty().MaximumLength(64);
             row.RuleFor(r => r.Date).NotEmpty();
             row.RuleFor(r => r.Type).IsInEnum();
+            row.RuleFor(r => r.Currency).IsInEnum();
             row.RuleFor(r => r.Description).MaximumLength(500);
-            row.RuleFor(r => r.Amount).Must(a => MoneyWire.IsValid(a) && MoneyWire.Parse(a).Amount > 0);
+            row.RuleFor(r => r.Amount).Must(MoneyWire.IsPositive);
         });
     }
 }

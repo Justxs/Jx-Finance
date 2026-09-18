@@ -8,17 +8,23 @@ import { ImportUploadForm } from "./import-upload-form";
 interface HarnessProps {
   accounts?: AccountResponse[];
   previewPending?: boolean;
+  fileError?: string;
+  secondary?: boolean;
+  disabled?: boolean;
 }
 
 function UploadFormHarness({
   accounts: accountList = accounts,
   previewPending = false,
+  fileError,
+  secondary = false,
+  disabled = false,
 }: Readonly<HarnessProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [accountId, setAccountId] = useState(accountList[0]?.id ?? "");
 
   return (
-    <section className="card w-[min(48rem,90vw)]">
+    <section className="section w-[min(48rem,90vw)]">
       <ImportUploadForm
         accounts={accountList}
         accountId={accountId}
@@ -29,6 +35,9 @@ function UploadFormHarness({
         }
         onFileChange={() => toast.message("File changed")}
         previewPending={previewPending}
+        fileError={fileError}
+        secondary={secondary}
+        disabled={disabled}
       />
     </section>
   );
@@ -45,6 +54,12 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const PreviewPending: Story = { args: { previewPending: true } };
+
+export const FileError: Story = { args: { fileError: "Choose a CSV file first." } };
+
+export const AfterPreview: Story = { args: { secondary: true } };
+
+export const ConfirmInProgress: Story = { args: { secondary: true, disabled: true } };
 
 export const SingleAccount: Story = { args: { accounts: [checkingAccount] } };
 

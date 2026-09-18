@@ -18,7 +18,7 @@ const meta = {
   decorators: [
     function withList(Story) {
       return (
-        <ul className="card w-[min(48rem,calc(100vw-3rem))] divide-y divide-border">
+        <ul className="rows w-[min(48rem,calc(100vw-3rem))]">
           <Story />
         </ul>
       );
@@ -50,7 +50,7 @@ export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };
@@ -58,7 +58,7 @@ export const EditDialogOpen: Story = {
 export const EditInvalid: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     const dialog = within(await within(document.body).findByRole("dialog"));
     await userEvent.clear(dialog.getAllByRole("textbox")[0]!);
   },
@@ -77,7 +77,7 @@ export const SavePending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     const dialog = within(await within(document.body).findByRole("dialog"));
     await userEvent.click(dialog.getByRole("button", { name: /^(save|išsaugoti)$/i }));
   },

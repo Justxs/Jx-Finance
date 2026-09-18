@@ -10,7 +10,7 @@ public sealed class CreateBudgetValidator : Validator<CreateBudgetRequest>
     {
         RuleFor(r => r.CategoryId).NotEmpty();
         RuleFor(r => r.LimitAmount)
-            .Must(amount => MoneyWire.IsValid(amount) && MoneyWire.Parse(amount).Amount > 0)
+            .Must(MoneyWire.IsPositive)
             .WithMessage("Limit must be a positive decimal with at most 2 decimal places.");
     }
 }

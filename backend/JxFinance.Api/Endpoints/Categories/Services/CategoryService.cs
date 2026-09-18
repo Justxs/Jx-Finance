@@ -1,74 +1,64 @@
+using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
-using JxFinance.Endpoints.Categories.CreateCategory;
 using JxFinance.Endpoints.Categories.Interfaces;
-using JxFinance.Endpoints.Categories.Mappers;
-using JxFinance.Endpoints.Categories.Shared;
-using JxFinance.Endpoints.Categories.UpdateCategory;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Categories.Services;
 
-public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, CategoryMapper mapper) : ICategoryService
+[RegisterService<ICategoryService>(LifeTime.Scoped)]
+public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) : ICategoryService
 {
-    public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken)
-    {
-        var categories = await db.Categories
+    public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken) =>
+        await db.Categories
             .OrderBy(c => c.Type)
             .ThenBy(c => c.Name)
             .ToListAsync(cancellationToken);
 
-        return categories.Select(mapper.FromEntity).ToList();
-    }
-
-    public async Task<Result<CategoryResponse>> CreateAsync(
-        CreateCategoryRequest request,
-        CancellationToken cancellationToken)
+    public async Task<Result<Category>> CreateAsync(Category category, CancellationToken cancellationToken)
     {
-        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<CategoryResponse>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<Category>.Failure(ErrorCodes.Validation, membershipError);
         }
-
-        var category = mapper.ToEntity(request);
 
         db.Categories.Add(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<CategoryResponse>.Success(mapper.FromEntity(category));
+        return Result<Category>.Success(category);
     }
 
-    public async Task<Result<CategoryResponse>> UpdateAsync(
-        UpdateCategoryRequest request,
-        CancellationToken cancellationToken)
+    public async Task<Result<Category>> UpdateAsync(Guid id, Action<Category> apply, CancellationToken cancellationToken)
     {
-        var categoryId = new CategoryId(request.Id);
+        var categoryId = new CategoryId(id);
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
         if (category is null)
         {
-            return Result<CategoryResponse>.Failure(ErrorCodes.NotFound, "Category not found.");
+            return Result<Category>.Failure(ErrorCodes.NotFound, "Category not found.");
         }
 
-        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
+        var (previousScope, previousHouseholdId) = (category.Scope, category.HouseholdId);
+        apply(category);
+
+        var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<CategoryResponse>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<Category>.Failure(ErrorCodes.Validation, membershipError);
         }
 
         if (category.UserId != currentUser.Id &&
-            (category.Scope != request.Scope || category.HouseholdId?.Value != request.HouseholdId))
+            (category.Scope != previousScope || category.HouseholdId != previousHouseholdId))
         {
-            return Result<CategoryResponse>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
+            return Result<Category>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
         }
 
-        mapper.UpdateEntity(request, category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<CategoryResponse>.Success(mapper.FromEntity(category));
+        return Result<Category>.Success(category);
     }
 
     private async Task<string?> ValidateHouseholdAsync(

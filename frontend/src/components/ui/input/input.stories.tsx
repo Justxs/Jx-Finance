@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Input } from "./input";
 import { Label } from "../label";
+import { Input } from "./input";
 
 const inputTypes = [
   { type: "text", label: "Text", value: "Maxima groceries" },

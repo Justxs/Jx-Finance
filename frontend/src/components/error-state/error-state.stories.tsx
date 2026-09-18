@@ -6,17 +6,17 @@ function RetryExample() {
   const [attempts, setAttempts] = useState(0);
 
   return (
-    <ErrorState
-      message={`Could not load transactions. Attempts: ${attempts}.`}
-      onRetry={() => setAttempts(attempts + 1)}
-    />
+    <div>
+      <ErrorState onRetry={() => setAttempts(attempts + 1)} />
+      <p className="text-xs text-muted-foreground">Attempts: {attempts}</p>
+    </div>
   );
 }
 
 const meta = {
   title: "Components/ErrorState",
   component: ErrorState,
-  args: { onRetry: () => undefined },
+  args: { onRetry: () => {} },
   decorators: [
     (Story) => (
       <section className="card w-[min(90vw,32rem)]">
@@ -31,19 +31,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Retrying: Story = { args: { retrying: true } };
-
 export const WithoutRetry: Story = { args: { onRetry: undefined } };
-
-export const CustomMessage: Story = {
-  args: { message: "The import file could not be read." },
-};
-
-export const LongMessage: Story = {
-  args: {
-    message:
-      "The server took too long to respond while loading the yearly report for every account in every household, so nothing could be shown. Check your connection and try again in a moment.",
-  },
-};
 
 export const CountsRetries: Story = { render: () => <RetryExample /> };

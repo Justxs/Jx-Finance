@@ -14,4 +14,6 @@ public sealed record TransactionResponse(
     TransactionSource Source,
     bool IsSplit,
     DateTimeOffset CreatedAt,
-    IReadOnlyList<TransactionLineResponse>? Lines);
+    IReadOnlyList<TransactionLineResponse>? Lines,
+    Currency Currency,
+    string ReportingAmount);

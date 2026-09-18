@@ -1,9 +1,10 @@
 import type { RefObject } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
-import { FileInput } from "@/components/ui/file-input";
 import { SelectField } from "@/components/select-field";
+import { Button } from "@/components/ui/button";
+import { FieldError } from "@/components/ui/field-error";
+import { FileInput } from "@/components/ui/file-input";
 
 interface Props {
   accounts: AccountResponse[];
@@ -13,6 +14,9 @@ interface Props {
   onPreview: () => void;
   onFileChange: () => void;
   previewPending: boolean;
+  disabled?: boolean;
+  fileError?: string;
+  secondary?: boolean;
 }
 
 export function ImportUploadForm({
@@ -23,12 +27,22 @@ export function ImportUploadForm({
   onPreview,
   onFileChange,
   previewPending,
+  disabled = false,
+  fileError,
+  secondary = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const locked = previewPending || disabled;
 
   return (
-    <div className="border-b p-6">
-      <h2 className="mb-5 font-semibold">{t("imports.title")}</h2>
+    <form
+      noValidate
+      onSubmit={(event) => {
+        event.preventDefault();
+        onPreview();
+      }}
+    >
+      <h2 className="section-title mb-4">{t("imports.fileSection")}</h2>
       <div className="form-grid">
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="import-account">
@@ -37,12 +51,12 @@ export function ImportUploadForm({
           <SelectField
             id="import-account"
             value={accountId}
-            disabled={previewPending}
+            disabled={locked}
             onChange={onAccountChange}
-            options={accounts.map((account) => ({ value: account.id!, label: account.name }))}
+            options={accounts.map((account) => ({ value: account.id, label: account.name }))}
           />
         </div>
-        <div className="space-y-1.5 col-span-full">
+        <div className="col-span-full space-y-1.5">
           <label className="text-sm font-medium" htmlFor="import-file">
             {t("imports.file")}
           </label>
@@ -50,15 +64,28 @@ export function ImportUploadForm({
             id="import-file"
             ref={fileInputRef}
             accept=".csv,text/csv"
-            disabled={previewPending}
+            disabled={locked}
             onChange={onFileChange}
             placeholder={t("imports.chooseFile")}
+            aria-invalid={fileError ? true : undefined}
+            aria-describedby={fileError ? "import-file-hint import-file-error" : "import-file-hint"}
           />
+          <p id="import-file-hint" className="text-xs text-muted-foreground">
+            {t("imports.fileHint")}
+          </p>
+          <FieldError id="import-file-error" message={fileError} />
         </div>
       </div>
-      <Button className="mt-4" pending={previewPending} disabled={!accountId} onClick={onPreview}>
-        {t("imports.preview")}
-      </Button>
-    </div>
+      <div className="mt-4 flex justify-end">
+        <Button
+          type="submit"
+          variant={secondary ? "outline" : "default"}
+          pending={previewPending}
+          disabled={!accountId || disabled}
+        >
+          {t("imports.preview")}
+        </Button>
+      </div>
+    </form>
   );
 }

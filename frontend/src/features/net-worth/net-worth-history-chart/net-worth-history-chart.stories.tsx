@@ -8,7 +8,7 @@ import { NetWorthHistoryChart } from "./net-worth-history-chart";
 
 function NetWorthHistoryChartStory() {
   return (
-    <section className="card w-[min(48rem,calc(100vw-3rem))] p-6">
+    <section className="section w-[min(48rem,calc(100vw-3rem))]">
       <h2 className="mb-4 font-semibold">Net worth trend</h2>
       <QueryBoundary fallback={<Skeleton className="h-56 w-full" />}>
         <NetWorthHistoryChart />

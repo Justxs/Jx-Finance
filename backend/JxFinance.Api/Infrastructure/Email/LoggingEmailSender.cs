@@ -1,3 +1,4 @@
+using FastEndpoints;
 using Microsoft.Extensions.Logging;
 
 namespace JxFinance.Infrastructure.Email;
@@ -7,6 +8,7 @@ namespace JxFinance.Infrastructure.Email;
 /// Logs the message instead of sending it, so the seam is ready to slot in a real sender later
 /// without touching any caller.
 /// </summary>
+[RegisterService<IEmailSender>(LifeTime.Singleton)]
 public sealed class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender
 {
     public Task SendAsync(string toEmail, string subject, string body, CancellationToken cancellationToken)

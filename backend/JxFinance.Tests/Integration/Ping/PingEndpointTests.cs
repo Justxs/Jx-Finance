@@ -3,7 +3,7 @@ using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Ping;
 
-[Collection(IntegrationCollection.Name)]
+[Collection<IntegrationCollection>]
 public sealed class PingEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]

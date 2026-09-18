@@ -7,7 +7,7 @@ public sealed class LoginSummary : Summary<LoginEndpoint, LoginRequest>
     public LoginSummary()
     {
         Summary = "Sign in";
-        Description = "Exchanges an email and password for a session cookie. When the account has "
+        Description = "Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has "
             + "two-factor authentication enabled and no code is supplied, the response is 200 with "
             + "twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. "
             + "The code may be a six-digit authenticator code or an unused recovery code. "

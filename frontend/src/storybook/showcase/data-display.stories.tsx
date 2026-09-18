@@ -84,7 +84,7 @@ function TableExample() {
             {rows.map((row) => (
               <TableRow key={row.id}>
                 <TableCell className="px-6 py-3">{row.date}</TableCell>
-                <TableCell className="whitespace-normal px-6 py-3">{row.description}</TableCell>
+                <TableCell className="px-6 py-3 whitespace-normal">{row.description}</TableCell>
                 <TableCell className="px-6 py-3">{row.category}</TableCell>
                 <TableCell className="px-6 py-3 text-right tabular-nums">{row.amount}</TableCell>
               </TableRow>
@@ -127,7 +127,7 @@ export const LoadingAndError: Story = {
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-40 w-full" />
       <section className="card">
-        <ErrorState onRetry={() => undefined} />
+        <ErrorState onRetry={() => {}} />
       </section>
     </div>
   ),
