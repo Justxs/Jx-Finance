@@ -13,7 +13,7 @@ import type { FlowType } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { AddCategoryForm } from "./add-category-form";
 import { CategoryRow } from "./category-row";
 
@@ -54,7 +54,7 @@ export function CategoriesPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("categories.addTitle")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("categories.addTitle")}>
         <AddCategoryForm
           onCreated={() => {
             invalidate();
@@ -62,7 +62,7 @@ export function CategoriesPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {groups.map((group) => {

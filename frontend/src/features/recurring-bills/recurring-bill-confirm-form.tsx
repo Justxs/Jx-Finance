@@ -2,10 +2,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useConfirmRecurringBillEndpoint } from "@/api/generated";
 import type { AccountResponse, RecurringBillResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { isPositiveMoney } from "@/lib/validation";
 
 interface Props {
@@ -49,18 +49,15 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
       {!bill.accountId ? (
         <div className="space-y-1.5">
           <Label htmlFor={`bill-${bill.id}-confirm-account`}>{t("recurringBills.account")}</Label>
-          <Select
+          <SelectField
             id={`bill-${bill.id}-confirm-account`}
             value={accountId}
-            onChange={(e) => setAccountId(e.target.value)}
-          >
-            <option value="">{t("recurringBills.noAccount")}</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-          </Select>
+            onChange={setAccountId}
+            options={[
+              { value: "", label: t("recurringBills.noAccount") },
+              ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+            ]}
+          />
           <p className="text-xs text-muted-foreground">
             {t("recurringBills.confirmAccountRequired")}
           </p>

@@ -8,12 +8,12 @@ import type {
   RecurringBillCadence,
   RecurringBillKind,
 } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { isPositiveMoney } from "@/lib/validation";
 import { todayIsoDate } from "@/features/transactions/transaction-form";
 
@@ -132,15 +132,16 @@ export function CreateRecurringBillForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="bill-kind">{t("recurringBills.kind")}</Label>
-            <Select
+            <SelectField
               id="bill-kind"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as RecurringBillKind)}
-            >
-              <option value="fixed">{t("recurringBills.kinds.fixed")}</option>
-              <option value="variable">{t("recurringBills.kinds.variable")}</option>
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={[
+                { value: "fixed", label: t("recurringBills.kinds.fixed") },
+                { value: "variable", label: t("recurringBills.kinds.variable") },
+              ]}
+            />
           </div>
         )}
       </form.Field>
@@ -177,17 +178,18 @@ export function CreateRecurringBillForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="bill-cadence">{t("recurringBills.cadence")}</Label>
-            <Select
+            <SelectField
               id="bill-cadence"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as RecurringBillCadence)}
-            >
-              <option value="weekly">{t("recurringBills.cadences.weekly")}</option>
-              <option value="monthly">{t("recurringBills.cadences.monthly")}</option>
-              <option value="quarterly">{t("recurringBills.cadences.quarterly")}</option>
-              <option value="yearly">{t("recurringBills.cadences.yearly")}</option>
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={[
+                { value: "weekly", label: t("recurringBills.cadences.weekly") },
+                { value: "monthly", label: t("recurringBills.cadences.monthly") },
+                { value: "quarterly", label: t("recurringBills.cadences.quarterly") },
+                { value: "yearly", label: t("recurringBills.cadences.yearly") },
+              ]}
+            />
           </div>
         )}
       </form.Field>
@@ -196,19 +198,19 @@ export function CreateRecurringBillForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="bill-category">{t("recurringBills.category")}</Label>
-            <Select
+            <SelectField
               id="bill-category"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              <option value="">{t("recurringBills.noCategory")}</option>
-              {expenseCategories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={[
+                { value: "", label: t("recurringBills.noCategory") },
+                ...expenseCategories.map((category) => ({
+                  value: category.id!,
+                  label: category.name,
+                })),
+              ]}
+            />
           </div>
         )}
       </form.Field>
@@ -217,19 +219,16 @@ export function CreateRecurringBillForm({
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="bill-account">{t("recurringBills.account")}</Label>
-            <Select
+            <SelectField
               id="bill-account"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            >
-              <option value="">{t("recurringBills.noAccount")}</option>
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </Select>
+              onChange={(value) => field.handleChange(value)}
+              options={[
+                { value: "", label: t("recurringBills.noAccount") },
+                ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+              ]}
+            />
           </div>
         )}
       </form.Field>

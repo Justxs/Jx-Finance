@@ -1,9 +1,9 @@
 import { ListFilter } from "lucide-react";
-import { type ReactNode, type ToggleEvent, useId, useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { positionPopover } from "@/lib/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -15,30 +15,10 @@ interface Props {
 
 export function ColumnFilter({ label, active, onClear, children }: Readonly<Props>) {
   const { t } = useTranslation();
-  const panelId = useId();
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  function handleToggle(event: ToggleEvent<HTMLDivElement>) {
-    if (event.newState !== "open") {
-      return;
-    }
-    const panel = panelRef.current;
-    const trigger = triggerRef.current;
-    if (!panel || !trigger) {
-      return;
-    }
-    positionPopover(panel, trigger);
-    panel.querySelector<HTMLElement>("input, select, button")?.focus();
-  }
 
   return (
-    <>
-      <button
-        ref={triggerRef}
-        type="button"
-        popoverTarget={panelId}
-        aria-haspopup="dialog"
+    <Popover>
+      <PopoverTrigger
         aria-label={t("filters.filterBy", { column: label })}
         title={t("filters.filterBy", { column: label })}
         className={cn(
@@ -47,25 +27,16 @@ export function ColumnFilter({ label, active, onClear, children }: Readonly<Prop
         )}
       >
         <ListFilter className="size-3.5" />
-      </button>
-
-      <div
-        ref={panelRef}
-        id={panelId}
-        popover="auto"
-        role="dialog"
-        aria-label={label}
-        onToggle={handleToggle}
-        className="fixed inset-auto m-0 w-64 max-w-[calc(100vw-1rem)] rounded-md border bg-popover p-3 text-sm font-normal tracking-normal text-popover-foreground shadow-lg"
-      >
+      </PopoverTrigger>
+      <PopoverContent align="start" aria-label={label} className="w-64 font-normal tracking-normal">
         <div className="space-y-2">{children}</div>
-        <div className="mt-3 flex justify-end border-t pt-2">
+        <div className="flex justify-end border-t pt-2">
           <Button type="button" variant="ghost" size="sm" disabled={!active} onClick={onClear}>
             {t("filters.clear")}
           </Button>
         </div>
-      </div>
-    </>
+      </PopoverContent>
+    </Popover>
   );
 }
 

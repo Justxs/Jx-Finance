@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useUpdateRecurringBillEndpoint } from "@/api/generated";
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { isPositiveMoney } from "@/lib/validation";
@@ -55,12 +56,7 @@ export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>
         />
       </div>
       <label className="flex items-center gap-2 text-sm text-muted-foreground">
-        <input
-          type="checkbox"
-          className="size-4 rounded border-input accent-primary"
-          checked={isActive}
-          onChange={(e) => setIsActive(e.target.checked)}
-        />
+        <Checkbox checked={isActive} onCheckedChange={(checked) => setIsActive(checked)} />
         {t("recurringBills.active")}
       </label>
       <Button

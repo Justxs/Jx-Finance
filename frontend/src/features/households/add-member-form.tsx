@@ -6,7 +6,7 @@ import type { HouseholdRole } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 
 interface FormValues {
   email: string;
@@ -73,13 +73,15 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
 
       <form.Field name="role">
         {(field) => (
-          <Select
+          <SelectField
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value as HouseholdRole)}
-          >
-            <option value="member">{t("households.roles.member")}</option>
-            <option value="owner">{t("households.roles.owner")}</option>
-          </Select>
+            className="sm:w-auto"
+            onChange={(value) => field.handleChange(value)}
+            options={[
+              { value: "member", label: t("households.roles.member") },
+              { value: "owner", label: t("households.roles.owner") },
+            ]}
+          />
         )}
       </form.Field>
 

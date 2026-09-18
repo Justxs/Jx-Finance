@@ -8,7 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import { isMoney } from "@/lib/validation";
 import { todayIsoDate } from "@/features/transactions/transaction-form";
 
@@ -87,18 +87,16 @@ export function AssetForm({ onCreated, onCancel }: Readonly<Props>) {
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="asset-type">{t("netWorth.type")}</Label>
-            <Select
+            <SelectField
               id="asset-type"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as AssetType)}
-            >
-              {assetTypes.map((type) => (
-                <option key={type} value={type}>
-                  {t(`netWorth.assetTypes.${type}`)}
-                </option>
-              ))}
-            </Select>
+              onChange={field.handleChange}
+              options={assetTypes.map((type) => ({
+                value: type,
+                label: t(`netWorth.assetTypes.${type}`),
+              }))}
+            />
           </div>
         )}
       </form.Field>

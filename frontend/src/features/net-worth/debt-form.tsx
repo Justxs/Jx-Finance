@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import { isMoney } from "@/lib/validation";
 import { todayIsoDate } from "@/features/transactions/transaction-form";
 
@@ -97,18 +97,16 @@ export function DebtForm({ onCreated, onCancel }: Readonly<Props>) {
         {(field) => (
           <div className="space-y-1.5">
             <Label htmlFor="debt-type">{t("netWorth.type")}</Label>
-            <Select
+            <SelectField
               id="debt-type"
               value={field.state.value}
               onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value as DebtType)}
-            >
-              {debtTypes.map((type) => (
-                <option key={type} value={type}>
-                  {t(`netWorth.debtTypes.${type}`)}
-                </option>
-              ))}
-            </Select>
+              onChange={field.handleChange}
+              options={debtTypes.map((type) => ({
+                value: type,
+                label: t(`netWorth.debtTypes.${type}`),
+              }))}
+            />
           </div>
         )}
       </form.Field>

@@ -12,7 +12,7 @@ import {
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { CreateRecurringBillForm } from "./create-recurring-bill-form";
 import { RecurringBillRow } from "./recurring-bill-row";
 
@@ -72,7 +72,7 @@ export function RecurringBillsPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("recurringBills.add")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("recurringBills.add")}>
         <CreateRecurringBillForm
           accounts={accountList}
           categories={categoryList}
@@ -82,7 +82,7 @@ export function RecurringBillsPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
       <section className="card overflow-hidden">{content}</section>
       <ConfirmDeleteDialog

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useLoginEndpoint } from "@/api/generated";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -142,11 +143,9 @@ export function LoginPage() {
           <form.Field name="rememberMe">
             {(field) => (
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border-input accent-primary"
+                <Checkbox
                   checked={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.checked)}
+                  onCheckedChange={(checked) => field.handleChange(checked)}
                 />
                 {t("auth.rememberMe")}
               </label>

@@ -14,7 +14,7 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { CreateUserForm } from "./create-user-form";
 import { UsersTable } from "./users-table";
 
@@ -59,7 +59,7 @@ export function UsersPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("users.add")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("users.add")}>
         <CreateUserForm
           onCreated={() => {
             invalidate();
@@ -67,7 +67,7 @@ export function UsersPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
       <UsersTable
         users={users.data ?? []}

@@ -1,10 +1,10 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { emptyLine, type TransactionFormApi } from "./transaction-form";
 
 interface Props {
@@ -26,19 +26,16 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
     <div className="form-grid">
       <form.Field name={`lines[${index}].categoryId`}>
         {(field) => (
-          <Select
+          <SelectField
             aria-label={t("transactions.lineCategory")}
             value={field.state.value}
             onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
-          >
-            <option value="">{t("transactions.uncategorized")}</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </Select>
+            onChange={(value) => field.handleChange(value)}
+            options={[
+              { value: "", label: t("transactions.uncategorized") },
+              ...categories.map((category) => ({ value: category.id!, label: category.name })),
+            ]}
+          />
         )}
       </form.Field>
       <form.Field name={`lines[${index}].amount`}>

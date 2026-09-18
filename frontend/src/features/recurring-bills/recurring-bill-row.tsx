@@ -7,7 +7,7 @@ import type {
   RecurringBillResponse,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
@@ -97,7 +97,7 @@ export function RecurringBillRow({
         </div>
       </div>
 
-      <Dialog
+      <Modal
         open={mode === "edit"}
         onOpenChange={(open) => {
           if (!open) {
@@ -107,9 +107,9 @@ export function RecurringBillRow({
         title={t("actions.edit")}
       >
         <RecurringBillEditForm bill={bill} onSaved={onSaved} onDone={() => setMode("view")} />
-      </Dialog>
+      </Modal>
 
-      <Dialog
+      <Modal
         open={mode === "confirm"}
         onOpenChange={(open) => {
           if (!open) {
@@ -124,7 +124,7 @@ export function RecurringBillRow({
           onSaved={onSaved}
           onDone={() => setMode("view")}
         />
-      </Dialog>
+      </Modal>
     </li>
   );
 }

@@ -12,7 +12,7 @@ import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { Modal } from "@/components/modal";
 import { useMoney } from "@/hooks/use-formatters";
 import { CreateBudgetForm } from "./create-budget-form";
 
@@ -104,7 +104,7 @@ export function BudgetsPage() {
         </Button>
       </PageHeader>
 
-      <Dialog open={addOpen} onOpenChange={setAddOpen} title={t("budgets.add")}>
+      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("budgets.add")}>
         <CreateBudgetForm
           categories={categoryList}
           onCreated={() => {
@@ -113,9 +113,9 @@ export function BudgetsPage() {
           }}
           onCancel={() => setAddOpen(false)}
         />
-      </Dialog>
+      </Modal>
 
-      <Dialog
+      <Modal
         open={editing !== null}
         onOpenChange={(open) => {
           if (!open) setEditing(null);
@@ -131,7 +131,7 @@ export function BudgetsPage() {
           }}
           onCancel={() => setEditing(null)}
         />
-      </Dialog>
+      </Modal>
       <section className="card overflow-hidden">{content}</section>
       <ConfirmDeleteDialog
         target={deleteTarget}

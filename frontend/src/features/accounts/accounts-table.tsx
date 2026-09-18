@@ -7,8 +7,16 @@ import type { AccountResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header";
-import { Dialog } from "@/components/ui/dialog";
-import { Select } from "@/components/ui/select";
+import { Modal } from "@/components/modal";
+import { SelectField } from "@/components/select-field";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { AccountForm, type AccountFormValues } from "./account-form";
@@ -66,16 +74,19 @@ export function AccountsTable({
   let body: ReactNode;
   if (rows.length === 0) {
     body = (
-      <tr>
-        <td colSpan={6} className="px-6 py-10 text-center text-muted-foreground">
+      <TableRow className="hover:bg-transparent">
+        <TableCell
+          colSpan={6}
+          className="px-6 py-10 text-center whitespace-normal text-muted-foreground"
+        >
           {filtered ? t("filters.noMatches") : t("accounts.empty")}
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
     );
   } else {
     body = rows.map((account) => (
-      <tr key={account.id} className="border-b last:border-0 hover:bg-muted/30">
-        <td className="px-6 py-3">
+      <TableRow key={account.id}>
+        <TableCell className="px-6 py-3 whitespace-normal">
           <div className="flex items-center gap-3">
             <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground">
               <AccountTypeIcon type={account.type ?? "other"} />
@@ -96,20 +107,22 @@ export function AccountsTable({
               ) : null}
             </div>
           </div>
-        </td>
-        <td className="px-6 py-3 font-mono text-xs text-muted-foreground">{account.iban || "—"}</td>
-        <td className="px-6 py-3">
+        </TableCell>
+        <TableCell className="px-6 py-3 font-mono text-xs text-muted-foreground">
+          {account.iban || "—"}
+        </TableCell>
+        <TableCell className="px-6 py-3">
           <span className="inline-flex rounded-full border px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
             {t(`accounts.types.${account.type}`)}
           </span>
-        </td>
-        <td className="px-6 py-3 text-right tabular-nums text-muted-foreground">
+        </TableCell>
+        <TableCell className="px-6 py-3 text-right tabular-nums text-muted-foreground">
           {money.format(Number(account.startingBalance))}
-        </td>
-        <td className="px-6 py-3 text-right font-semibold tabular-nums">
+        </TableCell>
+        <TableCell className="px-6 py-3 text-right font-semibold tabular-nums">
           {money.format(Number(account.currentBalance))}
-        </td>
-        <td className="px-6 py-3">
+        </TableCell>
+        <TableCell className="px-6 py-3">
           <div className="flex justify-end gap-1">
             <Button
               variant="ghost"
@@ -134,8 +147,8 @@ export function AccountsTable({
               <Archive />
             </Button>
           </div>
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
     ));
   }
 
@@ -149,13 +162,10 @@ export function AccountsTable({
             aria-label={t("accounts.title")}
             tabIndex={0}
           >
-            <table
-              className={`w-full min-w-160 text-sm ${stale ? "is-stale" : ""}`}
-              aria-busy={stale}
-            >
-              <thead>
-                <tr className="border-b bg-muted/50 text-left">
-                  <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+            <Table className={`min-w-160 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead className="px-6 py-3 text-xs tracking-wide text-muted-foreground">
                     <ColumnHeader
                       label={t("accounts.name")}
                       sortKey="name"
@@ -171,8 +181,8 @@ export function AccountsTable({
                         />
                       }
                     />
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-xs tracking-wide text-muted-foreground">
                     <ColumnHeader
                       label={t("accounts.iban")}
                       sortKey="iban"
@@ -188,8 +198,8 @@ export function AccountsTable({
                         />
                       }
                     />
-                  </th>
-                  <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-xs tracking-wide text-muted-foreground">
                     <ColumnHeader
                       label={t("accounts.type")}
                       sortKey="type"
@@ -202,26 +212,24 @@ export function AccountsTable({
                           active={!!search.type}
                           onClear={() => setFilter({ type: undefined })}
                         >
-                          <Select
+                          <SelectField
                             value={search.type ?? ""}
-                            onChange={(e) =>
-                              setFilter({
-                                type: (e.target.value || undefined) as typeof search.type,
-                              })
-                            }
-                          >
-                            <option value="">{t("accounts.allTypes")}</option>
-                            {(["checking", "savings", "cash", "other"] as const).map((type) => (
-                              <option key={type} value={type}>
-                                {t(`accounts.types.${type}`)}
-                              </option>
-                            ))}
-                          </Select>
+                            onChange={(value) => setFilter({ type: value || undefined })}
+                            options={[
+                              { value: "", label: t("accounts.allTypes") },
+                              ...(["checking", "savings", "cash", "other"] as const).map(
+                                (type) => ({
+                                  value: type,
+                                  label: t(`accounts.types.${type}`),
+                                }),
+                              ),
+                            ]}
+                          />
                         </ColumnFilter>
                       }
                     />
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium tracking-wide text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs tracking-wide text-muted-foreground">
                     <ColumnHeader
                       label={t("accounts.startingBalance")}
                       sortKey="startingBalance"
@@ -229,8 +237,8 @@ export function AccountsTable({
                       direction={search.direction}
                       onSort={toggleSort}
                     />
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium tracking-wide text-muted-foreground">
+                  </TableHead>
+                  <TableHead className="px-6 py-3 text-right text-xs tracking-wide text-muted-foreground">
                     <ColumnHeader
                       label={t("accounts.currentBalance")}
                       sortKey="currentBalance"
@@ -238,16 +246,16 @@ export function AccountsTable({
                       direction={search.direction}
                       onSort={toggleSort}
                     />
-                  </th>
-                  <th className="px-6 py-3" />
-                </tr>
-              </thead>
-              <tbody>{body}</tbody>
-            </table>
+                  </TableHead>
+                  <TableHead className="px-6 py-3" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>{body}</TableBody>
+            </Table>
           </div>
         </ViewTransition>
       </section>
-      <Dialog
+      <Modal
         open={!!editingAccount}
         onOpenChange={(open) => {
           if (!open) onCancelEdit();
@@ -262,7 +270,7 @@ export function AccountsTable({
             onCancel={onCancelEdit}
           />
         ) : null}
-      </Dialog>
+      </Modal>
     </>
   );
 }

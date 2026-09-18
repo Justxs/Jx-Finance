@@ -1,3 +1,4 @@
+import { enUS, lt } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { parseIso } from "@/lib/calendar";
 
@@ -26,4 +27,10 @@ export function useIsoDate() {
     const parsed = value ? parseIso(value) : null;
     return parsed ? date.format(parsed) : "";
   };
+}
+
+export function useCalendarLocale() {
+  const { i18n } = useTranslation();
+
+  return i18n.language.startsWith("lt") ? lt : enUS;
 }

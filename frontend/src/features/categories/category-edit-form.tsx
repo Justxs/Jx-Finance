@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
+import { SelectField } from "@/components/select-field";
 import { IconPicker } from "./icon-picker";
 
 interface FormValues {
@@ -123,14 +123,15 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
             {(field) => (
               <div className="space-y-1.5">
                 <Label htmlFor={`category-${category.id}-scope`}>{t("sharing.scope")}</Label>
-                <Select
+                <SelectField
                   id={`category-${category.id}-scope`}
                   value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value as FormValues["scope"])}
-                >
-                  <option value="personal">{t("sharing.personal")}</option>
-                  <option value="shared">{t("sharing.shared")}</option>
-                </Select>
+                  onChange={(value) => field.handleChange(value)}
+                  options={[
+                    { value: "personal", label: t("sharing.personal") },
+                    { value: "shared", label: t("sharing.shared") },
+                  ]}
+                />
               </div>
             )}
           </form.Field>
@@ -144,20 +145,20 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                       <Label htmlFor={`category-${category.id}-household`}>
                         {t("sharing.household")}
                       </Label>
-                      <Select
+                      <SelectField
                         id={`category-${category.id}-household`}
                         value={field.state.value}
                         aria-invalid={field.state.meta.errors.length > 0}
                         onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      >
-                        <option value="">{t("sharing.selectHousehold")}</option>
-                        {householdList.map((household) => (
-                          <option key={household.id} value={household.id}>
-                            {household.name}
-                          </option>
-                        ))}
-                      </Select>
+                        onChange={(value) => field.handleChange(value)}
+                        options={[
+                          { value: "", label: t("sharing.selectHousehold") },
+                          ...householdList.map((household) => ({
+                            value: household.id!,
+                            label: household.name,
+                          })),
+                        ]}
+                      />
                       <FieldError message={field.state.meta.errors[0]?.message} />
                     </div>
                   )}

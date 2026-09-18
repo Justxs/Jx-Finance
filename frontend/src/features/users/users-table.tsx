@@ -6,7 +6,15 @@ import type { UserProfileResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header";
-import { Select } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { SelectField } from "@/components/select-field";
 
 const roles = ["Member", "Admin"] as const;
 
@@ -45,41 +53,37 @@ export function UsersTable({
 
   const filtered = !!search.search || !!search.role || search.isActive !== undefined;
   const rows = users;
+  const roleOptions = roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }));
 
   let body: ReactNode;
   if (rows.length === 0) {
     body = (
-      <tr>
-        <td colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
+      <TableRow>
+        <TableCell colSpan={4} className="px-6 py-10 text-center text-muted-foreground">
           {filtered ? t("filters.noMatches") : t("users.empty")}
-        </td>
-      </tr>
+        </TableCell>
+      </TableRow>
     );
   } else {
     body = rows.map((user) => {
       const isSelf = user.id === currentUserId;
       return (
-        <tr key={user.id} className="border-b last:border-0 hover:bg-muted/30">
-          <td className="px-6 py-3">
+        <TableRow key={user.id} className="hover:bg-muted/30">
+          <TableCell className="px-6 py-3">
             <p className="font-medium">{user.displayName}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{user.email}</p>
-          </td>
-          <td className="px-6 py-3">
-            <Select
+          </TableCell>
+          <TableCell className="px-6 py-3">
+            <SelectField
               value={user.role}
               className={rolePendingId === user.id ? "is-stale" : undefined}
               aria-busy={rolePendingId === user.id}
               disabled={isSelf || rolePendingId !== null}
-              onChange={(e) => onRoleChange(user.id!, e.target.value)}
-            >
-              {roles.map((role) => (
-                <option key={role} value={role}>
-                  {t(`users.roles.${role}`)}
-                </option>
-              ))}
-            </Select>
-          </td>
-          <td className="px-6 py-3">
+              onChange={(role) => onRoleChange(user.id!, role)}
+              options={roleOptions}
+            />
+          </TableCell>
+          <TableCell className="px-6 py-3">
             <span
               className={
                 user.isActive
@@ -89,8 +93,8 @@ export function UsersTable({
             >
               {user.isActive ? t("users.active") : t("users.deactivated")}
             </span>
-          </td>
-          <td className="px-6 py-3">
+          </TableCell>
+          <TableCell className="px-6 py-3">
             <div className="flex justify-end">
               <Button
                 variant="ghost"
@@ -105,8 +109,8 @@ export function UsersTable({
                 <UserX />
               </Button>
             </div>
-          </td>
-        </tr>
+          </TableCell>
+        </TableRow>
       );
     });
   }
@@ -115,13 +119,10 @@ export function UsersTable({
     <section className="card overflow-hidden">
       <ViewTransition name="users-rows" enter="none" exit="none">
         <div className="overflow-x-auto" role="region" aria-label={t("users.title")} tabIndex={0}>
-          <table
-            className={`w-full min-w-160 text-sm ${stale ? "is-stale" : ""}`}
-            aria-busy={stale}
-          >
-            <thead>
-              <tr className="border-b bg-muted/50 text-left">
-                <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+          <Table className={`min-w-160 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+            <TableHeader>
+              <TableRow className="bg-muted/50">
+                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
                   <ColumnHeader
                     label={t("users.displayName")}
                     sortKey="displayName"
@@ -137,8 +138,8 @@ export function UsersTable({
                       />
                     }
                   />
-                </th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
                   <ColumnHeader
                     label={t("users.role")}
                     sortKey="role"
@@ -151,24 +152,16 @@ export function UsersTable({
                         active={!!search.role}
                         onClear={() => setFilter({ role: undefined })}
                       >
-                        <Select
+                        <SelectField
                           value={search.role ?? ""}
-                          onChange={(e) =>
-                            setFilter({ role: (e.target.value || undefined) as typeof search.role })
-                          }
-                        >
-                          <option value="">{t("users.allRoles")}</option>
-                          {roles.map((role) => (
-                            <option key={role} value={role}>
-                              {t(`users.roles.${role}`)}
-                            </option>
-                          ))}
-                        </Select>
+                          onChange={(role) => setFilter({ role: role || undefined })}
+                          options={[{ value: "", label: t("users.allRoles") }, ...roleOptions]}
+                        />
                       </ColumnFilter>
                     }
                   />
-                </th>
-                <th className="px-6 py-3 text-xs font-medium tracking-wide text-muted-foreground">
+                </TableHead>
+                <TableHead className="h-auto px-6 py-3 text-xs tracking-wide text-muted-foreground">
                   <ColumnHeader
                     label={t("users.status")}
                     sortKey="status"
@@ -181,28 +174,26 @@ export function UsersTable({
                         active={search.isActive !== undefined}
                         onClear={() => setFilter({ isActive: undefined })}
                       >
-                        <Select
+                        <SelectField
                           value={search.isActive === undefined ? "" : String(search.isActive)}
-                          onChange={(e) =>
-                            setFilter({
-                              isActive:
-                                e.target.value === "" ? undefined : e.target.value === "true",
-                            })
+                          onChange={(value) =>
+                            setFilter({ isActive: value === "" ? undefined : value === "true" })
                           }
-                        >
-                          <option value="">{t("users.allStatuses")}</option>
-                          <option value="true">{t("users.active")}</option>
-                          <option value="false">{t("users.deactivated")}</option>
-                        </Select>
+                          options={[
+                            { value: "", label: t("users.allStatuses") },
+                            { value: "true", label: t("users.active") },
+                            { value: "false", label: t("users.deactivated") },
+                          ]}
+                        />
                       </ColumnFilter>
                     }
                   />
-                </th>
-                <th className="px-6 py-3" />
-              </tr>
-            </thead>
-            <tbody>{body}</tbody>
-          </table>
+                </TableHead>
+                <TableHead className="h-auto px-6 py-3" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>{body}</TableBody>
+          </Table>
         </div>
       </ViewTransition>
     </section>

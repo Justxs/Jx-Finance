@@ -3,11 +3,11 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudgetEndpoint, useUpdateBudgetEndpoint } from "@/api/generated";
 import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select } from "@/components/ui/select";
 import { isPositiveMoney } from "@/lib/validation";
 
 interface FormValues {
@@ -69,18 +69,16 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
           {(field) => (
             <div className="space-y-1.5">
               <Label htmlFor="budget-category">{t("budgets.category")}</Label>
-              <Select
+              <SelectField
                 id="budget-category"
                 value={field.state.value}
                 onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              >
-                {expenseCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </Select>
+                onChange={(value) => field.handleChange(value)}
+                options={expenseCategories.map((category) => ({
+                  value: category.id!,
+                  label: category.name,
+                }))}
+              />
             </div>
           )}
         </form.Field>
