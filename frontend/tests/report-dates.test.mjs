@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { presetRange, detectPreset } from "../src/features/reports/date-range-presets.ts";
+import {
+  presetRange,
+  detectPreset,
+} from "../src/features/reports/report-filters/date-range-presets.ts";
 
 for (const zone of ["Europe/Vilnius", "America/Los_Angeles", "UTC"]) {
   test(`report dates follow the local calendar in ${zone}`, () => {
