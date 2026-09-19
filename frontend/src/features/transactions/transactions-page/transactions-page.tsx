@@ -244,9 +244,11 @@ export function TransactionsPage() {
 
   const deleteItem = items.find((item) => item.id === deleteTarget);
   const deleteLabel = deleteItem
-    ? `${formatDate(deleteItem.date)} · ${transactionName(deleteItem, categoryById, t)} · ${
-        deleteItem.type === "income" ? "+" : "−"
-      }${money.format(Number(deleteItem.amount), deleteItem.currency)}`
+    ? `${formatDate(deleteItem.date)} · ${transactionName(deleteItem, categoryById, t)} · ${money.formatSigned(
+        Number(deleteItem.amount),
+        deleteItem.type === "income" ? "+" : "−",
+        deleteItem.currency,
+      )}`
     : undefined;
 
   const total = transactions.data.total;

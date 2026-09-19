@@ -24,18 +24,16 @@ export function SetupPage() {
   const schema = z.object({
     email: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .refine(isEmail, t("validation.email")),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => isEmail(value.trim()), t("validation.email")),
     password: z
       .string()
       .min(8, t("validation.minLength", { min: 8 }))
       .max(100, t("validation.maxLength", { max: 100 })),
     displayName: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
   });
 
   const setupMutation = useSetupEndpoint({

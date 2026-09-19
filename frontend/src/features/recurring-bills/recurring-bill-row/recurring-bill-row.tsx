@@ -11,7 +11,7 @@ import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
-import { toIso } from "@/lib/calendar";
+import { useToday } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 import { RecurringBillEditForm } from "./recurring-bill-edit-form";
@@ -43,8 +43,8 @@ export function RecurringBillRow({
   const category = categories.find((c) => c.id === bill.categoryId);
   const account = accounts.find((a) => a.id === bill.accountId);
 
-  const overdue =
-    bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < toIso(new Date());
+  const today = useToday();
+  const overdue = bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < today;
 
   const meta = [
     t(`recurringBills.cadences.${bill.cadence}`),

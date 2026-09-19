@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { SelectField } from "@/components/select-field";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Label } from "@/components/ui/label";
+import { useTodayDate } from "@/hooks/use-settings";
 import { detectPreset, presetRange, type ReportPreset } from "./date-range-presets";
 
 interface Props {
@@ -14,13 +15,14 @@ const PRESETS: ReportPreset[] = ["thisMonth", "lastMonth", "thisYear", "lastYear
 
 export function ReportFilters({ dateFrom, dateTo, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const preset = detectPreset(dateFrom, dateTo);
+  const today = useTodayDate();
+  const preset = detectPreset(dateFrom, dateTo, today);
 
   function handlePresetChange(next: ReportPreset) {
     if (next === "custom") {
       return;
     }
-    onChange(presetRange(next));
+    onChange(presetRange(next, today));
   }
 
   return (

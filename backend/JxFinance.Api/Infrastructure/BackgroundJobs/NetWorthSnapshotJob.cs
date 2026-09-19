@@ -4,6 +4,7 @@ using JxFinance.Domain.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Services;
+using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.NetWorth.Services;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -26,7 +27,8 @@ public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<Net
     public async Task RunOnceAsync(CancellationToken ct)
     {
         using var scope = scopes.CreateScope();
-        if (!scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>().Current.IsEnabled(Feature.NetWorth))
+        var settings = scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>();
+        if (!settings.Current.IsEnabled(Feature.NetWorth))
         {
             return;
         }
@@ -44,7 +46,7 @@ public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<Net
             await using var db = new AppDbContext(options, user);
             var service = new NetWorthService(
                 db,
-                new AccountService(db, user, accountMapper, rates),
+                new AccountService(db, user, accountMapper, rates, new HoldingsValuation(db, rates, settings)),
                 clock,
                 user);
             await service.GetCurrentAsync(ct);

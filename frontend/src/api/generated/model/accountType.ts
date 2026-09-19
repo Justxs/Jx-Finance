@@ -16,4 +16,5 @@ export const AccountType = {
   savings: "savings",
   cash: "cash",
   other: "other",
+  investment: "investment",
 } as const;

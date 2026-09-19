@@ -10,6 +10,18 @@ export function isPositiveMoney(value: string): boolean {
   return isMoney(value) && Number(normalizeMoney(value)) > 0;
 }
 
+export function isQuantity(value: string): boolean {
+  return /^\d+(\.\d{1,8})?$/.test(normalizeMoney(value));
+}
+
+export function isPositiveQuantity(value: string): boolean {
+  return isQuantity(value) && Number(normalizeMoney(value)) > 0;
+}
+
+export function isNonNegativeMoney(value: string): boolean {
+  return isMoney(value) && Number(normalizeMoney(value)) >= 0;
+}
+
 export function isRate(value: string): boolean {
   return value.trim() === "" || /^\d+(\.\d+)?$/.test(normalizeMoney(value));
 }

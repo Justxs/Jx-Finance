@@ -148,7 +148,7 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["**/*.css"]
+        "allow": ["**/*.css", "@testing-library/jest-dom/vitest"]
       }
     ],
     "oxc/no-async-endpoint-handlers": "off",
@@ -192,7 +192,7 @@
       }
     },
     {
-      "files": ["tests/**", "src/mocks/**", "**/*.stories.tsx"],
+      "files": ["src/test/**", "**/*.test.{ts,tsx}", "src/mocks/**", "**/*.stories.tsx"],
       "rules": {
         "no-console": "off",
         "no-empty-function": "off",

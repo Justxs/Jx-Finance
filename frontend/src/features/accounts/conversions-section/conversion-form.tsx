@@ -82,7 +82,14 @@ function ConversionRate({
   const rateFormat = useRateFormat();
   const reference = useGetExchangeRateEndpoint(
     { from: fromCurrency, to: toCurrency, date },
-    { query: { enabled: fromCurrency !== toCurrency && date !== "", retry: false } },
+    {
+      query: {
+        enabled: fromCurrency !== toCurrency && date !== "",
+        retry: false,
+        throwOnError: false,
+        meta: { silent: true },
+      },
+    },
   );
 
   const from = fromCurrency.toUpperCase();
@@ -268,7 +275,7 @@ export function ConversionForm({
                         id="conversion-to-amount"
                         label={t("conversions.bought")}
                         value={field.value}
-                        error={field.errors[0]?.message}
+                        error={field.meta.isTouched ? field.errors[0]?.message : undefined}
                         onBlur={field.handleBlur}
                         onChange={field.handleChange}
                         currency={currencyField.value}

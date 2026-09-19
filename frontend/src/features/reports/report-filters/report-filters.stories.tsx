@@ -4,6 +4,8 @@ import { fn } from "storybook/test";
 import { presetRange } from "./date-range-presets";
 import { ReportFilters } from "./report-filters";
 
+const today = new Date();
+
 type FiltersProps = ComponentProps<typeof ReportFilters>;
 
 function StatefulFilters({ dateFrom, dateTo, onChange }: Readonly<FiltersProps>) {
@@ -25,7 +27,7 @@ const meta = {
   title: "Features/Reports/ReportFilters",
   component: ReportFilters,
   parameters: { route: "/reports" },
-  args: { ...presetRange("thisMonth"), onChange: fn() },
+  args: { ...presetRange("thisMonth", today), onChange: fn() },
   render: (args) => (
     <div className="w-[40rem] max-w-full">
       <StatefulFilters {...args} />
@@ -38,11 +40,11 @@ type Story = StoryObj<typeof meta>;
 
 export const ThisMonth: Story = {};
 
-export const LastMonth: Story = { args: presetRange("lastMonth") };
+export const LastMonth: Story = { args: presetRange("lastMonth", today) };
 
-export const ThisYear: Story = { args: presetRange("thisYear") };
+export const ThisYear: Story = { args: presetRange("thisYear", today) };
 
-export const LastYear: Story = { args: presetRange("lastYear") };
+export const LastYear: Story = { args: presetRange("lastYear", today) };
 
 export const CustomRange: Story = { args: { dateFrom: "2026-03-10", dateTo: "2026-05-24" } };
 

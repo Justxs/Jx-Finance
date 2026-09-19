@@ -218,7 +218,8 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         bool Reports,
         bool Import,
         bool Households,
-        bool MultiCurrency);
+        bool MultiCurrency,
+        bool Investments);
 
     private sealed record SettingsDto(
         string? InstanceName,

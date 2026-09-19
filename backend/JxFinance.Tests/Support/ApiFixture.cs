@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using FastEndpoints.Testing;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -44,6 +45,8 @@ public sealed class ApiFixture : AppFixture<Program>
     {
         services.RemoveAll<IExchangeRateProvider>();
         services.AddSingleton<IExchangeRateProvider, FixedRateProvider>();
+        services.RemoveAll<IFlexClient>();
+        services.AddSingleton<IFlexClient, SampleFlexReport>();
     }
 
     protected override async ValueTask SetupAsync()

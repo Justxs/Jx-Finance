@@ -17,6 +17,7 @@ import { pageViewTransition } from "@/lib/page-transition";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
 import { importSearchSchema } from "@/routes/import";
+import { investmentsSearchSchema } from "@/routes/investments";
 import { reportsSearchSchema } from "@/routes/reports";
 import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
@@ -26,6 +27,7 @@ const STORY_ROUTES = [
   { path: "/accounts", validateSearch: accountsSearchSchema },
   { path: "/transactions", validateSearch: transactionsSearchSchema },
   { path: "/import", validateSearch: importSearchSchema },
+  { path: "/investments", validateSearch: investmentsSearchSchema },
   { path: "/reports", validateSearch: reportsSearchSchema },
   { path: "/users", validateSearch: usersSearchSchema },
   { path: "/budgets" },

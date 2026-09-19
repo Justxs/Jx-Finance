@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { useMeEndpointSuspense } from "@/api/generated";
+import { FontPicker } from "@/components/font-picker";
 import { PageHeader } from "@/components/page-header";
+import { PalettePicker } from "@/components/palette-picker";
 import { ProfileForm } from "../profile-form";
 import { TwoFactorSettings } from "../two-factor-settings";
 
@@ -13,6 +15,8 @@ export function ProfilePage() {
       <PageHeader title={t("profile.title")} />
       <ProfileForm profile={me.data} />
       <TwoFactorSettings />
+      <PalettePicker />
+      <FontPicker />
     </div>
   );
 }

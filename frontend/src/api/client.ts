@@ -1,6 +1,6 @@
 import { normalizeMoney } from "@/lib/validation";
 
-export interface ApiErrorDetail {
+interface ApiErrorDetail {
   name: string;
   reason: string;
   code?: string | null;
@@ -25,6 +25,10 @@ const moneyKeys = new Set([
   "toAmount",
   "feeAmount",
   "receivedAmount",
+  "fee",
+  "price",
+  "quantity",
+  "lastPrice",
 ]);
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";

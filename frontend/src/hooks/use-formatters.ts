@@ -2,9 +2,15 @@ import { enUS, lt } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
 import { useGetCurrenciesEndpoint } from "@/api/generated";
 import { Currency } from "@/api/generated/model";
-import { parseIso } from "@/lib/calendar";
+import { useSettings } from "@/hooks/use-settings";
+import { parseIso, safeTimeZone } from "@/lib/calendar";
 
-const currenciesQuery = { staleTime: 5 * 60 * 1000, retry: false, throwOnError: false } as const;
+const currenciesQuery = {
+  staleTime: 5 * 60 * 1000,
+  retry: false,
+  throwOnError: false,
+  meta: { silent: true },
+} as const;
 const allCurrencies = Object.values(Currency);
 
 export function useReportingCurrency(): Currency {
@@ -86,6 +92,21 @@ export function useDate() {
   });
 }
 
+export function useDateTime() {
+  const { i18n } = useTranslation();
+  const timeZone = safeTimeZone(useSettings().timeZone);
+  const dateTime = new Intl.DateTimeFormat(i18n.language, {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone,
+  });
+
+  return function formatDateTime(value?: string | null) {
+    const parsed = value ? new Date(value) : null;
+    return parsed && !Number.isNaN(parsed.getTime()) ? dateTime.format(parsed) : "";
+  };
+}
+
 export function useIsoDate() {
   const date = useDate();
 
@@ -101,26 +122,72 @@ export function useCalendarLocale() {
   return i18n.language.startsWith("lt") ? lt : enUS;
 }
 
-const rateFormatters = new Map<string, Intl.NumberFormat>();
+const decimalFormatters = new Map<string, Intl.NumberFormat>();
 
-function rateFormatter(language: string) {
-  const cached = rateFormatters.get(language);
+function decimalFormatter(language: string, minimum: number, maximum: number, currency?: string) {
+  const code = currency?.toUpperCase();
+  const key = `${language}|${minimum}|${maximum}|${code ?? ""}`;
+  const cached = decimalFormatters.get(key);
   if (cached) {
     return cached;
   }
 
   const created = new Intl.NumberFormat(language, {
-    minimumFractionDigits: 4,
-    maximumFractionDigits: 4,
+    ...(code ? { style: "currency", currency: code, currencyDisplay: "symbol" } : {}),
+    minimumFractionDigits: minimum,
+    maximumFractionDigits: maximum,
   });
-  rateFormatters.set(language, created);
+  decimalFormatters.set(key, created);
   return created;
 }
 
 export function useRateFormat() {
   const { i18n } = useTranslation();
 
-  return rateFormatter(i18n.language);
+  return decimalFormatter(i18n.language, 4, 4);
+}
+
+export function useQuantityFormat() {
+  const { i18n } = useTranslation();
+
+  return decimalFormatter(i18n.language, 0, 8);
+}
+
+export function usePriceFormat() {
+  const { i18n } = useTranslation();
+
+  return function formatPrice(value: number, currency: string) {
+    return decimalFormatter(i18n.language, 2, 4, currency).format(value);
+  };
+}
+
+export function useSignedPercent() {
+  const { i18n } = useTranslation();
+  const percent = new Intl.NumberFormat(i18n.language, {
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+
+  return function formatSignedPercent(value: number) {
+    if (value === 0) {
+      return percent.format(0);
+    }
+
+    return (value < 0 ? "−" : "+") + percent.format(Math.abs(value) / 100);
+  };
+}
+
+export function useRatePercent() {
+  const { i18n } = useTranslation();
+  const percent = new Intl.NumberFormat(i18n.language, {
+    style: "percent",
+    maximumFractionDigits: 2,
+  });
+
+  return function formatRatePercent(value: number) {
+    return percent.format(value / 100);
+  };
 }
 
 export const EMPTY_VALUE = "—";
@@ -135,7 +202,7 @@ export function useMonthLabel() {
   const { i18n } = useTranslation();
   const month = new Intl.DateTimeFormat(i18n.language, { month: "long", year: "numeric" });
 
-  return function monthLabel(date: Date = new Date()) {
+  return function monthLabel(date: Date) {
     return month.format(date);
   };
 }

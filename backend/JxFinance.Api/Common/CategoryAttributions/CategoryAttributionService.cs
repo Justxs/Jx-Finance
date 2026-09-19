@@ -32,6 +32,7 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         var splitIds = splits.Keys.ToList();
         var lines = await db.TransactionLines
             .Where(l => splitIds.Contains(l.TransactionId))
+            .OrderBy(l => l.Id)
             .Select(l => new { l.TransactionId, l.CategoryId, Amount = (decimal)l.Amount })
             .ToListAsync(cancellationToken);
 
@@ -39,9 +40,10 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         {
             var parent = splits[group.Key];
             var remaining = parent.ReportingAmount;
+            var last = group.Count() - 1;
             return group.Select((line, index) =>
             {
-                var share = index == group.Count() - 1 || parent.Total == 0m
+                var share = index == last || parent.Total == 0m
                     ? remaining
                     : Money.Round(line.Amount * parent.ReportingAmount / parent.Total);
                 remaining -= share;

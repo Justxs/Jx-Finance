@@ -19,22 +19,17 @@ import { Button } from "@/components/ui/button";
 import { Meter } from "@/components/ui/meter";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useMoney, useMonthLabel } from "@/hooks/use-formatters";
+import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
+import { fromCents, toCents } from "@/lib/money";
 import { CreateBudgetForm } from "../create-budget-form";
-
-function toCents(value: string) {
-  return Math.round(Number(value) * 100);
-}
-
-function fromCents(cents: number) {
-  return (cents / 100).toFixed(2);
-}
 
 export function BudgetsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const money = useMoney();
   const monthLabel = useMonthLabel();
+  const today = useTodayDate();
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
@@ -54,11 +49,11 @@ export function BudgetsPage() {
 
   const deleteMutation = useDeleteBudgetEndpoint({ mutation: { onSettled: invalidate } });
 
-  const budgetList = useDeferredValue(budgets.data) ?? [];
-  const categoryList = categories.data ?? [];
+  const budgetList = useDeferredValue(budgets.data);
+  const categoryList = categories.data;
 
-  const month = monthLabel();
-  const { dateFrom, dateTo } = monthBounds();
+  const month = monthLabel(today);
+  const { dateFrom, dateTo } = monthBounds(today);
 
   const spentCents = budgetList.reduce((sum, budget) => sum + toCents(budget.spent), 0);
   const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.limitAmount), 0);

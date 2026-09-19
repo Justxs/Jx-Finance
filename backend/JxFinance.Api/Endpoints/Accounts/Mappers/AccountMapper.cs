@@ -50,7 +50,8 @@ public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<Crea
         balance.ByCurrency
             .Select(entry => new CurrencyBalance(entry.Currency, MoneyWire.ToWire(entry)))
             .ToList(),
-        MoneyWire.ToWire(balance.Reporting));
+        MoneyWire.ToWire(balance.Reporting),
+        MoneyWire.ToWire(balance.Holdings));
 
     private static HouseholdId? HouseholdFor(Scope scope, Guid? householdId) =>
         scope == Scope.Shared ? new HouseholdId(householdId!.Value) : null;

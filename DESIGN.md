@@ -100,7 +100,7 @@ The product is used in sit-down bookkeeping sessions on a desktop, so the interf
 
 ## Colors
 
-Cool, slightly blue-tinted neutrals with a navy ink accent. Tokens live in `frontend/src/global.css`; dark values are defined under `.dark`.
+Cool, slightly blue-tinted neutrals with a navy ink accent. Tokens live in `frontend/src/global.css`; dark values are defined under `.dark`. Ledger Navy is the default palette; Plum, Sepia and Graphite are per-browser alternatives under `[data-palette]` that re-tint the neutrals and the primary at the same lightness. Income green, expense red and the destructive fill are identical in every palette.
 
 ### Primary
 - **Ledger Navy** (`navy`): primary buttons, links, focus ring, selection, meters that measure neutral progress, the user monogram.
@@ -127,7 +127,7 @@ Cool, slightly blue-tinted neutrals with a navy ink accent. Tokens live in `fron
 **Display Font:** Source Serif 4 Variable (Georgia fallback), self-hosted.
 **Body Font:** Source Sans 3 Variable (Segoe UI, system-ui fallback), self-hosted.
 
-**Character:** A bookkeeping pair. The serif gives titles and totals the weight of a printed statement; the sans keeps dense rows, labels and controls calm and legible. Both cover Lithuanian diacritics.
+**Character:** A bookkeeping pair. The serif gives titles and totals the weight of a printed statement; the sans keeps dense rows, labels and controls calm and legible. Both cover Lithuanian diacritics. This pair is the default; a reader may switch their own browser to sans only, serif only, system fonts, Inter, Atkinson Hyperlegible, IBM Plex or Newsreader with Inter, and to a smaller or larger text size. Always use `font-sans` and `font-serif`, never a family name, so those choices apply.
 
 ### Hierarchy
 - **Page title** (serif 600, 1.75rem/2.25rem): one per page, class `page-title`.

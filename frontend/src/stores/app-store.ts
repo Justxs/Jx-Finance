@@ -41,7 +41,10 @@ function storeLocale(next: Locale) {
   } catch {}
 }
 
+let localeChosen = false;
+
 export function setLocale(next: Locale) {
+  localeChosen = true;
   applyLocale(next);
   storeLocale(next);
 }
@@ -54,9 +57,11 @@ export async function initLocale(loadDefault: () => Promise<string | null | unde
   }
 
   const fallback = await loadDefault().catch(() => null);
-  if (isLocale(fallback)) {
-    applyLocale(fallback);
+  if (localeChosen || readStoredLocale()) {
+    return;
   }
+
+  applyLocale(isLocale(fallback) ? fallback : appStore.state.locale);
 }
 
 export function useLocale() {

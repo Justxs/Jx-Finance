@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToday } from "@/hooks/use-settings";
 import { isMoney, isRate } from "@/lib/validation";
 
-export interface HoldingFormValues {
+interface HoldingFormValues {
   name: string;
   type: string;
   amount: string;
@@ -47,9 +47,8 @@ export function HoldingForm({
   const schema = z.object({
     name: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
     type: z.string(),
     amount: z.string().refine(isMoney, t("validation.money")),
     interestRate: z.string().refine(isRate, t("validation.rate")),

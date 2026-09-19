@@ -28,9 +28,8 @@ export function LoginPage() {
   const schema = z.object({
     email: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .refine(isEmail, t("validation.email")),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => isEmail(value.trim()), t("validation.email")),
     password: z.string().min(1, t("validation.required")),
     rememberMe: z.boolean(),
     twoFactorCode: twoFactorRequired ? z.string().min(1, t("validation.required")) : z.string(),

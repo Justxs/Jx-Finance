@@ -80,7 +80,7 @@ export function CategoriesPage() {
                   <CategoryRow
                     key={category.id}
                     category={category}
-                    onDelete={() => setDeleteTarget(category.id!)}
+                    onDelete={() => setDeleteTarget(category.id)}
                     deletePending={deletingId === category.id}
                     deleteDisabled={deleteMutation.isPending}
                     onSaved={invalidate}

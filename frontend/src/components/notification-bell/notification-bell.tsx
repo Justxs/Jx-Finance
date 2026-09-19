@@ -46,7 +46,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
   const notifications = useGetNotificationsEndpointSuspense({ unread: true });
-  const unreadList = notifications.data ?? [];
+  const unreadList = notifications.data;
 
   const bellLabel =
     unreadList.length > 0
@@ -119,10 +119,13 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
                     <button
                       type="button"
                       className={`w-full px-4 py-3 text-left text-sm hover:bg-accent ${
-                        markReadMutation.variables?.id === notification.id ? "is-stale" : ""
+                        markReadMutation.isPending &&
+                        markReadMutation.variables?.id === notification.id
+                          ? "is-stale"
+                          : ""
                       }`}
                       disabled={markReadMutation.isPending}
-                      onClick={() => markReadMutation.mutate({ id: notification.id! })}
+                      onClick={() => markReadMutation.mutate({ id: notification.id })}
                     >
                       <p className="font-medium">{notification.title}</p>
                       <p className="mt-0.5 text-xs text-muted-foreground">

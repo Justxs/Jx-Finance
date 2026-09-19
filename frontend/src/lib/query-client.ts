@@ -18,6 +18,12 @@ function toastError(error: unknown) {
   toast.error(i18n.t("errors.generic"));
 }
 
+declare module "@tanstack/react-query" {
+  interface Register {
+    queryMeta: { silent?: boolean };
+  }
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -26,6 +32,12 @@ export const queryClient = new QueryClient({
       throwOnError: true,
     },
   },
-  queryCache: new QueryCache({ onError: toastError }),
+  queryCache: new QueryCache({
+    onError: (error, query) => {
+      if (query.meta?.silent !== true) {
+        toastError(error);
+      }
+    },
+  }),
   mutationCache: new MutationCache({ onError: toastError }),
 });

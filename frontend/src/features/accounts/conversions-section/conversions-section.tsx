@@ -45,6 +45,9 @@ export function ConversionsSection({
   const stale = shownPage !== page;
   const conversions = useGetConversionsEndpointSuspense({ page: shownPage, pageSize });
   const pages = Math.max(1, Math.ceil((conversions.data?.total ?? 0) / pageSize));
+  if (page > pages) {
+    setPage(pages);
+  }
   const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
 
   function invalidate() {

@@ -8,7 +8,9 @@ import {
   useSyncExchangeRatesEndpoint,
   useUpdateSettingsEndpoint,
 } from "@/api/generated";
+import { FontPicker } from "@/components/font-picker";
 import { PageHeader } from "@/components/page-header";
+import { PalettePicker } from "@/components/palette-picker";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,7 +70,18 @@ function SettingsContent() {
     </div>
   );
 
-  const { ratesAsOf: _ratesAsOf, ...editable } = settings;
+  const editable = {
+    instanceName: settings.instanceName,
+    features: settings.features,
+    reportingCurrency: settings.reportingCurrency,
+    enabledCurrencies: settings.enabledCurrencies,
+    exchangeRateSyncEnabled: settings.exchangeRateSyncEnabled,
+    defaultLanguage: settings.defaultLanguage,
+    timeZone: settings.timeZone,
+    firstDayOfWeek: settings.firstDayOfWeek,
+    defaultAccountId: settings.defaultAccountId,
+    defaultPageSize: settings.defaultPageSize,
+  };
 
   return (
     <SettingsForm
@@ -77,7 +90,9 @@ function SettingsContent() {
       accounts={accounts.data ?? []}
       pending={updateMutation.isPending}
       exchangeRates={exchangeRates}
-      onSubmit={(values) => updateMutation.mutate({ data: values })}
+      onSubmit={(values, onSaved) =>
+        updateMutation.mutate({ data: values }, { onSuccess: onSaved })
+      }
     />
   );
 }
@@ -91,6 +106,8 @@ export function SettingsPage() {
       <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
         <SettingsContent />
       </QueryBoundary>
+      <PalettePicker />
+      <FontPicker />
     </div>
   );
 }

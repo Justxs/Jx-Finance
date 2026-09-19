@@ -5,7 +5,7 @@ import { useGetReportSummaryEndpointSuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { PageHeader } from "@/components/page-header";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { useFeature } from "@/hooks/use-settings";
+import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { NetWorthChangeCard } from "../net-worth-change-card";
 import { detectPreset, presetRange, ReportFilters } from "../report-filters";
 import { ReportStats } from "../report-stats";
@@ -17,10 +17,11 @@ export function ReportsPage() {
   const navigate = useNavigate({ from: "/reports" });
   const { dateFrom: searchFrom, dateTo: searchTo } = useSearch({ from: "/reports" });
 
-  const fallback = presetRange("thisMonth");
+  const today = useTodayDate();
+  const fallback = presetRange("thisMonth", today);
   const dateFrom = searchFrom ?? fallback.dateFrom;
   const dateTo = searchTo ?? fallback.dateTo;
-  const preset = detectPreset(dateFrom, dateTo);
+  const preset = detectPreset(dateFrom, dateTo, today);
 
   const [shown, stale] = useDeferredParams({ dateFrom, dateTo });
   const summary = useGetReportSummaryEndpointSuspense(shown);

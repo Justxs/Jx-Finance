@@ -32,9 +32,8 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
     .object({
       name: z
         .string()
-        .trim()
-        .min(1, t("validation.required"))
-        .max(100, t("validation.maxLength", { max: 100 })),
+        .refine((value) => value.trim().length > 0, t("validation.required"))
+        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
       icon: z.string().nullable(),
       scope: z.enum(["personal", "shared"]),
       householdId: z.string(),
@@ -60,7 +59,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
     validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
       updateMutation.mutate({
-        id: category.id!,
+        id: category.id,
         data: {
           name: value.name.trim(),
           icon: value.icon,
@@ -168,7 +167,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                         options={[
                           { value: "", label: t("sharing.selectHousehold") },
                           ...householdList.map((household) => ({
-                            value: household.id!,
+                            value: household.id,
                             label: household.name,
                           })),
                         ]}

@@ -67,6 +67,7 @@ public static class OpenApiExtensions
         tags["Setup"] = "First-run provisioning of the administrator account.";
         tags["Transactions"] = "The ledger: single and split transactions, plus CSV and PDF exports.";
         tags["Transfers"] = "Money moved between two of your own accounts, in one currency or across two.";
+        tags["Investments"] = "Securities, trades, dividends and holdings on investment accounts, with Interactive Brokers import.";
         tags["Conversions"] = "One currency exchanged for another inside a single account.";
         tags["Currencies"] = "Supported currencies, the reporting currency, and reference exchange rates.";
         tags["Users"] = "Administration of user accounts and roles.";

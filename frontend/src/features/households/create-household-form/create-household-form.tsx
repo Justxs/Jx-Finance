@@ -1,7 +1,8 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateHouseholdEndpoint } from "@/api/generated";
+import { useCreateHouseholdEndpoint, useUpdateHouseholdEndpoint } from "@/api/generated";
+import type { HouseholdResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -11,28 +12,35 @@ interface FormValues {
 }
 
 interface Props {
+  initial?: HouseholdResponse;
   onCreated: () => void;
   onCancel: () => void;
 }
 
-export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
+export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
     name: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
   });
 
   const createMutation = useCreateHouseholdEndpoint({ mutation: { onSuccess: onCreated } });
+  const updateMutation = useUpdateHouseholdEndpoint({ mutation: { onSuccess: onCreated } });
+  const pending = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm({
-    defaultValues: { name: "" } satisfies FormValues,
+    defaultValues: { name: initial?.name ?? "" } satisfies FormValues,
     validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: ({ value }) => {
-      createMutation.mutate({ data: { name: value.name.trim() } });
+      const data = { name: value.name.trim() };
+      if (initial) {
+        updateMutation.mutate({ id: initial.id, data });
+        return;
+      }
+      createMutation.mutate({ data });
     },
   });
 
@@ -50,6 +58,7 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
         {(field) => (
           <div className="space-y-1.5">
             <Input
+              aria-label={t("households.name")}
               placeholder={t("households.namePlaceholder")}
               value={field.value}
               aria-invalid={field.errors.length > 0}
@@ -69,8 +78,8 @@ export function CreateHouseholdForm({ onCreated, onCancel }: Readonly<Props>) {
         </Button>
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
-            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
-              {t("households.add")}
+            <Button type="submit" pending={pending} disabled={!canSubmit}>
+              {initial ? t("actions.save") : t("households.add")}
             </Button>
           )}
         </form.Subscribe>

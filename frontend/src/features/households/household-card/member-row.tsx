@@ -33,7 +33,7 @@ export function MemberRow({
   return (
     <RowTransition>
       <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 break-words">
+        <div className="min-w-0 wrap-break-word">
           <p className="text-sm font-medium">{member.displayName}</p>
           <p className="text-xs text-muted-foreground">{member.email}</p>
         </div>
@@ -48,7 +48,7 @@ export function MemberRow({
               onChange={(role) =>
                 roleMutation.mutate({
                   id: householdId,
-                  userId: member.userId!,
+                  userId: member.userId,
                   data: { role },
                 })
               }

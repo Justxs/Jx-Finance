@@ -6,6 +6,7 @@ import type {
   ExchangeRateResponse,
   AccountResponse,
   AssetResponse,
+  BrokerConnectionResponse,
   BudgetResponse,
   CategoryBreakdownResponse,
   CategoryResponse,
@@ -14,11 +15,14 @@ import type {
   GoalResponse,
   HouseholdResponse,
   ImportConfirmResponse,
+  InvestmentTransactionResponse,
+  InvestmentTransactionType,
   LoginResponse,
   MonthlyTrendResponse,
   NotificationResponse,
   ProblemDetails,
   RecurringBillResponse,
+  SecurityResponse,
   ReportSummaryResponse,
   TransactionLineResponse,
   TransactionResponse,
@@ -79,6 +83,16 @@ import {
   unauthorizedProblem,
   users,
 } from "./fixtures";
+import {
+  brokerConnections,
+  brokerImportResult,
+  duplicateSecurityProblem,
+  emptyPortfolio,
+  investmentTransactions,
+  oversellProblem,
+  portfolio,
+  securities,
+} from "./investment-fixtures";
 
 type Body = Record<string, unknown>;
 
@@ -376,6 +390,7 @@ const accountHandlers = [
         ...merged,
         currentBalance: merged.startingBalance,
         reportingBalance: merged.startingBalance,
+        holdingsValue: "0.00",
         balances: [{ currency: merged.currency, amount: merged.startingBalance }],
       },
       { status: 201 },
@@ -595,6 +610,127 @@ const importHandlers = [
     };
     return HttpResponse.json(result);
   }),
+];
+
+const investmentHandlers = [
+  http.get(api("/investments/portfolio"), ({ request }) => {
+    const accountId = new URL(request.url).searchParams.get("accountId");
+    const held = portfolio.holdings.some((holding) => holding.accountId === accountId);
+    return HttpResponse.json(!accountId || held ? portfolio : emptyPortfolio);
+  }),
+  http.get(api("/investments/transactions"), ({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const accountId = params.get("accountId");
+    const securityId = params.get("securityId");
+    const type = params.get("type");
+    const items = investmentTransactions.filter(
+      (item) =>
+        (!accountId || item.accountId === accountId) &&
+        (!securityId || item.securityId === securityId) &&
+        (!type || item.type === type),
+    );
+    return HttpResponse.json(paginate(items, params));
+  }),
+  http.post(api("/investments/transactions"), async ({ request }) => {
+    const body = await readBody(request);
+    const security = securities.find((item) => item.id === body.securityId);
+    const type = (text(body.type) ?? "buy") as InvestmentTransactionType;
+    const quantity = Number(text(body.quantity) ?? 0);
+    const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
+    if (type === "sell" && quantity > Number(held?.quantity ?? 0)) {
+      return problem(oversellProblem, 400);
+    }
+
+    const gross = quantity * Number(text(body.price) ?? 0);
+    const fee = Number(text(body.fee) ?? 0);
+    const amount = Number(text(body.amount) ?? 0);
+    const cashByType: Record<InvestmentTransactionType, number> = {
+      buy: -(gross + fee),
+      sell: gross - fee,
+      dividend: amount,
+      interest: amount,
+      withholdingTax: -amount,
+      fee: -amount,
+      split: 0,
+    };
+    const created: InvestmentTransactionResponse = {
+      id: NEW_ID,
+      accountId: text(body.accountId) ?? "",
+      securityId: security?.id ?? null,
+      symbol: security?.symbol ?? null,
+      type,
+      date: text(body.date) ?? FIXTURE_TODAY,
+      quantity: text(body.quantity) ?? "0",
+      price: text(body.price) ?? "0",
+      fee: fee.toFixed(2),
+      cashAmount: cashByType[type].toFixed(2),
+      currency: security?.currency ?? ((text(body.currency) ?? "eur") as Currency),
+      description: text(body.description),
+      source: "manual",
+      createdAt: CREATED_AT,
+    };
+    return HttpResponse.json(created, { status: 201 });
+  }),
+  http.delete(api("/investments/transactions/:id"), noContent),
+  http.get(api("/investments/securities"), ({ request }) => {
+    const search = new URL(request.url).searchParams.get("search")?.toLowerCase() ?? "";
+    return HttpResponse.json(
+      securities.filter((item) =>
+        [item.symbol, item.name, item.isin ?? ""].some((value) =>
+          value.toLowerCase().includes(search),
+        ),
+      ),
+    );
+  }),
+  http.post(api("/investments/securities"), async ({ request }) => {
+    const body = await readBody(request);
+    const exists = securities.some(
+      (item) => item.symbol === body.symbol && item.currency === body.currency,
+    );
+    if (exists) {
+      return problem(duplicateSecurityProblem, 409);
+    }
+
+    const created: SecurityResponse = {
+      id: NEW_ID,
+      symbol: "",
+      name: "",
+      isin: null,
+      exchange: null,
+      type: "stock",
+      currency: "eur",
+      lastPrice: null,
+      lastPriceDate: null,
+      ...body,
+    };
+    const lastPriceDate = created.lastPrice ? (created.lastPriceDate ?? FIXTURE_TODAY) : null;
+    return HttpResponse.json({ ...created, lastPriceDate }, { status: 201 });
+  }),
+  http.put(api("/investments/securities/:id"), async ({ params, request }) => {
+    const found = byId(securities, params.id);
+    return found ? HttpResponse.json({ ...found, ...(await readBody(request)) }) : notFound();
+  }),
+  http.post(api("/investments/import/interactive-brokers"), () =>
+    HttpResponse.json(brokerImportResult),
+  ),
+  http.get(api("/investments/connections"), () => HttpResponse.json(brokerConnections)),
+  http.put(api("/investments/connections/:accountId"), async ({ params, request }) => {
+    const body = await readBody(request);
+    const found = brokerConnections.find((item) => item.accountId === params.accountId);
+    const saved: BrokerConnectionResponse = {
+      accountId: String(params.accountId),
+      fundingAccountId: text(body.fundingAccountId),
+      queryId: text(body.queryId) ?? "",
+      isEnabled: body.isEnabled !== false,
+      lastSyncAt: found?.lastSyncAt ?? null,
+      lastError: null,
+    };
+    return HttpResponse.json(saved);
+  }),
+  http.delete(api("/investments/connections/:accountId"), noContent),
+  http.post(api("/investments/connections/:accountId/sync"), () =>
+    HttpResponse.json(brokerImportResult),
+  ),
 ];
 
 const netWorthHandlers = [
@@ -868,6 +1004,7 @@ export const handlers: RequestHandler[] = [
   ...goalHandlers,
   ...householdHandlers,
   ...importHandlers,
+  ...investmentHandlers,
   ...netWorthHandlers,
   ...notificationHandlers,
   ...recurringBillHandlers,
@@ -900,6 +1037,13 @@ function emptyList() {
   return HttpResponse.json([]);
 }
 
+const emptyInvestmentHandlers: RequestHandler[] = [
+  http.get(api("/investments/portfolio"), () => HttpResponse.json(emptyPortfolio)),
+  http.get(api("/investments/transactions"), ({ request }) => emptyPage(request)),
+  http.get(api("/investments/securities"), emptyList),
+  http.get(api("/investments/connections"), emptyList),
+];
+
 export const emptyHandlers: RequestHandler[] = [
   ...[
     "/accounts",
@@ -920,6 +1064,7 @@ export const emptyHandlers: RequestHandler[] = [
   http.get(api("/dashboard/summary"), () => HttpResponse.json(emptyDashboardSummary)),
   http.get(api("/dashboard/monthly-trend"), () => HttpResponse.json({ items: [] })),
   http.get(api("/dashboard/category-breakdown"), () => HttpResponse.json(emptyCategoryBreakdown)),
+  ...emptyInvestmentHandlers,
   http.get(api("/networth"), () => HttpResponse.json(emptyNetWorth)),
   http.get(api("/networth/history"), () => HttpResponse.json({ items: [] })),
   http.get(api("/reports/summary"), ({ request }) => {
@@ -975,3 +1120,5 @@ export const unauthenticatedHandlers: RequestHandler[] = [
   http.get(api("/auth/me"), () => problem(unauthorizedProblem, 401)),
   ...handlers,
 ];
+
+export const investmentsEmptyHandlers: RequestHandler[] = [...emptyInvestmentHandlers, ...handlers];

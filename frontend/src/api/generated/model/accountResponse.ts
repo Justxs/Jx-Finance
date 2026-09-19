@@ -27,4 +27,5 @@ export interface AccountResponse {
   currency: Currency;
   balances: IReadOnlyListOfCurrencyBalance;
   reportingBalance: string;
+  holdingsValue: string;
 }

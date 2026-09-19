@@ -248,6 +248,7 @@ export const checkingAccount: AccountResponse = {
   currency: "eur",
   balances: [{ currency: "eur", amount: "2843.17" }],
   reportingBalance: "2843.17",
+  holdingsValue: "0.00",
   householdId: null,
 };
 
@@ -264,10 +265,11 @@ export const savingsAccount: AccountResponse = {
   currency: "eur",
   balances: [{ currency: "eur", amount: "12500.00" }],
   reportingBalance: "12500.00",
+  holdingsValue: "0.00",
   householdId: null,
 };
 
-export const cashAccount: AccountResponse = {
+const cashAccount: AccountResponse = {
   id: ids.accounts.cash,
   name: "Grynieji",
   description: "Piniginė ir namų stalčius",
@@ -280,6 +282,7 @@ export const cashAccount: AccountResponse = {
   currency: "eur",
   balances: [{ currency: "eur", amount: "185.50" }],
   reportingBalance: "185.50",
+  holdingsValue: "0.00",
   householdId: null,
 };
 
@@ -297,6 +300,7 @@ export const sharedAccount: AccountResponse = {
   currency: "eur",
   balances: [{ currency: "eur", amount: "1620.40" }],
   reportingBalance: "1620.40",
+  holdingsValue: "0.00",
   householdId: ids.households.family,
 };
 
@@ -305,7 +309,7 @@ export const brokerAccount: AccountResponse = {
   name: "Interactive Brokers",
   description: "Investicinė sąskaita keliomis valiutomis",
   iban: null,
-  type: "other",
+  type: "investment",
   startingBalance: "5000.00",
   currentBalance: "5412.63",
   createdAt: "2025-05-19T10:05:00Z",
@@ -316,7 +320,8 @@ export const brokerAccount: AccountResponse = {
     { currency: "usd", amount: "2710.40" },
     { currency: "gbp", amount: "350.00" },
   ],
-  reportingBalance: "5412.63",
+  reportingBalance: "15987.62",
+  holdingsValue: "10574.99",
   householdId: null,
 };
 
@@ -767,7 +772,7 @@ export const emptyTransactionsSummary: TransactionsSummaryResponse = {
   totalExpense: "0.00",
 };
 
-export const sameCurrencyTransfers: TransferResponse[] = [
+const sameCurrencyTransfers: TransferResponse[] = [
   {
     id: ids.transfers.toSavings,
     fromAccountId: ids.accounts.checking,
@@ -807,7 +812,7 @@ export const sameCurrencyTransfers: TransferResponse[] = [
   },
 ];
 
-export const crossCurrencyTransfer: TransferResponse = {
+const crossCurrencyTransfer: TransferResponse = {
   id: ids.transfers.toBroker,
   fromAccountId: ids.accounts.checking,
   toAccountId: ids.accounts.broker,
@@ -866,6 +871,7 @@ export const settings: SettingsResponse = {
     import: true,
     households: true,
     multiCurrency: true,
+    investments: true,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],
@@ -946,7 +952,7 @@ function addDays(date: string, days: number): string {
   return value.toISOString().slice(0, 10);
 }
 
-export function buildDailyTrend(dateFrom: string, dateTo: string): ReportTrendPoint[] {
+function buildDailyTrend(dateFrom: string, dateTo: string): ReportTrendPoint[] {
   const points: ReportTrendPoint[] = [];
   for (let day = dateFrom; day <= dateTo && points.length < 366; day = addDays(day, 1)) {
     const items = transactions.filter((item) => item.date === day);

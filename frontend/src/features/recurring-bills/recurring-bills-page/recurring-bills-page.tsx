@@ -51,7 +51,7 @@ export function RecurringBillsPage() {
             bill={bill}
             accounts={accountList}
             categories={categoryList}
-            onDelete={() => setDeleteTarget(bill.id!)}
+            onDelete={() => setDeleteTarget(bill.id)}
             deletePending={deletingId === bill.id}
             deleteDisabled={deleteMutation.isPending}
             onSaved={invalidate}

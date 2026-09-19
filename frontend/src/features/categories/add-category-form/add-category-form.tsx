@@ -32,9 +32,8 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
     .object({
       name: z
         .string()
-        .trim()
-        .min(1, t("validation.required"))
-        .max(100, t("validation.maxLength", { max: 100 })),
+        .refine((value) => value.trim().length > 0, t("validation.required"))
+        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
       type: z.enum(["income", "expense"]),
       icon: z.string().nullable(),
       scope: z.enum(["personal", "shared"]),
@@ -158,7 +157,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                         options={[
                           { value: "", label: t("sharing.selectHousehold") },
                           ...householdList.map((household) => ({
-                            value: household.id!,
+                            value: household.id,
                             label: household.name,
                           })),
                         ]}

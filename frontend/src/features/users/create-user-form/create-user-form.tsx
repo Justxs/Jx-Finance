@@ -29,14 +29,12 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
   const schema = z.object({
     email: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .refine(isEmail, t("validation.email")),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => isEmail(value.trim()), t("validation.email")),
     displayName: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
     role: z.enum(roles),
     password: z
       .string()

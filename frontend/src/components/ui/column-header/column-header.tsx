@@ -7,26 +7,48 @@ import { cn } from "@/lib/utils";
 
 export type SortDirection = "asc" | "desc";
 
-interface Props {
+export type AriaSort = "ascending" | "descending" | undefined;
+
+interface Props<K extends string> {
   label: string;
-  sortKey?: string;
-  activeSort?: string;
+  sortKey?: K;
+  activeSort?: K;
   direction?: SortDirection;
-  onSort?: (key: string) => void;
+  onSort?: (key: K) => void;
   filter?: ReactNode;
 }
 
-export function ColumnHeader({
+export function nextSortDirection<K extends string>(
+  sortKey: K | undefined,
+  activeSort: K | undefined,
+  direction: SortDirection | undefined,
+): SortDirection {
+  return sortKey !== undefined && activeSort === sortKey && direction === "asc" ? "desc" : "asc";
+}
+
+export function ariaSortFor<K extends string>(
+  sortKey: K | undefined,
+  activeSort: K | undefined,
+  direction: SortDirection | undefined,
+): AriaSort {
+  if (sortKey === undefined || activeSort !== sortKey) {
+    return undefined;
+  }
+
+  return direction === "desc" ? "descending" : "ascending";
+}
+
+export function ColumnHeader<K extends string>({
   label,
   sortKey,
   activeSort,
   direction,
   onSort,
   filter,
-}: Readonly<Props>) {
+}: Readonly<Props<K>>) {
   const { t } = useTranslation();
   const sorted = Boolean(sortKey) && activeSort === sortKey;
-  const next: SortDirection = sorted && direction === "asc" ? "desc" : "asc";
+  const next = nextSortDirection(sortKey, activeSort, direction);
 
   let Icon = ChevronsUpDown;
   if (sorted) {
@@ -62,20 +84,19 @@ export function ColumnHeader({
   );
 }
 
-interface SortableTableHeadProps extends Props {
+interface SortableTableHeadProps<K extends string> extends Props<K> {
   className?: string;
 }
 
-export function SortableTableHead({ className, ...header }: Readonly<SortableTableHeadProps>) {
-  const sorted = Boolean(header.sortKey) && header.activeSort === header.sortKey;
-
-  let ariaSort: "ascending" | "descending" | undefined;
-  if (sorted) {
-    ariaSort = header.direction === "desc" ? "descending" : "ascending";
-  }
-
+export function SortableTableHead<K extends string>({
+  className,
+  ...header
+}: Readonly<SortableTableHeadProps<K>>) {
   return (
-    <TableHead className={className} aria-sort={ariaSort}>
+    <TableHead
+      className={className}
+      aria-sort={ariaSortFor(header.sortKey, header.activeSort, header.direction)}
+    >
       <ColumnHeader {...header} />
     </TableHead>
   );

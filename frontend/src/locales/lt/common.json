@@ -21,7 +21,8 @@
     "expand": "Išskleisti šoninę juostą",
     "main": "Pagrindinė navigacija",
     "skip": "Pereiti prie turinio",
-    "settings": "Nustatymai"
+    "settings": "Nustatymai",
+    "investments": "Investicijos"
   },
   "actions": {
     "add": "Pridėti",
@@ -80,11 +81,13 @@
       "checking": "Einamoji",
       "savings": "Taupomoji",
       "cash": "Grynieji",
-      "other": "Kita"
+      "other": "Kita",
+      "investment": "Investicinė"
     },
     "allTypes": "Visi tipai",
     "currency": "Pagrindinė valiuta",
-    "currencyHint": "Pradinis likutis ir sąskaitos suma rodomi šia valiuta. Sąskaitoje gali būti ir kitų valiutų."
+    "currencyHint": "Pradinis likutis ir sąskaitos suma rodomi šia valiuta. Sąskaitoje gali būti ir kitų valiutų.",
+    "holdings": "Vertybiniai popieriai ≈ {{value}}"
   },
   "transfers": {
     "title": "Pervesti pinigus",
@@ -205,6 +208,37 @@
   "theme": {
     "toggle": "Perjungti temą"
   },
+  "appearance": {
+    "title": "Išvaizda",
+    "paletteHint": "Spalvos tik šioje naršyklėje. Šviesi ir tamsi tema perjungiama šoninėje juostoje.",
+    "palettes": {
+      "ledger": "Knygos mėlyna",
+      "plum": "Slyvinė",
+      "sepia": "Sepija",
+      "graphite": "Grafitas"
+    }
+  },
+  "typography": {
+    "title": "Šriftai",
+    "hint": "Šriftas ir teksto dydis tik šioje naršyklėje.",
+    "typeface": "Šriftas",
+    "textSize": "Teksto dydis",
+    "fonts": {
+      "ledger": "Klasikinis",
+      "sans": "Tik be užraitų",
+      "serif": "Tik su užraitais",
+      "system": "Sistemos",
+      "inter": "Inter",
+      "hyperlegible": "Hyperlegible",
+      "plex": "IBM Plex",
+      "editorial": "Newsreader"
+    },
+    "textSizes": {
+      "small": "Mažas",
+      "default": "Įprastas",
+      "large": "Didelis"
+    }
+  },
   "auth": {
     "signIn": "Prisijungti",
     "signInSubtitle": "Prisijunkite prie savo Jx Finance paskyros.",
@@ -315,6 +349,10 @@
         "multiCurrency": {
           "name": "Kelios valiutos",
           "hint": "Valiutos pasirinkimas, keitimai ir pervedimai tarp valiutų."
+        },
+        "investments": {
+          "name": "Investicijos",
+          "hint": "Vertybiniai popieriai, sandoriai, dividendai ir „Interactive Brokers“ importas."
         }
       }
     },
@@ -435,6 +473,223 @@
       "mortgage": "Hipoteka",
       "loan": "Paskola",
       "other": "Kita"
+    }
+  },
+  "investments": {
+    "title": "Investicijos",
+    "description": "Vertybiniai popieriai, sandoriai ir pajamos jūsų investicinėse sąskaitose.",
+    "accountFilter": "Sąskaita",
+    "allAccounts": "Visos sąskaitos",
+    "summary": {
+      "marketValue": "Rinkos vertė",
+      "unrealizedGain": "Nerealizuotas pelnas",
+      "realizedGain": "Realizuotas pelnas",
+      "dividends": "Dividendai",
+      "withholdingTax": "Mokestis prie šaltinio",
+      "incomplete": "Kai kurios pozicijos neturi kainos arba valiutos kurso, todėl į šias sumas neįtrauktos. Kad jos būtų įtrauktos, pozicijų lentelėje nurodykite kainą."
+    },
+    "holdings": {
+      "title": "Pozicijos",
+      "empty": "Atvirų pozicijų nėra.",
+      "security": "Vertybinis popierius",
+      "quantity": "Kiekis",
+      "averageCost": "Vidutinė savikaina",
+      "lastPrice": "Paskutinė kaina",
+      "marketValue": "Rinkos vertė",
+      "unrealizedGain": "Nerealizuotas pelnas",
+      "realizedGain": "Realizuotas pelnas",
+      "dividends": "Dividendai",
+      "quantityAtCost": "{{quantity}} vnt., vid. savikaina {{cost}}",
+      "closed": "Uždarytos pozicijos ({{count}})",
+      "closedLabel": "Uždarytos pozicijos"
+    },
+    "price": {
+      "update": "Atnaujinti kainą",
+      "set": "Nurodyti kainą",
+      "label": "Paskutinė kaina ({{currency}})",
+      "date": "Kainos data",
+      "hint": "Brokerio importas šią kainą perrašo, kai jo ataskaita yra tos pačios dienos arba naujesnė."
+    },
+    "years": {
+      "title": "Pajamos pagal metus",
+      "empty": "Pajamų ar realizuoto pelno dar nėra.",
+      "year": "Metai",
+      "dividends": "Dividendai",
+      "withholdingTax": "Išskaičiuotas mokestis",
+      "interest": "Palūkanos",
+      "fees": "Mokesčiai brokeriui",
+      "realizedGain": "Realizuotas pelnas"
+    },
+    "activity": {
+      "title": "Įrašai",
+      "empty": "Įrašų dar nėra.",
+      "typeFilter": "Įrašo tipas",
+      "allTypes": "Visi tipai",
+      "imported": "IBKR",
+      "splitRatio": "{{ratio}} už 1",
+      "noCash": "Be pinigų"
+    },
+    "types": {
+      "buy": "Pirkimas",
+      "sell": "Pardavimas",
+      "dividend": "Dividendai",
+      "withholdingTax": "Mokestis prie šaltinio",
+      "interest": "Palūkanos",
+      "fee": "Mokestis brokeriui",
+      "split": "Akcijų skaidymas"
+    },
+    "securityTypes": {
+      "stock": "Akcija",
+      "etf": "ETF",
+      "fund": "Fondas",
+      "bond": "Obligacija",
+      "crypto": "Kriptovaliuta",
+      "other": "Kita"
+    },
+    "entry": {
+      "add": "Pridėti įrašą",
+      "title": "Pridėti investicijų įrašą",
+      "description": "Užregistruokite sandorį, pajamas ar mokestį investicinėje sąskaitoje. Sąskaitos pinigų likutis pasikeis atitinkamai.",
+      "type": "Įrašo tipas",
+      "security": "Vertybinis popierius",
+      "securityOptional": "Vertybinis popierius (neprivaloma)",
+      "chooseSecurity": "Pasirinkite vertybinį popierių",
+      "noSecurity": "Be vertybinio popieriaus",
+      "quantity": "Kiekis",
+      "ratio": "Naujų akcijų už vieną seną",
+      "ratioHint": "2, kai skaidoma santykiu 2 už 1.",
+      "price": "Vieneto kaina",
+      "priceIn": "Vieneto kaina ({{currency}})",
+      "fee": "Komisinis mokestis (neprivaloma)",
+      "feeHint": "Brokerio komisinis, vertybinio popieriaus valiuta.",
+      "amountIn": "Suma ({{currency}})",
+      "currency": "Valiuta",
+      "note": "Pastaba (neprivaloma)",
+      "cashEffect": "Poveikis pinigų likučiui",
+      "noCash": "Pinigai nejuda",
+      "submit": "Pridėti įrašą",
+      "saved": "Įrašas pridėtas."
+    },
+    "validation": {
+      "price": "Įveskite 0 ar didesnę kainą, iki 8 skaitmenų po kablelio, pvz., 98,4125.",
+      "quantity": "Įveskite už 0 didesnį kiekį, iki 8 skaitmenų po kablelio, pvz., 2,5.",
+      "ratio": "Įveskite santykį – kiek naujų akcijų tenka vienai senai, pvz., 2.",
+      "security": "Pasirinkite vertybinį popierių.",
+      "isin": "Įveskite teisingą ISIN, pvz., IE00BK5BQT80."
+    },
+    "securities": {
+      "title": "Vertybiniai popieriai",
+      "description": "Viskas, kuo galite prekiauti ar iš ko gaunate pajamų. Kainos įvedamos ranka arba atnaujinamos brokerio importu.",
+      "search": "Ieškoti pagal simbolį, pavadinimą ar ISIN",
+      "add": "Pridėti vertybinį popierių",
+      "addDescription": "Tas pats simbolis viena valiuta gali būti tik vieną kartą.",
+      "edit": "Redaguoti vertybinį popierių",
+      "empty": "Vertybinių popierių dar nėra.",
+      "noPrice": "Kainos nėra",
+      "symbol": "Simbolis",
+      "type": "Tipas",
+      "name": "Pavadinimas",
+      "currency": "Prekybos valiuta",
+      "currencyHint": "Šio vertybinio popieriaus kainos, sandoriai ir dividendai registruojami šia valiuta.",
+      "exchange": "Birža (neprivaloma)",
+      "isin": "ISIN (neprivaloma)",
+      "lastPrice": "Paskutinė kaina (neprivaloma)",
+      "lastPriceHint": "Reikalinga rinkos vertei parodyti.",
+      "lastPriceDate": "Kainos data",
+      "lastPriceDatePlaceholder": "Šiandien"
+    },
+    "import": {
+      "open": "Importuoti iš brokerio",
+      "title": "Importas iš „Interactive Brokers“",
+      "description": "Įkelkite sandorius, pajamas, valiutos keitimus ir kainas iš „Flex Query“ ataskaitos. Importuojant persidengiančius laikotarpius dublikatų nesusidaro.",
+      "account": "Brokerio sąskaita",
+      "accountHint": "Sąskaita šioje programoje, atitinkanti jūsų „Interactive Brokers“ sąskaitą.",
+      "noAccounts": "Pirmiausia sukurkite investicinio tipo sąskaitą.",
+      "tabs": {
+        "upload": "Įkelti ataskaitą",
+        "sync": "Sinchronizavimas"
+      },
+      "fundingAccount": "Papildymo sąskaita (neprivaloma)",
+      "noFundingAccount": "Nėra",
+      "fundingHint": "Įnašai ir išėmimai tampa pervedimais į šią sąskaitą arba iš jos. Nenurodžius jie praleidžiami.",
+      "file": "„Flex Query“ ataskaita",
+      "chooseFile": "Spustelėkite ir pasirinkite XML failą",
+      "fileHint": "„Activity Flex Query“ ataskaita XML formatu, iki 20 MB. Importuojama viskas arba nieko.",
+      "fileRequired": "Pirmiausia pasirinkite XML failą.",
+      "fileEmpty": "Šis failas tuščias. Paleiskite „Flex Query“ dar kartą ir pasirinkite naują failą.",
+      "fileTooLarge": "Šis failas didesnis nei 20 MB. Eksportuokite trumpesnį laikotarpį.",
+      "submit": "Importuoti",
+      "uploading": "Ataskaita importuojama. Didelės ataskaitos gali užtrukti.",
+      "result": {
+        "done": "Importas baigtas.",
+        "nothing": "Nieko naujo importuoti nebuvo.",
+        "trades_one": "Importuotas {{count}} sandoris.",
+        "trades_few": "Importuoti {{count}} sandoriai.",
+        "trades_many": "Importuota {{count}} sandorio.",
+        "trades_other": "Importuota {{count}} sandorių.",
+        "cashEntries_one": "Importuotas {{count}} dividendų, mokesčių ar palūkanų įrašas.",
+        "cashEntries_few": "Importuoti {{count}} dividendų, mokesčių ar palūkanų įrašai.",
+        "cashEntries_many": "Importuota {{count}} dividendų, mokesčių ar palūkanų įrašo.",
+        "cashEntries_other": "Importuota {{count}} dividendų, mokesčių ar palūkanų įrašų.",
+        "conversions_one": "Importuotas {{count}} valiutos keitimas.",
+        "conversions_few": "Importuoti {{count}} valiutos keitimai.",
+        "conversions_many": "Importuota {{count}} valiutos keitimo.",
+        "conversions_other": "Importuota {{count}} valiutos keitimų.",
+        "transfers_one": "{{count}} įnašas ar išėmimas užregistruotas kaip pervedimas.",
+        "transfers_few": "{{count}} įnašai ar išėmimai užregistruoti kaip pervedimai.",
+        "transfers_many": "{{count}} įnašo ar išėmimo užregistruota kaip pervedimai.",
+        "transfers_other": "{{count}} įnašų ar išėmimų užregistruota kaip pervedimai.",
+        "securitiesCreated_one": "Pridėtas {{count}} naujas vertybinis popierius.",
+        "securitiesCreated_few": "Pridėti {{count}} nauji vertybiniai popieriai.",
+        "securitiesCreated_many": "Pridėta {{count}} naujo vertybinio popieriaus.",
+        "securitiesCreated_other": "Pridėta {{count}} naujų vertybinių popierių.",
+        "pricesUpdated_one": "Atnaujinta {{count}} kaina.",
+        "pricesUpdated_few": "Atnaujintos {{count}} kainos.",
+        "pricesUpdated_many": "Atnaujinta {{count}} kainos.",
+        "pricesUpdated_other": "Atnaujinta {{count}} kainų.",
+        "duplicates_one": "{{count}} įrašas jau buvo importuotas anksčiau ir paliktas nepakeistas.",
+        "duplicates_few": "{{count}} įrašai jau buvo importuoti anksčiau ir palikti nepakeisti.",
+        "duplicates_many": "{{count}} įrašo jau buvo importuota anksčiau, jis paliktas nepakeistas.",
+        "duplicates_other": "{{count}} įrašų jau buvo importuoti anksčiau ir palikti nepakeisti.",
+        "skipped_one": "Praleista {{count}} eilutė.",
+        "skipped_few": "Praleistos {{count}} eilutės.",
+        "skipped_many": "Praleista {{count}} eilutės.",
+        "skipped_other": "Praleista {{count}} eilučių."
+      },
+      "help": {
+        "title": "Kaip sukurti „Flex Query“",
+        "create": "„Interactive Brokers“ „Client Portal“ atverkite „Performance & Reports“, tada „Flex Queries“ ir sukurkite „Activity Flex Query“.",
+        "sections": "Pridėkite skiltis „Trades“ (pažymėję „Executions“), „Cash Transactions“ ir „Open Positions“.",
+        "format": "Pasirinkite XML formatą ir datos formatą yyyyMMdd.",
+        "period": "Pasirinkite laikotarpį, pavyzdžiui, „Last 365 days“, išsaugokite užklausą ir paleiskite ją, kad atsisiųstumėte failą.",
+        "token": "Automatiniam sinchronizavimui tame pačiame puslapyje atverkite „Flex Web Service“, įjunkite jį ir nusikopijuokite prieigos raktą.",
+        "queryId": "„Query ID“ yra skaičius, rodomas šalia išsaugotos užklausos."
+      }
+    },
+    "connection": {
+      "description": "„Jx Finance“ kartą per dieną atsisiunčia „Flex Query“ ataskaitą ir importuoja tai, kas nauja. Prieigos raktas saugomas užšifruotas ir daugiau neberodomas.",
+      "lastSync": "Paskutinis sinchronizavimas",
+      "neverSynced": "Dar nesinchronizuota",
+      "lastError": "Paskutinis sinchronizavimas nepavyko",
+      "queryId": "Query ID",
+      "queryIdError": "„Query ID“ yra skaičius, rodomas šalia jūsų „Flex Query“.",
+      "token": "„Flex“ prieigos raktas",
+      "tokenStored": "Išsaugotas – palikite tuščią, jei nekeičiate",
+      "tokenHint": "Skaičius, kurį „Interactive Brokers“ parodo įjungus „Flex Web Service“.",
+      "tokenError": "Prieigos raktą sudaro nuo 6 iki 64 skaitmenų.",
+      "syncDaily": "Sinchronizuoti kasdien",
+      "syncDailyHint": "Išjunkite, jei ryšį norite naudoti tik rankiniam sinchronizavimui.",
+      "saved": "Ryšys išsaugotas.",
+      "remove": "Pašalinti ryšį",
+      "removeLabel": "„Interactive Brokers“ ryšys · {{account}}",
+      "syncNow": "Sinchronizuoti dabar",
+      "syncing": "Ataskaita siunčiama iš „Interactive Brokers“. Tai gali užtrukti iki minutės."
+    },
+    "empty": {
+      "title": "Investicijų dar nėra",
+      "description": "Registruokite pirkimus, pardavimus, dividendus ir mokesčius – matysite pozicijas, pelną ir pajamas pagal metus. Kiekvienas įrašas pakeičia savo sąskaitos pinigų likutį.",
+      "addFirst": "Pridėti pirmą įrašą",
+      "import": "Importuoti iš „Interactive Brokers“"
     }
   },
   "recurringBills": {

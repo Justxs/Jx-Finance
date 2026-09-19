@@ -21,7 +21,8 @@
     "expand": "Expand sidebar",
     "main": "Main navigation",
     "skip": "Skip to content",
-    "settings": "Settings"
+    "settings": "Settings",
+    "investments": "Investments"
   },
   "actions": {
     "add": "Add",
@@ -80,11 +81,13 @@
       "checking": "Checking",
       "savings": "Savings",
       "cash": "Cash",
-      "other": "Other"
+      "other": "Other",
+      "investment": "Investment"
     },
     "allTypes": "All types",
     "currency": "Main currency",
-    "currencyHint": "The starting balance and the account total use this currency. The account can still hold others."
+    "currencyHint": "The starting balance and the account total use this currency. The account can still hold others.",
+    "holdings": "Holdings ≈ {{value}}"
   },
   "transfers": {
     "title": "Transfer money",
@@ -197,6 +200,37 @@
   "theme": {
     "toggle": "Toggle theme"
   },
+  "appearance": {
+    "title": "Appearance",
+    "paletteHint": "Colors for this browser only. Light and dark are switched from the sidebar.",
+    "palettes": {
+      "ledger": "Ledger navy",
+      "plum": "Plum",
+      "sepia": "Sepia",
+      "graphite": "Graphite"
+    }
+  },
+  "typography": {
+    "title": "Typography",
+    "hint": "Typeface and text size for this browser only.",
+    "typeface": "Typeface",
+    "textSize": "Text size",
+    "fonts": {
+      "ledger": "Classic",
+      "sans": "Sans only",
+      "serif": "Serif only",
+      "system": "System",
+      "inter": "Inter",
+      "hyperlegible": "Hyperlegible",
+      "plex": "IBM Plex",
+      "editorial": "Newsreader"
+    },
+    "textSizes": {
+      "small": "Small",
+      "default": "Default",
+      "large": "Large"
+    }
+  },
   "auth": {
     "signIn": "Sign in",
     "signInSubtitle": "Sign in to your Jx Finance account.",
@@ -307,6 +341,10 @@
         "multiCurrency": {
           "name": "Multiple currencies",
           "hint": "Currency pickers, conversions and cross-currency transfers."
+        },
+        "investments": {
+          "name": "Investments",
+          "hint": "Securities, trades, dividends and Interactive Brokers import."
         }
       }
     },
@@ -423,6 +461,207 @@
       "mortgage": "Mortgage",
       "loan": "Loan",
       "other": "Other"
+    }
+  },
+  "investments": {
+    "title": "Investments",
+    "description": "Securities, trades and income across your investment accounts.",
+    "accountFilter": "Account",
+    "allAccounts": "All accounts",
+    "summary": {
+      "marketValue": "Market value",
+      "unrealizedGain": "Unrealised gain",
+      "realizedGain": "Realised gain",
+      "dividends": "Dividends",
+      "withholdingTax": "Withholding tax",
+      "incomplete": "Some holdings have no price or exchange rate and are left out of these totals. Set a price in the holdings table to include them."
+    },
+    "holdings": {
+      "title": "Holdings",
+      "empty": "No open positions.",
+      "security": "Security",
+      "quantity": "Quantity",
+      "averageCost": "Average cost",
+      "lastPrice": "Last price",
+      "marketValue": "Market value",
+      "unrealizedGain": "Unrealised gain",
+      "realizedGain": "Realised gain",
+      "dividends": "Dividends",
+      "quantityAtCost": "{{quantity}} at {{cost}} average",
+      "closed": "Closed positions ({{count}})",
+      "closedLabel": "Closed positions"
+    },
+    "price": {
+      "update": "Update price",
+      "set": "Set price",
+      "label": "Last price ({{currency}})",
+      "date": "Price date",
+      "hint": "A broker import overwrites this price when its report is from the same day or newer."
+    },
+    "years": {
+      "title": "Income by year",
+      "empty": "No income or realised gains yet.",
+      "year": "Year",
+      "dividends": "Dividends",
+      "withholdingTax": "Withholding tax",
+      "interest": "Interest",
+      "fees": "Fees",
+      "realizedGain": "Realised gain"
+    },
+    "activity": {
+      "title": "Activity",
+      "empty": "No entries yet.",
+      "typeFilter": "Entry type",
+      "allTypes": "All types",
+      "imported": "IBKR",
+      "splitRatio": "{{ratio}} for 1",
+      "noCash": "No cash"
+    },
+    "types": {
+      "buy": "Buy",
+      "sell": "Sell",
+      "dividend": "Dividend",
+      "withholdingTax": "Withholding tax",
+      "interest": "Interest",
+      "fee": "Fee",
+      "split": "Split"
+    },
+    "securityTypes": {
+      "stock": "Stock",
+      "etf": "ETF",
+      "fund": "Fund",
+      "bond": "Bond",
+      "crypto": "Crypto",
+      "other": "Other"
+    },
+    "entry": {
+      "add": "Add entry",
+      "title": "Add investment entry",
+      "description": "Record a trade, income or a charge on an investment account. The account's cash balance follows.",
+      "type": "Entry type",
+      "security": "Security",
+      "securityOptional": "Security (optional)",
+      "chooseSecurity": "Choose a security",
+      "noSecurity": "No security",
+      "quantity": "Quantity",
+      "ratio": "New shares per old share",
+      "ratioHint": "2 for a 2-for-1 split.",
+      "price": "Price per share",
+      "priceIn": "Price per share ({{currency}})",
+      "fee": "Fee (optional)",
+      "feeHint": "Broker commission, in the security's currency.",
+      "amountIn": "Amount ({{currency}})",
+      "currency": "Currency",
+      "note": "Note (optional)",
+      "cashEffect": "Cash effect",
+      "noCash": "No cash movement",
+      "submit": "Add entry",
+      "saved": "Entry added."
+    },
+    "validation": {
+      "price": "Enter a price of 0 or more with up to 8 decimals, e.g. 98.4125.",
+      "quantity": "Enter a quantity greater than 0 with up to 8 decimals, e.g. 2.5.",
+      "ratio": "Enter the ratio as new shares per old share, e.g. 2.",
+      "security": "Choose a security.",
+      "isin": "Enter a valid ISIN, e.g. IE00BK5BQT80."
+    },
+    "securities": {
+      "title": "Securities",
+      "description": "Everything you can trade or receive income from. Prices are kept by hand or updated by a broker import.",
+      "search": "Search symbol, name or ISIN",
+      "add": "Add security",
+      "addDescription": "A symbol can exist once per currency.",
+      "edit": "Edit security",
+      "empty": "No securities yet.",
+      "noPrice": "No price",
+      "symbol": "Symbol",
+      "type": "Type",
+      "name": "Name",
+      "currency": "Trading currency",
+      "currencyHint": "Prices, trades and dividends for this security use this currency.",
+      "exchange": "Exchange (optional)",
+      "isin": "ISIN (optional)",
+      "lastPrice": "Last price (optional)",
+      "lastPriceHint": "Needed to show market value.",
+      "lastPriceDate": "Price date",
+      "lastPriceDatePlaceholder": "Today"
+    },
+    "import": {
+      "open": "Import from broker",
+      "title": "Import from Interactive Brokers",
+      "description": "Bring in trades, income, currency conversions and prices from a Flex Query report. Importing overlapping periods never creates duplicates.",
+      "account": "Broker account",
+      "accountHint": "The account in this ledger that mirrors your Interactive Brokers account.",
+      "noAccounts": "Add an account of type Investment first.",
+      "tabs": {
+        "upload": "Upload report",
+        "sync": "Automatic sync"
+      },
+      "fundingAccount": "Funding account (optional)",
+      "noFundingAccount": "None",
+      "fundingHint": "Deposits and withdrawals become transfers to or from this account. Without it they are skipped.",
+      "file": "Flex Query report",
+      "chooseFile": "Click to choose an XML file",
+      "fileHint": "Activity Flex Query exported as XML, up to 20 MB. The import is all or nothing.",
+      "fileRequired": "Choose an XML file first.",
+      "fileEmpty": "This file is empty. Run the Flex Query again and choose the new file.",
+      "fileTooLarge": "This file is larger than 20 MB. Export a shorter period.",
+      "submit": "Import",
+      "uploading": "Importing the report. Large reports can take a moment.",
+      "result": {
+        "done": "Import finished.",
+        "nothing": "Nothing new to import.",
+        "trades_one": "{{count}} trade imported.",
+        "trades_other": "{{count}} trades imported.",
+        "cashEntries_one": "{{count}} dividend, tax, interest or fee entry imported.",
+        "cashEntries_other": "{{count}} dividend, tax, interest or fee entries imported.",
+        "conversions_one": "{{count}} currency conversion imported.",
+        "conversions_other": "{{count}} currency conversions imported.",
+        "transfers_one": "{{count}} deposit or withdrawal recorded as a transfer.",
+        "transfers_other": "{{count}} deposits or withdrawals recorded as transfers.",
+        "securitiesCreated_one": "{{count}} new security added.",
+        "securitiesCreated_other": "{{count}} new securities added.",
+        "pricesUpdated_one": "{{count}} price updated.",
+        "pricesUpdated_other": "{{count}} prices updated.",
+        "duplicates_one": "{{count}} entry was already imported and left alone.",
+        "duplicates_other": "{{count}} entries were already imported and left alone.",
+        "skipped_one": "{{count}} row skipped.",
+        "skipped_other": "{{count}} rows skipped."
+      },
+      "help": {
+        "title": "How to create the Flex Query",
+        "create": "In Interactive Brokers Client Portal open Performance & Reports, then Flex Queries, and create an Activity Flex Query.",
+        "sections": "Add the sections Trades (with Executions selected), Cash Transactions and Open Positions.",
+        "format": "Set the format to XML and the date format to yyyyMMdd.",
+        "period": "Choose a period, for example Last 365 days, then save the query and run it to download the file.",
+        "token": "For automatic sync, open Flex Web Service on the same page, enable it and copy the token.",
+        "queryId": "The Query ID is the number shown next to the saved query."
+      }
+    },
+    "connection": {
+      "description": "Jx Finance fetches the Flex Query once a day and imports whatever is new. The token is stored encrypted and is never shown again.",
+      "lastSync": "Last sync",
+      "neverSynced": "Not synced yet",
+      "lastError": "Last sync failed",
+      "queryId": "Query ID",
+      "queryIdError": "The Query ID is the number shown next to your Flex Query.",
+      "token": "Flex token",
+      "tokenStored": "Stored — leave empty to keep",
+      "tokenHint": "The number Interactive Brokers shows when you enable the Flex Web Service.",
+      "tokenError": "Enter the token as 6 to 64 digits.",
+      "syncDaily": "Sync daily",
+      "syncDailyHint": "Turn off to keep the connection for manual syncs only.",
+      "saved": "Connection saved.",
+      "remove": "Remove connection",
+      "removeLabel": "Interactive Brokers connection · {{account}}",
+      "syncNow": "Sync now",
+      "syncing": "Fetching the report from Interactive Brokers. This can take up to a minute."
+    },
+    "empty": {
+      "title": "No investments yet",
+      "description": "Record buys, sells, dividends and fees to see holdings, gains and income by year. Entries move the cash balance of the account they belong to.",
+      "addFirst": "Add first entry",
+      "import": "Import from Interactive Brokers"
     }
   },
   "recurringBills": {

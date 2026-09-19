@@ -43,7 +43,7 @@ export function GoalsPage() {
           <GoalRow
             key={goal.id}
             goal={goal}
-            onDelete={() => setDeleteTarget(goal.id!)}
+            onDelete={() => setDeleteTarget(goal.id)}
             deletePending={deletingId === goal.id}
             deleteDisabled={deleteMutation.isPending}
             onSaved={invalidate}

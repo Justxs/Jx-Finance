@@ -8,6 +8,7 @@ using JxFinance.Domain.Conversions;
 using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Investments;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
@@ -33,6 +34,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
+    public DbSet<Security> Securities => Set<Security>();
+    public DbSet<InvestmentTransaction> InvestmentTransactions => Set<InvestmentTransaction>();
+    public DbSet<BrokerConnection> BrokerConnections => Set<BrokerConnection>();
     public DbSet<InstanceSettings> InstanceSettings => Set<InstanceSettings>();
     public DbSet<Budget> Budgets => Set<Budget>();
     public DbSet<Goal> Goals => Set<Goal>();
@@ -183,10 +187,62 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             conversion.ComplexProperty(c => c.FromAmount, money => ConfigureMoney(money, "FromAmount", "FromCurrency"));
             conversion.ComplexProperty(c => c.ToAmount, money => ConfigureMoney(money, "ToAmount", "ToCurrency"));
             conversion.Property(c => c.Description).HasMaxLength(500);
+            conversion.Property(c => c.ImportRef).HasMaxLength(64);
             conversion.HasIndex(c => new { c.AccountId, c.Date });
+            conversion.HasIndex(c => new { c.AccountId, c.ImportRef }).IsUnique();
             conversion.HasOne<AppUser>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
             conversion.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
             conversion.HasOne<Transaction>().WithMany().HasForeignKey(c => c.FeeTransactionId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<Security>(security =>
+        {
+            security.Property(s => s.Id).HasConversion(id => id.Value, value => new SecurityId(value));
+            security.Property(s => s.Symbol).HasMaxLength(32);
+            security.Property(s => s.Name).HasMaxLength(200);
+            security.Property(s => s.Isin).HasMaxLength(12);
+            security.Property(s => s.Exchange).HasMaxLength(32);
+            security.Property(s => s.Currency).HasConversion(CurrencyToCode, CodeToCurrency).HasMaxLength(3);
+            security.Property(s => s.LastPrice).HasPrecision(18, 8);
+            security.HasIndex(s => new { s.Symbol, s.Currency }).IsUnique().HasFilter("\"IsDeleted\" = false");
+            security.HasIndex(s => s.BrokerContractId);
+        });
+
+        builder.Entity<InvestmentTransaction>(entry =>
+        {
+            entry.Property(t => t.Id).HasConversion(id => id.Value, value => new InvestmentTransactionId(value));
+            entry.Property(t => t.AccountId).HasConversion(id => id.Value, value => new AccountId(value));
+            entry.Property(t => t.SecurityId).HasConversion(
+                id => id.HasValue ? id.Value.Value : (Guid?)null,
+                value => value.HasValue ? new SecurityId(value.Value) : (SecurityId?)null);
+            entry.ComplexProperty(t => t.CashAmount, money => ConfigureMoney(money, "CashAmount", "Currency"));
+            entry.Property(t => t.Quantity).HasPrecision(20, 8);
+            entry.Property(t => t.Price).HasPrecision(20, 8);
+            entry.Property(t => t.Fee).HasPrecision(18, 2);
+            entry.Property(t => t.ReportingAmount).HasPrecision(18, 2);
+            entry.Property(t => t.Description).HasMaxLength(500);
+            entry.Property(t => t.ExternalId).HasMaxLength(64);
+            entry.HasIndex(t => new { t.AccountId, t.Date });
+            entry.HasIndex(t => new { t.AccountId, t.ExternalId }).IsUnique();
+            entry.HasIndex(t => t.SecurityId);
+            entry.HasOne<AppUser>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasOne<Account>().WithMany().HasForeignKey(t => t.AccountId).OnDelete(DeleteBehavior.Restrict);
+            entry.HasOne<Security>().WithMany().HasForeignKey(t => t.SecurityId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<BrokerConnection>(connection =>
+        {
+            connection.Property(c => c.Id).HasConversion(id => id.Value, value => new BrokerConnectionId(value));
+            connection.Property(c => c.AccountId).HasConversion(id => id.Value, value => new AccountId(value));
+            connection.Property(c => c.FundingAccountId).HasConversion(
+                id => id.HasValue ? id.Value.Value : (Guid?)null,
+                value => value.HasValue ? new AccountId(value.Value) : (AccountId?)null);
+            connection.Property(c => c.QueryId).HasMaxLength(20);
+            connection.Property(c => c.ProtectedToken).HasMaxLength(1000);
+            connection.Property(c => c.LastError).HasMaxLength(500);
+            connection.HasIndex(c => c.AccountId).IsUnique().HasFilter("\"IsDeleted\" = false");
+            connection.HasOne<AppUser>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Restrict);
+            connection.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<ExchangeRate>(rate =>
@@ -392,6 +448,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             {
                 entityType.SetQueryFilter(ConversionFilter());
             }
+            else if (clrType == typeof(InvestmentTransaction))
+            {
+                entityType.SetQueryFilter(InvestmentTransactionFilter());
+            }
             else if (clrType == typeof(Transfer))
             {
                 entityType.SetQueryFilter(TransferFilter());
@@ -440,6 +500,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private Expression<Func<CurrencyConversion, bool>> ConversionFilter() =>
         c => !c.IsDeleted &&
             Accounts.Any(a => a.Id == c.AccountId);
+
+    private Expression<Func<InvestmentTransaction, bool>> InvestmentTransactionFilter() =>
+        t => !t.IsDeleted &&
+            Accounts.Any(a => a.Id == t.AccountId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
         t => !t.IsDeleted &&

@@ -6,12 +6,16 @@ import {
   useGetSettingsEndpointSuspense,
 } from "@/api/generated";
 import type { FeatureFlags, SettingsResponse } from "@/api/generated/model";
-import { todayInZone } from "@/lib/calendar";
+import { parseIso, todayInZone } from "@/lib/calendar";
 
 export type FeatureKey = keyof FeatureFlags;
 
 const settingsQuery = { staleTime: 5 * 60 * 1000, retry: false } as const;
-const quietSettingsQuery = { ...settingsQuery, throwOnError: false } as const;
+const quietSettingsQuery = {
+  ...settingsQuery,
+  throwOnError: false,
+  meta: { silent: true },
+} as const;
 
 export function settingsQueryOptions() {
   return getGetSettingsEndpointQueryOptions({ query: settingsQuery });
@@ -32,6 +36,7 @@ const defaultSettings: SettingsResponse = {
     import: true,
     households: true,
     multiCurrency: true,
+    investments: true,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur"],
@@ -72,4 +77,8 @@ export function useWeekStartsOn(): 0 | 1 {
 
 export function useToday(): string {
   return todayInZone(useSettings().timeZone);
+}
+
+export function useTodayDate(): Date {
+  return parseIso(useToday()) ?? new Date();
 }

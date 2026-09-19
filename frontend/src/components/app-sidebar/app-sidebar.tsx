@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   CalendarClock,
+  ChartCandlestick,
   FileBarChart,
   FileUp,
   House,
@@ -62,6 +63,13 @@ const navItems = [
     feature: "recurringBills",
   },
   { to: "/net-worth", key: "nav.netWorth", icon: Scale, group: "review", feature: "netWorth" },
+  {
+    to: "/investments",
+    key: "nav.investments",
+    icon: ChartCandlestick,
+    group: "review",
+    feature: "investments",
+  },
   { to: "/reports", key: "nav.reports", icon: FileBarChart, group: "review", feature: "reports" },
   { to: "/households", key: "nav.households", icon: House, group: "manage", feature: "households" },
 ] as const;
@@ -71,7 +79,9 @@ const adminNavItems = [
   { to: "/settings", key: "nav.settings", icon: Settings, group: "manage" },
 ] as const;
 
-export function visibleNav(features: FeatureFlags, isAdmin: boolean) {
+export type NavItem = (typeof navItems)[number] | (typeof adminNavItems)[number];
+
+export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly NavItem[] {
   const enabled = navItems.filter((item) => !("feature" in item) || features[item.feature]);
   return isAdmin ? [...enabled, ...adminNavItems] : enabled;
 }

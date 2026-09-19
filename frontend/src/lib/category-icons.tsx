@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const categoryIcons: Record<string, LucideIcon> = {
+const categoryIcons: Record<string, LucideIcon> = {
   banknote: Banknote,
   briefcase: Briefcase,
   bus: Bus,
