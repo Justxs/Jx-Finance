@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Security.Claims;
 using FastEndpoints.Security;
-using FastEndpoints.Testing;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,10 +14,10 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     [Fact]
     public async Task Login_issues_http_only_access_and_refresh_cookies()
     {
-        var (email, password) = await CreateUserAsync();
-        using var client = CreateCookielessClient();
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
 
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
 
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var cookies = SetCookies(login);
@@ -32,9 +31,9 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     [Fact]
     public async Task Refresh_rotates_the_refresh_token_and_rejects_the_old_one()
     {
-        var (email, password) = await CreateUserAsync();
-        using var client = CreateCookielessClient();
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
         var issued = SetCookies(login);
 
         var refresh = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]);
@@ -52,12 +51,12 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     [Fact]
     public async Task Deactivation_revokes_the_access_token_and_the_refresh_token()
     {
-        var (email, password, id) = await CreateUserWithIdAsync();
-        using var client = CreateCookielessClient();
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = true });
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = true });
         var issued = SetCookies(login);
 
-        var deactivate = await Client.PostAsync($"/api/users/{id}/deactivate", null);
+        var deactivate = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null);
         Assert.Equal(HttpStatusCode.NoContent, deactivate.StatusCode);
 
         var me = await SendAsync(client, HttpMethod.Get, "/api/auth/me", issued[AuthCookies.AccessToken]);
@@ -69,9 +68,9 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     [Fact]
     public async Task Logout_ends_the_session()
     {
-        var (email, password) = await CreateUserAsync();
-        using var client = CreateCookielessClient();
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
         var issued = SetCookies(login);
 
         var logout = await SendAsync(client, HttpMethod.Post, "/api/auth/logout", issued[AuthCookies.AccessToken]);
@@ -95,34 +94,11 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
             if (userId is not null)
                 o.User.Claims.Add(new Claim(ClaimTypes.NameIdentifier, userId));
         });
-        using var client = CreateCookielessClient();
+        using var client = CreateClient(handleCookies: false);
 
         var accounts = await SendAsync(client, HttpMethod.Get, "/api/accounts", new IssuedCookie(AuthCookies.AccessToken, token, ""));
 
         Assert.Equal(HttpStatusCode.Unauthorized, accounts.StatusCode);
-    }
-
-    private HttpClient CreateCookielessClient()
-    {
-        var client = CreateClient(new ClientOptions { HandleCookies = false, AllowAutoRedirect = false });
-        client.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.1.{Random.Shared.Next(0, 255)}.{Random.Shared.Next(2, 254)}");
-        return client;
-    }
-
-    private async Task<(string Email, string Password)> CreateUserAsync()
-    {
-        var (email, password, _) = await CreateUserWithIdAsync();
-        return (email, password);
-    }
-
-    private async Task<(string Email, string Password, Guid Id)> CreateUserWithIdAsync()
-    {
-        var email = $"session-{Guid.NewGuid():N}@localhost";
-        const string password = "Session-Password-123!";
-        var response = await Client.PostAsJsonAsync("/api/users", new { email, displayName = "Session User", role = "Member", password });
-        response.EnsureSuccessStatusCode();
-        var created = await response.Content.ReadFromJsonAsync<UserDto>();
-        return (email, password, created!.Id);
     }
 
     private static Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string url, IssuedCookie cookie)
@@ -143,6 +119,4 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
             .ToDictionary(cookie => cookie.Name);
 
     private sealed record IssuedCookie(string Name, string Value, string Attributes);
-
-    private sealed record UserDto(Guid Id);
 }

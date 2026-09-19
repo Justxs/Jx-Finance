@@ -6,6 +6,7 @@ using JxFinance.Endpoints.Investments.GetPortfolio;
 using JxFinance.Endpoints.Investments.GetSecurities;
 using JxFinance.Endpoints.Investments.SaveSecurity;
 using JxFinance.Endpoints.Investments.Shared;
+using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 
 namespace JxFinance.Endpoints.Investments.Interfaces;
 
@@ -19,6 +20,10 @@ public interface IInvestmentService
 
     Task<Result<InvestmentTransactionResponse>> CreateTransactionAsync(
         CreateInvestmentTransactionRequest request,
+        CancellationToken cancellationToken);
+
+    Task<Result<InvestmentTransactionResponse>> UpdateTransactionAsync(
+        UpdateInvestmentTransactionRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken);

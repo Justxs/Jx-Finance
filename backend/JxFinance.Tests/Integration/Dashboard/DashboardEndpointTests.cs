@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
 
@@ -11,27 +10,16 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
     [Fact]
     public async Task Summary_reflects_new_accounts_and_this_months_transactions()
     {
-        var before = await Client.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        using var member = await CreateUserClientAsync();
+        var before = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
 
-        var accountResponse = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name = "Dashboard test", type = "checking", startingBalance = "10.00" });
-        Assert.Equal(HttpStatusCode.Created, accountResponse.StatusCode);
-        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
-
-        var inMonthDate = before!.MonthStart;
-        var income = await Client.PostAsJsonAsync(
+        var account = await CreateAccountAsync("10.00", client: member);
+        await PostAsync<IdDto>(
+            member,
             "/api/transactions",
-            new
-            {
-                accountId = account!.Id,
-                type = "income",
-                amount = "5.00",
-                date = inMonthDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            });
-        Assert.Equal(HttpStatusCode.Created, income.StatusCode);
+            new { accountId = account, type = "income", amount = "5.00", date = before!.MonthStart });
 
-        var after = await Client.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        var after = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
 
         Assert.Equal(15.00m, Parse(after!.TotalBalance) - Parse(before.TotalBalance));
         Assert.Equal(5.00m, Parse(after.MonthIncome) - Parse(before.MonthIncome));
@@ -40,8 +28,6 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     private static decimal Parse(string money) => decimal.Parse(money, CultureInfo.InvariantCulture);
-
-    private sealed record AccountDto(Guid Id);
 
     private sealed record SummaryDto(
         string TotalBalance,

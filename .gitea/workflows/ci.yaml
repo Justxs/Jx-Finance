@@ -47,6 +47,10 @@ jobs:
       - name: Restore
         run: dotnet restore backend/JxFinance.slnx
 
+      - name: Restore tools
+        working-directory: backend
+        run: dotnet tool restore
+
       - name: Build
         run: dotnet build backend/JxFinance.slnx --configuration Release --no-restore
 

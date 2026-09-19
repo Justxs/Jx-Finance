@@ -3,7 +3,6 @@ using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
-using JxFinance.Endpoints.Investments.CreateInvestmentTransaction;
 using JxFinance.Endpoints.Investments.SaveSecurity;
 using JxFinance.Endpoints.Investments.Shared;
 
@@ -12,7 +11,7 @@ namespace JxFinance.Endpoints.Investments.Mappers;
 [RegisterService<InvestmentMapper>(LifeTime.Singleton)]
 public sealed class InvestmentMapper
 {
-    public InvestmentTransaction ToEntity(CreateInvestmentTransactionRequest request, Currency currency)
+    public InvestmentTransaction ToEntity(IInvestmentTransactionInput request, Currency currency)
     {
         var quantity = request.Quantity is null ? 0m : QuantityWire.Parse(request.Quantity);
         var price = request.Price is null ? 0m : QuantityWire.Parse(request.Price);

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using FastEndpoints.Testing;
 
 namespace JxFinance.Tests.Integration.Auth;
 
@@ -9,90 +8,130 @@ namespace JxFinance.Tests.Integration.Auth;
 public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     [Fact]
-    public async Task Full_totp_enrollment_login_and_recovery_code_flow()
+    public async Task Enabling_with_a_valid_code_issues_ten_recovery_codes()
     {
-        var email = $"twofactor-{Guid.NewGuid():N}@localhost";
-        const string password = "TwoFactor-Password-123!";
-        await Client.PostAsJsonAsync(
-            "/api/users",
-            new { email, displayName = "Two Factor User", role = "Member", password });
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
 
-        using var userClient = CreateClient(new ClientOptions { HandleCookies = true });
-        userClient.DefaultRequestHeaders.Add("X-Forwarded-For", $"10.1.0.{Random.Shared.Next(2, 254)}");
-
-        var initialLogin = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false });
-        var initialLoginBody = await initialLogin.Content.ReadFromJsonAsync<LoginDto>();
-        Assert.False(initialLoginBody!.TwoFactorRequired);
-        Assert.NotNull(initialLoginBody.Profile);
-
-        var setupResponse = await userClient.PostAsJsonAsync("/api/auth/2fa/setup", new { password });
-        setupResponse.EnsureSuccessStatusCode();
-        var setup = await setupResponse.Content.ReadFromJsonAsync<SetupDto>();
-        Assert.False(string.IsNullOrWhiteSpace(setup!.SharedKey));
-
-        var code = Totp.GenerateCode(setup.SharedKey);
-        var enableResponse = await userClient.PostAsJsonAsync("/api/auth/2fa/enable", new { code });
-        enableResponse.EnsureSuccessStatusCode();
-        var enabled = await enableResponse.Content.ReadFromJsonAsync<EnableDto>();
-        Assert.Equal(10, enabled!.RecoveryCodes.Count);
-
-        await userClient.PostAsync("/api/auth/logout", null);
-
-        var loginNoCode = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false });
-        var loginNoCodeBody = await loginNoCode.Content.ReadFromJsonAsync<LoginDto>();
-        Assert.True(loginNoCodeBody!.TwoFactorRequired);
-        Assert.Null(loginNoCodeBody.Profile);
-
-        var meAfterPartialLogin = await userClient.GetAsync("/api/auth/me");
-        Assert.Equal(HttpStatusCode.Unauthorized, meAfterPartialLogin.StatusCode);
-
-        var loginWrongCode = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false, twoFactorCode = "000000" });
-        Assert.Equal(HttpStatusCode.Unauthorized, loginWrongCode.StatusCode);
-
-        var freshCode = Totp.GenerateCode(setup.SharedKey);
-        var loginWithCode = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false, twoFactorCode = freshCode });
-        loginWithCode.EnsureSuccessStatusCode();
-        var loginWithCodeBody = await loginWithCode.Content.ReadFromJsonAsync<LoginDto>();
-        Assert.False(loginWithCodeBody!.TwoFactorRequired);
-        Assert.NotNull(loginWithCodeBody.Profile);
-
-        var meAfterFullLogin = await userClient.GetAsync("/api/auth/me");
-        Assert.Equal(HttpStatusCode.OK, meAfterFullLogin.StatusCode);
-
-        await userClient.PostAsync("/api/auth/logout", null);
-        var recoveryCode = enabled.RecoveryCodes[0];
-        var loginWithRecovery = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false, twoFactorCode = recoveryCode });
-        loginWithRecovery.EnsureSuccessStatusCode();
-        var loginWithRecoveryBody = await loginWithRecovery.Content.ReadFromJsonAsync<LoginDto>();
-        Assert.False(loginWithRecoveryBody!.TwoFactorRequired);
-
-        var disableResponse = await userClient.PostAsJsonAsync("/api/auth/2fa/disable", new { password });
-        Assert.Equal(HttpStatusCode.NoContent, disableResponse.StatusCode);
-
-        await userClient.PostAsync("/api/auth/logout", null);
-        var loginAfterDisable = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email, password, rememberMe = false });
-        var loginAfterDisableBody = await loginAfterDisable.Content.ReadFromJsonAsync<LoginDto>();
-        Assert.False(loginAfterDisableBody!.TwoFactorRequired);
-        Assert.NotNull(loginAfterDisableBody.Profile);
+        Assert.Equal(10, enrolled.RecoveryCodes.Count);
+        Assert.Equal(10, enrolled.RecoveryCodes.Distinct().Count());
     }
+
+    [Fact]
+    public async Task Enabling_with_a_wrong_code_is_rejected()
+    {
+        var user = await CreateUserAsync();
+        using var client = await LoginAsync(user);
+        await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
+
+        var response = await client.PostAsJsonAsync("/api/auth/2fa/enable", new { code = "000000" });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Password_alone_no_longer_opens_a_session()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+
+        var login = await LoginAsync(client, enrolled.User);
+
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        Assert.True(body!.TwoFactorRequired);
+        Assert.Null(body.Profile);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_wrong_code_is_rejected()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+
+        var login = await LoginAsync(client, enrolled.User, "000000");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_valid_authenticator_code_opens_a_session()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+
+        var login = await LoginAsync(client, enrolled.User, Totp.GenerateCode(enrolled.SharedKey));
+
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        Assert.False(body!.TwoFactorRequired);
+        Assert.NotNull(body.Profile);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+    }
+
+    [Fact]
+    public async Task A_recovery_code_opens_a_session_once()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+        var recoveryCode = enrolled.RecoveryCodes[0];
+
+        var first = await LoginAsync(client, enrolled.User, recoveryCode);
+        await client.PostAsync("/api/auth/logout", null);
+        var second = await LoginAsync(client, enrolled.User, recoveryCode);
+
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, second.StatusCode);
+    }
+
+    [Fact]
+    public async Task Disabling_returns_to_password_only_login()
+    {
+        var enrolled = await EnrollAsync();
+        using var client = enrolled.Client;
+        (await LoginAsync(client, enrolled.User, Totp.GenerateCode(enrolled.SharedKey))).EnsureSuccessStatusCode();
+
+        var disable = await client.PostAsJsonAsync("/api/auth/2fa/disable", new { password = enrolled.User.Password });
+        await client.PostAsync("/api/auth/logout", null);
+        var login = await LoginAsync(client, enrolled.User);
+
+        Assert.Equal(HttpStatusCode.NoContent, disable.StatusCode);
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        Assert.False(body!.TwoFactorRequired);
+        Assert.NotNull(body.Profile);
+    }
+
+    [Fact]
+    public async Task Setup_requires_the_current_password()
+    {
+        using var client = await CreateUserClientAsync();
+
+        var response = await client.PostAsJsonAsync("/api/auth/2fa/setup", new { password = "incorrect" });
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private async Task<Enrollment> EnrollAsync()
+    {
+        var user = await CreateUserAsync();
+        var client = await LoginAsync(user);
+        var setup = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
+        var enabled = await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code = Totp.GenerateCode(setup.SharedKey) });
+        await client.PostAsync("/api/auth/logout", null);
+        return new Enrollment(client, user, setup.SharedKey, enabled.RecoveryCodes);
+    }
+
+    private static Task<HttpResponseMessage> LoginAsync(HttpClient client, TestUser user, string? twoFactorCode = null) =>
+        client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { email = user.Email, password = user.Password, rememberMe = false, twoFactorCode });
+
+    private sealed record Enrollment(HttpClient Client, TestUser User, string SharedKey, List<string> RecoveryCodes);
 
     private sealed record LoginDto(bool TwoFactorRequired, ProfileDto? Profile);
 
     private sealed record ProfileDto(Guid Id);
 
-    private sealed record SetupDto(string SharedKey, string AuthenticatorUri);
+    private sealed record SetupDto(string SharedKey);
 
     private sealed record EnableDto(List<string> RecoveryCodes);
 }

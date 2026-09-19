@@ -35,6 +35,33 @@ public class RateTableTests
         Assert.Null(RateTable.Empty.Rate(Currency.Usd, Currency.Eur));
     }
 
+    [Fact]
+    public void Converting_there_and_back_returns_the_amount_within_a_cent()
+    {
+        var random = new Random(20260919);
+        Currency[] currencies = [Currency.Eur, Currency.Usd, Currency.Gbp];
+
+        for (var i = 0; i < 500; i++)
+        {
+            var amount = Math.Round((decimal)random.NextDouble() * 100_000m, 2);
+            var from = currencies[random.Next(currencies.Length)];
+            var to = currencies[random.Next(currencies.Length)];
+
+            var there = Table.Convert(amount, from, to)!.Value;
+            var back = Table.Convert(there, to, from)!.Value;
+
+            Assert.InRange(back - amount, -0.01m, 0.01m);
+        }
+    }
+
+    [Fact]
+    public void Inverse_rates_multiply_to_one()
+    {
+        var product = Table.Rate(Currency.Usd, Currency.Gbp)!.Value * Table.Rate(Currency.Gbp, Currency.Usd)!.Value;
+
+        Assert.InRange(product, 0.99999m, 1.00001m);
+    }
+
     [Theory]
     [InlineData("usd", true)]
     [InlineData("EUR", true)]

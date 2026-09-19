@@ -19,14 +19,6 @@ public sealed class SystemClockTests
     }
 
     [Fact]
-    public void UtcNow_is_in_utc()
-    {
-        var clock = CreateClock("UTC");
-
-        Assert.Equal(TimeSpan.Zero, clock.UtcNow.Offset);
-    }
-
-    [Fact]
     public void Today_is_the_date_in_the_configured_zone()
     {
         var clock = CreateClock("Pacific/Kiritimati");

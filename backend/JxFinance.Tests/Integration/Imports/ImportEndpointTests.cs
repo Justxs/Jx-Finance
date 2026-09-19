@@ -22,7 +22,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var marker = Guid.NewGuid().ToString("N")[..8];
         var csv = string.Format(SampleCsv, marker);
 
-        var preview = await PreviewAsync(account.Id, csv);
+        var preview = await PreviewAsync(account, csv);
         Assert.Equal(HttpStatusCode.OK, preview.response.StatusCode);
         Assert.Equal(3, preview.body!.Rows.Count);
         Assert.All(preview.body.Rows, r => Assert.False(r.IsDuplicate));
@@ -30,47 +30,76 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains(preview.body.Rows, r => !r.LooksLikeTransfer && r.Type == "income");
         Assert.Contains(preview.body.Rows, r => !r.LooksLikeTransfer && r.Type == "expense");
 
-        var confirmResponse = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
-            new
-            {
-                accountId = account.Id,
-                rows = preview.body.Rows.Select(r => new
-                {
-                    importRef = r.ImportRef,
-                    date = r.Date,
-                    description = r.Description,
-                    amount = r.Amount,
-                    type = r.Type,
-                    categoryId = (Guid?)null,
-                }),
-            });
-        confirmResponse.EnsureSuccessStatusCode();
-        var confirmed = await confirmResponse.Content.ReadFromJsonAsync<ConfirmDto>();
-        Assert.Equal(3, confirmed!.Imported);
+        var confirmed = await ConfirmAsync(account, preview.body.Rows);
+        Assert.Equal(3, confirmed.Imported);
         Assert.Equal(0, confirmed.SkippedDuplicates);
 
-        var previewAgain = await PreviewAsync(account.Id, csv);
+        var previewAgain = await PreviewAsync(account, csv);
         Assert.All(previewAgain.body!.Rows, r => Assert.True(r.IsDuplicate));
 
-        var confirmAgainResponse = await Client.PostAsJsonAsync(
-            "/api/import/swedbank/confirm",
-            new
-            {
-                accountId = account.Id,
-                rows = previewAgain.body.Rows.Select(r => new
-                {
-                    importRef = r.ImportRef,
-                    date = r.Date,
-                    description = r.Description,
-                    amount = r.Amount,
-                    type = r.Type,
-                    categoryId = (Guid?)null,
-                }),
-            });
-        var confirmedAgain = await confirmAgainResponse.Content.ReadFromJsonAsync<ConfirmDto>();
-        Assert.Equal(0, confirmedAgain!.Imported);
+        var confirmedAgain = await ConfirmAsync(account, previewAgain.body.Rows);
+        Assert.Equal(0, confirmedAgain.Imported);
         Assert.Equal(3, confirmedAgain.SkippedDuplicates);
+    }
+
+    [Fact]
+    public async Task Duplicate_rows_and_concurrent_retries_import_once()
+    {
+        var account = await CreateAccountAsync("100.00");
+
+        var results = await Task.WhenAll(
+            ConfirmAsync(account, Row("duplicate"), Row("duplicate")),
+            ConfirmAsync(account, Row("duplicate"), Row("duplicate")));
+
+        Assert.Equal(1, results.Sum(r => r.Imported));
+        Assert.Equal("90.00", await CurrentBalanceAsync(account));
+    }
+
+    [Theory]
+    [InlineData("-5.00")]
+    [InlineData("0.00")]
+    [InlineData("abc")]
+    public async Task Confirm_rejects_invalid_money_without_writing(string amount)
+    {
+        var account = await CreateAccountAsync("100.00");
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/swedbank/confirm",
+            new { accountId = account, rows = new[] { Row("invalid", amount) } });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal("100.00", await CurrentBalanceAsync(account));
+    }
+
+    [Fact]
+    public async Task Deleted_import_stays_deduplicated()
+    {
+        var account = await CreateAccountAsync("100.00");
+        await ConfirmAsync(account, Row("deleted"));
+        var imported = await Client.GetFromJsonAsync<PageDto>($"/api/transactions?accountId={account}");
+        (await Client.DeleteAsync($"/api/transactions/{imported!.Items.Single().Id}")).EnsureSuccessStatusCode();
+
+        var retry = await ConfirmAsync(account, Row("deleted"));
+
+        Assert.Equal(0, retry.Imported);
+        Assert.Equal(1, retry.SkippedDuplicates);
+    }
+
+    [Fact]
+    public async Task Both_bank_entries_of_one_transfer_match_a_single_transfer()
+    {
+        var source = await CreateAccountAsync("100.00");
+        var destination = await CreateAccountAsync("100.00");
+
+        await ConfirmAsync(source, Row("outgoing", transferAccountId: destination));
+        var transfers = await Client.GetFromJsonAsync<TransferPageDto>("/api/transfers?pageSize=200");
+        var transfer = transfers!.Items.Single(t => t.FromAccountId == source);
+        await ConfirmAsync(destination, Row("incoming", type: "income", transferAccountId: source, existingTransferId: transfer.Id));
+
+        Assert.Equal("90.00", await CurrentBalanceAsync(source));
+        Assert.Equal("110.00", await CurrentBalanceAsync(destination));
+        var transactions = await Client.GetFromJsonAsync<PageDto>($"/api/transactions?accountId={source}");
+        Assert.Equal(0, transactions!.Total);
     }
 
     private async Task<(HttpResponseMessage response, PreviewDto? body)> PreviewAsync(Guid accountId, string csv)
@@ -88,16 +117,21 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         return (response, body);
     }
 
-    private async Task<AccountDto> CreateAccountAsync()
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name = $"Import test {Guid.NewGuid():N}", type = "checking", startingBalance = "0.00" });
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
-    }
+    private Task<ConfirmDto> ConfirmAsync(Guid accountId, IEnumerable<PreviewRowDto> rows) =>
+        ConfirmAsync(accountId, rows.Select(r => Row(r.ImportRef, r.Amount, r.Type, r.Date, r.Description)).ToArray());
 
-    private sealed record AccountDto(Guid Id);
+    private Task<ConfirmDto> ConfirmAsync(Guid accountId, params object[] rows) =>
+        PostAsync<ConfirmDto>(Client, "/api/import/swedbank/confirm", new { accountId, rows });
+
+    private static object Row(
+        string importRef,
+        string amount = "10.00",
+        string type = "expense",
+        DateOnly? date = null,
+        string? description = null,
+        Guid? transferAccountId = null,
+        Guid? existingTransferId = null) =>
+        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId };
 
     private sealed record PreviewRowDto(
         string ImportRef,
@@ -112,4 +146,10 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record PreviewDto(List<PreviewRowDto> Rows);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
+
+    private sealed record PageDto(List<IdDto> Items, int Total);
+
+    private sealed record TransferDto(Guid Id, Guid FromAccountId);
+
+    private sealed record TransferPageDto(List<TransferDto> Items);
 }

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using FastEndpoints.Testing;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Settings;
@@ -24,7 +23,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Public_settings_need_no_session()
     {
-        using var anonymous = CreateClient(new ClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+        using var anonymous = CreateClient();
 
         var response = await anonymous.GetAsync("/api/settings/public");
 
@@ -90,9 +89,9 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies");
             Assert.Equal(["eur", "usd"], currencies!.Currencies);
 
-            var rejected = await CreateAccountAsync("Pounds refused", "gbp");
+            var rejected = await CreateAccountInAsync("Pounds refused", "gbp");
             Assert.Equal(HttpStatusCode.BadRequest, rejected.StatusCode);
-            var accepted = await CreateAccountAsync("Dollars allowed", "usd");
+            var accepted = await CreateAccountInAsync("Dollars allowed", "usd");
             Assert.Equal(HttpStatusCode.Created, accepted.StatusCode);
         }
         finally
@@ -112,7 +111,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies");
             Assert.Equal(["eur"], currencies!.Currencies);
             Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync("/api/conversions")).StatusCode);
-            Assert.Equal(HttpStatusCode.BadRequest, (await CreateAccountAsync("Dollars refused", "usd")).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await CreateAccountInAsync("Dollars refused", "usd")).StatusCode);
         }
         finally
         {
@@ -124,7 +123,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     public async Task Changing_the_reporting_currency_revalues_history()
     {
         var original = await ReadAsync();
-        var accountResponse = await CreateAccountAsync("Revalue dollars", "usd");
+        var accountResponse = await CreateAccountInAsync("Revalue dollars", "usd");
         var account = await accountResponse.Content.ReadFromJsonAsync<IdDto>();
         var created = await Client.PostAsJsonAsync(
             "/api/transactions",
@@ -207,7 +206,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         return (await response.Content.ReadFromJsonAsync<SettingsDto>())!;
     }
 
-    private Task<HttpResponseMessage> CreateAccountAsync(string name, string currency) =>
+    private Task<HttpResponseMessage> CreateAccountInAsync(string name, string currency) =>
         Client.PostAsJsonAsync("/api/accounts", new { name, type = "other", startingBalance = "0.00", currency });
 
     private sealed record FeaturesDto(
@@ -234,8 +233,6 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         int DefaultPageSize);
 
     private sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
-
-    private sealed record IdDto(Guid Id);
 
     private sealed record TransactionDto(Guid Id, string ReportingAmount);
 

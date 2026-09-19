@@ -14,6 +14,7 @@ using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Mappers;
 using JxFinance.Endpoints.Investments.SaveSecurity;
 using JxFinance.Endpoints.Investments.Shared;
+using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,6 +24,9 @@ namespace JxFinance.Endpoints.Investments.Services;
 public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, IExchangeRateService rates, IClock clock)
     : IInvestmentService
 {
+    private const string OversoldMessage =
+        "This would sell more than was held on that date; short positions are not supported.";
+
     public async Task<PortfolioResponse> GetPortfolioAsync(GetPortfolioRequest request, CancellationToken cancellationToken)
     {
         var query = db.InvestmentTransactions.AsQueryable();
@@ -178,6 +182,95 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         CreateInvestmentTransactionRequest request,
         CancellationToken cancellationToken)
     {
+        var built = await BuildTransactionAsync(request, cancellationToken);
+        if (built.IsFailure)
+        {
+            return Result<InvestmentTransactionResponse>.FailureFrom(built);
+        }
+
+        var (transaction, security) = built.Value;
+        if (transaction.SecurityId is { } tradedId
+            && await IsOversoldAsync(transaction.AccountId, tradedId, history => history.Append(transaction), cancellationToken))
+        {
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, OversoldMessage);
+        }
+
+        db.InvestmentTransactions.Add(transaction);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<InvestmentTransactionResponse>.Success(mapper.FromEntity(transaction, security?.Symbol));
+    }
+
+    public async Task<Result<InvestmentTransactionResponse>> UpdateTransactionAsync(
+        UpdateInvestmentTransactionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var transactionId = new InvestmentTransactionId(request.Id);
+        var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
+        if (transaction is null)
+        {
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.NotFound, "Investment transaction not found.");
+        }
+
+        if (transaction.Source != InvestmentSource.Manual)
+        {
+            return Result<InvestmentTransactionResponse>.Failure(
+                ErrorCodes.Validation,
+                "This entry was imported from a broker. Correct it there and import again.");
+        }
+
+        var built = await BuildTransactionAsync(request, cancellationToken);
+        if (built.IsFailure)
+        {
+            return Result<InvestmentTransactionResponse>.FailureFrom(built);
+        }
+
+        var (corrected, security) = built.Value;
+        corrected.Id = transactionId;
+
+        var movedAway = transaction.SecurityId is { } previousId
+            && (previousId != corrected.SecurityId || transaction.AccountId != corrected.AccountId);
+        if (movedAway
+            && await IsOversoldAsync(
+                transaction.AccountId,
+                transaction.SecurityId!.Value,
+                history => history.Where(t => t.Id != transactionId),
+                cancellationToken))
+        {
+            return Result<InvestmentTransactionResponse>.Failure(
+                ErrorCodes.Validation,
+                "Later sales depend on this entry. Correct those first.");
+        }
+
+        if (corrected.SecurityId is { } correctedId
+            && await IsOversoldAsync(
+                corrected.AccountId,
+                correctedId,
+                history => history.Where(t => t.Id != transactionId).Append(corrected),
+                cancellationToken))
+        {
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, OversoldMessage);
+        }
+
+        transaction.AccountId = corrected.AccountId;
+        transaction.SecurityId = corrected.SecurityId;
+        transaction.Type = corrected.Type;
+        transaction.Date = corrected.Date;
+        transaction.Quantity = corrected.Quantity;
+        transaction.Price = corrected.Price;
+        transaction.Fee = corrected.Fee;
+        transaction.CashAmount = corrected.CashAmount;
+        transaction.ReportingAmount = corrected.ReportingAmount;
+        transaction.Description = corrected.Description;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<InvestmentTransactionResponse>.Success(mapper.FromEntity(transaction, security?.Symbol));
+    }
+
+    private async Task<Result<(InvestmentTransaction Transaction, Security? Security)>> BuildTransactionAsync(
+        IInvestmentTransactionInput request,
+        CancellationToken cancellationToken)
+    {
         var accountId = new AccountId(request.AccountId);
         var accountCurrency = await db.Accounts
             .Where(a => a.Id == accountId)
@@ -185,7 +278,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             .FirstOrDefaultAsync(cancellationToken);
         if (accountCurrency is null)
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, "Account does not exist.");
+            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, "Account does not exist.");
         }
 
         Security? security = null;
@@ -195,7 +288,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             security = await db.Securities.FirstOrDefaultAsync(s => s.Id == typedSecurityId, cancellationToken);
             if (security is null)
             {
-                return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, "Security does not exist.");
+                return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, "Security does not exist.");
             }
         }
 
@@ -203,29 +296,18 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency.Value;
         if (rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, currencyError);
         }
 
         var transaction = mapper.ToEntity(request, currency);
         var reportingAmount = await rates.ToReportingAsync(transaction.CashAmount, transaction.Date, cancellationToken);
         if (reportingAmount.IsFailure)
         {
-            return Result<InvestmentTransactionResponse>.FailureFrom(reportingAmount);
+            return Result<(InvestmentTransaction, Security?)>.FailureFrom(reportingAmount);
         }
 
         transaction.ReportingAmount = reportingAmount.Value;
-        if (transaction.SecurityId is { } tradedId
-            && await IsOversoldAsync(accountId, tradedId, history => history.Append(transaction), cancellationToken))
-        {
-            return Result<InvestmentTransactionResponse>.Failure(
-                ErrorCodes.Validation,
-                "This would sell more than was held on that date; short positions are not supported.");
-        }
-
-        db.InvestmentTransactions.Add(transaction);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<InvestmentTransactionResponse>.Success(mapper.FromEntity(transaction, security?.Symbol));
+        return Result<(InvestmentTransaction, Security?)>.Success((transaction, security));
     }
 
     public async Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken)

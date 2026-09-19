@@ -1,8 +1,5 @@
-using System.Text;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
-using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
-using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Unit;
 
@@ -91,24 +88,32 @@ public sealed class PortfolioTests
     }
 
     [Fact]
-    public async Task Flex_report_is_read_without_order_and_summary_rows()
+    public void Sale_after_a_split_uses_the_diluted_cost_per_share()
     {
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(SampleFlexReport.Xml));
+        var position = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Split, 2, 4m, 0m),
+            Entry(InvestmentTransactionType.Sell, 3, 10m, 30m),
+        ])[Fund];
 
-        var statement = (await FlexParser.ParseAsync(stream, CancellationToken.None)).Value!;
-
-        Assert.Equal(5, statement.Trades.Count);
-        Assert.Equal(4, statement.CashTransactions.Count);
-        Assert.Equal(2, statement.OpenPositions.Count);
-        Assert.Equal(new DateOnly(2026, 6, 4), statement.Trades.Single(t => t.Id == "1003").Date);
-        Assert.False(statement.Trades.Single(t => t.Id == "1002").IsBuy);
+        Assert.Equal(30m, position.Quantity);
+        Assert.Equal(750m, position.CostBasis);
+        Assert.Equal(50m, Assert.Single(position.Sales).Gain);
     }
 
     [Fact]
-    public async Task Anything_else_is_rejected()
+    public void Sale_spanning_two_lots_books_one_gain_from_both()
     {
-        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("Statement,Header,Field Name"));
+        var position = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 1m, 100m),
+            Entry(InvestmentTransactionType.Buy, 2, 1m, 200m),
+            Entry(InvestmentTransactionType.Sell, 3, 2m, 250m),
+        ])[Fund];
 
-        Assert.True((await FlexParser.ParseAsync(stream, CancellationToken.None)).IsFailure);
+        Assert.Equal(0m, position.Quantity);
+        Assert.Equal(0m, position.CostBasis);
+        Assert.Equal(200m, position.Sales.Sum(s => s.Gain));
     }
 }

@@ -10,13 +10,13 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     [Fact]
     public async Task Create_update_and_delete_a_transaction()
     {
-        var account = await CreateAccountAsync("Tx CRUD");
+        var account = await CreateAccountAsync();
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "15.77",
                 date = "2026-06-02",
@@ -34,7 +34,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
             $"/api/transactions/{created.Id}",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "18.20",
                 date = "2026-06-03",
@@ -55,14 +55,14 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     [Fact]
     public async Task List_is_paged_and_filterable_by_account()
     {
-        var account = await CreateAccountAsync("Tx paging");
+        var account = await CreateAccountAsync();
         for (var i = 1; i <= 3; i++)
         {
             var response = await Client.PostAsJsonAsync(
                 "/api/transactions",
                 new
                 {
-                    accountId = account.Id,
+                    accountId = account,
                     type = "expense",
                     amount = $"{i}.00",
                     date = $"2026-06-0{i}",
@@ -71,7 +71,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         }
 
         var page = await Client.GetFromJsonAsync<PagedDto<TransactionDto>>(
-            $"/api/transactions?accountId={account.Id}&page=1&pageSize=2");
+            $"/api/transactions?accountId={account}&page=1&pageSize=2");
 
         Assert.Equal(3, page!.Total);
         Assert.Equal(2, page.Items.Count);
@@ -80,55 +80,58 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     }
 
     [Fact]
-    public async Task Create_rejects_invalid_payloads()
+    public async Task Create_rejects_a_zero_amount()
     {
-        var account = await CreateAccountAsync("Tx validation");
-
-        var zeroAmount = await Client.PostAsJsonAsync(
+        var response = await Client.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = account.Id, type = "expense", amount = "0", date = "2026-06-02" });
-        Assert.Equal(HttpStatusCode.BadRequest, zeroAmount.StatusCode);
+            new { accountId = await CreateAccountAsync(), type = "expense", amount = "0", date = "2026-06-02" });
 
-        var unknownAccount = await Client.PostAsJsonAsync(
+        await AssertValidationErrorAsync(response, "amount");
+    }
+
+    [Fact]
+    public async Task Create_rejects_an_unknown_account()
+    {
+        var response = await Client.PostAsJsonAsync(
             "/api/transactions",
             new { accountId = Guid.NewGuid(), type = "expense", amount = "5.00", date = "2026-06-02" });
-        Assert.Equal(HttpStatusCode.BadRequest, unknownAccount.StatusCode);
 
-        var incomeCategoryResponse = await Client.PostAsJsonAsync(
-            "/api/categories",
-            new { name = $"Income only {Guid.NewGuid():N}", type = "income" });
-        var incomeCategory = await incomeCategoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        await AssertRejectedAsync(response, "Account does not exist.");
+    }
 
-        var mismatchedCategory = await Client.PostAsJsonAsync(
+    [Fact]
+    public async Task Create_rejects_a_category_of_the_other_flow_type()
+    {
+        var response = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
-                categoryId = incomeCategory!.Id,
+                accountId = await CreateAccountAsync(),
+                categoryId = await CreateCategoryAsync("income"),
                 type = "expense",
                 amount = "5.00",
                 date = "2026-06-02",
             });
-        Assert.Equal(HttpStatusCode.BadRequest, mismatchedCategory.StatusCode);
+
+        await AssertRejectedAsync(response, "Category type does not match the transaction type.");
     }
 
     [Fact]
     public async Task Export_returns_csv_with_account_and_category_names()
     {
         var accountName = $"Export account {Guid.NewGuid():N}";
-        var account = await CreateAccountAsync(accountName);
-
-        var categoryResponse = await Client.PostAsJsonAsync(
-            "/api/categories",
-            new { name = $"Export category {Guid.NewGuid():N}", type = "expense" });
-        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        var account = await PostAsync<IdDto>(
+            Client,
+            "/api/accounts",
+            new { name = accountName, type = "checking", startingBalance = "0.00" });
+        var category = await CreateCategoryAsync();
 
         await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
                 accountId = account.Id,
-                categoryId = category!.Id,
+                categoryId = category,
                 type = "expense",
                 amount = "12.34",
                 date = "2026-06-05",
@@ -149,39 +152,26 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     [Fact]
     public async Task Export_pdf_returns_pdf_document()
     {
-        var account = await CreateAccountAsync($"Pdf account {Guid.NewGuid():N}");
+        var account = await CreateAccountAsync();
 
         await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "56.78",
                 date = "2026-06-05",
                 description = "Pdf me — ąčęėįšųūž",
             });
 
-        var response = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account.Id}");
+        var response = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}");
         response.EnsureSuccessStatusCode();
         Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
 
         var pdf = await response.Content.ReadAsByteArrayAsync();
         Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
     }
-
-    private async Task<AccountDto> CreateAccountAsync(string name)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name, type = "checking", startingBalance = "0.00" });
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
-    }
-
-    private sealed record AccountDto(Guid Id);
-
-    private sealed record CategoryDto(Guid Id);
 
     private sealed record TransactionDto(
         Guid Id,
