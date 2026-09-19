@@ -1,9 +1,9 @@
 using System.Globalization;
 using CsvHelper;
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -64,7 +64,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 r.Date,
                 r.Payee,
                 r.Description,
-                MoneyWire.ToWire(new Money(r.Amount)),
+                r.Amount,
                 r.Type,
                 !existingRefSet.Add(r.ImportRef),
                 LooksLikeTransfer(r.Payee, r.Description),
@@ -110,7 +110,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 continue;
             }
 
-            var amount = MoneyWire.Parse(row.Amount, row.Currency ?? accountCurrency.Value);
+            var amount = new Money(row.Amount, row.Currency ?? accountCurrency.Value);
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
             if (categoryId is { } chosen && categoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
@@ -197,13 +197,13 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
             var date = DateOnly.ParseExact(csv.GetField(2)!.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
             var payee = csv.GetField(3)?.Trim();
             var description = csv.GetField(4)?.Trim();
-            var amount = decimal.Parse(csv.GetField(5)!.Trim(), CultureInfo.InvariantCulture);
+            var amount = decimal.Parse(csv.GetField(5)!.Trim(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);
             var direction = csv.GetField(7)?.Trim();
             var importRef = csv.GetField(8)!.Trim();
 
             if (direction is not ("D" or "K") || !CurrencyCode.TryParse(csv.GetField(6), out var currency)
                 || string.IsNullOrWhiteSpace(importRef) || importRef.Length > 64
-                || amount <= 0 || !MoneyWire.IsValid(csv.GetField(5)?.Trim()) || description?.Length > 500)
+                || amount <= 0 || !DecimalRules.FitsMoney(amount) || description?.Length > 500)
                 throw new FormatException("Invalid bank entry.");
             if (rows.Count >= 10000) throw new FormatException("At most 10000 entries can be imported at once.");
 

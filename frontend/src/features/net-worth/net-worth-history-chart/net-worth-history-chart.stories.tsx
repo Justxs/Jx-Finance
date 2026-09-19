@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
+import { getGetNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { netWorthHistoryItems } from "@/storybook/fixtures";
@@ -18,7 +18,7 @@ function NetWorthHistoryChartStory() {
 }
 
 function historyHandlers(items: typeof netWorthHistoryItems) {
-  return [http.get("*/api/networth/history", () => HttpResponse.json({ items })), ...handlers];
+  return [getGetNetWorthHistoryMockHandler({ items }), ...handlers];
 }
 
 const negativeItems = netWorthHistoryItems.map((item, index) => ({

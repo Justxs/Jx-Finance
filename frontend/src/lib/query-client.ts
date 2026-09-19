@@ -1,11 +1,8 @@
 import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import type { ApiError } from "@/api/client";
+import { type ApiError, isApiError } from "@/api/client";
+import { invalidateAfterMutation } from "@/api/invalidation";
 import { i18n } from "@/lib/i18n";
-
-function isApiError(error: unknown): error is ApiError {
-  return typeof error === "object" && error !== null && "status" in error;
-}
 
 const ERROR_TOAST_DURATION = 12_000;
 
@@ -27,9 +24,21 @@ function toastError(error: unknown) {
 
 declare module "@tanstack/react-query" {
   interface Register {
+    defaultError: ApiError;
     queryMeta: { silent?: boolean };
     mutationMeta: { silent?: boolean };
   }
+}
+
+export function createMutationCache(onError?: (error: unknown, silent: boolean) => void) {
+  return new MutationCache({
+    onError: (error, _variables, _result, mutation) => {
+      onError?.(error, mutation.meta?.silent === true);
+    },
+    onSettled: (_data, _error, _variables, _result, _mutation, context) => {
+      void invalidateAfterMutation(context.client, context.mutationKey);
+    },
+  });
 }
 
 export const queryClient = new QueryClient({
@@ -47,11 +56,9 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-  mutationCache: new MutationCache({
-    onError: (error, _variables, _context, mutation) => {
-      if (mutation.meta?.silent !== true) {
-        toastError(error);
-      }
-    },
+  mutationCache: createMutationCache((error, silent) => {
+    if (!silent) {
+      toastError(error);
+    }
   }),
 });

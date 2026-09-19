@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { getGetCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { categoryBreakdownItems } from "@/storybook/fixtures";
+import { categoryBreakdown } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
 
@@ -30,16 +30,13 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 function singleCategoryBreakdown() {
-  return HttpResponse.json({ items: categoryBreakdownItems.slice(0, 1) });
+  return { ...categoryBreakdown, items: categoryBreakdown.items.slice(0, 1) };
 }
 
 export const SingleCategory: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/dashboard/category-breakdown", singleCategoryBreakdown),
-        ...handlers,
-      ],
+      handlers: [getGetCategoryBreakdownMockHandler(singleCategoryBreakdown), ...handlers],
     },
   },
 };

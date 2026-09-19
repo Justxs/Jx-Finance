@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.RecurringBills;
 
 namespace JxFinance.Endpoints.RecurringBills.Shared;
@@ -6,7 +7,7 @@ public sealed record RecurringBillResponse(
     Guid Id,
     string Name,
     RecurringBillKind Kind,
-    string? Amount,
+    [property: Money] decimal? Amount,
     Guid? CategoryId,
     Guid? AccountId,
     RecurringBillCadence Cadence,

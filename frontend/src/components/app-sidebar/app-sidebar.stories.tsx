@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import { Suspense } from "react";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { toggleSidebar } from "@/stores/sidebar-store";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
@@ -56,7 +56,7 @@ export const Collapsed: Story = {
 export const MemberWithoutUsersLink: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/auth/me", () => HttpResponse.json(memberUser)), ...handlers],
+      handlers: [getMeMockHandler(memberUser), ...handlers],
     },
   },
 };
@@ -64,7 +64,7 @@ export const MemberWithoutUsersLink: Story = {
 export const LongUserName: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/auth/me", () => HttpResponse.json(longNameUser)), ...handlers],
+      handlers: [getMeMockHandler(longNameUser), ...handlers],
     },
   },
 };

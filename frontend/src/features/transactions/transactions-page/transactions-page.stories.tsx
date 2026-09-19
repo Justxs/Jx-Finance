@@ -1,15 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { TransactionsPage } from "./transactions-page";
-
-async function neverResolve() {
-  await delay("infinite");
-  return new HttpResponse(null, { status: 204 });
-}
 
 const meta = {
   title: "Features/Transactions/TransactionsPage",
@@ -78,5 +79,5 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [http.post("*/api/transactions", neverResolve), ...handlers] } },
+  parameters: { msw: { handlers: [getCreateTransactionMockHandler(pending), ...handlers] } },
 };

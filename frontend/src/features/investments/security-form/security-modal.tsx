@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { useCreateSecurityEndpoint, useUpdateSecurityEndpoint } from "@/api/generated";
+import { useCreateSecurity, useUpdateSecurity } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { useInvalidateInvestments } from "../use-invalidate-investments";
 import { SecurityForm } from "./security-form";
 
 interface Props {
@@ -14,18 +13,17 @@ interface Props {
 
 export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { invalidateEntries } = useInvalidateInvestments();
 
   function handleSaved(saved: SecurityResponse) {
     onSaved?.(saved);
     onOpenChange(false);
   }
 
-  const createMutation = useCreateSecurityEndpoint({
-    mutation: { onSuccess: handleSaved, onSettled: invalidateEntries },
+  const createMutation = useCreateSecurity({
+    mutation: { onSuccess: handleSaved },
   });
-  const updateMutation = useUpdateSecurityEndpoint({
-    mutation: { onSuccess: handleSaved, onSettled: invalidateEntries },
+  const updateMutation = useUpdateSecurity({
+    mutation: { onSuccess: handleSaved },
   });
 
   return (

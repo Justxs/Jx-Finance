@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetAccountsEndpointSuspense, useGetPortfolioEndpointSuspense } from "@/api/generated";
+import { useGetAccountsSuspense, useGetPortfolioSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -34,7 +34,7 @@ function InvestmentsOverview({
   const { t } = useTranslation();
   const [shown, stale] = useDeferredParams({ accountId: accountId ?? "" });
   const shownAccountId = shown.accountId || undefined;
-  const portfolio = useGetPortfolioEndpointSuspense({ accountId: shownAccountId });
+  const portfolio = useGetPortfolioSuspense({ accountId: shownAccountId });
   const firstRun =
     shownAccountId === undefined &&
     portfolio.data.holdings.length === 0 &&
@@ -84,7 +84,7 @@ export function InvestmentsPage() {
   const { t } = useTranslation();
   const search = useSearch({ from: "/investments" });
   const navigate = useNavigate({ from: "/investments" });
-  const accounts = useGetAccountsEndpointSuspense();
+  const accounts = useGetAccountsSuspense();
   const accountList = accounts.data ?? [];
   const accountId = accountList.find((account) => account.id === search.accountId)?.id;
 

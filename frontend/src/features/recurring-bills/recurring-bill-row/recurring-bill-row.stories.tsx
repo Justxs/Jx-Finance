@@ -21,7 +21,6 @@ const meta = {
     accounts,
     categories,
     onDelete: fn(),
-    onSaved: fn(),
     deletePending: false,
     deleteDisabled: false,
   },

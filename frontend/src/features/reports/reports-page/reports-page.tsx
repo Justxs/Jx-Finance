@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetReportSummaryEndpointSuspense } from "@/api/generated";
+import { useGetReportSummarySuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -27,7 +27,7 @@ export function ReportsPage() {
   const preset = detectPreset(dateFrom, dateTo, today);
 
   const [shown, stale] = useDeferredParams({ dateFrom, dateTo });
-  const summary = useGetReportSummaryEndpointSuspense(shown);
+  const summary = useGetReportSummarySuspense(shown);
 
   function handleRangeChange(range: { dateFrom: string; dateTo: string }) {
     navigate({ search: () => range });

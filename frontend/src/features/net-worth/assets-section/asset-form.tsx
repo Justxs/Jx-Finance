@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCreateAssetEndpoint, useUpdateAssetEndpoint } from "@/api/generated";
+import { useCreateAsset, useUpdateAsset } from "@/api/generated";
 import { AssetType } from "@/api/generated/model";
 import { HoldingForm, type HoldingFormProps } from "../holdings-section";
 
@@ -7,10 +7,10 @@ const assetTypes = Object.values(AssetType);
 
 export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingFormProps>) {
   const { t } = useTranslation();
-  const createMutation = useCreateAssetEndpoint({
+  const createMutation = useCreateAsset({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
-  const updateMutation = useUpdateAssetEndpoint({
+  const updateMutation = useUpdateAsset({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

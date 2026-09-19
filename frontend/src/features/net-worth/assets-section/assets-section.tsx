@@ -1,30 +1,16 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getGetAssetsEndpointQueryKey,
-  getGetNetWorthEndpointQueryKey,
-  getGetNetWorthHistoryEndpointQueryKey,
-  useDeleteAssetEndpoint,
-  useGetAssetsEndpointSuspense,
-} from "@/api/generated";
+import { useDeleteAsset, useGetAssetsSuspense } from "@/api/generated";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { HoldingsSection } from "../holdings-section";
 import { AssetForm } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
-  const assets = useGetAssetsEndpointSuspense();
+  const assets = useGetAssetsSuspense();
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetAssetsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetNetWorthEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetNetWorthHistoryEndpointQueryKey() });
-  }
-
-  const deleteMutation = useDeleteAssetEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteAsset();
   const assetList = useDeferredValue(assets.data) ?? [];
 
   return (
@@ -48,7 +34,6 @@ export function AssetsSection() {
       deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
       deleteDisabled={deleteMutation.isPending}
       onDelete={(id) => deleteMutation.mutate({ id })}
-      onCreated={invalidate}
       form={AssetForm}
     />
   );

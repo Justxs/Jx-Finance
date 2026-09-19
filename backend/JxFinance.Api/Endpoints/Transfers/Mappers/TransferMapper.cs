@@ -25,11 +25,11 @@ public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferRespo
         transfer.Id.Value,
         transfer.FromAccountId.Value,
         transfer.ToAccountId.Value,
-        MoneyWire.ToWire(transfer.Amount),
+        transfer.Amount.Amount,
         transfer.Date,
         transfer.Description,
         transfer.CreatedAt,
         transfer.Amount.Currency,
-        MoneyWire.ToWire(transfer.ReceivedAmount),
+        transfer.ReceivedAmount.Amount,
         transfer.ReceivedAmount.Currency);
 }

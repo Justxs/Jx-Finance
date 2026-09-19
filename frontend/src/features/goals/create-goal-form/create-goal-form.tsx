@@ -1,8 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateGoalEndpoint, useUpdateGoalEndpoint } from "@/api/generated";
+import { useCreateGoal, useUpdateGoal } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
+import { createGoalBodyNameMax } from "@/api/schemas/goals/goals.zod";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -35,16 +36,19 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
     name: z
       .string()
       .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+      .refine(
+        (value) => value.trim().length <= createGoalBodyNameMax,
+        t("validation.maxLength", { max: createGoalBodyNameMax }),
+      ),
     targetAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
     currentAmount: z.string().refine(isCurrentAmount, t("validation.money")),
     targetDate: z.string(),
   });
 
-  const createMutation = useCreateGoalEndpoint({
+  const createMutation = useCreateGoal({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
-  const updateMutation = useUpdateGoalEndpoint({
+  const updateMutation = useUpdateGoal({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

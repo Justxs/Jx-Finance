@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
@@ -118,10 +117,10 @@ public sealed class NetWorthService(
         await transaction.CommitAsync(cancellationToken);
 
         return new NetWorthResponse(
-            MoneyWire.ToWire(new Money(accountsTotal)),
-            MoneyWire.ToWire(new Money(assetsTotal)),
-            MoneyWire.ToWire(new Money(debtsTotal)),
-            MoneyWire.ToWire(new Money(netWorth)));
+            accountsTotal,
+            assetsTotal,
+            debtsTotal,
+            netWorth);
     }
 
     public async Task<NetWorthHistoryResponse> GetHistoryAsync(CancellationToken cancellationToken)
@@ -133,10 +132,10 @@ public sealed class NetWorthService(
         var items = snapshots
             .Select(s => new NetWorthSnapshotItem(
                 s.Date,
-                MoneyWire.ToWire(s.Accounts),
-                MoneyWire.ToWire(s.Assets),
-                MoneyWire.ToWire(s.Debts),
-                MoneyWire.ToWire(s.NetWorthValue)))
+                s.Accounts.Amount,
+                s.Assets.Amount,
+                s.Debts.Amount,
+                s.NetWorthValue.Amount))
             .ToList();
 
         return new NetWorthHistoryResponse(items);
@@ -189,14 +188,14 @@ public sealed class NetWorthService(
         asset.Id.Value,
         asset.Name,
         asset.Type,
-        MoneyWire.ToWire(asset.CurrentValue),
+        asset.CurrentValue.Amount,
         asset.AsOf);
 
     private static DebtResponse ToResponse(Debt debt) => new(
         debt.Id.Value,
         debt.Name,
         debt.Type,
-        MoneyWire.ToWire(debt.OutstandingAmount),
+        debt.OutstandingAmount.Amount,
         debt.InterestRate,
         debt.AsOf);
 }

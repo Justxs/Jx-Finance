@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { useGetBrokerConnectionsEndpointSuspense } from "@/api/generated";
+import { useGetBrokerConnectionsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ interface Props {
 export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDateTime = useDateTime();
-  const connections = useGetBrokerConnectionsEndpointSuspense();
+  const connections = useGetBrokerConnectionsSuspense();
   const connection = connections.data?.find((item) => item.accountId === accountId);
   const accountName = accounts.find((account) => account.id === accountId)?.name;
 

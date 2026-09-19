@@ -1,7 +1,7 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteHouseholdEndpoint, useRemoveMemberEndpoint } from "@/api/generated";
+import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -12,10 +12,9 @@ import { MemberRow } from "./member-row";
 
 interface Props {
   household: HouseholdResponse;
-  onChanged: () => void;
 }
 
-export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
+export function HouseholdCard({ household }: Readonly<Props>) {
   const members = useDeferredValue(household.members);
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState(false);
@@ -25,8 +24,8 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteHouseholdEndpoint({ mutation: { onSettled: onChanged } });
-  const removeMutation = useRemoveMemberEndpoint({ mutation: { onSettled: onChanged } });
+  const deleteMutation = useDeleteHousehold();
+  const removeMutation = useRemoveMember();
 
   return (
     <section className="section">
@@ -63,10 +62,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
       <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
         <CreateHouseholdForm
           initial={household}
-          onCreated={() => {
-            onChanged();
-            setRenaming(false);
-          }}
+          onCreated={() => setRenaming(false)}
           onCancel={() => setRenaming(false)}
         />
       </Modal>
@@ -83,7 +79,6 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
             }
             removeDisabled={removeMutation.isPending}
             onRemove={() => removeMutation.mutate({ id: household.id, userId: member.userId })}
-            onSaved={onChanged}
           />
         ))}
       </ul>
@@ -100,10 +95,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
       <Modal open={addMemberOpen} onOpenChange={setAddMemberOpen} title={t("households.addMember")}>
         <AddMemberForm
           householdId={household.id}
-          onAdded={() => {
-            onChanged();
-            setAddMemberOpen(false);
-          }}
+          onAdded={() => setAddMemberOpen(false)}
           onCancel={() => setAddMemberOpen(false)}
         />
       </Modal>

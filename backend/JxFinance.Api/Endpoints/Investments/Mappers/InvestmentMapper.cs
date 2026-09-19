@@ -13,10 +13,10 @@ public sealed class InvestmentMapper
 {
     public InvestmentTransaction ToEntity(IInvestmentTransactionInput request, Currency currency)
     {
-        var quantity = request.Quantity is null ? 0m : QuantityWire.Parse(request.Quantity);
-        var price = request.Price is null ? 0m : QuantityWire.Parse(request.Price);
-        var amount = request.Amount is null ? 0m : MoneyWire.Parse(request.Amount, currency).Amount;
-        var fee = request.Fee is null ? 0m : MoneyWire.Parse(request.Fee, currency).Amount;
+        var quantity = request.Quantity ?? 0m;
+        var price = request.Price ?? 0m;
+        var amount = request.Amount ?? 0m;
+        var fee = request.Fee ?? 0m;
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
 
         return new InvestmentTransaction
@@ -41,10 +41,10 @@ public sealed class InvestmentMapper
         symbol,
         transaction.Type,
         transaction.Date,
-        QuantityWire.ToWire(transaction.Quantity),
-        QuantityWire.ToWire(transaction.Price),
-        MoneyWire.ToWire(new Money(transaction.Fee, transaction.CashAmount.Currency)),
-        MoneyWire.ToWire(transaction.CashAmount),
+        transaction.Quantity,
+        transaction.Price,
+        transaction.Fee,
+        transaction.CashAmount.Amount,
         transaction.CashAmount.Currency,
         transaction.Description,
         transaction.Source,
@@ -58,7 +58,7 @@ public sealed class InvestmentMapper
         security.Exchange,
         security.Type,
         security.Currency,
-        security.LastPrice is { } price ? QuantityWire.ToWire(price) : null,
+        security.LastPrice,
         security.LastPriceDate);
 
     public void Apply(SaveSecurityRequest request, string symbol, Security security, DateOnly today)
@@ -71,7 +71,7 @@ public sealed class InvestmentMapper
         security.Currency = request.Currency;
         if (request.LastPrice is not null)
         {
-            security.LastPrice = QuantityWire.Parse(request.LastPrice);
+            security.LastPrice = request.LastPrice;
             security.LastPriceDate = request.LastPriceDate ?? today;
         }
     }
@@ -85,22 +85,21 @@ public sealed class InvestmentMapper
         decimal realizedGain,
         decimal dividends)
     {
-        string Wire(decimal amount) => MoneyWire.ToWire(new Money(amount, security.Currency));
         var unrealized = marketValue - position.CostBasis;
 
         return new HoldingResponse(
             accountId.Value,
             FromEntity(security),
-            QuantityWire.ToWire(position.Quantity),
-            QuantityWire.ToWire(position.Quantity == 0m ? 0m : decimal.Round(position.CostBasis / position.Quantity, 4)),
-            Wire(position.CostBasis),
-            marketValue is { } value ? Wire(value) : null,
-            unrealized is { } gain ? Wire(gain) : null,
+            position.Quantity,
+            position.Quantity == 0m ? 0m : decimal.Round(position.CostBasis / position.Quantity, 4),
+            position.CostBasis,
+            marketValue,
+            unrealized,
             unrealized is { } change && position.CostBasis != 0m
-                ? QuantityWire.ToWire(decimal.Round(change / position.CostBasis * 100m, 2))
+                ? decimal.Round(change / position.CostBasis * 100m, 2)
                 : null,
-            marketValueReporting is { } reporting ? MoneyWire.ToWire(new Money(reporting)) : null,
-            Wire(realizedGain),
-            Wire(dividends));
+            marketValueReporting is { } reporting ? Money.Round(reporting) : null,
+            realizedGain,
+            dividends);
     }
 }

@@ -23,7 +23,6 @@ interface Props {
   onDelete: () => void;
   deletePending: boolean;
   deleteDisabled: boolean;
-  onSaved: () => void;
 }
 
 export function RecurringBillRow({
@@ -33,7 +32,6 @@ export function RecurringBillRow({
   onDelete,
   deletePending,
   deleteDisabled,
-  onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
@@ -133,7 +131,7 @@ export function RecurringBillRow({
           }}
           title={t("actions.edit")}
         >
-          <RecurringBillEditForm bill={bill} onSaved={onSaved} onDone={() => setMode("view")} />
+          <RecurringBillEditForm bill={bill} onDone={() => setMode("view")} />
         </Modal>
 
         <Modal
@@ -148,7 +146,6 @@ export function RecurringBillRow({
           <RecurringBillConfirmForm
             bill={bill}
             accounts={accounts}
-            onSaved={onSaved}
             onDone={() => setMode("view")}
           />
         </Modal>

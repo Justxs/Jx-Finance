@@ -1,15 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getGetAccountsEndpointQueryKey,
-  getGetDashboardSummaryEndpointQueryKey,
-  getGetTransfersEndpointQueryKey,
-  useCreateTransferEndpoint,
-  useDeleteTransferEndpoint,
-  useGetTransfersEndpointSuspense,
-} from "@/api/generated";
+import { useCreateTransfer, useDeleteTransfer, useGetTransfersSuspense } from "@/api/generated";
 import type { AccountResponse, TransferResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -27,7 +19,6 @@ const pageSize = 10;
 
 export function TransfersSection({ accounts }: Readonly<Props>) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const money = useMoney();
   const formatDate = useIsoDate();
   const [addOpen, setAddOpen] = useState(false);
@@ -35,28 +26,21 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const [page, setPage] = useState(1);
   const shownPage = useDeferredValue(page);
   const stale = shownPage !== page;
-  const transfers = useGetTransfersEndpointSuspense({ page: shownPage, pageSize });
+  const transfers = useGetTransfersSuspense({ page: shownPage, pageSize });
   const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / pageSize));
   if (page > pages) {
     setPage(pages);
   }
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetTransfersEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
-  }
-
-  const createMutation = useCreateTransferEndpoint({
+  const createMutation = useCreateTransfer({
     mutation: {
       onSuccess: () => setAddOpen(false),
-      onSettled: invalidate,
     },
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteTransferEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteTransfer();
 
   const items = useDeferredValue(transfers.data?.items) ?? [];
 

@@ -71,7 +71,7 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
         }
 
         Transaction? fee = null;
-        if (request.FeeAmount is not null)
+        if (request.FeeAmount is { } requestedFee)
         {
             CategoryId? feeCategoryId = request.FeeCategoryId is { } id ? new CategoryId(id) : null;
             if (feeCategoryId is not null && !await db.Categories.AnyAsync(
@@ -81,7 +81,7 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
                 return Result<ConversionResponse>.Failure(ErrorCodes.Validation, "The fee category must be an expense category.");
             }
 
-            var feeAmount = MoneyWire.Parse(request.FeeAmount, request.FeeCurrency ?? request.FromCurrency);
+            var feeAmount = new Money(requestedFee, request.FeeCurrency ?? request.FromCurrency);
             var reporting = await rates.ToReportingAsync(feeAmount, request.Date, cancellationToken);
             if (reporting.IsFailure)
             {

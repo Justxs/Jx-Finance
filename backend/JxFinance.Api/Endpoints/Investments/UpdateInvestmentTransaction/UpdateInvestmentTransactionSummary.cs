@@ -18,9 +18,9 @@ public sealed class UpdateInvestmentTransactionSummary
             InvestmentTransactionType.Buy,
             new DateOnly(2026, 9, 12),
             Guid.Empty,
-            "10",
-            "104.52",
-            Fee: "1.25");
+            10m,
+            104.52m,
+            Fee: 1.25m);
         RequestParam(r => r.Quantity, "Shares for a buy or sell; new shares per old share for a split.");
         RequestParam(r => r.Amount, "Cash amount for dividend, withholding tax, interest and fee entries.");
         RequestParam(r => r.Currency, "Currency for entries without a security. Defaults to the security's currency, then the account's.");

@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Conversions.CreateConversion;
 
@@ -15,13 +15,13 @@ public sealed class CreateConversionValidator : Validator<CreateConversionReques
             .NotEqual(r => r.FromCurrency)
             .WithMessage("Choose two different currencies.");
         RuleFor(r => r.FromAmount)
-            .Must(MoneyWire.IsPositive)
+            .IsPositiveMoney()
             .WithMessage("Sold amount must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.ToAmount)
-            .Must(MoneyWire.IsPositive)
+            .IsPositiveMoney()
             .WithMessage("Bought amount must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.FeeAmount)
-            .Must(a => a is null || MoneyWire.IsPositive(a))
+            .IsPositiveMoney()
             .WithMessage("Fee must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.FeeCurrency)
             .Must((request, currency) => currency is null || currency == request.FromCurrency || currency == request.ToCurrency)

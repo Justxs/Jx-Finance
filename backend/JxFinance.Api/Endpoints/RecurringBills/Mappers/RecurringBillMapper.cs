@@ -1,7 +1,7 @@
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -15,7 +15,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
     {
         Name = request.Name.Trim(),
         Kind = request.Kind,
-        Amount = request.Amount is null ? null : MoneyWire.Parse(request.Amount),
+        Amount = request.Amount is { } amount ? new Money(amount) : null,
         CategoryId = request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
         AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null,
         Cadence = request.Cadence,
@@ -28,7 +28,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
     {
         bill.Name = request.Name.Trim();
         bill.Kind = request.Kind;
-        bill.Amount = request.Amount is null ? null : MoneyWire.Parse(request.Amount);
+        bill.Amount = request.Amount is { } amount ? new Money(amount) : null;
         bill.CategoryId = request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
         bill.AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null;
         bill.Cadence = request.Cadence;
@@ -45,7 +45,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
         bill.Id.Value,
         bill.Name,
         bill.Kind,
-        bill.Amount is null ? null : MoneyWire.ToWire(bill.Amount.Value),
+        bill.Amount?.Amount,
         bill.CategoryId?.Value,
         bill.AccountId?.Value,
         bill.Cadence,

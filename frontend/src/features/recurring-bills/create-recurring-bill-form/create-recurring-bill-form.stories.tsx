@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { getCreateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { accounts, categories } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, pending } from "@/storybook/handlers";
 import { CreateRecurringBillForm } from "./create-recurring-bill-form";
 
 const meta = {
@@ -51,12 +51,7 @@ export const ValidationErrors: Story = {
 export const SubmitPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/recurring-bills", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateRecurringBillMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

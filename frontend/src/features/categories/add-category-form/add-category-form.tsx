@@ -1,8 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateCategoryEndpoint, useGetHouseholdsEndpointSuspense } from "@/api/generated";
+import { useCreateCategory, useGetHouseholdsSuspense } from "@/api/generated";
 import type { FlowType, Scope } from "@/api/generated/model";
+import { createCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
 import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ interface Props {
 
 export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpointSuspense();
+  const households = useGetHouseholdsSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
@@ -34,7 +35,10 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
       name: z
         .string()
         .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+        .refine(
+          (value) => value.trim().length <= createCategoryBodyNameMax,
+          t("validation.maxLength", { max: createCategoryBodyNameMax }),
+        ),
       type: z.enum(["income", "expense"]),
       icon: z.string().nullable(),
       scope: z.enum(["personal", "shared"]),
@@ -45,7 +49,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
       path: ["householdId"],
     });
 
-  const createMutation = useCreateCategoryEndpoint({
+  const createMutation = useCreateCategory({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

@@ -11,6 +11,7 @@ import {
   InvestmentTransactionType,
   type SecurityResponse,
 } from "@/api/generated/model";
+import { createInvestmentTransactionBodyDescriptionMax } from "@/api/schemas/investments/investments.zod";
 import { FormError } from "@/components/form-error";
 import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
@@ -128,7 +129,12 @@ export function InvestmentEntryForm({
       fee: z.string(),
       amount: z.string(),
       currency: z.enum(Currency),
-      description: z.string().max(500, t("validation.maxLength", { max: 500 })),
+      description: z
+        .string()
+        .max(
+          createInvestmentTransactionBodyDescriptionMax,
+          t("validation.maxLength", { max: createInvestmentTransactionBodyDescriptionMax }),
+        ),
     })
     .superRefine((value, context) => {
       function fail(path: keyof FormValues, message: string) {

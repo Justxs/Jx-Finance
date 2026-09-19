@@ -1,14 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getGetBudgetsEndpointQueryKey,
-  useDeleteBudgetEndpoint,
-  useGetBudgetsEndpointSuspense,
-  useGetCategoriesEndpointSuspense,
-} from "@/api/generated";
+import { useDeleteBudget, useGetBudgetsSuspense, useGetCategoriesSuspense } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -26,28 +20,23 @@ import { CreateBudgetForm } from "../create-budget-form";
 
 export function BudgetsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const money = useMoney();
   const monthLabel = useMonthLabel();
   const today = useTodayDate();
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
-  const categories = useGetCategoriesEndpointSuspense();
-  const budgets = useGetBudgetsEndpointSuspense();
+  const categories = useGetCategoriesSuspense();
+  const budgets = useGetBudgetsSuspense();
 
   function openForm(budget: BudgetResponse | null) {
     setEditing(budget);
     setFormOpen(true);
   }
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetBudgetsEndpointQueryKey() });
-  }
-
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteBudgetEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteBudget();
 
   const budgetList = useDeferredValue(budgets.data);
   const categoryList = categories.data;
@@ -165,10 +154,7 @@ export function BudgetsPage() {
           key={editing?.id ?? "new"}
           initial={editing ?? undefined}
           categories={categoryList}
-          onCreated={() => {
-            invalidate();
-            setFormOpen(false);
-          }}
+          onCreated={() => setFormOpen(false)}
           onCancel={() => setFormOpen(false)}
         />
       </Modal>

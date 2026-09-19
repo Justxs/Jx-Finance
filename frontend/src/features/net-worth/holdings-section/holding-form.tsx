@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
 import { FormError } from "@/components/form-error";
 import { SelectField, type SelectOption } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,10 @@ export function HoldingForm({
     name: z
       .string()
       .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+      .refine(
+        (value) => value.trim().length <= createAssetBodyNameMax,
+        t("validation.maxLength", { max: createAssetBodyNameMax }),
+      ),
     type: z.string(),
     amount: z.string().refine(isMoney, t("validation.money")),
     interestRate: z.string().refine(isRate, t("validation.rate")),

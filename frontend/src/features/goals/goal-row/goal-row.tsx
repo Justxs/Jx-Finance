@@ -15,16 +15,9 @@ interface Props {
   onDelete: () => void;
   deletePending: boolean;
   deleteDisabled: boolean;
-  onSaved: () => void;
 }
 
-export function GoalRow({
-  goal,
-  onDelete,
-  deletePending,
-  deleteDisabled,
-  onSaved,
-}: Readonly<Props>) {
+export function GoalRow({ goal, onDelete, deletePending, deleteDisabled }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -95,10 +88,7 @@ export function GoalRow({
         <Modal open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
           <CreateGoalForm
             initial={goal}
-            onCreated={() => {
-              setEditing(false);
-              onSaved();
-            }}
+            onCreated={() => setEditing(false)}
             onCancel={() => setEditing(false)}
           />
         </Modal>

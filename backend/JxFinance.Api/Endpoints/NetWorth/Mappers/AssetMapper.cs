@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -13,7 +13,7 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
     {
         Name = request.Name.Trim(),
         Type = request.Type,
-        CurrentValue = MoneyWire.Parse(request.CurrentValue),
+        CurrentValue = new Money(request.CurrentValue),
         AsOf = request.AsOf,
     };
 
@@ -21,7 +21,7 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
     {
         asset.Name = request.Name.Trim();
         asset.Type = request.Type;
-        asset.CurrentValue = MoneyWire.Parse(request.CurrentValue);
+        asset.CurrentValue = new Money(request.CurrentValue);
         asset.AsOf = request.AsOf;
     }
 
@@ -29,6 +29,6 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
         asset.Id.Value,
         asset.Name,
         asset.Type,
-        MoneyWire.ToWire(asset.CurrentValue),
+        asset.CurrentValue.Amount,
         asset.AsOf);
 }

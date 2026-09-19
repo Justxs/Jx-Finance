@@ -1,7 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
+import {
+  getGetDebtsMockHandler,
+  getGetNetWorthHistoryMockHandler,
+} from "@/api/generated/net-worth/net-worth.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  failWith,
+  handlers,
+  loadingHandlers,
+} from "@/storybook/handlers";
 import { NetWorthPage } from "./net-worth-page";
 
 function NetWorthPageStory() {
@@ -33,12 +42,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyHistoryFails: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/networth/history", () =>
-          HttpResponse.json(serverErrorProblem, { status: 500 }),
-        ),
-        ...handlers,
-      ],
+      handlers: [getGetNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
     },
   },
 };
@@ -46,7 +50,7 @@ export const OnlyHistoryFails: Story = {
 export const AssetsWithoutDebts: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/debts", () => HttpResponse.json([])), ...handlers],
+      handlers: [getGetDebtsMockHandler([]), ...handlers],
     },
   },
 };

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useConfirmRecurringBillEndpoint } from "@/api/generated";
+import { useConfirmRecurringBill } from "@/api/generated";
 import type { AccountResponse, RecurringBillResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -11,18 +11,17 @@ import { isPositiveMoney } from "@/lib/validation";
 interface Props {
   bill: RecurringBillResponse;
   accounts: AccountResponse[];
-  onSaved: () => void;
   onDone: () => void;
 }
 
-export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Readonly<Props>) {
+export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const [amount, setAmount] = useState("");
   const [accountId, setAccountId] = useState(bill.accountId ?? "");
 
-  const confirmMutation = useConfirmRecurringBillEndpoint({
-    mutation: { onSuccess: onDone, onSettled: onSaved },
+  const confirmMutation = useConfirmRecurringBill({
+    mutation: { onSuccess: onDone },
   });
 
   const isVariable = bill.kind === "variable";

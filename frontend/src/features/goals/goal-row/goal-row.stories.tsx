@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { completedGoal, goalWithTargetDate, openEndedGoal } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, pending } from "@/storybook/handlers";
 import { GoalRow } from "./goal-row";
 
 const meta = {
@@ -11,7 +11,6 @@ const meta = {
   args: {
     goal: goalWithTargetDate,
     onDelete: fn(),
-    onSaved: fn(),
     deletePending: false,
     deleteDisabled: false,
   },
@@ -67,12 +66,7 @@ export const EditInvalid: Story = {
 export const SavePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.put("*/api/goals/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getUpdateGoalMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

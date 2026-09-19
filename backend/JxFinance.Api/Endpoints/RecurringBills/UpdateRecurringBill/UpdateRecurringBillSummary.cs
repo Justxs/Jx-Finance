@@ -15,7 +15,7 @@ public sealed class UpdateRecurringBillSummary : Summary<UpdateRecurringBillEndp
             Guid.Empty,
             "Rent",
             RecurringBillKind.Fixed,
-            "675.00",
+            675.00m,
             null,
             null,
             RecurringBillCadence.Monthly,

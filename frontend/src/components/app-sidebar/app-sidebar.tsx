@@ -18,7 +18,7 @@ import {
   WalletCards,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useMeEndpointSuspense } from "@/api/generated";
+import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
 import { Brand } from "@/components/brand";
 import { LanguageToggle } from "@/components/language-toggle";
@@ -94,7 +94,7 @@ export const navLinkActiveClass = "border-border! bg-background font-semibold te
 export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
-  const me = useMeEndpointSuspense();
+  const me = useMeSuspense();
 
   const settings = useSettings();
   const visibleNavItems = visibleNav(settings.features, me.data?.role === "Admin");

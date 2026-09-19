@@ -1,6 +1,6 @@
 import { Link, Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useMeEndpoint } from "@/api/generated";
+import { useMe } from "@/api/generated";
 import {
   AppSidebar,
   type NavItem,
@@ -61,7 +61,7 @@ function RootLayout() {
   const location = useLocation();
   const { t } = useTranslation();
   const authenticatedArea = !UNAUTHENTICATED_PATHS.has(location.pathname);
-  const me = useMeEndpoint({ query: { enabled: authenticatedArea } });
+  const me = useMe({ query: { enabled: authenticatedArea } });
   const settings = useSettings({ enabled: authenticatedArea });
   const instanceName = usePublicSettings()?.instanceName;
 

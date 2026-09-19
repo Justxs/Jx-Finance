@@ -21,7 +21,7 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             AccountId = new AccountId(request.AccountId),
             CategoryId = ResolveCategoryId(request.CategoryId, isSplit),
             Type = request.Type,
-            Amount = MoneyWire.Parse(request.Amount, currency),
+            Amount = new Money(request.Amount, currency),
             ReportingAmount = reportingAmount,
             Date = request.Date,
             Description = OptionalText.Normalize(request.Description),
@@ -36,7 +36,7 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
         transaction.AccountId = new AccountId(request.AccountId);
         transaction.CategoryId = ResolveCategoryId(request.CategoryId, isSplit);
         transaction.Type = request.Type;
-        transaction.Amount = MoneyWire.Parse(request.Amount, currency);
+        transaction.Amount = new Money(request.Amount, currency);
         transaction.ReportingAmount = reportingAmount;
         transaction.Date = request.Date;
         transaction.Description = OptionalText.Normalize(request.Description);
@@ -53,7 +53,7 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             UserId = userId,
             TransactionId = transactionId,
             CategoryId = line.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
-            Amount = MoneyWire.Parse(line.Amount, currency),
+            Amount = new Money(line.Amount, currency),
             Description = OptionalText.Normalize(line.Description),
         }).ToList();
 
@@ -62,7 +62,7 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
         transaction.AccountId.Value,
         transaction.CategoryId?.Value,
         transaction.Type,
-        MoneyWire.ToWire(transaction.Amount),
+        transaction.Amount.Amount,
         transaction.Date,
         transaction.Description,
         transaction.Source,
@@ -72,11 +72,11 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             ? (lines ?? []).Select(line => new TransactionLineResponse(
                 line.Id,
                 line.CategoryId?.Value,
-                MoneyWire.ToWire(line.Amount),
+                line.Amount.Amount,
                 line.Description)).ToList()
             : null,
         transaction.Amount.Currency,
-        MoneyWire.ToWire(new Money(transaction.ReportingAmount)));
+        Money.Round(transaction.ReportingAmount));
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {

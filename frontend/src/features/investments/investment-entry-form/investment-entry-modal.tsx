@@ -1,15 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  useCreateInvestmentTransactionEndpoint,
-  useGetSecuritiesEndpointSuspense,
-  useUpdateInvestmentTransactionEndpoint,
+  useCreateInvestmentTransaction,
+  useGetSecuritiesSuspense,
+  useUpdateInvestmentTransaction,
 } from "@/api/generated";
 import type { AccountResponse, InvestmentTransactionResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useInvalidateInvestments } from "../use-invalidate-investments";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
 interface Props {
@@ -24,28 +23,25 @@ type ContentProps = Omit<Props, "open">;
 
 function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Readonly<ContentProps>) {
   const { t } = useTranslation();
-  const { invalidateEntries } = useInvalidateInvestments();
-  const securities = useGetSecuritiesEndpointSuspense();
+  const securities = useGetSecuritiesSuspense();
 
-  const createMutation = useCreateInvestmentTransactionEndpoint({
+  const createMutation = useCreateInvestmentTransaction({
     mutation: {
       meta: { silent: true },
       onSuccess: () => {
         toast.success(t("investments.entry.saved"));
         onOpenChange(false);
       },
-      onSettled: invalidateEntries,
     },
   });
 
-  const updateMutation = useUpdateInvestmentTransactionEndpoint({
+  const updateMutation = useUpdateInvestmentTransaction({
     mutation: {
       meta: { silent: true },
       onSuccess: () => {
         toast.success(t("investments.entry.corrected"));
         onOpenChange(false);
       },
-      onSettled: invalidateEntries,
     },
   });
 

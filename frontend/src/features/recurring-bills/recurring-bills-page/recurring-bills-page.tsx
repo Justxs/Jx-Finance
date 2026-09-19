@@ -1,13 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  getGetRecurringBillsEndpointQueryKey,
-  useDeleteRecurringBillEndpoint,
-  useGetAccountsEndpointSuspense,
-  useGetCategoriesEndpointSuspense,
-  useGetRecurringBillsEndpointSuspense,
+  useDeleteRecurringBill,
+  useGetAccountsSuspense,
+  useGetCategoriesSuspense,
+  useGetRecurringBillsSuspense,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -18,20 +16,15 @@ import { RecurringBillRow } from "../recurring-bill-row";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const accounts = useGetAccountsEndpointSuspense();
-  const categories = useGetCategoriesEndpointSuspense();
-  const bills = useGetRecurringBillsEndpointSuspense();
-
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetRecurringBillsEndpointQueryKey() });
-  }
+  const accounts = useGetAccountsSuspense();
+  const categories = useGetCategoriesSuspense();
+  const bills = useGetRecurringBillsSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteRecurringBillEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteRecurringBill();
 
   const accountList = accounts.data ?? [];
   const categoryList = categories.data ?? [];
@@ -54,7 +47,6 @@ export function RecurringBillsPage() {
             onDelete={() => setDeleteTarget(bill.id)}
             deletePending={deletingId === bill.id}
             deleteDisabled={deleteMutation.isPending}
-            onSaved={invalidate}
           />
         ))}
       </ul>
@@ -74,10 +66,7 @@ export function RecurringBillsPage() {
         <CreateRecurringBillForm
           accounts={accountList}
           categories={categoryList}
-          onCreated={() => {
-            invalidate();
-            setAddOpen(false);
-          }}
+          onCreated={() => setAddOpen(false)}
           onCancel={() => setAddOpen(false)}
         />
       </Modal>

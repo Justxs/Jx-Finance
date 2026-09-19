@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import type { ApiError } from "@/api/client";
+import { ApiError } from "@/api/client";
 import { queryClient } from "./query-client";
 
 const generic = "Something went wrong. Please try again.";
@@ -45,7 +45,7 @@ afterEach(() => {
 
 describe("query errors", () => {
   test("API errors toast their title and detail", async () => {
-    const error: ApiError = { status: 409, title: "Conflict", detail: "Name is taken." };
+    const error = new ApiError({ status: 409, title: "Conflict", detail: "Name is taken." });
 
     await failingQuery(error);
 
@@ -56,13 +56,13 @@ describe("query errors", () => {
   });
 
   test("validation reasons stand in for a missing detail", async () => {
-    const error: ApiError = {
+    const error = new ApiError({
       status: 400,
       errors: [
         { name: "amount", reason: "Amount is required." },
         { name: "date", reason: "Date is invalid." },
       ],
-    };
+    });
 
     await failingQuery(error);
 
@@ -82,7 +82,7 @@ describe("query errors", () => {
   });
 
   test("silent queries do not toast", async () => {
-    await failingQuery({ status: 500, title: "Boom" }, { silent: true });
+    await failingQuery(new ApiError({ status: 500, title: "Boom" }), { silent: true });
 
     expect(toastError).not.toHaveBeenCalled();
   });
@@ -90,7 +90,7 @@ describe("query errors", () => {
 
 describe("mutation errors", () => {
   test("toast like query errors", async () => {
-    await failingMutation({ status: 422, title: "Invalid", detail: "Bad amount." });
+    await failingMutation(new ApiError({ status: 422, title: "Invalid", detail: "Bad amount." }));
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith("Invalid", {
       description: "Bad amount.",

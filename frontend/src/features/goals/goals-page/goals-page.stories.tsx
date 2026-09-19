@@ -1,10 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import { getDeleteGoalMockHandler, getGetGoalsMockHandler } from "@/api/generated/goals/goals.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
-import { completedGoal, goals, openEndedGoal } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { completedGoal, goals, openEndedGoal, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { GoalsPage } from "./goals-page";
 
 function GoalsPageStory() {
@@ -18,7 +24,7 @@ function GoalsPageStory() {
 }
 
 const manyGoals = Array.from({ length: 12 }, (_, index) => ({
-  ...goals[index % goals.length],
+  ...cycle(goals, index),
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
 }));
 
@@ -43,7 +49,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const SingleCompletedGoal: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/goals", () => HttpResponse.json([completedGoal])), ...handlers],
+      handlers: [getGetGoalsMockHandler([completedGoal]), ...handlers],
     },
   },
 };
@@ -51,10 +57,7 @@ export const SingleCompletedGoal: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/goals", () => HttpResponse.json([openEndedGoal, ...manyGoals])),
-        ...handlers,
-      ],
+      handlers: [getGetGoalsMockHandler([openEndedGoal, ...manyGoals]), ...handlers],
     },
   },
 };
@@ -70,12 +73,7 @@ export const AddDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.delete("*/api/goals/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getDeleteGoalMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

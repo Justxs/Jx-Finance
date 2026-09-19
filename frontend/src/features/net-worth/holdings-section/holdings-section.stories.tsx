@@ -51,7 +51,6 @@ const meta = {
     items,
     deleteDisabled: false,
     onDelete: fn(),
-    onCreated: fn(),
     form: StubForm,
   },
   decorators: [

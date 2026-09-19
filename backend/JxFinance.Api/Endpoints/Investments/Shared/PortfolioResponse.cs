@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Investments.Shared;
@@ -5,33 +6,33 @@ namespace JxFinance.Endpoints.Investments.Shared;
 public sealed record HoldingResponse(
     Guid AccountId,
     SecurityResponse Security,
-    string Quantity,
-    string AverageCost,
-    string CostBasis,
-    string? MarketValue,
-    string? UnrealizedGain,
-    string? UnrealizedPercent,
-    string? MarketValueReporting,
-    string RealizedGain,
-    string Dividends);
+    [property: Quantity] decimal Quantity,
+    [property: Quantity] decimal AverageCost,
+    [property: Money] decimal CostBasis,
+    [property: Money] decimal? MarketValue,
+    [property: Money] decimal? UnrealizedGain,
+    [property: Quantity] decimal? UnrealizedPercent,
+    [property: Money] decimal? MarketValueReporting,
+    [property: Money] decimal RealizedGain,
+    [property: Money] decimal Dividends);
 
 public sealed record PortfolioYear(
     int Year,
-    string Dividends,
-    string WithholdingTax,
-    string Interest,
-    string Fees,
-    string RealizedGain);
+    [property: Money] decimal Dividends,
+    [property: Money] decimal WithholdingTax,
+    [property: Money] decimal Interest,
+    [property: Money] decimal Fees,
+    [property: Money] decimal RealizedGain);
 
 public sealed record PortfolioResponse(
     Currency ReportingCurrency,
-    string MarketValue,
-    string CostBasis,
-    string UnrealizedGain,
-    string RealizedGain,
-    string Dividends,
-    string WithholdingTax,
-    string Fees,
+    [property: Money] decimal MarketValue,
+    [property: Money] decimal CostBasis,
+    [property: Money] decimal UnrealizedGain,
+    [property: Money] decimal RealizedGain,
+    [property: Money] decimal Dividends,
+    [property: Money] decimal WithholdingTax,
+    [property: Money] decimal Fees,
     bool IsComplete,
     IReadOnlyList<HoldingResponse> Holdings,
     IReadOnlyList<PortfolioYear> Years);

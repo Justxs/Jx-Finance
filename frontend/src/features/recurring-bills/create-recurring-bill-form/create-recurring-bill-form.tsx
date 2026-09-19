@@ -1,13 +1,14 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateRecurringBillEndpoint } from "@/api/generated";
+import { useCreateRecurringBill } from "@/api/generated";
 import type {
   AccountResponse,
   CategoryResponse,
   RecurringBillCadence,
   RecurringBillKind,
 } from "@/api/generated/model";
+import { createRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/recurring-bills.zod";
 import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -51,7 +52,10 @@ export function CreateRecurringBillForm({
       name: z
         .string()
         .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+        .refine(
+          (value) => value.trim().length <= createRecurringBillBodyNameMax,
+          t("validation.maxLength", { max: createRecurringBillBodyNameMax }),
+        ),
       kind: z.enum(["fixed", "variable"]),
       amount: z.string(),
       categoryId: z.string(),
@@ -66,7 +70,7 @@ export function CreateRecurringBillForm({
       }
     });
 
-  const createMutation = useCreateRecurringBillEndpoint({
+  const createMutation = useCreateRecurringBill({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

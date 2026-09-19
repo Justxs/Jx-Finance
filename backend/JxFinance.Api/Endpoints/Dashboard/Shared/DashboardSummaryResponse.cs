@@ -1,8 +1,10 @@
+using JxFinance.Common.Json;
+
 namespace JxFinance.Endpoints.Dashboard.Shared;
 
 public sealed record DashboardSummaryResponse(
-    string TotalBalance,
-    string MonthIncome,
-    string MonthExpense,
+    [property: Money] decimal TotalBalance,
+    [property: Money] decimal MonthIncome,
+    [property: Money] decimal MonthExpense,
     DateOnly MonthStart,
     DateOnly MonthEnd);

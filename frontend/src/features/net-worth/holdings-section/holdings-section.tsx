@@ -32,7 +32,6 @@ interface Props {
   deletingId?: string;
   deleteDisabled: boolean;
   onDelete: (id: string) => void;
-  onCreated: () => void;
   form: ComponentType<HoldingFormProps>;
 }
 
@@ -45,7 +44,6 @@ export function HoldingsSection({
   deletingId,
   deleteDisabled,
   onDelete,
-  onCreated,
   form: Form,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -115,13 +113,7 @@ export function HoldingsSection({
         </Button>
       </div>
       <Modal open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
-        <Form
-          onCreated={() => {
-            onCreated();
-            setAddOpen(false);
-          }}
-          onCancel={() => setAddOpen(false)}
-        />
+        <Form onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
       <Modal
         open={editItem !== undefined}
@@ -136,10 +128,7 @@ export function HoldingsSection({
           <Form
             key={editItem.id}
             editing={{ id: editItem.id, values: editItem.values }}
-            onCreated={() => {
-              onCreated();
-              setEditTarget(null);
-            }}
+            onCreated={() => setEditTarget(null)}
             onCancel={() => setEditTarget(null)}
           />
         ) : null}

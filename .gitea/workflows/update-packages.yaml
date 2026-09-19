@@ -66,7 +66,6 @@ jobs:
           cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
           cd frontend
           nub run orval
-          nub run format src/api/generated
 
       - name: Detect changes
         id: changes

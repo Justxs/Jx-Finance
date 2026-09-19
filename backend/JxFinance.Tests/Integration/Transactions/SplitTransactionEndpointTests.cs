@@ -61,6 +61,31 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("12,50")]
+    [InlineData("0.001")]
+    public async Task Create_names_the_line_whose_amount_is_malformed(string amount)
+    {
+        var account = await CreateAccountAsync("1000.00");
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/transactions",
+            new
+            {
+                accountId = account,
+                type = "expense",
+                amount = "50.00",
+                date = "2026-06-05",
+                lines = new object[]
+                {
+                    new { amount = "30.00" },
+                    new { amount },
+                },
+            });
+
+        await AssertValidationErrorAsync(response, "lines[1].amount");
+    }
+
     [Fact]
     public async Task Editing_a_split_replaces_its_line_set()
     {

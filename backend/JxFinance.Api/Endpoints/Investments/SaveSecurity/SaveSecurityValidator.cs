@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Investments.SaveSecurity;
 
@@ -16,7 +16,7 @@ public sealed class SaveSecurityValidator : Validator<SaveSecurityRequest>
             .WithMessage("ISIN must be 12 characters: two letters, nine letters or digits, and a check digit.");
         RuleFor(r => r.Exchange).MaximumLength(32);
         RuleFor(r => r.LastPrice)
-            .Must(p => p is null || QuantityWire.IsNonNegative(p))
+            .IsNonNegativeQuantity()
             .WithMessage("Price must be a decimal of 0 or more with at most 8 decimal places.");
     }
 }

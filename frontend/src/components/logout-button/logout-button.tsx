@@ -2,7 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLogoutEndpoint } from "@/api/generated";
+import { useLogout } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { setAuthenticated } from "@/lib/auth-gate";
 
@@ -11,7 +11,7 @@ export function LogoutButton() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const logoutMutation = useLogoutEndpoint({
+  const logoutMutation = useLogout({
     mutation: {
       onSuccess: () => {
         setAuthenticated(false);

@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 
@@ -10,7 +11,7 @@ public sealed record SaveSecurityRequest(
     Currency Currency,
     string? Isin = null,
     string? Exchange = null,
-    string? LastPrice = null,
+    [property: Quantity] decimal? LastPrice = null,
     DateOnly? LastPriceDate = null)
 {
     public Guid Id { get; init; }

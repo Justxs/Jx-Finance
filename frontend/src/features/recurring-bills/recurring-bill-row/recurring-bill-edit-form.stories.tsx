@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fn, userEvent, within } from "storybook/test";
+import { getUpdateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { dueSoonBill, inactiveBill, recurringBills, variableBill } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, pending } from "@/storybook/handlers";
 import { RecurringBillEditForm } from "./recurring-bill-edit-form";
 
 const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? dueSoonBill;
@@ -10,7 +10,7 @@ const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? d
 const meta = {
   title: "Features/RecurringBills/RecurringBillEditForm",
   component: RecurringBillEditForm,
-  args: { bill: dueSoonBill, onSaved: fn(), onDone: fn() },
+  args: { bill: dueSoonBill, onDone: fn() },
   decorators: [
     function withFormWidth(Story) {
       return (
@@ -47,12 +47,7 @@ export const InvalidAmount: Story = {
 export const SavePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.put("*/api/recurring-bills/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getUpdateRecurringBillMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

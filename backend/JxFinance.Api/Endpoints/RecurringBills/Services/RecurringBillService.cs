@@ -1,7 +1,7 @@
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -104,14 +104,14 @@ public sealed class RecurringBillService(
         }
         else
         {
-            if (string.IsNullOrWhiteSpace(request.Amount) || (!MoneyWire.IsValid(request.Amount) || MoneyWire.Parse(request.Amount).Amount <= 0))
+            if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
             {
                 return Result<RecurringBillConfirmation>.Failure(
                     ErrorCodes.Validation,
                     "A variable bill needs an amount to confirm.");
             }
 
-            amount = MoneyWire.Parse(request.Amount);
+            amount = new Money(confirmed);
         }
 
         var accountId = request.AccountId is { } requestAccountId ? new AccountId(requestAccountId) : bill.AccountId;

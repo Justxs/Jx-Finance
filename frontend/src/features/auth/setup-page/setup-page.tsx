@@ -2,7 +2,12 @@ import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useSetupEndpoint } from "@/api/generated";
+import { useSetup } from "@/api/generated";
+import {
+  setupBodyDisplayNameMax,
+  setupBodyPasswordMax,
+  setupBodyPasswordMin,
+} from "@/api/schemas/setup/setup.zod";
 import { Brand } from "@/components/brand";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
@@ -29,15 +34,18 @@ export function SetupPage() {
       .refine((value) => isEmail(value.trim()), t("validation.email")),
     password: z
       .string()
-      .min(8, t("validation.minLength", { min: 8 }))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .min(setupBodyPasswordMin, t("validation.minLength", { min: setupBodyPasswordMin }))
+      .max(setupBodyPasswordMax, t("validation.maxLength", { max: setupBodyPasswordMax })),
     displayName: z
       .string()
       .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+      .refine(
+        (value) => value.trim().length <= setupBodyDisplayNameMax,
+        t("validation.maxLength", { max: setupBodyDisplayNameMax }),
+      ),
   });
 
-  const setupMutation = useSetupEndpoint({
+  const setupMutation = useSetup({
     mutation: {
       meta: { silent: true },
       onSuccess: () => {

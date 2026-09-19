@@ -1,26 +1,17 @@
 import {
-  useDeleteBrokerConnectionEndpoint,
-  useImportBrokerReportEndpoint,
-  useSaveBrokerConnectionEndpoint,
-  useSyncBrokerConnectionEndpoint,
+  useDeleteBrokerConnection,
+  useImportBrokerReport,
+  useSaveBrokerConnection,
+  useSyncBrokerConnection,
 } from "@/api/generated";
-import { useInvalidateInvestments } from "../use-invalidate-investments";
 
 export function useBrokerImportMutations() {
-  const { invalidateConnections, invalidateImport } = useInvalidateInvestments();
-
-  const importReport = useImportBrokerReportEndpoint({
-    mutation: { onSettled: invalidateImport },
+  const importReport = useImportBrokerReport();
+  const saveConnection = useSaveBrokerConnection({
+    mutation: { gcTime: 0 },
   });
-  const saveConnection = useSaveBrokerConnectionEndpoint({
-    mutation: { gcTime: 0, onSettled: invalidateConnections },
-  });
-  const deleteConnection = useDeleteBrokerConnectionEndpoint({
-    mutation: { onSettled: invalidateConnections },
-  });
-  const syncConnection = useSyncBrokerConnectionEndpoint({
-    mutation: { onSettled: invalidateImport },
-  });
+  const deleteConnection = useDeleteBrokerConnection();
+  const syncConnection = useSyncBrokerConnection();
 
   const busy =
     importReport.isPending ||

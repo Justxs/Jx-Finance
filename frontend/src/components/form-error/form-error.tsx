@@ -1,4 +1,4 @@
-import type { ApiError } from "@/api/client";
+import { isApiError } from "@/api/client";
 import { errorMessage } from "@/lib/query-client";
 import { cn } from "@/lib/utils";
 
@@ -8,11 +8,7 @@ interface Props {
 }
 
 function fieldReasons(error: unknown) {
-  if (typeof error !== "object" || error === null || !("errors" in error)) {
-    return [];
-  }
-
-  return ((error as ApiError).errors ?? []).map((detail) => detail.reason);
+  return isApiError(error) ? (error.errors ?? []).map((detail) => detail.reason) : [];
 }
 
 export function FormError({ error, className }: Readonly<Props>) {

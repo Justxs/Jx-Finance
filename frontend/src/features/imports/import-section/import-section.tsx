@@ -1,16 +1,11 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetAccountsEndpointQueryKey,
-  getGetDashboardSummaryEndpointQueryKey,
-  getGetTransactionsEndpointQueryKey,
-  getGetTransfersEndpointQueryKey,
-  useGetCategoriesEndpointSuspense,
-  useGetTransactionsEndpointSuspense,
-  useImportConfirmEndpoint,
-  useImportPreviewEndpoint,
+  useGetCategoriesSuspense,
+  useGetTransactionsSuspense,
+  useImportConfirm,
+  useImportPreview,
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import {
@@ -33,7 +28,6 @@ interface Props {
 
 export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [accountId, setAccountId] = useState(
@@ -44,23 +38,16 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
-  const categories = useGetCategoriesEndpointSuspense();
+  const categories = useGetCategoriesSuspense();
   const categoryList = categories.data ?? [];
-  const history = useGetTransactionsEndpointSuspense({
+  const history = useGetTransactionsSuspense({
     page: 1,
     pageSize: RECALL_PAGE_SIZE,
     sort: "date",
     direction: "desc",
   });
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetTransfersEndpointQueryKey() });
-  }
-
-  const previewMutation = useImportPreviewEndpoint({
+  const previewMutation = useImportPreview({
     mutation: {
       onSuccess: (data) => {
         setRows(toPreviewRows(data.rows ?? [], history.data?.items ?? [], categoryList));
@@ -68,7 +55,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     },
   });
 
-  const confirmMutation = useImportConfirmEndpoint({
+  const confirmMutation = useImportConfirm({
     mutation: {
       onSuccess: (data, variables) => {
         const confirmed = (rows ?? []).filter((row) => row.selected);
@@ -83,7 +70,6 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
         });
         setRows(null);
         setUploadKey((key) => key + 1);
-        invalidate();
       },
     },
   });

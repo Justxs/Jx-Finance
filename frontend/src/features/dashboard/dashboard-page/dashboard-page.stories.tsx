@@ -1,12 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { getGetMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  failWith,
+  handlers,
+  loadingHandlers,
+} from "@/storybook/handlers";
 import { DashboardPage } from "./dashboard-page";
-
-function trendFailure() {
-  return HttpResponse.json(serverErrorProblem, { status: 500 });
-}
 
 const meta = {
   title: "Features/Dashboard/DashboardPage",
@@ -32,6 +34,8 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const PartialFailure: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/dashboard/monthly-trend", trendFailure), ...handlers] },
+    msw: {
+      handlers: [getGetMonthlyTrendMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
+    },
   },
 };

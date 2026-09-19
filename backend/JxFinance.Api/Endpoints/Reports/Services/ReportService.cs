@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Dashboard.Shared;
@@ -49,9 +48,9 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
                     g.Key?.Value,
                     category?.Name ?? "Uncategorized",
                     category?.Icon,
-                    MoneyWire.ToWire(new Money(g.Sum(a => a.Amount))));
+                    Money.Round(g.Sum(a => a.Amount)));
             })
-            .OrderByDescending(i => decimal.Parse(i.Amount))
+            .OrderByDescending(i => i.Amount)
             .ToList();
 
         var (trend, bucket) = await BuildTrendAsync(periodStart, exclusiveEnd, cancellationToken);
@@ -59,9 +58,9 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
         return new ReportSummaryResponse(
             periodStart,
             periodEnd,
-            MoneyWire.ToWire(new Money(totalIncome)),
-            MoneyWire.ToWire(new Money(totalExpense)),
-            MoneyWire.ToWire(new Money(totalIncome - totalExpense)),
+            totalIncome,
+            totalExpense,
+            totalIncome - totalExpense,
             expenseByCategory,
             trend,
             bucket);
@@ -89,7 +88,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
                 var next = cursor.AddMonths(1);
                 var income = raw.Where(t => t.Type == FlowType.Income && t.Date >= cursor && t.Date < next).Sum(t => t.Amount);
                 var expense = raw.Where(t => t.Type == FlowType.Expense && t.Date >= cursor && t.Date < next).Sum(t => t.Amount);
-                points.Add(new ReportTrendPoint(cursor, MoneyWire.ToWire(new Money(income)), MoneyWire.ToWire(new Money(expense))));
+                points.Add(new ReportTrendPoint(cursor, income, expense));
                 cursor = next;
             }
 
@@ -101,7 +100,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
         {
             var income = raw.Where(t => t.Type == FlowType.Income && t.Date == day).Sum(t => t.Amount);
             var expense = raw.Where(t => t.Type == FlowType.Expense && t.Date == day).Sum(t => t.Amount);
-            points.Add(new ReportTrendPoint(day, MoneyWire.ToWire(new Money(income)), MoneyWire.ToWire(new Money(expense))));
+            points.Add(new ReportTrendPoint(day, income, expense));
             day = day.AddDays(1);
         }
 

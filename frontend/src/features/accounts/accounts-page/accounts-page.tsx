@@ -1,16 +1,13 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetAccountsEndpointQueryKey,
-  getGetDashboardSummaryEndpointQueryKey,
-  useCreateAccountEndpoint,
-  useDeleteAccountEndpoint,
-  useGetAccountsEndpointSuspense,
-  useUpdateAccountEndpoint,
+  useCreateAccount,
+  useDeleteAccount,
+  useGetAccountsSuspense,
+  useUpdateAccount,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -27,45 +24,36 @@ import { TransfersSection } from "../transfers-section";
 
 export function AccountsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const { features } = useSettings();
 
   const [shown, stale] = useDeferredParams(useSearch({ from: "/accounts" }));
-  const accounts = useGetAccountsEndpointSuspense({
+  const accounts = useGetAccountsSuspense({
     search: shown.search,
     iban: shown.iban,
     type: shown.type,
     sort: shown.sort,
     direction: shown.direction,
   });
-  const allAccounts = useGetAccountsEndpointSuspense();
+  const allAccounts = useGetAccountsSuspense();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [convertAccountId, setConvertAccountId] = useState<string | null>(null);
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
-  }
-
-  const createMutation = useCreateAccountEndpoint({
+  const createMutation = useCreateAccount({
     mutation: {
       onSuccess: () => setCreateOpen(false),
-      onSettled: invalidate,
     },
   });
-  const updateMutation = useUpdateAccountEndpoint({
+  const updateMutation = useUpdateAccount({
     mutation: {
       onSuccess: () => setEditingId(null),
-      onSettled: invalidate,
     },
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteAccountEndpoint({
+  const deleteMutation = useDeleteAccount({
     mutation: {
       onSuccess: () => toast.success(t("accounts.archived")),
-      onSettled: invalidate,
     },
   });
 

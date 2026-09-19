@@ -77,8 +77,8 @@ public sealed class TransactionService(
 
         return new TransactionsSummaryResponse(
             totals?.Count ?? 0,
-            MoneyWire.ToWire(new Money(totals?.Income ?? 0m)),
-            MoneyWire.ToWire(new Money(totals?.Expense ?? 0m)));
+            totals?.Income ?? 0m,
+            totals?.Expense ?? 0m);
     }
 
     private IOrderedQueryable<Transaction> Sorted(IQueryable<Transaction> query, GetTransactionsRequest request)
@@ -342,7 +342,7 @@ public sealed class TransactionService(
         Guid accountId,
         Currency? requested,
         Currency? existing,
-        string amount,
+        decimal amount,
         DateOnly date,
         CancellationToken cancellationToken)
     {
@@ -357,7 +357,7 @@ public sealed class TransactionService(
             return Result<(Currency, decimal)>.Failure(ErrorCodes.Validation, currencyError);
         }
 
-        var reporting = await rates.ToReportingAsync(MoneyWire.Parse(amount, currency), date, cancellationToken);
+        var reporting = await rates.ToReportingAsync(new Money(amount, currency), date, cancellationToken);
         return reporting.IsSuccess
             ? Result<(Currency, decimal)>.Success((currency, reporting.Value))
             : Result<(Currency, decimal)>.FailureFrom(reporting);

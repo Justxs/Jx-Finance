@@ -1,15 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
-import { fn } from "storybook/test";
+import {
+  getRemoveMemberMockHandler,
+  getUpdateHouseholdMockHandler,
+} from "@/api/generated/households/households.msw";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, pending } from "@/storybook/handlers";
 import { HouseholdCard } from "./household-card";
 
 const meta = {
   title: "Features/Households/HouseholdCard",
   component: HouseholdCard,
   parameters: { route: "/households" },
-  args: { household: familyHousehold, onChanged: fn() },
+  args: { household: familyHousehold },
   render: (args) => (
     <div className="w-[40rem] max-w-full">
       <HouseholdCard {...args} />
@@ -61,14 +63,8 @@ export const SlowMutations: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.delete("*/api/households/:id/members/:userId", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        http.put("*/api/households/:id", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
+        getRemoveMemberMockHandler(pending),
+        getUpdateHouseholdMockHandler(pending),
         ...handlers,
       ],
     },

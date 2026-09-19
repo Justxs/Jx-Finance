@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useCreateDebtEndpoint, useUpdateDebtEndpoint } from "@/api/generated";
+import { useCreateDebt, useUpdateDebt } from "@/api/generated";
 import { DebtType } from "@/api/generated/model";
 import { normalizeMoney } from "@/lib/validation";
 import { HoldingForm, type HoldingFormProps } from "../holdings-section";
@@ -8,10 +8,10 @@ const debtTypes = Object.values(DebtType);
 
 export function DebtForm({ editing, onCreated, onCancel }: Readonly<HoldingFormProps>) {
   const { t } = useTranslation();
-  const createMutation = useCreateDebtEndpoint({
+  const createMutation = useCreateDebt({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
-  const updateMutation = useUpdateDebtEndpoint({
+  const updateMutation = useUpdateDebt({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

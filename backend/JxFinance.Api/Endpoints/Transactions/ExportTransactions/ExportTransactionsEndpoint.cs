@@ -66,7 +66,7 @@ public sealed class ExportTransactionsEndpoint(
                 Escape(accountNames.GetValueOrDefault(transaction.AccountId) ?? ""),
                 Escape(category ?? ""),
                 Escape(transaction.Type.ToString()),
-                Escape(transaction.Amount),
+                Escape(transaction.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
                 Escape(transaction.Currency.ToCode())));
         }
 

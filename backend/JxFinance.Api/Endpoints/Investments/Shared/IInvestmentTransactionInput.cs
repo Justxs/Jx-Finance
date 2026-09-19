@@ -9,10 +9,10 @@ public interface IInvestmentTransactionInput
     InvestmentTransactionType Type { get; }
     DateOnly Date { get; }
     Guid? SecurityId { get; }
-    string? Quantity { get; }
-    string? Price { get; }
-    string? Amount { get; }
-    string? Fee { get; }
+    decimal? Quantity { get; }
+    decimal? Price { get; }
+    decimal? Amount { get; }
+    decimal? Fee { get; }
     Currency? Currency { get; }
     string? Description { get; }
 }

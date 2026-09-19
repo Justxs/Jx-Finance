@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { getGetTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -35,11 +35,11 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 function specialTransactions() {
   const items = [longDescriptionTransaction, splitTransaction, uncategorisedTransaction];
-  return HttpResponse.json({ items, page: 1, pageSize: 6, total: items.length });
+  return { items, page: 1, pageSize: 6, total: items.length };
 }
 
 export const LongAndSpecialRows: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/transactions", specialTransactions), ...handlers] },
+    msw: { handlers: [getGetTransactionsMockHandler(specialTransactions), ...handlers] },
   },
 };

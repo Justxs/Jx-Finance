@@ -1,14 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  getGetCategoriesEndpointQueryKey,
-  getGetTransactionsEndpointQueryKey,
-  useDeleteCategoryEndpoint,
-  useGetCategoriesEndpointSuspense,
-} from "@/api/generated";
+import { useDeleteCategory, useGetCategoriesSuspense } from "@/api/generated";
 import type { FlowType } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -19,22 +13,15 @@ import { CategoryRow } from "../category-row";
 
 export function CategoriesPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const categories = useGetCategoriesEndpointSuspense();
-
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetCategoriesEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
-  }
+  const categories = useGetCategoriesSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteCategoryEndpoint({
+  const deleteMutation = useDeleteCategory({
     mutation: {
       onSuccess: () => toast.success(t("categories.deleted")),
-      onSettled: invalidate,
     },
   });
 
@@ -55,13 +42,7 @@ export function CategoriesPage() {
       </PageHeader>
 
       <Modal open={addOpen} onOpenChange={setAddOpen} title={t("categories.addTitle")}>
-        <AddCategoryForm
-          onCreated={() => {
-            invalidate();
-            setAddOpen(false);
-          }}
-          onCancel={() => setAddOpen(false)}
-        />
+        <AddCategoryForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
 
       <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
@@ -83,7 +64,6 @@ export function CategoriesPage() {
                     onDelete={() => setDeleteTarget(category.id)}
                     deletePending={deletingId === category.id}
                     deleteDisabled={deleteMutation.isPending}
-                    onSaved={invalidate}
                   />
                 ))}
               </ul>

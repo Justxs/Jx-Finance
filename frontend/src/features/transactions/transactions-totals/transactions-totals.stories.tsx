@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
-import { emptyHandlers, errorHandlers, handlers } from "@/storybook/handlers";
+import { getGetTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { emptyHandlers, errorHandlers, handlers, pending } from "@/storybook/handlers";
 import { TransactionsTotals, TransactionsTotalsLine } from "./transactions-totals";
 
 const meta = {
@@ -31,13 +31,7 @@ export const Stale: Story = { args: { stale: true } };
 export const Loading: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/transactions/summary", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getGetTransactionsSummaryMockHandler(pending), ...handlers],
     },
   },
 };

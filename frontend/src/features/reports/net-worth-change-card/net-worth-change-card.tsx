@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useGetNetWorthHistoryEndpointSuspense } from "@/api/generated";
+import { useGetNetWorthHistorySuspense } from "@/api/generated";
 import { useMoney } from "@/hooks/use-formatters";
 
 interface Props {
@@ -10,7 +10,7 @@ interface Props {
 export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const history = useGetNetWorthHistoryEndpointSuspense();
+  const history = useGetNetWorthHistorySuspense();
 
   const items = (history.data?.items ?? [])
     .filter((item) => (item.date ?? "") >= dateFrom && (item.date ?? "") <= dateTo)

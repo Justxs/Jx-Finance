@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+using JxFinance.Common.Json;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 
@@ -9,7 +11,7 @@ public sealed record UpdateAccountRequest(
     string? Description,
     string? Iban,
     AccountType Type,
-    string StartingBalance,
+    [property: Money, JsonRequired] decimal StartingBalance,
     Scope Scope,
     Guid? HouseholdId,
     Currency? Currency = null);

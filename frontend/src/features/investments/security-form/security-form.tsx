@@ -2,6 +2,11 @@ import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { Currency, type SecurityResponse, SecurityType } from "@/api/generated/model";
+import {
+  createSecurityBodyExchangeMax,
+  createSecurityBodyNameMax,
+  createSecurityBodySymbolMax,
+} from "@/api/schemas/investments/investments.zod";
 import { CurrencySelect } from "@/components/currency-select";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -52,11 +57,17 @@ export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<
     symbol: z
       .string()
       .refine((value) => value.trim() !== "", t("validation.required"))
-      .max(32, t("validation.maxLength", { max: 32 })),
+      .max(
+        createSecurityBodySymbolMax,
+        t("validation.maxLength", { max: createSecurityBodySymbolMax }),
+      ),
     name: z
       .string()
       .refine((value) => value.trim() !== "", t("validation.required"))
-      .max(200, t("validation.maxLength", { max: 200 })),
+      .max(
+        createSecurityBodyNameMax,
+        t("validation.maxLength", { max: createSecurityBodyNameMax }),
+      ),
     type: z.enum(SecurityType),
     currency: z.enum(Currency),
     isin: z
@@ -65,7 +76,12 @@ export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<
         (value) => value.trim() === "" || ISIN_PATTERN.test(value.trim()),
         t("investments.validation.isin"),
       ),
-    exchange: z.string().max(32, t("validation.maxLength", { max: 32 })),
+    exchange: z
+      .string()
+      .max(
+        createSecurityBodyExchangeMax,
+        t("validation.maxLength", { max: createSecurityBodyExchangeMax }),
+      ),
     lastPrice: z
       .string()
       .refine(

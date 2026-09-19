@@ -1,7 +1,7 @@
 import { Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetSecuritiesEndpointSuspense } from "@/api/generated";
+import { useGetSecuritiesSuspense } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -37,7 +37,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
-  const securities = useGetSecuritiesEndpointSuspense();
+  const securities = useGetSecuritiesSuspense();
   const all = securities.data ?? [];
   const shown = all.filter((security) => matches(security, search));
 

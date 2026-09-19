@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
+import { getSetupMockHandler } from "@/api/generated/setup/setup.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { SetupPage } from "./setup-page";
 
 const meta = {
@@ -24,12 +24,7 @@ export const ServerErrorAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/setup", () =>
-          HttpResponse.json(
-            { ...serverErrorProblem, instance: "/api/setup" },
-            { status: 500, headers: { "Content-Type": "application/problem+json" } },
-          ),
-        ),
+        getSetupMockHandler(failWith({ ...serverErrorProblem, instance: "/api/setup" }, 500)),
         ...handlers,
       ],
     },
@@ -39,13 +34,7 @@ export const ServerErrorAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/setup", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getSetupMockHandler(pending), ...handlers],
     },
   },
 };

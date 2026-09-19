@@ -10,7 +10,7 @@ public sealed class CreateGoalSummary : Summary<CreateGoalEndpoint, CreateGoalRe
         Description = "Starts tracking progress towards a target amount, optionally by a target date. "
             + "The goal is a standalone tracker: it is not tied to an account, and moving money does not "
             + "update it by itself.";
-        ExampleRequest = new CreateGoalRequest("Emergency fund", "5000.00", "1200.00", new DateOnly(2027, 1, 1));
+        ExampleRequest = new CreateGoalRequest("Emergency fund", 5000.00m, 1200.00m, new DateOnly(2027, 1, 1));
         RequestParam(r => r.TargetAmount, "Decimal string with at most two decimal places, greater than zero.");
         RequestParam(r => r.CurrentAmount, "Amount already saved. Defaults to zero when omitted.");
         RequestParam(r => r.TargetDate, "Optional date to reach the target by, as YYYY-MM-DD.");

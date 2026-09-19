@@ -1,8 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsEndpointSuspense, useUpdateCategoryEndpoint } from "@/api/generated";
+import { useGetHouseholdsSuspense, useUpdateCategory } from "@/api/generated";
 import type { CategoryResponse, Scope } from "@/api/generated/model";
+import { updateCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -25,7 +26,7 @@ interface Props {
 
 export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpointSuspense();
+  const households = useGetHouseholdsSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
@@ -33,7 +34,10 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       name: z
         .string()
         .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+        .refine(
+          (value) => value.trim().length <= updateCategoryBodyNameMax,
+          t("validation.maxLength", { max: updateCategoryBodyNameMax }),
+        ),
       icon: z.string().nullable(),
       scope: z.enum(["personal", "shared"]),
       householdId: z.string(),
@@ -43,7 +47,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       path: ["householdId"],
     });
 
-  const updateMutation = useUpdateCategoryEndpoint({
+  const updateMutation = useUpdateCategory({
     mutation: {
       onSuccess: onSaved,
     },

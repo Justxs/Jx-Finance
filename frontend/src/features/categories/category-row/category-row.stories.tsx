@@ -16,7 +16,6 @@ const meta = {
   args: {
     category: personalCategory,
     onDelete: fn(),
-    onSaved: fn(),
     deletePending: false,
     deleteDisabled: false,
   },

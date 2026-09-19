@@ -2,8 +2,8 @@ import { Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useDeleteInvestmentTransactionEndpoint,
-  useGetInvestmentTransactionsEndpointSuspense,
+  useDeleteInvestmentTransaction,
+  useGetInvestmentTransactionsSuspense,
 } from "@/api/generated";
 import type {
   AccountResponse,
@@ -22,7 +22,6 @@ import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks
 import { cn } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
 import { entryTypes, isTrade } from "../investment-types";
-import { useInvalidateInvestments } from "../use-invalidate-investments";
 
 interface Props {
   accounts: readonly AccountResponse[];
@@ -37,7 +36,6 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const quantityFormat = useQuantityFormat();
-  const { invalidateEntries } = useInvalidateInvestments();
 
   const [type, setType] = useState<InvestmentTransactionType | "">("");
   const [page, setPage] = useState(1);
@@ -48,7 +46,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   }
 
   const [shown, stale] = useDeferredParams({ page, type });
-  const transactions = useGetInvestmentTransactionsEndpointSuspense({
+  const transactions = useGetInvestmentTransactionsSuspense({
     page: shown.page,
     pageSize: ACTIVITY_PAGE_SIZE,
     accountId,
@@ -64,9 +62,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
 
   const [editing, setEditing] = useState<InvestmentTransactionResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const deleteMutation = useDeleteInvestmentTransactionEndpoint({
-    mutation: { onSettled: invalidateEntries },
-  });
+  const deleteMutation = useDeleteInvestmentTransaction();
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   function title(entry: InvestmentTransactionResponse) {

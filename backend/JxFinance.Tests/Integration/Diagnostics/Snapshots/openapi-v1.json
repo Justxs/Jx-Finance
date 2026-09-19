@@ -18,7 +18,7 @@
         ],
         "summary": "Create an account",
         "description": "Opens a new account. A personal account belongs to you alone; a shared account must name a household you are a member of, and everyone in that household sees it and its transactions. The starting balance is the balance before any transaction is recorded.",
-        "operationId": "CreateAccountEndpoint",
+        "operationId": "CreateAccount",
         "requestBody": {
           "content": {
             "application/json": {
@@ -93,7 +93,7 @@
         ],
         "summary": "List accounts",
         "description": "Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.",
-        "operationId": "GetAccountsEndpoint",
+        "operationId": "GetAccounts",
         "parameters": [
           {
             "name": "search",
@@ -198,7 +198,7 @@
         ],
         "summary": "Archive an account",
         "description": "Archives the account instead of deleting it: the transactions posted to it stay in the ledger and in reports, but the account no longer appears in listings or pickers.",
-        "operationId": "DeleteAccountEndpoint",
+        "operationId": "DeleteAccount",
         "parameters": [
           {
             "name": "id",
@@ -267,7 +267,7 @@
         ],
         "summary": "Get one account",
         "description": "Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people\u0027s data.",
-        "operationId": "GetAccountEndpoint",
+        "operationId": "GetAccount",
         "parameters": [
           {
             "name": "id",
@@ -343,7 +343,7 @@
         ],
         "summary": "Update an account",
         "description": "Replaces the editable fields of an account. Moving an account from Personal to Shared hands its history to the household; moving it back makes it private again. Transactions already posted to the account keep their amounts.",
-        "operationId": "UpdateAccountEndpoint",
+        "operationId": "UpdateAccount",
         "parameters": [
           {
             "name": "id",
@@ -443,7 +443,7 @@
         ],
         "summary": "Add an asset",
         "description": "Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards.",
-        "operationId": "CreateAssetEndpoint",
+        "operationId": "CreateAsset",
         "requestBody": {
           "content": {
             "application/json": {
@@ -514,7 +514,7 @@
         ],
         "summary": "List assets",
         "description": "Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.",
-        "operationId": "GetAssetsEndpoint",
+        "operationId": "GetAssets",
         "responses": {
           "200": {
             "description": "The assets belonging to the signed-in user.",
@@ -571,7 +571,7 @@
         ],
         "summary": "Delete an asset",
         "description": "Stops tracking the asset. Snapshots already recorded keep the value it had.",
-        "operationId": "DeleteAssetEndpoint",
+        "operationId": "DeleteAsset",
         "parameters": [
           {
             "name": "id",
@@ -640,7 +640,7 @@
         ],
         "summary": "Update an asset",
         "description": "Revalues or renames an asset. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.",
-        "operationId": "UpdateAssetEndpoint",
+        "operationId": "UpdateAsset",
         "parameters": [
           {
             "name": "id",
@@ -736,7 +736,7 @@
         ],
         "summary": "Turn two-factor authentication off",
         "description": "Removes the authenticator secret and the remaining recovery codes after re-authenticating with the account password. Rate limited to five attempts per five minutes.",
-        "operationId": "DisableTwoFactorEndpoint",
+        "operationId": "DisableTwoFactor",
         "requestBody": {
           "content": {
             "application/json": {
@@ -812,7 +812,7 @@
         ],
         "summary": "Finish two-factor enrolment",
         "description": "Verifies the first code produced by the authenticator and turns two-factor authentication on. The response carries the one-time recovery codes; they are shown once and never again, so the client must make the user save them before moving on.",
-        "operationId": "EnableTwoFactorEndpoint",
+        "operationId": "EnableTwoFactor",
         "requestBody": {
           "content": {
             "application/json": {
@@ -892,7 +892,7 @@
         ],
         "summary": "Begin two-factor enrolment",
         "description": "Generates a fresh authenticator secret and returns it as both a shared key and an otpauth URI for a QR code. Nothing is enabled yet: enrolment only completes once the code from the authenticator is posted to the enable endpoint. Re-authentication with the account password is required, and the call is rate limited to five attempts per five minutes.",
-        "operationId": "SetupTwoFactorEndpoint",
+        "operationId": "SetupTwoFactor",
         "requestBody": {
           "content": {
             "application/json": {
@@ -975,7 +975,7 @@
         ],
         "summary": "Sign in",
         "description": "Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client.",
-        "operationId": "LoginEndpoint",
+        "operationId": "Login",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1046,7 +1046,7 @@
         ],
         "summary": "Sign out",
         "description": "Ends the session and clears its cookies. Safe to call when already signed out.",
-        "operationId": "LogoutEndpoint",
+        "operationId": "Logout",
         "responses": {
           "204": {
             "description": "The session is gone."
@@ -1096,7 +1096,7 @@
         ],
         "summary": "Get the signed-in profile",
         "description": "Returns the profile behind the current session cookie, including the role and whether two-factor authentication is on. The client uses this to decide what to render and to detect an expired session.",
-        "operationId": "MeEndpoint",
+        "operationId": "Me",
         "responses": {
           "200": {
             "description": "The profile of the signed-in user.",
@@ -1163,7 +1163,7 @@
         ],
         "summary": "Renew the access token",
         "description": "Exchanges the refresh cookie for a new access token cookie and a rotated refresh cookie. Call it when a request answers 401, then retry that request once. The session keeps its original absolute expiry; renewing never extends it. A session whose user was deactivated, locked out, or had their role or password changed elsewhere is rejected.",
-        "operationId": "RefreshEndpoint",
+        "operationId": "Refresh",
         "responses": {
           "204": {
             "description": "New cookies issued."
@@ -1211,7 +1211,7 @@
         ],
         "summary": "Create a budget",
         "description": "Sets a spending limit for one category. A category can carry a single budget, so creating a second one for the same category is rejected.",
-        "operationId": "CreateBudgetEndpoint",
+        "operationId": "CreateBudget",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1280,7 +1280,7 @@
         ],
         "summary": "List budgets",
         "description": "Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.",
-        "operationId": "GetBudgetsEndpoint",
+        "operationId": "GetBudgets",
         "responses": {
           "200": {
             "description": "The budgets visible to the signed-in user.",
@@ -1337,7 +1337,7 @@
         ],
         "summary": "Delete a budget",
         "description": "Removes the spending limit. Transactions in the category are untouched.",
-        "operationId": "DeleteBudgetEndpoint",
+        "operationId": "DeleteBudget",
         "parameters": [
           {
             "name": "id",
@@ -1406,7 +1406,7 @@
         ],
         "summary": "Update a budget",
         "description": "Changes the limit, or moves the budget to a different category. Spending already recorded is re-evaluated against the new limit the next time the budget is read.",
-        "operationId": "UpdateBudgetEndpoint",
+        "operationId": "UpdateBudget",
         "parameters": [
           {
             "name": "id",
@@ -1500,7 +1500,7 @@
         ],
         "summary": "Create a category",
         "description": "Adds a category for transactions to be attributed to. The flow type is fixed at creation and cannot be changed afterwards, because moving a category between income and expense would silently rewrite the meaning of every transaction already filed under it.",
-        "operationId": "CreateCategoryEndpoint",
+        "operationId": "CreateCategory",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1572,7 +1572,7 @@
         ],
         "summary": "List categories",
         "description": "Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.",
-        "operationId": "GetCategoriesEndpoint",
+        "operationId": "GetCategories",
         "responses": {
           "200": {
             "description": "The categories visible to the signed-in user.",
@@ -1629,7 +1629,7 @@
         ],
         "summary": "Delete a category",
         "description": "Removes the category. Transactions filed under it are kept and become uncategorised rather than being deleted along with it.",
-        "operationId": "DeleteCategoryEndpoint",
+        "operationId": "DeleteCategory",
         "parameters": [
           {
             "name": "id",
@@ -1708,7 +1708,7 @@
         ],
         "summary": "Update a category",
         "description": "Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation.",
-        "operationId": "UpdateCategoryEndpoint",
+        "operationId": "UpdateCategory",
         "parameters": [
           {
             "name": "id",
@@ -1804,7 +1804,7 @@
         ],
         "summary": "Convert currency inside an account",
         "description": "Records an exchange of one currency for another inside a single account, such as selling euros for dollars at a broker. The sold balance drops, the bought balance rises, and neither side counts as income or expense. An optional fee is booked as an ordinary expense transaction on the same account so it shows in reports and budgets.",
-        "operationId": "CreateConversionEndpoint",
+        "operationId": "CreateConversion",
         "requestBody": {
           "content": {
             "application/json": {
@@ -1881,7 +1881,7 @@
         ],
         "summary": "List currency conversions",
         "description": "Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.",
-        "operationId": "GetConversionsEndpoint",
+        "operationId": "GetConversions",
         "parameters": [
           {
             "name": "page",
@@ -1970,7 +1970,7 @@
         ],
         "summary": "Delete a currency conversion",
         "description": "Removes the conversion and the fee transaction it created, restoring both balances.",
-        "operationId": "DeleteConversionEndpoint",
+        "operationId": "DeleteConversion",
         "parameters": [
           {
             "name": "id",
@@ -2040,7 +2040,7 @@
         ],
         "summary": "List supported currencies",
         "description": "Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.",
-        "operationId": "GetCurrenciesEndpoint",
+        "operationId": "GetCurrencies",
         "responses": {
           "200": {
             "description": "The supported currencies.",
@@ -2097,7 +2097,7 @@
         ],
         "summary": "Get spending split by category",
         "description": "Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.",
-        "operationId": "GetCategoryBreakdownEndpoint",
+        "operationId": "GetCategoryBreakdown",
         "parameters": [
           {
             "name": "month",
@@ -2167,7 +2167,7 @@
         ],
         "summary": "Get the monthly income and expense trend",
         "description": "Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.",
-        "operationId": "GetMonthlyTrendEndpoint",
+        "operationId": "GetMonthlyTrend",
         "parameters": [
           {
             "name": "months",
@@ -2236,7 +2236,7 @@
         ],
         "summary": "Get the dashboard summary",
         "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller\u0027s.",
-        "operationId": "GetDashboardSummaryEndpoint",
+        "operationId": "GetDashboardSummary",
         "responses": {
           "200": {
             "description": "The current-month totals.",
@@ -2293,7 +2293,7 @@
         ],
         "summary": "Add a debt",
         "description": "Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards.",
-        "operationId": "CreateDebtEndpoint",
+        "operationId": "CreateDebt",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2365,7 +2365,7 @@
         ],
         "summary": "List debts",
         "description": "Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.",
-        "operationId": "GetDebtsEndpoint",
+        "operationId": "GetDebts",
         "responses": {
           "200": {
             "description": "The debts belonging to the signed-in user.",
@@ -2422,7 +2422,7 @@
         ],
         "summary": "Delete a debt",
         "description": "Stops tracking the debt, for instance once it is settled. Snapshots already recorded keep the balance it had.",
-        "operationId": "DeleteDebtEndpoint",
+        "operationId": "DeleteDebt",
         "parameters": [
           {
             "name": "id",
@@ -2491,7 +2491,7 @@
         ],
         "summary": "Update a debt",
         "description": "Records a new outstanding balance, rate, or name. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down.",
-        "operationId": "UpdateDebtEndpoint",
+        "operationId": "UpdateDebt",
         "parameters": [
           {
             "name": "id",
@@ -2588,7 +2588,7 @@
         ],
         "summary": "Look up an exchange rate",
         "description": "Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.",
-        "operationId": "GetExchangeRateEndpoint",
+        "operationId": "GetExchangeRate",
         "parameters": [
           {
             "name": "from",
@@ -2685,7 +2685,7 @@
         ],
         "summary": "Create a savings goal",
         "description": "Starts tracking progress towards a target amount, optionally by a target date. The goal is a standalone tracker: it is not tied to an account, and moving money does not update it by itself.",
-        "operationId": "CreateGoalEndpoint",
+        "operationId": "CreateGoal",
         "requestBody": {
           "content": {
             "application/json": {
@@ -2756,7 +2756,7 @@
         ],
         "summary": "List savings goals",
         "description": "Returns your savings goals with the amount saved so far against each target.",
-        "operationId": "GetGoalsEndpoint",
+        "operationId": "GetGoals",
         "responses": {
           "200": {
             "description": "The goals belonging to the signed-in user.",
@@ -2813,7 +2813,7 @@
         ],
         "summary": "Delete a savings goal",
         "description": "Removes the goal and its recorded progress. Nothing else in the ledger changes.",
-        "operationId": "DeleteGoalEndpoint",
+        "operationId": "DeleteGoal",
         "parameters": [
           {
             "name": "id",
@@ -2882,7 +2882,7 @@
         ],
         "summary": "Update a savings goal",
         "description": "Changes the name, the target, the target date, or how much has been put aside. This is how progress is recorded: raise currentAmount as money is saved.",
-        "operationId": "UpdateGoalEndpoint",
+        "operationId": "UpdateGoal",
         "parameters": [
           {
             "name": "id",
@@ -2978,7 +2978,7 @@
         ],
         "summary": "Create a household",
         "description": "Creates a household and makes you its owner. A household is the unit that shared accounts, categories, and transactions belong to; adding members is what gives other people sight of that data.",
-        "operationId": "CreateHouseholdEndpoint",
+        "operationId": "CreateHousehold",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3046,7 +3046,7 @@
         ],
         "summary": "List households",
         "description": "Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.",
-        "operationId": "GetHouseholdsEndpoint",
+        "operationId": "GetHouseholds",
         "responses": {
           "200": {
             "description": "The households the signed-in user belongs to.",
@@ -3103,7 +3103,7 @@
         ],
         "summary": "Delete a household",
         "description": "Disbands the household. Only an owner may do this, and only once nothing shared still points at it: accounts, categories, and transactions shared with the household must be made personal or removed first.",
-        "operationId": "DeleteHouseholdEndpoint",
+        "operationId": "DeleteHousehold",
         "parameters": [
           {
             "name": "id",
@@ -3182,7 +3182,7 @@
         ],
         "summary": "Get one household",
         "description": "Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.",
-        "operationId": "GetHouseholdEndpoint",
+        "operationId": "GetHousehold",
         "parameters": [
           {
             "name": "id",
@@ -3258,7 +3258,7 @@
         ],
         "summary": "Rename a household",
         "description": "Changes the household name. Only an owner may do this; a plain member gets 403 rather than 404, because membership already tells them the household exists.",
-        "operationId": "UpdateHouseholdEndpoint",
+        "operationId": "UpdateHousehold",
         "parameters": [
           {
             "name": "id",
@@ -3361,7 +3361,7 @@
         ],
         "summary": "Add a member",
         "description": "Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.",
-        "operationId": "AddMemberEndpoint",
+        "operationId": "AddMember",
         "parameters": [
           {
             "name": "id",
@@ -3465,7 +3465,7 @@
         ],
         "summary": "Remove a member",
         "description": "Revokes a member and with them their sight of the shared data. The last owner cannot be removed. Data the household owns stays with the household.",
-        "operationId": "RemoveMemberEndpoint",
+        "operationId": "RemoveMember",
         "parameters": [
           {
             "name": "id",
@@ -3560,7 +3560,7 @@
         ],
         "summary": "Change a member role",
         "description": "Promotes a member to owner or demotes an owner to member. The last owner cannot be demoted, so a household is never left without someone who can manage it.",
-        "operationId": "UpdateMemberRoleEndpoint",
+        "operationId": "UpdateMemberRole",
         "parameters": [
           {
             "name": "id",
@@ -3674,7 +3674,7 @@
         ],
         "summary": "Commit previewed statement rows",
         "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped.",
-        "operationId": "ImportConfirmEndpoint",
+        "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
             "application/json": {
@@ -3741,7 +3741,7 @@
         ],
         "summary": "Preview a Swedbank CSV statement",
         "description": "Parses an exported Swedbank statement and returns the rows it found, each with a suggested category and a flag saying whether a matching transaction already exists in the account. Nothing is written: this call only reads the file, and the client decides which rows to keep before calling confirm. Send the file as multipart/form-data.",
-        "operationId": "ImportPreviewEndpoint",
+        "operationId": "ImportPreview",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -3808,7 +3808,7 @@
         ],
         "summary": "List your Interactive Brokers connections",
         "description": "One connection per account. The Flex token is write-only and never returned.",
-        "operationId": "GetBrokerConnectionsEndpoint",
+        "operationId": "GetBrokerConnections",
         "responses": {
           "200": {
             "description": "Your connections with the time and outcome of the last sync.",
@@ -3865,7 +3865,7 @@
         ],
         "summary": "Remove an Interactive Brokers connection",
         "description": "Forgets the token and stops automatic sync. Imported entries stay.",
-        "operationId": "DeleteBrokerConnectionEndpoint",
+        "operationId": "DeleteBrokerConnection",
         "parameters": [
           {
             "name": "accountId",
@@ -3933,7 +3933,7 @@
         ],
         "summary": "Connect an account to the Interactive Brokers Flex Web Service",
         "description": "Stores the Flex Query id and token so the server can download the report once a day and on demand. The token is encrypted at rest. Leave Token empty to keep the stored one.",
-        "operationId": "SaveBrokerConnectionEndpoint",
+        "operationId": "SaveBrokerConnection",
         "parameters": [
           {
             "name": "accountId",
@@ -4011,7 +4011,7 @@
         ],
         "summary": "Download and import the Flex Query report now",
         "description": "Asks Interactive Brokers to run the stored Flex Query, waits for it, and imports it the same way as an uploaded file. Can take up to a minute.",
-        "operationId": "SyncBrokerConnectionEndpoint",
+        "operationId": "SyncBrokerConnection",
         "parameters": [
           {
             "name": "accountId",
@@ -4078,7 +4078,7 @@
         ],
         "summary": "Import an Interactive Brokers Flex Query report",
         "description": "Reads the Trades, Cash Transactions and Open Positions sections of a Flex Query XML report. Stock, ETF, fund and bond trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing.",
-        "operationId": "ImportBrokerReportEndpoint",
+        "operationId": "ImportBrokerReport",
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -4145,7 +4145,7 @@
         ],
         "summary": "Get the investment portfolio",
         "description": "Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security\u0027s own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction\u0027s date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.",
-        "operationId": "GetPortfolioEndpoint",
+        "operationId": "GetPortfolio",
         "parameters": [
           {
             "name": "accountId",
@@ -4216,7 +4216,7 @@
         ],
         "summary": "List securities",
         "description": "Securities are shared by everyone on the installation, because a price is the same for all holders.",
-        "operationId": "GetSecuritiesEndpoint",
+        "operationId": "GetSecurities",
         "parameters": [
           {
             "name": "search",
@@ -4284,7 +4284,7 @@
         ],
         "summary": "Add a security",
         "description": "Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.",
-        "operationId": "CreateSecurityEndpoint",
+        "operationId": "CreateSecurity",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4351,7 +4351,7 @@
         ],
         "summary": "Update a security or its price",
         "description": "Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.",
-        "operationId": "UpdateSecurityEndpoint",
+        "operationId": "UpdateSecurity",
         "parameters": [
           {
             "name": "id",
@@ -4429,7 +4429,7 @@
         ],
         "summary": "Record an investment transaction",
         "description": "Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security\u0027s currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account\u0027s balance in that currency and never counts as income or expense in reports or budgets.",
-        "operationId": "CreateInvestmentTransactionEndpoint",
+        "operationId": "CreateInvestmentTransaction",
         "requestBody": {
           "content": {
             "application/json": {
@@ -4506,7 +4506,7 @@
         ],
         "summary": "List investment transactions",
         "description": "Pages through trades, dividends, withholding tax, interest, fees and splits on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account.",
-        "operationId": "GetInvestmentTransactionsEndpoint",
+        "operationId": "GetInvestmentTransactions",
         "parameters": [
           {
             "name": "page",
@@ -4615,7 +4615,7 @@
         ],
         "summary": "Delete an investment transaction",
         "description": "Removes the entry and its cash effect. A later broker import will not bring a deleted imported entry back.",
-        "operationId": "DeleteInvestmentTransactionEndpoint",
+        "operationId": "DeleteInvestmentTransaction",
         "parameters": [
           {
             "name": "id",
@@ -4683,7 +4683,7 @@
         ],
         "summary": "Correct an investment transaction",
         "description": "Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again. A correction that would leave a later sale without enough shares is refused.",
-        "operationId": "UpdateInvestmentTransactionEndpoint",
+        "operationId": "UpdateInvestmentTransaction",
         "parameters": [
           {
             "name": "id",
@@ -4784,7 +4784,7 @@
         ],
         "summary": "Get current net worth",
         "description": "Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.",
-        "operationId": "GetNetWorthEndpoint",
+        "operationId": "GetNetWorth",
         "responses": {
           "200": {
             "description": "Total assets, total debts, and net worth.",
@@ -4841,7 +4841,7 @@
         ],
         "summary": "Get the net worth history",
         "description": "Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.",
-        "operationId": "GetNetWorthHistoryEndpoint",
+        "operationId": "GetNetWorthHistory",
         "responses": {
           "200": {
             "description": "The recorded snapshots.",
@@ -4898,7 +4898,7 @@
         ],
         "summary": "List notifications",
         "description": "Returns your notifications, newest first. These are raised by background jobs, for example when a recurring bill is about to fall due.",
-        "operationId": "GetNotificationsEndpoint",
+        "operationId": "GetNotifications",
         "parameters": [
           {
             "name": "unread",
@@ -4968,7 +4968,7 @@
         ],
         "summary": "Mark every notification read",
         "description": "Clears the unread badge by marking all of your notifications read at once.",
-        "operationId": "MarkAllNotificationsReadEndpoint",
+        "operationId": "MarkAllNotificationsRead",
         "responses": {
           "204": {
             "description": "Every notification is marked read."
@@ -5018,7 +5018,7 @@
         ],
         "summary": "Mark one notification read",
         "description": "Marks a single notification as read. Marking an already read notification again changes nothing and still answers 204.",
-        "operationId": "MarkNotificationReadEndpoint",
+        "operationId": "MarkNotificationRead",
         "parameters": [
           {
             "name": "id",
@@ -5089,7 +5089,7 @@
         ],
         "summary": "Ping the API",
         "description": "Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.",
-        "operationId": "GetPingEndpoint",
+        "operationId": "GetPing",
         "responses": {
           "200": {
             "description": "The API is serving requests.",
@@ -5131,7 +5131,7 @@
         ],
         "summary": "Create a recurring bill",
         "description": "Schedules a bill or a recurring income. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction is only written once the occurrence is confirmed.",
-        "operationId": "CreateRecurringBillEndpoint",
+        "operationId": "CreateRecurringBill",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5206,7 +5206,7 @@
         ],
         "summary": "List recurring bills",
         "description": "Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.",
-        "operationId": "GetRecurringBillsEndpoint",
+        "operationId": "GetRecurringBills",
         "responses": {
           "200": {
             "description": "The recurring bills belonging to the signed-in user.",
@@ -5263,7 +5263,7 @@
         ],
         "summary": "Delete a recurring bill",
         "description": "Removes the schedule and its reminders. Transactions already posted from it stay in the ledger.",
-        "operationId": "DeleteRecurringBillEndpoint",
+        "operationId": "DeleteRecurringBill",
         "parameters": [
           {
             "name": "id",
@@ -5332,7 +5332,7 @@
         ],
         "summary": "Get one recurring bill",
         "description": "Returns a single schedule with its cadence, reminder lead time, and next due date.",
-        "operationId": "GetRecurringBillEndpoint",
+        "operationId": "GetRecurringBill",
         "parameters": [
           {
             "name": "id",
@@ -5408,7 +5408,7 @@
         ],
         "summary": "Update a recurring bill",
         "description": "Changes the schedule, the expected amount, or the reminder lead time. Setting isActive to false stops reminders without losing the schedule or the transactions already posted from it.",
-        "operationId": "UpdateRecurringBillEndpoint",
+        "operationId": "UpdateRecurringBill",
         "parameters": [
           {
             "name": "id",
@@ -5509,7 +5509,7 @@
         ],
         "summary": "Confirm a due occurrence",
         "description": "Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.",
-        "operationId": "ConfirmRecurringBillEndpoint",
+        "operationId": "ConfirmRecurringBill",
         "parameters": [
           {
             "name": "id",
@@ -5604,7 +5604,7 @@
         ],
         "summary": "Summarise income and expenses over a range",
         "description": "Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months.",
-        "operationId": "GetReportSummaryEndpoint",
+        "operationId": "GetReportSummary",
         "parameters": [
           {
             "name": "dateFrom",
@@ -5687,7 +5687,7 @@
         ],
         "summary": "Read installation settings",
         "description": "Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.",
-        "operationId": "GetSettingsEndpoint",
+        "operationId": "GetSettings",
         "responses": {
           "200": {
             "description": "The current settings.",
@@ -5742,7 +5742,7 @@
         ],
         "summary": "Update installation settings",
         "description": "Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature_disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.",
-        "operationId": "UpdateSettingsEndpoint",
+        "operationId": "UpdateSettings",
         "requestBody": {
           "content": {
             "application/json": {
@@ -5821,7 +5821,7 @@
         ],
         "summary": "Fetch exchange rates now",
         "description": "Administrators only. Fetches reference rates published since the newest stored date. It works even when automatic sync is turned off.",
-        "operationId": "SyncExchangeRatesEndpoint",
+        "operationId": "SyncExchangeRates",
         "responses": {
           "200": {
             "description": "How many rates were added and the newest rate date now stored.",
@@ -5890,7 +5890,7 @@
         ],
         "summary": "Read the settings the sign-in page needs",
         "description": "Anonymous. Returns only the installation name and the default language.",
-        "operationId": "GetPublicSettingsEndpoint",
+        "operationId": "GetPublicSettings",
         "responses": {
           "200": {
             "description": "The public settings.",
@@ -5942,7 +5942,7 @@
         ],
         "summary": "Provision the first administrator",
         "description": "Creates the administrator account on a fresh instance. It works exactly once: once an administrator exists the endpoint answers 409 for good. Rate limited to five attempts per five minutes per client.",
-        "operationId": "SetupEndpoint",
+        "operationId": "Setup",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6012,7 +6012,7 @@
         ],
         "summary": "Check whether first-run setup is needed",
         "description": "Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.",
-        "operationId": "GetSetupStatusEndpoint",
+        "operationId": "GetSetupStatus",
         "responses": {
           "200": {
             "description": "needsSetup is true while no administrator exists.",
@@ -6054,7 +6054,7 @@
         ],
         "summary": "Record a transaction",
         "description": "Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored.",
-        "operationId": "CreateTransactionEndpoint",
+        "operationId": "CreateTransaction",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6129,7 +6129,7 @@
         ],
         "summary": "List transactions",
         "description": "Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.",
-        "operationId": "GetTransactionsEndpoint",
+        "operationId": "GetTransactions",
         "parameters": [
           {
             "name": "page",
@@ -6289,7 +6289,7 @@
         ],
         "summary": "Set the category of several transactions",
         "description": "Files every listed transaction under one category, or clears their category when categoryId is null. The request is all-or-nothing: if any id is not visible to you, is a split transaction, or has a type the category does not match, nothing changes. Repeated ids count once.",
-        "operationId": "BulkCategorizeTransactionsEndpoint",
+        "operationId": "BulkCategorizeTransactions",
         "requestBody": {
           "content": {
             "application/json": {
@@ -6372,7 +6372,7 @@
         ],
         "summary": "Export transactions as CSV",
         "description": "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.",
-        "operationId": "ExportTransactionsEndpoint",
+        "operationId": "ExportTransactions",
         "parameters": [
           {
             "name": "page",
@@ -6531,7 +6531,7 @@
         ],
         "summary": "Export transactions as PDF",
         "description": "Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.",
-        "operationId": "ExportTransactionsPdfEndpoint",
+        "operationId": "ExportTransactionsPdf",
         "parameters": [
           {
             "name": "page",
@@ -6690,7 +6690,7 @@
         ],
         "summary": "Total the filtered transactions",
         "description": "Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.",
-        "operationId": "GetTransactionsSummaryEndpoint",
+        "operationId": "GetTransactionsSummary",
         "parameters": [
           {
             "name": "accountId",
@@ -6816,7 +6816,7 @@
         ],
         "summary": "Delete a transaction",
         "description": "Removes the transaction and any split lines, and adjusts the account balance accordingly.",
-        "operationId": "DeleteTransactionEndpoint",
+        "operationId": "DeleteTransaction",
         "parameters": [
           {
             "name": "id",
@@ -6885,7 +6885,7 @@
         ],
         "summary": "Get one transaction",
         "description": "Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.",
-        "operationId": "GetTransactionEndpoint",
+        "operationId": "GetTransaction",
         "parameters": [
           {
             "name": "id",
@@ -6961,7 +6961,7 @@
         ],
         "summary": "Update a transaction",
         "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Moving it to another account adjusts both balances.",
-        "operationId": "UpdateTransactionEndpoint",
+        "operationId": "UpdateTransaction",
         "parameters": [
           {
             "name": "id",
@@ -7061,7 +7061,7 @@
         ],
         "summary": "Create a transfer",
         "description": "Moves money from one of your accounts to another. Both balances change and neither side counts as income or expense, so reports and budgets are left alone. The two accounts must differ and both must be visible to you.",
-        "operationId": "CreateTransferEndpoint",
+        "operationId": "CreateTransfer",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7136,7 +7136,7 @@
         ],
         "summary": "List transfers",
         "description": "Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.",
-        "operationId": "GetTransfersEndpoint",
+        "operationId": "GetTransfers",
         "parameters": [
           {
             "name": "page",
@@ -7227,7 +7227,7 @@
         ],
         "summary": "Delete a transfer",
         "description": "Reverses the transfer: both account balances go back to what they were before it.",
-        "operationId": "DeleteTransferEndpoint",
+        "operationId": "DeleteTransfer",
         "parameters": [
           {
             "name": "id",
@@ -7298,7 +7298,7 @@
         ],
         "summary": "Create a user",
         "description": "Provisions a user account with an initial password. There is no self-service sign-up: accounts exist only because an administrator created them. Administrators only.",
-        "operationId": "CreateUserEndpoint",
+        "operationId": "CreateUser",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7381,7 +7381,7 @@
         ],
         "summary": "List users",
         "description": "Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.",
-        "operationId": "GetUsersEndpoint",
+        "operationId": "GetUsers",
         "parameters": [
           {
             "name": "search",
@@ -7501,7 +7501,7 @@
         ],
         "summary": "Update your own profile",
         "description": "Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.",
-        "operationId": "UpdateMyProfileEndpoint",
+        "operationId": "UpdateMyProfile",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7573,7 +7573,7 @@
         ],
         "summary": "Deactivate a user",
         "description": "Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself. Administrators only.",
-        "operationId": "DeactivateUserEndpoint",
+        "operationId": "DeactivateUser",
         "parameters": [
           {
             "name": "id",
@@ -7656,7 +7656,7 @@
         ],
         "summary": "Change a user role",
         "description": "Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last administrator cannot be demoted, so an instance is never left without one. Administrators only.",
-        "operationId": "UpdateUserRoleEndpoint",
+        "operationId": "UpdateUserRole",
         "parameters": [
           {
             "name": "id",
@@ -7799,10 +7799,12 @@
             "$ref": "#/components/schemas/AccountType"
           },
           "startingBalance": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "currentBalance": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "createdAt": {
             "type": "string",
@@ -7825,10 +7827,12 @@
             "$ref": "#/components/schemas/IReadOnlyListOfCurrencyBalance"
           },
           "reportingBalance": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "holdingsValue": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -7896,7 +7900,8 @@
             "$ref": "#/components/schemas/AssetType"
           },
           "currentValue": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
@@ -8028,13 +8033,16 @@
             "type": "string"
           },
           "limitAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "spent": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "remaining": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "period": {
             "type": "string"
@@ -8106,7 +8114,8 @@
             ]
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -8186,6 +8195,7 @@
               "string"
             ],
             "description": "Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.",
+            "format": "decimal",
             "example": "650.00"
           },
           "accountId": {
@@ -8249,13 +8259,15 @@
             "format": "uuid"
           },
           "fromAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "fromCurrency": {
             "$ref": "#/components/schemas/Currency"
           },
           "toAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "toCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -8276,7 +8288,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "feeCurrency": {
             "oneOf": [
@@ -8344,6 +8357,7 @@
           "startingBalance": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, for example \u00221250.00\u0022.",
+            "format": "decimal",
             "example": "1250.00"
           },
           "scope": {
@@ -8400,6 +8414,7 @@
           "currentValue": {
             "type": "string",
             "description": "Decimal string with at most two decimal places.",
+            "format": "decimal",
             "example": "180000.00"
           },
           "asOf": {
@@ -8430,6 +8445,7 @@
           "limitAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
             "example": "400.00"
           }
         },
@@ -8509,6 +8525,7 @@
           "fromAmount": {
             "type": "string",
             "description": "Amount sold, as a decimal string greater than zero.",
+            "format": "decimal",
             "example": "1000.00"
           },
           "fromCurrency": {
@@ -8517,6 +8534,7 @@
           "toAmount": {
             "type": "string",
             "description": "Amount bought, as a decimal string greater than zero.",
+            "format": "decimal",
             "example": "1084.20"
           },
           "toCurrency": {
@@ -8540,6 +8558,7 @@
               "string"
             ],
             "description": "Optional fee. It is charged on top of the sold or bought amount.",
+            "format": "decimal",
             "example": "2.00"
           },
           "feeCurrency": {
@@ -8598,6 +8617,7 @@
           "outstandingAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places.",
+            "format": "decimal",
             "example": "120000.00"
           },
           "interestRate": {
@@ -8641,6 +8661,7 @@
           "targetAmount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
             "example": "5000.00"
           },
           "currentAmount": {
@@ -8649,6 +8670,7 @@
               "string"
             ],
             "description": "Amount already saved. Defaults to zero when omitted.",
+            "format": "decimal",
             "example": "1200.00"
           },
           "targetDate": {
@@ -8722,6 +8744,7 @@
               "string"
             ],
             "description": "Shares for a buy or sell; new shares per old share for a split.",
+            "format": "decimal",
             "example": "10"
           },
           "price": {
@@ -8729,6 +8752,7 @@
               "null",
               "string"
             ],
+            "format": "decimal",
             "example": "104.52"
           },
           "amount": {
@@ -8736,13 +8760,15 @@
               "null",
               "string"
             ],
-            "description": "Cash amount for dividend, withholding tax, interest and fee entries."
+            "description": "Cash amount for dividend, withholding tax, interest and fee entries.",
+            "format": "decimal"
           },
           "fee": {
             "type": [
               "null",
               "string"
             ],
+            "format": "decimal",
             "example": "1.25"
           },
           "currency": {
@@ -8806,6 +8832,7 @@
               "string"
             ],
             "description": "Expected amount. Required for a Fixed bill, optional for a Variable one.",
+            "format": "decimal",
             "example": "650.00"
           },
           "categoryId": {
@@ -8882,6 +8909,7 @@
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
             "example": "42.50"
           },
           "date": {
@@ -8954,6 +8982,7 @@
           "amount": {
             "type": "string",
             "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
             "example": "200.00"
           },
           "date": {
@@ -8982,7 +9011,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "receivedCurrency": {
             "oneOf": [
@@ -9121,7 +9151,8 @@
             "$ref": "#/components/schemas/Currency"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -9136,13 +9167,16 @@
         "type": "object",
         "properties": {
           "totalBalance": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "monthIncome": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "monthExpense": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "monthStart": {
             "$ref": "#/components/schemas/DateOnly"
@@ -9178,7 +9212,8 @@
             "$ref": "#/components/schemas/DebtType"
           },
           "outstandingAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "interestRate": {
             "type": [
@@ -9366,10 +9401,12 @@
             "type": "string"
           },
           "targetAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "currentAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "targetDate": {
             "oneOf": [
@@ -9407,43 +9444,52 @@
             "$ref": "#/components/schemas/SecurityResponse"
           },
           "quantity": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "averageCost": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "costBasis": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "marketValue": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "unrealizedGain": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "unrealizedPercent": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "marketValueReporting": {
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "realizedGain": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "dividends": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -9584,7 +9630,8 @@
             ]
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
@@ -9680,7 +9727,8 @@
             ]
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "type": {
             "$ref": "#/components/schemas/FlowType"
@@ -9750,16 +9798,20 @@
             "$ref": "#/components/schemas/DateOnly"
           },
           "quantity": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "price": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "fee": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "cashAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
@@ -10060,10 +10112,12 @@
             "format": "int32"
           },
           "income": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "expense": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -10099,16 +10153,20 @@
         "type": "object",
         "properties": {
           "accounts": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "assets": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "debts": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "netWorth": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -10126,16 +10184,20 @@
             "$ref": "#/components/schemas/DateOnly"
           },
           "accounts": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "assets": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "debts": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "netWorth": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -10332,25 +10394,32 @@
             "$ref": "#/components/schemas/Currency"
           },
           "marketValue": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "costBasis": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "unrealizedGain": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "realizedGain": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "dividends": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "withholdingTax": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "fees": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "isComplete": {
             "type": "boolean"
@@ -10379,19 +10448,24 @@
             "format": "int32"
           },
           "dividends": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "withholdingTax": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "interest": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "fees": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "realizedGain": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -10548,7 +10622,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "categoryId": {
             "type": [
@@ -10599,13 +10674,16 @@
             "$ref": "#/components/schemas/DateOnly"
           },
           "totalIncome": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "totalExpense": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "net": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "expenseByCategory": {
             "$ref": "#/components/schemas/IReadOnlyListOfCategoryBreakdownItem"
@@ -10630,10 +10708,12 @@
             "$ref": "#/components/schemas/DateOnly"
           },
           "income": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "expense": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -10713,7 +10793,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "lastPriceDate": {
             "oneOf": [
@@ -10772,7 +10853,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "lastPriceDate": {
             "oneOf": [
@@ -10843,7 +10925,8 @@
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "format": "decimal"
           },
           "lastPriceDate": {
             "oneOf": [
@@ -11003,7 +11086,8 @@
             "format": "uuid"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "description": {
             "type": [
@@ -11034,7 +11118,8 @@
             "format": "uuid"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "description": {
             "type": [
@@ -11081,7 +11166,8 @@
             "$ref": "#/components/schemas/FlowType"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -11115,7 +11201,8 @@
             "$ref": "#/components/schemas/Currency"
           },
           "reportingAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -11149,10 +11236,12 @@
             "format": "int32"
           },
           "totalIncome": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "totalExpense": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -11184,7 +11273,8 @@
             "format": "uuid"
           },
           "amount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "date": {
             "$ref": "#/components/schemas/DateOnly"
@@ -11203,7 +11293,8 @@
             "$ref": "#/components/schemas/Currency"
           },
           "receivedAmount": {
-            "type": "string"
+            "type": "string",
+            "format": "decimal"
           },
           "receivedCurrency": {
             "$ref": "#/components/schemas/Currency"
@@ -11264,6 +11355,7 @@
           },
           "startingBalance": {
             "type": "string",
+            "format": "decimal",
             "example": "1250.00"
           },
           "scope": {
@@ -11318,6 +11410,7 @@
           },
           "currentValue": {
             "type": "string",
+            "format": "decimal",
             "example": "185000.00"
           },
           "asOf": {
@@ -11346,6 +11439,7 @@
           },
           "limitAmount": {
             "type": "string",
+            "format": "decimal",
             "example": "450.00"
           }
         },
@@ -11417,6 +11511,7 @@
           },
           "outstandingAmount": {
             "type": "string",
+            "format": "decimal",
             "example": "118500.00"
           },
           "interestRate": {
@@ -11458,10 +11553,12 @@
           },
           "targetAmount": {
             "type": "string",
+            "format": "decimal",
             "example": "5000.00"
           },
           "currentAmount": {
             "type": "string",
+            "format": "decimal",
             "example": "1500.00"
           },
           "targetDate": {
@@ -11534,6 +11631,7 @@
               "string"
             ],
             "description": "Shares for a buy or sell; new shares per old share for a split.",
+            "format": "decimal",
             "example": "10"
           },
           "price": {
@@ -11541,6 +11639,7 @@
               "null",
               "string"
             ],
+            "format": "decimal",
             "example": "104.52"
           },
           "amount": {
@@ -11548,13 +11647,15 @@
               "null",
               "string"
             ],
-            "description": "Cash amount for dividend, withholding tax, interest and fee entries."
+            "description": "Cash amount for dividend, withholding tax, interest and fee entries.",
+            "format": "decimal"
           },
           "fee": {
             "type": [
               "null",
               "string"
             ],
+            "format": "decimal",
             "example": "1.25"
           },
           "currency": {
@@ -11669,6 +11770,7 @@
               "null",
               "string"
             ],
+            "format": "decimal",
             "example": "675.00"
           },
           "categoryId": {
@@ -11806,6 +11908,7 @@
           },
           "amount": {
             "type": "string",
+            "format": "decimal",
             "example": "42.50"
           },
           "date": {

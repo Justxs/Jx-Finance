@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import {
+  getDeleteDebtMockHandler,
+  getGetDebtsMockHandler,
+} from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { debts } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { debts, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { DebtsSection } from "./debts-section";
 
 function DebtsSectionStory() {
@@ -18,7 +27,7 @@ function DebtsSectionStory() {
 }
 
 const many = Array.from({ length: 15 }, (_, index) => ({
-  ...debts[index % debts.length],
+  ...cycle(debts, index),
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
 }));
 
@@ -43,7 +52,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/debts", () => HttpResponse.json(many)), ...handlers],
+      handlers: [getGetDebtsMockHandler(many), ...handlers],
     },
   },
 };
@@ -59,12 +68,7 @@ export const AddDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.delete("*/api/debts/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getDeleteDebtMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

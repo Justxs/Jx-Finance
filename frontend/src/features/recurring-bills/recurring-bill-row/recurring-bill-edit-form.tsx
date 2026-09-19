@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useUpdateRecurringBillEndpoint } from "@/api/generated";
+import { useUpdateRecurringBill } from "@/api/generated";
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,11 +10,10 @@ import { isPositiveMoney } from "@/lib/validation";
 
 interface Props {
   bill: RecurringBillResponse;
-  onSaved: () => void;
   onDone: () => void;
 }
 
-export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>) {
+export function RecurringBillEditForm({ bill, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const [name, setName] = useState(bill.name ?? "");
@@ -22,8 +21,8 @@ export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>
   const [remindDaysBefore, setRemindDaysBefore] = useState(String(bill.remindDaysBefore ?? 0));
   const [isActive, setIsActive] = useState(bill.isActive ?? true);
 
-  const updateMutation = useUpdateRecurringBillEndpoint({
-    mutation: { onSuccess: onDone, onSettled: onSaved },
+  const updateMutation = useUpdateRecurringBill({
+    mutation: { onSuccess: onDone },
   });
 
   const amountInvalid = bill.kind === "fixed" && !isPositiveMoney(amount);

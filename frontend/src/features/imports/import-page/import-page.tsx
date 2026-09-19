@@ -1,6 +1,6 @@
 import { Link, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useGetAccountsEndpointSuspense } from "@/api/generated";
+import { useGetAccountsSuspense } from "@/api/generated";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -9,7 +9,7 @@ import { ImportSection } from "../import-section";
 export function ImportPage() {
   const { t } = useTranslation();
   const search = useSearch({ from: "/import" });
-  const accounts = useGetAccountsEndpointSuspense();
+  const accounts = useGetAccountsSuspense();
   const accountList = accounts.data ?? [];
 
   return (

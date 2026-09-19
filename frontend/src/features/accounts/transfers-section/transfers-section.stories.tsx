@@ -1,13 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
+import {
+  getCreateTransferMockHandler,
+  getGetTransfersMockHandler,
+} from "@/api/generated/transfers/transfers.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { accounts, ids, transfers } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { accounts, ids, transfers, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { TransfersSection } from "./transfers-section";
 
 const manyTransfers = Array.from({ length: 34 }, (_, index) => ({
-  ...transfers[index % transfers.length],
+  ...cycle(transfers, index),
   id: `99999999-0000-4000-8000-${String(index).padStart(12, "0")}`,
   fromAccountId: ids.accounts.checking,
   toAccountId: ids.accounts.savings,
@@ -18,17 +27,12 @@ function manyTransfersPage({ request }: { request: Request }) {
   const params = new URL(request.url).searchParams;
   const page = Number(params.get("page") ?? "1");
   const pageSize = Number(params.get("pageSize") ?? "10");
-  return HttpResponse.json({
+  return {
     items: manyTransfers.slice((page - 1) * pageSize, page * pageSize),
     total: manyTransfers.length,
     page,
     pageSize,
-  });
-}
-
-async function neverResolve() {
-  await delay("infinite");
-  return new HttpResponse(null, { status: 204 });
+  };
 }
 
 const meta = {
@@ -53,7 +57,7 @@ export const Default: Story = {};
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const Paginated: Story = {
-  parameters: { msw: { handlers: [http.get("*/api/transfers", manyTransfersPage), ...handlers] } },
+  parameters: { msw: { handlers: [getGetTransfersMockHandler(manyTransfersPage), ...handlers] } },
 };
 
 export const UnknownAccounts: Story = { args: { accounts: [] } };
@@ -63,5 +67,5 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [http.post("*/api/transfers", neverResolve), ...handlers] } },
+  parameters: { msw: { handlers: [getCreateTransferMockHandler(pending), ...handlers] } },
 };
