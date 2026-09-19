@@ -2,9 +2,9 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
-  useGetAccountsSuspense,
-  useGetCategoriesSuspense,
-  useGetTransactionsSuspense,
+  useAccountsSuspense,
+  useCategoriesSuspense,
+  useTransactionsSuspense,
 } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RowsSkeleton } from "@/components/ui/skeleton";
@@ -14,6 +14,7 @@ import {
   transactionName,
 } from "@/features/transactions/transaction-amount";
 import { parseIso } from "@/lib/calendar";
+import { recentTransactionsParams } from "../dashboard-queries";
 
 function FirstRunSteps() {
   const { t } = useTranslation();
@@ -55,9 +56,9 @@ function RecentRows() {
   const { t, i18n } = useTranslation();
   const dayFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" });
 
-  const recent = useGetTransactionsSuspense({ page: 1, pageSize: 6 });
-  const categories = useGetCategoriesSuspense();
-  const accounts = useGetAccountsSuspense();
+  const recent = useTransactionsSuspense(recentTransactionsParams);
+  const categories = useCategoriesSuspense();
+  const accounts = useAccountsSuspense();
 
   const categoryById = new Map(categories.data.map((c) => [c.id, c]));
   const accountNames = new Map(accounts.data.map((a) => [a.id, a.name]));

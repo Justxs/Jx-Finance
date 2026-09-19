@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Conversions.CreateConversion;
@@ -8,11 +9,11 @@ public sealed class CreateConversionValidator : Validator<CreateConversionReques
 {
     public CreateConversionValidator()
     {
-        RuleFor(r => r.AccountId).NotEmpty();
-        RuleFor(r => r.FromCurrency).IsInEnum();
+        RuleFor(r => r.AccountId).IsRequired();
+        RuleFor(r => r.FromCurrency).IsKnownEnum();
         RuleFor(r => r.ToCurrency)
-            .IsInEnum()
-            .NotEqual(r => r.FromCurrency)
+            .IsKnownEnum()
+            .DiffersFrom(r => r.FromCurrency)
             .WithMessage("Choose two different currencies.");
         RuleFor(r => r.FromAmount)
             .IsPositiveMoney()
@@ -25,8 +26,9 @@ public sealed class CreateConversionValidator : Validator<CreateConversionReques
             .WithMessage("Fee must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.FeeCurrency)
             .Must((request, currency) => currency is null || currency == request.FromCurrency || currency == request.ToCurrency)
+            .WithErrorCode(ErrorCodes.EnumInvalid)
             .WithMessage("The fee must be in one of the two converted currencies.");
-        RuleFor(r => r.Date).NotEmpty();
-        RuleFor(r => r.Description).MaximumLength(500);
+        RuleFor(r => r.Date).IsRequired();
+        RuleFor(r => r.Description).HasMaxLength(500);
     }
 }

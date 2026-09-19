@@ -40,6 +40,6 @@ export const SetupResponse = zod.object({
  * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
  * @summary Check whether first-run setup is needed
  */
-export const GetSetupStatusResponse = zod.object({
+export const SetupStatusResponse = zod.object({
   needsSetup: zod.boolean(),
 });

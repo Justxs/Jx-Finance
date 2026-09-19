@@ -1,17 +1,20 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  useGetNotificationsSuspense,
+  getNotificationsQueryKey,
+  useNotificationsSuspense,
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
 } from "@/api/generated";
-import type { NotificationResponse } from "@/api/generated/model";
+import type { NotificationResponse, NotificationsParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
+import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 
 export function NotificationBellUnavailable() {
   const { t } = useTranslation();
@@ -33,6 +36,12 @@ export function NotificationBellUnavailable() {
   );
 }
 
+export const unreadParams: NotificationsParams = { unread: true };
+
+function noNotifications(): NotificationResponse[] {
+  return [];
+}
+
 interface Props {
   placement?: "below" | "above";
 }
@@ -42,7 +51,9 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const date = useDate();
   const [open, setOpen] = useState(false);
 
-  const notifications = useGetNotificationsSuspense({ unread: true });
+  const queryClient = useQueryClient();
+  const unreadKey = getNotificationsQueryKey(unreadParams);
+  const notifications = useNotificationsSuspense(unreadParams);
   const unreadList = notifications.data;
 
   const bellLabel =
@@ -50,8 +61,16 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       ? t("notifications.titleWithCount", { count: unreadList.length })
       : t("notifications.title");
 
-  const markReadMutation = useMarkNotificationRead();
-  const markAllReadMutation = useMarkAllNotificationsRead();
+  const markReadMutation = useMarkNotificationRead({
+    mutation: optimisticRemoval<NotificationResponse>(queryClient, unreadKey),
+  });
+  const markAllReadMutation = useMarkAllNotificationsRead({
+    mutation: optimisticUpdate<NotificationResponse[]>({
+      queryClient,
+      queryKey: unreadKey,
+      apply: noNotifications,
+    }),
+  });
 
   function describe(notification: NotificationResponse) {
     const dueDate = notification.type === "billDue" ? parseIso(notification.message ?? "") : null;

@@ -27,7 +27,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192436)", cancellationToken);
         if (!await IsSetupNeededAsync(cancellationToken))
         {
-            return Result<AppUser>.Failure(ErrorCodes.Conflict, "Setup has already been completed.");
+            return Result<AppUser>.Failure(ErrorCodes.SetupAlreadyCompleted, "Setup has already been completed.");
         }
 
         var user = await userManager.Users.FirstOrDefaultAsync(cancellationToken);
@@ -55,9 +55,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
 
         if (!identityResult.Succeeded)
         {
-            return Result<AppUser>.Failure(
-                ErrorCodes.Validation,
-                string.Join("; ", identityResult.Errors.Select(e => e.Description)));
+            return Result<AppUser>.Failure(identityResult.ToDomainError());
         }
 
         await EnsureRolesExistAsync();
@@ -77,7 +75,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
             || await userManager.IsLockedOutAsync(user)
             || !await userManager.CheckPasswordAsync(user, password))
         {
-            return Result<AppUser>.Failure(ErrorCodes.Unauthorized, "Invalid email or password.");
+            return Result<AppUser>.Failure(ErrorCodes.CredentialsInvalid, "Invalid email or password.");
         }
 
         return Result<AppUser>.Success(user);
@@ -136,7 +134,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
             code);
         if (!isValid)
         {
-            return Result<IReadOnlyList<string>>.Failure(ErrorCodes.Validation, "Invalid authenticator code.");
+            return Result<IReadOnlyList<string>>.Failure(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code.");
         }
 
         await userManager.SetTwoFactorEnabledAsync(user, true);

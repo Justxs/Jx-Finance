@@ -5,7 +5,6 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
@@ -14,57 +13,6 @@ import type {
   TwoFactorSetupResponse,
   UserProfileResponse,
 } from "../model";
-
-export const getEnableTwoFactorResponseMock = (
-  overrideResponse: Partial<Extract<EnableTwoFactorResponse, object>> = {},
-): EnableTwoFactorResponse => ({
-  recoveryCodes: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ),
-  ...overrideResponse,
-});
-
-export const getSetupTwoFactorResponseMock = (
-  overrideResponse: Partial<Extract<TwoFactorSetupResponse, object>> = {},
-): TwoFactorSetupResponse => ({
-  sharedKey: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  authenticatorUri: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getLoginResponseUserProfileResponseMock = (
-  overrideResponse: Partial<UserProfileResponse> = {},
-): UserProfileResponse => ({
-  ...{
-    id: faker.string.uuid(),
-    email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    twoFactorEnabled: faker.datatype.boolean(),
-    isActive: faker.datatype.boolean(),
-  },
-  ...overrideResponse,
-});
-
-export const getLoginResponseMock = (
-  overrideResponse: Partial<Extract<LoginResponse, object>> = {},
-): LoginResponse => ({
-  twoFactorRequired: faker.datatype.boolean(),
-  profile: faker.helpers.arrayElement([null, { ...getLoginResponseUserProfileResponseMock() }]),
-  ...overrideResponse,
-});
-
-export const getMeResponseMock = (
-  overrideResponse: Partial<Extract<UserProfileResponse, object>> = {},
-): UserProfileResponse => ({
-  id: faker.string.uuid(),
-  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  twoFactorEnabled: faker.datatype.boolean(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
 
 export const getDisableTwoFactorMockHandler = (
   overrideResponse?:
@@ -101,7 +49,7 @@ export const getEnableTwoFactorMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getEnableTwoFactorResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -125,7 +73,7 @@ export const getSetupTwoFactorMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getSetupTwoFactorResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -149,7 +97,7 @@ export const getLoginMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getLoginResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -192,7 +140,7 @@ export const getMeMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getMeResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },

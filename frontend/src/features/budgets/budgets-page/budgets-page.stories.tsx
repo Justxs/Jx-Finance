@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   getDeleteBudgetMockHandler,
-  getGetBudgetsMockHandler,
+  getBudgetsMockHandler,
 } from "@/api/generated/budgets/budgets.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
@@ -75,7 +75,7 @@ export const AllOverLimit: Story = {
   parameters: {
     msw: {
       handlers: [
-        getGetBudgetsMockHandler([
+        getBudgetsMockHandler([
           overLimitBudget,
           {
             ...overLimitBudget,
@@ -101,7 +101,7 @@ export const ZeroLimit: Story = {
   parameters: {
     msw: {
       handlers: [
-        getGetBudgetsMockHandler([
+        getBudgetsMockHandler([
           { ...overLimitBudget, limitAmount: "0.00", spent: "0.00", remaining: "0.00" },
         ]),
         ...handlers,
@@ -113,7 +113,7 @@ export const ZeroLimit: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getGetBudgetsMockHandler(manyBudgets), ...handlers],
+      handlers: [getBudgetsMockHandler(manyBudgets), ...handlers],
     },
   },
 };

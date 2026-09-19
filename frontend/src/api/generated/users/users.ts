@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -26,12 +21,11 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   CreateUserRequest,
-  GetUsersParams,
-  IReadOnlyListOfUserProfileResponse,
   ProblemDetails,
   UpdateMyProfileRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
+  UsersParams,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -155,7 +149,7 @@ export const useCreateUser = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getCreateUserMutationOptions(options), queryClient);
 };
-export const getGetUsersUrl = (params?: GetUsersParams) => {
+export const getUsersUrl = (params?: UsersParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -173,176 +167,76 @@ export const getGetUsersUrl = (params?: GetUsersParams) => {
  * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
  * @summary List users
  */
-export const getUsers = async (
-  params?: GetUsersParams,
+export const users = async (
+  params?: UsersParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfUserProfileResponse> => {
-  return customFetch<IReadOnlyListOfUserProfileResponse>(getGetUsersUrl(params), {
+): Promise<UserProfileResponse[]> => {
+  return customFetch<UserProfileResponse[]>(getUsersUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetUsersQueryKey = (params?: GetUsersParams) => {
+export const getUsersQueryKey = (params?: UsersParams) => {
   return [`/api/users`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetUsersQueryOptions = <
-  TData = Awaited<ReturnType<typeof getUsers>>,
+export const getUsersSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetUsersParams,
+  params?: UsersParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetUsersQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getUsersQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsers>>> = ({ signal }) =>
-    getUsers(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getUsers>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetUsersQueryResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>;
-export type GetUsersQueryError = ErrorType<ProblemDetails>;
-
-export function useGetUsers<
-  TData = Awaited<ReturnType<typeof getUsers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetUsersParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getUsers>>,
-          TError,
-          Awaited<ReturnType<typeof getUsers>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetUsers<
-  TData = Awaited<ReturnType<typeof getUsers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetUsersParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getUsers>>,
-          TError,
-          Awaited<ReturnType<typeof getUsers>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetUsers<
-  TData = Awaited<ReturnType<typeof getUsers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetUsersParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List users
- */
-
-export function useGetUsers<
-  TData = Awaited<ReturnType<typeof getUsers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetUsersParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetUsersQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetUsersSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getUsers>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetUsersParams,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetUsersQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsers>>> = ({ signal }) =>
-    getUsers(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof users>>> = ({ signal }) =>
+    users(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getUsers>>,
+    Awaited<ReturnType<typeof users>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetUsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getUsers>>>;
-export type GetUsersSuspenseQueryError = ErrorType<ProblemDetails>;
+export type UsersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof users>>>;
+export type UsersSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetUsersSuspense<
-  TData = Awaited<ReturnType<typeof getUsers>>,
+export function useUsersSuspense<
+  TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetUsersParams,
+  params: undefined | UsersParams,
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetUsersSuspense<
-  TData = Awaited<ReturnType<typeof getUsers>>,
+export function useUsersSuspense<
+  TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetUsersParams,
+  params?: UsersParams,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetUsersSuspense<
-  TData = Awaited<ReturnType<typeof getUsers>>,
+export function useUsersSuspense<
+  TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetUsersParams,
+  params?: UsersParams,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -351,18 +245,18 @@ export function useGetUsersSuspense<
  * @summary List users
  */
 
-export function useGetUsersSuspense<
-  TData = Awaited<ReturnType<typeof getUsers>>,
+export function useUsersSuspense<
+  TData = Awaited<ReturnType<typeof users>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetUsersParams,
+  params?: UsersParams,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getUsers>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof users>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetUsersSuspenseQueryOptions(params, options);
+  const queryOptions = getUsersSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

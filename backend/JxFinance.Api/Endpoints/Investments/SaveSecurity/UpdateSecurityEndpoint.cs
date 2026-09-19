@@ -9,7 +9,7 @@ public sealed class UpdateSecurityEndpoint(IInvestmentService investmentService)
 {
     public override void Configure()
     {
-        Put("investments/securities/{id}");
+        Put("investments/securities/{id:guid}");
         Group<InvestmentsGroup>();
     }
 

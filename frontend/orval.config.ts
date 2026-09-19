@@ -75,6 +75,22 @@ function writeDecimalFields() {
   );
 }
 
+const plainQueryOperations = [
+  "GetCurrencies",
+  "GetExchangeRate",
+  "GetPublicSettings",
+  "GetSecurities",
+  "GetSettings",
+  "GetTransfers",
+  "Me",
+];
+
+function operationName(operation: { operationId?: string }, _route: string, verb: string) {
+  const id = operation.operationId ?? "";
+  const name = verb === "get" && /^Get[A-Z]/.test(id) ? id.slice(3) : id;
+  return name.charAt(0).toLowerCase() + name.slice(1);
+}
+
 export default defineConfig({
   api: {
     input,
@@ -85,13 +101,18 @@ export default defineConfig({
       target: "./src/api/generated",
       schemas: "./src/api/generated/model",
       mock: {
-        generators: [{ type: "msw", baseUrl: "*", delay: false }],
+        generators: [{ type: "msw", baseUrl: "*", delay: false, operationResponses: false }],
       },
       override: {
+        operationName,
         query: {
+          useQuery: false,
           useSuspenseQuery: true,
           signal: true,
         },
+        operations: Object.fromEntries(
+          plainQueryOperations.map((id) => [id, { query: { useQuery: true } }]),
+        ),
         mutator: {
           path: "./src/api/client.ts",
           name: "customFetch",
@@ -113,6 +134,12 @@ export default defineConfig({
       clean: true,
       target: "./src/api/schemas",
       fileExtension: ".zod.ts",
+      override: {
+        operationName,
+        zod: {
+          generate: { param: false, query: false, header: false, body: true, response: true },
+        },
+      },
     },
     hooks: {
       afterAllFilesWrite: format,

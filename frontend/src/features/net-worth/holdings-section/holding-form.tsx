@@ -1,16 +1,13 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { SelectField, type SelectOption } from "@/components/select-field";
+import type { SelectOption } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToday } from "@/hooks/use-settings";
-import { isMoney, isRate } from "@/lib/validation";
+import { type FieldAliases, submitToServer } from "@/lib/form-server-errors";
+import { isRate, money, requiredText, requiredValue } from "@/lib/validation";
 
 export interface HoldingFormValues {
   name: string;
@@ -30,7 +27,8 @@ interface Props {
   withAsOf?: boolean;
   pending: boolean;
   error?: unknown;
-  onSubmit: (values: HoldingFormValues) => void;
+  errorAliases?: FieldAliases;
+  onSubmit: (values: HoldingFormValues) => Promise<unknown> | void;
   onCancel: () => void;
 }
 
@@ -44,6 +42,7 @@ export function HoldingForm({
   withAsOf = false,
   pending,
   error,
+  errorAliases,
   onSubmit,
   onCancel,
 }: Readonly<Props>) {
@@ -51,17 +50,11 @@ export function HoldingForm({
   const today = useToday();
 
   const schema = z.object({
-    name: z
-      .string()
-      .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine(
-        (value) => value.trim().length <= createAssetBodyNameMax,
-        t("validation.maxLength", { max: createAssetBodyNameMax }),
-      ),
+    name: requiredText(t, createAssetBodyNameMax),
     type: z.string(),
-    amount: z.string().refine(isMoney, t("validation.money")),
+    amount: money(t),
     interestRate: z.string().refine(isRate, t("validation.rate")),
-    asOf: z.string().min(1, t("validation.required")),
+    asOf: requiredValue(t),
   });
 
   const defaultValues: HoldingFormValues = initialValues ?? {
@@ -72,126 +65,75 @@ export function HoldingForm({
     asOf: today,
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      onSubmit({ ...value, name: value.name.trim() });
-    },
+    onSubmit: (submission) =>
+      submitToServer(
+        submission,
+        () => onSubmit({ ...submission.value, name: submission.value.name.trim() }),
+        errorAliases,
+      ),
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="name">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-name`}>{t("netWorth.name")}</Label>
-            <Input
-              id={`${idPrefix}-name`}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? `${idPrefix}-name-error` : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id={`${idPrefix}-name-error`} message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="name">
+          {(field) => <field.TextField id={`${idPrefix}-name`} label={t("netWorth.name")} />}
+        </form.Field>
 
-      <form.Field name="type">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-type`}>{t("netWorth.type")}</Label>
-            <SelectField
+        <form.Field name="type">
+          {(field) => (
+            <field.SelectFieldControl
               id={`${idPrefix}-type`}
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
+              label={t("netWorth.type")}
               options={typeOptions}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="amount">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor={`${idPrefix}-amount`}>{amountLabel}</Label>
-            <Input
-              id={`${idPrefix}-amount`}
-              inputMode="decimal"
-              placeholder="0.00"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? `${idPrefix}-amount-error` : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id={`${idPrefix}-amount-error`} message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="amount">
+          {(field) => <field.MoneyInputField id={`${idPrefix}-amount`} label={amountLabel} />}
+        </form.Field>
 
-      {withInterestRate ? (
-        <form.Field name="interestRate">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-rate`}>{t("netWorth.interestRate")}</Label>
-              <Input
+        {withInterestRate ? (
+          <form.Field name="interestRate">
+            {(field) => (
+              <field.MoneyInputField
                 id={`${idPrefix}-rate`}
-                inputMode="decimal"
+                label={t("netWorth.interestRate")}
                 placeholder="0.0"
-                value={field.value}
-                aria-invalid={field.errors.length > 0}
-                aria-describedby={field.errors.length > 0 ? `${idPrefix}-rate-error` : undefined}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError id={`${idPrefix}-rate-error`} message={field.errors[0]?.message} />
-            </div>
-          )}
-        </form.Field>
-      ) : null}
+            )}
+          </form.Field>
+        ) : null}
 
-      {withAsOf ? (
-        <form.Field name="asOf">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor={`${idPrefix}-as-of`}>{t("netWorth.asOf")}</Label>
-              <DatePicker
-                id={`${idPrefix}-as-of`}
-                value={field.value}
-                onBlur={field.handleBlur}
-                onChange={field.handleChange}
-              />
-            </div>
-          )}
-        </form.Field>
-      ) : null}
+        {withAsOf ? (
+          <form.Field name="asOf">
+            {(field) => <field.DateField id={`${idPrefix}-as-of`} label={t("netWorth.asOf")} />}
+          </form.Field>
+        ) : null}
 
-      <FormError error={error} />
+        <FormError error={error} />
 
-      <div className="col-span-full flex items-end justify-end gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {initialValues ? t("actions.save") : t("actions.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+        <div className="col-span-full flex items-end justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+          <form.SubmitButton pending={pending}>
+            {initialValues ? t("actions.save") : t("actions.add")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

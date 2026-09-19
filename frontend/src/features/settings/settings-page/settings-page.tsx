@@ -3,8 +3,8 @@ import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetSettingsQueryKey,
-  useGetAccountsSuspense,
+  getSettingsQueryKey,
+  useAccountsSuspense,
   useSyncExchangeRates,
   useUpdateSettings,
 } from "@/api/generated";
@@ -23,12 +23,12 @@ function SettingsContent() {
   const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const settings = useSettingsSuspense();
-  const accounts = useGetAccountsSuspense();
+  const accounts = useAccountsSuspense();
 
   const updateMutation = useUpdateSettings({
     mutation: {
       onSuccess: (saved) => {
-        queryClient.setQueryData(getGetSettingsQueryKey(), saved);
+        queryClient.setQueryData(getSettingsQueryKey(), saved);
         toast.success(t("settings.savedToast"));
       },
     },
@@ -89,7 +89,7 @@ function SettingsContent() {
       pending={updateMutation.isPending}
       exchangeRates={exchangeRates}
       onSubmit={(values, onSaved) =>
-        updateMutation.mutate({ data: values }, { onSuccess: onSaved })
+        updateMutation.mutateAsync({ data: values }, { onSuccess: onSaved })
       }
     />
   );

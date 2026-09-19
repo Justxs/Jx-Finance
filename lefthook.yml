@@ -1,0 +1,22 @@
+pre-commit:
+  parallel: true
+  jobs:
+    - name: format
+      root: frontend/
+      glob: "*.{ts,tsx,js,cjs,mjs,json,jsonc,css,md}"
+      run: node_modules/.bin/oxfmt {staged_files}
+      stage_fixed: true
+    - name: lint
+      root: frontend/
+      glob: "*.{ts,tsx}"
+      run: node_modules/.bin/oxlint {staged_files}
+
+pre-push:
+  jobs:
+    - name: typecheck
+      root: frontend/
+      glob: "*.{ts,tsx}"
+      run: node_modules/.bin/tsc -b
+    - name: contract reminder
+      glob: "backend/JxFinance.Api/{Endpoints,Common,Extensions}/**/*.cs"
+      run: echo "Backend API sources changed - run 'just gen-check' if the contract may have moved."

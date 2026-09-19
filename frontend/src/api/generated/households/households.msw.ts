@@ -5,128 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { HouseholdRole } from "../model";
-import type { HouseholdResponse, IReadOnlyListOfHouseholdResponse } from "../model";
-
-export const getCreateHouseholdResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
-
-export const getGetHouseholdsResponseMock = (): IReadOnlyListOfHouseholdResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-      () => ({
-        userId: faker.string.uuid(),
-        email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-      }),
-    ),
-  }));
-
-export const getGetHouseholdResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
-
-export const getUpdateHouseholdResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
-
-export const getAddMemberResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
-
-export const getRemoveMemberResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
-
-export const getUpdateMemberRoleResponseMock = (
-  overrideResponse: Partial<Extract<HouseholdResponse, object>> = {},
-): HouseholdResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  myRole: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-  members: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      userId: faker.string.uuid(),
-      email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      role: faker.helpers.arrayElement(Object.values(HouseholdRole)),
-    }),
-  ),
-  ...overrideResponse,
-});
+import type { HouseholdResponse } from "../model";
 
 export const getCreateHouseholdMockHandler = (
   overrideResponse?:
@@ -144,7 +25,7 @@ export const getCreateHouseholdMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateHouseholdResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -152,12 +33,12 @@ export const getCreateHouseholdMockHandler = (
   );
 };
 
-export const getGetHouseholdsMockHandler = (
+export const getHouseholdsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfHouseholdResponse
+    | HouseholdResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfHouseholdResponse> | IReadOnlyListOfHouseholdResponse),
+      ) => Promise<HouseholdResponse[]> | HouseholdResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -168,7 +49,7 @@ export const getGetHouseholdsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetHouseholdsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -195,7 +76,7 @@ export const getDeleteHouseholdMockHandler = (
   );
 };
 
-export const getGetHouseholdMockHandler = (
+export const getHouseholdMockHandler = (
   overrideResponse?:
     | HouseholdResponse
     | ((
@@ -211,7 +92,7 @@ export const getGetHouseholdMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetHouseholdResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -235,7 +116,7 @@ export const getUpdateHouseholdMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateHouseholdResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -259,7 +140,7 @@ export const getAddMemberMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getAddMemberResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -283,7 +164,7 @@ export const getRemoveMemberMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getRemoveMemberResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -307,7 +188,7 @@ export const getUpdateMemberRoleMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateMemberRoleResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -316,9 +197,9 @@ export const getUpdateMemberRoleMockHandler = (
 };
 export const getHouseholdsMock = () => [
   getCreateHouseholdMockHandler(),
-  getGetHouseholdsMockHandler(),
+  getHouseholdsMockHandler(),
   getDeleteHouseholdMockHandler(),
-  getGetHouseholdMockHandler(),
+  getHouseholdMockHandler(),
   getUpdateHouseholdMockHandler(),
   getAddMemberMockHandler(),
   getRemoveMemberMockHandler(),

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import {
-  getGetBrokerConnectionsMockHandler,
+  getBrokerConnectionsMockHandler,
   getImportBrokerReportMockHandler,
   getSyncBrokerConnectionMockHandler,
 } from "@/api/generated/investments/investments.msw";
@@ -123,7 +123,7 @@ export const ConnectionNew: Story = {
   args: { initialTab: "sync" },
   parameters: {
     msw: {
-      handlers: [getGetBrokerConnectionsMockHandler([]), ...handlers],
+      handlers: [getBrokerConnectionsMockHandler([]), ...handlers],
     },
   },
 };
@@ -133,7 +133,7 @@ export const ConnectionError: Story = {
   parameters: {
     msw: {
       handlers: [
-        getGetBrokerConnectionsMockHandler([failedBrokerConnection]),
+        getBrokerConnectionsMockHandler([failedBrokerConnection]),
         getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem, 400)),
         ...handlers,
       ],

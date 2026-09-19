@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetHouseholdsMockHandler } from "@/api/generated/households/households.msw";
+import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { familyHousehold, gardenHousehold } from "@/storybook/fixtures";
@@ -27,7 +27,7 @@ export const Default: Story = {};
 export const OwnerOnly: Story = {
   parameters: {
     msw: {
-      handlers: [getGetHouseholdsMockHandler([familyHousehold]), ...handlers],
+      handlers: [getHouseholdsMockHandler([familyHousehold]), ...handlers],
     },
   },
 };
@@ -35,7 +35,7 @@ export const OwnerOnly: Story = {
 export const MemberOnly: Story = {
   parameters: {
     msw: {
-      handlers: [getGetHouseholdsMockHandler([gardenHousehold]), ...handlers],
+      handlers: [getHouseholdsMockHandler([gardenHousehold]), ...handlers],
     },
   },
 };

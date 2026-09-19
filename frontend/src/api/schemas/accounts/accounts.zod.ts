@@ -173,21 +173,7 @@ export const CreateAccountResponse = zod.object({
  * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.
  * @summary List accounts
  */
-export const GetAccountsQueryParams = zod.object({
-  search: zod.string().nullish().describe("Case-insensitive match against the account name."),
-  iban: zod.string().nullish().describe("Case-insensitive match against the IBAN."),
-  type: zod
-    .enum(["checking", "savings", "cash", "other", "investment"])
-    .optional()
-    .describe("Keep only accounts of this type."),
-  sort: zod
-    .enum(["created", "name", "iban", "type", "startingBalance", "currentBalance"])
-    .optional()
-    .describe("Field to sort by. Defaults to creation order."),
-  direction: zod.enum(["asc", "desc"]).optional().describe("Asc or Desc. Defaults to Asc."),
-});
-
-export const GetAccountsResponseItem = zod.object({
+export const AccountsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   description: zod.string().nullable(),
@@ -272,27 +258,19 @@ export const GetAccountsResponseItem = zod.object({
   reportingBalance: zod.string(),
   holdingsValue: zod.string(),
 });
-export const GetAccountsResponse = zod.array(GetAccountsResponseItem);
+export const AccountsResponse = zod.array(AccountsResponseItem);
 
 /**
  * Archives the account instead of deleting it: the transactions posted to it stay in the ledger and in reports, but the account no longer appears in listings or pickers.
  * @summary Archive an account
  */
-export const DeleteAccountParams = zod.object({
-  id: zod.string().describe("The account id."),
-});
-
 export const DeleteAccountResponse = zod.void();
 
 /**
  * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
  * @summary Get one account
  */
-export const GetAccountParams = zod.object({
-  id: zod.string().describe("The account id."),
-});
-
-export const GetAccountResponse = zod.object({
+export const AccountResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   description: zod.string().nullable(),
@@ -382,10 +360,6 @@ export const GetAccountResponse = zod.object({
  * Replaces the editable fields of an account. Moving an account from Personal to Shared hands its history to the household; moving it back makes it private again. Transactions already posted to the account keep their amounts.
  * @summary Update an account
  */
-export const UpdateAccountParams = zod.object({
-  id: zod.uuid().describe("The account id. Takes precedence over the id in the body."),
-});
-
 export const updateAccountBodyNameMin = 0;
 export const updateAccountBodyNameMax = 100;
 

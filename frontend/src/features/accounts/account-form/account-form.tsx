@@ -1,7 +1,6 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsSuspense } from "@/api/generated";
+import { useHouseholdsSuspense } from "@/api/generated";
 import {
   type AccountResponse,
   type AccountType,
@@ -13,14 +12,13 @@ import {
   createAccountBodyNameMax,
 } from "@/api/schemas/accounts/accounts.zod";
 import { CurrencySelect } from "@/components/currency-select";
-import { SelectField } from "@/components/select-field";
+import { useAppForm } from "@/components/form";
 import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
-import { isIban, isMoney } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { isIban, money, optionalText, requiredText } from "@/lib/validation";
 import { accountTypes } from "../account-types";
 
 export interface AccountFormValues {
@@ -48,35 +46,37 @@ interface FormValues {
 interface Props {
   initial?: AccountResponse;
   pending: boolean;
-  onSubmit: (values: AccountFormValues) => void;
+  onSubmit: (values: AccountFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
+}
+
+function buildValues(value: FormValues): AccountFormValues {
+  return {
+    name: value.name.trim(),
+    description: value.description.trim() || null,
+    iban: value.iban.trim() || null,
+    type: value.type,
+    startingBalance: value.startingBalance,
+    currency: value.currency,
+    scope: value.scope,
+    householdId: value.scope === "shared" ? value.householdId : null,
+  };
 }
 
 export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsSuspense();
+  const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
 
   const schema = z
     .object({
-      name: z
-        .string()
-        .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine(
-          (value) => value.trim().length <= createAccountBodyNameMax,
-          t("validation.maxLength", { max: createAccountBodyNameMax }),
-        ),
-      description: z
-        .string()
-        .max(
-          createAccountBodyDescriptionMax,
-          t("validation.maxLength", { max: createAccountBodyDescriptionMax }),
-        ),
+      name: requiredText(t, createAccountBodyNameMax),
+      description: optionalText(t, createAccountBodyDescriptionMax),
       iban: z.string().refine((value) => !value.trim() || isIban(value), t("validation.iban")),
       type: z.enum(accountTypes),
-      startingBalance: z.string().refine(isMoney, t("validation.money")),
+      startingBalance: money(t),
       currency: z.enum(Currency),
       scope: z.enum(["personal", "shared"]),
       householdId: z.string(),
@@ -86,7 +86,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       path: ["householdId"],
     });
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       name: initial?.name ?? "",
       description: initial?.description ?? "",
@@ -98,173 +98,116 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       householdId: initial?.householdId ?? "",
     } satisfies FormValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      onSubmit({
-        name: value.name.trim(),
-        description: value.description.trim() || null,
-        iban: value.iban.trim() || null,
-        type: value.type,
-        startingBalance: value.startingBalance,
-        currency: value.currency,
-        scope: value.scope,
-        householdId: value.scope === "shared" ? value.householdId : null,
-      });
-    },
+    onSubmit: (submission) =>
+      submitToServer(submission, () => onSubmit(buildValues(submission.value))),
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="name">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="account-name">{t("accounts.name")}</Label>
-            <Input
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="name">
+          {(field) => (
+            <field.TextField
               id="account-name"
+              label={t("accounts.name")}
               placeholder={t("accounts.namePlaceholder")}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "account-name-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError id="account-name-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="type">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="account-type">{t("accounts.type")}</Label>
-            <SelectField
+        <form.Field name="type">
+          {(field) => (
+            <field.SelectFieldControl
               id="account-type"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
+              label={t("accounts.type")}
               options={accountTypes.map((accountType) => ({
                 value: accountType,
                 label: t(`accounts.types.${accountType}`),
               }))}
             />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="startingBalance">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="account-balance">{t("accounts.startingBalance")}</Label>
-            <Input
-              id="account-balance"
-              inputMode="decimal"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "account-balance-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id="account-balance-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      {multiCurrency ? (
-        <form.Field name="currency">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="account-currency">{t("accounts.currency")}</Label>
-              <CurrencySelect
-                id="account-currency"
-                value={field.value}
-                preferred={[reportingCurrency]}
-                onBlur={field.handleBlur}
-                onChange={(value) => field.handleChange(value)}
-              />
-              <p className="text-xs text-muted-foreground">{t("accounts.currencyHint")}</p>
-            </div>
           )}
         </form.Field>
-      ) : null}
 
-      <form.Field name="iban">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="account-iban">{t("accounts.iban")}</Label>
-            <Input
-              id="account-iban"
-              placeholder={t("accounts.ibanPlaceholder")}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "account-iban-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
+        <form.Field name="startingBalance">
+          {(field) => (
+            <field.MoneyInputField
+              id="account-balance"
+              label={t("accounts.startingBalance")}
+              placeholder=""
             />
-            <FieldError id="account-iban-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="description">
-        {(field) => (
-          <div className="col-span-full space-y-1.5">
-            <Label htmlFor="account-description">{t("accounts.description")}</Label>
-            <Input
-              id="account-description"
-              placeholder={t("accounts.descriptionPlaceholder")}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "account-description-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id="account-description-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      {householdList.length > 0 ? (
-        <>
-          <form.Field name="scope">
+        {multiCurrency ? (
+          <form.Field name="currency">
             {(field) => (
               <div className="space-y-1.5">
-                <Label htmlFor="account-scope">{t("sharing.scope")}</Label>
-                <SelectField
-                  id="account-scope"
+                <Label htmlFor="account-currency">{t("accounts.currency")}</Label>
+                <CurrencySelect
+                  id="account-currency"
                   value={field.value}
+                  preferred={[reportingCurrency]}
+                  onBlur={field.handleBlur}
                   onChange={(value) => field.handleChange(value)}
+                />
+                <p className="text-xs text-muted-foreground">{t("accounts.currencyHint")}</p>
+              </div>
+            )}
+          </form.Field>
+        ) : null}
+
+        <form.Field name="iban">
+          {(field) => (
+            <field.TextField
+              id="account-iban"
+              label={t("accounts.iban")}
+              placeholder={t("accounts.ibanPlaceholder")}
+            />
+          )}
+        </form.Field>
+
+        <form.Field name="description">
+          {(field) => (
+            <field.TextField
+              id="account-description"
+              label={t("accounts.description")}
+              placeholder={t("accounts.descriptionPlaceholder")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
+        {householdList.length > 0 ? (
+          <>
+            <form.Field name="scope">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="account-scope"
+                  label={t("sharing.scope")}
                   options={[
                     { value: "personal", label: t("sharing.personal") },
                     { value: "shared", label: t("sharing.shared") },
                   ]}
                 />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <form.Subscribe selector={(state) => state.values.scope}>
-            {(scope) =>
-              scope === "shared" ? (
-                <form.Field name="householdId">
-                  {(field) => (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="account-household">{t("sharing.household")}</Label>
-                      <SelectField
+            <form.Subscribe selector={(state) => state.values.scope}>
+              {(scope) =>
+                scope === "shared" ? (
+                  <form.Field name="householdId">
+                    {(field) => (
+                      <field.SelectFieldControl
                         id="account-household"
-                        value={field.value}
-                        aria-invalid={field.errors.length > 0}
-                        aria-describedby={
-                          field.errors.length > 0 ? "account-household-error" : undefined
-                        }
-                        onBlur={field.handleBlur}
-                        onChange={(value) => field.handleChange(value)}
+                        label={t("sharing.household")}
                         options={[
                           { value: "", label: t("sharing.selectHousehold") },
                           ...householdList.map((household) => ({
@@ -273,30 +216,25 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
                           })),
                         ]}
                       />
-                      <FieldError id="account-household-error" message={field.errors[0]?.message} />
-                    </div>
-                  )}
-                </form.Field>
-              ) : null
-            }
-          </form.Subscribe>
-        </>
-      ) : null}
-
-      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
+                    )}
+                  </form.Field>
+                ) : null
+              }
+            </form.Subscribe>
+          </>
         ) : null}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {initial ? t("actions.save") : t("actions.add")}
+
+        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t("actions.cancel")}
             </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+          ) : null}
+          <form.SubmitButton pending={pending}>
+            {initial ? t("actions.save") : t("actions.add")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { getTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { emptyHandlers, errorHandlers, handlers, pending } from "@/storybook/handlers";
 import { TransactionsTotals, TransactionsTotalsLine } from "./transactions-totals";
 
@@ -31,7 +31,7 @@ export const Stale: Story = { args: { stale: true } };
 export const Loading: Story = {
   parameters: {
     msw: {
-      handlers: [getGetTransactionsSummaryMockHandler(pending), ...handlers],
+      handlers: [getTransactionsSummaryMockHandler(pending), ...handlers],
     },
   },
 };

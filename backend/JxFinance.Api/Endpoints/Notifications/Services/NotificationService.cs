@@ -34,7 +34,7 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
             cancellationToken);
         if (notification is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Notification not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Notification not found.");
         }
 
         notification.IsRead = true;

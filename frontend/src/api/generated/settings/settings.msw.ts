@@ -5,92 +5,11 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency, FirstDayOfWeek } from "../model";
 import type { ExchangeRateSyncResponse, PublicSettingsResponse, SettingsResponse } from "../model";
 
-export const getGetSettingsResponseMock = (
-  overrideResponse: Partial<Extract<SettingsResponse, object>> = {},
-): SettingsResponse => ({
-  instanceName: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  features: {
-    budgets: faker.datatype.boolean(),
-    goals: faker.datatype.boolean(),
-    recurringBills: faker.datatype.boolean(),
-    netWorth: faker.datatype.boolean(),
-    reports: faker.datatype.boolean(),
-    import: faker.datatype.boolean(),
-    households: faker.datatype.boolean(),
-    multiCurrency: faker.datatype.boolean(),
-    investments: faker.datatype.boolean(),
-  },
-  reportingCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  enabledCurrencies: faker.helpers.arrayElements(Object.values(Currency)),
-  exchangeRateSyncEnabled: faker.datatype.boolean(),
-  ratesAsOf: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  defaultLanguage: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  timeZone: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  firstDayOfWeek: faker.helpers.arrayElement(Object.values(FirstDayOfWeek)),
-  defaultAccountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  defaultPageSize: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getUpdateSettingsResponseMock = (
-  overrideResponse: Partial<Extract<SettingsResponse, object>> = {},
-): SettingsResponse => ({
-  instanceName: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  features: {
-    budgets: faker.datatype.boolean(),
-    goals: faker.datatype.boolean(),
-    recurringBills: faker.datatype.boolean(),
-    netWorth: faker.datatype.boolean(),
-    reports: faker.datatype.boolean(),
-    import: faker.datatype.boolean(),
-    households: faker.datatype.boolean(),
-    multiCurrency: faker.datatype.boolean(),
-    investments: faker.datatype.boolean(),
-  },
-  reportingCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  enabledCurrencies: faker.helpers.arrayElements(Object.values(Currency)),
-  exchangeRateSyncEnabled: faker.datatype.boolean(),
-  ratesAsOf: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  defaultLanguage: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  timeZone: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  firstDayOfWeek: faker.helpers.arrayElement(Object.values(FirstDayOfWeek)),
-  defaultAccountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  defaultPageSize: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getSyncExchangeRatesResponseMock = (
-  overrideResponse: Partial<Extract<ExchangeRateSyncResponse, object>> = {},
-): ExchangeRateSyncResponse => ({
-  added: faker.number.int(),
-  ratesAsOf: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
-
-export const getGetPublicSettingsResponseMock = (
-  overrideResponse: Partial<Extract<PublicSettingsResponse, object>> = {},
-): PublicSettingsResponse => ({
-  instanceName: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  defaultLanguage: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getGetSettingsMockHandler = (
+export const getSettingsMockHandler = (
   overrideResponse?:
     | SettingsResponse
     | ((
@@ -106,7 +25,7 @@ export const getGetSettingsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetSettingsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -130,7 +49,7 @@ export const getUpdateSettingsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateSettingsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -154,7 +73,7 @@ export const getSyncExchangeRatesMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getSyncExchangeRatesResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -162,7 +81,7 @@ export const getSyncExchangeRatesMockHandler = (
   );
 };
 
-export const getGetPublicSettingsMockHandler = (
+export const getPublicSettingsMockHandler = (
   overrideResponse?:
     | PublicSettingsResponse
     | ((
@@ -178,7 +97,7 @@ export const getGetPublicSettingsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetPublicSettingsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -186,8 +105,8 @@ export const getGetPublicSettingsMockHandler = (
   );
 };
 export const getSettingsMock = () => [
-  getGetSettingsMockHandler(),
+  getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
   getSyncExchangeRatesMockHandler(),
-  getGetPublicSettingsMockHandler(),
+  getPublicSettingsMockHandler(),
 ];

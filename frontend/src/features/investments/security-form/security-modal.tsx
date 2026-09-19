@@ -40,10 +40,10 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
           pending={createMutation.isPending || updateMutation.isPending}
           onSubmit={(values) => {
             if (security) {
-              updateMutation.mutate({ id: security.id, data: values });
-            } else {
-              createMutation.mutate({ data: values });
+              return updateMutation.mutateAsync({ id: security.id, data: values });
             }
+
+            return createMutation.mutateAsync({ data: values });
           }}
           onCancel={() => onOpenChange(false)}
         />

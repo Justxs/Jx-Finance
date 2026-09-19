@@ -6,8 +6,8 @@
  * OpenAPI spec version: v1
  */
 import type { Currency } from "./currency";
-import type { IReadOnlyListOfHoldingResponse } from "./iReadOnlyListOfHoldingResponse";
-import type { IReadOnlyListOfPortfolioYear } from "./iReadOnlyListOfPortfolioYear";
+import type { HoldingResponse } from "./holdingResponse";
+import type { PortfolioYear } from "./portfolioYear";
 
 export interface PortfolioResponse {
   reportingCurrency: Currency;
@@ -19,6 +19,6 @@ export interface PortfolioResponse {
   withholdingTax: string;
   fees: string;
   isComplete: boolean;
-  holdings: IReadOnlyListOfHoldingResponse;
-  years: IReadOnlyListOfPortfolioYear;
+  holdings: HoldingResponse[];
+  years: PortfolioYear[];
 }

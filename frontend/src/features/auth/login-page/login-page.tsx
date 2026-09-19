@@ -1,18 +1,14 @@
-import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useLogin } from "@/api/generated";
 import { Brand } from "@/components/brand";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { setAuthenticated } from "@/lib/auth-gate";
-import { isEmail } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { requiredEmail, requiredValue } from "@/lib/validation";
 
 interface FormValues {
   email: string;
@@ -27,13 +23,10 @@ export function LoginPage() {
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
 
   const schema = z.object({
-    email: z
-      .string()
-      .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => isEmail(value.trim()), t("validation.email")),
-    password: z.string().min(1, t("validation.required")),
+    email: requiredEmail(t),
+    password: requiredValue(t),
     rememberMe: z.boolean(),
-    twoFactorCode: twoFactorRequired ? z.string().min(1, t("validation.required")) : z.string(),
+    twoFactorCode: twoFactorRequired ? requiredValue(t) : z.string(),
   });
 
   const loginMutation = useLogin({
@@ -57,18 +50,22 @@ export function LoginPage() {
     twoFactorCode: "",
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      loginMutation.mutate({
-        data: {
-          email: value.email.trim(),
-          password: value.password,
-          rememberMe: value.rememberMe,
-          twoFactorCode: value.twoFactorCode || null,
-        },
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        loginMutation.mutateAsync({
+          data: {
+            email: value.email.trim(),
+            password: value.password,
+            rememberMe: value.rememberMe,
+            twoFactorCode: value.twoFactorCode || null,
+          },
+        }),
+      );
     },
   });
 
@@ -81,108 +78,73 @@ export function LoginPage() {
         <h1 className="text-lg font-semibold">{t("auth.signIn")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.signInSubtitle")}</p>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void form.handleSubmit();
-          }}
-          noValidate
-          className="mt-6 space-y-4"
-        >
-          <form.Field name="email">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="login-email">{t("auth.email")}</Label>
-                <Input
+        <form.AppForm>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void form.handleSubmit();
+            }}
+            noValidate
+            className="mt-6 space-y-4"
+          >
+            <form.Field name="email">
+              {(field) => (
+                <field.TextField
                   id="login-email"
+                  label={t("auth.email")}
                   autoComplete="username"
                   type="email"
                   autoFocus={!twoFactorRequired}
                   disabled={twoFactorRequired}
-                  value={field.value}
-                  aria-invalid={field.errors.length > 0}
-                  aria-describedby={field.errors.length > 0 ? "login-email-error" : undefined}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError id="login-email-error" message={field.errors[0]?.message} />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <form.Field name="password">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="login-password">{t("auth.password")}</Label>
-                <Input
+            <form.Field name="password">
+              {(field) => (
+                <field.TextField
                   id="login-password"
+                  label={t("auth.password")}
                   autoComplete="current-password"
                   type="password"
                   disabled={twoFactorRequired}
-                  value={field.value}
-                  aria-invalid={field.errors.length > 0}
-                  aria-describedby={field.errors.length > 0 ? "login-password-error" : undefined}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError id="login-password-error" message={field.errors[0]?.message} />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          {twoFactorRequired ? (
-            <form.Field name="twoFactorCode">
-              {(field) => (
-                <div className="space-y-1.5">
-                  <Label htmlFor="login-two-factor-code">{t("auth.twoFactorCode")}</Label>
-                  <Input
+            {twoFactorRequired ? (
+              <form.Field name="twoFactorCode">
+                {(field) => (
+                  <field.TextField
                     id="login-two-factor-code"
+                    label={t("auth.twoFactorCode")}
+                    hint={t("auth.twoFactorCodeHint")}
                     autoComplete="one-time-code"
                     autoFocus
                     inputMode="numeric"
-                    value={field.value}
-                    aria-invalid={field.errors.length > 0}
-                    aria-describedby={
-                      field.errors.length > 0 ? "login-two-factor-code-error" : undefined
-                    }
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
                   />
-                  <FieldError id="login-two-factor-code-error" message={field.errors[0]?.message} />
-                  <p className="text-xs text-muted-foreground">{t("auth.twoFactorCodeHint")}</p>
-                </div>
-              )}
-            </form.Field>
-          ) : (
-            <form.Field name="rememberMe">
-              {(field) => (
-                <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Checkbox
-                    checked={field.value}
-                    onCheckedChange={(checked) => field.handleChange(checked)}
+                )}
+              </form.Field>
+            ) : (
+              <form.Field name="rememberMe">
+                {(field) => (
+                  <field.CheckboxField
+                    id="login-remember-me"
+                    label={t("auth.rememberMe")}
+                    tone="muted"
                   />
-                  {t("auth.rememberMe")}
-                </label>
-              )}
-            </form.Field>
-          )}
-
-          <FormError error={loginMutation.error} />
-
-          <form.Subscribe selector={(state) => state.canSubmit}>
-            {(canSubmit) => (
-              <Button
-                type="submit"
-                pending={loginMutation.isPending}
-                disabled={!canSubmit}
-                className="w-full"
-              >
-                {twoFactorRequired ? t("auth.verifyCode") : t("auth.signIn")}
-              </Button>
+                )}
+              </form.Field>
             )}
-          </form.Subscribe>
-        </form>
+
+            <FormError error={loginMutation.error} />
+
+            <form.SubmitButton pending={loginMutation.isPending} className="w-full">
+              {twoFactorRequired ? t("auth.verifyCode") : t("auth.signIn")}
+            </form.SubmitButton>
+          </form>
+        </form.AppForm>
       </div>
     </div>
   );

@@ -13,7 +13,7 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
     {
         Name = request.Name.Trim(),
         Type = request.Type,
-        CurrentValue = new Money(request.CurrentValue),
+        CurrentValue = new Money(request.CurrentValue!.Value),
         AsOf = request.AsOf,
     };
 
@@ -21,7 +21,7 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
     {
         asset.Name = request.Name.Trim();
         asset.Type = request.Type;
-        asset.CurrentValue = new Money(request.CurrentValue);
+        asset.CurrentValue = new Money(request.CurrentValue!.Value);
         asset.AsOf = request.AsOf;
     }
 

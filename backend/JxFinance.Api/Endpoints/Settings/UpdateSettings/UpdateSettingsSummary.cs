@@ -8,7 +8,7 @@ public sealed class UpdateSettingsSummary : Summary<UpdateSettingsEndpoint, Upda
     {
         Summary = "Update installation settings";
         Description = "Administrators only. Replaces every installation-wide setting. A feature that is "
-            + "turned off answers 404 with code feature_disabled on its routes and its background work "
+            + "turned off answers 404 with code feature.disabled on its routes and its background work "
             + "stops; its data is kept. Changing the reporting currency revalues every stored transaction "
             + "at the exchange rate for its own date and fails without saving anything if a rate is "
             + "missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.";

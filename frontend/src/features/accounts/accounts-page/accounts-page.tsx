@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import {
   useCreateAccount,
   useDeleteAccount,
-  useGetAccountsSuspense,
+  useAccountsSuspense,
   useUpdateAccount,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
 import { AccountForm } from "../account-form";
+import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table";
 import { ConversionsSection } from "../conversions-section";
 import { TransfersSection } from "../transfers-section";
@@ -27,14 +28,8 @@ export function AccountsPage() {
   const { features } = useSettings();
 
   const [shown, stale] = useDeferredParams(useSearch({ from: "/accounts" }));
-  const accounts = useGetAccountsSuspense({
-    search: shown.search,
-    iban: shown.iban,
-    type: shown.type,
-    sort: shown.sort,
-    direction: shown.direction,
-  });
-  const allAccounts = useGetAccountsSuspense();
+  const accounts = useAccountsSuspense(accountListParams(shown));
+  const allAccounts = useAccountsSuspense();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [convertAccountId, setConvertAccountId] = useState<string | null>(null);
@@ -78,7 +73,7 @@ export function AccountsPage() {
       <Modal open={createOpen} onOpenChange={setCreateOpen} title={t("accounts.add")}>
         <AccountForm
           pending={createMutation.isPending}
-          onSubmit={(values) => createMutation.mutate({ data: values })}
+          onSubmit={(values) => createMutation.mutateAsync({ data: values })}
           onCancel={() => setCreateOpen(false)}
         />
       </Modal>
@@ -90,7 +85,7 @@ export function AccountsPage() {
         onEdit={setEditingId}
         onCancelEdit={() => setEditingId(null)}
         updatePending={updateMutation.isPending}
-        onUpdate={(id, values) => updateMutation.mutate({ id, data: values })}
+        onUpdate={(id, values) => updateMutation.mutateAsync({ id, data: values })}
         deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
         onDelete={(id) => setDeleteTarget(id)}
         onConvert={features.multiCurrency ? setConvertAccountId : undefined}

@@ -5,41 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { GoalResponse, IReadOnlyListOfGoalResponse } from "../model";
-
-export const getCreateGoalResponseMock = (
-  overrideResponse: Partial<Extract<GoalResponse, object>> = {},
-): GoalResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  targetAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  currentAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  targetDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
-
-export const getGetGoalsResponseMock = (): IReadOnlyListOfGoalResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    targetAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    currentAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    targetDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  }));
-
-export const getUpdateGoalResponseMock = (
-  overrideResponse: Partial<Extract<GoalResponse, object>> = {},
-): GoalResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  targetAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  currentAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  targetDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
+import type { GoalResponse } from "../model";
 
 export const getCreateGoalMockHandler = (
   overrideResponse?:
@@ -57,7 +25,7 @@ export const getCreateGoalMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateGoalResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -65,12 +33,12 @@ export const getCreateGoalMockHandler = (
   );
 };
 
-export const getGetGoalsMockHandler = (
+export const getGoalsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfGoalResponse
+    | GoalResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfGoalResponse> | IReadOnlyListOfGoalResponse),
+      ) => Promise<GoalResponse[]> | GoalResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -81,7 +49,7 @@ export const getGetGoalsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetGoalsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -124,7 +92,7 @@ export const getUpdateGoalMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateGoalResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -133,7 +101,7 @@ export const getUpdateGoalMockHandler = (
 };
 export const getGoalsMock = () => [
   getCreateGoalMockHandler(),
-  getGetGoalsMockHandler(),
+  getGoalsMockHandler(),
   getDeleteGoalMockHandler(),
   getUpdateGoalMockHandler(),
 ];

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   useDeactivateUser,
-  useGetUsersSuspense,
+  useUsersSuspense,
   useMeSuspense,
   useUpdateUserRole,
 } from "@/api/generated";
@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { CreateUserForm } from "../create-user-form";
+import { userListParams } from "../user-queries";
 import { UsersTable } from "../users-table";
 
 export function UsersPage() {
@@ -22,13 +23,7 @@ export function UsersPage() {
 
   const me = useMeSuspense();
   const [shown, stale] = useDeferredParams(useSearch({ from: "/users" }));
-  const users = useGetUsersSuspense({
-    search: shown.search,
-    role: shown.role,
-    isActive: shown.isActive,
-    sort: shown.sort,
-    direction: shown.direction,
-  });
+  const users = useUsersSuspense(userListParams(shown));
 
   const roleMutation = useUpdateUserRole({
     mutation: {

@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetHouseholdsSuspense } from "@/api/generated";
+import { useHouseholdsSuspense } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { RowTransition } from "@/components/row-transition";
@@ -25,7 +25,7 @@ export function CategoryRow({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
-  const households = useGetHouseholdsSuspense();
+  const households = useHouseholdsSuspense();
   const householdNames = new Map(households.data?.map((h) => [h.id, h.name]) ?? []);
 
   return (

@@ -1,8 +1,14 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteBudget, useGetBudgetsSuspense, useGetCategoriesSuspense } from "@/api/generated";
+import {
+  getBudgetsQueryKey,
+  useDeleteBudget,
+  useBudgetsSuspense,
+  useCategoriesSuspense,
+} from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -16,18 +22,20 @@ import { useMoney, useMonthLabel } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 import { fromCents, toCents } from "@/lib/money";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { CreateBudgetForm } from "../create-budget-form";
 
 export function BudgetsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const money = useMoney();
   const monthLabel = useMonthLabel();
   const today = useTodayDate();
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
-  const categories = useGetCategoriesSuspense();
-  const budgets = useGetBudgetsSuspense();
+  const categories = useCategoriesSuspense();
+  const budgets = useBudgetsSuspense();
 
   function openForm(budget: BudgetResponse | null) {
     setEditing(budget);
@@ -36,7 +44,9 @@ export function BudgetsPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteBudget();
+  const deleteMutation = useDeleteBudget({
+    mutation: optimisticRemoval<BudgetResponse>(queryClient, getBudgetsQueryKey()),
+  });
 
   const budgetList = useDeferredValue(budgets.data);
   const categoryList = categories.data;

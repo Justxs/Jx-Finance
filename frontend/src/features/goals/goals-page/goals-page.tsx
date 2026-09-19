@@ -1,23 +1,29 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteGoal, useGetGoalsSuspense } from "@/api/generated";
+import { getGoalsQueryKey, useDeleteGoal, useGoalsSuspense } from "@/api/generated";
+import type { GoalResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { CreateGoalForm } from "../create-goal-form";
 import { GoalRow } from "../goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const goals = useGetGoalsSuspense();
+  const goals = useGoalsSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteGoal();
+  const deleteMutation = useDeleteGoal({
+    mutation: optimisticRemoval<GoalResponse>(queryClient, getGoalsQueryKey()),
+  });
 
   const goalList = useDeferredValue(goals.data) ?? [];
 

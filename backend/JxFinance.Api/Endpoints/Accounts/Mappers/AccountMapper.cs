@@ -19,7 +19,7 @@ public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<Crea
         Description = OptionalText.Normalize(request.Description),
         Iban = Iban.Normalize(request.Iban),
         Type = request.Type,
-        StartingBalance = new Money(request.StartingBalance, request.Currency ?? settings.Current.ReportingCurrency),
+        StartingBalance = new Money(request.StartingBalance!.Value, request.Currency ?? settings.Current.ReportingCurrency),
         Scope = request.Scope,
         HouseholdId = HouseholdFor(request.Scope, request.HouseholdId),
     };
@@ -30,7 +30,7 @@ public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<Crea
         account.Description = OptionalText.Normalize(request.Description);
         account.Iban = Iban.Normalize(request.Iban);
         account.Type = request.Type;
-        account.StartingBalance = new Money(request.StartingBalance, request.Currency ?? account.Currency);
+        account.StartingBalance = new Money(request.StartingBalance!.Value, request.Currency ?? account.Currency);
         account.Scope = request.Scope;
         account.HouseholdId = HouseholdFor(request.Scope, request.HouseholdId);
     }

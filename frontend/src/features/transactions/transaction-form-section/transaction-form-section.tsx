@@ -14,9 +14,9 @@ interface Props {
   createPending: boolean;
   createError?: unknown;
   updateError?: unknown;
-  onCreate: (values: TransactionFormValues) => void;
+  onCreate: (values: TransactionFormValues) => Promise<unknown> | void;
   onCreateAnother?: (values: TransactionFormValues) => Promise<boolean>;
-  onUpdate: (values: TransactionFormValues) => void;
+  onUpdate: (values: TransactionFormValues) => Promise<unknown> | void;
 }
 
 export function TransactionFormSection({

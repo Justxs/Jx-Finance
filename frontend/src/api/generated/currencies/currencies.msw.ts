@@ -5,32 +5,11 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency } from "../model";
 import type { CurrenciesResponse, ExchangeRateResponse } from "../model";
 
-export const getGetCurrenciesResponseMock = (
-  overrideResponse: Partial<Extract<CurrenciesResponse, object>> = {},
-): CurrenciesResponse => ({
-  reportingCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  currencies: faker.helpers.arrayElements(Object.values(Currency)),
-  ratesAsOf: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
-
-export const getGetExchangeRateResponseMock = (
-  overrideResponse: Partial<Extract<ExchangeRateResponse, object>> = {},
-): ExchangeRateResponse => ({
-  from: faker.helpers.arrayElement(Object.values(Currency)),
-  to: faker.helpers.arrayElement(Object.values(Currency)),
-  rate: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  asOf: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetCurrenciesMockHandler = (
+export const getCurrenciesMockHandler = (
   overrideResponse?:
     | CurrenciesResponse
     | ((
@@ -46,7 +25,7 @@ export const getGetCurrenciesMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetCurrenciesResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -54,7 +33,7 @@ export const getGetCurrenciesMockHandler = (
   );
 };
 
-export const getGetExchangeRateMockHandler = (
+export const getExchangeRateMockHandler = (
   overrideResponse?:
     | ExchangeRateResponse
     | ((
@@ -70,14 +49,11 @@ export const getGetExchangeRateMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetExchangeRateResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
     options,
   );
 };
-export const getCurrenciesMock = () => [
-  getGetCurrenciesMockHandler(),
-  getGetExchangeRateMockHandler(),
-];
+export const getCurrenciesMock = () => [getCurrenciesMockHandler(), getExchangeRateMockHandler()];

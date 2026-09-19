@@ -11,7 +11,7 @@ import * as zod from "zod";
  * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
  * @summary Read installation settings
  */
-export const GetSettingsResponse = zod.object({
+export const SettingsResponse = zod.object({
   instanceName: zod.string().nullable(),
   features: zod.object({
     budgets: zod.boolean(),
@@ -102,7 +102,7 @@ export const GetSettingsResponse = zod.object({
 });
 
 /**
- * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature_disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
+ * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature.disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
  * @summary Update installation settings
  */
 export const updateSettingsBodyInstanceNameMin = 0;
@@ -308,7 +308,7 @@ export const SyncExchangeRatesResponse = zod.object({
  * Anonymous. Returns only the installation name and the default language.
  * @summary Read the settings the sign-in page needs
  */
-export const GetPublicSettingsResponse = zod.object({
+export const PublicSettingsResponse = zod.object({
   instanceName: zod.string().nullable(),
   defaultLanguage: zod.string(),
 });

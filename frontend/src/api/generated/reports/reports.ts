@@ -5,23 +5,18 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
-import type { GetReportSummaryParams, ProblemDetails, ReportSummaryResponse } from "../model";
+import type { ProblemDetails, ReportSummaryParams, ReportSummaryResponse } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -40,7 +35,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetReportSummaryUrl = (params?: GetReportSummaryParams) => {
+export const getReportSummaryUrl = (params?: ReportSummaryParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -60,185 +55,85 @@ export const getGetReportSummaryUrl = (params?: GetReportSummaryParams) => {
  * Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months.
  * @summary Summarise income and expenses over a range
  */
-export const getReportSummary = async (
-  params?: GetReportSummaryParams,
+export const reportSummary = async (
+  params?: ReportSummaryParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<ReportSummaryResponse> => {
-  return customFetch<ReportSummaryResponse>(getGetReportSummaryUrl(params), {
+  return customFetch<ReportSummaryResponse>(getReportSummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetReportSummaryQueryKey = (params?: GetReportSummaryParams) => {
+export const getReportSummaryQueryKey = (params?: ReportSummaryParams) => {
   return [`/api/reports/summary`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetReportSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
+export const getReportSummarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof reportSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetReportSummaryParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetReportSummaryQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportSummary>>> = ({ signal }) =>
-    getReportSummary(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getReportSummary>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetReportSummaryQueryResult = NonNullable<Awaited<ReturnType<typeof getReportSummary>>>;
-export type GetReportSummaryQueryError = ErrorType<ProblemDetails>;
-
-export function useGetReportSummary<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetReportSummaryParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getReportSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getReportSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetReportSummary<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetReportSummaryParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getReportSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getReportSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetReportSummary<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetReportSummaryParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Summarise income and expenses over a range
- */
-
-export function useGetReportSummary<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetReportSummaryParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetReportSummaryQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetReportSummarySuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetReportSummaryParams,
+  params?: ReportSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetReportSummaryQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getReportSummaryQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getReportSummary>>> = ({ signal }) =>
-    getReportSummary(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof reportSummary>>> = ({ signal }) =>
+    reportSummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getReportSummary>>,
+    Awaited<ReturnType<typeof reportSummary>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetReportSummarySuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getReportSummary>>
+export type ReportSummarySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof reportSummary>>
 >;
-export type GetReportSummarySuspenseQueryError = ErrorType<ProblemDetails>;
+export type ReportSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetReportSummarySuspense<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
+export function useReportSummarySuspense<
+  TData = Awaited<ReturnType<typeof reportSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetReportSummaryParams,
+  params: undefined | ReportSummaryParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetReportSummarySuspense<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
+export function useReportSummarySuspense<
+  TData = Awaited<ReturnType<typeof reportSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetReportSummaryParams,
+  params?: ReportSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetReportSummarySuspense<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
+export function useReportSummarySuspense<
+  TData = Awaited<ReturnType<typeof reportSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetReportSummaryParams,
+  params?: ReportSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -248,20 +143,20 @@ export function useGetReportSummarySuspense<
  * @summary Summarise income and expenses over a range
  */
 
-export function useGetReportSummarySuspense<
-  TData = Awaited<ReturnType<typeof getReportSummary>>,
+export function useReportSummarySuspense<
+  TData = Awaited<ReturnType<typeof reportSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetReportSummaryParams,
+  params?: ReportSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getReportSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetReportSummarySuspenseQueryOptions(params, options);
+  const queryOptions = getReportSummarySuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

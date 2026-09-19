@@ -8,7 +8,7 @@ public sealed class CreateGoalValidator : Validator<CreateGoalRequest>
 {
     public CreateGoalValidator()
     {
-        RuleFor(r => r.Name).NotEmpty().MaximumLength(100);
+        RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
         RuleFor(r => r.TargetAmount)
             .IsPositiveMoney()
             .WithMessage("Target amount must be a positive decimal with at most 2 decimal places.");

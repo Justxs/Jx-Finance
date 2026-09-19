@@ -5,26 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type { SetupStatusResponse, UserProfileResponse } from "../model";
-
-export const getSetupResponseMock = (
-  overrideResponse: Partial<Extract<UserProfileResponse, object>> = {},
-): UserProfileResponse => ({
-  id: faker.string.uuid(),
-  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  twoFactorEnabled: faker.datatype.boolean(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getGetSetupStatusResponseMock = (
-  overrideResponse: Partial<Extract<SetupStatusResponse, object>> = {},
-): SetupStatusResponse => ({ needsSetup: faker.datatype.boolean(), ...overrideResponse });
 
 export const getSetupMockHandler = (
   overrideResponse?:
@@ -42,7 +25,7 @@ export const getSetupMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getSetupResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -50,7 +33,7 @@ export const getSetupMockHandler = (
   );
 };
 
-export const getGetSetupStatusMockHandler = (
+export const getSetupStatusMockHandler = (
   overrideResponse?:
     | SetupStatusResponse
     | ((
@@ -66,11 +49,11 @@ export const getGetSetupStatusMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetSetupStatusResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
     options,
   );
 };
-export const getSetupMock = () => [getSetupMockHandler(), getGetSetupStatusMockHandler()];
+export const getSetupMock = () => [getSetupMockHandler(), getSetupStatusMockHandler()];

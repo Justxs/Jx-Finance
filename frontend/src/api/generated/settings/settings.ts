@@ -49,7 +49,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetSettingsUrl = () => {
+export const getSettingsUrl = () => {
   return `/api/settings`;
 };
 
@@ -57,54 +57,54 @@ export const getGetSettingsUrl = () => {
  * Every signed-in user can read the settings, because they decide which pages, currencies and defaults the client offers. Only administrators can change them.
  * @summary Read installation settings
  */
-export const getSettings = async (
+export const settings = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SettingsResponse> => {
-  return customFetch<SettingsResponse>(getGetSettingsUrl(), {
+  return customFetch<SettingsResponse>(getSettingsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetSettingsQueryKey = () => {
+export const getSettingsQueryKey = () => {
   return [`/api/settings`] as const;
 };
 
-export const getGetSettingsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export const getSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>;
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getSettingsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({ signal }) =>
-    getSettings({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof settings>>> = ({ signal }) =>
+    settings({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getSettings>>,
+    Awaited<ReturnType<typeof settings>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getSettings>>>;
-export type GetSettingsQueryError = ErrorType<ProblemDetails>;
+export type SettingsQueryResult = NonNullable<Awaited<ReturnType<typeof settings>>>;
+export type SettingsQueryError = ErrorType<ProblemDetails>;
 
-export function useGetSettings<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettings<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSettings>>,
+          Awaited<ReturnType<typeof settings>>,
           TError,
-          Awaited<ReturnType<typeof getSettings>>
+          Awaited<ReturnType<typeof settings>>
         >,
         "initialData"
       >;
@@ -112,17 +112,17 @@ export function useGetSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSettings<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettings<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSettings>>,
+          Awaited<ReturnType<typeof settings>>,
           TError,
-          Awaited<ReturnType<typeof getSettings>>
+          Awaited<ReturnType<typeof settings>>
         >,
         "initialData"
       >;
@@ -130,12 +130,12 @@ export function useGetSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSettings<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettings<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -144,17 +144,17 @@ export function useGetSettings<
  * @summary Read installation settings
  */
 
-export function useGetSettings<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettings<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSettingsQueryOptions(options);
+  const queryOptions = getSettingsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -163,60 +163,56 @@ export function useGetSettings<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetSettingsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export const getSettingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSettingsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getSettingsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSettings>>> = ({ signal }) =>
-    getSettings({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof settings>>> = ({ signal }) =>
+    settings({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getSettings>>,
+    Awaited<ReturnType<typeof settings>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetSettingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getSettings>>>;
-export type GetSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type SettingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof settings>>>;
+export type SettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettingsSuspense<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettingsSuspense<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettingsSuspense<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -225,19 +221,17 @@ export function useGetSettingsSuspense<
  * @summary Read installation settings
  */
 
-export function useGetSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getSettings>>,
+export function useSettingsSuspense<
+  TData = Awaited<ReturnType<typeof settings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSettings>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof settings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSettingsSuspenseQueryOptions(options);
+  const queryOptions = getSettingsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -252,7 +246,7 @@ export const getUpdateSettingsUrl = () => {
 };
 
 /**
- * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature_disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
+ * Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature.disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.
  * @summary Update installation settings
  */
 export const updateSettings = async (
@@ -419,7 +413,7 @@ export const useSyncExchangeRates = <TError = ErrorType<ProblemDetails>, TContex
 ): UseMutationResult<Awaited<ReturnType<typeof syncExchangeRates>>, TError, void, TContext> => {
   return useMutation(getSyncExchangeRatesMutationOptions(options), queryClient);
 };
-export const getGetPublicSettingsUrl = () => {
+export const getPublicSettingsUrl = () => {
   return `/api/settings/public`;
 };
 
@@ -427,56 +421,54 @@ export const getGetPublicSettingsUrl = () => {
  * Anonymous. Returns only the installation name and the default language.
  * @summary Read the settings the sign-in page needs
  */
-export const getPublicSettings = async (
+export const publicSettings = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PublicSettingsResponse> => {
-  return customFetch<PublicSettingsResponse>(getGetPublicSettingsUrl(), {
+  return customFetch<PublicSettingsResponse>(getPublicSettingsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetPublicSettingsQueryKey = () => {
+export const getPublicSettingsQueryKey = () => {
   return [`/api/settings/public`] as const;
 };
 
-export const getGetPublicSettingsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export const getPublicSettingsQueryOptions = <
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>>;
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetPublicSettingsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getPublicSettingsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicSettings>>> = ({ signal }) =>
-    getPublicSettings({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof publicSettings>>> = ({ signal }) =>
+    publicSettings({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getPublicSettings>>,
+    Awaited<ReturnType<typeof publicSettings>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetPublicSettingsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getPublicSettings>>
->;
-export type GetPublicSettingsQueryError = ErrorType<ProblemDetails>;
+export type PublicSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof publicSettings>>>;
+export type PublicSettingsQueryError = ErrorType<ProblemDetails>;
 
-export function useGetPublicSettings<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettings<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPublicSettings>>,
+          Awaited<ReturnType<typeof publicSettings>>,
           TError,
-          Awaited<ReturnType<typeof getPublicSettings>>
+          Awaited<ReturnType<typeof publicSettings>>
         >,
         "initialData"
       >;
@@ -484,17 +476,17 @@ export function useGetPublicSettings<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPublicSettings<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettings<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPublicSettings>>,
+          Awaited<ReturnType<typeof publicSettings>>,
           TError,
-          Awaited<ReturnType<typeof getPublicSettings>>
+          Awaited<ReturnType<typeof publicSettings>>
         >,
         "initialData"
       >;
@@ -502,12 +494,12 @@ export function useGetPublicSettings<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPublicSettings<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettings<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -516,17 +508,17 @@ export function useGetPublicSettings<
  * @summary Read the settings the sign-in page needs
  */
 
-export function useGetPublicSettings<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettings<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetPublicSettingsQueryOptions(options);
+  const queryOptions = getPublicSettingsQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -535,65 +527,65 @@ export function useGetPublicSettings<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetPublicSettingsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export const getPublicSettingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
   >;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetPublicSettingsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getPublicSettingsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPublicSettings>>> = ({ signal }) =>
-    getPublicSettings({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof publicSettings>>> = ({ signal }) =>
+    publicSettings({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getPublicSettings>>,
+    Awaited<ReturnType<typeof publicSettings>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetPublicSettingsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getPublicSettings>>
+export type PublicSettingsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof publicSettings>>
 >;
-export type GetPublicSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type PublicSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetPublicSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettingsSuspense<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPublicSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettingsSuspense<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPublicSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettingsSuspense<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -603,19 +595,19 @@ export function useGetPublicSettingsSuspense<
  * @summary Read the settings the sign-in page needs
  */
 
-export function useGetPublicSettingsSuspense<
-  TData = Awaited<ReturnType<typeof getPublicSettings>>,
+export function usePublicSettingsSuspense<
+  TData = Awaited<ReturnType<typeof publicSettings>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPublicSettings>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof publicSettings>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetPublicSettingsSuspenseQueryOptions(options);
+  const queryOptions = getPublicSettingsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

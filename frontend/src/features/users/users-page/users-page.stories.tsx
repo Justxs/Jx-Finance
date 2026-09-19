@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { getGetUsersMockHandler } from "@/api/generated/users/users.msw";
+import { getUsersMockHandler } from "@/api/generated/users/users.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { inactiveUser, longNameUser, memberUser } from "@/storybook/fixtures";
@@ -39,7 +39,7 @@ export const OnlyCurrentUser: Story = { parameters: { msw: { handlers: emptyHand
 
 export const NoUsers: Story = {
   parameters: {
-    msw: { handlers: [getGetUsersMockHandler([]), ...handlers] },
+    msw: { handlers: [getUsersMockHandler([]), ...handlers] },
   },
 };
 
@@ -54,7 +54,7 @@ export const SignedInAsAnotherAdmin: Story = {
 export const LongNamesAndInactive: Story = {
   parameters: {
     msw: {
-      handlers: [getGetUsersMockHandler([longNameUser, inactiveUser]), ...handlers],
+      handlers: [getUsersMockHandler([longNameUser, inactiveUser]), ...handlers],
     },
   },
 };

@@ -8,7 +8,6 @@
 import type { Currency } from "./currency";
 import type { FeatureFlags } from "./featureFlags";
 import type { FirstDayOfWeek } from "./firstDayOfWeek";
-import type { IReadOnlyListOfCurrency } from "./iReadOnlyListOfCurrency";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface SettingsResponse {
@@ -16,7 +15,8 @@ export interface SettingsResponse {
   instanceName: string | null;
   features: FeatureFlags;
   reportingCurrency: Currency;
-  enabledCurrencies: IReadOnlyListOfCurrency;
+  /** Currencies offered when entering data. The reporting currency is always included. */
+  enabledCurrencies: Currency[];
   exchangeRateSyncEnabled: boolean;
   ratesAsOf: null | NullableOfDateOnly;
   defaultLanguage: string;

@@ -1,5 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 
@@ -10,9 +12,10 @@ public sealed class BulkCategorizeTransactionsValidator : Validator<BulkCategori
     public BulkCategorizeTransactionsValidator()
     {
         RuleFor(r => r.TransactionIds)
-            .NotEmpty()
+            .IsRequired()
             .Must(ids => ids is null || ids.Count <= MaxTransactions)
+            .WithErrorCode(ErrorCodes.CollectionInvalidSize)
             .WithMessage($"At most {MaxTransactions} transactions can be recategorized at once.");
-        RuleForEach(r => r.TransactionIds).NotEmpty();
+        RuleForEach(r => r.TransactionIds).IsRequired();
     }
 }

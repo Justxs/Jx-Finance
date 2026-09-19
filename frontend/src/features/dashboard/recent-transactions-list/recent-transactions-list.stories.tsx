@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { getTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -40,6 +40,6 @@ function specialTransactions() {
 
 export const LongAndSpecialRows: Story = {
   parameters: {
-    msw: { handlers: [getGetTransactionsMockHandler(specialTransactions), ...handlers] },
+    msw: { handlers: [getTransactionsMockHandler(specialTransactions), ...handlers] },
   },
 };

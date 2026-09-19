@@ -11,7 +11,7 @@ import * as zod from "zod";
  * One connection per account. The Flex token is write-only and never returned.
  * @summary List your Interactive Brokers connections
  */
-export const GetBrokerConnectionsResponseItem = zod.object({
+export const BrokerConnectionsResponseItem = zod.object({
   accountId: zod.uuid(),
   fundingAccountId: zod.uuid().nullable(),
   queryId: zod.string(),
@@ -19,25 +19,18 @@ export const GetBrokerConnectionsResponseItem = zod.object({
   lastSyncAt: zod.iso.datetime({ offset: true }).nullable(),
   lastError: zod.string().nullable(),
 });
-export const GetBrokerConnectionsResponse = zod.array(GetBrokerConnectionsResponseItem);
+export const BrokerConnectionsResponse = zod.array(BrokerConnectionsResponseItem);
 
 /**
  * Forgets the token and stops automatic sync. Imported entries stay.
  * @summary Remove an Interactive Brokers connection
  */
-export const DeleteBrokerConnectionParams = zod.object({
-  accountId: zod.string(),
-});
-
 export const DeleteBrokerConnectionResponse = zod.void();
 
 /**
  * Stores the Flex Query id and token so the server can download the report once a day and on demand. The token is encrypted at rest. Leave Token empty to keep the stored one.
  * @summary Connect an account to the Interactive Brokers Flex Web Service
  */
-export const SaveBrokerConnectionParams = zod.object({
-  accountId: zod.uuid(),
-});
 
 export const saveBrokerConnectionBodyQueryIdRegExp = new RegExp("^[0-9]{1,20}$");
 export const saveBrokerConnectionBodyTokenRegExp = new RegExp("^[0-9]{6,64}$");
@@ -67,10 +60,6 @@ export const SaveBrokerConnectionResponse = zod.object({
  * Asks Interactive Brokers to run the stored Flex Query, waits for it, and imports it the same way as an uploaded file. Can take up to a minute.
  * @summary Download and import the Flex Query report now
  */
-export const SyncBrokerConnectionParams = zod.object({
-  accountId: zod.string(),
-});
-
 export const SyncBrokerConnectionResponse = zod.object({
   trades: zod.int(),
   cashEntries: zod.int(),
@@ -110,11 +99,7 @@ export const ImportBrokerReportResponse = zod.object({
  * Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security's own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
  * @summary Get the investment portfolio
  */
-export const GetPortfolioQueryParams = zod.object({
-  accountId: zod.uuid().nullish().describe("Only holdings and income on this account."),
-});
-
-export const GetPortfolioResponse = zod.object({
+export const PortfolioResponse = zod.object({
   reportingCurrency: zod.enum([
     "eur",
     "usd",
@@ -227,11 +212,7 @@ export const GetPortfolioResponse = zod.object({
  * Securities are shared by everyone on the installation, because a price is the same for all holders.
  * @summary List securities
  */
-export const GetSecuritiesQueryParams = zod.object({
-  search: zod.string().nullish().describe("Matches symbol, name or ISIN."),
-});
-
-export const GetSecuritiesResponseItem = zod.object({
+export const SecuritiesResponseItem = zod.object({
   id: zod.uuid(),
   symbol: zod.string(),
   name: zod.string(),
@@ -273,7 +254,7 @@ export const GetSecuritiesResponseItem = zod.object({
   lastPrice: zod.string().nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
-export const GetSecuritiesResponse = zod.array(GetSecuritiesResponseItem);
+export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
 
 /**
  * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.
@@ -332,8 +313,10 @@ export const CreateSecurityBody = zod.object({
     .max(createSecurityBodyExchangeMax)
     .nullish(),
   lastPrice: zod.string().nullish(),
-  lastPriceDate: zod.union([zod.null(), zod.iso.date()]).optional(),
-  id: zod.uuid().optional(),
+  lastPriceDate: zod
+    .union([zod.null(), zod.iso.date()])
+    .optional()
+    .describe("Defaults to today when a price is given without a date."),
 });
 
 export const CreateSecurityResponse = zod.object({
@@ -383,10 +366,6 @@ export const CreateSecurityResponse = zod.object({
  * Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.
  * @summary Update a security or its price
  */
-export const UpdateSecurityParams = zod.object({
-  id: zod.uuid(),
-});
-
 export const updateSecurityBodySymbolMin = 0;
 export const updateSecurityBodySymbolMax = 32;
 
@@ -611,18 +590,7 @@ export const CreateInvestmentTransactionResponse = zod.object({
  * Pages through trades, dividends, withholding tax, interest, fees and splits on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account.
  * @summary List investment transactions
  */
-export const GetInvestmentTransactionsQueryParams = zod.object({
-  page: zod.int(),
-  pageSize: zod.int(),
-  accountId: zod.uuid().nullish().describe("Only entries on this account."),
-  securityId: zod.uuid().nullish().describe("Only entries for this security."),
-  type: zod
-    .enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"])
-    .optional()
-    .describe("Only entries of this type."),
-});
-
-export const GetInvestmentTransactionsResponse = zod.object({
+export const InvestmentTransactionsResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
@@ -681,19 +649,12 @@ export const GetInvestmentTransactionsResponse = zod.object({
  * Removes the entry and its cash effect. A later broker import will not bring a deleted imported entry back.
  * @summary Delete an investment transaction
  */
-export const DeleteInvestmentTransactionParams = zod.object({
-  id: zod.string(),
-});
-
 export const DeleteInvestmentTransactionResponse = zod.void();
 
 /**
  * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again. A correction that would leave a later sale without enough shares is refused.
  * @summary Correct an investment transaction
  */
-export const UpdateInvestmentTransactionParams = zod.object({
-  id: zod.uuid(),
-});
 
 export const updateInvestmentTransactionBodyDescriptionMin = 0;
 export const updateInvestmentTransactionBodyDescriptionMax = 500;

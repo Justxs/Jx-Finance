@@ -11,7 +11,7 @@ import * as zod from "zod";
  * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
  * @summary List supported currencies
  */
-export const GetCurrenciesResponse = zod.object({
+export const CurrenciesResponse = zod.object({
   reportingCurrency: zod.enum([
     "eur",
     "usd",
@@ -87,75 +87,7 @@ export const GetCurrenciesResponse = zod.object({
  * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
  * @summary Look up an exchange rate
  */
-export const GetExchangeRateQueryParams = zod.object({
-  from: zod.enum([
-    "eur",
-    "usd",
-    "gbp",
-    "chf",
-    "pln",
-    "sek",
-    "nok",
-    "dkk",
-    "czk",
-    "huf",
-    "ron",
-    "isk",
-    "try",
-    "jpy",
-    "cny",
-    "hkd",
-    "sgd",
-    "krw",
-    "inr",
-    "idr",
-    "myr",
-    "php",
-    "thb",
-    "aud",
-    "nzd",
-    "cad",
-    "mxn",
-    "brl",
-    "ils",
-    "zar",
-  ]),
-  to: zod.enum([
-    "eur",
-    "usd",
-    "gbp",
-    "chf",
-    "pln",
-    "sek",
-    "nok",
-    "dkk",
-    "czk",
-    "huf",
-    "ron",
-    "isk",
-    "try",
-    "jpy",
-    "cny",
-    "hkd",
-    "sgd",
-    "krw",
-    "inr",
-    "idr",
-    "myr",
-    "php",
-    "thb",
-    "aud",
-    "nzd",
-    "cad",
-    "mxn",
-    "brl",
-    "ils",
-    "zar",
-  ]),
-  date: zod.iso.date().nullish().describe("Rate date as YYYY-MM-DD. Defaults to today."),
-});
-
-export const GetExchangeRateResponse = zod.object({
+export const ExchangeRateResponse = zod.object({
   from: zod.enum([
     "eur",
     "usd",

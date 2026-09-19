@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,22 +11,23 @@ import {
   type SecurityResponse,
 } from "@/api/generated/model";
 import { createInvestmentTransactionBodyDescriptionMax } from "@/api/schemas/investments/investments.zod";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { submitToServer } from "@/lib/form-server-errors";
 import { cn } from "@/lib/utils";
 import {
   isNonNegativeMoney,
   isPositiveMoney,
   isPositiveQuantity,
   isQuantity,
+  optionalText,
+  requiredValue,
 } from "@/lib/validation";
 import { type CashEffectInput, cashEffect } from "../cash-effect";
 import {
@@ -60,7 +60,7 @@ interface Props {
   editing?: InvestmentTransactionResponse;
   pending: boolean;
   serverError?: unknown;
-  onSubmit: (values: CreateInvestmentTransactionRequest) => void;
+  onSubmit: (values: CreateInvestmentTransactionRequest) => Promise<unknown> | void;
   onCancel?: () => void;
 }
 
@@ -121,20 +121,15 @@ export function InvestmentEntryForm({
   const schema = z
     .object({
       type: z.enum(InvestmentTransactionType),
-      accountId: z.string().min(1, t("validation.required")),
-      date: z.string().min(1, t("validation.required")),
+      accountId: requiredValue(t),
+      date: requiredValue(t),
       securityId: z.string(),
       quantity: z.string(),
       price: z.string(),
       fee: z.string(),
       amount: z.string(),
       currency: z.enum(Currency),
-      description: z
-        .string()
-        .max(
-          createInvestmentTransactionBodyDescriptionMax,
-          t("validation.maxLength", { max: createInvestmentTransactionBodyDescriptionMax }),
-        ),
+      description: optionalText(t, createInvestmentTransactionBodyDescriptionMax),
     })
     .superRefine((value, context) => {
       function fail(path: keyof FormValues, message: string) {
@@ -191,26 +186,29 @@ export function InvestmentEntryForm({
         description: "",
       };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
+    onSubmit: (submission) => {
+      const { value } = submission;
       const trade = isTrade(value.type);
       const cash = usesAmount(value.type);
       const securityId = value.securityId || null;
 
-      onSubmit({
-        accountId: value.accountId,
-        type: value.type,
-        date: value.date,
-        securityId,
-        quantity: cash ? null : value.quantity,
-        price: trade ? value.price : null,
-        fee: trade && value.fee.trim() !== "" ? value.fee : null,
-        amount: cash ? value.amount : null,
-        currency: cash && securityId === null ? value.currency : null,
-        description: value.description.trim() || null,
-      });
+      return submitToServer(submission, () =>
+        onSubmit({
+          accountId: value.accountId,
+          type: value.type,
+          date: value.date,
+          securityId,
+          quantity: cash ? null : value.quantity,
+          price: trade ? value.price : null,
+          fee: trade && value.fee.trim() !== "" ? value.fee : null,
+          amount: cash ? value.amount : null,
+          currency: cash && securityId === null ? value.currency : null,
+          description: value.description.trim() || null,
+        }),
+      );
     },
   });
 
@@ -219,327 +217,244 @@ export function InvestmentEntryForm({
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="type">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="entry-type">{t("investments.entry.type")}</Label>
-            <SelectField
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="type">
+          {(field) => (
+            <field.SelectFieldControl
               id="entry-type"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
+              label={t("investments.entry.type")}
               options={entryTypes.map((type) => ({
                 value: type,
                 label: t(`investments.types.${type}`),
               }))}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="date">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="entry-date">{t("transactions.date")}</Label>
-            <DatePicker
-              id="entry-date"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "entry-date-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            />
-            <FieldError id="entry-date-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="date">
+          {(field) => <field.DateField id="entry-date" label={t("transactions.date")} />}
+        </form.Field>
 
-      <form.Field name="accountId">
-        {(field) => (
-          <div className="col-span-full space-y-1.5">
-            <Label htmlFor="entry-account">{t("transactions.account")}</Label>
-            <SelectField
+        <form.Field name="accountId">
+          {(field) => (
+            <field.SelectFieldControl
               id="entry-account"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "entry-account-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(value) => {
-                field.handleChange(value);
+              label={t("transactions.account")}
+              className="col-span-full"
+              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              onValueChange={(value) => {
                 const next = accounts.find((account) => account.id === value);
                 if (next) {
                   form.setFieldValue("currency", next.currency);
                 }
               }}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
             />
-            <FieldError id="entry-account-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Subscribe selector={(state) => state.values.type}>
-        {(type) => (
-          <>
-            <form.Field name="securityId">
-              {(field) => {
-                const error = field.errors[0]?.message;
-
-                return (
-                  <div className="col-span-full space-y-1.5">
-                    <Label htmlFor="entry-security">
-                      {requiresSecurity(type)
-                        ? t("investments.entry.security")
-                        : t("investments.entry.securityOptional")}
-                    </Label>
-                    <div className="flex flex-wrap gap-2">
-                      <div className="min-w-48 flex-1">
-                        <SelectField
-                          id="entry-security"
-                          value={field.value}
-                          placeholder={t("investments.entry.chooseSecurity")}
-                          aria-invalid={Boolean(error)}
-                          aria-describedby={error ? "entry-security-error" : undefined}
-                          onBlur={field.handleBlur}
-                          onChange={field.handleChange}
-                          options={[
-                            ...(requiresSecurity(type)
-                              ? []
-                              : [{ value: "", label: t("investments.entry.noSecurity") }]),
-                            ...allSecurities.map((security) => ({
-                              value: security.id,
-                              label: `${security.symbol} · ${security.name}`,
-                            })),
-                          ]}
-                        />
-                      </div>
-                      <Button type="button" variant="outline" onClick={() => setSecurityOpen(true)}>
-                        <Plus />
-                        {t("investments.securities.add")}
-                      </Button>
-                    </div>
-                    <FieldError id="entry-security-error" message={error} />
-                  </div>
-                );
-              }}
-            </form.Field>
-
-            {usesAmount(type) ? null : (
-              <form.Field name="quantity">
+        <form.Subscribe selector={(state) => state.values.type}>
+          {(type) => (
+            <>
+              <form.Field name="securityId">
                 {(field) => {
                   const error = field.errors[0]?.message;
-                  const split = type === "split";
-                  const hintId = split ? "entry-quantity-hint" : undefined;
 
                   return (
-                    <div className={cn("space-y-1.5", split && "col-span-full")}>
-                      <Label htmlFor="entry-quantity">
-                        {split ? t("investments.entry.ratio") : t("investments.entry.quantity")}
+                    <div className="col-span-full space-y-1.5">
+                      <Label htmlFor="entry-security">
+                        {requiresSecurity(type)
+                          ? t("investments.entry.security")
+                          : t("investments.entry.securityOptional")}
                       </Label>
-                      <Input
-                        id="entry-quantity"
-                        inputMode="decimal"
-                        placeholder={split ? "2" : "0"}
-                        value={field.value}
-                        aria-invalid={Boolean(error)}
-                        aria-describedby={error ? "entry-quantity-error" : hintId}
-                        onBlur={field.handleBlur}
-                        onChange={(event) => field.handleChange(event.target.value)}
-                      />
-                      {split ? (
-                        <p id="entry-quantity-hint" className="text-xs text-muted-foreground">
-                          {t("investments.entry.ratioHint")}
-                        </p>
-                      ) : null}
-                      <FieldError id="entry-quantity-error" message={error} />
+                      <div className="flex flex-wrap gap-2">
+                        <div className="min-w-48 flex-1">
+                          <SelectField
+                            id="entry-security"
+                            value={field.value}
+                            placeholder={t("investments.entry.chooseSecurity")}
+                            aria-invalid={Boolean(error)}
+                            aria-describedby={error ? "entry-security-error" : undefined}
+                            onBlur={field.handleBlur}
+                            onChange={field.handleChange}
+                            options={[
+                              ...(requiresSecurity(type)
+                                ? []
+                                : [{ value: "", label: t("investments.entry.noSecurity") }]),
+                              ...allSecurities.map((security) => ({
+                                value: security.id,
+                                label: `${security.symbol} · ${security.name}`,
+                              })),
+                            ]}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setSecurityOpen(true)}
+                        >
+                          <Plus />
+                          {t("investments.securities.add")}
+                        </Button>
+                      </div>
+                      <FieldError id="entry-security-error" message={error} />
                     </div>
                   );
                 }}
               </form.Field>
-            )}
 
-            {isTrade(type) ? (
-              <>
-                <form.Subscribe selector={(state) => state.values.securityId}>
-                  {(securityId) => (
-                    <form.Field name="price">
-                      {(field) => {
-                        const error = field.errors[0]?.message;
-                        const code = securityCurrency(securityId)?.toUpperCase();
+              {usesAmount(type) ? null : (
+                <form.Field name="quantity">
+                  {(field) => {
+                    const split = type === "split";
 
-                        return (
-                          <div className="space-y-1.5">
-                            <Label htmlFor="entry-price">
-                              {code
-                                ? t("investments.entry.priceIn", { currency: code })
-                                : t("investments.entry.price")}
-                            </Label>
-                            <Input
-                              id="entry-price"
-                              inputMode="decimal"
-                              placeholder="0.00"
-                              value={field.value}
-                              aria-invalid={Boolean(error)}
-                              aria-describedby={error ? "entry-price-error" : undefined}
-                              onBlur={field.handleBlur}
-                              onChange={(event) => field.handleChange(event.target.value)}
-                            />
-                            <FieldError id="entry-price-error" message={error} />
-                          </div>
-                        );
-                      }}
-                    </form.Field>
-                  )}
-                </form.Subscribe>
-
-                <form.Field name="fee">
-                  {(field) => (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="entry-fee">{t("investments.entry.fee")}</Label>
-                      <Input
-                        id="entry-fee"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={field.value}
-                        aria-invalid={field.errors.length > 0}
-                        aria-describedby={
-                          field.errors.length > 0 ? "entry-fee-error" : "entry-fee-hint"
+                    return (
+                      <field.MoneyInputField
+                        id="entry-quantity"
+                        label={
+                          split ? t("investments.entry.ratio") : t("investments.entry.quantity")
                         }
-                        onBlur={field.handleBlur}
-                        onChange={(event) => field.handleChange(event.target.value)}
+                        hint={split ? t("investments.entry.ratioHint") : undefined}
+                        className={split ? "col-span-full" : undefined}
+                        placeholder={split ? "2" : "0"}
                       />
-                      <p id="entry-fee-hint" className="text-xs text-muted-foreground">
-                        {t("investments.entry.feeHint")}
-                      </p>
-                      <FieldError id="entry-fee-error" message={field.errors[0]?.message} />
-                    </div>
-                  )}
+                    );
+                  }}
                 </form.Field>
-              </>
-            ) : null}
+              )}
 
-            {usesAmount(type) ? (
-              <form.Subscribe selector={(state) => state.values.securityId}>
-                {(securityId) => (
-                  <form.Field name="amount">
-                    {(field) => {
-                      const error = field.errors[0]?.message;
-                      const code = securityCurrency(securityId)?.toUpperCase();
+              {isTrade(type) ? (
+                <>
+                  <form.Subscribe selector={(state) => state.values.securityId}>
+                    {(securityId) => (
+                      <form.Field name="price">
+                        {(field) => {
+                          const code = securityCurrency(securityId)?.toUpperCase();
 
-                      if (code) {
-                        return (
-                          <div className="space-y-1.5">
-                            <Label htmlFor="entry-amount">
-                              {t("investments.entry.amountIn", { currency: code })}
-                            </Label>
-                            <Input
-                              id="entry-amount"
-                              inputMode="decimal"
-                              placeholder="0.00"
-                              value={field.value}
-                              aria-invalid={Boolean(error)}
-                              aria-describedby={error ? "entry-amount-error" : undefined}
-                              onBlur={field.handleBlur}
-                              onChange={(event) => field.handleChange(event.target.value)}
+                          return (
+                            <field.MoneyInputField
+                              id="entry-price"
+                              label={
+                                code
+                                  ? t("investments.entry.priceIn", { currency: code })
+                                  : t("investments.entry.price")
+                              }
                             />
-                            <FieldError id="entry-amount-error" message={error} />
-                          </div>
-                        );
-                      }
+                          );
+                        }}
+                      </form.Field>
+                    )}
+                  </form.Subscribe>
 
+                  <form.Field name="fee">
+                    {(field) => (
+                      <field.MoneyInputField
+                        id="entry-fee"
+                        label={t("investments.entry.fee")}
+                        hint={t("investments.entry.feeHint")}
+                      />
+                    )}
+                  </form.Field>
+                </>
+              ) : null}
+
+              {usesAmount(type) ? (
+                <form.Subscribe selector={(state) => state.values.securityId}>
+                  {(securityId) => {
+                    const code = securityCurrency(securityId)?.toUpperCase();
+
+                    if (code) {
                       return (
-                        <form.Field name="currency">
-                          {(currencyField) => (
-                            <MoneyField
+                        <form.Field name="amount">
+                          {(field) => (
+                            <field.MoneyInputField
                               id="entry-amount"
-                              label={t("transactions.amount")}
-                              value={field.value}
-                              error={error}
-                              onBlur={field.handleBlur}
-                              onChange={field.handleChange}
-                              currency={currencyField.value}
-                              currencyLabel={t("investments.entry.currency")}
-                              onCurrencyChange={currencyField.handleChange}
+                              label={t("investments.entry.amountIn", { currency: code })}
                             />
                           )}
                         </form.Field>
                       );
-                    }}
-                  </form.Field>
-                )}
-              </form.Subscribe>
-            ) : null}
-          </>
-        )}
-      </form.Subscribe>
+                    }
 
-      <form.Field name="description">
-        {(field) => (
-          <div className="col-span-full space-y-1.5">
-            <Label htmlFor="entry-description">{t("investments.entry.note")}</Label>
-            <Input
-              id="entry-description"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "entry-description-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value)}
-            />
-            <FieldError id="entry-description-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Subscribe
-        selector={(state) => ({
-          type: state.values.type,
-          quantity: state.values.quantity,
-          price: state.values.price,
-          fee: state.values.fee,
-          amount: state.values.amount,
-          securityId: state.values.securityId,
-          currency: state.values.currency,
-        })}
-      >
-        {({ securityId, currency, ...input }) => (
-          <CashEffectLine input={input} currency={securityCurrency(securityId) ?? currency} />
-        )}
-      </form.Subscribe>
-
-      <FormError error={serverError} />
-
-      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {editing ? t("actions.save") : t("investments.entry.submit")}
-            </Button>
+                    return (
+                      <form.Field name="currency">
+                        {(currencyField) => (
+                          <form.Field name="amount">
+                            {(field) => (
+                              <field.MoneyAmountField
+                                id="entry-amount"
+                                label={t("transactions.amount")}
+                                currencyLabel={t("investments.entry.currency")}
+                                currencyField={currencyField}
+                              />
+                            )}
+                          </form.Field>
+                        )}
+                      </form.Field>
+                    );
+                  }}
+                </form.Subscribe>
+              ) : null}
+            </>
           )}
         </form.Subscribe>
-      </div>
 
-      <SecurityModal
-        open={securityOpen}
-        onOpenChange={setSecurityOpen}
-        onSaved={(security) => {
-          setCreated((previous) => [...previous, security]);
-          form.setFieldValue("securityId", security.id);
-        }}
-      />
-    </form>
+        <form.Field name="description">
+          {(field) => (
+            <field.TextField
+              id="entry-description"
+              label={t("investments.entry.note")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
+        <form.Subscribe
+          selector={(state) => ({
+            type: state.values.type,
+            quantity: state.values.quantity,
+            price: state.values.price,
+            fee: state.values.fee,
+            amount: state.values.amount,
+            securityId: state.values.securityId,
+            currency: state.values.currency,
+          })}
+        >
+          {({ securityId, currency, ...input }) => (
+            <CashEffectLine input={input} currency={securityCurrency(securityId) ?? currency} />
+          )}
+        </form.Subscribe>
+
+        <FormError error={serverError} />
+
+        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t("actions.cancel")}
+            </Button>
+          ) : null}
+          <form.SubmitButton pending={pending}>
+            {editing ? t("actions.save") : t("investments.entry.submit")}
+          </form.SubmitButton>
+        </div>
+
+        <SecurityModal
+          open={securityOpen}
+          onOpenChange={setSecurityOpen}
+          onSaved={(security) => {
+            setCreated((previous) => [...previous, security]);
+            form.setFieldValue("securityId", security.id);
+          }}
+        />
+      </form>
+    </form.AppForm>
   );
 }

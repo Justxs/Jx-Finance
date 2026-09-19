@@ -39,5 +39,5 @@ public sealed class SampleFlexReport : IFlexClient
     public Task<Result<Stream>> DownloadAsync(string token, string queryId, CancellationToken cancellationToken) =>
         Task.FromResult(token == Token && queryId == QueryId
             ? Result<Stream>.Success(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(Xml)))
-            : Result<Stream>.Failure("validation", "Interactive Brokers rejected the request: Token is invalid."));
+            : Result<Stream>.Failure("broker.rejected", "Interactive Brokers rejected the request: Token is invalid."));
 }

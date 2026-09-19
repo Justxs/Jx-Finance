@@ -13,7 +13,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
     {
         Name = request.Name.Trim(),
         Type = request.Type,
-        OutstandingAmount = new Money(request.OutstandingAmount),
+        OutstandingAmount = new Money(request.OutstandingAmount!.Value),
         InterestRate = request.InterestRate,
         AsOf = request.AsOf,
     };
@@ -22,7 +22,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
     {
         debt.Name = request.Name.Trim();
         debt.Type = request.Type;
-        debt.OutstandingAmount = new Money(request.OutstandingAmount);
+        debt.OutstandingAmount = new Money(request.OutstandingAmount!.Value);
         debt.InterestRate = request.InterestRate;
         debt.AsOf = request.AsOf;
     }

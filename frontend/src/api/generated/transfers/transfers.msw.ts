@@ -5,54 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency } from "../model";
 import type { PagedResponseOfTransferResponse, TransferResponse } from "../model";
-
-export const getCreateTransferResponseMock = (
-  overrideResponse: Partial<Extract<TransferResponse, object>> = {},
-): TransferResponse => ({
-  id: faker.string.uuid(),
-  fromAccountId: faker.string.uuid(),
-  toAccountId: faker.string.uuid(),
-  amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  date: faker.date.past().toISOString().slice(0, 10),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  receivedAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  receivedCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  ...overrideResponse,
-});
-
-export const getGetTransfersResponseMock = (
-  overrideResponse: Partial<Extract<PagedResponseOfTransferResponse, object>> = {},
-): PagedResponseOfTransferResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    fromAccountId: faker.string.uuid(),
-    toAccountId: faker.string.uuid(),
-    amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    date: faker.date.past().toISOString().slice(0, 10),
-    description: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-    currency: faker.helpers.arrayElement(Object.values(Currency)),
-    receivedAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    receivedCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  })),
-  page: faker.number.int(),
-  pageSize: faker.number.int(),
-  total: faker.number.int(),
-  ...overrideResponse,
-});
 
 export const getCreateTransferMockHandler = (
   overrideResponse?:
@@ -70,7 +25,7 @@ export const getCreateTransferMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateTransferResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -78,7 +33,7 @@ export const getCreateTransferMockHandler = (
   );
 };
 
-export const getGetTransfersMockHandler = (
+export const getTransfersMockHandler = (
   overrideResponse?:
     | PagedResponseOfTransferResponse
     | ((
@@ -94,7 +49,7 @@ export const getGetTransfersMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetTransfersResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -122,6 +77,6 @@ export const getDeleteTransferMockHandler = (
 };
 export const getTransfersMock = () => [
   getCreateTransferMockHandler(),
-  getGetTransfersMockHandler(),
+  getTransfersMockHandler(),
   getDeleteTransferMockHandler(),
 ];

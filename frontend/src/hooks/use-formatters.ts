@@ -1,6 +1,6 @@
 import { enUS, lt } from "date-fns/locale";
 import { useTranslation } from "react-i18next";
-import { useGetCurrencies } from "@/api/generated";
+import { useCurrencies } from "@/api/generated";
 import { Currency } from "@/api/generated/model";
 import { useSettings } from "@/hooks/use-settings";
 import { parseIso, safeTimeZone } from "@/lib/calendar";
@@ -14,13 +14,13 @@ const currenciesQuery = {
 const allCurrencies = Object.values(Currency);
 
 export function useReportingCurrency(): Currency {
-  const currencies = useGetCurrencies({ query: currenciesQuery });
+  const currencies = useCurrencies({ query: currenciesQuery });
 
   return currencies.data?.reportingCurrency ?? "eur";
 }
 
 export function useUsableCurrencies(): readonly Currency[] {
-  const currencies = useGetCurrencies({ query: currenciesQuery });
+  const currencies = useCurrencies({ query: currenciesQuery });
 
   return currencies.data?.currencies ?? allCurrencies;
 }

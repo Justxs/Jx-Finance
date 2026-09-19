@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { ApiError } from "@/api/client";
 import {
   accounts,
   categories,
@@ -9,6 +10,19 @@ import {
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
 import { TransactionForm } from "./transaction-form";
+
+const splitLineProblem = new ApiError({
+  status: 400,
+  title: "One or more validation errors occurred.",
+  errors: [
+    {
+      name: "lines[1].amount",
+      reason: "Line amount must be a decimal greater than 0.",
+      code: "money.positive",
+    },
+    { name: "generalErrors", reason: "The month is closed for this account." },
+  ],
+});
 
 const incomeTransaction = transactions.find((item) => item.type === "income") ?? transactions[0];
 
@@ -88,5 +102,28 @@ export const ValidationErrors: Story = {
   play: async ({ canvasElement, args }) => {
     await submitForm(canvasElement);
     await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+export const ServerLineError: Story = {
+  args: {
+    initial: splitTransaction,
+    error: splitLineProblem,
+    onSubmit: fn(() => Promise.reject(splitLineProblem)),
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await submitForm(canvasElement);
+    await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
+
+    const message = await canvas.findByText("Enter an amount greater than 0, e.g. 12.34.");
+    await expect(message).toHaveAttribute("id", "tx-line-1-amount-error");
+    const lineAmount = canvasElement.querySelector("#tx-line-1-amount");
+    await expect(lineAmount).toHaveAttribute("aria-invalid", "true");
+    await expect(lineAmount).toHaveAttribute("aria-describedby", "tx-line-1-amount-error");
+
+    const alert = canvas.getByRole("alert");
+    await expect(alert).toHaveTextContent("The month is closed for this account.");
+    await expect(alert).not.toHaveTextContent("Enter an amount greater than 0, e.g. 12.34.");
   },
 };

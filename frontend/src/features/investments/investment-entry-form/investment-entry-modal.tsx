@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   useCreateInvestmentTransaction,
-  useGetSecuritiesSuspense,
+  useSecuritiesSuspense,
   useUpdateInvestmentTransaction,
 } from "@/api/generated";
 import type { AccountResponse, InvestmentTransactionResponse } from "@/api/generated/model";
@@ -23,7 +23,7 @@ type ContentProps = Omit<Props, "open">;
 
 function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Readonly<ContentProps>) {
   const { t } = useTranslation();
-  const securities = useGetSecuritiesSuspense();
+  const securities = useSecuritiesSuspense();
 
   const createMutation = useCreateInvestmentTransaction({
     mutation: {
@@ -56,11 +56,10 @@ function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Reado
       serverError={createMutation.error ?? updateMutation.error}
       onSubmit={(values) => {
         if (editing) {
-          updateMutation.mutate({ id: editing.id, data: values });
-          return;
+          return updateMutation.mutateAsync({ id: editing.id, data: values });
         }
 
-        createMutation.mutate({ data: values });
+        return createMutation.mutateAsync({ data: values });
       }}
       onCancel={() => onOpenChange(false)}
     />

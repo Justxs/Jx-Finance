@@ -43,13 +43,13 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
             }
 
             return Result<Stream>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.BrokerUnavailable,
                 "Interactive Brokers is still preparing the report. Try again in a few minutes.");
         }
         catch (Exception ex) when (ex is HttpRequestException or XmlException
             || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
         {
-            return Result<Stream>.Failure(ErrorCodes.Validation, "Interactive Brokers could not be reached. Try again later.");
+            return Result<Stream>.Failure(ErrorCodes.BrokerUnavailable, "Interactive Brokers could not be reached. Try again later.");
         }
     }
 
@@ -64,7 +64,7 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
     {
         var message = response.Root?.Element("ErrorMessage")?.Value ?? "unknown error";
         return Result<Stream>.Failure(
-            ErrorCodes.Validation,
+            ErrorCodes.BrokerRejected,
             $"Interactive Brokers rejected the request: {(message.Length > 300 ? message[..300] : message)}");
     }
 }

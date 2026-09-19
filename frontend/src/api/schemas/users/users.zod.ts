@@ -49,24 +49,7 @@ export const CreateUserResponse = zod.object({
  * Returns user accounts with their role and whether they are still active. Filters are optional and combine with AND. Administrators only.
  * @summary List users
  */
-export const GetUsersQueryParams = zod.object({
-  search: zod
-    .string()
-    .nullish()
-    .describe("Case-insensitive match against the display name or email."),
-  role: zod.string().nullish().describe("Keep only users in this role."),
-  isActive: zod
-    .boolean()
-    .nullish()
-    .describe("True for active accounts, false for deactivated ones."),
-  sort: zod
-    .enum(["displayName", "email", "role", "status"])
-    .optional()
-    .describe("Field to sort by. Defaults to display name."),
-  direction: zod.enum(["asc", "desc"]).optional().describe("Asc or Desc. Defaults to Asc."),
-});
-
-export const GetUsersResponseItem = zod.object({
+export const UsersResponseItem = zod.object({
   id: zod.uuid(),
   email: zod.string(),
   displayName: zod.string(),
@@ -74,7 +57,7 @@ export const GetUsersResponseItem = zod.object({
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
 });
-export const GetUsersResponse = zod.array(GetUsersResponseItem);
+export const UsersResponse = zod.array(UsersResponseItem);
 
 /**
  * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
@@ -113,20 +96,12 @@ export const UpdateMyProfileResponse = zod.object({
  * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself. Administrators only.
  * @summary Deactivate a user
  */
-export const DeactivateUserParams = zod.object({
-  id: zod.string().describe("The user id."),
-});
-
 export const DeactivateUserResponse = zod.void();
 
 /**
  * Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last administrator cannot be demoted, so an instance is never left without one. Administrators only.
  * @summary Change a user role
  */
-export const UpdateUserRoleParams = zod.object({
-  id: zod.uuid().describe("The user id. Takes precedence over the id in the body."),
-});
-
 export const UpdateUserRoleBody = zod.object({
   role: zod.string().describe("Admin or Member."),
 });

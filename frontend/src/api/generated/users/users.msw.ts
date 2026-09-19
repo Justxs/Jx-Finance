@@ -5,56 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { IReadOnlyListOfUserProfileResponse, UserProfileResponse } from "../model";
-
-export const getCreateUserResponseMock = (
-  overrideResponse: Partial<Extract<UserProfileResponse, object>> = {},
-): UserProfileResponse => ({
-  id: faker.string.uuid(),
-  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  twoFactorEnabled: faker.datatype.boolean(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getGetUsersResponseMock = (): IReadOnlyListOfUserProfileResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    twoFactorEnabled: faker.datatype.boolean(),
-    isActive: faker.datatype.boolean(),
-  }));
-
-export const getUpdateMyProfileResponseMock = (
-  overrideResponse: Partial<Extract<UserProfileResponse, object>> = {},
-): UserProfileResponse => ({
-  id: faker.string.uuid(),
-  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  twoFactorEnabled: faker.datatype.boolean(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getUpdateUserRoleResponseMock = (
-  overrideResponse: Partial<Extract<UserProfileResponse, object>> = {},
-): UserProfileResponse => ({
-  id: faker.string.uuid(),
-  email: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  displayName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  role: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  twoFactorEnabled: faker.datatype.boolean(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
+import type { UserProfileResponse } from "../model";
 
 export const getCreateUserMockHandler = (
   overrideResponse?:
@@ -72,7 +25,7 @@ export const getCreateUserMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateUserResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -80,12 +33,12 @@ export const getCreateUserMockHandler = (
   );
 };
 
-export const getGetUsersMockHandler = (
+export const getUsersMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfUserProfileResponse
+    | UserProfileResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfUserProfileResponse> | IReadOnlyListOfUserProfileResponse),
+      ) => Promise<UserProfileResponse[]> | UserProfileResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -96,7 +49,7 @@ export const getGetUsersMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetUsersResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -120,7 +73,7 @@ export const getUpdateMyProfileMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateMyProfileResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -163,7 +116,7 @@ export const getUpdateUserRoleMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateUserRoleResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -172,7 +125,7 @@ export const getUpdateUserRoleMockHandler = (
 };
 export const getUsersMock = () => [
   getCreateUserMockHandler(),
-  getGetUsersMockHandler(),
+  getUsersMockHandler(),
   getUpdateMyProfileMockHandler(),
   getDeactivateUserMockHandler(),
   getUpdateUserRoleMockHandler(),

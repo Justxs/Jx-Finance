@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -26,8 +21,8 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   ConversionResponse,
+  ConversionsParams,
   CreateConversionRequest,
-  GetConversionsParams,
   PagedResponseOfConversionResponse,
   ProblemDetails,
 } from "../model";
@@ -155,7 +150,7 @@ export const useCreateConversion = <TError = ErrorType<ProblemDetails>, TContext
 > => {
   return useMutation(getCreateConversionMutationOptions(options), queryClient);
 };
-export const getGetConversionsUrl = (params: GetConversionsParams) => {
+export const getConversionsUrl = (params: ConversionsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -175,185 +170,81 @@ export const getGetConversionsUrl = (params: GetConversionsParams) => {
  * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
  * @summary List currency conversions
  */
-export const getConversions = async (
-  params: GetConversionsParams,
+export const conversions = async (
+  params: ConversionsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PagedResponseOfConversionResponse> => {
-  return customFetch<PagedResponseOfConversionResponse>(getGetConversionsUrl(params), {
+  return customFetch<PagedResponseOfConversionResponse>(getConversionsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetConversionsQueryKey = (params?: GetConversionsParams) => {
+export const getConversionsQueryKey = (params?: ConversionsParams) => {
   return [`/api/conversions`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetConversionsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getConversions>>,
+export const getConversionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetConversionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetConversionsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversions>>> = ({ signal }) =>
-    getConversions(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getConversions>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetConversionsQueryResult = NonNullable<Awaited<ReturnType<typeof getConversions>>>;
-export type GetConversionsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetConversions<
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getConversions>>,
-          TError,
-          Awaited<ReturnType<typeof getConversions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetConversions<
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getConversions>>,
-          TError,
-          Awaited<ReturnType<typeof getConversions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetConversions<
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List currency conversions
- */
-
-export function useGetConversions<
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetConversionsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetConversionsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
+  params: ConversionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetConversionsQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getConversionsQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getConversions>>> = ({ signal }) =>
-    getConversions(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof conversions>>> = ({ signal }) =>
+    conversions(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getConversions>>,
+    Awaited<ReturnType<typeof conversions>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetConversionsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getConversions>>
->;
-export type GetConversionsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type ConversionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof conversions>>>;
+export type ConversionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetConversionsSuspense<
-  TData = Awaited<ReturnType<typeof getConversions>>,
+export function useConversionsSuspense<
+  TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetConversionsParams,
+  params: ConversionsParams,
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useConversionsSuspense<
+  TData = Awaited<ReturnType<typeof conversions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: ConversionsParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetConversionsSuspense<
-  TData = Awaited<ReturnType<typeof getConversions>>,
+export function useConversionsSuspense<
+  TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetConversionsParams,
+  params: ConversionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetConversionsSuspense<
-  TData = Awaited<ReturnType<typeof getConversions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetConversionsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -363,20 +254,20 @@ export function useGetConversionsSuspense<
  * @summary List currency conversions
  */
 
-export function useGetConversionsSuspense<
-  TData = Awaited<ReturnType<typeof getConversions>>,
+export function useConversionsSuspense<
+  TData = Awaited<ReturnType<typeof conversions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetConversionsParams,
+  params: ConversionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getConversions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof conversions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetConversionsSuspenseQueryOptions(params, options);
+  const queryOptions = getConversionsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

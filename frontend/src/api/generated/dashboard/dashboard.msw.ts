@@ -5,7 +5,6 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
@@ -14,47 +13,7 @@ import type {
   MonthlyTrendResponse,
 } from "../model";
 
-export const getGetCategoryBreakdownResponseMock = (
-  overrideResponse: Partial<Extract<CategoryBreakdownResponse, object>> = {},
-): CategoryBreakdownResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    categoryName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    categoryIcon: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  })),
-  periodStart: faker.date.past().toISOString().slice(0, 10),
-  periodEnd: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetMonthlyTrendResponseMock = (
-  overrideResponse: Partial<Extract<MonthlyTrendResponse, object>> = {},
-): MonthlyTrendResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    year: faker.number.int(),
-    month: faker.number.int(),
-    income: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    expense: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  })),
-  ...overrideResponse,
-});
-
-export const getGetDashboardSummaryResponseMock = (
-  overrideResponse: Partial<Extract<DashboardSummaryResponse, object>> = {},
-): DashboardSummaryResponse => ({
-  totalBalance: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  monthIncome: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  monthExpense: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  monthStart: faker.date.past().toISOString().slice(0, 10),
-  monthEnd: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetCategoryBreakdownMockHandler = (
+export const getCategoryBreakdownMockHandler = (
   overrideResponse?:
     | CategoryBreakdownResponse
     | ((
@@ -70,7 +29,7 @@ export const getGetCategoryBreakdownMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetCategoryBreakdownResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -78,7 +37,7 @@ export const getGetCategoryBreakdownMockHandler = (
   );
 };
 
-export const getGetMonthlyTrendMockHandler = (
+export const getMonthlyTrendMockHandler = (
   overrideResponse?:
     | MonthlyTrendResponse
     | ((
@@ -94,7 +53,7 @@ export const getGetMonthlyTrendMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetMonthlyTrendResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -102,7 +61,7 @@ export const getGetMonthlyTrendMockHandler = (
   );
 };
 
-export const getGetDashboardSummaryMockHandler = (
+export const getDashboardSummaryMockHandler = (
   overrideResponse?:
     | DashboardSummaryResponse
     | ((
@@ -118,7 +77,7 @@ export const getGetDashboardSummaryMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetDashboardSummaryResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -126,7 +85,7 @@ export const getGetDashboardSummaryMockHandler = (
   );
 };
 export const getDashboardMock = () => [
-  getGetCategoryBreakdownMockHandler(),
-  getGetMonthlyTrendMockHandler(),
-  getGetDashboardSummaryMockHandler(),
+  getCategoryBreakdownMockHandler(),
+  getMonthlyTrendMockHandler(),
+  getDashboardSummaryMockHandler(),
 ];

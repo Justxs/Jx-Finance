@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -28,7 +23,6 @@ import type {
   AddMemberRequest,
   CreateHouseholdRequest,
   HouseholdResponse,
-  IReadOnlyListOfHouseholdResponse,
   ProblemDetails,
   UpdateHouseholdRequest,
   UpdateMemberRoleRequest,
@@ -157,7 +151,7 @@ export const useCreateHousehold = <TError = ErrorType<ProblemDetails>, TContext 
 > => {
   return useMutation(getCreateHouseholdMutationOptions(options), queryClient);
 };
-export const getGetHouseholdsUrl = () => {
+export const getHouseholdsUrl = () => {
   return `/api/households`;
 };
 
@@ -165,172 +159,69 @@ export const getGetHouseholdsUrl = () => {
  * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
  * @summary List households
  */
-export const getHouseholds = async (
+export const households = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfHouseholdResponse> => {
-  return customFetch<IReadOnlyListOfHouseholdResponse>(getGetHouseholdsUrl(), {
+): Promise<HouseholdResponse[]> => {
+  return customFetch<HouseholdResponse[]>(getHouseholdsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetHouseholdsQueryKey = () => {
+export const getHouseholdsQueryKey = () => {
   return [`/api/households`] as const;
 };
 
-export const getGetHouseholdsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
+export const getHouseholdsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetHouseholdsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getHouseholdsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHouseholds>>> = ({ signal }) =>
-    getHouseholds({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getHouseholds>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetHouseholdsQueryResult = NonNullable<Awaited<ReturnType<typeof getHouseholds>>>;
-export type GetHouseholdsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetHouseholds<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHouseholds>>,
-          TError,
-          Awaited<ReturnType<typeof getHouseholds>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholds<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHouseholds>>,
-          TError,
-          Awaited<ReturnType<typeof getHouseholds>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholds<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List households
- */
-
-export function useGetHouseholds<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetHouseholdsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetHouseholdsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetHouseholdsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHouseholds>>> = ({ signal }) =>
-    getHouseholds({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof households>>> = ({ signal }) =>
+    households({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getHouseholds>>,
+    Awaited<ReturnType<typeof households>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetHouseholdsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getHouseholds>>
->;
-export type GetHouseholdsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type HouseholdsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof households>>>;
+export type HouseholdsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetHouseholdsSuspense<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
+export function useHouseholdsSuspense<
+  TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholdsSuspense<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
+export function useHouseholdsSuspense<
+  TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholdsSuspense<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
+export function useHouseholdsSuspense<
+  TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -339,19 +230,17 @@ export function useGetHouseholdsSuspense<
  * @summary List households
  */
 
-export function useGetHouseholdsSuspense<
-  TData = Awaited<ReturnType<typeof getHouseholds>>,
+export function useHouseholdsSuspense<
+  TData = Awaited<ReturnType<typeof households>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHouseholds>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof households>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetHouseholdsSuspenseQueryOptions(options);
+  const queryOptions = getHouseholdsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -446,7 +335,7 @@ export const useDeleteHousehold = <TError = ErrorType<ProblemDetails>, TContext 
 > => {
   return useMutation(getDeleteHouseholdMutationOptions(options), queryClient);
 };
-export const getGetHouseholdUrl = (id: string) => {
+export const getHouseholdUrl = (id: string) => {
   return `/api/households/${id}`;
 };
 
@@ -454,187 +343,76 @@ export const getGetHouseholdUrl = (id: string) => {
  * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
  * @summary Get one household
  */
-export const getHousehold = async (
+export const household = async (
   id: string,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<HouseholdResponse> => {
-  return customFetch<HouseholdResponse>(getGetHouseholdUrl(id), {
+  return customFetch<HouseholdResponse>(getHouseholdUrl(id), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetHouseholdQueryKey = (id: string) => {
+export const getHouseholdQueryKey = (id: string) => {
   return [`/api/households/${id}`] as const;
 };
 
-export const getGetHouseholdQueryOptions = <
-  TData = Awaited<ReturnType<typeof getHousehold>>,
+export const getHouseholdSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetHouseholdQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getHouseholdQueryKey(id);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHousehold>>> = ({ signal }) =>
-    getHousehold(id, { signal, ...requestOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: id !== null && id !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-};
-
-export type GetHouseholdQueryResult = NonNullable<Awaited<ReturnType<typeof getHousehold>>>;
-export type GetHouseholdQueryError = ErrorType<ProblemDetails>;
-
-export function useGetHousehold<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHousehold>>,
-          TError,
-          Awaited<ReturnType<typeof getHousehold>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHousehold<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getHousehold>>,
-          TError,
-          Awaited<ReturnType<typeof getHousehold>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHousehold<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get one household
- */
-
-export function useGetHousehold<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetHouseholdQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetHouseholdSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getHousehold>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetHouseholdQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getHousehold>>> = ({ signal }) =>
-    getHousehold(id, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof household>>> = ({ signal }) =>
+    household(id, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getHousehold>>,
+    Awaited<ReturnType<typeof household>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetHouseholdSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getHousehold>>>;
-export type GetHouseholdSuspenseQueryError = ErrorType<ProblemDetails>;
+export type HouseholdSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof household>>>;
+export type HouseholdSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetHouseholdSuspense<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
+export function useHouseholdSuspense<
+  TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholdSuspense<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
+export function useHouseholdSuspense<
+  TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetHouseholdSuspense<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
+export function useHouseholdSuspense<
+  TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -643,20 +421,18 @@ export function useGetHouseholdSuspense<
  * @summary Get one household
  */
 
-export function useGetHouseholdSuspense<
-  TData = Awaited<ReturnType<typeof getHousehold>>,
+export function useHouseholdSuspense<
+  TData = Awaited<ReturnType<typeof household>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getHousehold>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof household>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetHouseholdSuspenseQueryOptions(id, options);
+  const queryOptions = getHouseholdSuspenseQueryOptions(id, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

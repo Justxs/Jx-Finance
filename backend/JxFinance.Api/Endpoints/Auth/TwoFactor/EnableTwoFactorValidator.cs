@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
@@ -7,6 +8,6 @@ public sealed class EnableTwoFactorValidator : Validator<EnableTwoFactorRequest>
 {
     public EnableTwoFactorValidator()
     {
-        RuleFor(r => r.Code).NotEmpty();
+        RuleFor(r => r.Code).IsRequired();
     }
 }

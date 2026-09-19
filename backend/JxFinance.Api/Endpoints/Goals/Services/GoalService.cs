@@ -28,7 +28,7 @@ public sealed class GoalService(AppDbContext db) : IGoalService
         var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken);
         if (goal is null)
         {
-            return Result<Goal>.Failure(ErrorCodes.NotFound, "Goal not found.");
+            return Result<Goal>.Failure(ErrorCodes.ResourceNotFound, "Goal not found.");
         }
 
         apply(goal);
@@ -43,7 +43,7 @@ public sealed class GoalService(AppDbContext db) : IGoalService
         var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken);
         if (goal is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Goal not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Goal not found.");
         }
 
         db.Goals.Remove(goal);

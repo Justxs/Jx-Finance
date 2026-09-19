@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import { getDeleteGoalMockHandler, getGetGoalsMockHandler } from "@/api/generated/goals/goals.msw";
+import { getDeleteGoalMockHandler, getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
 import { completedGoal, goals, openEndedGoal, cycle } from "@/storybook/fixtures";
@@ -49,7 +49,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const SingleCompletedGoal: Story = {
   parameters: {
     msw: {
-      handlers: [getGetGoalsMockHandler([completedGoal]), ...handlers],
+      handlers: [getGoalsMockHandler([completedGoal]), ...handlers],
     },
   },
 };
@@ -57,7 +57,7 @@ export const SingleCompletedGoal: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getGetGoalsMockHandler([openEndedGoal, ...manyGoals]), ...handlers],
+      handlers: [getGoalsMockHandler([openEndedGoal, ...manyGoals]), ...handlers],
     },
   },
 };

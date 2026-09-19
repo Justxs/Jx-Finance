@@ -34,7 +34,7 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(id, cancellationToken);
         if (household is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
@@ -65,12 +65,12 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(request.Id, cancellationToken);
         if (household is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         if (!await IsOwnerAsync(household.Id, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Forbidden, "Only a household owner can do this.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
         mapper.UpdateEntity(request, household);
@@ -84,12 +84,12 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(id, cancellationToken);
         if (household is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         if (!await IsOwnerAsync(household.Id, cancellationToken))
         {
-            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Only a household owner can do this.");
+            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
         await db.Accounts
@@ -123,26 +123,26 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(request.Id, cancellationToken);
         if (household is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         if (!await IsOwnerAsync(household.Id, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Forbidden, "Only a household owner can do this.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
         var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
         if (user is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Validation, "No user with that email exists.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ReferenceNotFound, "No user with that email exists.");
         }
 
         var alreadyMember = await db.HouseholdMemberships
             .AnyAsync(m => m.HouseholdId == household.Id && m.UserId == user.Id, cancellationToken);
         if (alreadyMember)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Conflict, "That user is already a member.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ConflictDuplicate, "That user is already a member.");
         }
 
         db.HouseholdMemberships.Add(new HouseholdMembership
@@ -163,19 +163,19 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(request.Id, cancellationToken);
         if (household is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         if (!await IsOwnerAsync(household.Id, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Forbidden, "Only a household owner can do this.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
         var membership = await db.HouseholdMemberships
             .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == request.UserId, cancellationToken);
         if (membership is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Membership not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Membership not found.");
         }
 
         if (membership.Role == HouseholdRole.Owner
@@ -183,7 +183,7 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
             return Result<HouseholdResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.HouseholdLastOwner,
                 "A household needs at least one owner.");
         }
 
@@ -201,26 +201,26 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         var household = await FindAsync(householdId, cancellationToken);
         if (household is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Household not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
         }
 
         if (!await IsOwnerAsync(household.Id, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.Forbidden, "Only a household owner can do this.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
         var membership = await db.HouseholdMemberships
             .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == userId, cancellationToken);
         if (membership is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.NotFound, "Membership not found.");
+            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Membership not found.");
         }
 
         if (membership.Role == HouseholdRole.Owner
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
             return Result<HouseholdResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.HouseholdLastOwner,
                 "A household needs at least one owner.");
         }
 

@@ -62,12 +62,12 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
         var accountId = new AccountId(request.AccountId);
         if (!await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken))
         {
-            return Result<ConversionResponse>.Failure(ErrorCodes.Validation, "Account does not exist.");
+            return Result<ConversionResponse>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         if (rates.UnusableReason(request.FromCurrency, request.ToCurrency) is { } currencyError)
         {
-            return Result<ConversionResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<ConversionResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         Transaction? fee = null;
@@ -78,7 +78,7 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
                     c => c.Id == feeCategoryId && c.Type == FlowType.Expense,
                     cancellationToken))
             {
-                return Result<ConversionResponse>.Failure(ErrorCodes.Validation, "The fee category must be an expense category.");
+                return Result<ConversionResponse>.Failure(ErrorCodes.CategoryWrongType, "The fee category must be an expense category.");
             }
 
             var feeAmount = new Money(requestedFee, request.FeeCurrency ?? request.FromCurrency);
@@ -115,7 +115,7 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
         var conversion = await db.CurrencyConversions.FirstOrDefaultAsync(c => c.Id == conversionId, cancellationToken);
         if (conversion is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Conversion not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Conversion not found.");
         }
 
         if (conversion.FeeTransactionId is { } feeId)

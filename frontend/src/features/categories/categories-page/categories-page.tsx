@@ -1,26 +1,30 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import { useDeleteCategory, useGetCategoriesSuspense } from "@/api/generated";
-import type { FlowType } from "@/api/generated/model";
+import { getCategoriesQueryKey, useDeleteCategory, useCategoriesSuspense } from "@/api/generated";
+import type { CategoryResponse, FlowType } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { AddCategoryForm } from "../add-category-form";
 import { CategoryRow } from "../category-row";
 
 export function CategoriesPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const categories = useGetCategoriesSuspense();
+  const categories = useCategoriesSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteCategory({
     mutation: {
+      ...optimisticRemoval<CategoryResponse>(queryClient, getCategoriesQueryKey()),
       onSuccess: () => toast.success(t("categories.deleted")),
     },
   });

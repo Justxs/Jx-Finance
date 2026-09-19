@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
+import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { monthlyTrendItems } from "@/storybook/fixtures";
@@ -41,12 +41,12 @@ function expenseOnlyTrend() {
 
 export const SingleMonth: Story = {
   parameters: {
-    msw: { handlers: [getGetMonthlyTrendMockHandler(singleMonthTrend), ...handlers] },
+    msw: { handlers: [getMonthlyTrendMockHandler(singleMonthTrend), ...handlers] },
   },
 };
 
 export const ExpenseOnly: Story = {
   parameters: {
-    msw: { handlers: [getGetMonthlyTrendMockHandler(expenseOnlyTrend), ...handlers] },
+    msw: { handlers: [getMonthlyTrendMockHandler(expenseOnlyTrend), ...handlers] },
   },
 };

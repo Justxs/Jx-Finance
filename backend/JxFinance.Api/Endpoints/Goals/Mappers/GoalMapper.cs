@@ -21,7 +21,7 @@ public sealed class GoalMapper : Mapper<CreateGoalRequest, GoalResponse, Goal>
     {
         goal.Name = request.Name.Trim();
         goal.TargetAmount = new Money(request.TargetAmount);
-        goal.CurrentAmount = new Money(request.CurrentAmount);
+        goal.CurrentAmount = new Money(request.CurrentAmount!.Value);
         goal.TargetDate = request.TargetDate;
     }
 

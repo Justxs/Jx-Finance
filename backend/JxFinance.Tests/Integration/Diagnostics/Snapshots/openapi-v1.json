@@ -148,7 +148,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfAccountResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountResponse"
+                  }
                 }
               }
             }
@@ -521,7 +524,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfAssetResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetResponse"
+                  }
                 }
               }
             }
@@ -1287,7 +1293,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfBudgetResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BudgetResponse"
+                  }
                 }
               }
             }
@@ -1579,7 +1588,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfCategoryResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategoryResponse"
+                  }
                 }
               }
             }
@@ -2372,7 +2384,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfDebtResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DebtResponse"
+                  }
                 }
               }
             }
@@ -2763,7 +2778,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfGoalResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GoalResponse"
+                  }
                 }
               }
             }
@@ -3053,7 +3071,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfHouseholdResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HouseholdResponse"
+                  }
                 }
               }
             }
@@ -3815,7 +3836,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfBrokerConnectionResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BrokerConnectionResponse"
+                  }
                 }
               }
             }
@@ -4236,7 +4260,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfSecurityResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SecurityResponse"
+                  }
                 }
               }
             }
@@ -4289,7 +4316,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SaveSecurityRequest__opA040D7350AFF"
+                "$ref": "#/components/schemas/SaveSecurityRequest"
               }
             }
           },
@@ -4367,7 +4394,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/SaveSecurityRequest__op2EFFB26FBA95"
+                "$ref": "#/components/schemas/SaveSecurityRequest"
               }
             }
           },
@@ -4918,7 +4945,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfNotificationResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotificationResponse"
+                  }
                 }
               }
             }
@@ -5213,7 +5243,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfRecurringBillResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RecurringBillResponse"
+                  }
                 }
               }
             }
@@ -5741,7 +5774,7 @@
           "Settings"
         ],
         "summary": "Update installation settings",
-        "description": "Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature_disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.",
+        "description": "Administrators only. Replaces every installation-wide setting. A feature that is turned off answers 404 with code feature.disabled on its routes and its background work stops; its data is kept. Changing the reporting currency revalues every stored transaction at the exchange rate for its own date and fails without saving anything if a rate is missing. Budgets, goals, assets, debts, bills and net worth history keep their numbers.",
         "operationId": "UpdateSettings",
         "requestBody": {
           "content": {
@@ -7439,7 +7472,10 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/IReadOnlyListOfUserProfileResponse"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserProfileResponse"
+                  }
                 }
               }
             }
@@ -7824,7 +7860,10 @@
             "$ref": "#/components/schemas/Currency"
           },
           "balances": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCurrencyBalance"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CurrencyBalance"
+            }
           },
           "reportingBalance": {
             "type": "string",
@@ -8057,7 +8096,16 @@
         "type": "object",
         "properties": {
           "transactionIds": {
-            "$ref": "#/components/schemas/IReadOnlyListOfGuid"
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Between 1 and 200 transaction ids.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
           },
           "categoryId": {
             "type": [
@@ -8128,7 +8176,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCategoryBreakdownItem"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdownItem"
+            }
           },
           "periodStart": {
             "$ref": "#/components/schemas/DateOnly"
@@ -8925,14 +8976,13 @@
             "example": "Weekly shop"
           },
           "lines": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/IReadOnlyListOfTransactionLineRequest"
-              }
+            "type": [
+              "null",
+              "array"
             ],
+            "items": {
+              "$ref": "#/components/schemas/TransactionLineRequest"
+            },
             "description": "Optional split lines. Their amounts must sum to the transaction amount."
           },
           "currency": {
@@ -9091,7 +9141,11 @@
             "$ref": "#/components/schemas/Currency"
           },
           "currencies": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCurrency"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            },
+            "description": "Currencies offered when entering data. The reporting currency is always included."
           },
           "ratesAsOf": {
             "oneOf": [
@@ -9260,9 +9314,71 @@
         "type": "object",
         "properties": {
           "recoveryCodes": {
-            "$ref": "#/components/schemas/IReadOnlyListOfString"
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
+      },
+      "ErrorCode": {
+        "enum": [
+          "access.forbidden",
+          "broker.rejected",
+          "broker.tokenRequired",
+          "broker.unavailable",
+          "category.wrongType",
+          "collection.invalidSize",
+          "conflict.duplicate",
+          "conflict.stale",
+          "credentials.invalid",
+          "currency.disabled",
+          "decimal.malformed",
+          "email.invalid",
+          "email.taken",
+          "enum.invalid",
+          "exchangeRate.unavailable",
+          "feature.disabled",
+          "holding.dependentSales",
+          "holding.oversold",
+          "household.lastOwner",
+          "household.notMember",
+          "household.required",
+          "iban.invalid",
+          "import.invalidFile",
+          "import.transferMismatch",
+          "money.invalid",
+          "money.nonNegative",
+          "money.positive",
+          "password.incorrect",
+          "password.tooWeak",
+          "quantity.nonNegative",
+          "quantity.positive",
+          "range.invalid",
+          "recurringBill.inactive",
+          "reference.notFound",
+          "request.invalid",
+          "request.malformed",
+          "required",
+          "resource.notFound",
+          "resource.readOnly",
+          "setup.alreadyCompleted",
+          "text.invalidFormat",
+          "text.tooLong",
+          "text.tooShort",
+          "transaction.linesMismatch",
+          "transaction.splitNotAllowed",
+          "transfer.amountMismatch",
+          "transfer.receivedAmountRequired",
+          "transfer.sameAccount",
+          "twoFactor.invalidCode",
+          "user.selfChange",
+          "value.locked",
+          "value.mustBeEmpty",
+          "value.mustDiffer"
+        ],
+        "type": "string",
+        "description": "Stable machine-readable reason for a failure. Translate it on the client; the reason text is an English fallback."
       },
       "ExchangeRateResponse": {
         "required": [
@@ -9537,7 +9653,10 @@
             "$ref": "#/components/schemas/HouseholdRole"
           },
           "members": {
-            "$ref": "#/components/schemas/IReadOnlyListOfHouseholdMemberResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdMemberResponse"
+            }
           }
         }
       },
@@ -9585,7 +9704,11 @@
             "format": "uuid"
           },
           "rows": {
-            "$ref": "#/components/schemas/IReadOnlyListOfImportConfirmRow"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportConfirmRow"
+            },
+            "description": "The rows to import, as returned by preview, with any category corrections applied."
           }
         }
       },
@@ -9690,7 +9813,10 @@
         "type": "object",
         "properties": {
           "rows": {
-            "$ref": "#/components/schemas/IReadOnlyListOfImportPreviewRow"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportPreviewRow"
+            }
           }
         }
       },
@@ -9843,194 +9969,6 @@
         ],
         "type": "string"
       },
-      "IReadOnlyListOfAccountResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/AccountResponse"
-        }
-      },
-      "IReadOnlyListOfAssetResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/AssetResponse"
-        }
-      },
-      "IReadOnlyListOfBrokerConnectionResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/BrokerConnectionResponse"
-        }
-      },
-      "IReadOnlyListOfBudgetResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/BudgetResponse"
-        }
-      },
-      "IReadOnlyListOfCategoryBreakdownItem": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/CategoryBreakdownItem"
-        }
-      },
-      "IReadOnlyListOfCategoryResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/CategoryResponse"
-        }
-      },
-      "IReadOnlyListOfConversionResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ConversionResponse"
-        }
-      },
-      "IReadOnlyListOfCurrency": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/Currency"
-        },
-        "description": "Currencies offered when entering data. The reporting currency is always included."
-      },
-      "IReadOnlyListOfCurrencyBalance": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/CurrencyBalance"
-        }
-      },
-      "IReadOnlyListOfDebtResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/DebtResponse"
-        }
-      },
-      "IReadOnlyListOfGoalResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/GoalResponse"
-        }
-      },
-      "IReadOnlyListOfGuid": {
-        "minItems": 1,
-        "type": "array",
-        "items": {
-          "type": "string",
-          "format": "uuid"
-        },
-        "description": "Between 1 and 200 transaction ids.",
-        "example": [
-          "00000000-0000-0000-0000-000000000000"
-        ]
-      },
-      "IReadOnlyListOfHoldingResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/HoldingResponse"
-        }
-      },
-      "IReadOnlyListOfHouseholdMemberResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/HouseholdMemberResponse"
-        }
-      },
-      "IReadOnlyListOfHouseholdResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/HouseholdResponse"
-        }
-      },
-      "IReadOnlyListOfImportConfirmRow": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ImportConfirmRow"
-        },
-        "description": "The rows to import, as returned by preview, with any category corrections applied."
-      },
-      "IReadOnlyListOfImportPreviewRow": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ImportPreviewRow"
-        }
-      },
-      "IReadOnlyListOfInvestmentTransactionResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/InvestmentTransactionResponse"
-        }
-      },
-      "IReadOnlyListOfMonthlyTrendItem": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/MonthlyTrendItem"
-        }
-      },
-      "IReadOnlyListOfNetWorthSnapshotItem": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/NetWorthSnapshotItem"
-        }
-      },
-      "IReadOnlyListOfNotificationResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/NotificationResponse"
-        }
-      },
-      "IReadOnlyListOfPortfolioYear": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/PortfolioYear"
-        }
-      },
-      "IReadOnlyListOfRecurringBillResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/RecurringBillResponse"
-        }
-      },
-      "IReadOnlyListOfReportTrendPoint": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/ReportTrendPoint"
-        }
-      },
-      "IReadOnlyListOfSecurityResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/SecurityResponse"
-        }
-      },
-      "IReadOnlyListOfString": {
-        "type": "array",
-        "items": {
-          "type": "string"
-        }
-      },
-      "IReadOnlyListOfTransactionLineRequest": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TransactionLineRequest"
-        }
-      },
-      "IReadOnlyListOfTransactionResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TransactionResponse"
-        }
-      },
-      "IReadOnlyListOfTransferResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/TransferResponse"
-        }
-      },
-      "IReadOnlyListOfUserProfileResponse": {
-        "type": "array",
-        "items": {
-          "$ref": "#/components/schemas/UserProfileResponse"
-        }
-      },
       "LoginRequest": {
         "required": [
           "email",
@@ -10128,7 +10066,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfMonthlyTrendItem"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthlyTrendItem"
+            }
           }
         }
       },
@@ -10139,7 +10080,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfNetWorthSnapshotItem"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NetWorthSnapshotItem"
+            }
           }
         }
       },
@@ -10280,7 +10224,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfConversionResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversionResponse"
+            }
           },
           "page": {
             "type": "integer",
@@ -10306,7 +10253,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfInvestmentTransactionResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvestmentTransactionResponse"
+            }
           },
           "page": {
             "type": "integer",
@@ -10332,7 +10282,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfTransactionResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionResponse"
+            }
           },
           "page": {
             "type": "integer",
@@ -10358,7 +10311,10 @@
         "type": "object",
         "properties": {
           "items": {
-            "$ref": "#/components/schemas/IReadOnlyListOfTransferResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransferResponse"
+            }
           },
           "page": {
             "type": "integer",
@@ -10425,10 +10381,16 @@
             "type": "boolean"
           },
           "holdings": {
-            "$ref": "#/components/schemas/IReadOnlyListOfHoldingResponse"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HoldingResponse"
+            }
           },
           "years": {
-            "$ref": "#/components/schemas/IReadOnlyListOfPortfolioYear"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PortfolioYear"
+            }
           }
         }
       },
@@ -10522,11 +10484,8 @@
                   "default": "Error reason"
                 },
                 "code": {
-                  "type": [
-                    "null",
-                    "string"
-                  ],
-                  "description": "the code of the error"
+                  "description": "The kind of failure. The name says which field it concerns.",
+                  "$ref": "#/components/schemas/ErrorCode"
                 },
                 "severity": {
                   "type": [
@@ -10538,6 +10497,10 @@
               },
               "description": "the error details object"
             }
+          },
+          "code": {
+            "description": "Set when the problem has no errors entries, for example feature.disabled.",
+            "$ref": "#/components/schemas/ErrorCode"
           }
         },
         "description": "RFC9457 compatible problem details/ error response class. this can be used by configuring startup like so:\n\u0060\u0060\u0060app.UseFastEndpoints(c =\u0026gt; c.Errors.UseProblemDetails())\u0060\u0060\u0060"
@@ -10686,10 +10649,16 @@
             "format": "decimal"
           },
           "expenseByCategory": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCategoryBreakdownItem"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdownItem"
+            }
           },
           "trend": {
-            "$ref": "#/components/schemas/IReadOnlyListOfReportTrendPoint"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReportTrendPoint"
+            }
           },
           "trendBucket": {
             "type": "string"
@@ -10749,7 +10718,7 @@
           }
         }
       },
-      "SaveSecurityRequest__op2EFFB26FBA95": {
+      "SaveSecurityRequest": {
         "required": [
           "symbol",
           "name",
@@ -10806,69 +10775,6 @@
               }
             ],
             "description": "Defaults to today when a price is given without a date."
-          }
-        }
-      },
-      "SaveSecurityRequest__opA040D7350AFF": {
-        "required": [
-          "symbol",
-          "name",
-          "type",
-          "currency"
-        ],
-        "type": "object",
-        "properties": {
-          "symbol": {
-            "maxLength": 32,
-            "minLength": 0,
-            "type": "string"
-          },
-          "name": {
-            "maxLength": 200,
-            "minLength": 0,
-            "type": "string"
-          },
-          "type": {
-            "$ref": "#/components/schemas/SecurityType"
-          },
-          "currency": {
-            "$ref": "#/components/schemas/Currency"
-          },
-          "isin": {
-            "pattern": "^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$",
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "exchange": {
-            "maxLength": 32,
-            "minLength": 0,
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "lastPrice": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "decimal"
-          },
-          "lastPriceDate": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/NullableOfDateOnly"
-              }
-            ]
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid"
           }
         }
       },
@@ -10980,7 +10886,11 @@
             "$ref": "#/components/schemas/Currency"
           },
           "enabledCurrencies": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCurrency"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            },
+            "description": "Currencies offered when entering data. The reporting currency is always included."
           },
           "exchangeRateSyncEnabled": {
             "type": "boolean"
@@ -11848,7 +11758,11 @@
             "$ref": "#/components/schemas/Currency"
           },
           "enabledCurrencies": {
-            "$ref": "#/components/schemas/IReadOnlyListOfCurrency"
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Currency"
+            },
+            "description": "Currencies offered when entering data. The reporting currency is always included."
           },
           "exchangeRateSyncEnabled": {
             "type": "boolean"
@@ -11924,14 +11838,13 @@
             "example": "Weekly shop"
           },
           "lines": {
-            "oneOf": [
-              {
-                "type": "null"
-              },
-              {
-                "$ref": "#/components/schemas/IReadOnlyListOfTransactionLineRequest"
-              }
-            ]
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/TransactionLineRequest"
+            }
           },
           "currency": {
             "oneOf": [

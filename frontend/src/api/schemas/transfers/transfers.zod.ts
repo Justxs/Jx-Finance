@@ -183,13 +183,7 @@ export const CreateTransferResponse = zod.object({
  * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
  * @summary List transfers
  */
-export const GetTransfersQueryParams = zod.object({
-  page: zod.int().describe("One-based page number. Defaults to 1."),
-  pageSize: zod.int().describe("Rows per page. Defaults to 20."),
-  date: zod.iso.date().nullish().describe("Keep only transfers on this date, as YYYY-MM-DD."),
-});
-
-export const GetTransfersResponse = zod.object({
+export const TransfersResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
@@ -275,8 +269,4 @@ export const GetTransfersResponse = zod.object({
  * Reverses the transfer: both account balances go back to what they were before it.
  * @summary Delete a transfer
  */
-export const DeleteTransferParams = zod.object({
-  id: zod.string().describe("The transfer id."),
-});
-
 export const DeleteTransferResponse = zod.void();

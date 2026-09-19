@@ -1,7 +1,10 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
+import { getMeSuspenseQueryOptions, getUsersSuspenseQueryOptions } from "@/api/generated";
+import { userListParams } from "@/features/users/user-queries";
 import { UsersPage } from "@/features/users/users-page";
 import { checkIsAdmin } from "@/lib/auth-gate";
+import { warm } from "@/lib/route-prefetch";
 
 export const usersSearchSchema = z.object({
   search: z.string().optional().catch(undefined),
@@ -20,6 +23,11 @@ export const Route = createFileRoute("/users")({
     if (!(await checkIsAdmin())) {
       throw redirect({ to: "/" });
     }
+  },
+  loaderDeps: ({ search }) => userListParams(search),
+  loader: ({ context: { queryClient }, deps }) => {
+    warm(queryClient, getMeSuspenseQueryOptions());
+    warm(queryClient, getUsersSuspenseQueryOptions(deps));
   },
   component: UsersPage,
 });

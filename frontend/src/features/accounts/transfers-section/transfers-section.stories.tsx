@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
   getCreateTransferMockHandler,
-  getGetTransfersMockHandler,
+  getTransfersMockHandler,
 } from "@/api/generated/transfers/transfers.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -57,7 +57,7 @@ export const Default: Story = {};
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const Paginated: Story = {
-  parameters: { msw: { handlers: [getGetTransfersMockHandler(manyTransfersPage), ...handlers] } },
+  parameters: { msw: { handlers: [getTransfersMockHandler(manyTransfersPage), ...handlers] } },
 };
 
 export const UnknownAccounts: Story = { args: { accounts: [] } };

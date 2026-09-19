@@ -8,7 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
-import type { IReadOnlyListOfTransactionLineRequest } from "./iReadOnlyListOfTransactionLineRequest";
+import type { TransactionLineRequest } from "./transactionLineRequest";
 
 export interface CreateTransactionRequest {
   /**
@@ -31,7 +31,10 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   description: string | null;
-  /** Optional split lines. Their amounts must sum to the transaction amount. */
-  lines: null | IReadOnlyListOfTransactionLineRequest;
+  /**
+   * Optional split lines. Their amounts must sum to the transaction amount.
+   * @nullable
+   */
+  lines: TransactionLineRequest[] | null;
   currency?: null | Currency;
 }

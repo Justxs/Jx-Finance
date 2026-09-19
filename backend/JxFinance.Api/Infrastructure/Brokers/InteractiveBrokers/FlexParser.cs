@@ -68,7 +68,7 @@ public static class FlexParser
     }
 
     private static Result<FlexStatement> Invalid() => Result<FlexStatement>.Failure(
-        ErrorCodes.Validation,
+        ErrorCodes.ImportInvalidFile,
         "The file is not an Interactive Brokers Flex Query report in XML format.");
 
     private static FlexTrade? Trade(XElement node)

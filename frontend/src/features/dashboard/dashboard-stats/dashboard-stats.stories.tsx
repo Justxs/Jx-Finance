@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashboard.msw";
+import { getDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { dashboardSummary } from "@/storybook/fixtures";
@@ -49,12 +49,12 @@ function largeSummary() {
 
 export const Overspent: Story = {
   parameters: {
-    msw: { handlers: [getGetDashboardSummaryMockHandler(overspentSummary), ...handlers] },
+    msw: { handlers: [getDashboardSummaryMockHandler(overspentSummary), ...handlers] },
   },
 };
 
 export const LargeAmounts: Story = {
   parameters: {
-    msw: { handlers: [getGetDashboardSummaryMockHandler(largeSummary), ...handlers] },
+    msw: { handlers: [getDashboardSummaryMockHandler(largeSummary), ...handlers] },
   },
 };

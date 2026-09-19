@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -30,11 +25,11 @@ import type {
   CreateTransactionRequest,
   ExportTransactionsParams,
   ExportTransactionsPdfParams,
-  GetTransactionsParams,
-  GetTransactionsSummaryParams,
   PagedResponseOfTransactionResponse,
   ProblemDetails,
   TransactionResponse,
+  TransactionsParams,
+  TransactionsSummaryParams,
   TransactionsSummaryResponse,
   UpdateTransactionRequest,
 } from "../model";
@@ -162,7 +157,7 @@ export const useCreateTransaction = <TError = ErrorType<ProblemDetails>, TContex
 > => {
   return useMutation(getCreateTransactionMutationOptions(options), queryClient);
 };
-export const getGetTransactionsUrl = (params: GetTransactionsParams) => {
+export const getTransactionsUrl = (params: TransactionsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -182,185 +177,83 @@ export const getGetTransactionsUrl = (params: GetTransactionsParams) => {
  * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.
  * @summary List transactions
  */
-export const getTransactions = async (
-  params: GetTransactionsParams,
+export const transactions = async (
+  params: TransactionsParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PagedResponseOfTransactionResponse> => {
-  return customFetch<PagedResponseOfTransactionResponse>(getGetTransactionsUrl(params), {
+  return customFetch<PagedResponseOfTransactionResponse>(getTransactionsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTransactionsQueryKey = (params?: GetTransactionsParams) => {
+export const getTransactionsQueryKey = (params?: TransactionsParams) => {
   return [`/api/transactions`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetTransactionsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransactions>>,
+export const getTransactionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactions>>> = ({ signal }) =>
-    getTransactions(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTransactions>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetTransactionsQueryResult = NonNullable<Awaited<ReturnType<typeof getTransactions>>>;
-export type GetTransactionsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetTransactions<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetTransactionsParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransactions>>,
-          TError,
-          Awaited<ReturnType<typeof getTransactions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactions<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransactions>>,
-          TError,
-          Awaited<ReturnType<typeof getTransactions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactions<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List transactions
- */
-
-export function useGetTransactions<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetTransactionsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetTransactionsParams,
+  params: TransactionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionsQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getTransactionsQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactions>>> = ({ signal }) =>
-    getTransactions(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof transactions>>> = ({ signal }) =>
+    transactions(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getTransactions>>,
+    Awaited<ReturnType<typeof transactions>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetTransactionsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTransactions>>
->;
-export type GetTransactionsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type TransactionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transactions>>>;
+export type TransactionsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
+export function useTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransactionsParams,
+  params: TransactionsParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
+export function useTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransactionsParams,
+  params: TransactionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
+export function useTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransactionsParams,
+  params: TransactionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -370,20 +263,20 @@ export function useGetTransactionsSuspense<
  * @summary List transactions
  */
 
-export function useGetTransactionsSuspense<
-  TData = Awaited<ReturnType<typeof getTransactions>>,
+export function useTransactionsSuspense<
+  TData = Awaited<ReturnType<typeof transactions>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransactionsParams,
+  params: TransactionsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactions>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionsSuspenseQueryOptions(params, options);
+  const queryOptions = getTransactionsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -539,110 +432,6 @@ export const getExportTransactionsQueryKey = (params?: ExportTransactionsParams)
   return [`/api/transactions/export`, ...(params ? [params] : [])] as const;
 };
 
-export const getExportTransactionsQueryOptions = <
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getExportTransactionsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactions>>> = ({ signal }) =>
-    exportTransactions(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof exportTransactions>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type ExportTransactionsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof exportTransactions>>
->;
-export type ExportTransactionsQueryError = ErrorType<ProblemDetails>;
-
-export function useExportTransactions<
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportTransactions>>,
-          TError,
-          Awaited<ReturnType<typeof exportTransactions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactions<
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportTransactions>>,
-          TError,
-          Awaited<ReturnType<typeof exportTransactions>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactions<
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Export transactions as CSV
- */
-
-export function useExportTransactions<
-  TData = Awaited<ReturnType<typeof exportTransactions>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getExportTransactionsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
 export const getExportTransactionsSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof exportTransactions>>,
   TError = ErrorType<ProblemDetails>,
@@ -774,118 +563,6 @@ export const getExportTransactionsPdfQueryKey = (params?: ExportTransactionsPdfP
   return [`/api/transactions/export/pdf`, ...(params ? [params] : [])] as const;
 };
 
-export const getExportTransactionsPdfQueryOptions = <
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getExportTransactionsPdfQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactionsPdf>>> = ({ signal }) =>
-    exportTransactionsPdf(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof exportTransactionsPdf>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type ExportTransactionsPdfQueryResult = NonNullable<
-  Awaited<ReturnType<typeof exportTransactionsPdf>>
->;
-export type ExportTransactionsPdfQueryError = ErrorType<ProblemDetails>;
-
-export function useExportTransactionsPdf<
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportTransactionsPdf>>,
-          TError,
-          Awaited<ReturnType<typeof exportTransactionsPdf>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactionsPdf<
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof exportTransactionsPdf>>,
-          TError,
-          Awaited<ReturnType<typeof exportTransactionsPdf>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useExportTransactionsPdf<
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Export transactions as PDF
- */
-
-export function useExportTransactionsPdf<
-  TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: ExportTransactionsPdfParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof exportTransactionsPdf>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getExportTransactionsPdfQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
 export const getExportTransactionsPdfSuspenseQueryOptions = <
   TData = Awaited<ReturnType<typeof exportTransactionsPdf>>,
   TError = ErrorType<ProblemDetails>,
@@ -983,7 +660,7 @@ export function useExportTransactionsPdfSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetTransactionsSummaryUrl = (params?: GetTransactionsSummaryParams) => {
+export const getTransactionsSummaryUrl = (params?: TransactionsSummaryParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -1003,197 +680,85 @@ export const getGetTransactionsSummaryUrl = (params?: GetTransactionsSummaryPara
  * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
  * @summary Total the filtered transactions
  */
-export const getTransactionsSummary = async (
-  params?: GetTransactionsSummaryParams,
+export const transactionsSummary = async (
+  params?: TransactionsSummaryParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransactionsSummaryResponse> => {
-  return customFetch<TransactionsSummaryResponse>(getGetTransactionsSummaryUrl(params), {
+  return customFetch<TransactionsSummaryResponse>(getTransactionsSummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTransactionsSummaryQueryKey = (params?: GetTransactionsSummaryParams) => {
+export const getTransactionsSummaryQueryKey = (params?: TransactionsSummaryParams) => {
   return [`/api/transactions/summary`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetTransactionsSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
+export const getTransactionsSummarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetTransactionsSummaryParams,
+  params?: TransactionsSummaryParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionsSummaryQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getTransactionsSummaryQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsSummary>>> = ({ signal }) =>
-    getTransactionsSummary(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTransactionsSummary>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetTransactionsSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTransactionsSummary>>
->;
-export type GetTransactionsSummaryQueryError = ErrorType<ProblemDetails>;
-
-export function useGetTransactionsSummary<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetTransactionsSummaryParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransactionsSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getTransactionsSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSummary<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetTransactionsSummaryParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransactionsSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getTransactionsSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSummary<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetTransactionsSummaryParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Total the filtered transactions
- */
-
-export function useGetTransactionsSummary<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetTransactionsSummaryParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionsSummaryQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetTransactionsSummarySuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetTransactionsSummaryParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionsSummaryQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransactionsSummary>>> = ({ signal }) =>
-    getTransactionsSummary(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsSummary>>> = ({ signal }) =>
+    transactionsSummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getTransactionsSummary>>,
+    Awaited<ReturnType<typeof transactionsSummary>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetTransactionsSummarySuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTransactionsSummary>>
+export type TransactionsSummarySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof transactionsSummary>>
 >;
-export type GetTransactionsSummarySuspenseQueryError = ErrorType<ProblemDetails>;
+export type TransactionsSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetTransactionsSummarySuspense<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
+export function useTransactionsSummarySuspense<
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetTransactionsSummaryParams,
+  params: undefined | TransactionsSummaryParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSummarySuspense<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
+export function useTransactionsSummarySuspense<
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetTransactionsSummaryParams,
+  params?: TransactionsSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionsSummarySuspense<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
+export function useTransactionsSummarySuspense<
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetTransactionsSummaryParams,
+  params?: TransactionsSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -1203,20 +768,20 @@ export function useGetTransactionsSummarySuspense<
  * @summary Total the filtered transactions
  */
 
-export function useGetTransactionsSummarySuspense<
-  TData = Awaited<ReturnType<typeof getTransactionsSummary>>,
+export function useTransactionsSummarySuspense<
+  TData = Awaited<ReturnType<typeof transactionsSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetTransactionsSummaryParams,
+  params?: TransactionsSummaryParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransactionsSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionsSummarySuspenseQueryOptions(params, options);
+  const queryOptions = getTransactionsSummarySuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -1311,7 +876,7 @@ export const useDeleteTransaction = <TError = ErrorType<ProblemDetails>, TContex
 > => {
   return useMutation(getDeleteTransactionMutationOptions(options), queryClient);
 };
-export const getGetTransactionUrl = (id: string) => {
+export const getTransactionUrl = (id: string) => {
   return `/api/transactions/${id}`;
 };
 
@@ -1319,188 +884,81 @@ export const getGetTransactionUrl = (id: string) => {
  * Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
-export const getTransaction = async (
+export const transaction = async (
   id: string,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<TransactionResponse> => {
-  return customFetch<TransactionResponse>(getGetTransactionUrl(id), {
+  return customFetch<TransactionResponse>(getTransactionUrl(id), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTransactionQueryKey = (id: string) => {
+export const getTransactionQueryKey = (id: string) => {
   return [`/api/transactions/${id}`] as const;
 };
 
-export const getGetTransactionQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransaction>>> = ({ signal }) =>
-    getTransaction(id, { signal, ...requestOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: id !== null && id !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-};
-
-export type GetTransactionQueryResult = NonNullable<Awaited<ReturnType<typeof getTransaction>>>;
-export type GetTransactionQueryError = ErrorType<ProblemDetails>;
-
-export function useGetTransaction<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransaction>>,
-          TError,
-          Awaited<ReturnType<typeof getTransaction>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransaction<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransaction>>,
-          TError,
-          Awaited<ReturnType<typeof getTransaction>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransaction<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get one transaction
- */
-
-export function useGetTransaction<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetTransactionSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransaction>>,
+export const getTransactionSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTransactionQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getTransactionQueryKey(id);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransaction>>> = ({ signal }) =>
-    getTransaction(id, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof transaction>>> = ({ signal }) =>
+    transaction(id, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getTransaction>>,
+    Awaited<ReturnType<typeof transaction>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetTransactionSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getTransaction>>
->;
-export type GetTransactionSuspenseQueryError = ErrorType<ProblemDetails>;
+export type TransactionSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transaction>>>;
+export type TransactionSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetTransactionSuspense<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
+export function useTransactionSuspense<
+  TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionSuspense<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
+export function useTransactionSuspense<
+  TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransactionSuspense<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
+export function useTransactionSuspense<
+  TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -1510,20 +968,20 @@ export function useGetTransactionSuspense<
  * @summary Get one transaction
  */
 
-export function useGetTransactionSuspense<
-  TData = Awaited<ReturnType<typeof getTransaction>>,
+export function useTransactionSuspense<
+  TData = Awaited<ReturnType<typeof transaction>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransaction>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransactionSuspenseQueryOptions(id, options);
+  const queryOptions = getTransactionSuspenseQueryOptions(id, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

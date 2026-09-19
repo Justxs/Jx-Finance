@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import {
   getDeleteCategoryMockHandler,
-  getGetCategoriesMockHandler,
+  getCategoriesMockHandler,
 } from "@/api/generated/categories/categories.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
@@ -52,7 +52,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyIncomeCategories: Story = {
   parameters: {
     msw: {
-      handlers: [getGetCategoriesMockHandler(incomeCategories), ...handlers],
+      handlers: [getCategoriesMockHandler(incomeCategories), ...handlers],
     },
   },
 };
@@ -60,7 +60,7 @@ export const OnlyIncomeCategories: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getGetCategoriesMockHandler(manyCategories), ...handlers],
+      handlers: [getCategoriesMockHandler(manyCategories), ...handlers],
     },
   },
 };

@@ -90,7 +90,7 @@ public sealed class AccountService(
         var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
         if (account is null)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.NotFound, "Account not found.");
+            return Result<AccountResponse>.Failure(ErrorCodes.ResourceNotFound, "Account not found.");
         }
 
         return Result<AccountResponse>.Success(mapper.FromEntity(account, await BalanceAsync(account, cancellationToken)));
@@ -103,13 +103,13 @@ public sealed class AccountService(
         var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<AccountResponse>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         var account = mapper.ToEntity(request);
         if (rates.UnusableReason(account.Currency) is { } currencyError)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<AccountResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         db.Accounts.Add(account);
@@ -126,24 +126,24 @@ public sealed class AccountService(
         var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
         if (account is null)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.NotFound, "Account not found.");
+            return Result<AccountResponse>.Failure(ErrorCodes.ResourceNotFound, "Account not found.");
         }
 
         var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<AccountResponse>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         if (account.UserId != currentUser.Id &&
             (account.Scope != request.Scope || account.HouseholdId?.Value != request.HouseholdId))
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
+            return Result<AccountResponse>.Failure(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
         }
 
         if (request.Currency is { } currency && currency != account.Currency && rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<AccountResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<AccountResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         mapper.UpdateEntity(request, account);
@@ -175,12 +175,12 @@ public sealed class AccountService(
         var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == new AccountId(id), cancellationToken);
         if (account is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Account not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Account not found.");
         }
 
         if (account.UserId != currentUser.Id)
         {
-            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Only the owner can archive an account.");
+            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only the owner can archive an account.");
         }
 
         db.Accounts.Remove(account);

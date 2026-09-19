@@ -1,4 +1,3 @@
-using System.Text.Json.Serialization;
 using JxFinance.Common.Json;
 using JxFinance.Domain.NetWorth;
 
@@ -8,5 +7,5 @@ public sealed record UpdateAssetRequest(
     Guid Id,
     string Name,
     AssetType Type,
-    [property: Money, JsonRequired] decimal CurrentValue,
+    [property: Money(NotNull = true)] decimal? CurrentValue,
     DateOnly AsOf);

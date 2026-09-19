@@ -5,301 +5,23 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency, InvestmentSource, InvestmentTransactionType, SecurityType } from "../model";
 import type {
   BrokerConnectionResponse,
   BrokerImportResponse,
-  IReadOnlyListOfBrokerConnectionResponse,
-  IReadOnlyListOfSecurityResponse,
   InvestmentTransactionResponse,
   PagedResponseOfInvestmentTransactionResponse,
   PortfolioResponse,
   SecurityResponse,
 } from "../model";
 
-export const getGetBrokerConnectionsResponseMock = (): IReadOnlyListOfBrokerConnectionResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    accountId: faker.string.uuid(),
-    fundingAccountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    queryId: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    isEnabled: faker.datatype.boolean(),
-    lastSyncAt: faker.helpers.arrayElement([
-      faker.date.past().toISOString().slice(0, 19) + "Z",
-      null,
-    ]),
-    lastError: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-  }));
-
-export const getSaveBrokerConnectionResponseMock = (
-  overrideResponse: Partial<Extract<BrokerConnectionResponse, object>> = {},
-): BrokerConnectionResponse => ({
-  accountId: faker.string.uuid(),
-  fundingAccountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  queryId: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  isEnabled: faker.datatype.boolean(),
-  lastSyncAt: faker.helpers.arrayElement([
-    faker.date.past().toISOString().slice(0, 19) + "Z",
-    null,
-  ]),
-  lastError: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  ...overrideResponse,
-});
-
-export const getSyncBrokerConnectionResponseMock = (
-  overrideResponse: Partial<Extract<BrokerImportResponse, object>> = {},
-): BrokerImportResponse => ({
-  trades: faker.number.int(),
-  cashEntries: faker.number.int(),
-  conversions: faker.number.int(),
-  transfers: faker.number.int(),
-  duplicates: faker.number.int(),
-  skipped: faker.number.int(),
-  securitiesCreated: faker.number.int(),
-  pricesUpdated: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getImportBrokerReportResponseMock = (
-  overrideResponse: Partial<Extract<BrokerImportResponse, object>> = {},
-): BrokerImportResponse => ({
-  trades: faker.number.int(),
-  cashEntries: faker.number.int(),
-  conversions: faker.number.int(),
-  transfers: faker.number.int(),
-  duplicates: faker.number.int(),
-  skipped: faker.number.int(),
-  securitiesCreated: faker.number.int(),
-  pricesUpdated: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getGetPortfolioResponseMock = (
-  overrideResponse: Partial<Extract<PortfolioResponse, object>> = {},
-): PortfolioResponse => ({
-  reportingCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  marketValue: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  costBasis: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  unrealizedGain: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  realizedGain: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  dividends: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  withholdingTax: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  fees: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  isComplete: faker.datatype.boolean(),
-  holdings: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(
-    () => ({
-      accountId: faker.string.uuid(),
-      security: {
-        id: faker.string.uuid(),
-        symbol: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        isin: faker.helpers.arrayElement([
-          faker.string.alpha({ length: { min: 10, max: 20 } }),
-          null,
-        ]),
-        exchange: faker.helpers.arrayElement([
-          faker.string.alpha({ length: { min: 10, max: 20 } }),
-          null,
-        ]),
-        type: faker.helpers.arrayElement(Object.values(SecurityType)),
-        currency: faker.helpers.arrayElement(Object.values(Currency)),
-        lastPrice: faker.helpers.arrayElement([
-          faker.string.alpha({ length: { min: 10, max: 20 } }),
-          null,
-        ]),
-        lastPriceDate: faker.helpers.arrayElement([
-          null,
-          faker.date.past().toISOString().slice(0, 10),
-        ]),
-      },
-      quantity: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      averageCost: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      costBasis: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      marketValue: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-      unrealizedGain: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-      unrealizedPercent: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-      marketValueReporting: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-      realizedGain: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      dividends: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    }),
-  ),
-  years: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    year: faker.number.int(),
-    dividends: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    withholdingTax: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    interest: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    fees: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    realizedGain: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  })),
-  ...overrideResponse,
-});
-
-export const getGetSecuritiesResponseMock = (): IReadOnlyListOfSecurityResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    symbol: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    isin: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-    exchange: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    type: faker.helpers.arrayElement(Object.values(SecurityType)),
-    currency: faker.helpers.arrayElement(Object.values(Currency)),
-    lastPrice: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    lastPriceDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  }));
-
-export const getCreateSecurityResponseMock = (
-  overrideResponse: Partial<Extract<SecurityResponse, object>> = {},
-): SecurityResponse => ({
-  id: faker.string.uuid(),
-  symbol: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  isin: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  exchange: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  type: faker.helpers.arrayElement(Object.values(SecurityType)),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  lastPrice: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  lastPriceDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
-
-export const getUpdateSecurityResponseMock = (
-  overrideResponse: Partial<Extract<SecurityResponse, object>> = {},
-): SecurityResponse => ({
-  id: faker.string.uuid(),
-  symbol: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  isin: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  exchange: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  type: faker.helpers.arrayElement(Object.values(SecurityType)),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  lastPrice: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  lastPriceDate: faker.helpers.arrayElement([null, faker.date.past().toISOString().slice(0, 10)]),
-  ...overrideResponse,
-});
-
-export const getCreateInvestmentTransactionResponseMock = (
-  overrideResponse: Partial<Extract<InvestmentTransactionResponse, object>> = {},
-): InvestmentTransactionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  securityId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  symbol: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  type: faker.helpers.arrayElement(Object.values(InvestmentTransactionType)),
-  date: faker.date.past().toISOString().slice(0, 10),
-  quantity: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  price: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  fee: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  cashAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  source: faker.helpers.arrayElement(Object.values(InvestmentSource)),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  ...overrideResponse,
-});
-
-export const getGetInvestmentTransactionsResponseMock = (
-  overrideResponse: Partial<Extract<PagedResponseOfInvestmentTransactionResponse, object>> = {},
-): PagedResponseOfInvestmentTransactionResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    accountId: faker.string.uuid(),
-    securityId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    symbol: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    type: faker.helpers.arrayElement(Object.values(InvestmentTransactionType)),
-    date: faker.date.past().toISOString().slice(0, 10),
-    quantity: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    price: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    fee: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    cashAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    currency: faker.helpers.arrayElement(Object.values(Currency)),
-    description: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    source: faker.helpers.arrayElement(Object.values(InvestmentSource)),
-    createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  })),
-  page: faker.number.int(),
-  pageSize: faker.number.int(),
-  total: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getUpdateInvestmentTransactionResponseMock = (
-  overrideResponse: Partial<Extract<InvestmentTransactionResponse, object>> = {},
-): InvestmentTransactionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  securityId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  symbol: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  type: faker.helpers.arrayElement(Object.values(InvestmentTransactionType)),
-  date: faker.date.past().toISOString().slice(0, 10),
-  quantity: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  price: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  fee: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  cashAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  source: faker.helpers.arrayElement(Object.values(InvestmentSource)),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  ...overrideResponse,
-});
-
-export const getGetBrokerConnectionsMockHandler = (
+export const getBrokerConnectionsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfBrokerConnectionResponse
+    | BrokerConnectionResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) =>
-        | Promise<IReadOnlyListOfBrokerConnectionResponse>
-        | IReadOnlyListOfBrokerConnectionResponse),
+      ) => Promise<BrokerConnectionResponse[]> | BrokerConnectionResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -310,7 +32,7 @@ export const getGetBrokerConnectionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetBrokerConnectionsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -353,7 +75,7 @@ export const getSaveBrokerConnectionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getSaveBrokerConnectionResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -377,7 +99,7 @@ export const getSyncBrokerConnectionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getSyncBrokerConnectionResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -401,7 +123,7 @@ export const getImportBrokerReportMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getImportBrokerReportResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -409,7 +131,7 @@ export const getImportBrokerReportMockHandler = (
   );
 };
 
-export const getGetPortfolioMockHandler = (
+export const getPortfolioMockHandler = (
   overrideResponse?:
     | PortfolioResponse
     | ((
@@ -425,7 +147,7 @@ export const getGetPortfolioMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetPortfolioResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -433,12 +155,12 @@ export const getGetPortfolioMockHandler = (
   );
 };
 
-export const getGetSecuritiesMockHandler = (
+export const getSecuritiesMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfSecurityResponse
+    | SecurityResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfSecurityResponse> | IReadOnlyListOfSecurityResponse),
+      ) => Promise<SecurityResponse[]> | SecurityResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -449,7 +171,7 @@ export const getGetSecuritiesMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetSecuritiesResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -473,7 +195,7 @@ export const getCreateSecurityMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateSecurityResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -497,7 +219,7 @@ export const getUpdateSecurityMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateSecurityResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -521,7 +243,7 @@ export const getCreateInvestmentTransactionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateInvestmentTransactionResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -529,7 +251,7 @@ export const getCreateInvestmentTransactionMockHandler = (
   );
 };
 
-export const getGetInvestmentTransactionsMockHandler = (
+export const getInvestmentTransactionsMockHandler = (
   overrideResponse?:
     | PagedResponseOfInvestmentTransactionResponse
     | ((
@@ -547,7 +269,7 @@ export const getGetInvestmentTransactionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetInvestmentTransactionsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -590,7 +312,7 @@ export const getUpdateInvestmentTransactionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateInvestmentTransactionResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -598,17 +320,17 @@ export const getUpdateInvestmentTransactionMockHandler = (
   );
 };
 export const getInvestmentsMock = () => [
-  getGetBrokerConnectionsMockHandler(),
+  getBrokerConnectionsMockHandler(),
   getDeleteBrokerConnectionMockHandler(),
   getSaveBrokerConnectionMockHandler(),
   getSyncBrokerConnectionMockHandler(),
   getImportBrokerReportMockHandler(),
-  getGetPortfolioMockHandler(),
-  getGetSecuritiesMockHandler(),
+  getPortfolioMockHandler(),
+  getSecuritiesMockHandler(),
   getCreateSecurityMockHandler(),
   getUpdateSecurityMockHandler(),
   getCreateInvestmentTransactionMockHandler(),
-  getGetInvestmentTransactionsMockHandler(),
+  getInvestmentTransactionsMockHandler(),
   getDeleteInvestmentTransactionMockHandler(),
   getUpdateInvestmentTransactionMockHandler(),
 ];

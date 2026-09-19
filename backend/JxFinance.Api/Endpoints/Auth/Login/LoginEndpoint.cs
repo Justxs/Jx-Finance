@@ -33,7 +33,7 @@ public sealed class LoginEndpoint(IAuthService authService, ISessionService sess
             {
                 ThrowError(
                     "Invalid authenticator code.",
-                    ErrorCodes.Unauthorized,
+                    ErrorCodes.TwoFactorInvalidCode,
                     Severity.Error,
                     StatusCodes.Status401Unauthorized);
             }

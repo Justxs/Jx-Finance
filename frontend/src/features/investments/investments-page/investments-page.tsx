@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { FileUp, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetAccountsSuspense, useGetPortfolioSuspense } from "@/api/generated";
+import { useAccountsSuspense, usePortfolioSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
@@ -14,6 +14,7 @@ import { ActivitySection } from "../activity-section";
 import { BrokerImportDialog } from "../broker-import-dialog";
 import { IncomeByYear } from "../income-by-year";
 import { InvestmentEntryModal } from "../investment-entry-form";
+import { portfolioParams } from "../investment-queries";
 import { PortfolioSummary } from "../portfolio-summary";
 import { PositionsSection } from "../positions-section";
 import { SecuritiesDialog } from "../securities-dialog";
@@ -34,7 +35,7 @@ function InvestmentsOverview({
   const { t } = useTranslation();
   const [shown, stale] = useDeferredParams({ accountId: accountId ?? "" });
   const shownAccountId = shown.accountId || undefined;
-  const portfolio = useGetPortfolioSuspense({ accountId: shownAccountId });
+  const portfolio = usePortfolioSuspense(portfolioParams(shownAccountId));
   const firstRun =
     shownAccountId === undefined &&
     portfolio.data.holdings.length === 0 &&
@@ -84,7 +85,7 @@ export function InvestmentsPage() {
   const { t } = useTranslation();
   const search = useSearch({ from: "/investments" });
   const navigate = useNavigate({ from: "/investments" });
-  const accounts = useGetAccountsSuspense();
+  const accounts = useAccountsSuspense();
   const accountList = accounts.data ?? [];
   const accountId = accountList.find((account) => account.id === search.accountId)?.id;
 

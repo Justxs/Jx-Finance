@@ -1,7 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { vi } from "vitest";
-import { getGetCurrenciesQueryKey, getGetSettingsQueryKey } from "@/api/generated";
+import { getCurrenciesQueryKey, getSettingsQueryKey } from "@/api/generated";
 import type { CurrenciesResponse, SettingsResponse } from "@/api/generated/model";
 
 interface Seed {
@@ -16,10 +16,10 @@ export function createQueryWrapper({ settings, currencies }: Seed = {}) {
   );
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   if (settings) {
-    client.setQueryData(getGetSettingsQueryKey(), settings);
+    client.setQueryData(getSettingsQueryKey(), settings);
   }
   if (currencies) {
-    client.setQueryData(getGetCurrenciesQueryKey(), currencies);
+    client.setQueryData(getCurrenciesQueryKey(), currencies);
   }
 
   function Wrapper({ children }: Readonly<{ children: ReactNode }>) {

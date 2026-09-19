@@ -1,16 +1,13 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateGoal, useUpdateGoal } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { createGoalBodyNameMax } from "@/api/schemas/goals/goals.zod";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { isNonNegativeMoney, isPositiveMoney } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { isNonNegativeMoney, positiveMoney, requiredText } from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -33,14 +30,8 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
   const { t } = useTranslation();
 
   const schema = z.object({
-    name: z
-      .string()
-      .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine(
-        (value) => value.trim().length <= createGoalBodyNameMax,
-        t("validation.maxLength", { max: createGoalBodyNameMax }),
-      ),
-    targetAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+    name: requiredText(t, createGoalBodyNameMax),
+    targetAmount: positiveMoney(t),
     currentAmount: z.string().refine(isCurrentAmount, t("validation.money")),
     targetDate: z.string(),
   });
@@ -59,135 +50,85 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
     targetDate: initial?.targetDate ?? "",
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
+    onSubmit: (submission) => {
+      const { value } = submission;
       const name = value.name.trim();
       const targetDate = value.targetDate || null;
-      if (initial?.id) {
-        updateMutation.mutate({
-          id: initial.id,
-          data: {
-            name,
-            targetAmount: value.targetAmount,
-            currentAmount: value.currentAmount || "0",
-            targetDate,
-          },
-        });
-      } else {
-        createMutation.mutate({
-          data: {
-            name,
-            targetAmount: value.targetAmount,
-            currentAmount: value.currentAmount || null,
-            targetDate,
-          },
-        });
-      }
+
+      return submitToServer(submission, () =>
+        initial?.id
+          ? updateMutation.mutateAsync({
+              id: initial.id,
+              data: {
+                name,
+                targetAmount: value.targetAmount,
+                currentAmount: value.currentAmount || "0",
+                targetDate,
+              },
+            })
+          : createMutation.mutateAsync({
+              data: {
+                name,
+                targetAmount: value.targetAmount,
+                currentAmount: value.currentAmount || null,
+                targetDate,
+              },
+            }),
+      );
     },
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="space-y-4"
-    >
-      <div className="form-grid">
-        <form.Field name="name">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="goal-name">{t("goals.name")}</Label>
-              <Input
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="space-y-4"
+      >
+        <div className="form-grid">
+          <form.Field name="name">
+            {(field) => (
+              <field.TextField
                 id="goal-name"
+                label={t("goals.name")}
                 placeholder={t("goals.namePlaceholder")}
-                value={field.value}
-                aria-invalid={field.errors.length > 0}
-                aria-describedby={field.errors.length > 0 ? "goal-name-error" : undefined}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
               />
-              <FieldError id="goal-name-error" message={field.errors[0]?.message} />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.Field>
 
-        <form.Field name="targetAmount">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="goal-target">{t("goals.targetAmount")}</Label>
-              <Input
-                id="goal-target"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={field.value}
-                aria-invalid={field.errors.length > 0}
-                aria-describedby={field.errors.length > 0 ? "goal-target-error" : undefined}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-              <FieldError id="goal-target-error" message={field.errors[0]?.message} />
-            </div>
-          )}
-        </form.Field>
+          <form.Field name="targetAmount">
+            {(field) => <field.MoneyInputField id="goal-target" label={t("goals.targetAmount")} />}
+          </form.Field>
 
-        <form.Field name="currentAmount">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="goal-current">{t("goals.currentAmount")}</Label>
-              <Input
-                id="goal-current"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={field.value}
-                aria-invalid={field.errors.length > 0}
-                aria-describedby={field.errors.length > 0 ? "goal-current-error" : undefined}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-              <FieldError id="goal-current-error" message={field.errors[0]?.message} />
-            </div>
-          )}
-        </form.Field>
+          <form.Field name="currentAmount">
+            {(field) => (
+              <field.MoneyInputField id="goal-current" label={t("goals.currentAmount")} />
+            )}
+          </form.Field>
 
-        <form.Field name="targetDate">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="goal-date">{t("goals.targetDate")}</Label>
-              <DatePicker
-                id="goal-date"
-                value={field.value}
-                onBlur={field.handleBlur}
-                onChange={field.handleChange}
-              />
-            </div>
-          )}
-        </form.Field>
-      </div>
+          <form.Field name="targetDate">
+            {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
+          </form.Field>
+        </div>
 
-      <FormError error={createMutation.error ?? updateMutation.error} />
+        <FormError error={createMutation.error ?? updateMutation.error} />
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button
-              type="submit"
-              pending={createMutation.isPending || updateMutation.isPending}
-              disabled={!canSubmit}
-            >
-              {initial ? t("actions.save") : t("goals.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+          <form.SubmitButton pending={createMutation.isPending || updateMutation.isPending}>
+            {initial ? t("actions.save") : t("goals.add")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

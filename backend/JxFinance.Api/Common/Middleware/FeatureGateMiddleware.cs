@@ -1,3 +1,4 @@
+using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Settings;
 using Microsoft.AspNetCore.Mvc;
@@ -6,8 +7,6 @@ namespace JxFinance.Common.Middleware;
 
 public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSettingsStore settings)
 {
-    private const string ErrorCode = "feature_disabled";
-
     private const string EmptyWhenDisabled = "/api/households";
 
     private static readonly (string Prefix, Feature Feature)[] Gates =
@@ -49,7 +48,7 @@ public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSetting
                     Title = "Feature disabled",
                     Detail = $"The {feature} feature is turned off for this installation.",
                     Instance = path,
-                    Extensions = { ["code"] = ErrorCode },
+                    Extensions = { ["code"] = ErrorCodes.FeatureDisabled },
                 },
                 options: null,
                 contentType: "application/problem+json",

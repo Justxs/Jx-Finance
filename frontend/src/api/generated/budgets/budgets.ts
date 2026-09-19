@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -27,7 +22,6 @@ import type { ErrorType } from "../../client";
 import type {
   BudgetResponse,
   CreateBudgetRequest,
-  IReadOnlyListOfBudgetResponse,
   ProblemDetails,
   UpdateBudgetRequest,
 } from "../model";
@@ -153,7 +147,7 @@ export const useCreateBudget = <TError = ErrorType<ProblemDetails>, TContext = u
 > => {
   return useMutation(getCreateBudgetMutationOptions(options), queryClient);
 };
-export const getGetBudgetsUrl = () => {
+export const getBudgetsUrl = () => {
   return `/api/budgets`;
 };
 
@@ -161,162 +155,69 @@ export const getGetBudgetsUrl = () => {
  * Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.
  * @summary List budgets
  */
-export const getBudgets = async (
+export const budgets = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfBudgetResponse> => {
-  return customFetch<IReadOnlyListOfBudgetResponse>(getGetBudgetsUrl(), {
+): Promise<BudgetResponse[]> => {
+  return customFetch<BudgetResponse[]>(getBudgetsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetBudgetsQueryKey = () => {
+export const getBudgetsQueryKey = () => {
   return [`/api/budgets`] as const;
 };
 
-export const getGetBudgetsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getBudgets>>,
+export const getBudgetsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetBudgetsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getBudgetsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBudgets>>> = ({ signal }) =>
-    getBudgets({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getBudgets>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetBudgetsQueryResult = NonNullable<Awaited<ReturnType<typeof getBudgets>>>;
-export type GetBudgetsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetBudgets<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBudgets>>,
-          TError,
-          Awaited<ReturnType<typeof getBudgets>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetBudgets<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getBudgets>>,
-          TError,
-          Awaited<ReturnType<typeof getBudgets>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetBudgets<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List budgets
- */
-
-export function useGetBudgets<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetBudgetsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetBudgetsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getBudgets>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetBudgetsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBudgets>>> = ({ signal }) =>
-    getBudgets({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof budgets>>> = ({ signal }) =>
+    budgets({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getBudgets>>,
+    Awaited<ReturnType<typeof budgets>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetBudgetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getBudgets>>>;
-export type GetBudgetsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type BudgetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof budgets>>>;
+export type BudgetsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetBudgetsSuspense<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
+export function useBudgetsSuspense<
+  TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetBudgetsSuspense<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
+export function useBudgetsSuspense<
+  TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetBudgetsSuspense<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
+export function useBudgetsSuspense<
+  TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -325,17 +226,17 @@ export function useGetBudgetsSuspense<
  * @summary List budgets
  */
 
-export function useGetBudgetsSuspense<
-  TData = Awaited<ReturnType<typeof getBudgets>>,
+export function useBudgetsSuspense<
+  TData = Awaited<ReturnType<typeof budgets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBudgets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof budgets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetBudgetsSuspenseQueryOptions(options);
+  const queryOptions = getBudgetsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

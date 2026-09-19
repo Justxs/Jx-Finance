@@ -15,5 +15,5 @@ public static class DecimalString
         reader.TokenType == JsonTokenType.String
         && decimal.TryParse(reader.GetString(), Styles, CultureInfo.InvariantCulture, out var parsed)
             ? parsed
-            : throw new JsonException(Invalid);
+            : throw new DecimalStringException();
 }

@@ -5,106 +5,14 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { AssetType, DebtType } from "../model";
 import type {
   AssetResponse,
   DebtResponse,
-  IReadOnlyListOfAssetResponse,
-  IReadOnlyListOfDebtResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
 } from "../model";
-
-export const getCreateAssetResponseMock = (
-  overrideResponse: Partial<Extract<AssetResponse, object>> = {},
-): AssetResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(AssetType)),
-  currentValue: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  asOf: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetAssetsResponseMock = (): IReadOnlyListOfAssetResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    type: faker.helpers.arrayElement(Object.values(AssetType)),
-    currentValue: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    asOf: faker.date.past().toISOString().slice(0, 10),
-  }));
-
-export const getUpdateAssetResponseMock = (
-  overrideResponse: Partial<Extract<AssetResponse, object>> = {},
-): AssetResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(AssetType)),
-  currentValue: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  asOf: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getCreateDebtResponseMock = (
-  overrideResponse: Partial<Extract<DebtResponse, object>> = {},
-): DebtResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(DebtType)),
-  outstandingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  interestRate: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
-  asOf: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetDebtsResponseMock = (): IReadOnlyListOfDebtResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    type: faker.helpers.arrayElement(Object.values(DebtType)),
-    outstandingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    interestRate: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
-    asOf: faker.date.past().toISOString().slice(0, 10),
-  }));
-
-export const getUpdateDebtResponseMock = (
-  overrideResponse: Partial<Extract<DebtResponse, object>> = {},
-): DebtResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(DebtType)),
-  outstandingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  interestRate: faker.helpers.arrayElement([faker.number.float({ fractionDigits: 2 }), null]),
-  asOf: faker.date.past().toISOString().slice(0, 10),
-  ...overrideResponse,
-});
-
-export const getGetNetWorthResponseMock = (
-  overrideResponse: Partial<Extract<NetWorthResponse, object>> = {},
-): NetWorthResponse => ({
-  accounts: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  assets: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  debts: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  netWorth: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getGetNetWorthHistoryResponseMock = (
-  overrideResponse: Partial<Extract<NetWorthHistoryResponse, object>> = {},
-): NetWorthHistoryResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    date: faker.date.past().toISOString().slice(0, 10),
-    accounts: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    assets: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    debts: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    netWorth: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  })),
-  ...overrideResponse,
-});
 
 export const getCreateAssetMockHandler = (
   overrideResponse?:
@@ -122,7 +30,7 @@ export const getCreateAssetMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateAssetResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -130,12 +38,12 @@ export const getCreateAssetMockHandler = (
   );
 };
 
-export const getGetAssetsMockHandler = (
+export const getAssetsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfAssetResponse
+    | AssetResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfAssetResponse> | IReadOnlyListOfAssetResponse),
+      ) => Promise<AssetResponse[]> | AssetResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -146,7 +54,7 @@ export const getGetAssetsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetAssetsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -189,7 +97,7 @@ export const getUpdateAssetMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateAssetResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -213,7 +121,7 @@ export const getCreateDebtMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateDebtResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -221,12 +129,12 @@ export const getCreateDebtMockHandler = (
   );
 };
 
-export const getGetDebtsMockHandler = (
+export const getDebtsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfDebtResponse
+    | DebtResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfDebtResponse> | IReadOnlyListOfDebtResponse),
+      ) => Promise<DebtResponse[]> | DebtResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -237,7 +145,7 @@ export const getGetDebtsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetDebtsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -280,7 +188,7 @@ export const getUpdateDebtMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateDebtResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -288,7 +196,7 @@ export const getUpdateDebtMockHandler = (
   );
 };
 
-export const getGetNetWorthMockHandler = (
+export const getNetWorthMockHandler = (
   overrideResponse?:
     | NetWorthResponse
     | ((
@@ -304,7 +212,7 @@ export const getGetNetWorthMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetNetWorthResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -312,7 +220,7 @@ export const getGetNetWorthMockHandler = (
   );
 };
 
-export const getGetNetWorthHistoryMockHandler = (
+export const getNetWorthHistoryMockHandler = (
   overrideResponse?:
     | NetWorthHistoryResponse
     | ((
@@ -328,7 +236,7 @@ export const getGetNetWorthHistoryMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetNetWorthHistoryResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -337,13 +245,13 @@ export const getGetNetWorthHistoryMockHandler = (
 };
 export const getNetWorthMock = () => [
   getCreateAssetMockHandler(),
-  getGetAssetsMockHandler(),
+  getAssetsMockHandler(),
   getDeleteAssetMockHandler(),
   getUpdateAssetMockHandler(),
   getCreateDebtMockHandler(),
-  getGetDebtsMockHandler(),
+  getDebtsMockHandler(),
   getDeleteDebtMockHandler(),
   getUpdateDebtMockHandler(),
-  getGetNetWorthMockHandler(),
-  getGetNetWorthHistoryMockHandler(),
+  getNetWorthMockHandler(),
+  getNetWorthHistoryMockHandler(),
 ];

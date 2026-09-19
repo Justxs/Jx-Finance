@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { useGetNetWorthSuspense } from "@/api/generated";
+import { useNetWorthSuspense } from "@/api/generated";
 import { SummaryStats } from "@/components/summary-stats";
 
 export function NetWorthStats() {
   const { t } = useTranslation();
-  const netWorth = useGetNetWorthSuspense();
+  const netWorth = useNetWorthSuspense();
 
   const stats = [
     { key: "netWorth.accounts", value: netWorth.data?.accounts },

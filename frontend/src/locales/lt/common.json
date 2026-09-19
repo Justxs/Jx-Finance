@@ -898,5 +898,122 @@
     "netWorthLabel": "Grynosios vertės kitimas",
     "net": "Balansas",
     "netWorth": "Grynoji vertė"
+  },
+  "serverErrors": {
+    "access": {
+      "forbidden": "Neturite teisės atlikti šio veiksmo."
+    },
+    "broker": {
+      "rejected": "Interactive Brokers atmetė užklausą: {{reason}}",
+      "tokenRequired": "Įveskite Flex žetoną iš naujo.",
+      "unavailable": "Interactive Brokers šiuo metu nepasiekiamas. Bandykite vėliau."
+    },
+    "category": {
+      "wrongType": "Pasirinkite tinkamo tipo kategoriją."
+    },
+    "collection": {
+      "invalidSize": "Per mažai arba per daug elementų."
+    },
+    "conflict": {
+      "duplicate": "Toks įrašas jau yra.",
+      "stale": "Duomenys pasikeitė. Atnaujinkite ir bandykite dar kartą."
+    },
+    "credentials": {
+      "invalid": "Neteisingas el. paštas arba slaptažodis."
+    },
+    "currency": {
+      "disabled": "Ši valiuta neįjungta."
+    },
+    "decimal": {
+      "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
+    },
+    "email": {
+      "invalid": "Įveskite galiojantį el. pašto adresą.",
+      "taken": "Šis el. paštas jau naudojamas."
+    },
+    "enum": {
+      "invalid": "Pasirinkite vieną iš galimų reikšmių."
+    },
+    "exchangeRate": {
+      "unavailable": "Šiai datai nėra valiutos kurso. Pirmiau sinchronizuokite kursus nustatymuose."
+    },
+    "feature": {
+      "disabled": "Ši funkcija išjungta."
+    },
+    "holding": {
+      "dependentSales": "Nuo šio įrašo priklauso vėlesni pardavimai.",
+      "oversold": "Taip būtų parduota daugiau, nei tą dieną turėta."
+    },
+    "household": {
+      "lastOwner": "Namų ūkis turi turėti bent vieną savininką.",
+      "notMember": "Nesate šio namų ūkio narys.",
+      "required": "Bendram įrašui pasirinkite namų ūkį."
+    },
+    "iban": {
+      "invalid": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000."
+    },
+    "import": {
+      "invalidFile": "Failas tuščias, per didelis arba netinkamo formato.",
+      "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės."
+    },
+    "money": {
+      "invalid": "Įveskite galiojančią sumą, pvz., 12.34.",
+      "nonNegative": "Įveskite 0 arba didesnę sumą, pvz., 12.34.",
+      "positive": "Įveskite sumą, didesnę už 0, pvz., 12.34."
+    },
+    "password": {
+      "incorrect": "Dabartinis slaptažodis neteisingas.",
+      "tooWeak": "Pasirinkite stipresnį slaptažodį."
+    },
+    "quantity": {
+      "nonNegative": "Įveskite 0 arba daugiau, iki 8 skaitmenų po kablelio.",
+      "positive": "Įveskite daugiau nei 0, iki 8 skaitmenų po kablelio."
+    },
+    "range": {
+      "invalid": "Reikšmė nepatenka į leistiną intervalą."
+    },
+    "recurringBill": {
+      "inactive": "Ši sąskaita neaktyvi."
+    },
+    "reference": {
+      "notFound": "Pasirinktas įrašas nebeegzistuoja."
+    },
+    "request": {
+      "invalid": "Užklausos nepavyko apdoroti.",
+      "malformed": "Užklausos nepavyko perskaityti."
+    },
+    "required": "Šis laukas privalomas.",
+    "resource": {
+      "notFound": "Šis įrašas nebeegzistuoja.",
+      "readOnly": "Importuotų įrašų redaguoti negalima."
+    },
+    "setup": {
+      "alreadyCompleted": "Pradinis nustatymas jau atliktas."
+    },
+    "text": {
+      "invalidFormat": "Netinkamas formatas.",
+      "tooLong": "Per ilgas tekstas.",
+      "tooShort": "Per trumpas tekstas."
+    },
+    "transaction": {
+      "linesMismatch": "Padalintų eilučių suma turi sutapti su operacijos suma.",
+      "splitNotAllowed": "Padalintų operacijų kategorijos masiškai keisti negalima."
+    },
+    "transfer": {
+      "amountMismatch": "Ta pačia valiuta išsiųsta ir gauta suma turi sutapti.",
+      "receivedAmountRequired": "Pervedimui tarp valiutų įveskite gautą sumą.",
+      "sameAccount": "Pasirinkite dvi skirtingas sąskaitas."
+    },
+    "twoFactor": {
+      "invalidCode": "Kodas neteisingas."
+    },
+    "user": {
+      "selfChange": "Negalite keisti savo vaidmens ar išjungti savo paskyros."
+    },
+    "value": {
+      "locked": "Šios reikšmės keisti nebegalima.",
+      "mustBeEmpty": "Palikite tuščią.",
+      "mustDiffer": "Pasirinkite kitą reikšmę."
+    }
   }
 }

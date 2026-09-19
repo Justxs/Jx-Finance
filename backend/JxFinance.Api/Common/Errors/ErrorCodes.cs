@@ -1,19 +1,78 @@
+using System.Reflection;
+
 namespace JxFinance.Common.Errors;
 
 public static class ErrorCodes
 {
-    public const string NotFound = "not_found";
-    public const string Validation = "validation";
-    public const string Conflict = "conflict";
-    public const string Forbidden = "forbidden";
-    public const string Unauthorized = "unauthorized";
+    public const string Required = "required";
+    public const string TextTooLong = "text.tooLong";
+    public const string TextTooShort = "text.tooShort";
+    public const string TextInvalidFormat = "text.invalidFormat";
+    public const string EmailInvalid = "email.invalid";
+    public const string EmailTaken = "email.taken";
+    public const string IbanInvalid = "iban.invalid";
+    public const string DecimalMalformed = "decimal.malformed";
+    public const string MoneyInvalid = "money.invalid";
+    public const string MoneyPositive = "money.positive";
+    public const string MoneyNonNegative = "money.nonNegative";
+    public const string QuantityPositive = "quantity.positive";
+    public const string QuantityNonNegative = "quantity.nonNegative";
+    public const string RangeInvalid = "range.invalid";
+    public const string EnumInvalid = "enum.invalid";
+    public const string CollectionInvalidSize = "collection.invalidSize";
+    public const string ValueMustDiffer = "value.mustDiffer";
+    public const string ValueMustBeEmpty = "value.mustBeEmpty";
+    public const string ValueLocked = "value.locked";
+    public const string RequestMalformed = "request.malformed";
+    public const string RequestInvalid = "request.invalid";
+    public const string ReferenceNotFound = "reference.notFound";
+    public const string ResourceNotFound = "resource.notFound";
+    public const string ResourceReadOnly = "resource.readOnly";
+    public const string ConflictDuplicate = "conflict.duplicate";
+    public const string ConflictStale = "conflict.stale";
+    public const string AccessForbidden = "access.forbidden";
+    public const string CredentialsInvalid = "credentials.invalid";
+    public const string PasswordIncorrect = "password.incorrect";
+    public const string PasswordTooWeak = "password.tooWeak";
+    public const string TwoFactorInvalidCode = "twoFactor.invalidCode";
+    public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
+    public const string FeatureDisabled = "feature.disabled";
+    public const string UserSelfChange = "user.selfChange";
+    public const string HouseholdRequired = "household.required";
+    public const string HouseholdNotMember = "household.notMember";
+    public const string HouseholdLastOwner = "household.lastOwner";
+    public const string CategoryWrongType = "category.wrongType";
+    public const string CurrencyDisabled = "currency.disabled";
+    public const string ExchangeRateUnavailable = "exchangeRate.unavailable";
+    public const string TransferSameAccount = "transfer.sameAccount";
+    public const string TransferReceivedAmountRequired = "transfer.receivedAmountRequired";
+    public const string TransferAmountMismatch = "transfer.amountMismatch";
+    public const string TransactionLinesMismatch = "transaction.linesMismatch";
+    public const string TransactionSplitNotAllowed = "transaction.splitNotAllowed";
+    public const string RecurringBillInactive = "recurringBill.inactive";
+    public const string HoldingOversold = "holding.oversold";
+    public const string HoldingDependentSales = "holding.dependentSales";
+    public const string ImportInvalidFile = "import.invalidFile";
+    public const string ImportTransferMismatch = "import.transferMismatch";
+    public const string BrokerUnavailable = "broker.unavailable";
+    public const string BrokerRejected = "broker.rejected";
+    public const string BrokerTokenRequired = "broker.tokenRequired";
+
+    public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
+        .GetFields(BindingFlags.Public | BindingFlags.Static)
+        .Where(field => field is { IsLiteral: true, IsInitOnly: false } && field.FieldType == typeof(string))
+        .Select(field => (string)field.GetRawConstantValue()!)
+        .Order(StringComparer.Ordinal)
+        .ToList();
+
+    public static bool IsKnown(string? errorCode) => errorCode is not null && All.Contains(errorCode, StringComparer.Ordinal);
 
     public static int StatusCodeFor(string? errorCode) => errorCode switch
     {
-        NotFound => StatusCodes.Status404NotFound,
-        Conflict => StatusCodes.Status409Conflict,
-        Forbidden => StatusCodes.Status403Forbidden,
-        Unauthorized => StatusCodes.Status401Unauthorized,
+        ResourceNotFound => StatusCodes.Status404NotFound,
+        ConflictDuplicate or ConflictStale or SetupAlreadyCompleted => StatusCodes.Status409Conflict,
+        AccessForbidden or UserSelfChange => StatusCodes.Status403Forbidden,
+        CredentialsInvalid => StatusCodes.Status401Unauthorized,
         _ => StatusCodes.Status400BadRequest,
     };
 }

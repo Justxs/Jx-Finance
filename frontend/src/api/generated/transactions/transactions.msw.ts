@@ -5,172 +5,14 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency, FlowType, TransactionSource } from "../model";
 import type {
   BulkCategorizeTransactionsResponse,
   PagedResponseOfTransactionResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
 } from "../model";
-
-export const getCreateTransactionResponseMock = (
-  overrideResponse: Partial<Extract<TransactionResponse, object>> = {},
-): TransactionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  type: faker.helpers.arrayElement(Object.values(FlowType)),
-  amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  date: faker.date.past().toISOString().slice(0, 10),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  source: faker.helpers.arrayElement(Object.values(TransactionSource)),
-  isSplit: faker.datatype.boolean(),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  lines: faker.helpers.arrayElement([
-    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-      id: faker.string.uuid(),
-      categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-      amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      description: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-    })),
-    null,
-  ]),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  reportingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getGetTransactionsResponseMock = (
-  overrideResponse: Partial<Extract<PagedResponseOfTransactionResponse, object>> = {},
-): PagedResponseOfTransactionResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    accountId: faker.string.uuid(),
-    categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    type: faker.helpers.arrayElement(Object.values(FlowType)),
-    amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    date: faker.date.past().toISOString().slice(0, 10),
-    description: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    source: faker.helpers.arrayElement(Object.values(TransactionSource)),
-    isSplit: faker.datatype.boolean(),
-    createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-    lines: faker.helpers.arrayElement([
-      Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-        id: faker.string.uuid(),
-        categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-        amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-        description: faker.helpers.arrayElement([
-          faker.string.alpha({ length: { min: 10, max: 20 } }),
-          null,
-        ]),
-      })),
-      null,
-    ]),
-    currency: faker.helpers.arrayElement(Object.values(Currency)),
-    reportingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  })),
-  page: faker.number.int(),
-  pageSize: faker.number.int(),
-  total: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getBulkCategorizeTransactionsResponseMock = (
-  overrideResponse: Partial<Extract<BulkCategorizeTransactionsResponse, object>> = {},
-): BulkCategorizeTransactionsResponse => ({ updated: faker.number.int(), ...overrideResponse });
-
-export const getExportTransactionsResponseMock = (): ArrayBuffer =>
-  new ArrayBuffer(faker.number.int({ min: 1, max: 64 }));
-
-export const getExportTransactionsPdfResponseMock = (): ArrayBuffer =>
-  new ArrayBuffer(faker.number.int({ min: 1, max: 64 }));
-
-export const getGetTransactionsSummaryResponseMock = (
-  overrideResponse: Partial<Extract<TransactionsSummaryResponse, object>> = {},
-): TransactionsSummaryResponse => ({
-  count: faker.number.int(),
-  totalIncome: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  totalExpense: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getGetTransactionResponseMock = (
-  overrideResponse: Partial<Extract<TransactionResponse, object>> = {},
-): TransactionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  type: faker.helpers.arrayElement(Object.values(FlowType)),
-  amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  date: faker.date.past().toISOString().slice(0, 10),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  source: faker.helpers.arrayElement(Object.values(TransactionSource)),
-  isSplit: faker.datatype.boolean(),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  lines: faker.helpers.arrayElement([
-    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-      id: faker.string.uuid(),
-      categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-      amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      description: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-    })),
-    null,
-  ]),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  reportingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getUpdateTransactionResponseMock = (
-  overrideResponse: Partial<Extract<TransactionResponse, object>> = {},
-): TransactionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  type: faker.helpers.arrayElement(Object.values(FlowType)),
-  amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  date: faker.date.past().toISOString().slice(0, 10),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  source: faker.helpers.arrayElement(Object.values(TransactionSource)),
-  isSplit: faker.datatype.boolean(),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  lines: faker.helpers.arrayElement([
-    Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-      id: faker.string.uuid(),
-      categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-      amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-      description: faker.helpers.arrayElement([
-        faker.string.alpha({ length: { min: 10, max: 20 } }),
-        null,
-      ]),
-    })),
-    null,
-  ]),
-  currency: faker.helpers.arrayElement(Object.values(Currency)),
-  reportingAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
 
 export const getCreateTransactionMockHandler = (
   overrideResponse?:
@@ -188,7 +30,7 @@ export const getCreateTransactionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateTransactionResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -196,7 +38,7 @@ export const getCreateTransactionMockHandler = (
   );
 };
 
-export const getGetTransactionsMockHandler = (
+export const getTransactionsMockHandler = (
   overrideResponse?:
     | PagedResponseOfTransactionResponse
     | ((
@@ -212,7 +54,7 @@ export const getGetTransactionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetTransactionsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -236,7 +78,7 @@ export const getBulkCategorizeTransactionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getBulkCategorizeTransactionsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -258,7 +100,7 @@ export const getExportTransactionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getExportTransactionsResponseMock();
+          : undefined;
       return HttpResponse.arrayBuffer(
         binaryBody instanceof ArrayBuffer ? binaryBody : new ArrayBuffer(0),
         { status: 200, headers: { "Content-Type": "application/octet-stream" } },
@@ -282,7 +124,7 @@ export const getExportTransactionsPdfMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getExportTransactionsPdfResponseMock();
+          : undefined;
       return HttpResponse.arrayBuffer(
         binaryBody instanceof ArrayBuffer ? binaryBody : new ArrayBuffer(0),
         { status: 200, headers: { "Content-Type": "application/pdf" } },
@@ -292,7 +134,7 @@ export const getExportTransactionsPdfMockHandler = (
   );
 };
 
-export const getGetTransactionsSummaryMockHandler = (
+export const getTransactionsSummaryMockHandler = (
   overrideResponse?:
     | TransactionsSummaryResponse
     | ((
@@ -308,7 +150,7 @@ export const getGetTransactionsSummaryMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetTransactionsSummaryResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -335,7 +177,7 @@ export const getDeleteTransactionMockHandler = (
   );
 };
 
-export const getGetTransactionMockHandler = (
+export const getTransactionMockHandler = (
   overrideResponse?:
     | TransactionResponse
     | ((
@@ -351,7 +193,7 @@ export const getGetTransactionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetTransactionResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -375,7 +217,7 @@ export const getUpdateTransactionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateTransactionResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -384,12 +226,12 @@ export const getUpdateTransactionMockHandler = (
 };
 export const getTransactionsMock = () => [
   getCreateTransactionMockHandler(),
-  getGetTransactionsMockHandler(),
+  getTransactionsMockHandler(),
   getBulkCategorizeTransactionsMockHandler(),
   getExportTransactionsMockHandler(),
   getExportTransactionsPdfMockHandler(),
-  getGetTransactionsSummaryMockHandler(),
+  getTransactionsSummaryMockHandler(),
   getDeleteTransactionMockHandler(),
-  getGetTransactionMockHandler(),
+  getTransactionMockHandler(),
   getUpdateTransactionMockHandler(),
 ];

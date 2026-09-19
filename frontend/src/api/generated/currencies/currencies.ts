@@ -23,8 +23,8 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   CurrenciesResponse,
+  ExchangeRateParams,
   ExchangeRateResponse,
-  GetExchangeRateParams,
   ProblemDetails,
 } from "../model";
 
@@ -45,7 +45,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetCurrenciesUrl = () => {
+export const getCurrenciesUrl = () => {
   return `/api/currencies`;
 };
 
@@ -53,54 +53,54 @@ export const getGetCurrenciesUrl = () => {
  * Returns the currencies accounts and transactions can use, the reporting currency that totals, budgets, and reports are expressed in, and the date of the newest stored exchange rates. Rates are European Central Bank reference rates.
  * @summary List supported currencies
  */
-export const getCurrencies = async (
+export const currencies = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CurrenciesResponse> => {
-  return customFetch<CurrenciesResponse>(getGetCurrenciesUrl(), {
+  return customFetch<CurrenciesResponse>(getCurrenciesUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetCurrenciesQueryKey = () => {
+export const getCurrenciesQueryKey = () => {
   return [`/api/currencies`] as const;
 };
 
-export const getGetCurrenciesQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export const getCurrenciesQueryOptions = <
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>>;
+  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetCurrenciesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getCurrenciesQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrencies>>> = ({ signal }) =>
-    getCurrencies({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof currencies>>> = ({ signal }) =>
+    currencies({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getCurrencies>>,
+    Awaited<ReturnType<typeof currencies>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetCurrenciesQueryResult = NonNullable<Awaited<ReturnType<typeof getCurrencies>>>;
-export type GetCurrenciesQueryError = ErrorType<ProblemDetails>;
+export type CurrenciesQueryResult = NonNullable<Awaited<ReturnType<typeof currencies>>>;
+export type CurrenciesQueryError = ErrorType<ProblemDetails>;
 
-export function useGetCurrencies<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrencies<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCurrencies>>,
+          Awaited<ReturnType<typeof currencies>>,
           TError,
-          Awaited<ReturnType<typeof getCurrencies>>
+          Awaited<ReturnType<typeof currencies>>
         >,
         "initialData"
       >;
@@ -108,17 +108,17 @@ export function useGetCurrencies<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCurrencies<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrencies<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCurrencies>>,
+          Awaited<ReturnType<typeof currencies>>,
           TError,
-          Awaited<ReturnType<typeof getCurrencies>>
+          Awaited<ReturnType<typeof currencies>>
         >,
         "initialData"
       >;
@@ -126,12 +126,12 @@ export function useGetCurrencies<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCurrencies<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrencies<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -140,17 +140,17 @@ export function useGetCurrencies<
  * @summary List supported currencies
  */
 
-export function useGetCurrencies<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrencies<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCurrenciesQueryOptions(options);
+  const queryOptions = getCurrenciesQueryOptions(options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -159,66 +159,56 @@ export function useGetCurrencies<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetCurrenciesSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export const getCurrenciesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>
-  >;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetCurrenciesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getCurrenciesQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCurrencies>>> = ({ signal }) =>
-    getCurrencies({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof currencies>>> = ({ signal }) =>
+    currencies({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getCurrencies>>,
+    Awaited<ReturnType<typeof currencies>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetCurrenciesSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCurrencies>>
->;
-export type GetCurrenciesSuspenseQueryError = ErrorType<ProblemDetails>;
+export type CurrenciesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof currencies>>>;
+export type CurrenciesSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetCurrenciesSuspense<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrenciesSuspense<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCurrenciesSuspense<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrenciesSuspense<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCurrenciesSuspense<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrenciesSuspense<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -227,19 +217,17 @@ export function useGetCurrenciesSuspense<
  * @summary List supported currencies
  */
 
-export function useGetCurrenciesSuspense<
-  TData = Awaited<ReturnType<typeof getCurrencies>>,
+export function useCurrenciesSuspense<
+  TData = Awaited<ReturnType<typeof currencies>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCurrencies>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCurrenciesSuspenseQueryOptions(options);
+  const queryOptions = getCurrenciesSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -249,7 +237,7 @@ export function useGetCurrenciesSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetExchangeRateUrl = (params: GetExchangeRateParams) => {
+export const getExchangeRateUrl = (params: ExchangeRateParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -269,59 +257,59 @@ export const getGetExchangeRateUrl = (params: GetExchangeRateParams) => {
  * Returns how many units of the target currency one unit of the source currency buys, using the newest reference rate on or before the date. Weekends and holidays fall back to the previous business day.
  * @summary Look up an exchange rate
  */
-export const getExchangeRate = async (
-  params: GetExchangeRateParams,
+export const exchangeRate = async (
+  params: ExchangeRateParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<ExchangeRateResponse> => {
-  return customFetch<ExchangeRateResponse>(getGetExchangeRateUrl(params), {
+  return customFetch<ExchangeRateResponse>(getExchangeRateUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetExchangeRateQueryKey = (params?: GetExchangeRateParams) => {
+export const getExchangeRateQueryKey = (params?: ExchangeRateParams) => {
   return [`/api/exchange-rates`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetExchangeRateQueryOptions = <
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export const getExchangeRateQueryOptions = <
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetExchangeRateQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getExchangeRateQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getExchangeRate>>> = ({ signal }) =>
-    getExchangeRate(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exchangeRate>>> = ({ signal }) =>
+    exchangeRate(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getExchangeRate>>,
+    Awaited<ReturnType<typeof exchangeRate>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetExchangeRateQueryResult = NonNullable<Awaited<ReturnType<typeof getExchangeRate>>>;
-export type GetExchangeRateQueryError = ErrorType<ProblemDetails>;
+export type ExchangeRateQueryResult = NonNullable<Awaited<ReturnType<typeof exchangeRate>>>;
+export type ExchangeRateQueryError = ErrorType<ProblemDetails>;
 
-export function useGetExchangeRate<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRate<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getExchangeRate>>,
+          Awaited<ReturnType<typeof exchangeRate>>,
           TError,
-          Awaited<ReturnType<typeof getExchangeRate>>
+          Awaited<ReturnType<typeof exchangeRate>>
         >,
         "initialData"
       >;
@@ -329,18 +317,18 @@ export function useGetExchangeRate<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetExchangeRate<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRate<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getExchangeRate>>,
+          Awaited<ReturnType<typeof exchangeRate>>,
           TError,
-          Awaited<ReturnType<typeof getExchangeRate>>
+          Awaited<ReturnType<typeof exchangeRate>>
         >,
         "initialData"
       >;
@@ -348,13 +336,13 @@ export function useGetExchangeRate<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetExchangeRate<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRate<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -363,18 +351,18 @@ export function useGetExchangeRate<
  * @summary Look up an exchange rate
  */
 
-export function useGetExchangeRate<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRate<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetExchangeRateQueryOptions(params, options);
+  const queryOptions = getExchangeRateQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -383,71 +371,69 @@ export function useGetExchangeRate<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetExchangeRateSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export const getExchangeRateSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetExchangeRateQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getExchangeRateQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getExchangeRate>>> = ({ signal }) =>
-    getExchangeRate(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exchangeRate>>> = ({ signal }) =>
+    exchangeRate(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getExchangeRate>>,
+    Awaited<ReturnType<typeof exchangeRate>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetExchangeRateSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getExchangeRate>>
->;
-export type GetExchangeRateSuspenseQueryError = ErrorType<ProblemDetails>;
+export type ExchangeRateSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof exchangeRate>>>;
+export type ExchangeRateSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetExchangeRateSuspense<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRateSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetExchangeRateSuspense<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRateSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetExchangeRateSuspense<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRateSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -457,20 +443,20 @@ export function useGetExchangeRateSuspense<
  * @summary Look up an exchange rate
  */
 
-export function useGetExchangeRateSuspense<
-  TData = Awaited<ReturnType<typeof getExchangeRate>>,
+export function useExchangeRateSuspense<
+  TData = Awaited<ReturnType<typeof exchangeRate>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetExchangeRateParams,
+  params: ExchangeRateParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getExchangeRate>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetExchangeRateSuspenseQueryOptions(params, options);
+  const queryOptions = getExchangeRateSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

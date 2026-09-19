@@ -43,7 +43,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             var blocked = await Client.GetAsync("/api/budgets");
             Assert.Equal(HttpStatusCode.NotFound, blocked.StatusCode);
             var problem = await blocked.Content.ReadFromJsonAsync<JsonElement>();
-            Assert.Equal("feature_disabled", problem.GetProperty("code").GetString());
+            Assert.Equal("feature.disabled", problem.GetProperty("code").GetString());
 
             var untouched = await Client.GetAsync("/api/goals");
             Assert.Equal(HttpStatusCode.OK, untouched.StatusCode);

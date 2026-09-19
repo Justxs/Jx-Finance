@@ -30,7 +30,7 @@ public sealed class CurrencyService(IExchangeRateService rates, IInstanceSetting
         if (table.Rate(request.From, request.To) is not { } rate || table.AsOf is not { } asOf)
         {
             return Result<ExchangeRateResponse>.Failure(
-                ErrorCodes.NotFound,
+                ErrorCodes.ResourceNotFound,
                 $"No exchange rate is available for {request.From.ToCode()} to {request.To.ToCode()}.");
         }
 

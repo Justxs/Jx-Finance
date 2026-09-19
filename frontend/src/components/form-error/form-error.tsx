@@ -1,4 +1,4 @@
-import { isApiError } from "@/api/client";
+import { serverErrorText, unplacedServerErrors } from "@/lib/form-server-errors";
 import { errorMessage } from "@/lib/query-client";
 import { cn } from "@/lib/utils";
 
@@ -7,18 +7,20 @@ interface Props {
   className?: string;
 }
 
-function fieldReasons(error: unknown) {
-  return isApiError(error) ? (error.errors ?? []).map((detail) => detail.reason) : [];
-}
-
 export function FormError({ error, className }: Readonly<Props>) {
   if (error === null || error === undefined) {
     return null;
   }
 
+  const { placedAny, unplaced } = unplacedServerErrors(error);
+
+  if (placedAny && unplaced.length === 0) {
+    return null;
+  }
+
   const { title, description } = errorMessage(error);
-  const reasons = fieldReasons(error);
-  const listed = reasons.length > 1;
+  const reasons = unplaced.map(serverErrorText);
+  const listed = placedAny || reasons.length > 1;
 
   return (
     <div
