@@ -25,7 +25,8 @@ public static class DependencyInjection
             .Validate(options => IsValidTimeZone(options.TimeZone), "App:TimeZone is not a valid time zone id.")
             .ValidateOnStart();
 
-        services.AddSingleton<IClock, JxFinance.Infrastructure.Time.SystemClock>();
+        services.AddSingleton<IClock, Time.SystemClock>();
+        services.AddSingleton<Backups.BackupStore>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
 

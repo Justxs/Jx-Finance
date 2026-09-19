@@ -1,6 +1,6 @@
-import { Download } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ExportMenu } from "@/components/export-menu";
+import { Button } from "@/components/ui/button";
 
 interface Props {
   exportUrl: string;
@@ -24,14 +24,7 @@ export function TransactionsToolbar({
           {t("transactions.clearFilters")}
         </Button>
       ) : null}
-      <a href={exportUrl} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-        <Download />
-        {t("transactions.exportCsv")}
-      </a>
-      <a href={exportPdfUrl} className={buttonVariants({ variant: "ghost", size: "sm" })}>
-        <Download />
-        {t("transactions.exportPdf")}
-      </a>
+      <ExportMenu csvUrl={exportUrl} pdfUrl={exportPdfUrl} />
     </div>
   );
 }

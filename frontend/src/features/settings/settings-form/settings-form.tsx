@@ -155,7 +155,7 @@ export function SettingsForm({
           void form.handleSubmit();
         }}
         noValidate
-        className="space-y-10"
+        className="space-y-5"
       >
         <section className="section" aria-labelledby="settings-general">
           <h2 id="settings-general" className="section-title">

@@ -85,7 +85,6 @@ export const shortcuts: readonly Shortcut[] = [
   goTo("v", "/investments", "nav.investments", "investments"),
   goTo("r", "/reports", "nav.reports", "reports"),
   goTo("h", "/households", "nav.households", "households"),
-  goTo("i", "/import", "nav.import", "import"),
 ];
 
 export function visibleShortcuts(isFeatureEnabled: (feature: ShortcutFeature) => boolean) {

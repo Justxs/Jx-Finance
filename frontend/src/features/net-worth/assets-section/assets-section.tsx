@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
@@ -10,12 +9,11 @@ import { AssetForm } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const assets = useAssetsSuspense();
 
   const deleteMutation = useDeleteAsset({
-    mutation: optimisticRemoval<AssetResponse>(queryClient, getAssetsQueryKey()),
+    mutation: optimisticRemoval<AssetResponse>(getAssetsQueryKey()),
   });
   const assetList = useDeferredValue(assets.data) ?? [];
 

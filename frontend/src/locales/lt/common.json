@@ -85,7 +85,9 @@
     "monthlyTrend": "Pajamos ir išlaidos",
     "other": "Kita",
     "noSpending": "Šį mėnesį išlaidų nėra.",
-    "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas"
+    "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas",
+    "keptShare": "Liko {{percent}} šio mėnesio pajamų",
+    "overspent": "Šį mėnesį išleista daugiau nei gauta"
   },
   "accounts": {
     "title": "Sąskaitos",
@@ -181,8 +183,6 @@
     "allAccounts": "Visos sąskaitos",
     "allCategories": "Visos kategorijos",
     "clearFilters": "Išjungti filtrus",
-    "exportCsv": "Eksportuoti CSV",
-    "exportPdf": "Eksportuoti PDF",
     "split": "Skaidyta",
     "splitCategories_one": "{{count}} kategorija",
     "splitCategories_few": "{{count}} kategorijos",
@@ -232,6 +232,50 @@
   },
   "theme": {
     "toggle": "Perjungti temą"
+  },
+  "backup": {
+    "title": "Atsarginės kopijos",
+    "description": "Atsarginė kopija yra vienas failas su viskuo, kas yra šioje diegtyje: naudotojais, nustatymais ir kiekvieno naudotojo knygomis. Kopijos laikomos serveryje; retkarčiais atsisiųskite kopiją, nes šalia duomenų bazės laikoma kopija prarandama kartu su ja. Faile yra slaptažodžių maišos, tad elkitės su juo kaip su paslaptimi.",
+    "last": "Paskutinė kopija",
+    "never": "Dar nepadaryta nė viena kopija.",
+    "create": "Daryti kopiją",
+    "created": "Kopija padaryta.",
+    "note": "Pastaba",
+    "notePlaceholder": "Kodėl daroma ši kopija (neprivaloma)",
+    "date": "Padaryta",
+    "size": "Dydis",
+    "rows": "Eilutės",
+    "uploadedTag": "Įkelta",
+    "otherVersionTag": "Kita versija",
+    "otherVersionHint": "Padaryta kitos programos versijos. Ją galima atsisiųsti, bet ne atkurti čia.",
+    "empty": "Kopijų dar nėra. Pirmąją padarykite mygtuku „Daryti kopiją“.",
+    "download": "Atsisiųsti",
+    "editNote": "Keisti pastabą",
+    "noteSaved": "Pastaba išsaugota.",
+    "delete": "Ištrinti kopiją",
+    "deleted": "Kopija ištrinta.",
+    "restoreAction": "Atkurti",
+    "uploadTitle": "Pridėti kopijos failą",
+    "uploadHint": "Įkelkite anksčiau atsisiųstą kopiją iš šios ar kitos diegties. Ji tik pridedama prie sąrašo; niekas neatkuriama, kol nepasirenkate „Atkurti“.",
+    "file": "Kopijos failas",
+    "chooseFile": "Pasirinkite .json.gz kopijos failą",
+    "fileRequired": "Pirmiausia pasirinkite kopijos failą.",
+    "fileEmpty": "Failas tuščias.",
+    "fileTooLarge": "Failas didesnis nei 100 MB.",
+    "upload": "Įkelti",
+    "uploaded": "Kopija pridėta prie sąrašo.",
+    "confirmTitle": "Pakeisti visus duomenis šia kopija?",
+    "confirmDescription": "Viskas šioje diegtyje, visų naudotojų, ištrinama ir pakeičiama kopijos turiniu. Šio veiksmo atšaukti negalima. Visi atjungiami, o jūs prisijungiate iš naujo kopijoje esančiu slaptažodžiu. Serveryje esančios kopijos išlieka.",
+    "confirmLabel": "Patvirtinkite įrašydami {{word}}",
+    "confirmWord": "ATKURTI",
+    "confirmAction": "Pakeisti visus duomenis",
+    "restored": "Atkurta {{date}} kopija. Prisijunkite iš naujo.",
+    "bytes": {
+      "b": "{{value}} B",
+      "kb": "{{value}} KB",
+      "mb": "{{value}} MB",
+      "gb": "{{value}} GB"
+    }
   },
   "appearance": {
     "title": "Išvaizda",
@@ -799,8 +843,6 @@
   },
   "reports": {
     "title": "Ataskaitos",
-    "exportCsv": "Operacijos CSV",
-    "exportPdf": "Operacijos PDF",
     "range": "Laikotarpis",
     "presets": {
       "thisMonth": "Šis mėnuo",
@@ -838,7 +880,6 @@
     "matchHelp": "Importuodami kitą sąskaitą, susiekite tą patį pervedimą, kad jis nebūtų įskaitytas du kartus.",
     "selectRow": "Pasirinkti: {{row}}",
     "flags": "Būsena",
-    "pageTitle": "CSV importas",
     "pageDescription": "Įkelkite Swedbank išrašą, peržiūrėkite eilutes ir patvirtinkite, kas pateks į apskaitą.",
     "fileSection": "Išrašo failas",
     "reviewSection": "Eilučių peržiūra",
@@ -850,7 +891,6 @@
     "errorFileSize": "Failas turi būti netuščias CSV, ne didesnis nei 5 MB.",
     "errorGeneric": "Nepavyko įkelti peržiūros. Bandykite dar kartą.",
     "errorFix": "Eksportuokite sąskaitos išrašą iš Swedbank CSV formatu, sumos eurais, ir įkelkite jo nekeisdami. Peržiūra tikrina stulpelių tvarką, valiutą, debeto ir kredito kryptį, datas, sumas ir nuorodas.",
-    "noAccountsTitle": "Sąskaitų dar nėra",
     "noAccounts": "Importui reikia sąskaitos, kurioje bus įrašomos eilutės.",
     "goToAccounts": "Pridėkite ją puslapyje „Sąskaitos“",
     "allDuplicates": "Visos šio failo eilutės jau importuotos į šią sąskaitą. Naujų įrašų nėra.",
@@ -888,7 +928,17 @@
     "resultSkipped_few": "Praleisti {{count}} dublikatai.",
     "resultSkipped_many": "Praleista {{count}} dublikato.",
     "resultSkipped_other": "Praleista {{count}} dublikatų.",
-    "resultLink": "Peržiūrėti operacijose"
+    "resultLink": "Peržiūrėti operacijose",
+    "open": "Importuoti banko išrašą",
+    "sectionTitle": "Duomenų importas",
+    "sectionDescription": "Įkelkite operacijas iš banko išrašo failo. Kiekviena eilutė peržiūrima prieš patenkant į knygą.",
+    "dialogTitle": "Importuoti banko išrašą",
+    "dialogProviderTitle": "Importas iš {{provider}}",
+    "chooseProvider": "Pasirinkite, iš kur yra išrašas.",
+    "allProviders": "Visi teikėjai",
+    "providers": {
+      "swedbankFormat": "EUR sąskaitos išrašas, CSV"
+    }
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
@@ -933,6 +983,10 @@
   "serverErrors": {
     "access": {
       "forbidden": "Neturite teisės atlikti šio veiksmo."
+    },
+    "backup": {
+      "invalidFile": "Failas nėra tinkama atsarginė kopija. Niekas nepakeista.",
+      "schemaMismatch": "Kopija sukurta kitos programos versijos. Atkurkite ją ta versija, kuri ją sukūrė, tada atnaujinkite."
     },
     "broker": {
       "rejected": "Interactive Brokers atmetė užklausą: {{reason}}",
@@ -1046,5 +1100,11 @@
       "mustBeEmpty": "Palikite tuščią.",
       "mustDiffer": "Pasirinkite kitą reikšmę."
     }
+  },
+  "export": {
+    "button": "Eksportuoti",
+    "chooseFormat": "Pasirinkite formatą",
+    "csvHint": "Eilutės skaičiuoklei",
+    "pdfHint": "Spausdinamas išrašas"
   }
 }

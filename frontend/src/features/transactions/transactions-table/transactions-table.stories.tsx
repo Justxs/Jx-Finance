@@ -44,7 +44,7 @@ function TransactionsTableHarness({
   });
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="p-6 lg:p-10">
       <TransactionsTable
         data={data}
         columns={columns}

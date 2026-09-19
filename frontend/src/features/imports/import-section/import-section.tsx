@@ -125,7 +125,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <section className="section space-y-4">
         <ImportUploadForm
           key={uploadKey}

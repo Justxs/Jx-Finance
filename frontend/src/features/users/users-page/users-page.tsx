@@ -37,7 +37,7 @@ export function UsersPage() {
   });
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("users.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -49,17 +49,19 @@ export function UsersPage() {
         <CreateUserForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
 
-      <UsersTable
-        users={users.data ?? []}
-        stale={stale}
-        currentUserId={me.data?.id}
-        onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
-        rolePendingId={roleMutation.isPending ? (roleMutation.variables?.id ?? null) : null}
-        onDeactivate={(id) => deactivateMutation.mutate({ id })}
-        deactivatePendingId={
-          deactivateMutation.isPending ? (deactivateMutation.variables?.id ?? null) : null
-        }
-      />
+      <div className="panel">
+        <UsersTable
+          users={users.data ?? []}
+          stale={stale}
+          currentUserId={me.data?.id}
+          onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
+          rolePendingId={roleMutation.isPending ? (roleMutation.variables?.id ?? null) : null}
+          onDeactivate={(id) => deactivateMutation.mutate({ id })}
+          deactivatePendingId={
+            deactivateMutation.isPending ? (deactivateMutation.variables?.id ?? null) : null
+          }
+        />
+      </div>
     </div>
   );
 }

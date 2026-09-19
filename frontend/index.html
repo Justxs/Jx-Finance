@@ -13,16 +13,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Jx Finance, a private household ledger." />
     <title>Jx Finance</title>
-    <link rel="stylesheet" href="/splash.css" />
     <link rel="preload" href="/brand/mark.svg" as="image" type="image/svg+xml" />
     <script src="/theme-init.js"></script>
   </head>
 
   <body>
     <div id="root">
-      <div class="splash" role="status" aria-label="Loading">
-        <div class="splash-mark"></div>
-        <div class="splash-rule"></div>
+      <div
+        class="fixed inset-0 z-50 grid place-items-center bg-background"
+        role="status"
+        aria-label="Loading"
+      >
+        <div class="relative grid size-32 place-items-center">
+          <div class="absolute inset-0 rounded-full border-2 border-border"></div>
+          <div
+            class="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-primary motion-reduce:animate-none"
+          ></div>
+          <div
+            class="aspect-[375/271] w-16 bg-primary mask-[url(/brand/mark.svg)] mask-contain mask-center mask-no-repeat"
+          ></div>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.tsx"></script>

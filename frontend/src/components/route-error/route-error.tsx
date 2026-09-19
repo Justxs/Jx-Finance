@@ -43,7 +43,7 @@ export function RouteError({ title, onRetry }: Readonly<Props>) {
 
   if (title) {
     return (
-      <div className="space-y-10">
+      <div className="space-y-5">
         <PageHeader title={title} />
         {message}
       </div>

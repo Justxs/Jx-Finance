@@ -82,6 +82,7 @@ export {
   importPreviewAllDuplicates,
   importFormatProblem,
 } from "./imports";
+export { backups, backupRestored, backupSchemaProblem, backupInvalidFileProblem } from "./backups";
 export {
   twoFactorSetup,
   twoFactorRecoveryCodes,

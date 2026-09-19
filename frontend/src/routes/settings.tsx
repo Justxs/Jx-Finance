@@ -1,5 +1,5 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { getAccountsSuspenseQueryOptions } from "@/api/generated";
+import { getAccountsSuspenseQueryOptions, getBackupsSuspenseQueryOptions } from "@/api/generated";
 import { SettingsPage } from "@/features/settings/settings-page";
 import { settingsQueryOptions } from "@/hooks/use-settings";
 import { checkIsAdmin } from "@/lib/auth-gate";
@@ -14,6 +14,7 @@ export const Route = createFileRoute("/settings")({
   loader: ({ context: { queryClient } }) => {
     warm(queryClient, settingsQueryOptions());
     warm(queryClient, getAccountsSuspenseQueryOptions());
+    warm(queryClient, getBackupsSuspenseQueryOptions());
   },
   component: SettingsPage,
 });

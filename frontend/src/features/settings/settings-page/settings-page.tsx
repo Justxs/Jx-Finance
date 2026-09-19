@@ -14,8 +14,10 @@ import { PalettePicker } from "@/components/palette-picker";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ImportDataSection } from "@/features/imports/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
+import { BackupSection } from "../backup-section";
 import { SettingsForm } from "../settings-form";
 
 function SettingsContent() {
@@ -99,11 +101,13 @@ export function SettingsPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("settings.title")} description={t("settings.description")} />
       <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
         <SettingsContent />
       </QueryBoundary>
+      <ImportDataSection />
+      <BackupSection />
       <PalettePicker />
       <FontPicker />
     </div>

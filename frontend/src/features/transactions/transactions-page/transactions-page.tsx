@@ -1,6 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { FileUp, Plus } from "lucide-react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -22,7 +21,7 @@ import type {
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
@@ -54,17 +53,16 @@ interface SelectionState {
 
 export function TransactionsPage() {
   const { t } = useTranslation();
-  const { defaultPageSize: pageSize, features } = useSettingsSuspense();
+  const { defaultPageSize: pageSize } = useSettingsSuspense();
   const money = useMoney();
   const reportingCurrency = useReportingCurrency();
   const formatDate = useIsoDate();
-  const queryClient = useQueryClient();
 
   const { new: createOpen = false, ...view } = useSearch({ from: "/transactions" });
   const viewKey = JSON.stringify(view);
   const [shown, stale] = useDeferredParams(view);
 
-  const { page, accountId } = shown;
+  const { page } = shown;
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -133,14 +131,12 @@ export function TransactionsPage() {
   }
 
   const optimisticCreate = optimisticUpdate({
-    queryClient,
     queryKey: listKey,
     cancelKey: getTransactionsQueryKey(),
     apply: withOptimisticTransaction,
   });
 
   const optimisticDelete = optimisticPagedRemoval<PagedResponseOfTransactionResponse>(
-    queryClient,
     listKey,
     getTransactionsQueryKey(),
   );
@@ -251,16 +247,6 @@ export function TransactionsPage() {
           exportUrl={buildExportUrl("/api/transactions/export", filterParams)}
           exportPdfUrl={buildExportUrl("/api/transactions/export/pdf", filterParams)}
         />
-        {features.import ? (
-          <Link
-            to="/import"
-            search={{ accountId }}
-            className={buttonVariants({ variant: "ghost", size: "sm" })}
-          >
-            <FileUp />
-            {t("nav.import")}
-          </Link>
-        ) : null}
         <Button onClick={() => setCreateOpen(true)} disabled={accountList.length === 0}>
           <Plus />
           {t("transactions.add")}
@@ -287,7 +273,7 @@ export function TransactionsPage() {
         onUpdate={handleUpdate}
       />
 
-      <section className="min-w-0 space-y-2">
+      <section className="panel space-y-2">
         {selectedItems.length > 0 ? (
           <SelectionToolbar
             selected={selectedItems}

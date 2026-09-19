@@ -40,7 +40,7 @@ export const Open: Story = {
   },
   play: async () => {
     const dialog = await within(document.body).findByRole("dialog");
-    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(15);
+    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(14);
   },
 };
 

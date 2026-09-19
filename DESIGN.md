@@ -160,10 +160,10 @@ Controls and overlays use 6px corners. Tags use 2px. Meters and chart bars are s
 ## Components
 
 ### Sections
-`<section className="section">` has no rule of its own; whitespace and the `h2.section-title` (sans 600, 1.125rem) open it. Lists inside use `ul.rows` (hairline dividers between rows, none above the first or below the last). On the dashboard, `DashboardSection` adds the title row with an optional "go to page" link. Do not wrap page content in `.card`.
+`<section className="section">` is a tonal panel: 6px corners, `muted` at 50% in light and `card` in dark, 20 to 24px padding, no border and no shadow. `.panel` is the same surface for blocks without a section title (summary stats, a standalone table or list). Panels never nest: a panel inside a panel or a dialog drops its fill and padding. Pages stack panels 20px apart and use the full width beside the sidebar. The `h2.section-title` (sans 600, 1.125rem) opens a section. Lists inside use `ul.rows` (hairline dividers between rows, none above the first or below the last). On the dashboard, `DashboardSection` adds the title row with an optional "go to page" link. Do not wrap page content in `.card`.
 
 ### Summary stats
-`SummaryStats` renders one lead figure with a double rule and the remaining figures as a plain definition list with no rules. Mark the lead with `lead: true`.
+`SummaryStats` renders one lead figure in the display serif, with no rule under it, and the remaining figures as a plain definition list with no rules. Mark the lead with `lead: true`.
 
 ### Tables
 No surrounding box and no header fill. Header cells are `text-xs` medium muted with an ink bottom rule; body rows are hairline-separated. Cells use `px-3` and the table is pulled out by `-mx-3` so text aligns with the page edge while hover fills have breathing room. Dates and amounts never wrap. Wide tables use `table-fixed` with explicit widths for every column except the description, which takes the remaining space; category and account names truncate to one line with the full text in `title`, so row actions are never pushed out of view.
@@ -195,7 +195,7 @@ Dialog scrims are flat (`bg-black/30`, no blur). Dialogs use the 6px control rad
 
 A section keeps its rule and title while its content loads or fails: the `QueryBoundary` sits inside the `section`, below the `h2`. Pass `errorSubject` (normally the section title) so the message names what failed ("Recent transactions could not be loaded."). When a whole page fails, the root boundary renders `RouteError` with the page title still in place.
 
-The first paint is the splash: the bird over a double rule that fills and empties, served from `index.html` and `public/splash.css` and repeated by `Splash` as the root pending component, so no partial layout flashes before the session check finishes. `RoutePending` mirrors a page (title, stats, rows). Loading placeholders follow the ledger: `RowsSkeleton` for lists and tables (hairline-ruled rows of short bars), `StatsSkeleton` for `SummaryStats`. A plain `Skeleton` block is only for a chart plot. A zero amount is neutral ink with no sign, and a chart with nothing to plot is replaced by one muted sentence.
+The first paint is the splash: the bird centered inside a thin hairline ring with a navy arc circling it, served from `index.html` and `public/splash.css` and repeated by `Splash` as the root pending component, so no partial layout flashes before the session check finishes. `RoutePending` mirrors a page (title, stats, rows). Loading placeholders follow the ledger: `RowsSkeleton` for lists and tables (hairline-ruled rows of short bars), `StatsSkeleton` for `SummaryStats`. A plain `Skeleton` block is only for a chart plot. A zero amount is neutral ink with no sign, and a chart with nothing to plot is replaced by one muted sentence.
 
 A failed form submission stays on screen: `FormError` (`components/form-error`) renders a `role="alert"` block in `text-expense` under a 1px expense rule, above the form footer, listing each server reason when there are several. The mutation is marked `meta: { silent: true }` so it does not also toast. Error toasts stay for 12 seconds.
 
@@ -216,8 +216,11 @@ Sidebar links are muted text; the current page gets a paper fill, a hairline bor
 - **Do** keep row actions as ghost icon buttons with `aria-label` and `title`.
 
 ### Don't:
-- **Don't** put page content in a bordered white card, and never nest boxes.
+- **Don't** give panels a border or shadow, and never nest them.
 - **Don't** add circular or rounded-square icon tiles in rows.
 - **Don't** use `rounded-full` on tags or meters.
 - **Don't** color rows, bars or categories for variety.
 - **Don't** use serif outside titles and lead figures.
+
+### Export and import
+Exports sit behind one ghost "Export" button (`ExportMenu`); its popover lists the formats, each with a one-line hint. Bank statement import has no page or navigation entry: an "Import data" section on Settings and Profile opens `ImportDialog`, which first lists the supported providers and then runs upload and review in a wide dialog.

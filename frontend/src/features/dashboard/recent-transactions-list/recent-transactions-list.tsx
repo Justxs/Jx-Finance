@@ -106,11 +106,12 @@ function RecentRows() {
   );
 }
 
-export function RecentTransactionsList() {
+export function RecentTransactionsList({ className }: Readonly<{ className?: string }>) {
   const { t } = useTranslation();
 
   return (
     <DashboardSection
+      className={className}
       title={t("dashboard.recent")}
       to="/transactions"
       linkLabel={t("nav.transactions")}

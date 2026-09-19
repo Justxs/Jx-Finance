@@ -4,6 +4,7 @@ import type { CategoryBreakdownItem } from "@/api/generated/model";
 import { Meter } from "@/components/ui/meter";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
+import { CategoryIcon } from "@/lib/category-icons";
 
 const MAX_ROWS = 5;
 
@@ -26,8 +27,11 @@ export function CategoryBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) 
       name: item.categoryName ?? t("transactions.uncategorized"),
       amount: Number(item.amount),
       categoryId: item.categoryId,
+      icon: item.categoryIcon,
     })),
-    ...(restTotal > 0 ? [{ name: t("dashboard.other"), amount: restTotal, categoryId: null }] : []),
+    ...(restTotal > 0
+      ? [{ name: t("dashboard.other"), amount: restTotal, categoryId: null, icon: "shapes" }]
+      : []),
   ];
 
   if (rows.length === 0) {
@@ -42,6 +46,10 @@ export function CategoryBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) 
       {rows.map((row) => (
         <li key={row.categoryId ?? "other"}>
           <div className="flex items-baseline gap-3 text-sm">
+            <CategoryIcon
+              icon={row.icon}
+              className="shrink-0 translate-y-0.5 self-start text-muted-foreground"
+            />
             {row.categoryId ? (
               <Tooltip content={t("dashboard.showTransactions", { category: row.name })}>
                 <Link

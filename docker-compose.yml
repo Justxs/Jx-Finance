@@ -24,12 +24,14 @@ services:
     environment:
       ASPNETCORE_URLS: http://+:8080
       App__DataProtectionDirectory: /keys
+      App__BackupDirectory: /backups
     env_file:
       - .env
     ports:
       - "127.0.0.1:8091:8080"
     volumes:
       - auth_keys:/keys
+      - backups:/backups
     depends_on:
       db:
         condition: service_healthy
@@ -65,3 +67,4 @@ services:
 volumes:
   db_data:
   auth_keys:
+  backups:

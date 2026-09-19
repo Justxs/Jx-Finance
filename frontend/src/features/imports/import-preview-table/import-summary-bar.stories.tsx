@@ -16,7 +16,7 @@ const meta = {
     onApplyCategory: (category) => toast.message(`Apply ${category.name}`),
   },
   render: (args) => (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="p-6 lg:p-10">
       <ImportSummaryBar {...args} />
     </div>
   ),

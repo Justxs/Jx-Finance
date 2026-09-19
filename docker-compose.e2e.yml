@@ -10,6 +10,7 @@ services:
     ports: !reset []
     volumes: !override
       - e2e_auth_keys:/keys
+      - e2e_backups:/backups
 
   frontend:
     ports: !override
@@ -18,3 +19,4 @@ services:
 volumes:
   e2e_db_data:
   e2e_auth_keys:
+  e2e_backups:

@@ -378,8 +378,18 @@
     text-wrap: balance;
   }
 
+  .panel,
   .section {
-    @apply min-w-0;
+    @apply min-w-0 rounded-lg bg-muted/50 p-5 sm:p-6 dark:bg-card;
+  }
+
+  .panel .panel,
+  .panel .section,
+  .section .panel,
+  .section .section,
+  [role="dialog"] .section,
+  [role="dialog"] .panel {
+    @apply rounded-none bg-transparent p-0 dark:bg-transparent;
   }
 
   .section-title {

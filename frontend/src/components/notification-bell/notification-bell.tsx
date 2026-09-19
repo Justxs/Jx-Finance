@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -51,7 +50,6 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const date = useDate();
   const [open, setOpen] = useState(false);
 
-  const queryClient = useQueryClient();
   const unreadKey = getNotificationsQueryKey(unreadParams);
   const notifications = useNotificationsSuspense(unreadParams);
   const unreadList = notifications.data;
@@ -62,11 +60,10 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       : t("notifications.title");
 
   const markReadMutation = useMarkNotificationRead({
-    mutation: optimisticRemoval<NotificationResponse>(queryClient, unreadKey),
+    mutation: optimisticRemoval<NotificationResponse>(unreadKey),
   });
   const markAllReadMutation = useMarkAllNotificationsRead({
     mutation: optimisticUpdate<NotificationResponse[]>({
-      queryClient,
       queryKey: unreadKey,
       apply: noNotifications,
     }),

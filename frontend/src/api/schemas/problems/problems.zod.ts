@@ -38,6 +38,8 @@ export const ProblemDetailsResponse = zod
             code: zod
               .enum([
                 "access.forbidden",
+                "backup.invalidFile",
+                "backup.schemaMismatch",
                 "broker.rejected",
                 "broker.tokenRequired",
                 "broker.unavailable",
@@ -101,6 +103,8 @@ export const ProblemDetailsResponse = zod
     code: zod
       .enum([
         "access.forbidden",
+        "backup.invalidFile",
+        "backup.schemaMismatch",
         "broker.rejected",
         "broker.tokenRequired",
         "broker.unavailable",

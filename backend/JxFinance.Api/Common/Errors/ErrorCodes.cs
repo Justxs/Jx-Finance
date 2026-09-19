@@ -54,6 +54,8 @@ public static class ErrorCodes
     public const string HoldingDependentSales = "holding.dependentSales";
     public const string ImportInvalidFile = "import.invalidFile";
     public const string ImportTransferMismatch = "import.transferMismatch";
+    public const string BackupInvalidFile = "backup.invalidFile";
+    public const string BackupSchemaMismatch = "backup.schemaMismatch";
     public const string BrokerUnavailable = "broker.unavailable";
     public const string BrokerRejected = "broker.rejected";
     public const string BrokerTokenRequired = "broker.tokenRequired";

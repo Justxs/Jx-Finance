@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
@@ -21,7 +20,6 @@ import { RecurringBillRow } from "../recurring-bill-row";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
   const accounts = useAccountsSuspense();
@@ -31,7 +29,7 @@ export function RecurringBillsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteRecurringBill({
-    mutation: optimisticRemoval<RecurringBillResponse>(queryClient, getRecurringBillsQueryKey()),
+    mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
   });
 
   const accountList = accounts.data ?? [];
@@ -45,7 +43,7 @@ export function RecurringBillsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <ul className="rows panel py-2 sm:py-3">
         {billList.map((bill) => (
           <RecurringBillRow
             key={bill.id}
@@ -62,7 +60,7 @@ export function RecurringBillsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("recurringBills.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

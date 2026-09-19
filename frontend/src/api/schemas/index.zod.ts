@@ -1,5 +1,6 @@
 export * from "./accounts/accounts.zod";
 export * from "./auth/auth.zod";
+export * from "./backups/backups.zod";
 export * from "./budgets/budgets.zod";
 export * from "./categories/categories.zod";
 export * from "./conversions/conversions.zod";
