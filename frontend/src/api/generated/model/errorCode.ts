@@ -13,6 +13,8 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 export const ErrorCode = {
   accessforbidden: "access.forbidden",
+  backupinvalidFile: "backup.invalidFile",
+  backupschemaMismatch: "backup.schemaMismatch",
   brokerrejected: "broker.rejected",
   brokertokenRequired: "broker.tokenRequired",
   brokerunavailable: "broker.unavailable",

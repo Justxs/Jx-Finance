@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -31,7 +30,6 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
   const [page, setPage] = useState(1);
@@ -54,7 +52,6 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
 
   const deleteMutation = useDeleteTransfer({
     mutation: optimisticPagedRemoval<PagedResponseOfTransferResponse>(
-      queryClient,
       getTransfersQueryKey(listParams),
       getTransfersQueryKey(),
     ),

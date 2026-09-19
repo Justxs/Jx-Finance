@@ -20,7 +20,7 @@ export function HouseholdsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("households.empty")}</p>;
   } else {
     content = (
-      <div className="space-y-10">
+      <div className="space-y-5">
         {householdList.map((household) => (
           <HouseholdCard key={household.id} household={household} />
         ))}
@@ -29,7 +29,7 @@ export function HouseholdsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("households.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

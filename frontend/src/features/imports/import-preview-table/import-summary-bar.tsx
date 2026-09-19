@@ -40,7 +40,7 @@ export function ImportSummaryBar({
   }
 
   return (
-    <div className="z-10 space-y-3 border-b bg-background py-3 md:sticky md:top-0">
+    <div className="z-10 space-y-3 border-b bg-popover py-3 md:sticky md:top-0">
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <p className="text-sm tabular-nums" role="status">
           <span className="font-semibold">

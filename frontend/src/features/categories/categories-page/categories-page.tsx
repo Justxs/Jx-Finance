@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,7 +15,6 @@ import { CategoryRow } from "../category-row";
 
 export function CategoriesPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
   const categories = useCategoriesSuspense();
@@ -25,7 +23,7 @@ export function CategoriesPage() {
 
   const deleteMutation = useDeleteCategory({
     mutation: {
-      ...optimisticRemoval<CategoryResponse>(queryClient, getCategoriesQueryKey()),
+      ...optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()),
       onSuccess: () => toast.success(t("categories.deleted")),
     },
   });
@@ -38,7 +36,7 @@ export function CategoriesPage() {
   ];
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("categories.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />
@@ -50,7 +48,7 @@ export function CategoriesPage() {
         <AddCategoryForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
 
-      <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         {groups.map((group) => {
           const items = categoryList.filter((c) => c.type === group.type);
 

@@ -161,7 +161,7 @@ function RootLayout() {
         </nav>
         <main
           id="main-content"
-          className="mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10"
+          className="w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14"
         >
           <QueryBoundary
             key={location.pathname}

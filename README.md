@@ -47,7 +47,7 @@ dotnet test --solution backend/JxFinance.slnx -- --coverage --coverage-output-fo
 docker compose up -d --build --wait
 ```
 
-Open http://localhost:8081. Database and API ports bind to loopback. The database lives in `db_data`; authentication keys live in `auth_keys`. Startup applies EF migrations. The app includes no database backup or restore feature.
+Open http://localhost:8081. Database and API ports bind to loopback. The database lives in `db_data`; authentication keys live in `auth_keys`. Startup applies EF migrations. Backups taken from Settings live in the `backups` volume; an administrator can take, download, upload, restore and delete them there, see `docs/7. Architecture notes.md`. Nothing is scheduled and nothing leaves the server on its own, so download a copy now and then.
 
 For private HTTPS, set `SITE_ADDRESS` to your internal hostname and `BIND_ADDRESS` to the server's private interface address in `.env`, then run:
 

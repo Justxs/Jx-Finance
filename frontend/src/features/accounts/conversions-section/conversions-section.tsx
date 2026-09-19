@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -38,7 +37,6 @@ export function ConversionsSection({
   const money = useMoney();
   const formatDate = useIsoDate();
   const rateFormat = useRateFormat();
-  const queryClient = useQueryClient();
   const canConvert = useUsableCurrencies().length >= 2;
 
   const [page, setPage] = useState(1);
@@ -60,7 +58,6 @@ export function ConversionsSection({
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteConversion({
     mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
-      queryClient,
       getConversionsQueryKey(listParams),
       getConversionsQueryKey(),
     ),

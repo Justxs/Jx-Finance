@@ -1,12 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppAt } from "./decorators";
-import {
-  emptyHandlers,
-  errorHandlers,
-  importFormatErrorHandlers,
-  loadingHandlers,
-} from "./handlers";
-import { uploadAndPreview } from "./import-play";
+import { emptyHandlers, errorHandlers, loadingHandlers } from "./handlers";
 
 const meta = {
   title: "Pages/App",
@@ -20,8 +14,6 @@ type Story = StoryObj<typeof meta>;
 export const Dashboard: Story = { args: { path: "/" } };
 
 export const Transactions: Story = { args: { path: "/transactions" } };
-
-export const Import: Story = { args: { path: "/import" } };
 
 export const Accounts: Story = { args: { path: "/accounts" } };
 
@@ -72,24 +64,4 @@ export const TransactionsEmpty: Story = {
 export const TransactionsError: Story = {
   args: { path: "/transactions" },
   parameters: { msw: { handlers: errorHandlers } },
-};
-
-export const ImportReview: Story = {
-  args: { path: "/import" },
-  play: async ({ canvasElement }) => {
-    await uploadAndPreview(canvasElement);
-  },
-};
-
-export const ImportEmpty: Story = {
-  args: { path: "/import" },
-  parameters: { msw: { handlers: emptyHandlers } },
-};
-
-export const ImportError: Story = {
-  args: { path: "/import" },
-  parameters: { msw: { handlers: importFormatErrorHandlers } },
-  play: async ({ canvasElement }) => {
-    await uploadAndPreview(canvasElement);
-  },
 };

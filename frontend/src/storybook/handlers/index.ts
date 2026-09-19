@@ -44,6 +44,7 @@ import {
 } from "@/storybook/fixtures";
 import { accountHandlers } from "./accounts";
 import { authHandlers } from "./auth";
+import { backupHandlers } from "./backups";
 import { budgetHandlers } from "./budgets";
 import { categoryHandlers } from "./categories";
 import { conversionHandlers } from "./conversions";
@@ -71,6 +72,7 @@ export const handlers: RequestHandler[] = [
   ...accountHandlers,
   ...assetHandlers,
   ...authHandlers,
+  ...backupHandlers,
   ...budgetHandlers,
   ...categoryHandlers,
   ...conversionHandlers,

@@ -67,7 +67,7 @@ function InvestmentsOverview({
   }
 
   return (
-    <div className={stale ? "is-stale space-y-10" : "space-y-10"} aria-busy={stale}>
+    <div className={stale ? "is-stale space-y-5" : "space-y-5"} aria-busy={stale}>
       <PortfolioSummary portfolio={portfolio.data} />
       <AllocationSection
         holdings={portfolio.data.holdings}
@@ -100,7 +100,7 @@ export function InvestmentsPage() {
   const noAccounts = accountList.length === 0;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("investments.title")} description={t("investments.description")}>
         <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
           {t("investments.securities.title")}
@@ -139,7 +139,7 @@ export function InvestmentsPage() {
       <QueryBoundary
         errorSubject={t("investments.title")}
         fallback={
-          <div className="space-y-10">
+          <div className="space-y-5">
             <StatsSkeleton />
             <RowsSkeleton rows={6} />
           </div>

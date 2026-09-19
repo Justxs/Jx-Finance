@@ -20,7 +20,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: { accounts },
   render: (args) => (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="p-6 lg:p-10">
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
         <ImportSection {...args} />
       </QueryBoundary>

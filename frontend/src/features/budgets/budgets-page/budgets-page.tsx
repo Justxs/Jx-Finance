@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
@@ -28,7 +27,6 @@ import { CreateBudgetForm } from "../create-budget-form";
 
 export function BudgetsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const money = useMoney();
   const monthLabel = useMonthLabel();
   const today = useTodayDate();
@@ -46,7 +44,7 @@ export function BudgetsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteBudget({
-    mutation: optimisticRemoval<BudgetResponse>(queryClient, getBudgetsQueryKey()),
+    mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey()),
   });
 
   const budgetList = useDeferredValue(budgets.data);
@@ -66,7 +64,7 @@ export function BudgetsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("budgets.empty")}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <ul className="rows panel py-2 sm:py-3">
         {budgetList.map((budget) => {
           const limit = Number(budget.limitAmount);
           const spent = Number(budget.spent);
@@ -148,7 +146,7 @@ export function BudgetsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("budgets.title")} description={month}>
         <Button onClick={() => openForm(null)}>
           <Plus />

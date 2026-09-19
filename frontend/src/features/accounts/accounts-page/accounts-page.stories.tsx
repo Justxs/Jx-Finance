@@ -16,7 +16,7 @@ const meta = {
   component: AccountsPage,
   parameters: { layout: "fullscreen", route: "/accounts" },
   render: () => (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="p-6 lg:p-10">
       <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
         <AccountsPage />
       </QueryBoundary>

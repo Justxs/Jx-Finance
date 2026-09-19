@@ -1,27 +1,30 @@
-import type { QueryClient, QueryKey } from "@tanstack/react-query";
+import type { MutationFunctionContext, QueryKey } from "@tanstack/react-query";
 
 export interface OptimisticContext<TData> {
   previous: TData | undefined;
 }
 
+type ClientContext = Pick<MutationFunctionContext, "client">;
+
 interface OptimisticOptions<TData, TVariables> {
-  queryClient: QueryClient;
   queryKey: QueryKey;
   cancelKey?: QueryKey;
   apply: (previous: TData, variables: TVariables) => TData;
 }
 
 export function optimisticUpdate<TData, TVariables = void>({
-  queryClient,
   queryKey,
   cancelKey = queryKey,
   apply,
 }: OptimisticOptions<TData, TVariables>) {
-  async function onMutate(variables: TVariables): Promise<OptimisticContext<TData>> {
-    await queryClient.cancelQueries({ queryKey: cancelKey });
-    const previous = queryClient.getQueryData<TData>(queryKey);
+  async function onMutate(
+    variables: TVariables,
+    { client }: ClientContext,
+  ): Promise<OptimisticContext<TData>> {
+    await client.cancelQueries({ queryKey: cancelKey });
+    const previous = client.getQueryData<TData>(queryKey);
     if (previous !== undefined) {
-      queryClient.setQueryData<TData>(queryKey, apply(previous, variables));
+      client.setQueryData<TData>(queryKey, apply(previous, variables));
     }
     return { previous };
   }
@@ -29,10 +32,11 @@ export function optimisticUpdate<TData, TVariables = void>({
   function onError(
     _error: unknown,
     _variables: TVariables,
-    context: OptimisticContext<TData> | undefined,
+    onMutateResult: OptimisticContext<TData> | undefined,
+    { client }: ClientContext,
   ) {
-    if (context?.previous !== undefined) {
-      queryClient.setQueryData<TData>(queryKey, context.previous);
+    if (onMutateResult?.previous !== undefined) {
+      client.setQueryData<TData>(queryKey, onMutateResult.previous);
     }
   }
 
@@ -63,20 +67,15 @@ export function withoutPagedItem<TItem extends Identified, TPage extends Paged<T
   return { ...page, items, total: page.total - (page.items.length - items.length) };
 }
 
-export function optimisticRemoval<TItem extends Identified>(
-  queryClient: QueryClient,
-  queryKey: QueryKey,
-) {
-  return optimisticUpdate<TItem[], Identified>({ queryClient, queryKey, apply: withoutItem });
+export function optimisticRemoval<TItem extends Identified>(queryKey: QueryKey) {
+  return optimisticUpdate<TItem[], Identified>({ queryKey, apply: withoutItem });
 }
 
 export function optimisticPagedRemoval<TPage extends Paged<Identified>>(
-  queryClient: QueryClient,
   queryKey: QueryKey,
   cancelKey?: QueryKey,
 ) {
   return optimisticUpdate<TPage, Identified>({
-    queryClient,
     queryKey,
     cancelKey,
     apply: withoutPagedItem,

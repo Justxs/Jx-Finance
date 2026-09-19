@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
@@ -14,7 +13,6 @@ import { GoalRow } from "../goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
   const goals = useGoalsSuspense();
@@ -22,7 +20,7 @@ export function GoalsPage() {
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteGoal({
-    mutation: optimisticRemoval<GoalResponse>(queryClient, getGoalsQueryKey()),
+    mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()),
   });
 
   const goalList = useDeferredValue(goals.data) ?? [];
@@ -34,7 +32,7 @@ export function GoalsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("goals.empty")}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <ul className="rows panel py-2 sm:py-3">
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}
@@ -49,7 +47,7 @@ export function GoalsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("goals.title")}>
         <Button onClick={() => setAddOpen(true)}>
           <Plus />

@@ -6,7 +6,6 @@ const config: StorybookConfig = {
   staticDirs: [
     "./public",
     { from: "../public/favicon.svg", to: "/favicon.svg" },
-    { from: "../public/splash.css", to: "/splash.css" },
     { from: "../public/brand/mark.svg", to: "/brand/mark.svg" },
   ],
   framework: { name: "@storybook/react-vite", options: {} },

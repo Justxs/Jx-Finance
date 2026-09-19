@@ -1,5 +1,5 @@
-import { Link, useSearch } from "@tanstack/react-router";
-import { FileUp, Plus } from "lucide-react";
+import { useSearch } from "@tanstack/react-router";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AccountBalances } from "@/features/dashboard/account-balances";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -57,14 +57,8 @@ export function AccountsPage() {
   const allAccountList = allAccounts.data;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("accounts.title")}>
-        {features.import ? (
-          <Link to="/import" className={buttonVariants({ variant: "outline", size: "sm" })}>
-            <FileUp />
-            {t("nav.import")}
-          </Link>
-        ) : null}
         <Button onClick={() => setCreateOpen(true)}>
           <Plus />
           {t("accounts.add")}
@@ -79,18 +73,20 @@ export function AccountsPage() {
         />
       </Modal>
 
-      <AccountsTable
-        accounts={accountList}
-        stale={stale}
-        editingId={editingId}
-        onEdit={setEditingId}
-        onCancelEdit={() => setEditingId(null)}
-        updatePending={updateMutation.isPending}
-        onUpdate={(id, values) => updateMutation.mutateAsync({ id, data: values })}
-        deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
-        onDelete={(id) => setDeleteTarget(id)}
-        onConvert={features.multiCurrency ? setConvertAccountId : undefined}
-      />
+      <div className="panel">
+        <AccountsTable
+          accounts={accountList}
+          stale={stale}
+          editingId={editingId}
+          onEdit={setEditingId}
+          onCancelEdit={() => setEditingId(null)}
+          updatePending={updateMutation.isPending}
+          onUpdate={(id, values) => updateMutation.mutateAsync({ id, data: values })}
+          deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
+          onDelete={(id) => setDeleteTarget(id)}
+          onConvert={features.multiCurrency ? setConvertAccountId : undefined}
+        />
+      </div>
 
       {accountList.length > 1 ? (
         <section className="section">

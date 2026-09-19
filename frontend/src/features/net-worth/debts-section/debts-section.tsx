@@ -1,4 +1,3 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generated";
@@ -10,13 +9,12 @@ import { DebtForm } from "./debt-form";
 
 export function DebtsSection() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const formatRate = useRatePercent();
   const debts = useDebtsSuspense();
 
   const deleteMutation = useDeleteDebt({
-    mutation: optimisticRemoval<DebtResponse>(queryClient, getDebtsQueryKey()),
+    mutation: optimisticRemoval<DebtResponse>(getDebtsQueryKey()),
   });
   const debtList = useDeferredValue(debts.data);
 

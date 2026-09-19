@@ -32,6 +32,15 @@ const holdings = [
 const rules: readonly Rule[] = [
   {
     after: [
+      api.getCreateBackupMutationKey,
+      api.getUploadBackupMutationKey,
+      api.getUpdateBackupMutationKey,
+      api.getDeleteBackupMutationKey,
+    ],
+    refresh: [api.getBackupsQueryKey],
+  },
+  {
+    after: [
       api.getCreateTransactionMutationKey,
       api.getUpdateTransactionMutationKey,
       api.getDeleteTransactionMutationKey,
@@ -206,6 +215,7 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getSetupMutationKey,
   api.getSetupTwoFactorMutationKey,
   api.getImportPreviewMutationKey,
+  api.getRestoreBackupMutationKey,
 ];
 
 const refreshByMutation = new Map(

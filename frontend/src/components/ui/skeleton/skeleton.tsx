@@ -38,7 +38,7 @@ function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
     <div
       data-slot="stats-skeleton"
       aria-hidden="true"
-      className={cn("split-columns gap-y-6 lg:items-end", className)}
+      className={cn("panel split-columns gap-y-6 lg:items-end", className)}
     >
       <div className="min-w-0 space-y-2">
         <Skeleton className="h-4 w-24 rounded-sm" />

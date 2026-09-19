@@ -1,5 +1,6 @@
 export * from "./accounts/accounts";
 export * from "./auth/auth";
+export * from "./backups/backups";
 export * from "./budgets/budgets";
 export * from "./categories/categories";
 export * from "./conversions/conversions";

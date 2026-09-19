@@ -39,6 +39,7 @@ public sealed class ApiFixture : AppFixture<Program>
         builder.UseSetting("ConnectionStrings:Default", _connectionString);
         builder.UseSetting("App:BackgroundJobs", "false");
         builder.UseSetting("App:DataProtectionDirectory", _keyDirectory);
+        builder.UseSetting("App:BackupDirectory", Path.Combine(_keyDirectory, "backups"));
     }
 
     protected override void ConfigureServices(IServiceCollection services)

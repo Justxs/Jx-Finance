@@ -31,13 +31,13 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   }
 
   return (
-    <div className="split-columns gap-y-6 lg:items-end">
+    <div className="panel split-columns gap-y-6 lg:items-end">
       {lead ? (
         <dl className="min-w-0">
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
           <dd
             className={cn(
-              "figure total-rule mt-1 inline-block max-w-full pb-1.5 text-[2.5rem] leading-[1.1] break-words",
+              "figure mt-1 max-w-full text-[2.5rem] leading-[1.1] break-words",
               lead.tone,
             )}
           >

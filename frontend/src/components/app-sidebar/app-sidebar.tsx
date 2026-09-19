@@ -4,7 +4,6 @@ import {
   CalendarClock,
   ChartCandlestick,
   FileBarChart,
-  FileUp,
   House,
   LayoutDashboard,
   PanelLeftClose,
@@ -50,7 +49,6 @@ function initials(name: string | undefined) {
 const navItems = [
   { to: "/", key: "nav.dashboard", icon: LayoutDashboard, group: "ledger" },
   { to: "/transactions", key: "nav.transactions", icon: ArrowLeftRight, group: "ledger" },
-  { to: "/import", key: "nav.import", icon: FileUp, group: "ledger", feature: "import" },
   { to: "/accounts", key: "nav.accounts", icon: WalletCards, group: "ledger" },
   { to: "/categories", key: "nav.categories", icon: Tags, group: "ledger" },
   { to: "/budgets", key: "nav.budgets", icon: PiggyBank, group: "plan", feature: "budgets" },

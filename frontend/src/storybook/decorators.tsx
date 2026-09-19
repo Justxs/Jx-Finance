@@ -17,7 +17,6 @@ import { pageViewTransition } from "@/lib/page-transition";
 import { createToastingMutationCache } from "@/lib/query-client";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
-import { importSearchSchema } from "@/routes/import";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { reportsSearchSchema } from "@/routes/reports";
 import { transactionsSearchSchema } from "@/routes/transactions";
@@ -27,7 +26,6 @@ const STORY_ROUTES = [
   { path: "/" },
   { path: "/accounts", validateSearch: accountsSearchSchema },
   { path: "/transactions", validateSearch: transactionsSearchSchema },
-  { path: "/import", validateSearch: importSearchSchema },
   { path: "/investments", validateSearch: investmentsSearchSchema },
   { path: "/reports", validateSearch: reportsSearchSchema },
   { path: "/users", validateSearch: usersSearchSchema },

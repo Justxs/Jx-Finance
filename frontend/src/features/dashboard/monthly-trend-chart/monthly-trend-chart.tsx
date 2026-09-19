@@ -15,5 +15,5 @@ export function MonthlyTrendChart() {
     expense: Number(item.expense ?? 0),
   }));
 
-  return <IncomeExpenseChart data={chartData} />;
+  return <IncomeExpenseChart data={chartData} height={300} />;
 }

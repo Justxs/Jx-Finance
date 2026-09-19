@@ -85,7 +85,9 @@
     "monthlyTrend": "Income vs. expenses",
     "other": "Other",
     "noSpending": "No spending recorded this month.",
-    "showTransactions": "Show {{category}} transactions"
+    "showTransactions": "Show {{category}} transactions",
+    "keptShare": "{{percent}} of this month's income kept",
+    "overspent": "Spent more than came in this month"
   },
   "accounts": {
     "title": "Accounts",
@@ -181,8 +183,6 @@
     "allAccounts": "All accounts",
     "allCategories": "All categories",
     "clearFilters": "Clear filters",
-    "exportCsv": "Export CSV",
-    "exportPdf": "Export PDF",
     "split": "Split",
     "splitCategories_one": "{{count}} category",
     "splitCategories_other": "{{count}} categories",
@@ -224,6 +224,50 @@
   },
   "theme": {
     "toggle": "Toggle theme"
+  },
+  "backup": {
+    "title": "Backups",
+    "description": "A backup is one file with everything in this installation: users, settings and the books of every user. Backups are kept on the server; download a copy now and then, because a backup stored next to the database is lost together with it. The file holds password hashes, so treat it as a secret.",
+    "last": "Last backup",
+    "never": "No backup has been taken yet.",
+    "create": "Back up now",
+    "created": "Backup taken.",
+    "note": "Note",
+    "notePlaceholder": "Why this backup was taken (optional)",
+    "date": "Taken",
+    "size": "Size",
+    "rows": "Rows",
+    "uploadedTag": "Uploaded",
+    "otherVersionTag": "Other version",
+    "otherVersionHint": "Taken by another version of the application. It can be downloaded but not restored here.",
+    "empty": "No backups yet. Take the first one with Back up now.",
+    "download": "Download",
+    "editNote": "Edit note",
+    "noteSaved": "Note saved.",
+    "delete": "Delete backup",
+    "deleted": "Backup deleted.",
+    "restoreAction": "Restore",
+    "uploadTitle": "Add a backup file",
+    "uploadHint": "Upload a backup you downloaded earlier, from this or another installation. It is only added to the list; nothing is restored until you choose Restore.",
+    "file": "Backup file",
+    "chooseFile": "Choose a .json.gz backup file",
+    "fileRequired": "Choose a backup file first.",
+    "fileEmpty": "The file is empty.",
+    "fileTooLarge": "The file is larger than 100 MB.",
+    "upload": "Upload",
+    "uploaded": "Backup added to the list.",
+    "confirmTitle": "Replace all data with this backup?",
+    "confirmDescription": "Everything in this installation, for every user, is deleted and replaced with the backup. This cannot be undone. Everyone is signed out, and you sign in again with a password from the backup. The backups on the server are kept.",
+    "confirmLabel": "Type {{word}} to confirm",
+    "confirmWord": "RESTORE",
+    "confirmAction": "Replace all data",
+    "restored": "Backup from {{date}} restored. Sign in again.",
+    "bytes": {
+      "b": "{{value}} B",
+      "kb": "{{value}} KB",
+      "mb": "{{value}} MB",
+      "gb": "{{value}} GB"
+    }
   },
   "appearance": {
     "title": "Appearance",
@@ -771,8 +815,6 @@
   },
   "reports": {
     "title": "Reports",
-    "exportCsv": "Transactions CSV",
-    "exportPdf": "Transactions PDF",
     "range": "Range",
     "presets": {
       "thisMonth": "This month",
@@ -810,7 +852,6 @@
     "matchHelp": "When importing the other account, match the same transfer to avoid counting it twice.",
     "selectRow": "Select: {{row}}",
     "flags": "Status",
-    "pageTitle": "Import CSV",
     "pageDescription": "Upload a Swedbank statement, review the rows, then confirm what enters the ledger.",
     "fileSection": "Statement file",
     "reviewSection": "Review rows",
@@ -822,7 +863,6 @@
     "errorFileSize": "The file must be a non-empty CSV no larger than 5 MB.",
     "errorGeneric": "The preview could not be loaded. Try again.",
     "errorFix": "Export the account statement from Swedbank as CSV with amounts in EUR and upload it unchanged. The preview checks column order, currency, debit and credit direction, dates, amounts and references.",
-    "noAccountsTitle": "No accounts yet",
     "noAccounts": "An import needs an account to record the rows in.",
     "goToAccounts": "Add one in Accounts",
     "allDuplicates": "Every row in this file has already been imported into this account. There is nothing new to add.",
@@ -848,7 +888,17 @@
     "resultImported_other": "Imported {{count}} rows.",
     "resultSkipped_one": "{{count}} duplicate skipped.",
     "resultSkipped_other": "{{count}} duplicates skipped.",
-    "resultLink": "View them in Transactions"
+    "resultLink": "View them in Transactions",
+    "open": "Import bank statement",
+    "sectionTitle": "Import data",
+    "sectionDescription": "Bring transactions in from a bank statement file. Every row is reviewed before it enters the ledger.",
+    "dialogTitle": "Import bank statement",
+    "dialogProviderTitle": "Import from {{provider}}",
+    "chooseProvider": "Choose where the statement comes from.",
+    "allProviders": "All providers",
+    "providers": {
+      "swedbankFormat": "EUR account statement, CSV"
+    }
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -893,6 +943,10 @@
   "serverErrors": {
     "access": {
       "forbidden": "You do not have permission to do this."
+    },
+    "backup": {
+      "invalidFile": "The file is not a usable backup. Nothing was changed.",
+      "schemaMismatch": "The backup comes from another version of the application. Restore it with the version that created it, then upgrade."
     },
     "broker": {
       "rejected": "Interactive Brokers rejected the request: {{reason}}",
@@ -1006,5 +1060,11 @@
       "mustBeEmpty": "Leave this empty.",
       "mustDiffer": "Choose a different value."
     }
+  },
+  "export": {
+    "button": "Export",
+    "chooseFormat": "Choose a format",
+    "csvHint": "Rows for a spreadsheet",
+    "pdfHint": "A printable statement"
   }
 }

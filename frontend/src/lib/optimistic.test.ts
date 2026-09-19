@@ -25,9 +25,9 @@ function prepend(previous: Row[], added: Row) {
 test("the change is applied to the cached list before the request settles", async () => {
   const queryClient = new QueryClient();
   queryClient.setQueryData(listKey, rows);
-  const optimistic = optimisticUpdate({ queryClient, queryKey: listKey, apply: prepend });
+  const optimistic = optimisticUpdate({ queryKey: listKey, apply: prepend });
 
-  const context = await optimistic.onMutate({ id: "c", name: "Water" });
+  const context = await optimistic.onMutate({ id: "c", name: "Water" }, { client: queryClient });
 
   expect(queryClient.getQueryData<Row[]>(listKey)?.map((row) => row.id)).toEqual(["c", "a", "b"]);
   expect(context.previous).toBe(rows);
@@ -36,23 +36,23 @@ test("the change is applied to the cached list before the request settles", asyn
 test("a failed request restores the list it replaced", async () => {
   const queryClient = new QueryClient();
   queryClient.setQueryData(listKey, rows);
-  const optimistic = optimisticUpdate({ queryClient, queryKey: listKey, apply: prepend });
+  const optimistic = optimisticUpdate({ queryKey: listKey, apply: prepend });
   const added = { id: "c", name: "Water" };
 
-  const context = await optimistic.onMutate(added);
-  optimistic.onError(new Error("rejected"), added, context);
+  const context = await optimistic.onMutate(added, { client: queryClient });
+  optimistic.onError(new Error("rejected"), added, context, { client: queryClient });
 
   expect(queryClient.getQueryData(listKey)).toEqual(rows);
 });
 
 test("an empty cache is left empty and a failure has nothing to restore", async () => {
   const queryClient = new QueryClient();
-  const optimistic = optimisticUpdate({ queryClient, queryKey: listKey, apply: prepend });
+  const optimistic = optimisticUpdate({ queryKey: listKey, apply: prepend });
   const added = { id: "c", name: "Water" };
 
-  const context = await optimistic.onMutate(added);
-  optimistic.onError(new Error("rejected"), added, context);
-  optimistic.onError(new Error("rejected"), added, undefined);
+  const context = await optimistic.onMutate(added, { client: queryClient });
+  optimistic.onError(new Error("rejected"), added, context, { client: queryClient });
+  optimistic.onError(new Error("rejected"), added, undefined, { client: queryClient });
 
   expect(context.previous).toBeUndefined();
   expect(queryClient.getQueryData(listKey)).toBeUndefined();
@@ -76,13 +76,12 @@ test("only the exact key is rewritten while the wider root is cancelled", async 
   });
   inFlight.catch(() => undefined);
   const optimistic = optimisticUpdate({
-    queryClient,
     queryKey: listKey,
     cancelKey: ["/api/rows"],
     apply: prepend,
   });
 
-  await optimistic.onMutate({ id: "c", name: "Water" });
+  await optimistic.onMutate({ id: "c", name: "Water" }, { client: queryClient });
 
   expect(cancelled).toBe(true);
   expect(queryClient.getQueryData(otherKey)).toBe(rows);
@@ -92,7 +91,7 @@ test("removing a row drops it from a plain list", async () => {
   const queryClient = new QueryClient();
   queryClient.setQueryData(listKey, rows);
 
-  await optimisticRemoval<Row>(queryClient, listKey).onMutate({ id: "a" });
+  await optimisticRemoval<Row>(listKey).onMutate({ id: "a" }, { client: queryClient });
 
   expect(queryClient.getQueryData(listKey)).toEqual([{ id: "b", name: "Power" }]);
 });
@@ -102,7 +101,7 @@ test("removing a row from a page lowers the total by the rows removed", async ()
   const page = { items: rows, page: 1, pageSize: 2, total: 5 };
   queryClient.setQueryData(listKey, page);
 
-  await optimisticPagedRemoval<typeof page>(queryClient, listKey).onMutate({ id: "b" });
+  await optimisticPagedRemoval<typeof page>(listKey).onMutate({ id: "b" }, { client: queryClient });
 
   expect(queryClient.getQueryData(listKey)).toEqual({
     items: [{ id: "a", name: "Rent" }],

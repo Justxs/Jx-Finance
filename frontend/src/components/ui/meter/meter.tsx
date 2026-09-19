@@ -25,7 +25,7 @@ export function Meter({ value, max, tone = "primary", label, className }: Readon
       aria-valuemin={label ? 0 : undefined}
       aria-valuemax={label ? max : undefined}
       aria-valuenow={label ? Math.min(value, max) : undefined}
-      className={cn("h-1 bg-muted", className)}
+      className={cn("h-1.5 bg-border", className)}
     >
       <div
         className={cn("h-full transition-[width] duration-300 ease-out-expo", tones[tone])}

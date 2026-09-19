@@ -33,6 +33,7 @@ node_modules/
 **/test-results/
 # Exported OpenAPI documents (regenerated on demand / in CI)
 backend/**/wwwroot/openapi/
+backend/JxFinance.Api/backups/
 
 # ---- Logs ----
 *.log

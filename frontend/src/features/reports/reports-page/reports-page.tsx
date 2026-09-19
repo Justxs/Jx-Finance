@@ -1,11 +1,10 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Download } from "lucide-react";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useReportSummarySuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
+import { ExportMenu } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
-import { buttonVariants } from "@/components/ui/button";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
@@ -33,28 +32,18 @@ export function ReportsPage() {
   }
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("reports.title")}>
-        <a
-          href={buildExportUrl("/api/transactions/export", { dateFrom, dateTo })}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          <Download />
-          {t("reports.exportCsv")}
-        </a>
-        <a
-          href={buildExportUrl("/api/transactions/export/pdf", { dateFrom, dateTo })}
-          className={buttonVariants({ variant: "ghost", size: "sm" })}
-        >
-          <Download />
-          {t("reports.exportPdf")}
-        </a>
+        <ExportMenu
+          csvUrl={buildExportUrl("/api/transactions/export", { dateFrom, dateTo })}
+          pdfUrl={buildExportUrl("/api/transactions/export/pdf", { dateFrom, dateTo })}
+        />
       </PageHeader>
 
       <ReportFilters dateFrom={dateFrom} dateTo={dateTo} onChange={handleRangeChange} />
 
       <ViewTransition name="report-results" enter="none" exit="none">
-        <div className={`space-y-10 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+        <div className={`space-y-5 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
           <ReportStats
             totalIncome={summary.data.totalIncome}
             totalExpense={summary.data.totalExpense}
@@ -65,7 +54,7 @@ export function ReportsPage() {
             <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
           )}
 
-          <div className="split-columns gap-y-10">
+          <div className="split-columns gap-y-5">
             <section className="section">
               <h2 className="section-title mb-4">{t("reports.expenseByCategory")}</h2>
               <CategoryBreakdown

@@ -19,12 +19,13 @@ import {
 import { useAxisMoney, useIsoDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
 
+const SHORT_SPAN_MS = 92 * 24 * 60 * 60 * 1000;
+
 export function NetWorthCompositionChart() {
   const { t, i18n } = useTranslation();
   const axisMoney = useAxisMoney();
   const formatDate = useIsoDate();
   const history = useNetWorthHistorySuspense();
-  const tickFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", year: "2-digit" });
 
   const items = history.data?.items ?? [];
   if (items.length < 2) {
@@ -43,6 +44,14 @@ export function NetWorthCompositionChart() {
     assets: Number(item.assets ?? 0),
     debts: Number(item.debts ?? 0),
   }));
+
+  const first = parseIso(items[0]?.date ?? "");
+  const last = parseIso(items.at(-1)?.date ?? "");
+  const shortSpan = first && last ? last.getTime() - first.getTime() < SHORT_SPAN_MS : false;
+  const tickFormat = new Intl.DateTimeFormat(
+    i18n.language,
+    shortSpan ? { day: "numeric", month: "short" } : { month: "short", year: "2-digit" },
+  );
 
   function formatTick(value: string) {
     const parsed = parseIso(value);

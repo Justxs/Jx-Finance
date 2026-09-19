@@ -12,14 +12,14 @@ export function NetWorthPage() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-5">
       <PageHeader title={t("netWorth.title")} />
 
       <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
         <NetWorthStats />
       </QueryBoundary>
 
-      <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <section className="section">
           <h2 className="section-title mb-4">{t("netWorth.trend")}</h2>
           <QueryBoundary
@@ -40,7 +40,7 @@ export function NetWorthPage() {
         </section>
       </div>
 
-      <div className="grid gap-x-12 gap-y-10 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
           <AssetsSection />
         </QueryBoundary>

@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:10.0
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
-RUN mkdir /keys && chown app:app /keys
+RUN mkdir /keys /backups && chown app:app /keys /backups
 WORKDIR /app
 COPY --from=build /app ./
 ENV ASPNETCORE_URLS=http://+:8080

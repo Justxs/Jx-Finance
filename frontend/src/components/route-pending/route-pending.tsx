@@ -5,7 +5,7 @@ export function RoutePending() {
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-10" role="status" aria-busy="true">
+    <div className="space-y-5" role="status" aria-busy="true">
       <span className="sr-only">{t("errors.loading")}</span>
       <div className="space-y-2">
         <Skeleton className="h-9 w-48 max-w-full rounded-sm" />

@@ -15,7 +15,7 @@ const meta = {
   component: DashboardPage,
   parameters: { layout: "fullscreen" },
   render: () => (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="p-6 lg:p-10">
       <DashboardPage />
     </div>
   ),

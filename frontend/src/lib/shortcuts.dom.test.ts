@@ -37,7 +37,7 @@ describe("key map", () => {
   test("go-to shortcuts map to a G sequence", () => {
     const goTo = shortcuts.filter((shortcut) => shortcut.group === "goTo");
 
-    expect(goTo).toHaveLength(12);
+    expect(goTo).toHaveLength(11);
     for (const shortcut of goTo) {
       expect(toHotkeySteps(shortcut)).toEqual(["G", shortcut.keys[1]?.toUpperCase()]);
     }
