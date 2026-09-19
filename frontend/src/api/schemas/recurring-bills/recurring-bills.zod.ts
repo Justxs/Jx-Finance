@@ -14,6 +14,7 @@ import * as zod from "zod";
 export const createRecurringBillBodyNameMin = 0;
 export const createRecurringBillBodyNameMax = 100;
 
+export const createRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createRecurringBillBodyRemindDaysBeforeMin = 0;
 export const createRecurringBillBodyRemindDaysBeforeMax = 365;
 
@@ -23,7 +24,7 @@ export const CreateRecurringBillBody = zod.object({
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod
-    .string()
+    .stringFormat("decimal", createRecurringBillBodyAmountRegExp)
     .nullable()
     .describe("Expected amount. Required for a Fixed bill, optional for a Variable one."),
   categoryId: zod.uuid().nullable(),
@@ -39,13 +40,15 @@ export const CreateRecurringBillBody = zod.object({
     .describe("How many days ahead of the due date to raise a notification."),
 });
 
+export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateRecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-  amount: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", createRecurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
   cadence: zod
@@ -60,13 +63,15 @@ export const CreateRecurringBillResponse = zod.object({
  * Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
  * @summary List recurring bills
  */
+export const recurringBillsResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const RecurringBillsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-  amount: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", recurringBillsResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
   cadence: zod
@@ -88,13 +93,15 @@ export const DeleteRecurringBillResponse = zod.void();
  * Returns a single schedule with its cadence, reminder lead time, and next due date.
  * @summary Get one recurring bill
  */
+export const recurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const RecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-  amount: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", recurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
   cadence: zod
@@ -112,6 +119,7 @@ export const RecurringBillResponse = zod.object({
 export const updateRecurringBillBodyNameMin = 0;
 export const updateRecurringBillBodyNameMax = 100;
 
+export const updateRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateRecurringBillBodyRemindDaysBeforeMin = 0;
 export const updateRecurringBillBodyRemindDaysBeforeMax = 365;
 
@@ -120,7 +128,7 @@ export const UpdateRecurringBillBody = zod.object({
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-  amount: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", updateRecurringBillBodyAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
   cadence: zod
@@ -134,13 +142,15 @@ export const UpdateRecurringBillBody = zod.object({
   isActive: zod.boolean(),
 });
 
+export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateRecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-  amount: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", updateRecurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
   cadence: zod
@@ -155,9 +165,11 @@ export const UpdateRecurringBillResponse = zod.object({
  * Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.
  * @summary Confirm a due occurrence
  */
+export const confirmRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ConfirmRecurringBillBody = zod.object({
   amount: zod
-    .string()
+    .stringFormat("decimal", confirmRecurringBillBodyAmountRegExp)
     .nullable()
     .describe(
       "Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.",
@@ -169,6 +181,8 @@ export const ConfirmRecurringBillBody = zod.object({
   expectedDueDate: zod.iso.date(),
 });
 
+export const confirmRecurringBillResponseBillAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ConfirmRecurringBillResponse = zod.object({
   bill: zod.object({
     id: zod.uuid(),
@@ -176,7 +190,7 @@ export const ConfirmRecurringBillResponse = zod.object({
     kind: zod
       .enum(["fixed", "variable"])
       .describe("Fixed when the amount is always the same; Variable when it changes each time."),
-    amount: zod.string().nullable(),
+    amount: zod.stringFormat("decimal", confirmRecurringBillResponseBillAmountRegExp).nullable(),
     categoryId: zod.uuid().nullable(),
     accountId: zod.uuid().nullable(),
     cadence: zod

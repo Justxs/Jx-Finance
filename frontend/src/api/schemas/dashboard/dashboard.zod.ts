@@ -11,13 +11,15 @@ import * as zod from "zod";
  * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.
  * @summary Get spending split by category
  */
+export const categoryBreakdownResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CategoryBreakdownResponse = zod.object({
   items: zod.array(
     zod.object({
       categoryId: zod.uuid().nullable(),
       categoryName: zod.string(),
       categoryIcon: zod.string().nullable(),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", categoryBreakdownResponseItemsItemAmountRegExp),
     }),
   ),
   periodStart: zod.iso.date(),
@@ -28,13 +30,16 @@ export const CategoryBreakdownResponse = zod.object({
  * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.
  * @summary Get the monthly income and expense trend
  */
+export const monthlyTrendResponseItemsItemIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const monthlyTrendResponseItemsItemExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const MonthlyTrendResponse = zod.object({
   items: zod.array(
     zod.object({
       year: zod.int(),
       month: zod.int(),
-      income: zod.string(),
-      expense: zod.string(),
+      income: zod.stringFormat("decimal", monthlyTrendResponseItemsItemIncomeRegExp),
+      expense: zod.stringFormat("decimal", monthlyTrendResponseItemsItemExpenseRegExp),
     }),
   ),
 });
@@ -43,10 +48,14 @@ export const MonthlyTrendResponse = zod.object({
  * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.
  * @summary Get the dashboard summary
  */
+export const dashboardSummaryResponseTotalBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const dashboardSummaryResponseMonthIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const dashboardSummaryResponseMonthExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const DashboardSummaryResponse = zod.object({
-  totalBalance: zod.string(),
-  monthIncome: zod.string(),
-  monthExpense: zod.string(),
+  totalBalance: zod.stringFormat("decimal", dashboardSummaryResponseTotalBalanceRegExp),
+  monthIncome: zod.stringFormat("decimal", dashboardSummaryResponseMonthIncomeRegExp),
+  monthExpense: zod.stringFormat("decimal", dashboardSummaryResponseMonthExpenseRegExp),
   monthStart: zod.iso.date(),
   monthEnd: zod.iso.date(),
 });

@@ -17,13 +17,13 @@ interface Operation {
   requestBody?: { content?: Record<string, { schema?: SchemaNode }> };
 }
 
-interface OpenApiDocument {
+interface SpecDocument {
   paths: Record<string, Record<string, Operation>>;
   components: { schemas: Record<string, SchemaNode> };
 }
 
 function writeDecimalFields() {
-  const document = JSON.parse(readFileSync(input, "utf8")) as OpenApiDocument;
+  const document = JSON.parse(readFileSync(input, "utf8")) as SpecDocument;
   const names = new Set<string>();
   const visited = new Set<string>();
 
@@ -91,6 +91,52 @@ function operationName(operation: { operationId?: string }, _route: string, verb
   return name.charAt(0).toLowerCase() + name.slice(1);
 }
 
+const decimalPattern = "^-?\\d+(\\.\\d{1,8})?$";
+
+function describeDecimals(node: unknown) {
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      describeDecimals(item);
+    }
+    return;
+  }
+  if (typeof node !== "object" || node === null) {
+    return;
+  }
+  const schema = node as Record<string, unknown>;
+  if (schema.format === "decimal" && schema.pattern === undefined) {
+    schema.pattern = decimalPattern;
+  }
+  for (const value of Object.values(schema)) {
+    describeDecimals(value);
+  }
+}
+
+function forValidation<TDocument extends { paths?: object; components?: object }>(
+  document: TDocument,
+): TDocument {
+  const spec = structuredClone(document);
+  describeDecimals(spec.components);
+  spec.paths = {
+    ...spec.paths,
+    "/__contract/problem-details": {
+      get: {
+        operationId: "GetProblemDetails",
+        tags: ["Problems"],
+        responses: {
+          "200": {
+            description: "Shape of every application/problem+json failure body.",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ProblemDetails" } },
+            },
+          },
+        },
+      },
+    },
+  };
+  return spec;
+}
+
 export default defineConfig({
   api: {
     input,
@@ -127,7 +173,7 @@ export default defineConfig({
     },
   },
   zod: {
-    input,
+    input: { target: input, override: { transformer: forValidation } },
     output: {
       mode: "tags-split",
       client: "zod",

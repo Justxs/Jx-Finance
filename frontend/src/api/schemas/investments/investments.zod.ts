@@ -99,6 +99,37 @@ export const ImportBrokerReportResponse = zod.object({
  * Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security's own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
  * @summary Get the investment portfolio
  */
+export const portfolioResponseMarketValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseCostBasisRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseUnrealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseRealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseDividendsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseWithholdingTaxRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseFeesRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemSecurityLastPriceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const portfolioResponseHoldingsItemQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemAverageCostRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemCostBasisRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemMarketValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemUnrealizedGainRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const portfolioResponseHoldingsItemUnrealizedPercentRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const portfolioResponseHoldingsItemMarketValueReportingRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const portfolioResponseHoldingsItemRealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseHoldingsItemDividendsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseYearsItemDividendsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseYearsItemWithholdingTaxRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseYearsItemInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseYearsItemFeesRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const portfolioResponseYearsItemRealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const PortfolioResponse = zod.object({
   reportingCurrency: zod.enum([
     "eur",
@@ -132,13 +163,13 @@ export const PortfolioResponse = zod.object({
     "ils",
     "zar",
   ]),
-  marketValue: zod.string(),
-  costBasis: zod.string(),
-  unrealizedGain: zod.string(),
-  realizedGain: zod.string(),
-  dividends: zod.string(),
-  withholdingTax: zod.string(),
-  fees: zod.string(),
+  marketValue: zod.stringFormat("decimal", portfolioResponseMarketValueRegExp),
+  costBasis: zod.stringFormat("decimal", portfolioResponseCostBasisRegExp),
+  unrealizedGain: zod.stringFormat("decimal", portfolioResponseUnrealizedGainRegExp),
+  realizedGain: zod.stringFormat("decimal", portfolioResponseRealizedGainRegExp),
+  dividends: zod.stringFormat("decimal", portfolioResponseDividendsRegExp),
+  withholdingTax: zod.stringFormat("decimal", portfolioResponseWithholdingTaxRegExp),
+  fees: zod.stringFormat("decimal", portfolioResponseFeesRegExp),
   isComplete: zod.boolean(),
   holdings: zod.array(
     zod.object({
@@ -182,28 +213,38 @@ export const PortfolioResponse = zod.object({
           "ils",
           "zar",
         ]),
-        lastPrice: zod.string().nullable(),
+        lastPrice: zod
+          .stringFormat("decimal", portfolioResponseHoldingsItemSecurityLastPriceRegExp)
+          .nullable(),
         lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
       }),
-      quantity: zod.string(),
-      averageCost: zod.string(),
-      costBasis: zod.string(),
-      marketValue: zod.string().nullable(),
-      unrealizedGain: zod.string().nullable(),
-      unrealizedPercent: zod.string().nullable(),
-      marketValueReporting: zod.string().nullable(),
-      realizedGain: zod.string(),
-      dividends: zod.string(),
+      quantity: zod.stringFormat("decimal", portfolioResponseHoldingsItemQuantityRegExp),
+      averageCost: zod.stringFormat("decimal", portfolioResponseHoldingsItemAverageCostRegExp),
+      costBasis: zod.stringFormat("decimal", portfolioResponseHoldingsItemCostBasisRegExp),
+      marketValue: zod
+        .stringFormat("decimal", portfolioResponseHoldingsItemMarketValueRegExp)
+        .nullable(),
+      unrealizedGain: zod
+        .stringFormat("decimal", portfolioResponseHoldingsItemUnrealizedGainRegExp)
+        .nullable(),
+      unrealizedPercent: zod
+        .stringFormat("decimal", portfolioResponseHoldingsItemUnrealizedPercentRegExp)
+        .nullable(),
+      marketValueReporting: zod
+        .stringFormat("decimal", portfolioResponseHoldingsItemMarketValueReportingRegExp)
+        .nullable(),
+      realizedGain: zod.stringFormat("decimal", portfolioResponseHoldingsItemRealizedGainRegExp),
+      dividends: zod.stringFormat("decimal", portfolioResponseHoldingsItemDividendsRegExp),
     }),
   ),
   years: zod.array(
     zod.object({
       year: zod.int(),
-      dividends: zod.string(),
-      withholdingTax: zod.string(),
-      interest: zod.string(),
-      fees: zod.string(),
-      realizedGain: zod.string(),
+      dividends: zod.stringFormat("decimal", portfolioResponseYearsItemDividendsRegExp),
+      withholdingTax: zod.stringFormat("decimal", portfolioResponseYearsItemWithholdingTaxRegExp),
+      interest: zod.stringFormat("decimal", portfolioResponseYearsItemInterestRegExp),
+      fees: zod.stringFormat("decimal", portfolioResponseYearsItemFeesRegExp),
+      realizedGain: zod.stringFormat("decimal", portfolioResponseYearsItemRealizedGainRegExp),
     }),
   ),
 });
@@ -212,6 +253,8 @@ export const PortfolioResponse = zod.object({
  * Securities are shared by everyone on the installation, because a price is the same for all holders.
  * @summary List securities
  */
+export const securitiesResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const SecuritiesResponseItem = zod.object({
   id: zod.uuid(),
   symbol: zod.string(),
@@ -251,7 +294,7 @@ export const SecuritiesResponseItem = zod.object({
     "ils",
     "zar",
   ]),
-  lastPrice: zod.string().nullable(),
+  lastPrice: zod.stringFormat("decimal", securitiesResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
 export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
@@ -269,6 +312,8 @@ export const createSecurityBodyNameMax = 200;
 export const createSecurityBodyIsinRegExp = new RegExp("^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$");
 export const createSecurityBodyExchangeMin = 0;
 export const createSecurityBodyExchangeMax = 32;
+
+export const createSecurityBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateSecurityBody = zod.object({
   symbol: zod.string().min(createSecurityBodySymbolMin).max(createSecurityBodySymbolMax),
@@ -312,12 +357,14 @@ export const CreateSecurityBody = zod.object({
     .min(createSecurityBodyExchangeMin)
     .max(createSecurityBodyExchangeMax)
     .nullish(),
-  lastPrice: zod.string().nullish(),
+  lastPrice: zod.stringFormat("decimal", createSecurityBodyLastPriceRegExp).nullish(),
   lastPriceDate: zod
     .union([zod.null(), zod.iso.date()])
     .optional()
     .describe("Defaults to today when a price is given without a date."),
 });
+
+export const createSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateSecurityResponse = zod.object({
   id: zod.uuid(),
@@ -358,7 +405,7 @@ export const CreateSecurityResponse = zod.object({
     "ils",
     "zar",
   ]),
-  lastPrice: zod.string().nullable(),
+  lastPrice: zod.stringFormat("decimal", createSecurityResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
 
@@ -375,6 +422,8 @@ export const updateSecurityBodyNameMax = 200;
 export const updateSecurityBodyIsinRegExp = new RegExp("^[A-Za-z]{2}[A-Za-z0-9]{9}[0-9]$");
 export const updateSecurityBodyExchangeMin = 0;
 export const updateSecurityBodyExchangeMax = 32;
+
+export const updateSecurityBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateSecurityBody = zod.object({
   symbol: zod.string().min(updateSecurityBodySymbolMin).max(updateSecurityBodySymbolMax),
@@ -418,12 +467,14 @@ export const UpdateSecurityBody = zod.object({
     .min(updateSecurityBodyExchangeMin)
     .max(updateSecurityBodyExchangeMax)
     .nullish(),
-  lastPrice: zod.string().nullish(),
+  lastPrice: zod.stringFormat("decimal", updateSecurityBodyLastPriceRegExp).nullish(),
   lastPriceDate: zod
     .union([zod.null(), zod.iso.date()])
     .optional()
     .describe("Defaults to today when a price is given without a date."),
 });
+
+export const updateSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateSecurityResponse = zod.object({
   id: zod.uuid(),
@@ -464,7 +515,7 @@ export const UpdateSecurityResponse = zod.object({
     "ils",
     "zar",
   ]),
-  lastPrice: zod.string().nullable(),
+  lastPrice: zod.stringFormat("decimal", updateSecurityResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
 
@@ -473,6 +524,10 @@ export const UpdateSecurityResponse = zod.object({
  * @summary Record an investment transaction
  */
 
+export const createInvestmentTransactionBodyQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createInvestmentTransactionBodyPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createInvestmentTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createInvestmentTransactionBodyFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createInvestmentTransactionBodyDescriptionMin = 0;
 export const createInvestmentTransactionBodyDescriptionMax = 500;
 
@@ -482,15 +537,15 @@ export const CreateInvestmentTransactionBody = zod.object({
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
   quantity: zod
-    .string()
+    .stringFormat("decimal", createInvestmentTransactionBodyQuantityRegExp)
     .nullish()
     .describe("Shares for a buy or sell; new shares per old share for a split."),
-  price: zod.string().nullish(),
+  price: zod.stringFormat("decimal", createInvestmentTransactionBodyPriceRegExp).nullish(),
   amount: zod
-    .string()
+    .stringFormat("decimal", createInvestmentTransactionBodyAmountRegExp)
     .nullish()
     .describe("Cash amount for dividend, withholding tax, interest and fee entries."),
-  fee: zod.string().nullish(),
+  fee: zod.stringFormat("decimal", createInvestmentTransactionBodyFeeRegExp).nullish(),
   currency: zod
     .union([
       zod.null(),
@@ -538,6 +593,15 @@ export const CreateInvestmentTransactionBody = zod.object({
     .nullish(),
 });
 
+export const createInvestmentTransactionResponseQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createInvestmentTransactionResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createInvestmentTransactionResponseFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createInvestmentTransactionResponseCashAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const CreateInvestmentTransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
@@ -545,10 +609,10 @@ export const CreateInvestmentTransactionResponse = zod.object({
   symbol: zod.string().nullable(),
   type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
   date: zod.iso.date(),
-  quantity: zod.string(),
-  price: zod.string(),
-  fee: zod.string(),
-  cashAmount: zod.string(),
+  quantity: zod.stringFormat("decimal", createInvestmentTransactionResponseQuantityRegExp),
+  price: zod.stringFormat("decimal", createInvestmentTransactionResponsePriceRegExp),
+  fee: zod.stringFormat("decimal", createInvestmentTransactionResponseFeeRegExp),
+  cashAmount: zod.stringFormat("decimal", createInvestmentTransactionResponseCashAmountRegExp),
   currency: zod.enum([
     "eur",
     "usd",
@@ -590,6 +654,19 @@ export const CreateInvestmentTransactionResponse = zod.object({
  * Pages through trades, dividends, withholding tax, interest, fees and splits on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account.
  * @summary List investment transactions
  */
+export const investmentTransactionsResponseItemsItemQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const investmentTransactionsResponseItemsItemPriceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const investmentTransactionsResponseItemsItemFeeRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const investmentTransactionsResponseItemsItemCashAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const InvestmentTransactionsResponse = zod.object({
   items: zod.array(
     zod.object({
@@ -599,10 +676,13 @@ export const InvestmentTransactionsResponse = zod.object({
       symbol: zod.string().nullable(),
       type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
       date: zod.iso.date(),
-      quantity: zod.string(),
-      price: zod.string(),
-      fee: zod.string(),
-      cashAmount: zod.string(),
+      quantity: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemQuantityRegExp),
+      price: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemPriceRegExp),
+      fee: zod.stringFormat("decimal", investmentTransactionsResponseItemsItemFeeRegExp),
+      cashAmount: zod.stringFormat(
+        "decimal",
+        investmentTransactionsResponseItemsItemCashAmountRegExp,
+      ),
       currency: zod.enum([
         "eur",
         "usd",
@@ -656,6 +736,10 @@ export const DeleteInvestmentTransactionResponse = zod.void();
  * @summary Correct an investment transaction
  */
 
+export const updateInvestmentTransactionBodyQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateInvestmentTransactionBodyPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateInvestmentTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateInvestmentTransactionBodyFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateInvestmentTransactionBodyDescriptionMin = 0;
 export const updateInvestmentTransactionBodyDescriptionMax = 500;
 
@@ -665,15 +749,15 @@ export const UpdateInvestmentTransactionBody = zod.object({
   date: zod.iso.date(),
   securityId: zod.uuid().nullish(),
   quantity: zod
-    .string()
+    .stringFormat("decimal", updateInvestmentTransactionBodyQuantityRegExp)
     .nullish()
     .describe("Shares for a buy or sell; new shares per old share for a split."),
-  price: zod.string().nullish(),
+  price: zod.stringFormat("decimal", updateInvestmentTransactionBodyPriceRegExp).nullish(),
   amount: zod
-    .string()
+    .stringFormat("decimal", updateInvestmentTransactionBodyAmountRegExp)
     .nullish()
     .describe("Cash amount for dividend, withholding tax, interest and fee entries."),
-  fee: zod.string().nullish(),
+  fee: zod.stringFormat("decimal", updateInvestmentTransactionBodyFeeRegExp).nullish(),
   currency: zod
     .union([
       zod.null(),
@@ -721,6 +805,15 @@ export const UpdateInvestmentTransactionBody = zod.object({
     .nullish(),
 });
 
+export const updateInvestmentTransactionResponseQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateInvestmentTransactionResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateInvestmentTransactionResponseFeeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateInvestmentTransactionResponseCashAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const UpdateInvestmentTransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
@@ -728,10 +821,10 @@ export const UpdateInvestmentTransactionResponse = zod.object({
   symbol: zod.string().nullable(),
   type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
   date: zod.iso.date(),
-  quantity: zod.string(),
-  price: zod.string(),
-  fee: zod.string(),
-  cashAmount: zod.string(),
+  quantity: zod.stringFormat("decimal", updateInvestmentTransactionResponseQuantityRegExp),
+  price: zod.stringFormat("decimal", updateInvestmentTransactionResponsePriceRegExp),
+  fee: zod.stringFormat("decimal", updateInvestmentTransactionResponseFeeRegExp),
+  cashAmount: zod.stringFormat("decimal", updateInvestmentTransactionResponseCashAmountRegExp),
   currency: zod.enum([
     "eur",
     "usd",

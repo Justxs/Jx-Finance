@@ -12,15 +12,18 @@ import * as zod from "zod";
  * @summary Record a transaction
  */
 
+export const createTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransactionBodyDescriptionMin = 0;
 export const createTransactionBodyDescriptionMax = 500;
+
+export const createTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateTransactionBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the money moved on; must be visible to you."),
   categoryId: zod.uuid().nullable().describe("Optional category. Ignored when lines are supplied."),
   type: zod.enum(["income", "expense"]),
   amount: zod
-    .string()
+    .stringFormat("decimal", createTransactionBodyAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
   date: zod.iso.date(),
   description: zod
@@ -32,7 +35,7 @@ export const CreateTransactionBody = zod.object({
     .array(
       zod.object({
         categoryId: zod.uuid().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", createTransactionBodyLinesItemAmountRegExp),
         description: zod.string().nullable(),
       }),
     )
@@ -77,12 +80,16 @@ export const CreateTransactionBody = zod.object({
     .optional(),
 });
 
+export const createTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateTransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
   categoryId: zod.uuid().nullable(),
   type: zod.enum(["income", "expense"]),
-  amount: zod.string(),
+  amount: zod.stringFormat("decimal", createTransactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
   source: zod.enum(["manual", "imported"]),
@@ -93,7 +100,7 @@ export const CreateTransactionResponse = zod.object({
       zod.object({
         id: zod.uuid(),
         categoryId: zod.uuid().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", createTransactionResponseLinesItemAmountRegExp),
         description: zod.string().nullable(),
       }),
     )
@@ -130,13 +137,21 @@ export const CreateTransactionResponse = zod.object({
     "ils",
     "zar",
   ]),
-  reportingAmount: zod.string(),
+  reportingAmount: zod.stringFormat("decimal", createTransactionResponseReportingAmountRegExp),
 });
 
 /**
  * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.
  * @summary List transactions
  */
+export const transactionsResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionsResponseItemsItemLinesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionsResponseItemsItemReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const TransactionsResponse = zod.object({
   items: zod.array(
     zod.object({
@@ -144,7 +159,7 @@ export const TransactionsResponse = zod.object({
       accountId: zod.uuid(),
       categoryId: zod.uuid().nullable(),
       type: zod.enum(["income", "expense"]),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", transactionsResponseItemsItemAmountRegExp),
       date: zod.iso.date(),
       description: zod.string().nullable(),
       source: zod.enum(["manual", "imported"]),
@@ -155,7 +170,7 @@ export const TransactionsResponse = zod.object({
           zod.object({
             id: zod.uuid(),
             categoryId: zod.uuid().nullable(),
-            amount: zod.string(),
+            amount: zod.stringFormat("decimal", transactionsResponseItemsItemLinesItemAmountRegExp),
             description: zod.string().nullable(),
           }),
         )
@@ -192,7 +207,10 @@ export const TransactionsResponse = zod.object({
         "ils",
         "zar",
       ]),
-      reportingAmount: zod.string(),
+      reportingAmount: zod.stringFormat(
+        "decimal",
+        transactionsResponseItemsItemReportingAmountRegExp,
+      ),
     }),
   ),
   page: zod.int(),
@@ -233,10 +251,13 @@ export const ExportTransactionsPdfResponse = zod.unknown();
  * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
  * @summary Total the filtered transactions
  */
+export const transactionsSummaryResponseTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionsSummaryResponseTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const TransactionsSummaryResponse = zod.object({
   count: zod.int(),
-  totalIncome: zod.string(),
-  totalExpense: zod.string(),
+  totalIncome: zod.stringFormat("decimal", transactionsSummaryResponseTotalIncomeRegExp),
+  totalExpense: zod.stringFormat("decimal", transactionsSummaryResponseTotalExpenseRegExp),
 });
 
 /**
@@ -249,12 +270,16 @@ export const DeleteTransactionResponse = zod.void();
  * Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
+export const transactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const TransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
   categoryId: zod.uuid().nullable(),
   type: zod.enum(["income", "expense"]),
-  amount: zod.string(),
+  amount: zod.stringFormat("decimal", transactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
   source: zod.enum(["manual", "imported"]),
@@ -265,7 +290,7 @@ export const TransactionResponse = zod.object({
       zod.object({
         id: zod.uuid(),
         categoryId: zod.uuid().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", transactionResponseLinesItemAmountRegExp),
         description: zod.string().nullable(),
       }),
     )
@@ -302,7 +327,7 @@ export const TransactionResponse = zod.object({
     "ils",
     "zar",
   ]),
-  reportingAmount: zod.string(),
+  reportingAmount: zod.stringFormat("decimal", transactionResponseReportingAmountRegExp),
 });
 
 /**
@@ -310,14 +335,17 @@ export const TransactionResponse = zod.object({
  * @summary Update a transaction
  */
 
+export const updateTransactionBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransactionBodyDescriptionMin = 0;
 export const updateTransactionBodyDescriptionMax = 500;
+
+export const updateTransactionBodyLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateTransactionBody = zod.object({
   accountId: zod.uuid().min(1),
   categoryId: zod.uuid().nullable(),
   type: zod.enum(["income", "expense"]),
-  amount: zod.string(),
+  amount: zod.stringFormat("decimal", updateTransactionBodyAmountRegExp),
   date: zod.iso.date(),
   description: zod
     .string()
@@ -328,7 +356,7 @@ export const UpdateTransactionBody = zod.object({
     .array(
       zod.object({
         categoryId: zod.uuid().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", updateTransactionBodyLinesItemAmountRegExp),
         description: zod.string().nullable(),
       }),
     )
@@ -372,12 +400,16 @@ export const UpdateTransactionBody = zod.object({
     .optional(),
 });
 
+export const updateTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateTransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
   categoryId: zod.uuid().nullable(),
   type: zod.enum(["income", "expense"]),
-  amount: zod.string(),
+  amount: zod.stringFormat("decimal", updateTransactionResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
   source: zod.enum(["manual", "imported"]),
@@ -388,7 +420,7 @@ export const UpdateTransactionResponse = zod.object({
       zod.object({
         id: zod.uuid(),
         categoryId: zod.uuid().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", updateTransactionResponseLinesItemAmountRegExp),
         description: zod.string().nullable(),
       }),
     )
@@ -425,5 +457,5 @@ export const UpdateTransactionResponse = zod.object({
     "ils",
     "zar",
   ]),
-  reportingAmount: zod.string(),
+  reportingAmount: zod.stringFormat("decimal", updateTransactionResponseReportingAmountRegExp),
 });

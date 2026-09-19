@@ -14,14 +14,20 @@ import * as zod from "zod";
 export const createAssetBodyNameMin = 0;
 export const createAssetBodyNameMax = 100;
 
+export const createAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateAssetBody = zod.object({
   name: zod.string().min(createAssetBodyNameMin).max(createAssetBodyNameMax),
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
-  currentValue: zod.string().describe("Decimal string with at most two decimal places."),
+  currentValue: zod
+    .stringFormat("decimal", createAssetBodyCurrentValueRegExp)
+    .describe("Decimal string with at most two decimal places."),
   asOf: zod.iso.date(),
 });
+
+export const createAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateAssetResponse = zod.object({
   id: zod.uuid(),
@@ -29,7 +35,7 @@ export const CreateAssetResponse = zod.object({
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
-  currentValue: zod.string(),
+  currentValue: zod.stringFormat("decimal", createAssetResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
 });
 
@@ -37,13 +43,15 @@ export const CreateAssetResponse = zod.object({
  * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.
  * @summary List assets
  */
+export const assetsResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const AssetsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
-  currentValue: zod.string(),
+  currentValue: zod.stringFormat("decimal", assetsResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
 });
 export const AssetsResponse = zod.array(AssetsResponseItem);
@@ -61,14 +69,18 @@ export const DeleteAssetResponse = zod.void();
 export const updateAssetBodyNameMin = 0;
 export const updateAssetBodyNameMax = 100;
 
+export const updateAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateAssetBody = zod.object({
   name: zod.string().min(updateAssetBodyNameMin).max(updateAssetBodyNameMax),
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
-  currentValue: zod.string(),
+  currentValue: zod.stringFormat("decimal", updateAssetBodyCurrentValueRegExp),
   asOf: zod.iso.date(),
 });
+
+export const updateAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateAssetResponse = zod.object({
   id: zod.uuid(),
@@ -76,7 +88,7 @@ export const UpdateAssetResponse = zod.object({
   type: zod
     .enum(["property", "vehicle", "investment", "valuable", "other"])
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
-  currentValue: zod.string(),
+  currentValue: zod.stringFormat("decimal", updateAssetResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
 });
 
@@ -87,13 +99,16 @@ export const UpdateAssetResponse = zod.object({
 export const createDebtBodyNameMin = 0;
 export const createDebtBodyNameMax = 100;
 
+export const createDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createDebtBodyInterestRateMin = 0;
 export const createDebtBodyInterestRateMax = 100;
 
 export const CreateDebtBody = zod.object({
   name: zod.string().min(createDebtBodyNameMin).max(createDebtBodyNameMax),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
-  outstandingAmount: zod.string().describe("Decimal string with at most two decimal places."),
+  outstandingAmount: zod
+    .stringFormat("decimal", createDebtBodyOutstandingAmountRegExp)
+    .describe("Decimal string with at most two decimal places."),
   interestRate: zod
     .number()
     .min(createDebtBodyInterestRateMin)
@@ -103,11 +118,13 @@ export const CreateDebtBody = zod.object({
   asOf: zod.iso.date(),
 });
 
+export const createDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateDebtResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
-  outstandingAmount: zod.string(),
+  outstandingAmount: zod.stringFormat("decimal", createDebtResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
 });
@@ -116,11 +133,13 @@ export const CreateDebtResponse = zod.object({
  * Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.
  * @summary List debts
  */
+export const debtsResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const DebtsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
-  outstandingAmount: zod.string(),
+  outstandingAmount: zod.stringFormat("decimal", debtsResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
 });
@@ -139,13 +158,14 @@ export const DeleteDebtResponse = zod.void();
 export const updateDebtBodyNameMin = 0;
 export const updateDebtBodyNameMax = 100;
 
+export const updateDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateDebtBodyInterestRateMin = 0;
 export const updateDebtBodyInterestRateMax = 100;
 
 export const UpdateDebtBody = zod.object({
   name: zod.string().min(updateDebtBodyNameMin).max(updateDebtBodyNameMax),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
-  outstandingAmount: zod.string(),
+  outstandingAmount: zod.stringFormat("decimal", updateDebtBodyOutstandingAmountRegExp),
   interestRate: zod
     .number()
     .min(updateDebtBodyInterestRateMin)
@@ -154,11 +174,13 @@ export const UpdateDebtBody = zod.object({
   asOf: zod.iso.date(),
 });
 
+export const updateDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateDebtResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
-  outstandingAmount: zod.string(),
+  outstandingAmount: zod.stringFormat("decimal", updateDebtResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
 });
@@ -167,25 +189,35 @@ export const UpdateDebtResponse = zod.object({
  * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.
  * @summary Get current net worth
  */
+export const netWorthResponseAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthResponseAssetsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthResponseDebtsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthResponseNetWorthRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const NetWorthResponse = zod.object({
-  accounts: zod.string(),
-  assets: zod.string(),
-  debts: zod.string(),
-  netWorth: zod.string(),
+  accounts: zod.stringFormat("decimal", netWorthResponseAccountsRegExp),
+  assets: zod.stringFormat("decimal", netWorthResponseAssetsRegExp),
+  debts: zod.stringFormat("decimal", netWorthResponseDebtsRegExp),
+  netWorth: zod.stringFormat("decimal", netWorthResponseNetWorthRegExp),
 });
 
 /**
  * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.
  * @summary Get the net worth history
  */
+export const netWorthHistoryResponseItemsItemAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthHistoryResponseItemsItemAssetsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthHistoryResponseItemsItemDebtsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const netWorthHistoryResponseItemsItemNetWorthRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const NetWorthHistoryResponse = zod.object({
   items: zod.array(
     zod.object({
       date: zod.iso.date(),
-      accounts: zod.string(),
-      assets: zod.string(),
-      debts: zod.string(),
-      netWorth: zod.string(),
+      accounts: zod.stringFormat("decimal", netWorthHistoryResponseItemsItemAccountsRegExp),
+      assets: zod.stringFormat("decimal", netWorthHistoryResponseItemsItemAssetsRegExp),
+      debts: zod.stringFormat("decimal", netWorthHistoryResponseItemsItemDebtsRegExp),
+      netWorth: zod.stringFormat("decimal", netWorthHistoryResponseItemsItemNetWorthRegExp),
     }),
   ),
 });

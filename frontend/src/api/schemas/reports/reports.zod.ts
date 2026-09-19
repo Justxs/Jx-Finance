@@ -11,25 +11,34 @@ import * as zod from "zod";
  * Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months.
  * @summary Summarise income and expenses over a range
  */
+export const reportSummaryResponseTotalIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reportSummaryResponseTotalExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reportSummaryResponseNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reportSummaryResponseExpenseByCategoryItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseTrendItemIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reportSummaryResponseTrendItemExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ReportSummaryResponse = zod.object({
   periodStart: zod.iso.date(),
   periodEnd: zod.iso.date(),
-  totalIncome: zod.string(),
-  totalExpense: zod.string(),
-  net: zod.string(),
+  totalIncome: zod.stringFormat("decimal", reportSummaryResponseTotalIncomeRegExp),
+  totalExpense: zod.stringFormat("decimal", reportSummaryResponseTotalExpenseRegExp),
+  net: zod.stringFormat("decimal", reportSummaryResponseNetRegExp),
   expenseByCategory: zod.array(
     zod.object({
       categoryId: zod.uuid().nullable(),
       categoryName: zod.string(),
       categoryIcon: zod.string().nullable(),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", reportSummaryResponseExpenseByCategoryItemAmountRegExp),
     }),
   ),
   trend: zod.array(
     zod.object({
       bucketStart: zod.iso.date(),
-      income: zod.string(),
-      expense: zod.string(),
+      income: zod.stringFormat("decimal", reportSummaryResponseTrendItemIncomeRegExp),
+      expense: zod.stringFormat("decimal", reportSummaryResponseTrendItemExpenseRegExp),
     }),
   ),
   trendBucket: zod.string(),

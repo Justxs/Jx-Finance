@@ -12,6 +12,7 @@ export * from "./imports/imports.zod";
 export * from "./investments/investments.zod";
 export * from "./net-worth/net-worth.zod";
 export * from "./notifications/notifications.zod";
+export * from "./problems/problems.zod";
 export * from "./recurring-bills/recurring-bills.zod";
 export * from "./reports/reports.zod";
 export * from "./settings/settings.zod";

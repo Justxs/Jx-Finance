@@ -12,23 +12,29 @@ import * as zod from "zod";
  * @summary Create a budget
  */
 
+export const createBudgetBodyLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateBudgetBody = zod.object({
   categoryId: zod
     .uuid()
     .min(1)
     .describe("The category the limit applies to; must be visible to you."),
   limitAmount: zod
-    .string()
+    .stringFormat("decimal", createBudgetBodyLimitAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
 });
+
+export const createBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createBudgetResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateBudgetResponse = zod.object({
   id: zod.uuid(),
   categoryId: zod.uuid(),
   categoryName: zod.string(),
-  limitAmount: zod.string(),
-  spent: zod.string(),
-  remaining: zod.string(),
+  limitAmount: zod.stringFormat("decimal", createBudgetResponseLimitAmountRegExp),
+  spent: zod.stringFormat("decimal", createBudgetResponseSpentRegExp),
+  remaining: zod.stringFormat("decimal", createBudgetResponseRemainingRegExp),
   period: zod.string(),
 });
 
@@ -36,13 +42,17 @@ export const CreateBudgetResponse = zod.object({
  * Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.
  * @summary List budgets
  */
+export const budgetsResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const budgetsResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const budgetsResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const BudgetsResponseItem = zod.object({
   id: zod.uuid(),
   categoryId: zod.uuid(),
   categoryName: zod.string(),
-  limitAmount: zod.string(),
-  spent: zod.string(),
-  remaining: zod.string(),
+  limitAmount: zod.stringFormat("decimal", budgetsResponseLimitAmountRegExp),
+  spent: zod.stringFormat("decimal", budgetsResponseSpentRegExp),
+  remaining: zod.stringFormat("decimal", budgetsResponseRemainingRegExp),
   period: zod.string(),
 });
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
@@ -58,17 +68,23 @@ export const DeleteBudgetResponse = zod.void();
  * @summary Update a budget
  */
 
+export const updateBudgetBodyLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateBudgetBody = zod.object({
   categoryId: zod.uuid().min(1),
-  limitAmount: zod.string(),
+  limitAmount: zod.stringFormat("decimal", updateBudgetBodyLimitAmountRegExp),
 });
+
+export const updateBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateBudgetResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateBudgetResponse = zod.object({
   id: zod.uuid(),
   categoryId: zod.uuid(),
   categoryName: zod.string(),
-  limitAmount: zod.string(),
-  spent: zod.string(),
-  remaining: zod.string(),
+  limitAmount: zod.stringFormat("decimal", updateBudgetResponseLimitAmountRegExp),
+  spent: zod.stringFormat("decimal", updateBudgetResponseSpentRegExp),
+  remaining: zod.stringFormat("decimal", updateBudgetResponseRemainingRegExp),
   period: zod.string(),
 });
