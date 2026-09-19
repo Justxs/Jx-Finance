@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import type { TranslationKey } from "@/lib/i18n";
 
 export function normalizeMoney(value: string): string {
   return value.trim().replace(",", ".");
@@ -94,10 +95,10 @@ export function optionalNonNegativeMoney(t: TFunction) {
     .refine((value) => value.trim() === "" || isNonNegativeMoney(value), t("validation.money"));
 }
 
-export function quantity(t: TFunction, messageKey: string) {
+export function quantity(t: TFunction, messageKey: TranslationKey) {
   return z.string().refine(isQuantity, t(messageKey));
 }
 
-export function positiveQuantity(t: TFunction, messageKey: string) {
+export function positiveQuantity(t: TFunction, messageKey: TranslationKey) {
   return z.string().refine(isPositiveQuantity, t(messageKey));
 }

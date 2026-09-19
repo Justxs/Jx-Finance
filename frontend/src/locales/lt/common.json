@@ -1,6 +1,6 @@
 {
   "brand": {
-    "wordmark": "Finance"
+    "wordmark": "Jx Finance"
   },
   "appName": "Jx Finance",
   "nav": {
@@ -55,6 +55,21 @@
     "totalBalance": "Bendras likutis",
     "monthIncome": "Šio mėnesio pajamos",
     "monthExpense": "Šio mėnesio išlaidos",
+    "monthNet": "Šio mėnesio balansas",
+    "budgets": "Šio mėnesio biudžetai",
+    "noBudgets": "Biudžetų nėra.",
+    "accounts": "Likutis pagal sąskaitą",
+    "noAccounts": "Sąskaitų dar nėra.",
+    "upcomingBills": "Artėjantys mokėjimai",
+    "noBills": "Aktyvių mokėjimų nėra.",
+    "overdue": "Vėluoja",
+    "pace": {
+      "title": "Išlaidų tempas",
+      "current": "Šis mėnuo",
+      "previous": "Praėjęs mėnuo",
+      "day": "{{day}} diena",
+      "label": "Sukauptos išlaidos pagal dieną, šis mėnuo palyginti su praėjusiu"
+    },
     "recent": "Paskutinės operacijos",
     "empty": "Operacijų dar nėra.",
     "firstRun": {
@@ -96,7 +111,8 @@
     "allTypes": "Visi tipai",
     "currency": "Pagrindinė valiuta",
     "currencyHint": "Pradinis likutis ir sąskaitos suma rodomi šia valiuta. Sąskaitoje gali būti ir kitų valiutų.",
-    "holdings": "Vertybiniai popieriai ≈ {{value}}"
+    "holdings": "Vertybiniai popieriai ≈ {{value}}",
+    "share": "Likutis pagal sąskaitą"
   },
   "transfers": {
     "title": "Pervesti pinigus",
@@ -432,7 +448,11 @@
     "spentThisMonth": "Išleista šį mėnesį",
     "budgeted": "Suplanuota",
     "remaining": "Liko",
-    "overBy": "Viršyta"
+    "overBy": "Viršyta",
+    "spent": "Išleista",
+    "limitSeries": "Limitas",
+    "usage": "Biudžetas ir išlaidos",
+    "usageLabel": "Kiekvienos kategorijos šio mėnesio biudžetas ir išleista suma"
   },
   "shortcuts": {
     "title": "Spartieji klavišai",
@@ -484,7 +504,9 @@
       "mortgage": "Hipoteka",
       "loan": "Paskola",
       "other": "Kita"
-    }
+    },
+    "composition": "Iš ko jis susideda",
+    "compositionLabel": "Sąskaitos, turtas ir skolos laikui bėgant"
   },
   "investments": {
     "title": "Investicijos",
@@ -704,7 +726,8 @@
       "description": "Registruokite pirkimus, pardavimus, dividendus ir mokesčius – matysite pozicijas, pelną ir pajamas pagal metus. Kiekvienas įrašas pakeičia savo sąskaitos pinigų likutį.",
       "addFirst": "Pridėti pirmą įrašą",
       "import": "Importuoti iš „Interactive Brokers“"
-    }
+    },
+    "allocation": "Paskirstymas"
   },
   "recurringBills": {
     "title": "Periodinės sąskaitos",
@@ -739,7 +762,11 @@
     "empty": "Periodinių sąskaitų dar nėra.",
     "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti periodines sąskaitas.",
     "overdue": "Vėluoja",
-    "recordPayment": "Registruoti mokėjimą"
+    "recordPayment": "Registruoti mokėjimą",
+    "forecast": "Mokėtina per artimiausius šešis mėnesius",
+    "forecastSeries": "Mokėtinos sąskaitos",
+    "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos mokėjimų nėra.",
+    "forecastLabel": "Fiksuotų mokėjimų suma kiekvieną iš artimiausių šešių mėnesių"
   },
   "notifications": {
     "title": "Pranešimai",
@@ -868,7 +895,11 @@
     "loadFailed": "Nepavyko įkelti.",
     "loadFailedNamed": "Nepavyko įkelti: {{subject}}.",
     "retry": "Bandyti dar kartą",
-    "loading": "Kraunama"
+    "loading": "Kraunama",
+    "loadHint": "Knygoje niekas nepakeista. Patikrinkite ryšį ir bandykite dar kartą.",
+    "pageFailedTitle": "Nepavyko įkelti „Jx Finance“.",
+    "pageFailedBody": "Serveris neatsakė. Knygoje niekas nepakeista. Bandykite dar kartą arba perkraukite puslapį, jei problema išlieka.",
+    "reload": "Perkrauti puslapį"
   },
   "validation": {
     "rate": "Įveskite teisingą palūkanų normą, pvz. 4.5.",

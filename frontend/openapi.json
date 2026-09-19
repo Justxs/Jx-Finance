@@ -2,12 +2,12 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Jx Finance API",
-    "description": "Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem\u002Bjson with a machine-readable code per error; see the ProblemDetails schema.",
+    "description": "Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.",
     "version": "v1"
   },
   "servers": [
     {
-      "url": "http://localhost/"
+      "url": "http://localhost:8091"
     }
   ],
   "paths": {
@@ -53,7 +53,7 @@
           "400": {
             "description": "Validation failed, or the named household is not one of yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -63,7 +63,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -73,7 +73,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -83,7 +83,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -159,7 +159,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -169,7 +169,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -179,7 +179,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -189,7 +189,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -220,7 +220,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -230,7 +230,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -240,7 +240,7 @@
           "404": {
             "description": "No such account is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -250,7 +250,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -260,7 +260,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -269,7 +269,7 @@
           "Accounts"
         ],
         "summary": "Get one account",
-        "description": "Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people\u0027s data.",
+        "description": "Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.",
         "operationId": "GetAccount",
         "parameters": [
           {
@@ -296,7 +296,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -306,7 +306,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -316,7 +316,7 @@
           "404": {
             "description": "No such account is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -326,7 +326,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -336,7 +336,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -394,7 +394,7 @@
           "400": {
             "description": "Validation failed, or the named household is not one of yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -404,7 +404,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -414,7 +414,7 @@
           "404": {
             "description": "No such account is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -424,7 +424,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -434,7 +434,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -477,7 +477,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -487,7 +487,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -497,7 +497,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -507,7 +507,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -535,7 +535,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -545,7 +545,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -555,7 +555,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -565,7 +565,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -596,7 +596,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -606,7 +606,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -616,7 +616,7 @@
           "404": {
             "description": "No such asset belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -626,7 +626,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -636,7 +636,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -690,7 +690,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -700,7 +700,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -710,7 +710,7 @@
           "404": {
             "description": "No such asset belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -720,7 +720,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -730,7 +730,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -763,7 +763,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -773,7 +773,7 @@
           "401": {
             "description": "The password was wrong.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -783,7 +783,7 @@
           "404": {
             "description": "The session points at a user that no longer exists.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -796,7 +796,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -806,7 +806,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -846,7 +846,7 @@
           "400": {
             "description": "The code did not match the pending secret.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -856,7 +856,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -866,7 +866,7 @@
           "404": {
             "description": "The session points at a user that no longer exists.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -876,7 +876,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -886,7 +886,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -926,7 +926,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -936,7 +936,7 @@
           "401": {
             "description": "The password was wrong, or two-factor authentication is already enabled.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -946,7 +946,7 @@
           "404": {
             "description": "The session points at a user that no longer exists.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -959,7 +959,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -969,7 +969,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1012,7 +1012,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1022,7 +1022,7 @@
           "401": {
             "description": "The credentials or the authenticator code were rejected.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1035,7 +1035,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1060,7 +1060,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1070,7 +1070,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1080,7 +1080,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1090,7 +1090,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1117,7 +1117,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1127,7 +1127,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1137,7 +1137,7 @@
           "404": {
             "description": "The session points at a user that no longer exists.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1147,7 +1147,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1157,7 +1157,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1177,7 +1177,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1187,7 +1187,7 @@
           "401": {
             "description": "The refresh cookie is missing, expired, or revoked; sign in again.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1200,7 +1200,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1246,7 +1246,7 @@
           "400": {
             "description": "Validation failed, the category is not visible to you, or it already has a budget.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1256,7 +1256,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1266,7 +1266,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1276,7 +1276,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -1304,7 +1304,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1314,7 +1314,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1324,7 +1324,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1334,7 +1334,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1365,7 +1365,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1375,7 +1375,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1385,7 +1385,7 @@
           "404": {
             "description": "No such budget is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1395,7 +1395,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1405,7 +1405,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -1457,7 +1457,7 @@
           "400": {
             "description": "Validation failed, or the category is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1467,7 +1467,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1477,7 +1477,7 @@
           "404": {
             "description": "No such budget is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1487,7 +1487,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1497,7 +1497,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1541,7 +1541,7 @@
           "400": {
             "description": "Validation failed, the name is taken, or the named household is not one of yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1551,7 +1551,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1561,7 +1561,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1571,7 +1571,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -1599,7 +1599,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1609,7 +1609,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1619,7 +1619,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1629,7 +1629,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1660,7 +1660,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1670,7 +1670,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1680,7 +1680,7 @@
           "403": {
             "description": "Forbidden",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1690,7 +1690,7 @@
           "404": {
             "description": "No such category is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1700,7 +1700,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1710,7 +1710,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -1764,7 +1764,7 @@
           "400": {
             "description": "Validation failed, the name is taken, or the named household is not one of yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1774,7 +1774,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1784,7 +1784,7 @@
           "404": {
             "description": "No such category is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1794,7 +1794,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1804,7 +1804,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -1853,7 +1853,7 @@
           "400": {
             "description": "Validation failed, the account is not visible to you, or no exchange rate exists for the fee.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1863,7 +1863,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1873,7 +1873,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1883,7 +1883,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -1940,7 +1940,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1950,7 +1950,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1960,7 +1960,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -1970,7 +1970,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2000,7 +2000,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2010,7 +2010,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2020,7 +2020,7 @@
           "404": {
             "description": "No conversion with that id is visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2030,7 +2030,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2040,7 +2040,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2067,7 +2067,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2077,7 +2077,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2087,7 +2087,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2097,7 +2097,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2137,7 +2137,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2147,7 +2147,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2157,7 +2157,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2167,7 +2167,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2206,7 +2206,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2216,7 +2216,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2226,7 +2226,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2236,7 +2236,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2247,7 +2247,7 @@
           "Dashboard"
         ],
         "summary": "Get the dashboard summary",
-        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller\u0027s.",
+        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.",
         "operationId": "GetDashboardSummary",
         "responses": {
           "200": {
@@ -2263,7 +2263,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2273,7 +2273,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2283,7 +2283,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2293,7 +2293,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2337,7 +2337,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2347,7 +2347,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2357,7 +2357,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2367,7 +2367,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -2395,7 +2395,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2405,7 +2405,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2415,7 +2415,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2425,7 +2425,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2456,7 +2456,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2466,7 +2466,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2476,7 +2476,7 @@
           "404": {
             "description": "No such debt belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2486,7 +2486,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2496,7 +2496,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -2551,7 +2551,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2561,7 +2561,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2571,7 +2571,7 @@
           "404": {
             "description": "No such debt belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2581,7 +2581,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2591,7 +2591,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2648,7 +2648,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2658,7 +2658,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2668,7 +2668,7 @@
           "404": {
             "description": "No rate is stored or reachable for that pair.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2678,7 +2678,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2688,7 +2688,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2731,7 +2731,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2741,7 +2741,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2751,7 +2751,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2761,7 +2761,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -2789,7 +2789,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2799,7 +2799,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2809,7 +2809,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2819,7 +2819,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -2850,7 +2850,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2860,7 +2860,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2870,7 +2870,7 @@
           "404": {
             "description": "No such goal belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2880,7 +2880,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2890,7 +2890,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -2944,7 +2944,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2954,7 +2954,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2964,7 +2964,7 @@
           "404": {
             "description": "No such goal belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2974,7 +2974,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -2984,7 +2984,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3024,7 +3024,7 @@
           "400": {
             "description": "Validation failed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3034,7 +3034,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3044,7 +3044,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3054,7 +3054,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -3082,7 +3082,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3092,7 +3092,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3102,7 +3102,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3112,7 +3112,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3143,7 +3143,7 @@
           "400": {
             "description": "Shared data still belongs to the household.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3153,7 +3153,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3163,7 +3163,7 @@
           "403": {
             "description": "The signed-in user is a member but not an owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3173,7 +3173,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3183,7 +3183,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3193,7 +3193,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -3229,7 +3229,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3239,7 +3239,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3249,7 +3249,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3259,7 +3259,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3269,7 +3269,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -3320,7 +3320,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3330,7 +3330,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3340,7 +3340,7 @@
           "403": {
             "description": "The signed-in user is a member but not an owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3350,7 +3350,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3360,7 +3360,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3370,7 +3370,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3424,7 +3424,7 @@
           "400": {
             "description": "No such user, or they are already a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3434,7 +3434,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3444,7 +3444,7 @@
           "403": {
             "description": "The signed-in user is a member but not an owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3454,7 +3454,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3464,7 +3464,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3474,7 +3474,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3521,7 +3521,7 @@
           "400": {
             "description": "That user is not a member, or removing them would leave no owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3531,7 +3531,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3541,7 +3541,7 @@
           "403": {
             "description": "The signed-in user is a member but not an owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3551,7 +3551,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3561,7 +3561,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3571,7 +3571,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -3633,7 +3633,7 @@
           "400": {
             "description": "That user is not a member, or the change would leave no owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3643,7 +3643,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3653,7 +3653,7 @@
           "403": {
             "description": "The signed-in user is a member but not an owner.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3663,7 +3663,7 @@
           "404": {
             "description": "No such household, or the signed-in user is not a member.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3673,7 +3673,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3683,7 +3683,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3720,7 +3720,7 @@
           "400": {
             "description": "Validation failed, or the account is not visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3730,7 +3730,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3740,7 +3740,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3750,7 +3750,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3787,7 +3787,7 @@
           "400": {
             "description": "No file, a file over 5 MB, an unreadable statement, or an account that is not yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3797,7 +3797,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3807,7 +3807,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3817,7 +3817,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3847,7 +3847,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3857,7 +3857,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3867,7 +3867,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3877,7 +3877,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -3907,7 +3907,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3917,7 +3917,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3927,7 +3927,7 @@
           "404": {
             "description": "No connection on that account.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3937,7 +3937,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -3947,7 +3947,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -3993,7 +3993,7 @@
           "400": {
             "description": "Validation failed or the account is not yours.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4003,7 +4003,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4013,7 +4013,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4023,7 +4023,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4060,7 +4060,7 @@
           "400": {
             "description": "Interactive Brokers rejected the token or query, or the report could not be imported.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4070,7 +4070,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4080,7 +4080,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4090,7 +4090,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4127,7 +4127,7 @@
           "400": {
             "description": "The file is not a Flex Query XML report, an account is unknown, or an exchange rate is missing.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4137,7 +4137,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4147,7 +4147,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4157,7 +4157,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4168,7 +4168,7 @@
           "Investments"
         ],
         "summary": "Get the investment portfolio",
-        "description": "Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security\u0027s own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction\u0027s date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.",
+        "description": "Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security's own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.",
         "operationId": "GetPortfolio",
         "parameters": [
           {
@@ -4198,7 +4198,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4208,7 +4208,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4218,7 +4218,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4228,7 +4228,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4271,7 +4271,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4281,7 +4281,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4291,7 +4291,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4301,7 +4301,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -4336,7 +4336,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4346,7 +4346,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4356,7 +4356,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4366,7 +4366,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4414,7 +4414,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4424,7 +4424,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4434,7 +4434,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4444,7 +4444,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4455,7 +4455,7 @@
           "Investments"
         ],
         "summary": "Record an investment transaction",
-        "description": "Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security\u0027s currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account\u0027s balance in that currency and never counts as income or expense in reports or budgets.",
+        "description": "Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.",
         "operationId": "CreateInvestmentTransaction",
         "requestBody": {
           "content": {
@@ -4493,7 +4493,7 @@
           "400": {
             "description": "Validation failed, the account or security is unknown, or no exchange rate exists for the date.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4503,7 +4503,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4513,7 +4513,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4523,7 +4523,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -4600,7 +4600,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4610,7 +4610,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4620,7 +4620,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4630,7 +4630,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4660,7 +4660,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4670,7 +4670,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4680,7 +4680,7 @@
           "404": {
             "description": "No such entry on an account visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4690,7 +4690,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4700,7 +4700,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -4759,7 +4759,7 @@
           "400": {
             "description": "Validation failed, the entry was imported, the account or security is unknown, or no exchange rate exists for the date.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4769,7 +4769,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4779,7 +4779,7 @@
           "404": {
             "description": "The entry does not exist.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4789,7 +4789,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4799,7 +4799,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4826,7 +4826,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4836,7 +4836,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4846,7 +4846,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4856,7 +4856,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4883,7 +4883,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4893,7 +4893,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4903,7 +4903,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4913,7 +4913,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -4956,7 +4956,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4966,7 +4966,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4976,7 +4976,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -4986,7 +4986,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5006,7 +5006,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5016,7 +5016,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5026,7 +5026,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5036,7 +5036,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5067,7 +5067,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5077,7 +5077,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5087,7 +5087,7 @@
           "404": {
             "description": "No such notification belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5097,7 +5097,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5107,7 +5107,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5134,7 +5134,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5144,7 +5144,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5196,7 +5196,7 @@
           "400": {
             "description": "Validation failed, or the account or category is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5206,7 +5206,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5216,7 +5216,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5226,7 +5226,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -5254,7 +5254,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5264,7 +5264,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5274,7 +5274,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5284,7 +5284,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5315,7 +5315,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5325,7 +5325,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5335,7 +5335,7 @@
           "404": {
             "description": "No such recurring bill belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5345,7 +5345,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5355,7 +5355,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -5391,7 +5391,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5401,7 +5401,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5411,7 +5411,7 @@
           "404": {
             "description": "No such recurring bill belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5421,7 +5421,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5431,7 +5431,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -5490,7 +5490,7 @@
           "400": {
             "description": "Validation failed, or the account or category is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5500,7 +5500,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5510,7 +5510,7 @@
           "404": {
             "description": "No such recurring bill belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5520,7 +5520,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5530,7 +5530,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5585,7 +5585,7 @@
           "400": {
             "description": "The due date does not match, the amount is missing, or the account is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5595,7 +5595,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5605,7 +5605,7 @@
           "404": {
             "description": "No such recurring bill belongs to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5615,7 +5615,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5625,7 +5625,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5678,7 +5678,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5688,7 +5688,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5698,7 +5698,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5708,7 +5708,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -5735,7 +5735,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5745,7 +5745,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5755,7 +5755,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5765,7 +5765,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -5800,7 +5800,7 @@
           "400": {
             "description": "Validation failed, or the reporting currency could not be changed because a rate is missing.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5810,7 +5810,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5820,7 +5820,7 @@
           "403": {
             "description": "Only administrators can change settings.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5830,7 +5830,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5869,7 +5869,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5879,7 +5879,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5889,7 +5889,7 @@
           "403": {
             "description": "Only administrators can sync rates.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5899,7 +5899,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5938,7 +5938,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5948,7 +5948,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -5958,7 +5958,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6005,7 +6005,7 @@
           "400": {
             "description": "The email or password did not pass validation.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6015,7 +6015,7 @@
           "409": {
             "description": "An administrator already exists; setup is closed.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6028,7 +6028,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6060,7 +6060,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6070,7 +6070,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6122,7 +6122,7 @@
           "400": {
             "description": "Validation failed, the split lines do not add up, or the account or category is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6132,7 +6132,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6142,7 +6142,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6152,7 +6152,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -6280,7 +6280,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6290,7 +6290,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6300,7 +6300,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6310,7 +6310,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -6351,9 +6351,9 @@
             }
           },
           "400": {
-            "description": "Validation failed, a listed transaction is split, or the category is not visible to you or does not match a transaction\u0027s type.",
+            "description": "Validation failed, a listed transaction is split, or the category is not visible to you or does not match a transaction's type.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6363,7 +6363,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6373,7 +6373,7 @@
           "404": {
             "description": "At least one listed transaction is not visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6383,7 +6383,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6393,7 +6393,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -6522,7 +6522,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6532,7 +6532,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6542,7 +6542,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6552,7 +6552,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -6681,7 +6681,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6691,7 +6691,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6701,7 +6701,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6711,7 +6711,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -6807,7 +6807,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6817,7 +6817,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6827,7 +6827,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6837,7 +6837,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -6868,7 +6868,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6878,7 +6878,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6888,7 +6888,7 @@
           "404": {
             "description": "No such transaction is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6898,7 +6898,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6908,7 +6908,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -6944,7 +6944,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6954,7 +6954,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6964,7 +6964,7 @@
           "404": {
             "description": "No such transaction is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6974,7 +6974,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -6984,7 +6984,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -7042,7 +7042,7 @@
           "400": {
             "description": "Validation failed, the split lines do not add up, or the account or category is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7052,7 +7052,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7062,7 +7062,7 @@
           "404": {
             "description": "No such transaction is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7072,7 +7072,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7082,7 +7082,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -7129,7 +7129,7 @@
           "400": {
             "description": "Validation failed, the accounts are the same, or one of them is not visible to you.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7139,7 +7139,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7149,7 +7149,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7159,7 +7159,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       },
@@ -7218,7 +7218,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7228,7 +7228,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7238,7 +7238,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7248,7 +7248,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -7279,7 +7279,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7289,7 +7289,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7299,7 +7299,7 @@
           "404": {
             "description": "No such transfer is visible to the signed-in user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7309,7 +7309,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7319,7 +7319,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -7362,7 +7362,7 @@
           "400": {
             "description": "Validation failed, or the email is already taken.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7372,7 +7372,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7382,7 +7382,7 @@
           "403": {
             "description": "The signed-in user is not an administrator.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7392,7 +7392,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7483,7 +7483,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7493,7 +7493,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7503,7 +7503,7 @@
           "403": {
             "description": "The signed-in user is not an administrator.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7513,7 +7513,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7567,7 +7567,7 @@
           "400": {
             "description": "Validation failed, or the current password was wrong.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7577,7 +7577,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7587,7 +7587,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7597,7 +7597,7 @@
         },
         "security": [
           {
-            "Cookie": []
+            "Cookie": [ ]
           }
         ]
       }
@@ -7628,7 +7628,7 @@
           "400": {
             "description": "Bad Request",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7638,7 +7638,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7648,7 +7648,7 @@
           "403": {
             "description": "The signed-in user is not an administrator, or is the target.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7658,7 +7658,7 @@
           "404": {
             "description": "No such user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7668,7 +7668,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7733,7 +7733,7 @@
           "400": {
             "description": "Unknown role.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7743,7 +7743,7 @@
           "401": {
             "description": "Unauthorized",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7753,7 +7753,7 @@
           "403": {
             "description": "The signed-in user is not an administrator, or the change would leave no administrator.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7763,7 +7763,7 @@
           "404": {
             "description": "No such user.",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -7773,7 +7773,7 @@
           "500": {
             "description": "Server Error",
             "content": {
-              "application/problem\u002Bjson": {
+              "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
                 }
@@ -8407,7 +8407,7 @@
           },
           "startingBalance": {
             "type": "string",
-            "description": "Decimal string with at most two decimal places, for example \u00221250.00\u0022.",
+            "description": "Decimal string with at most two decimal places, for example \"1250.00\".",
             "format": "decimal",
             "example": "1250.00"
           },
@@ -8831,7 +8831,7 @@
                 "$ref": "#/components/schemas/Currency"
               }
             ],
-            "description": "Currency for entries without a security. Defaults to the security\u0027s currency, then the account\u0027s."
+            "description": "Currency for entries without a security. Defaults to the security's currency, then the account's."
           },
           "description": {
             "maxLength": 500,
@@ -9098,7 +9098,7 @@
           "email": {
             "maxLength": 256,
             "minLength": 0,
-            "pattern": "^[^@]\u002B@[^@]\u002B$",
+            "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email",
             "example": "partner@example.com"
@@ -9980,7 +9980,7 @@
         "properties": {
           "email": {
             "minLength": 1,
-            "pattern": "^[^@]\u002B@[^@]\u002B$",
+            "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email",
             "example": "you@example.com"
@@ -10503,7 +10503,7 @@
             "$ref": "#/components/schemas/ErrorCode"
           }
         },
-        "description": "RFC9457 compatible problem details/ error response class. this can be used by configuring startup like so:\n\u0060\u0060\u0060app.UseFastEndpoints(c =\u0026gt; c.Errors.UseProblemDetails())\u0060\u0060\u0060"
+        "description": "RFC9457 compatible problem details/ error response class. this can be used by configuring startup like so:\n```app.UseFastEndpoints(c =&gt; c.Errors.UseProblemDetails())```"
       },
       "PublicSettingsResponse": {
         "required": [
@@ -10938,7 +10938,7 @@
           "email": {
             "maxLength": 256,
             "minLength": 0,
-            "pattern": "^[^@]\u002B@[^@]\u002B$",
+            "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email",
             "example": "admin@example.com"
@@ -11577,7 +11577,7 @@
                 "$ref": "#/components/schemas/Currency"
               }
             ],
-            "description": "Currency for entries without a security. Defaults to the security\u0027s currency, then the account\u0027s."
+            "description": "Currency for entries without a security. Defaults to the security's currency, then the account's."
           },
           "description": {
             "maxLength": 500,

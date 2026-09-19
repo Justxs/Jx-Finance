@@ -2,8 +2,6 @@ using System.Security.Claims;
 using FastEndpoints.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Infrastructure.Auth;
 

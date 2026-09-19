@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AccountBalances } from "@/features/dashboard/account-balances";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
 import { AccountForm } from "../account-form";
@@ -90,6 +91,15 @@ export function AccountsPage() {
         onDelete={(id) => setDeleteTarget(id)}
         onConvert={features.multiCurrency ? setConvertAccountId : undefined}
       />
+
+      {accountList.length > 1 ? (
+        <section className="section">
+          <h2 className="section-title mb-4">{t("accounts.share")}</h2>
+          <div className="max-w-2xl">
+            <AccountBalances limit={12} />
+          </div>
+        </section>
+      ) : null}
 
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
         <TransfersSection accounts={allAccountList} />

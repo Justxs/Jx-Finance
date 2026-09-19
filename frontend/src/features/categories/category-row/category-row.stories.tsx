@@ -62,7 +62,7 @@ export const EditDialogOpen: Story = {
   args: { category: sharedCategory },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByRole("button", { name: /^(edit|redaguoti)$/i }));
+    await userEvent.click(await canvas.findByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };

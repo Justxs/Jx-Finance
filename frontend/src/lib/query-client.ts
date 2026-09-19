@@ -44,6 +44,14 @@ export function createMutationCache(onError?: (error: unknown, silent: boolean) 
   });
 }
 
+export function createToastingMutationCache() {
+  return createMutationCache((error, silent) => {
+    if (!silent) {
+      toastError(error);
+    }
+  });
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -59,9 +67,5 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-  mutationCache: createMutationCache((error, silent) => {
-    if (!silent) {
-      toastError(error);
-    }
-  }),
+  mutationCache: createToastingMutationCache(),
 });

@@ -4,7 +4,6 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Endpoints.Settings.UpdateSettings;

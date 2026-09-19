@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, within } from "storybook/test";
+import { expect, fireEvent, within, waitFor } from "storybook/test";
 import { z } from "zod";
 import { useAppForm } from "../app-form";
 
@@ -46,6 +46,6 @@ export const DisabledWhileInvalid: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     fireEvent.change(canvas.getByLabelText("Name"), { target: { value: "" } });
-    await expect(canvas.getByRole("button", { name: "Save" })).toBeDisabled();
+    await waitFor(() => expect(canvas.getByRole("button", { name: "Save" })).toBeDisabled());
   },
 };

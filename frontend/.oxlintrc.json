@@ -17,7 +17,9 @@
     "src/api/schemas",
     "src/route-tree.gen.ts",
     "public",
-    ".storybook/public"
+    ".storybook/public",
+    "playwright-report",
+    "test-results"
   ],
   "categories": {
     "correctness": "error",
@@ -174,26 +176,13 @@
   },
   "overrides": [
     {
-      "files": [
-        "**/*.stories.tsx",
-        ".storybook/**",
-        "*.config.ts",
-        "*.config.cjs",
-        "src/routes/**"
-      ],
+      "files": ["**/*.stories.tsx", ".storybook/**", "*.config.ts", "src/routes/**", "e2e/**"],
       "rules": {
         "import/no-default-export": "off"
       }
     },
     {
-      "files": ["*.config.cjs"],
-      "rules": {
-        "import/no-commonjs": "off",
-        "typescript/no-require-imports": "off"
-      }
-    },
-    {
-      "files": ["src/test/**", "**/*.test.{ts,tsx}", "src/mocks/**", "**/*.stories.tsx"],
+      "files": ["src/test/**", "**/*.test.{ts,tsx}", "**/*.stories.tsx"],
       "rules": {
         "no-console": "off",
         "no-empty-function": "off",

@@ -379,11 +379,11 @@
   }
 
   .section {
-    @apply min-w-0 border-t border-rule pt-4;
+    @apply min-w-0;
   }
 
   .section-title {
-    @apply text-base font-semibold;
+    @apply text-lg leading-6 font-semibold;
   }
 
   .figure {
@@ -396,7 +396,7 @@
   }
 
   .rows {
-    @apply divide-y divide-border border-b border-border;
+    @apply divide-y divide-border;
   }
 
   .form-grid {

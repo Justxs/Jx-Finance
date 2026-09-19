@@ -1,43 +1,130 @@
 set windows-shell := ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command"]
 
-# Run Postgres (Docker) + API + frontend dev servers.
+export_connection := "Host=localhost;Database=export;Username=export;Password=export"
+
+# List the recipes.
+default:
+    just --list
+
+# First checkout: create .env with a generated password, install packages and tools, install git hooks, verify the machine.
+setup:
+    & scripts/setup.ps1
+
+# Verify the tools this repository needs (versions, Docker running, known broken shims).
+doctor:
+    & scripts/doctor.ps1
+
+# Run Postgres (Docker) + API + frontend dev servers in one terminal; waits for the API before starting Vite.
 dev:
     & scripts/dev.ps1
 
-# Export the OpenAPI spec from the backend build (no running API needed) and regenerate the frontend client, MSW handlers and zod schemas.
+# Storybook on http://localhost:6006.
+storybook:
+    nub run --cwd frontend storybook
+
+# Add six months of demo accounts, transactions, budgets, goals and bills to an existing empty user of the dev database.
+seed email:
+    & scripts/with-dev-database.ps1 dotnet run --project backend/JxFinance.Api -c Release -- --seed-demo {{email}}
+
+# Drop the dev database volume and start an empty PostgreSQL; the API migrates on its next start.
+[confirm("This deletes every row in the dev database. Continue?")]
+db-reset:
+    docker compose rm --stop --force db
+    $project = (docker compose config --format json | ConvertFrom-Json).name; docker volume rm "${project}_db_data"
+    docker compose up -d --wait db
+
+# Create an EF migration from the current model.
+migrate-add name:
+    cd backend; $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet ef migrations add --configuration Release {{name}} --project JxFinance.Api --output-dir Infrastructure/Data/Migrations
+
+# Remove the last EF migration (only before it was applied anywhere).
+migrate-remove:
+    cd backend; $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet ef migrations remove --configuration Release --project JxFinance.Api
+
+# List EF migrations.
+migrate-list:
+    cd backend; $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet ef migrations list --configuration Release --project JxFinance.Api --no-connect
+
+# Print the idempotent SQL script for every migration.
+migrate-script:
+    cd backend; $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet ef migrations script --configuration Release --idempotent --project JxFinance.Api
+
+# Export the API contract from the backend build (no running API or database needed) into frontend/openapi.json and regenerate the frontend client, MSW handlers and zod schemas.
 gen:
-    $env:ConnectionStrings__Default = "Host=localhost;Database=export;Username=export;Password=export"; dotnet run --project backend/JxFinance.Api --export-openapi-docs true
+    $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
     Copy-Item backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
     nub run --cwd frontend orval
 
-# Regenerate only the frontend code from the spec already in frontend/openapi.json.
+# Regenerate only the frontend code from the contract already in frontend/openapi.json.
 gen-client:
     nub run --cwd frontend orval
 
-# Fail when the committed generated client differs from what the backend produces now.
+# Fail when the committed contract or generated client differs from what the backend produces now.
 gen-check: gen
-    if (git status --porcelain -- frontend/src/api/generated frontend/src/api/schemas) { git status --short -- frontend/src/api/generated frontend/src/api/schemas; throw "Generated API client is out of date; commit the result of just gen." }
+    if (git status --porcelain -- frontend/openapi.json frontend/src/api/generated frontend/src/api/schemas) { git status --short -- frontend/openapi.json frontend/src/api/generated frontend/src/api/schemas; throw "API contract or generated client is out of date; commit the result of just gen." }
 
-# Everything CI checks, in the same order: backend build and tests, client drift, frontend types, lint, format, tests.
-check: test gen-check
+# Scaffold a backend endpoint slice: just new-endpoint Goals ArchiveGoal post "goals/{id}/archive".
+new-endpoint tag name verb route:
+    node scripts/new-endpoint.mjs {{tag}} {{name}} {{verb}} "{{route}}"
+
+# Scaffold a frontend feature component with its story and test: just new-component goals goal-archive-dialog.
+new-component feature name:
+    node scripts/new-component.mjs {{feature}} {{name}}
+
+# Everything CI checks except story and end-to-end tests (just test-stories, just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, app and Storybook builds.
+check: format-check-backend test gen-check check-frontend
+    nub run --cwd frontend build
+    nub run --cwd frontend build-storybook
+
+# The quick loop without Docker: backend format and build, frontend types, lint, format and unit tests.
+check-fast: format-check-backend check-frontend
+    dotnet build backend/JxFinance.slnx -c Release
+
+# Frontend types, lint, format and tests.
+check-frontend:
     nub exec --cwd frontend tsc -b
     nub run --cwd frontend lint
     nub run --cwd frontend format:check
     nub run --cwd frontend test
 
-# Install the git hooks from lefthook.yml (format and lint staged files, typecheck before push).
+# Fail when backend code is not formatted or breaks a code style rule.
+format-check-backend:
+    dotnet format backend/JxFinance.slnx --verify-no-changes --exclude backend/JxFinance.Api/Infrastructure/Data/Migrations
+
+# Install the git hooks from lefthook.yml.
 hooks:
     nub exec --cwd frontend lefthook install
 
 # Run backend tests (needs Docker for Testcontainers).
 test:
     cd backend; dotnet tool restore
-    dotnet test --solution backend/JxFinance.slnx
+    dotnet test --solution backend/JxFinance.slnx -c Release
 
-# Auto-fix lint issues and format the frontend (Oxc).
+# Browser tests of the stories (needs the Playwright browser: just e2e-install).
+test-stories:
+    nub run --cwd frontend test:stories
+
+e2e_compose := "docker compose -f docker-compose.yml -f docker-compose.e2e.yml"
+
+# End-to-end smoke tests against a throwaway Docker stack (project jx-e2e, http://localhost:8089, own volumes); the dev database is never touched. The stack stays up after a failure for debugging.
+e2e: e2e-down
+    {{e2e_compose}} up -d --build --wait
+    nub run --cwd frontend e2e
+    {{e2e_compose}} down --volumes
+
+# Remove the throwaway end-to-end stack and its volumes.
+e2e-down:
+    {{e2e_compose}} down --volumes
+
+# Download the Chromium build Playwright uses for story and end-to-end tests.
+e2e-install:
+    nub exec --cwd frontend playwright install chromium
+
+# Auto-fix lint issues and format the frontend (Oxc) and the backend (dotnet format).
 fix:
     nub run --cwd frontend lint --fix
     nub run --cwd frontend format
+    dotnet format backend/JxFinance.slnx --exclude backend/JxFinance.Api/Infrastructure/Data/Migrations
 
 # Build and start the full Docker stack.
 up:

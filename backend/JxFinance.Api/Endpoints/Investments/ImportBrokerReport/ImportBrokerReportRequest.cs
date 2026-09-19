@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace JxFinance.Endpoints.Investments.ImportBrokerReport;
 
 public sealed class ImportBrokerReportRequest

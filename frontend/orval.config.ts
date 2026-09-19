@@ -85,8 +85,11 @@ const plainQueryOperations = [
   "Me",
 ];
 
-function operationName(operation: { operationId?: string }, _route: string, verb: string) {
-  const id = operation.operationId ?? "";
+function operationName(operation: object, _route: string, verb: string) {
+  const id =
+    "operationId" in operation && typeof operation.operationId === "string"
+      ? operation.operationId
+      : "";
   const name = verb === "get" && /^Get[A-Z]/.test(id) ? id.slice(3) : id;
   return name.charAt(0).toLowerCase() + name.slice(1);
 }

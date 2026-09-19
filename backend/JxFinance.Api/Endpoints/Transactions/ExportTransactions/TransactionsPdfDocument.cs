@@ -3,7 +3,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Pdf;
 using MigraDoc.DocumentObjectModel;
-using MigraDoc.DocumentObjectModel.Tables;
 using MigraDoc.Rendering;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;

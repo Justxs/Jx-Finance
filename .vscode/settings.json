@@ -1,9 +1,40 @@
 {
-  "files.associations": {
-    "justfile": "plaintext",
-    "Justfile": "plaintext"
-  },
   "files.watcherExclude": {
-    "**/src/api/generated/**": true
-  }
+    "**/src/api/generated/**": true,
+    "**/src/api/schemas/**": true,
+    "**/storybook-static/**": true
+  },
+  "search.exclude": {
+    "**/src/api/generated": true,
+    "**/src/api/schemas": true,
+    "frontend/openapi.json": true,
+    "**/storybook-static": true
+  },
+  "files.readonlyInclude": {
+    "frontend/src/api/generated/**": true,
+    "frontend/src/api/schemas/**": true,
+    "frontend/src/route-tree.gen.ts": true
+  },
+  "editor.formatOnSave": true,
+  "oxc.fmt.configPath": "frontend/.oxfmtrc.json",
+  "[typescript]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "oxc.oxc-vscode"
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp"
+  },
+  "typescript.tsdk": "frontend/node_modules/typescript/lib",
+  "dotnet.defaultSolution": "backend/JxFinance.slnx",
+  "i18n-ally.localesPaths": [
+    "frontend/src/locales"
+  ]
 }

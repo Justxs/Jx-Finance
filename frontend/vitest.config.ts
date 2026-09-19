@@ -1,6 +1,8 @@
 import { fileURLToPath } from "node:url";
 import babel from "@rolldown/plugin-babel";
+import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -30,6 +32,21 @@ export default defineConfig({
           setupFiles: ["./src/test/setup.ts"],
         },
       },
+      {
+        extends: true,
+        plugins: [
+          storybookTest({ configDir: fileURLToPath(new URL("./.storybook", import.meta.url)) }),
+        ],
+        test: {
+          name: "storybook",
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright(),
+            instances: [{ browser: "chromium" }],
+          },
+        },
+      },
     ],
     restoreMocks: true,
     unstubGlobals: true,
@@ -39,6 +56,8 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/api/generated/**",
+        "src/api/schemas/**",
+        "src/**/*.d.ts",
         "src/route-tree.gen.ts",
         "src/storybook/**",
         "src/test/**",

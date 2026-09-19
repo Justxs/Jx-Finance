@@ -6,6 +6,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.Middleware;
 using Scalar.AspNetCore;
 using Serilog;
+using Serilog.Events;
 
 namespace JxFinance.Extensions;
 
@@ -15,7 +16,7 @@ public static class ApiPipelineExtensions
     {
         app.UseExceptionHandler();
         app.UseMiddleware<CorrelationIdMiddleware>();
-        app.UseSerilogRequestLogging();
+        app.UseSerilogRequestLogging(options => options.GetLevel = RequestLogLevel);
 
         app.UseAuthentication();
         app.UseAuthorization();
@@ -50,5 +51,11 @@ public static class ApiPipelineExtensions
         app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
 
         return app;
+    }
+
+    private static LogEventLevel RequestLogLevel(HttpContext context, double elapsedMs, Exception? exception)
+    {
+        if (context.RequestAborted.IsCancellationRequested) return LogEventLevel.Debug;
+        return exception is not null || context.Response.StatusCode >= 500 ? LogEventLevel.Error : LogEventLevel.Information;
     }
 }

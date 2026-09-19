@@ -3,7 +3,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace JxFinance.Infrastructure.Data;
 
@@ -28,7 +27,11 @@ public static class DevDataSeeder
         if (await db.Categories.IgnoreQueryFilters().AnyAsync(c => c.UserId == userId, cancellationToken)) return;
         db.Categories.AddRange(StarterCategories.Select(starter => new Category
         {
-            UserId = userId, Name = starter.Name, Type = starter.Type, Icon = starter.Icon, IsDefault = true,
+            UserId = userId,
+            Name = starter.Name,
+            Type = starter.Type,
+            Icon = starter.Icon,
+            IsDefault = true,
         }));
         await db.SaveChangesAsync(cancellationToken);
     }

@@ -1,6 +1,8 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+COPY .editorconfig global.json ./
+COPY backend/Directory.Build.props backend/Directory.Packages.props backend/
 COPY backend/JxFinance.Api/JxFinance.Api.csproj backend/JxFinance.Api/
 RUN dotnet restore backend/JxFinance.Api/JxFinance.Api.csproj
 

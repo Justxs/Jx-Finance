@@ -169,8 +169,20 @@ describe("schema builders", () => {
       ["-1", "x"],
       "validation.money",
     ],
-    ["quantity", quantity(t, "q.key"), ["0", "1.12345678"], ["-1", "1.123456789"], "q.key"],
-    ["positiveQuantity", positiveQuantity(t, "q.key"), ["0.5"], ["0", ""], "q.key"],
+    [
+      "quantity",
+      quantity(t, "investments.validation.price"),
+      ["0", "1.12345678"],
+      ["-1", "1.123456789"],
+      "investments.validation.price",
+    ],
+    [
+      "positiveQuantity",
+      positiveQuantity(t, "investments.validation.price"),
+      ["0.5"],
+      ["0", ""],
+      "investments.validation.price",
+    ],
   ] as const)("%s", (_name, schema, valid, invalid, message) => {
     for (const value of valid) {
       expect(messages(schema, value)).toEqual([]);

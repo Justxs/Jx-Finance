@@ -1,4 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useMutation } from "@tanstack/react-query";
+import type { ComponentProps } from "react";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import { ApiError } from "@/api/client";
 import {
@@ -33,6 +35,23 @@ async function submitForm(canvasElement: HTMLElement) {
   if (submit) {
     await userEvent.click(submit);
   }
+}
+
+function MutationBackedForm(args: Readonly<ComponentProps<typeof TransactionForm>>) {
+  const mutation = useMutation({
+    mutationFn: async (values: Parameters<typeof args.onSubmit>[0]) => args.onSubmit(values),
+  });
+
+  return (
+    <div className="w-[min(42rem,90vw)]">
+      <TransactionForm
+        {...args}
+        pending={mutation.isPending}
+        error={mutation.error}
+        onSubmit={(values) => mutation.mutateAsync(values)}
+      />
+    </div>
+  );
 }
 
 const meta = {
@@ -108,9 +127,9 @@ export const ValidationErrors: Story = {
 export const ServerLineError: Story = {
   args: {
     initial: splitTransaction,
-    error: splitLineProblem,
     onSubmit: fn(() => Promise.reject(splitLineProblem)),
   },
+  render: (args) => <MutationBackedForm {...args} />,
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await submitForm(canvasElement);
@@ -122,7 +141,7 @@ export const ServerLineError: Story = {
     await expect(lineAmount).toHaveAttribute("aria-invalid", "true");
     await expect(lineAmount).toHaveAttribute("aria-describedby", "tx-line-1-amount-error");
 
-    const alert = canvas.getByRole("alert");
+    const alert = await canvas.findByRole("alert");
     await expect(alert).toHaveTextContent("The month is closed for this account.");
     await expect(alert).not.toHaveTextContent("Enter an amount greater than 0, e.g. 12.34.");
   },

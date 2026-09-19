@@ -28,8 +28,9 @@ node_modules/
 .vite/
 # Coverage
 **/coverage/
-# Generated OpenAPI spec (the client in src/api/generated is committed; the spec is fetched at gen time)
-frontend/openapi.json
+# Playwright
+**/playwright-report/
+**/test-results/
 # Exported OpenAPI documents (regenerated on demand / in CI)
 backend/**/wwwroot/openapi/
 
@@ -41,6 +42,8 @@ logs/
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
+!.vscode/launch.json
+!.vscode/tasks.json
 .idea/
 *.iml
 *.swp

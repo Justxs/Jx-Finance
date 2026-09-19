@@ -40,6 +40,7 @@ function BrokerImportContent({
   const [selectedAccountId, setSelectedAccountId] = useState(
     () => defaultInvestmentAccount(accounts, accountId)?.id ?? "",
   );
+  const [tab, setTab] = useState<BrokerImportTab>(initialTab);
 
   if (accounts.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("investments.import.noAccounts")}</p>;
@@ -62,7 +63,7 @@ function BrokerImportContent({
         </p>
       </div>
 
-      <Tabs defaultValue={initialTab} className="mt-5">
+      <Tabs value={tab} onValueChange={(next) => setTab(next as BrokerImportTab)} className="mt-5">
         <TabsList>
           <TabsTab value="upload" disabled={mutations.busy}>
             {t("investments.import.tabs.upload")}

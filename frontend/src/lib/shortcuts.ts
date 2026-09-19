@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-hotkeys";
 import type { RegisteredRouter } from "@tanstack/react-router";
 import type { FeatureFlags } from "@/api/generated/model";
+import type { TranslationKey } from "@/lib/i18n";
 
 export const PREFIX_TIMEOUT_MS = 1200;
 
@@ -29,13 +30,18 @@ type ShortcutAction =
 export interface Shortcut {
   id: string;
   keys: readonly string[];
-  labelKey: string;
+  labelKey: TranslationKey;
   group: "actions" | "goTo";
   action: ShortcutAction;
   feature?: ShortcutFeature;
 }
 
-function goTo(key: string, to: string, labelKey: string, feature?: ShortcutFeature): Shortcut {
+function goTo(
+  key: string,
+  to: string,
+  labelKey: TranslationKey,
+  feature?: ShortcutFeature,
+): Shortcut {
   return {
     id: `go-${key}`,
     keys: ["g", key],

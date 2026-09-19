@@ -15,8 +15,12 @@ export type FieldAliases = Readonly<Record<string, string>>;
 const placedNames = new WeakMap<object, ReadonlySet<string>>();
 
 export function errorCodeText(code: ErrorCode | null | undefined, reason?: string) {
-  const key = `serverErrors.${code ?? ""}`;
-  return code && i18n.exists(key) ? i18n.t(key, { reason: reason ?? "" }) : undefined;
+  if (!code) {
+    return undefined;
+  }
+  const key = ["serverErrors", code].join(".");
+  const fallback = reason ?? "";
+  return i18n.exists(key) ? i18n.t(key, { reason: fallback, defaultValue: fallback }) : undefined;
 }
 
 export function serverErrorText(detail: ServerErrorDetail): string {

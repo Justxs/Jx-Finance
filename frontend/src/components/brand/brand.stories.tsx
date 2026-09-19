@@ -4,7 +4,6 @@ import { Brand, BrandMark } from "./brand";
 const meta = {
   title: "Components/Brand",
   component: Brand,
-  parameters: { providers: "none" },
 } satisfies Meta<typeof Brand>;
 
 export default meta;
@@ -16,6 +15,8 @@ export const Small: Story = { args: { size: "sm" } };
 
 export const Large: Story = { args: { size: "lg" } };
 
+export const Stacked: Story = { args: { size: "lg", stacked: true } };
+
 export const Compact: Story = { args: { compact: true } };
 
 export const Dark: Story = { globals: { theme: "dark" } };
@@ -23,10 +24,10 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const MarkSizes: Story = {
   render: () => (
     <div className="flex items-end gap-4">
-      <BrandMark className="size-32" title="Jx Finance" />
-      <BrandMark className="size-16" />
-      <BrandMark className="size-8" />
-      <BrandMark className="size-4" />
+      <BrandMark className="h-32" title="Jx Finance" />
+      <BrandMark className="h-16" />
+      <BrandMark className="h-8" />
+      <BrandMark className="h-4" />
     </div>
   ),
 };

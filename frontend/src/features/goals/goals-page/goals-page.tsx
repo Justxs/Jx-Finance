@@ -34,7 +34,7 @@ export function GoalsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("goals.empty")}</p>;
   } else {
     content = (
-      <ul className="rows border-t border-t-rule">
+      <ul className="rows">
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}

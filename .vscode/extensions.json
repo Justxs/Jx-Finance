@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "oxc.oxc-vscode",
+    "ms-dotnettools.csdevkit",
+    "bradlc.vscode-tailwindcss",
+    "nefrob.vscode-just-syntax",
+    "editorconfig.editorconfig",
+    "ms-playwright.playwright",
+    "vitest.explorer",
+    "ms-azuretools.vscode-docker"
+  ]
+}

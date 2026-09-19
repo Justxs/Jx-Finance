@@ -9,6 +9,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { AddCategoryForm } from "../add-category-form";
 import { CategoryRow } from "../category-row";
@@ -31,7 +32,7 @@ export function CategoriesPage() {
 
   const categoryList = useDeferredValue(categories.data) ?? [];
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
-  const groups: { type: FlowType; labelKey: string }[] = [
+  const groups: { type: FlowType; labelKey: TranslationKey }[] = [
     { type: "income", labelKey: "categories.income" },
     { type: "expense", labelKey: "categories.expense" },
   ];

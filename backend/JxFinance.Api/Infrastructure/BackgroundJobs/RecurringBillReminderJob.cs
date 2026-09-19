@@ -1,8 +1,8 @@
+using System.Globalization;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Settings;
 using JxFinance.Domain.Notifications;
-using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -89,7 +89,7 @@ public sealed class RecurringBillReminderJob(
                 UserId = bill.UserId,
                 Type = NotificationType.BillDue,
                 Title = bill.Name,
-                Message = bill.NextDueDate.ToString("yyyy-MM-dd"),
+                Message = bill.NextDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
                 RelatedType = RelatedType,
                 RelatedId = bill.Id.Value,
                 Channel = NotificationChannel.InApp,

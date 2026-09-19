@@ -135,8 +135,15 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 }
                 else
                 {
-                    transfer = new Transfer { FromAccountId = fromId, ToAccountId = toId,
-                        Amount = amount, ReceivedAmount = amount, Date = row.Date, Description = row.Description };
+                    transfer = new Transfer
+                    {
+                        FromAccountId = fromId,
+                        ToAccountId = toId,
+                        Amount = amount,
+                        ReceivedAmount = amount,
+                        Date = row.Date,
+                        Description = row.Description
+                    };
                     db.Transfers.Add(transfer);
                 }
                 db.TransferImports.Add(new TransferImport { AccountId = accountId, ImportRef = row.ImportRef, TransferId = transfer.Id });

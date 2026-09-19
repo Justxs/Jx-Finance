@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { useCurrencyName } from "@/hooks/use-formatters";
 import type { FeatureKey } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
+import type { TranslationKey } from "@/lib/i18n";
 import { optionalText, requiredValue } from "@/lib/validation";
 
 interface Props {
@@ -42,7 +43,7 @@ interface FormValues {
   defaultPageSize: string;
 }
 
-const featureGroups: { titleKey: string; features: FeatureKey[] }[] = [
+const featureGroups: { titleKey: TranslationKey; features: FeatureKey[] }[] = [
   { titleKey: "settings.featureGroups.plan", features: ["budgets", "goals", "recurringBills"] },
   { titleKey: "settings.featureGroups.review", features: ["netWorth", "investments", "reports"] },
   {
@@ -52,7 +53,7 @@ const featureGroups: { titleKey: string; features: FeatureKey[] }[] = [
 ];
 
 const pageSizes = ["10", "20", "50", "100"];
-const languages = ["en", "lt"];
+const languages = ["en", "lt"] as const;
 
 function timeZones(current: string) {
   const supported = Intl.supportedValuesOf("timeZone");

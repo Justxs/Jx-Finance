@@ -35,7 +35,7 @@ function Demo() {
       <Button variant="outline" size="sm" onClick={add} disabled={rows.length === names.length}>
         Add row
       </Button>
-      <ul className="rows border-t border-t-rule">
+      <ul className="rows">
         {rows.map((name) => (
           <RowTransition key={name}>
             <li className="flex items-center justify-between py-2 text-sm">

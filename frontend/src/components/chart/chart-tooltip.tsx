@@ -48,7 +48,11 @@ export function ChartTooltip({
     return null;
   }
 
-  const values = new Map(payload.map((entry) => [String(entry.dataKey), Number(entry.value ?? 0)]));
+  const values = new Map(
+    payload
+      .filter((entry) => entry.value !== undefined && entry.value !== null)
+      .map((entry) => [String(entry.dataKey), Number(entry.value)]),
+  );
   const rows = series.filter((item) => values.has(item.key));
   const text = String(label ?? "");
 

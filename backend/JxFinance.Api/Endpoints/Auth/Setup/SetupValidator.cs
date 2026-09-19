@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
 using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Auth.Setup;

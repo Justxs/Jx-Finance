@@ -3,12 +3,8 @@ using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.Accounts.Interfaces;
-using JxFinance.Endpoints.NetWorth.CreateAsset;
-using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
-using JxFinance.Endpoints.NetWorth.UpdateAsset;
-using JxFinance.Endpoints.NetWorth.UpdateDebt;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 

@@ -29,6 +29,7 @@ import {
 import { QueryBoundary } from "@/components/query-boundary";
 import { RouteError } from "@/components/route-error";
 import { RoutePending } from "@/components/route-pending";
+import { Splash } from "@/components/splash";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
@@ -73,6 +74,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     warm(queryClient, getNotificationsSuspenseQueryOptions(unreadParams));
   },
   component: RootLayout,
+  pendingComponent: Splash,
+  pendingMs: 0,
+  pendingMinMs: 0,
 });
 
 interface MobileNavItem {

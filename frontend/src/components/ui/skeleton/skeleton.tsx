@@ -45,11 +45,11 @@ function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
         <Skeleton className="h-11 w-52 max-w-full rounded-sm" />
       </div>
       <div className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-8 gap-y-4">
-        <div className="space-y-2 border-t pt-2.5">
+        <div className="space-y-2">
           <Skeleton className="h-4 w-28 rounded-sm" />
           <Skeleton className="h-6 w-24 rounded-sm" />
         </div>
-        <div className="space-y-2 border-t pt-2.5">
+        <div className="space-y-2">
           <Skeleton className="h-4 w-28 rounded-sm" />
           <Skeleton className="h-6 w-24 rounded-sm" />
         </div>

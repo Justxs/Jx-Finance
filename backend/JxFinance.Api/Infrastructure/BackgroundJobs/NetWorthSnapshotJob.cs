@@ -1,7 +1,7 @@
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
-using JxFinance.Domain.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Services;
 using JxFinance.Endpoints.Investments.Services;
