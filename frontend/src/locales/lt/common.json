@@ -6,7 +6,6 @@
   "nav": {
     "dashboard": "Suvestinė",
     "transactions": "Operacijos",
-    "import": "CSV importas",
     "accounts": "Sąskaitos",
     "categories": "Kategorijos",
     "budgets": "Biudžetai",
@@ -364,13 +363,13 @@
     "confirmAndEnable": "Patvirtinti ir įjungti",
     "recoveryCodesTitle": "Išsaugokite atsarginius kodus",
     "recoveryCodesSubtitle": "Kiekvieną kodą galima naudoti vieną kartą, jei prarastumėte prieigą prie autentifikavimo programėlės. Saugokite juos saugioje vietoje — jie nebus rodomi pakartotinai.",
-    "recoveryCodesDone": "Išsaugojau šiuos kodus"
+    "recoveryCodesDone": "Išsaugojau šiuos kodus",
+    "sectionsNav": "Profilio skyriai"
   },
   "settings": {
     "title": "Nustatymai",
     "description": "Galioja visiems šios sistemos naudotojams.",
     "unsaved": "Yra neišsaugotų pakeitimų.",
-    "saved": "Visi pakeitimai išsaugoti.",
     "savedToast": "Nustatymai išsaugoti",
     "discard": "Atmesti pakeitimus",
     "general": {
@@ -477,7 +476,9 @@
       "firstAccount": "Pirmoji sąrašo sąskaita",
       "pageSize": "Eilučių puslapyje",
       "pageSizeHint": "Naudojama operacijų sąraše."
-    }
+    },
+    "appearance": "Išvaizda",
+    "sectionsNav": "Nustatymų skyriai"
   },
   "budgets": {
     "title": "Biudžetai",

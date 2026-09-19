@@ -59,7 +59,7 @@ function writeDecimalFields() {
     }
   }
 
-  const lines = [...names].toSorted().map((name) => `  "${name}",`);
+  const lines = [...names].toSorted((a, b) => a.localeCompare(b)).map((name) => `  "${name}",`);
   writeFileSync(
     decimalFieldsFile,
     [

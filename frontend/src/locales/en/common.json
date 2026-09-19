@@ -6,7 +6,6 @@
   "nav": {
     "dashboard": "Dashboard",
     "transactions": "Transactions",
-    "import": "Import CSV",
     "accounts": "Accounts",
     "categories": "Categories",
     "budgets": "Budgets",
@@ -356,13 +355,13 @@
     "confirmAndEnable": "Confirm and enable",
     "recoveryCodesTitle": "Save your recovery codes",
     "recoveryCodesSubtitle": "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe — they won't be shown again.",
-    "recoveryCodesDone": "I've saved these codes"
+    "recoveryCodesDone": "I've saved these codes",
+    "sectionsNav": "Profile sections"
   },
   "settings": {
     "title": "Settings",
     "description": "Apply to everyone who uses this installation.",
     "unsaved": "You have unsaved changes.",
-    "saved": "All changes saved.",
     "savedToast": "Settings saved",
     "discard": "Discard changes",
     "general": {
@@ -465,7 +464,9 @@
       "firstAccount": "First account in the list",
       "pageSize": "Rows per page",
       "pageSizeHint": "Used by the transactions list."
-    }
+    },
+    "appearance": "Appearance",
+    "sectionsNav": "Settings sections"
   },
   "budgets": {
     "title": "Budgets",

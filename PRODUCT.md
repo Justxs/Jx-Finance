@@ -35,7 +35,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 ## Capabilities and Constraints
 
-- Routes: dashboard, transactions, import (Swedbank CSV review with bulk selection, bulk category and category recall), accounts (with transfers), categories, budgets, goals, net worth, recurring bills, investments, households, reports, settings (admin: features, reporting currency, exchange-rate sync, installation defaults), users (admin), profile (password, 2FA), login, first-run setup. Import and investments can be switched off per installation.
+- Routes: dashboard, transactions, accounts (with transfers), categories, budgets, goals, net worth, recurring bills, investments, households, reports, settings (admin: features, reporting currency, exchange-rate sync, installation defaults), users (admin), profile (password, 2FA), login, first-run setup. Bank statement import is not a route: it opens as a dialog from Settings and Profile (provider list, then Swedbank CSV review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
 - Light and dark themes are both first-class.
 - The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync and a saved Interactive Brokers Flex connection.
 - Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, tags, categorization rules, credit-card statements, PWA/offline, email delivery.

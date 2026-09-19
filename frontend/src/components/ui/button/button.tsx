@@ -59,6 +59,7 @@ function Button({
     tooltipSide?: React.ComponentProps<typeof Tooltip>["side"];
   }) {
   const iconOnly = typeof size === "string" && size.startsWith("icon");
+  const hint = tooltip ?? (iconOnly ? props["aria-label"] : undefined);
 
   const button = (
     <ButtonPrimitive
@@ -74,7 +75,7 @@ function Button({
   );
 
   return (
-    <Tooltip content={tooltip} side={tooltipSide}>
+    <Tooltip content={hint} side={tooltipSide}>
       {button}
     </Tooltip>
   );

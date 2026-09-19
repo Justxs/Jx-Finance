@@ -125,6 +125,6 @@ export function categoryTargetCount(rows: PreviewRowState[], category: CategoryR
 }
 
 export function importDateRange(rows: PreviewRowState[]) {
-  const dates = rows.map((row) => row.date).toSorted();
+  const dates = rows.map((row) => row.date).toSorted((a, b) => a.localeCompare(b));
   return { dateFrom: dates[0] ?? "", dateTo: dates.at(-1) ?? "" };
 }

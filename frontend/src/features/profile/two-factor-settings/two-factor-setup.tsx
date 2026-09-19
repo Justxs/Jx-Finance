@@ -23,7 +23,7 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
   });
 
   return (
-    <div className="section max-w-md space-y-4">
+    <div className="section space-y-4 *:max-w-md">
       <h2 className="section-title">{t("profile.twoFactorTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("profile.scanQrSubtitle")}</p>
       <img

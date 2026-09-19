@@ -33,7 +33,7 @@ function PasswordPrompt({
   return (
     <form
       noValidate
-      className="section max-w-md space-y-4"
+      className="section space-y-4 *:max-w-md"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();

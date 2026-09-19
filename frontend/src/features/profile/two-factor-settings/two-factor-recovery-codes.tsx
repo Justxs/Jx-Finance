@@ -10,7 +10,7 @@ export function TwoFactorRecoveryCodes({ codes, onDone }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <div className="section max-w-md space-y-4">
+    <div className="section space-y-4 *:max-w-md">
       <h2 className="section-title">{t("profile.recoveryCodesTitle")}</h2>
       <p className="text-sm text-muted-foreground">{t("profile.recoveryCodesSubtitle")}</p>
       <ul className="grid gap-2 rounded-md bg-muted p-4 font-mono text-sm sm:grid-cols-2">
