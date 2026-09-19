@@ -58,6 +58,20 @@ function timeZones(current: string) {
   return supported.includes(current) ? supported : [current, ...supported];
 }
 
+function zoneRegion(zone: string) {
+  const slash = zone.indexOf("/");
+  return slash === -1 ? "" : zone.slice(0, slash);
+}
+
+function zoneCity(zone: string) {
+  const slash = zone.indexOf("/");
+  return (slash === -1 ? zone : zone.slice(slash + 1)).replaceAll("_", " ").replaceAll("/", " / ");
+}
+
+function zoneRegions(zones: readonly string[]) {
+  return [...new Set(zones.map(zoneRegion))].toSorted((a, b) => a.localeCompare(b));
+}
+
 export function SettingsForm({
   settings,
   accounts,
@@ -370,17 +384,39 @@ export function SettingsForm({
             {(field) => (
               <div className="space-y-1.5">
                 <Label htmlFor="settings-time-zone">{t("settings.regional.timeZone")}</Label>
-                <SelectField
-                  id="settings-time-zone"
-                  value={field.value}
-                  onBlur={field.handleBlur}
-                  onChange={(value) => field.handleChange(value)}
-                  options={timeZones(settings.timeZone).map((zone) => ({
-                    value: zone,
-                    label: zone.replaceAll("_", " "),
-                  }))}
-                />
-                <p className="text-xs text-muted-foreground">
+                <div className="flex gap-2">
+                  <div className="w-2/5 min-w-0">
+                    <SelectField
+                      aria-label={t("settings.regional.timeZoneRegion")}
+                      value={zoneRegion(field.value)}
+                      onChange={(region) => {
+                        const first = timeZones(settings.timeZone).find(
+                          (zone) => zoneRegion(zone) === region,
+                        );
+                        if (first && region !== zoneRegion(field.value)) {
+                          field.handleChange(first);
+                        }
+                      }}
+                      options={zoneRegions(timeZones(settings.timeZone)).map((region) => ({
+                        value: region,
+                        label: region || t("settings.regional.timeZoneOther"),
+                      }))}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <SelectField
+                      id="settings-time-zone"
+                      aria-describedby="settings-time-zone-hint"
+                      value={field.value}
+                      onBlur={field.handleBlur}
+                      onChange={(value) => field.handleChange(value)}
+                      options={timeZones(settings.timeZone)
+                        .filter((zone) => zoneRegion(zone) === zoneRegion(field.value))
+                        .map((zone) => ({ value: zone, label: zoneCity(zone) }))}
+                    />
+                  </div>
+                </div>
+                <p id="settings-time-zone-hint" className="text-xs text-muted-foreground">
                   {t("settings.regional.timeZoneHint")}
                 </p>
               </div>

@@ -191,7 +191,17 @@ Keyboard keys are shown as `kbd` with a 2px radius, hairline border and monospac
 Every amount is formatted in its own currency with `useMoney().format(value, currency)`; omitting the currency means the reporting currency. A foreign amount in a table carries its reporting-currency value on a second line, `text-xs`, muted, prefixed with `≈`. An account that holds more than one currency lists each balance under its total the same way. A movement between currencies reads `sold → bought` on one line with tabular figures. An amount input that needs a currency pairs the input (`flex-1`) with a compact `CurrencySelect` in a `w-24` wrapper showing only the code; standalone currency fields use the full `CODE · Name` label. Rates show four decimals as `1 EUR = 1.0842 USD` between two rules, never in a card.
 
 ### Overlays and errors
-Dialog scrims are flat (`bg-black/30`, no blur). A delete confirmation names the item. Inline load errors use ink text with a retry link; icon-sized slots use an icon fallback instead of a sentence.
+Dialog scrims are flat (`bg-black/30`, no blur). Dialogs use the 6px control radius and a footer separated by a hairline, with no fill. A delete confirmation names the item. Inline load errors use ink text with a retry link; icon-sized slots use an icon fallback instead of a sentence.
+
+A section keeps its rule and title while its content loads or fails: the `QueryBoundary` sits inside the `section`, below the `h2`. Pass `errorSubject` (normally the section title) so the message names what failed ("Recent transactions could not be loaded."). When a whole page fails, the root boundary renders `RouteError` with the page title still in place.
+
+Loading placeholders follow the ledger: `RowsSkeleton` for lists and tables (hairline-ruled rows of short bars), `StatsSkeleton` for `SummaryStats`. A plain `Skeleton` block is only for a chart plot. A zero amount is neutral ink with no sign, and a chart with nothing to plot is replaced by one muted sentence.
+
+A failed form submission stays on screen: `FormError` (`components/form-error`) renders a `role="alert"` block in `text-expense` under a 1px expense rule, above the form footer, listing each server reason when there are several. The mutation is marked `meta: { silent: true }` so it does not also toast. Error toasts stay for 12 seconds.
+
+Every row the user entered can be corrected: a ghost pencil before the delete button opens the same form that created the row, titled with the row's name and saved with "Save". A row the product will not let them change (a broker import) shows no pencil and carries a tag whose tooltip and screen-reader text say where to correct it.
+
+Below `md`, accounts, users and the import review follow the same ledger list as transactions. In the import review the upload form collapses to one line (file, account, "Change") once a preview exists, "Record as" appears only on rows that look like transfers and is otherwise a "Mark as transfer" text button, and the review pages at 50 rows. A report trend of more than 14 days is shown in weeks, labelled with the date range.
 
 ### Navigation
 Sidebar links are muted text; the current page gets a paper fill, a hairline border and semibold ink. No colored stripe.

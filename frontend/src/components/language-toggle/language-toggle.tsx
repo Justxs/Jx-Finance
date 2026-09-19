@@ -15,7 +15,7 @@ export function LanguageToggle() {
       size="icon"
       lang={next}
       onClick={() => setLocale(next)}
-      aria-label={labels[next]}
+      aria-label={`${locale.toUpperCase()}, ${labels[next]}`}
       tooltip={labels[next]}
     >
       <span aria-hidden="true" className="text-xs font-semibold tracking-wide uppercase">

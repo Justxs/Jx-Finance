@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useSetupEndpoint } from "@/api/generated";
 import { Brand } from "@/components/brand";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ export function SetupPage() {
 
   const setupMutation = useSetupEndpoint({
     mutation: {
+      meta: { silent: true },
       onSuccess: () => {
         setSetupNeeded(false);
         navigate({ to: "/login" });
@@ -137,6 +139,8 @@ export function SetupPage() {
               </div>
             )}
           </form.Field>
+
+          <FormError error={setupMutation.error} />
 
           <form.Subscribe selector={(state) => state.canSubmit}>
             {(canSubmit) => (

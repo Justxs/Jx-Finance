@@ -45,6 +45,13 @@ export function DebtsSection() {
           .filter(Boolean)
           .join(" · "),
         amount: Number(debt.outstandingAmount),
+        values: {
+          name: debt.name ?? "",
+          type: debt.type,
+          amount: debt.outstandingAmount,
+          interestRate: debt.interestRate === null ? "" : String(debt.interestRate),
+          asOf: debt.asOf,
+        },
       }))}
       deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
       deleteDisabled={deleteMutation.isPending}

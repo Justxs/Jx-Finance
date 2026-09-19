@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { HttpResponse, delay, http } from "msw";
+import { expect, userEvent, within } from "storybook/test";
 import { loginTwoFactorRequired, unauthorizedProblem } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
 import { LoginPage } from "./login-page";
@@ -44,6 +45,13 @@ export const InvalidCredentialsAfterSubmit: Story = {
         ...handlers,
       ],
     },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText("Email"), "ruta@example.lt");
+    await userEvent.type(canvas.getByLabelText("Password"), "fixture-value");
+    await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("Invalid credentials.");
   },
 };
 

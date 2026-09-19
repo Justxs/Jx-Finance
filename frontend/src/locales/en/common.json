@@ -56,7 +56,16 @@
     "monthIncome": "Income this month",
     "monthExpense": "Expenses this month",
     "recent": "Recent transactions",
-    "empty": "No transactions yet. Add your first one on the Transactions page.",
+    "empty": "No transactions yet.",
+    "firstRun": {
+      "intro": "The ledger is empty. Three steps start it:",
+      "accounts": "Add an account",
+      "accountsHint": "with its opening balance.",
+      "transactions": "Record transactions",
+      "transactionsHint": "by hand or from a bank CSV.",
+      "budgets": "Set a budget",
+      "budgetsHint": "to see whether the month is on plan."
+    },
     "spendingByCategory": "Spending by category (this month)",
     "monthlyTrend": "Income vs. expenses",
     "other": "Other",
@@ -380,6 +389,8 @@
         "lt": "Lietuvių"
       },
       "timeZone": "Time zone",
+      "timeZoneRegion": "Time zone region",
+      "timeZoneOther": "Other",
       "timeZoneHint": "Decides what counts as today and this month.",
       "firstDayOfWeek": "Week starts on",
       "days": {
@@ -514,6 +525,7 @@
       "typeFilter": "Entry type",
       "allTypes": "All types",
       "imported": "IBKR",
+      "importedLocked": "Imported from the broker. Correct it there and import again.",
       "splitRatio": "{{ratio}} for 1",
       "noCash": "No cash"
     },
@@ -556,7 +568,9 @@
       "cashEffect": "Cash effect",
       "noCash": "No cash movement",
       "submit": "Add entry",
-      "saved": "Entry added."
+      "saved": "Entry added.",
+      "corrected": "Entry corrected.",
+      "editTitle": "Correct entry"
     },
     "validation": {
       "price": "Enter a price of 0 or more with up to 8 decimals, e.g. 98.4125.",
@@ -730,6 +744,8 @@
   },
   "reports": {
     "title": "Reports",
+    "exportCsv": "Transactions CSV",
+    "exportPdf": "Transactions PDF",
     "range": "Range",
     "presets": {
       "thisMonth": "This month",
@@ -756,6 +772,9 @@
     "duplicate": "Already imported",
     "looksLikeTransfer": "Looks like a transfer",
     "recordAs": "Record as",
+    "markTransfer": "Mark as transfer",
+    "markTransferFor": "Mark as transfer: {{row}}",
+    "changeFile": "Change",
     "transaction": "Income / expense",
     "transferWith": "Transfer · {{account}}",
     "matchTransfer": "Match a transfer",
@@ -807,6 +826,7 @@
   "errors": {
     "generic": "Something went wrong. Please try again.",
     "loadFailed": "Could not load this.",
+    "loadFailedNamed": "{{subject}} could not be loaded.",
     "retry": "Try again",
     "loading": "Loading"
   },
@@ -834,6 +854,7 @@
     "income": "Income",
     "expense": "Expenses",
     "trendLabel": "Income and expenses by period",
+    "empty": "Nothing recorded in this period.",
     "netWorthLabel": "Net worth over time",
     "net": "Net",
     "netWorth": "Net worth"

@@ -163,6 +163,7 @@ export * from "./updateCategoryRequest";
 export * from "./updateDebtRequest";
 export * from "./updateGoalRequest";
 export * from "./updateHouseholdRequest";
+export * from "./updateInvestmentTransactionRequest";
 export * from "./updateMemberRoleRequest";
 export * from "./updateMyProfileRequest";
 export * from "./updateRecurringBillRequest";

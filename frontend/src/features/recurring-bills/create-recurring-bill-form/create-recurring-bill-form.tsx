@@ -8,6 +8,7 @@ import type {
   RecurringBillCadence,
   RecurringBillKind,
 } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -65,7 +66,9 @@ export function CreateRecurringBillForm({
       }
     });
 
-  const createMutation = useCreateRecurringBillEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateRecurringBillEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
   const defaultValues: FormValues = {
     name: "",
@@ -270,6 +273,8 @@ export function CreateRecurringBillForm({
           </div>
         )}
       </form.Field>
+
+      <FormError error={createMutation.error} />
 
       <div className="col-span-full flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

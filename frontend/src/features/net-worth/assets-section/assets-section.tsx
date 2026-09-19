@@ -37,6 +37,13 @@ export function AssetsSection() {
         name: asset.name ?? "",
         details: `${t(`netWorth.assetTypes.${asset.type}`)} · ${formatDate(asset.asOf)}`,
         amount: Number(asset.currentValue),
+        values: {
+          name: asset.name ?? "",
+          type: asset.type,
+          amount: asset.currentValue,
+          interestRate: "",
+          asOf: asset.asOf,
+        },
       }))}
       deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
       deleteDisabled={deleteMutation.isPending}

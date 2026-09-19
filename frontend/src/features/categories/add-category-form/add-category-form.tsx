@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateCategoryEndpoint, useGetHouseholdsEndpointSuspense } from "@/api/generated";
 import type { FlowType, Scope } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -44,7 +45,9 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
       path: ["householdId"],
     });
 
-  const createMutation = useCreateCategoryEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateCategoryEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
   const defaultValues: FormValues = {
     name: "",
@@ -183,6 +186,8 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
           </div>
         )}
       </form.Field>
+
+      <FormError error={createMutation.error} />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

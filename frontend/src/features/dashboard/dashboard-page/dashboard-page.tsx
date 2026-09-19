@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RowsSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton";
 import { useMonthLabel } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { CategoryBreakdownChart } from "../category-breakdown-chart";
@@ -18,28 +18,32 @@ export function DashboardPage() {
     <div className="space-y-10">
       <PageHeader title={t("dashboard.title")} description={month} />
 
-      <QueryBoundary fallback={<Skeleton className="h-24 w-full" />}>
+      <QueryBoundary fallback={<StatsSkeleton />} errorSubject={t("dashboard.totalBalance")}>
         <DashboardStats />
       </QueryBoundary>
 
       <div className="split-columns gap-y-10">
         <section className="section">
           <h2 className="section-title mb-4">{t("dashboard.spendingByCategory")}</h2>
-          <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
+          <QueryBoundary
+            fallback={<RowsSkeleton rows={6} />}
+            errorSubject={t("dashboard.spendingByCategory")}
+          >
             <CategoryBreakdownChart />
           </QueryBoundary>
         </section>
         <section className="section">
           <h2 className="section-title mb-4">{t("dashboard.monthlyTrend")}</h2>
-          <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
+          <QueryBoundary
+            fallback={<Skeleton className="h-64 w-full rounded-sm" />}
+            errorSubject={t("dashboard.monthlyTrend")}
+          >
             <MonthlyTrendChart />
           </QueryBoundary>
         </section>
       </div>
 
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <RecentTransactionsList />
-      </QueryBoundary>
+      <RecentTransactionsList />
     </div>
   );
 }

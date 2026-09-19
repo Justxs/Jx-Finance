@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateHouseholdEndpoint, useUpdateHouseholdEndpoint } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -27,8 +28,12 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
       .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
   });
 
-  const createMutation = useCreateHouseholdEndpoint({ mutation: { onSuccess: onCreated } });
-  const updateMutation = useUpdateHouseholdEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateHouseholdEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
+  const updateMutation = useUpdateHouseholdEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
   const pending = createMutation.isPending || updateMutation.isPending;
 
   const form = useForm({
@@ -71,6 +76,8 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
           </div>
         )}
       </form.Field>
+
+      <FormError error={createMutation.error ?? updateMutation.error} />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

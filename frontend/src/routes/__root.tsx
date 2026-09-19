@@ -13,6 +13,7 @@ import { LanguageToggle } from "@/components/language-toggle";
 import { LogoutButton } from "@/components/logout-button";
 import { NotificationBell, NotificationBellUnavailable } from "@/components/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary";
+import { RouteError } from "@/components/route-error";
 import { RoutePending } from "@/components/route-pending";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,6 +70,9 @@ function RootLayout() {
     { to: "/profile", key: "nav.profile" },
   ];
 
+  const currentItem = mobileNavItems.find((item) => item.to === location.pathname);
+  const currentTitle = currentItem ? t(currentItem.key) : undefined;
+
   if (!authenticatedArea) {
     return (
       <main className="relative flex min-h-screen items-center justify-center bg-background px-4">
@@ -120,7 +124,7 @@ function RootLayout() {
             <Link
               key={item.to}
               to={item.to}
-              className={cn(navLinkClass, "shrink-0 px-3 py-2")}
+              className={cn(navLinkClass, "shrink-0 px-3 py-2 pointer-coarse:py-3")}
               activeProps={{ className: navLinkActiveClass }}
               activeOptions={{ exact: item.to === "/" }}
             >
@@ -132,8 +136,13 @@ function RootLayout() {
           id="main-content"
           className="mx-auto w-full max-w-6xl min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-12 lg:py-10"
         >
-          <QueryBoundary fallback={<RoutePending />} reveal={false}>
-            <div key={location.pathname} className="page-transition">
+          <QueryBoundary
+            key={location.pathname}
+            fallback={<RoutePending />}
+            reveal={false}
+            renderError={(retry) => <RouteError title={currentTitle} onRetry={retry} />}
+          >
+            <div className="page-transition">
               <Outlet />
             </div>
           </QueryBoundary>

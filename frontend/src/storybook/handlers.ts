@@ -671,6 +671,10 @@ const investmentHandlers = [
     };
     return HttpResponse.json(created, { status: 201 });
   }),
+  http.put(api("/investments/transactions/:id"), ({ params }) => {
+    const found = byId(investmentTransactions, params.id);
+    return found ? HttpResponse.json(found) : notFound();
+  }),
   http.delete(api("/investments/transactions/:id"), noContent),
   http.get(api("/investments/securities"), ({ request }) => {
     const search = new URL(request.url).searchParams.get("search")?.toLowerCase() ?? "";

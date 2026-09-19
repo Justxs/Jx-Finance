@@ -11,7 +11,7 @@ afterEach(() => {
 
 test("offers the other language, labelled in that language", async () => {
   render(<LanguageToggle />);
-  const toLithuanian = screen.getByRole("button", { name: "Lietuvių" });
+  const toLithuanian = screen.getByRole("button", { name: "EN, Lietuvių" });
 
   expect(toLithuanian).toHaveAttribute("lang", "lt");
   expect(toLithuanian).toHaveTextContent("en");
@@ -19,5 +19,5 @@ test("offers the other language, labelled in that language", async () => {
   await userEvent.click(toLithuanian);
 
   expect(i18n.language).toBe("lt");
-  expect(screen.getByRole("button", { name: "English" })).toHaveTextContent("lt");
+  expect(screen.getByRole("button", { name: "LT, English" })).toHaveTextContent("lt");
 });

@@ -6,6 +6,9 @@ export function DashboardStats() {
   const { t } = useTranslation();
   const summary = useGetDashboardSummaryEndpointSuspense();
 
+  const income = Number(summary.data?.monthIncome ?? 0);
+  const expense = Number(summary.data?.monthExpense ?? 0);
+
   const stats = [
     {
       key: "dashboard.totalBalance",
@@ -15,14 +18,14 @@ export function DashboardStats() {
     {
       key: "dashboard.monthIncome",
       value: summary.data?.monthIncome,
-      tone: "text-income",
-      sign: "+",
+      tone: income === 0 ? "text-foreground" : "text-income",
+      sign: income === 0 ? undefined : "+",
     },
     {
       key: "dashboard.monthExpense",
       value: summary.data?.monthExpense,
-      tone: "text-expense",
-      sign: "−",
+      tone: expense === 0 ? "text-foreground" : "text-expense",
+      sign: expense === 0 ? undefined : "−",
     },
   ] as const;
 

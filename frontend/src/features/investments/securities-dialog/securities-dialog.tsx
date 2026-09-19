@@ -56,7 +56,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
 
         return (
           <li key={security.id} className="flex items-center gap-3 py-2 text-sm">
-            <div className="min-w-48 flex-1">
+            <div className="min-w-0 flex-1">
               <p className="flex flex-wrap items-center gap-2">
                 <span className="font-semibold">{security.symbol}</span>
                 <Tag>{t(`investments.securityTypes.${security.type}`)}</Tag>

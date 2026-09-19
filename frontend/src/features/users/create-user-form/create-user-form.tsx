@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateUserEndpoint } from "@/api/generated";
+import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -42,7 +43,9 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
       .max(100, t("validation.maxLength", { max: 100 })),
   });
 
-  const createMutation = useCreateUserEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateUserEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
   const defaultValues: FormValues = {
     email: "",
@@ -148,6 +151,8 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
           )}
         </form.Field>
       </div>
+
+      <FormError error={createMutation.error} />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

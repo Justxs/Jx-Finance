@@ -56,7 +56,16 @@
     "monthIncome": "Šio mėnesio pajamos",
     "monthExpense": "Šio mėnesio išlaidos",
     "recent": "Paskutinės operacijos",
-    "empty": "Operacijų dar nėra. Pridėkite pirmąją Operacijų puslapyje.",
+    "empty": "Operacijų dar nėra.",
+    "firstRun": {
+      "intro": "Knyga tuščia. Pradėkite trimis žingsniais:",
+      "accounts": "Pridėkite sąskaitą",
+      "accountsHint": "su pradiniu likučiu.",
+      "transactions": "Įrašykite operacijas",
+      "transactionsHint": "ranka arba iš banko CSV.",
+      "budgets": "Nustatykite biudžetą",
+      "budgetsHint": "kad matytumėte, ar mėnuo eina pagal planą."
+    },
     "spendingByCategory": "Išlaidos pagal kategoriją (šį mėnesį)",
     "monthlyTrend": "Pajamos ir išlaidos",
     "other": "Kita",
@@ -392,6 +401,8 @@
         "lt": "Lietuvių"
       },
       "timeZone": "Laiko juosta",
+      "timeZoneRegion": "Laiko juostos regionas",
+      "timeZoneOther": "Kita",
       "timeZoneHint": "Nuo jos priklauso, kas laikoma šiandiena ir šiuo mėnesiu.",
       "firstDayOfWeek": "Savaitė prasideda",
       "days": {
@@ -526,6 +537,7 @@
       "typeFilter": "Įrašo tipas",
       "allTypes": "Visi tipai",
       "imported": "IBKR",
+      "importedLocked": "Importuota iš brokerio. Pataisykite ten ir importuokite dar kartą.",
       "splitRatio": "{{ratio}} už 1",
       "noCash": "Be pinigų"
     },
@@ -568,7 +580,9 @@
       "cashEffect": "Poveikis pinigų likučiui",
       "noCash": "Pinigai nejuda",
       "submit": "Pridėti įrašą",
-      "saved": "Įrašas pridėtas."
+      "saved": "Įrašas pridėtas.",
+      "corrected": "Įrašas pataisytas.",
+      "editTitle": "Taisyti įrašą"
     },
     "validation": {
       "price": "Įveskite 0 ar didesnę kainą, iki 8 skaitmenų po kablelio, pvz., 98,4125.",
@@ -758,6 +772,8 @@
   },
   "reports": {
     "title": "Ataskaitos",
+    "exportCsv": "Operacijos CSV",
+    "exportPdf": "Operacijos PDF",
     "range": "Laikotarpis",
     "presets": {
       "thisMonth": "Šis mėnuo",
@@ -784,6 +800,9 @@
     "duplicate": "Jau importuota",
     "looksLikeTransfer": "Panašu į pervedimą",
     "recordAs": "Įrašyti kaip",
+    "markTransfer": "Žymėti kaip pervedimą",
+    "markTransferFor": "Žymėti kaip pervedimą: {{row}}",
+    "changeFile": "Keisti",
     "transaction": "Pajamos / išlaidos",
     "transferWith": "Pervedimas · {{account}}",
     "matchTransfer": "Susieti pervedimą",
@@ -847,6 +866,7 @@
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
     "loadFailed": "Nepavyko įkelti.",
+    "loadFailedNamed": "Nepavyko įkelti: {{subject}}.",
     "retry": "Bandyti dar kartą",
     "loading": "Kraunama"
   },
@@ -874,6 +894,7 @@
     "income": "Pajamos",
     "expense": "Išlaidos",
     "trendLabel": "Pajamos ir išlaidos pagal laikotarpį",
+    "empty": "Šiuo laikotarpiu įrašų nėra.",
     "netWorthLabel": "Grynosios vertės kitimas",
     "net": "Balansas",
     "netWorth": "Grynoji vertė"

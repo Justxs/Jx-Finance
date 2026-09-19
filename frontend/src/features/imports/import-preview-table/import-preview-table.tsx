@@ -1,27 +1,21 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
+import { Pagination } from "@/components/pagination";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
-import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { ImportRow } from "./import-row";
 import { ImportSummaryBar } from "./import-summary-bar";
-import { ImportTransferPicker } from "./import-transfer-picker";
 import {
   applyCategory,
   type PreviewRowState,
   selectAllPatch,
   summarizeSelection,
 } from "./preview-rows";
+
+const PREVIEW_PAGE_SIZE = 50;
 
 interface Props {
   rows: PreviewRowState[];
@@ -47,14 +41,29 @@ export function ImportPreviewTable({
   confirmPending,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const money = useMoney();
-  const formatDate = useIsoDate();
+  const [page, setPage] = useState(1);
 
   if (rows.length === 0) {
     return <p className="py-6 text-sm text-muted-foreground">{t("imports.noRows")}</p>;
   }
 
   const summary = summarizeSelection(rows);
+  const pages = Math.max(1, Math.ceil(rows.length / PREVIEW_PAGE_SIZE));
+  const shownPage = Math.min(page, pages);
+  const offset = (shownPage - 1) * PREVIEW_PAGE_SIZE;
+  const pageRows = rows.slice(offset, offset + PREVIEW_PAGE_SIZE);
+
+  const selectAll = (
+    <Tooltip content={t("imports.selectAllHint")}>
+      <Checkbox
+        aria-label={t("imports.selectAll")}
+        checked={summary.allSelected}
+        indeterminate={summary.someSelected && !summary.allSelected}
+        disabled={summary.selectableCount === 0}
+        onCheckedChange={(checked) => onRowsChange(selectAllPatch(rows, checked))}
+      />
+    </Tooltip>
+  );
 
   return (
     <>
@@ -67,27 +76,39 @@ export function ImportPreviewTable({
       {summary.selectableCount === 0 ? (
         <p className="text-sm text-foreground">{t("imports.allDuplicates")}</p>
       ) : null}
-      <div className="-mx-3">
+
+      <div className="md:hidden">
+        <label className="flex items-center gap-3 border-b border-rule py-2 text-xs font-medium text-muted-foreground">
+          {selectAll}
+          {t("imports.selectAll")}
+        </label>
+        <ul className="rows" aria-label={t("imports.preview")}>
+          {pageRows.map((row, index) => (
+            <ImportRow
+              key={`${row.importRef}-${offset + index}`}
+              variant="list"
+              row={row}
+              index={offset + index}
+              accountId={accountId}
+              accounts={accounts}
+              categories={categories}
+              onRowChange={onRowChange}
+            />
+          ))}
+        </ul>
+      </div>
+
+      <div className="-mx-3 hidden md:block">
         <div
           className="overflow-x-auto"
           role="region"
           aria-label={t("imports.preview")}
           tabIndex={0}
         >
-          <Table className="min-w-[48rem]">
+          <Table className="min-w-[44rem]">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-10">
-                  <Tooltip content={t("imports.selectAllHint")}>
-                    <Checkbox
-                      aria-label={t("imports.selectAll")}
-                      checked={summary.allSelected}
-                      indeterminate={summary.someSelected && !summary.allSelected}
-                      disabled={summary.selectableCount === 0}
-                      onCheckedChange={(checked) => onRowsChange(selectAllPatch(rows, checked))}
-                    />
-                  </Tooltip>
-                </TableHead>
+                <TableHead className="w-10">{selectAll}</TableHead>
                 <TableHead>{t("transactions.date")}</TableHead>
                 <TableHead>{t("transactions.description")}</TableHead>
                 <TableHead className="text-right">{t("transactions.amount")}</TableHead>
@@ -97,84 +118,25 @@ export function ImportPreviewTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row, index) => {
-                const rowCategories = categories.filter((c) => c.type === row.type);
-                const rowName = [formatDate(row.date), row.payee || row.description]
-                  .filter(Boolean)
-                  .join(" · ");
-                return (
-                  <TableRow key={`${row.importRef}-${index}`}>
-                    <TableCell>
-                      <Checkbox
-                        aria-label={t("imports.selectRow", { row: rowName })}
-                        checked={row.selected}
-                        onCheckedChange={(checked) => onRowChange(index, { selected: checked })}
-                      />
-                    </TableCell>
-                    <TableCell className="text-muted-foreground tabular-nums">
-                      {formatDate(row.date)}
-                    </TableCell>
-                    <TableCell className="whitespace-normal">
-                      <span
-                        className="line-clamp-2 min-w-40 font-medium wrap-break-word"
-                        title={row.payee || row.description || undefined}
-                      >
-                        {row.payee || row.description || EMPTY_VALUE}
-                      </span>
-                    </TableCell>
-                    <TableCell
-                      className={`text-right font-semibold tabular-nums ${row.type === "income" ? "text-income" : "text-foreground"}`}
-                    >
-                      {row.type === "income" ? "+" : "−"}
-                      {money.format(Number(row.amount), row.currency)}
-                    </TableCell>
-                    <TableCell>
-                      <SelectField
-                        aria-label={t("imports.categoryFor", { row: rowName })}
-                        disabled={Boolean(row.transferAccountId)}
-                        value={row.categoryId}
-                        onChange={(categoryId) =>
-                          onRowChange(index, { categoryId, categorySuggested: false })
-                        }
-                        options={[
-                          { value: "", label: t("transactions.uncategorized") },
-                          ...rowCategories.map((category) => ({
-                            value: category.id,
-                            label: category.name,
-                          })),
-                        ]}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <ImportTransferPicker
-                        row={row}
-                        accounts={accounts}
-                        accountId={accountId}
-                        onChange={(patch) => onRowChange(index, patch)}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
-                        {row.categorySuggested && !row.transferAccountId ? (
-                          <Tooltip content={t("imports.suggestedHint")}>
-                            <span>
-                              <Tag>{t("imports.suggested")}</Tag>
-                            </span>
-                          </Tooltip>
-                        ) : null}
-                        {row.looksLikeTransfer ? (
-                          <Tag tone="accent">{t("imports.looksLikeTransfer")}</Tag>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {pageRows.map((row, index) => (
+                <ImportRow
+                  key={`${row.importRef}-${offset + index}`}
+                  variant="table"
+                  row={row}
+                  index={offset + index}
+                  accountId={accountId}
+                  accounts={accounts}
+                  categories={categories}
+                  onRowChange={onRowChange}
+                />
+              ))}
             </TableBody>
           </Table>
         </div>
       </div>
+
+      <Pagination page={shownPage} pages={pages} onPageChange={setPage} />
+
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" disabled={confirmPending} onClick={onCancel}>
           {t("actions.cancel")}

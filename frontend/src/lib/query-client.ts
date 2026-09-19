@@ -7,20 +7,28 @@ function isApiError(error: unknown): error is ApiError {
   return typeof error === "object" && error !== null && "status" in error;
 }
 
-function toastError(error: unknown) {
-  if (isApiError(error)) {
-    toast.error(error.title ?? i18n.t("errors.generic"), {
-      description: error.detail ?? error.errors?.map((detail) => detail.reason).join(" "),
-    });
-    return;
+const ERROR_TOAST_DURATION = 12_000;
+
+export function errorMessage(error: unknown) {
+  if (!isApiError(error)) {
+    return { title: i18n.t("errors.generic"), description: undefined };
   }
 
-  toast.error(i18n.t("errors.generic"));
+  return {
+    title: error.title ?? i18n.t("errors.generic"),
+    description: error.detail ?? error.errors?.map((detail) => detail.reason).join(" "),
+  };
+}
+
+function toastError(error: unknown) {
+  const { title, description } = errorMessage(error);
+  toast.error(title, { description, duration: ERROR_TOAST_DURATION });
 }
 
 declare module "@tanstack/react-query" {
   interface Register {
     queryMeta: { silent?: boolean };
+    mutationMeta: { silent?: boolean };
   }
 }
 
@@ -39,5 +47,11 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-  mutationCache: new MutationCache({ onError: toastError }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      if (mutation.meta?.silent !== true) {
+        toastError(error);
+      }
+    },
+  }),
 });

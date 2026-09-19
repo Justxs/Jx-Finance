@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudgetEndpoint, useUpdateBudgetEndpoint } from "@/api/generated";
 import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -31,9 +32,13 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
     limitAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
   });
 
-  const createMutation = useCreateBudgetEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateBudgetEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
-  const updateMutation = useUpdateBudgetEndpoint({ mutation: { onSuccess: onCreated } });
+  const updateMutation = useUpdateBudgetEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
   const defaultValues: FormValues = {
     categoryId: initial?.categoryId ?? expenseCategories[0]?.id ?? "",
@@ -105,6 +110,8 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
           )}
         </form.Field>
       </div>
+
+      <FormError error={createMutation.error ?? updateMutation.error} />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

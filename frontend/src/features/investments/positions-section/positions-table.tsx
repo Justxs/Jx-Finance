@@ -32,7 +32,9 @@ interface Props {
 }
 
 const priceButtonClass =
-  "inline-flex min-h-6 flex-col items-end justify-center rounded-sm text-right underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11";
+  "inline-flex min-h-6 flex-col items-end justify-center group/price rounded-sm text-right outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11";
+
+const numericHeadClass = "h-auto py-2 text-right align-bottom whitespace-normal";
 
 function rowKey(holding: HoldingResponse) {
   return `${holding.accountId}:${holding.security.id}`;
@@ -66,13 +68,13 @@ export function PositionsTable({
     return (
       <button type="button" className={priceButtonClass} onClick={() => onEditPrice(security)}>
         {security.lastPrice === null ? (
-          <span className="font-medium text-primary">
+          <span className="font-medium text-primary underline-offset-4 group-hover/price:underline">
             {t("investments.price.set")}
             <span className="sr-only">: {security.symbol}</span>
           </span>
         ) : (
           <>
-            <span className="block whitespace-nowrap tabular-nums">
+            <span className="block whitespace-nowrap tabular-nums underline decoration-muted-foreground/70 decoration-dotted underline-offset-4 group-hover/price:decoration-foreground group-hover/price:decoration-solid">
               {formatPrice(Number(security.lastPrice), security.currency)}
             </span>
             <span className="block text-xs whitespace-nowrap text-muted-foreground tabular-nums">
@@ -140,29 +142,35 @@ export function PositionsTable({
         aria-label={label}
         tabIndex={0}
       >
-        <Table className={closed ? undefined : "min-w-208"}>
+        <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>{t("investments.holdings.security")}</TableHead>
+              <TableHead className="align-bottom">{t("investments.holdings.security")}</TableHead>
               {closed ? null : (
                 <>
-                  <TableHead className="text-right">{t("investments.holdings.quantity")}</TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className={numericHeadClass}>
+                    {t("investments.holdings.quantity")}
+                  </TableHead>
+                  <TableHead className={numericHeadClass}>
                     {t("investments.holdings.averageCost")}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className={numericHeadClass}>
                     {t("investments.holdings.lastPrice")}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className={numericHeadClass}>
                     {t("investments.holdings.marketValue")}
                   </TableHead>
-                  <TableHead className="text-right">
+                  <TableHead className={numericHeadClass}>
                     {t("investments.holdings.unrealizedGain")}
                   </TableHead>
                 </>
               )}
-              <TableHead className="text-right">{t("investments.holdings.realizedGain")}</TableHead>
-              <TableHead className="text-right">{t("investments.holdings.dividends")}</TableHead>
+              <TableHead className={numericHeadClass}>
+                {t("investments.holdings.realizedGain")}
+              </TableHead>
+              <TableHead className={numericHeadClass}>
+                {t("investments.holdings.dividends")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -172,7 +180,7 @@ export function PositionsTable({
 
               return (
                 <TableRow key={rowKey(holding)}>
-                  <TableCell className="max-w-64 min-w-44 whitespace-normal">
+                  <TableCell className="max-w-64 min-w-36 whitespace-normal">
                     <p className="flex items-center gap-2">
                       <span className="font-semibold">{security.symbol}</span>
                       <Tag>{t(`investments.securityTypes.${security.type}`)}</Tag>

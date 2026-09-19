@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Skeleton } from "./skeleton";
+import { RowsSkeleton, Skeleton, StatsSkeleton } from "./skeleton";
 
 const meta = {
   title: "UI/Skeleton",
@@ -39,16 +39,18 @@ export const CardPlaceholder: Story = {
   ),
 };
 
-export const TableRows: Story = {
+export const LedgerRows: Story = {
   render: () => (
-    <div className="card w-[min(90vw,36rem)] divide-y divide-border">
-      {Array.from({ length: 5 }, (_, index) => (
-        <div key={index} className="flex items-center gap-4 px-6 py-3">
-          <Skeleton className="h-4 w-20" />
-          <Skeleton className="h-4 flex-1" />
-          <Skeleton className="h-4 w-16" />
-        </div>
-      ))}
+    <div className="w-[min(90vw,36rem)]">
+      <RowsSkeleton rows={5} />
+    </div>
+  ),
+};
+
+export const SummaryFigures: Story = {
+  render: () => (
+    <div className="w-[min(90vw,56rem)]">
+      <StatsSkeleton />
     </div>
   ),
 };
