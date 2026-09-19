@@ -23,6 +23,7 @@ import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { BudgetUsageChart } from "../budget-usage-chart";
 import { CreateBudgetForm } from "../create-budget-form";
 
 export function BudgetsPage() {
@@ -65,7 +66,7 @@ export function BudgetsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("budgets.empty")}</p>;
   } else {
     content = (
-      <ul className="rows border-t border-t-rule">
+      <ul className="rows">
         {budgetList.map((budget) => {
           const limit = Number(budget.limitAmount);
           const spent = Number(budget.spent);
@@ -182,6 +183,12 @@ export function BudgetsPage() {
               : { label: t("budgets.remaining"), value: fromCents(remainingCents) },
           ]}
         />
+      ) : null}
+      {budgetList.length > 1 ? (
+        <section className="section">
+          <h2 className="section-title mb-4">{t("budgets.usage")}</h2>
+          <BudgetUsageChart budgets={budgetList} />
+        </section>
       ) : null}
       {content}
       <ConfirmDeleteDialog

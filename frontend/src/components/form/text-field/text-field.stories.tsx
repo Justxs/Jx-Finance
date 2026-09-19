@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, within, waitFor } from "storybook/test";
 import { z } from "zod";
 import { useAppForm } from "../app-form";
 
@@ -74,6 +74,6 @@ export const Invalid: Story = {
     await expect(input).toHaveAttribute("aria-invalid", "true");
     await expect(input).toHaveAttribute("aria-describedby", "demo-name-hint demo-name-error");
     fireEvent.change(input, { target: { value: "Groceries" } });
-    await expect(input).toHaveAttribute("aria-invalid", "false");
+    await waitFor(() => expect(input).toHaveAttribute("aria-invalid", "false"));
   },
 };

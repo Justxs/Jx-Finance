@@ -1,5 +1,4 @@
 using System.Security.Cryptography;
-using Microsoft.Extensions.Configuration;
 
 namespace JxFinance.Infrastructure.Auth;
 

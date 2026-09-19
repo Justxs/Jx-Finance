@@ -54,7 +54,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
         )}
       >
         {rest.map((item) => (
-          <div key={item.label} className="min-w-0 border-t pt-2.5">
+          <div key={item.label} className="min-w-0">
             <dt className="text-sm text-muted-foreground">{item.label}</dt>
             <dd className={cn("mt-0.5 text-xl font-semibold break-words tabular-nums", item.tone)}>
               {formatValue(item)}

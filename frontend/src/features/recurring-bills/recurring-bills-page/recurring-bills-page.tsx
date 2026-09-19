@@ -15,6 +15,7 @@ import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { BillsForecastChart } from "../bills-forecast-chart";
 import { CreateRecurringBillForm } from "../create-recurring-bill-form";
 import { RecurringBillRow } from "../recurring-bill-row";
 
@@ -44,7 +45,7 @@ export function RecurringBillsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>;
   } else {
     content = (
-      <ul className="rows border-t border-t-rule">
+      <ul className="rows">
         {billList.map((bill) => (
           <RecurringBillRow
             key={bill.id}
@@ -78,6 +79,12 @@ export function RecurringBillsPage() {
         />
       </Modal>
 
+      {billList.length > 0 ? (
+        <section className="section">
+          <h2 className="section-title mb-4">{t("recurringBills.forecast")}</h2>
+          <BillsForecastChart bills={billList} />
+        </section>
+      ) : null}
       {content}
       <ConfirmDeleteDialog
         target={deleteTarget}

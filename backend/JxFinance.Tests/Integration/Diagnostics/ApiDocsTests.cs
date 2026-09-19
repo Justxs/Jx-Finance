@@ -1,7 +1,6 @@
 using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Common.Errors;
 using JxFinance.Tests.Support;
@@ -11,8 +10,6 @@ namespace JxFinance.Tests.Integration.Diagnostics;
 [Collection<IntegrationCollection>]
 public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string UpdateVariable = "JX_UPDATE_SNAPSHOTS";
-
     private static readonly string[] LeakedCollectionPrefixes = ["IReadOnlyListOf", "IEnumerableOf", "ListOf", "IListOf", "ICollectionOf"];
 
     [Fact]
@@ -27,18 +24,14 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task OpenApi_document_matches_the_approved_contract()
     {
-        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
-        var actual = document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).ReplaceLineEndings("\n");
         var path = SnapshotPath();
+        Assert.True(File.Exists(path), "No approved contract. Run 'just gen'.");
+        var actual = WithoutServers(JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!);
+        var approved = WithoutServers(JsonNode.Parse(await File.ReadAllTextAsync(path))!);
 
-        if (Environment.GetEnvironmentVariable(UpdateVariable) == "1")
-            await File.WriteAllTextAsync(path, actual);
-
-        Assert.True(File.Exists(path), $"No approved contract. Run the tests once with {UpdateVariable}=1.");
-        var approved = (await File.ReadAllTextAsync(path)).ReplaceLineEndings("\n");
         Assert.True(
-            approved == actual,
-            $"The API contract changed. Review the difference, then run with {UpdateVariable}=1 and regenerate the frontend client.");
+            JsonNode.DeepEquals(approved, actual),
+            "The API contract changed. Run 'just gen', review the difference in the contract and the generated client, then commit both.");
     }
 
     [Fact]
@@ -111,6 +104,17 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         return directory.FullName;
     }
 
-    private static string SnapshotPath([CallerFilePath] string testFile = "") =>
-        Path.Combine(Path.GetDirectoryName(testFile)!, "Snapshots", "openapi-v1.json");
+    private static JsonNode WithoutServers(JsonNode document)
+    {
+        document.AsObject().Remove("servers");
+        return document;
+    }
+
+    private static string SnapshotPath([CallerFilePath] string testFile = "")
+    {
+        var directory = new DirectoryInfo(Path.GetDirectoryName(testFile)!);
+        while (!File.Exists(Path.Combine(directory.FullName, "frontend", "openapi.json")))
+            directory = directory.Parent ?? throw new InvalidOperationException("frontend/openapi.json was not found above the test project. Run 'just gen'.");
+        return Path.Combine(directory.FullName, "frontend", "openapi.json");
+    }
 }

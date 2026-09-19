@@ -63,7 +63,7 @@ export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };
@@ -72,7 +72,9 @@ export const ConfirmDialogOpenVariable: Story = {
   args: { bill: variableBill },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)$/i }));
+    await userEvent.click(
+      canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
+    );
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };
@@ -81,7 +83,9 @@ export const ConfirmDialogOpenNoAccount: Story = {
   args: { bill: longNameBill },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)$/i }));
+    await userEvent.click(
+      canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
+    );
     await expect(await within(document.body).findByRole("dialog")).toBeVisible();
   },
 };

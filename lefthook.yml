@@ -4,19 +4,38 @@ pre-commit:
     - name: format
       root: frontend/
       glob: "*.{ts,tsx,js,cjs,mjs,json,jsonc,css,md}"
+      exclude: "openapi.json"
       run: node_modules/.bin/oxfmt {staged_files}
       stage_fixed: true
     - name: lint
       root: frontend/
       glob: "*.{ts,tsx}"
       run: node_modules/.bin/oxlint {staged_files}
+    - name: backend format
+      glob: "backend/**/*.cs"
+      exclude: "backend/JxFinance.Api/Infrastructure/Data/Migrations/*"
+      run: dotnet format whitespace backend --folder --include {staged_files}
+      stage_fixed: true
+
+commit-msg:
+  jobs:
+    - name: conventional commit
+      run: node scripts/check-commit-message.mjs {1}
 
 pre-push:
+  parallel: true
   jobs:
     - name: typecheck
       root: frontend/
       glob: "*.{ts,tsx}"
       run: node_modules/.bin/tsc -b
+    - name: related tests
+      root: frontend/
+      glob: "src/**/*.{ts,tsx}"
+      run: node_modules/.bin/vitest related --run --project unit --project dom {push_files}
+    - name: backend build
+      glob: "backend/**/*.{cs,csproj,props}"
+      run: dotnet build backend/JxFinance.slnx -c Release --nologo -v quiet
     - name: contract reminder
       glob: "backend/JxFinance.Api/{Endpoints,Common,Extensions}/**/*.cs"
       run: echo "Backend API sources changed - run 'just gen-check' if the contract may have moved."

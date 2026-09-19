@@ -9,3 +9,27 @@ indent_size = 2
 
 [*.cs]
 indent_size = 4
+dotnet_sort_system_directives_first = true
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+dotnet_style_readonly_field = true:warning
+csharp_prefer_static_local_function = true:warning
+dotnet_diagnostic.IDE0005.severity = warning
+dotnet_diagnostic.CA1000.severity = none
+dotnet_diagnostic.CA1716.severity = none
+dotnet_diagnostic.CA1848.severity = none
+dotnet_diagnostic.CA1873.severity = none
+
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
+
+[backend/JxFinance.Tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+dotnet_diagnostic.CA1305.severity = none
+dotnet_diagnostic.CA1711.severity = none
+dotnet_diagnostic.CA1725.severity = none
+dotnet_diagnostic.CA1859.severity = none
+dotnet_diagnostic.CA1863.severity = none
+dotnet_diagnostic.CA5350.severity = none

@@ -40,7 +40,7 @@ export const FilledWithIcon: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.type(await canvas.findByRole("textbox"), "Pets and veterinary care");
-    await userEvent.click(canvas.getByTitle("coffee"));
+    await userEvent.click(canvas.getByRole("button", { name: "coffee" }));
   },
 };
 

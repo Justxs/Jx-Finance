@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Notifications;

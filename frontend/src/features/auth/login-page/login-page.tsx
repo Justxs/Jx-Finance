@@ -72,7 +72,7 @@ export function LoginPage() {
   return (
     <div className="w-full max-w-sm">
       <div className="mb-6 flex justify-center">
-        <Brand size="lg" />
+        <Brand size="lg" stacked />
       </div>
       <div className="card p-6 sm:p-8">
         <h1 className="text-lg font-semibold">{t("auth.signIn")}</h1>

@@ -25,7 +25,46 @@ env:
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true"
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect changed areas
+        id: filter
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base=""
+          if [ -n "$BASE_REF" ]; then
+            base="origin/$BASE_REF"
+          elif [ -n "$BEFORE" ] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            base="$BEFORE"
+          fi
+          if [ -z "$base" ]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "frontend=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only "$base" HEAD)
+          shared="^(\.gitea/|\.editorconfig|global\.json|docker-compose|justfile)"
+          backend=false
+          frontend=false
+          if echo "$files" | grep -qE "^backend/|$shared"; then backend=true; fi
+          if echo "$files" | grep -qE "^frontend/|$shared"; then frontend=true; fi
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "frontend=$frontend" >> "$GITHUB_OUTPUT"
+
   backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -34,13 +73,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          global-json-file: global.json
 
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
           path: ~/.nuget/packages
-          key: nuget-${{ runner.os }}-${{ hashFiles('backend/**/*.csproj') }}
+          key: nuget-${{ runner.os }}-${{ hashFiles('backend/Directory.Packages.props') }}
           restore-keys: |
             nuget-${{ runner.os }}-
 
@@ -51,15 +90,28 @@ jobs:
         working-directory: backend
         run: dotnet tool restore
 
+      - name: Format and code style
+        run: dotnet format backend/JxFinance.slnx --no-restore --verify-no-changes --exclude backend/JxFinance.Api/Infrastructure/Data/Migrations
+
       - name: Build
         run: dotnet build backend/JxFinance.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test backend/JxFinance.slnx --configuration Release --no-build --logger "console;verbosity=normal"
+        run: dotnet test --solution backend/JxFinance.slnx --configuration Release --no-build --report-xunit-trx --results-directory backend/TestResults --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: backend-test-results
+          path: backend/TestResults
+          retention-days: 7
 
   frontend:
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: frontend
@@ -81,19 +133,35 @@ jobs:
       - name: Lint
         run: nub run lint
 
-      - name: Test
-        run: nub run test
-
       - name: Format check
         run: nub run format:check
+
+      - name: Unit and DOM tests with coverage
+        run: nub run test:coverage
 
       - name: Build
         run: nub run build
 
+      - name: Install Playwright browser
+        run: nub exec playwright install --with-deps chromium
+
+      - name: Story tests
+        run: nub run test:stories
+
       - name: Build Storybook
         run: nub run build-storybook
 
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          retention-days: 7
+
   client-drift:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -102,7 +170,15 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          global-json-file: global.json
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('backend/Directory.Packages.props') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
       - name: Setup nub and Node
         uses: nubjs/setup-nub@v0
@@ -120,20 +196,77 @@ jobs:
       - name: Export OpenAPI document
         env:
           ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
-        run: dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true -p:PublishAot=false
+        run: dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
 
-      - name: Copy spec for codegen
+      - name: Copy contract for codegen
         run: cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
 
       - name: Regenerate client
         working-directory: frontend
         run: nub run orval
 
-      - name: Fail on client drift
+      - name: Fail on contract or client drift
         run: |
-          if [ -n "$(git status --porcelain -- frontend/src/api/generated frontend/src/api/schemas)" ]; then
-            echo "::error::Generated API client is out of date. Run 'just gen' and commit the result."
-            git status --short -- frontend/src/api/generated frontend/src/api/schemas
-            git diff -- frontend/src/api/generated frontend/src/api/schemas
+          paths="frontend/openapi.json frontend/src/api/generated frontend/src/api/schemas"
+          if [ -n "$(git status --porcelain -- $paths)" ]; then
+            echo "::error::API contract or generated client is out of date. Run 'just gen' and commit the result."
+            git status --short -- $paths
+            git diff -- $paths
             exit 1
           fi
+
+  e2e:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_COMPOSE: docker compose -f docker-compose.yml -f docker-compose.e2e.yml
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup nub and Node
+        uses: nubjs/setup-nub@v0
+        with:
+          nub-version: "0.9.2"
+          node-version: 24
+          working-directory: frontend
+          cache: true
+          cache-dependency-path: frontend/nub.lock
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: nub ci
+
+      - name: Install Playwright browser
+        working-directory: frontend
+        run: nub exec playwright install --with-deps chromium
+
+      - name: Start the throwaway stack
+        run: |
+          cp .env.example .env
+          $E2E_COMPOSE up -d --build --wait
+
+      - name: Smoke tests
+        working-directory: frontend
+        env:
+          CI: "true"
+        run: nub run e2e
+
+      - name: Stack logs
+        if: failure()
+        run: $E2E_COMPOSE logs --no-color --tail 200
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          retention-days: 7
+
+      - name: Stop the stack
+        if: always()
+        run: $E2E_COMPOSE down --volumes

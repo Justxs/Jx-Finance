@@ -1,0 +1,20 @@
+name: jx-e2e
+
+services:
+  db:
+    ports: !reset []
+    volumes: !override
+      - e2e_db_data:/var/lib/postgresql/data
+
+  api:
+    ports: !reset []
+    volumes: !override
+      - e2e_auth_keys:/keys
+
+  frontend:
+    ports: !override
+      - "127.0.0.1:8089:80"
+
+volumes:
+  e2e_db_data:
+  e2e_auth_keys:

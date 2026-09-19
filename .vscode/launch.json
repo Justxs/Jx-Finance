@@ -1,0 +1,51 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build api",
+      "program": "${workspaceFolder}/backend/JxFinance.Api/bin/Debug/net10.0/JxFinance.Api.dll",
+      "cwd": "${workspaceFolder}/backend/JxFinance.Api",
+      "envFile": "${workspaceFolder}/.local/api-debug.env",
+      "env": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:8091"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Frontend (Chrome)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "http://localhost:5173",
+      "webRoot": "${workspaceFolder}/frontend/src"
+    },
+    {
+      "name": "Vitest: current file",
+      "type": "node",
+      "request": "launch",
+      "cwd": "${workspaceFolder}/frontend",
+      "program": "${workspaceFolder}/frontend/node_modules/vitest/vitest.mjs",
+      "args": [
+        "run",
+        "--project",
+        "unit",
+        "--project",
+        "dom",
+        "${relativeFile}"
+      ],
+      "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + Frontend",
+      "configurations": [
+        "API",
+        "Frontend (Chrome)"
+      ]
+    }
+  ]
+}

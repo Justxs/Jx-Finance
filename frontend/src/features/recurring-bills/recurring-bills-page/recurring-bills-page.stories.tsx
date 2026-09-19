@@ -99,7 +99,9 @@ export const DeletePending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const deleteButtons = await canvas.findAllByRole("button", { name: /^(delete|ištrinti)$/i });
+    const deleteButtons = await canvas.findAllByRole("button", {
+      name: /^(delete|ištrinti)(:|$)/i,
+    });
     await userEvent.click(deleteButtons[0]!);
     const dialog = await within(document.body).findByRole("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));

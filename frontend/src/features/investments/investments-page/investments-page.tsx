@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { ActivitySection } from "../activity-section";
+import { AllocationSection } from "../allocation-section";
 import { BrokerImportDialog } from "../broker-import-dialog";
 import { IncomeByYear } from "../income-by-year";
 import { InvestmentEntryModal } from "../investment-entry-form";
@@ -68,6 +69,10 @@ function InvestmentsOverview({
   return (
     <div className={stale ? "is-stale space-y-10" : "space-y-10"} aria-busy={stale}>
       <PortfolioSummary portfolio={portfolio.data} />
+      <AllocationSection
+        holdings={portfolio.data.holdings}
+        currency={portfolio.data.reportingCurrency}
+      />
       <PositionsSection
         holdings={portfolio.data.holdings}
         reportingCurrency={portfolio.data.reportingCurrency}

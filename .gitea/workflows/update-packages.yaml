@@ -33,7 +33,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "10.0.x"
+          global-json-file: global.json
 
       - name: Setup nub and Node
         uses: nubjs/setup-nub@v0
@@ -62,7 +62,7 @@ jobs:
         env:
           ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
         run: |
-          dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true -p:PublishAot=false
+          dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
           cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
           cd frontend
           nub run orval
@@ -91,7 +91,7 @@ jobs:
         env:
           TOKEN: ${{ secrets.PACKAGE_UPDATE_TOKEN }}
         run: |
-          manifest_diff=$(git diff "origin/$BASE_BRANCH" HEAD --unified=0 -- 'backend/**/*.csproj' frontend/package.json | grep -E '^[+-][^+-]' || true)
+          manifest_diff=$(git diff "origin/$BASE_BRANCH" HEAD --unified=0 -- backend/Directory.Packages.props 'backend/**/*.csproj' backend/dotnet-tools.json frontend/package.json | grep -E '^[+-][^+-]' || true)
           body=$(printf 'Automated package update.\n\nCI runs on this pull request. Review the changelogs of any major version bumps before merging.\n\n```diff\n%s\n```\n' "$manifest_diff")
           payload=$(jq -n --arg title "chore(deps): update packages" --arg head "$UPDATE_BRANCH" --arg base "$BASE_BRANCH" --arg body "$body" '{title: $title, head: $head, base: $base, body: $body}')
           status=$(curl -sS -o response.json -w '%{http_code}' -X POST \

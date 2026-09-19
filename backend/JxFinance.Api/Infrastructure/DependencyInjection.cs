@@ -3,13 +3,9 @@ using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Infrastructure.Pdf;
-using JxFinance.Infrastructure.Time;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Infrastructure;
 

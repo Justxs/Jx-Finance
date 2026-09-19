@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using JxFinance.Domain.Common;
-using Microsoft.AspNetCore.Http;
 
 namespace JxFinance.Infrastructure.Auth;
 

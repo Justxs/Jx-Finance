@@ -4,12 +4,10 @@ using FastEndpoints;
 using JxFinance.Api;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Infrastructure.BackgroundJobs;
+using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.ExchangeRates;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.OpenApi;
 using Serilog;
-using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 
 namespace JxFinance.Extensions;
 

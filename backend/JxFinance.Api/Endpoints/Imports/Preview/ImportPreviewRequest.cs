@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace JxFinance.Endpoints.Imports.Preview;
 
 public sealed class ImportPreviewRequest

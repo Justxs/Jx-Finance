@@ -57,7 +57,7 @@ export const ConfirmPending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)(:|$)/i }));
   },
 };
 
@@ -72,6 +72,6 @@ export const ConfirmFails: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: /^(confirm|patvirtinti)(:|$)/i }));
   },
 };

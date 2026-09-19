@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import {
   useAccountsSuspense,
@@ -15,6 +14,7 @@ import {
 } from "@/features/transactions/transaction-amount";
 import { parseIso } from "@/lib/calendar";
 import { recentTransactionsParams } from "../dashboard-queries";
+import { DashboardSection } from "../dashboard-section";
 
 function FirstRunSteps() {
   const { t } = useTranslation();
@@ -90,7 +90,7 @@ function RecentRows() {
             <span className="w-14 shrink-0 text-muted-foreground tabular-nums">
               {formatDay(transaction.date)}
             </span>
-            <div className="min-w-0 flex-1 sm:flex sm:items-baseline sm:gap-3">
+            <div className="min-w-0 flex-1">
               <p className="truncate font-medium" title={name}>
                 {name}
               </p>
@@ -110,20 +110,14 @@ export function RecentTransactionsList() {
   const { t } = useTranslation();
 
   return (
-    <section className="section">
-      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="section-title">{t("dashboard.recent")}</h2>
-        <Link
-          to="/transactions"
-          className="-my-1 inline-flex items-center gap-1 py-1 text-sm font-medium text-primary hover:underline"
-        >
-          {t("nav.transactions")}
-          <ArrowRight aria-hidden="true" className="size-3.5" />
-        </Link>
-      </div>
+    <DashboardSection
+      title={t("dashboard.recent")}
+      to="/transactions"
+      linkLabel={t("nav.transactions")}
+    >
       <QueryBoundary fallback={<RowsSkeleton rows={6} />} errorSubject={t("dashboard.recent")}>
         <RecentRows />
       </QueryBoundary>
-    </section>
+    </DashboardSection>
   );
 }

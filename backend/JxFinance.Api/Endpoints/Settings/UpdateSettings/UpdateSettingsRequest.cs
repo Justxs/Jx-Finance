@@ -1,6 +1,5 @@
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
-using JxFinance.Endpoints.Settings.Shared;
 
 namespace JxFinance.Endpoints.Settings.UpdateSettings;
 

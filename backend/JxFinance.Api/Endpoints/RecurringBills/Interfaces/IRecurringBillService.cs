@@ -1,5 +1,5 @@
-using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Shared;
 

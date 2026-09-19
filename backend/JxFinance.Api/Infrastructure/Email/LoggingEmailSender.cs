@@ -1,5 +1,4 @@
 using FastEndpoints;
-using Microsoft.Extensions.Logging;
 
 namespace JxFinance.Infrastructure.Email;
 

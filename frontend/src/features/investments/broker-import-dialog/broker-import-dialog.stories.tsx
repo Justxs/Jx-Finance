@@ -115,7 +115,14 @@ export const UploadPending: Story = {
     await uploadReport();
     const body = within(document.body);
     await expect(await body.findByText(/Importing the report/)).toBeInTheDocument();
-    await expect(body.getByRole("tab", { name: "Automatic sync" })).toBeDisabled();
+    await expect(body.getByRole("tab", { name: "Automatic sync" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    await expect(body.getByRole("tab", { name: "Upload report" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
   },
 };
 

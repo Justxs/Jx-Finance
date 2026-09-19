@@ -1,6 +1,6 @@
 {
   "brand": {
-    "wordmark": "Finance"
+    "wordmark": "Jx Finance"
   },
   "appName": "Jx Finance",
   "nav": {
@@ -55,6 +55,21 @@
     "totalBalance": "Total balance",
     "monthIncome": "Income this month",
     "monthExpense": "Expenses this month",
+    "monthNet": "Net this month",
+    "budgets": "Budgets this month",
+    "noBudgets": "No budgets set.",
+    "accounts": "Balance by account",
+    "noAccounts": "No accounts yet.",
+    "upcomingBills": "Upcoming bills",
+    "noBills": "No active bills.",
+    "overdue": "Overdue",
+    "pace": {
+      "title": "Spending pace",
+      "current": "This month",
+      "previous": "Last month",
+      "day": "Day {{day}}",
+      "label": "Cumulative spending by day, this month against last month"
+    },
     "recent": "Recent transactions",
     "empty": "No transactions yet.",
     "firstRun": {
@@ -96,7 +111,8 @@
     "allTypes": "All types",
     "currency": "Main currency",
     "currencyHint": "The starting balance and the account total use this currency. The account can still hold others.",
-    "holdings": "Holdings ≈ {{value}}"
+    "holdings": "Holdings ≈ {{value}}",
+    "share": "Balance by account"
   },
   "transfers": {
     "title": "Transfer money",
@@ -420,7 +436,11 @@
     "spentThisMonth": "Spent this month",
     "budgeted": "Budgeted",
     "remaining": "Remaining",
-    "overBy": "Over by"
+    "overBy": "Over by",
+    "spent": "Spent",
+    "limitSeries": "Limit",
+    "usage": "Budgeted against spent",
+    "usageLabel": "Budgeted and spent amount for each category this month"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -472,7 +492,9 @@
       "mortgage": "Mortgage",
       "loan": "Loan",
       "other": "Other"
-    }
+    },
+    "composition": "What it is made of",
+    "compositionLabel": "Accounts, assets and debts over time"
   },
   "investments": {
     "title": "Investments",
@@ -676,7 +698,8 @@
       "description": "Record buys, sells, dividends and fees to see holdings, gains and income by year. Entries move the cash balance of the account they belong to.",
       "addFirst": "Add first entry",
       "import": "Import from Interactive Brokers"
-    }
+    },
+    "allocation": "Allocation"
   },
   "recurringBills": {
     "title": "Recurring bills",
@@ -711,7 +734,11 @@
     "empty": "No recurring bills yet.",
     "needAccount": "Create an account first to set up recurring bills.",
     "overdue": "Overdue",
-    "recordPayment": "Record payment"
+    "recordPayment": "Record payment",
+    "forecast": "Due in the next six months",
+    "forecastSeries": "Bills due",
+    "forecastEmpty": "No fixed-amount bills are due in the next six months.",
+    "forecastLabel": "Total of fixed bills due in each of the next six months"
   },
   "notifications": {
     "title": "Notifications",
@@ -828,7 +855,11 @@
     "loadFailed": "Could not load this.",
     "loadFailedNamed": "{{subject}} could not be loaded.",
     "retry": "Try again",
-    "loading": "Loading"
+    "loading": "Loading",
+    "loadHint": "Nothing in the ledger was changed. Check the connection and try again.",
+    "pageFailedTitle": "Jx Finance could not be loaded.",
+    "pageFailedBody": "The server did not answer. Nothing in the ledger was changed. Try again, or reload the page if the problem stays.",
+    "reload": "Reload the page"
   },
   "validation": {
     "rate": "Enter a valid rate, e.g. 4.5.",
