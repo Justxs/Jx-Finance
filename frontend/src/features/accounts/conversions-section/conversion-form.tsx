@@ -1,8 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetExchangeRateEndpoint } from "@/api/generated";
+import { useGetExchangeRate } from "@/api/generated";
 import { type AccountResponse, Currency } from "@/api/generated/model";
+import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/conversions.zod";
 import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -80,7 +81,7 @@ function ConversionRate({
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const rateFormat = useRateFormat();
-  const reference = useGetExchangeRateEndpoint(
+  const reference = useGetExchangeRate(
     { from: fromCurrency, to: toCurrency, date },
     {
       query: {
@@ -138,7 +139,12 @@ export function ConversionForm({
       toAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
       toCurrency: z.enum(Currency),
       date: z.string().min(1, t("validation.required")),
-      description: z.string().max(500, t("validation.maxLength", { max: 500 })),
+      description: z
+        .string()
+        .max(
+          createConversionBodyDescriptionMax,
+          t("validation.maxLength", { max: createConversionBodyDescriptionMax }),
+        ),
       feeAmount: z
         .string()
         .refine(

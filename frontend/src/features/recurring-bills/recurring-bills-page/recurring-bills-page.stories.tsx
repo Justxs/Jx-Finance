@@ -1,10 +1,20 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import { getGetAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
+import {
+  getDeleteRecurringBillMockHandler,
+  getGetRecurringBillsMockHandler,
+} from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
-import { inactiveBill, recurringBills } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { inactiveBill, recurringBills, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { RecurringBillsPage } from "./recurring-bills-page";
 
 function RecurringBillsPageStory() {
@@ -18,7 +28,7 @@ function RecurringBillsPageStory() {
 }
 
 const manyBills = Array.from({ length: 18 }, (_, index) => ({
-  ...recurringBills[index % recurringBills.length],
+  ...cycle(recurringBills, index),
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
 }));
 
@@ -43,10 +53,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyInactive: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/recurring-bills", () => HttpResponse.json([inactiveBill])),
-        ...handlers,
-      ],
+      handlers: [getGetRecurringBillsMockHandler([inactiveBill]), ...handlers],
     },
   },
 };
@@ -54,10 +61,7 @@ export const OnlyInactive: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/recurring-bills", () => HttpResponse.json(manyBills)),
-        ...handlers,
-      ],
+      handlers: [getGetRecurringBillsMockHandler(manyBills), ...handlers],
     },
   },
 };
@@ -75,7 +79,7 @@ export const AddDialogOpen: Story = {
 export const AddDialogWithoutAccounts: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/accounts", () => HttpResponse.json([])), ...handlers],
+      handlers: [getGetAccountsMockHandler([]), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {
@@ -90,12 +94,7 @@ export const AddDialogWithoutAccounts: Story = {
 export const DeletePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.delete("*/api/recurring-bills/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getDeleteRecurringBillMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

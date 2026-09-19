@@ -72,8 +72,8 @@ public sealed class TransactionsPdfDocument(
         range.Format.Font.Color = MutedColor;
         range.Format.SpaceAfter = Unit.FromPoint(8);
 
-        var income = transactions.Where(t => t.Type == FlowType.Income).Sum(t => decimal.Parse(t.ReportingAmount, CultureInfo.InvariantCulture));
-        var expense = transactions.Where(t => t.Type == FlowType.Expense).Sum(t => decimal.Parse(t.ReportingAmount, CultureInfo.InvariantCulture));
+        var income = transactions.Where(t => t.Type == FlowType.Income).Sum(t => t.ReportingAmount);
+        var expense = transactions.Where(t => t.Type == FlowType.Expense).Sum(t => t.ReportingAmount);
 
         var summary = section.AddTable();
         summary.Borders.Visible = false;
@@ -138,7 +138,7 @@ public sealed class TransactionsPdfDocument(
         foreach (var transaction in transactions.OrderByDescending(t => t.Date))
         {
             var category = transaction.CategoryId is { } categoryId ? categoryNames.GetValueOrDefault(categoryId) : null;
-            var amount = decimal.Parse(transaction.Amount, CultureInfo.InvariantCulture);
+            var amount = transaction.Amount;
 
             var row = table.AddRow();
             row.TopPadding = Unit.FromPoint(3);

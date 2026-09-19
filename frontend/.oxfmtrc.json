@@ -25,7 +25,6 @@
   },
   "ignorePatterns": [
     "**/route-tree.gen.ts",
-    "src/api/generated",
     "public/mockServiceWorker.js",
     ".storybook/public",
     "storybook-static",

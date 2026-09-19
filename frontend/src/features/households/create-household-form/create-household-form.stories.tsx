@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { fn } from "storybook/test";
+import { getCreateHouseholdMockHandler } from "@/api/generated/households/households.msw";
 import { Modal } from "@/components/modal";
 import { serverErrorProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateHouseholdForm } from "./create-household-form";
 
 const meta = {
@@ -43,11 +43,8 @@ export const ServerErrorAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/households", () =>
-          HttpResponse.json(
-            { ...serverErrorProblem, instance: "/api/households" },
-            { status: 500, headers: { "Content-Type": "application/problem+json" } },
-          ),
+        getCreateHouseholdMockHandler(
+          failWith({ ...serverErrorProblem, instance: "/api/households" }, 500),
         ),
         ...handlers,
       ],
@@ -58,13 +55,7 @@ export const ServerErrorAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/households", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateHouseholdMockHandler(pending), ...handlers],
     },
   },
 };

@@ -1,9 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { ApiError } from "@/api/client";
-
-function isApiError(error: unknown): error is ApiError {
-  return typeof error === "object" && error !== null && "status" in error;
-}
+import { isApiError } from "@/api/client";
 
 function messageKey(error: unknown) {
   if (!isApiError(error) || error.status !== 400) {

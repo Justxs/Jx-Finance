@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useEnableTwoFactorEndpoint } from "@/api/generated";
+import { useEnableTwoFactor } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,7 +16,7 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
   const { t } = useTranslation();
   const [code, setCode] = useState("");
 
-  const enableMutation = useEnableTwoFactorEndpoint({
+  const enableMutation = useEnableTwoFactor({
     mutation: {
       onSuccess: (data) => onEnabled(data.recoveryCodes ?? []),
     },

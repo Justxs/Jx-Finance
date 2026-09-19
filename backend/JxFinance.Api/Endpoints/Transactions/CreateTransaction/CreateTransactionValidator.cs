@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.CreateTransaction;
@@ -11,7 +11,7 @@ public sealed class CreateTransactionValidator : Validator<CreateTransactionRequ
     {
         RuleFor(r => r.AccountId).NotEmpty();
         RuleFor(r => r.Amount)
-            .Must(MoneyWire.IsPositive)
+            .IsPositiveMoney()
             .WithMessage("Amount must be a positive decimal with at most 2 decimal places.");
         RuleFor(r => r.Currency).IsInEnum();
         RuleFor(r => r.Date).NotEmpty();
@@ -21,7 +21,7 @@ public sealed class CreateTransactionValidator : Validator<CreateTransactionRequ
             .ChildRules(line =>
             {
                 line.RuleFor(l => l.Amount)
-                    .Must(MoneyWire.IsPositive)
+                    .IsPositiveMoney()
                     .WithMessage("Each line's amount must be a positive decimal with at most 2 decimal places.");
                 line.RuleFor(l => l.Description).MaximumLength(500);
             })
@@ -33,14 +33,8 @@ public sealed class CreateTransactionValidator : Validator<CreateTransactionRequ
             .WithName("Lines");
     }
 
-    private static bool LinesSumMatchesTotal(IReadOnlyList<TransactionLineRequest> lines, string total)
-    {
-        if (!MoneyWire.IsValid(total) || lines.Any(l => !MoneyWire.IsValid(l.Amount)))
-        {
-            return true;
-        }
-
-        var sum = lines.Sum(l => MoneyWire.Parse(l.Amount).Amount);
-        return sum == MoneyWire.Parse(total).Amount;
-    }
+    private static bool LinesSumMatchesTotal(IReadOnlyList<TransactionLineRequest> lines, decimal total) =>
+        !DecimalRules.FitsMoney(total)
+        || lines.Any(l => !DecimalRules.FitsMoney(l.Amount))
+        || lines.Sum(l => l.Amount) == total;
 }

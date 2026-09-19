@@ -1,12 +1,7 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getGetGoalsEndpointQueryKey,
-  useDeleteGoalEndpoint,
-  useGetGoalsEndpointSuspense,
-} from "@/api/generated";
+import { useDeleteGoal, useGetGoalsSuspense } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
@@ -16,18 +11,13 @@ import { GoalRow } from "../goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const goals = useGetGoalsEndpointSuspense();
-
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetGoalsEndpointQueryKey() });
-  }
+  const goals = useGetGoalsSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteGoalEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteGoal();
 
   const goalList = useDeferredValue(goals.data) ?? [];
 
@@ -46,7 +36,6 @@ export function GoalsPage() {
             onDelete={() => setDeleteTarget(goal.id)}
             deletePending={deletingId === goal.id}
             deleteDisabled={deleteMutation.isPending}
-            onSaved={invalidate}
           />
         ))}
       </ul>
@@ -63,13 +52,7 @@ export function GoalsPage() {
       </PageHeader>
 
       <Modal open={addOpen} onOpenChange={setAddOpen} title={t("goals.add")}>
-        <CreateGoalForm
-          onCreated={() => {
-            invalidate();
-            setAddOpen(false);
-          }}
-          onCancel={() => setAddOpen(false)}
-        />
+        <CreateGoalForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
 
       {content}

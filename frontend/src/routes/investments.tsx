@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { getGetAccountsEndpointQueryOptions } from "@/api/generated";
+import { getGetAccountsQueryOptions } from "@/api/generated";
 import { InvestmentsPage } from "@/features/investments/investments-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { queryClient } from "@/lib/query-client";
@@ -13,7 +13,7 @@ const requireInvestments = requireFeature("investments");
 
 async function isKnownAccount(accountId: string): Promise<boolean> {
   try {
-    const accounts = await queryClient.ensureQueryData(getGetAccountsEndpointQueryOptions());
+    const accounts = await queryClient.ensureQueryData(getGetAccountsQueryOptions());
     return accounts.some((account) => account.id === accountId);
   } catch {
     return true;

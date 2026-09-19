@@ -1,6 +1,5 @@
 using System.Globalization;
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
@@ -37,9 +36,9 @@ public sealed class DashboardService(
         var monthExpense = monthTotals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m;
 
         return new DashboardSummaryResponse(
-            MoneyWire.ToWire(new Money(totalBalance)),
-            MoneyWire.ToWire(new Money(monthIncome)),
-            MoneyWire.ToWire(new Money(monthExpense)),
+            totalBalance,
+            monthIncome,
+            monthExpense,
             monthStart,
             monthEnd.AddDays(-1));
     }
@@ -68,9 +67,9 @@ public sealed class DashboardService(
                     g.Key?.Value,
                     category?.Name ?? "Uncategorized",
                     category?.Icon,
-                    MoneyWire.ToWire(new Money(g.Sum(a => a.Amount))));
+                    Money.Round(g.Sum(a => a.Amount)));
             })
-            .OrderByDescending(i => decimal.Parse(i.Amount))
+            .OrderByDescending(i => i.Amount)
             .ToList();
 
         return new CategoryBreakdownResponse(items, periodStart, periodEnd.AddDays(-1));
@@ -103,8 +102,8 @@ public sealed class DashboardService(
             items.Add(new MonthlyTrendItem(
                 monthStart.Year,
                 monthStart.Month,
-                MoneyWire.ToWire(new Money(income)),
-                MoneyWire.ToWire(new Money(expense))));
+                income,
+                expense));
         }
 
         return new MonthlyTrendResponse(items);

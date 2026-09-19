@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -17,7 +17,7 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Type).IsInEnum();
             row.RuleFor(r => r.Currency).IsInEnum();
             row.RuleFor(r => r.Description).MaximumLength(500);
-            row.RuleFor(r => r.Amount).Must(MoneyWire.IsPositive);
+            row.RuleFor(r => r.Amount).IsPositiveMoney();
         });
     }
 }

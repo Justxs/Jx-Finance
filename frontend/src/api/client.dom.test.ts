@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { type ApiError, customFetch } from "./client";
+import { ApiError, customFetch } from "./client";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -22,6 +22,7 @@ async function rejection(promise: Promise<unknown>): Promise<ApiError> {
   try {
     await promise;
   } catch (error) {
+    expect(error).toBeInstanceOf(ApiError);
     return error as ApiError;
   }
   throw new Error("expected the request to fail");
@@ -184,7 +185,7 @@ describe("errors", () => {
       }),
     );
 
-    await expect(rejection(customFetch("/api/accounts"))).resolves.toEqual({
+    await expect(rejection(customFetch("/api/accounts"))).resolves.toMatchObject({
       status: 409,
       title: "Conflict",
       detail: "Name is taken.",
@@ -199,7 +200,7 @@ describe("errors", () => {
     ];
     fetchMock.mockResolvedValueOnce(json({ title: "Invalid", errors }, { status: 400 }));
 
-    await expect(rejection(customFetch("/api/transactions"))).resolves.toEqual({
+    await expect(rejection(customFetch("/api/transactions"))).resolves.toMatchObject({
       status: 400,
       title: "Invalid",
       detail: "Amount is required. Date is invalid.",
@@ -212,7 +213,7 @@ describe("errors", () => {
       new Response("<html>bad gateway</html>", { status: 502, statusText: "Bad Gateway" }),
     );
 
-    await expect(rejection(customFetch("/api/accounts"))).resolves.toEqual({
+    await expect(rejection(customFetch("/api/accounts"))).resolves.toMatchObject({
       status: 502,
       title: "Bad Gateway",
       detail: undefined,

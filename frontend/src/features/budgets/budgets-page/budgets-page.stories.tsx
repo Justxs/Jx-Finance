@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import {
+  getDeleteBudgetMockHandler,
+  getGetBudgetsMockHandler,
+} from "@/api/generated/budgets/budgets.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
-import { budgets, ids, overLimitBudget } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { budgets, ids, overLimitBudget, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { BudgetsPage } from "./budgets-page";
 
 function BudgetsPageStory() {
@@ -18,7 +27,7 @@ function BudgetsPageStory() {
 }
 
 const manyBudgets = Array.from({ length: 14 }, (_, index) => ({
-  ...budgets[index % budgets.length],
+  ...cycle(budgets, index),
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
   categoryName:
     index % 3 === 0
@@ -66,19 +75,17 @@ export const AllOverLimit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/budgets", () =>
-          HttpResponse.json([
-            overLimitBudget,
-            {
-              ...overLimitBudget,
-              id: ids.budgets.transport,
-              categoryName: "Transportas",
-              limitAmount: "10.00",
-              spent: "98.40",
-              remaining: "-88.40",
-            },
-          ]),
-        ),
+        getGetBudgetsMockHandler([
+          overLimitBudget,
+          {
+            ...overLimitBudget,
+            id: ids.budgets.transport,
+            categoryName: "Transportas",
+            limitAmount: "10.00",
+            spent: "98.40",
+            remaining: "-88.40",
+          },
+        ]),
         ...handlers,
       ],
     },
@@ -94,11 +101,9 @@ export const ZeroLimit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/budgets", () =>
-          HttpResponse.json([
-            { ...overLimitBudget, limitAmount: "0.00", spent: "0.00", remaining: "0.00" },
-          ]),
-        ),
+        getGetBudgetsMockHandler([
+          { ...overLimitBudget, limitAmount: "0.00", spent: "0.00", remaining: "0.00" },
+        ]),
         ...handlers,
       ],
     },
@@ -108,7 +113,7 @@ export const ZeroLimit: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/budgets", () => HttpResponse.json(manyBudgets)), ...handlers],
+      handlers: [getGetBudgetsMockHandler(manyBudgets), ...handlers],
     },
   },
 };
@@ -135,13 +140,7 @@ export const EditDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.delete("*/api/budgets/:id", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getDeleteBudgetMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

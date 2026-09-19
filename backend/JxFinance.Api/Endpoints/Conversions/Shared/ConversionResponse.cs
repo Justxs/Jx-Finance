@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Conversions.Shared;
@@ -5,14 +6,14 @@ namespace JxFinance.Endpoints.Conversions.Shared;
 public sealed record ConversionResponse(
     Guid Id,
     Guid AccountId,
-    string FromAmount,
+    [property: Money] decimal FromAmount,
     Currency FromCurrency,
-    string ToAmount,
+    [property: Money] decimal ToAmount,
     Currency ToCurrency,
     string Rate,
     DateOnly Date,
     string? Description,
-    string? FeeAmount,
+    [property: Money] decimal? FeeAmount,
     Currency? FeeCurrency,
     Guid? FeeTransactionId,
     DateTimeOffset CreatedAt);

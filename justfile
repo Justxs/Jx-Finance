@@ -4,9 +4,14 @@ set windows-shell := ["powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", 
 dev:
     & scripts/dev.ps1
 
-# Regenerate the frontend API client from the running API's OpenAPI spec.
+# Export the OpenAPI spec from the backend build (no running API needed) and regenerate the frontend client, MSW handlers and zod schemas.
 gen:
-    Invoke-WebRequest http://localhost:8091/openapi/v1.json -OutFile frontend/openapi.json
+    $env:ConnectionStrings__Default = "Host=localhost;Database=export;Username=export;Password=export"; dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
+    Copy-Item backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
+    nub run --cwd frontend orval
+
+# Regenerate only the frontend code from the spec already in frontend/openapi.json.
+gen-client:
     nub run --cwd frontend orval
 
 # Run backend tests (needs Docker for Testcontainers).

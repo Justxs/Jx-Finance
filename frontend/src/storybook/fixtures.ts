@@ -51,6 +51,14 @@ export function toCents(amount: string): number {
   return Math.round(Number(amount) * 100);
 }
 
+export function cycle<T>(items: readonly T[], index: number): T {
+  const item = items[index % items.length];
+  if (item === undefined) {
+    throw new Error("Cannot cycle through an empty fixture list.");
+  }
+  return item;
+}
+
 export function fromCents(cents: number): string {
   return (cents / 100).toFixed(2);
 }

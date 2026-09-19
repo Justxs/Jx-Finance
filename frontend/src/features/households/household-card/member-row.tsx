@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useUpdateMemberRoleEndpoint } from "@/api/generated";
+import { useUpdateMemberRole } from "@/api/generated";
 import type { HouseholdMemberResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition";
 import { SelectField } from "@/components/select-field";
@@ -14,7 +14,6 @@ interface Props {
   onRemove: () => void;
   removePending: boolean;
   removeDisabled: boolean;
-  onSaved: () => void;
 }
 
 export function MemberRow({
@@ -24,11 +23,10 @@ export function MemberRow({
   onRemove,
   removePending,
   removeDisabled,
-  onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
 
-  const roleMutation = useUpdateMemberRoleEndpoint({ mutation: { onSettled: onSaved } });
+  const roleMutation = useUpdateMemberRole();
 
   return (
     <RowTransition>

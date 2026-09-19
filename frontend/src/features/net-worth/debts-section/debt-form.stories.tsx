@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
-import { handlers } from "@/storybook/handlers";
+import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
+import { handlers, pending } from "@/storybook/handlers";
 import { DebtForm } from "./debt-form";
 
 const meta = {
@@ -47,12 +47,7 @@ export const ValidationErrors: Story = {
 export const SubmitPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/debts", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateDebtMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

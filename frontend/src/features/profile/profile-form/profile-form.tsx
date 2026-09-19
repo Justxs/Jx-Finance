@@ -2,8 +2,12 @@ import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
-import { useUpdateMyProfileEndpoint } from "@/api/generated";
+import { useUpdateMyProfile } from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
+import {
+  updateMyProfileBodyDisplayNameMax,
+  updateMyProfileBodyNewPasswordMin,
+} from "@/api/schemas/users/users.zod";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -28,20 +32,27 @@ export function ProfileForm({ profile }: Readonly<Props>) {
       displayName: z
         .string()
         .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+        .refine(
+          (value) => value.trim().length <= updateMyProfileBodyDisplayNameMax,
+          t("validation.maxLength", { max: updateMyProfileBodyDisplayNameMax }),
+        ),
       currentPassword: z.string(),
       newPassword: z.string(),
     })
-    .refine((value) => value.newPassword === "" || value.newPassword.length >= 8, {
-      message: t("validation.minLength", { min: 8 }),
-      path: ["newPassword"],
-    })
+    .refine(
+      (value) =>
+        value.newPassword === "" || value.newPassword.length >= updateMyProfileBodyNewPasswordMin,
+      {
+        message: t("validation.minLength", { min: updateMyProfileBodyNewPasswordMin }),
+        path: ["newPassword"],
+      },
+    )
     .refine((value) => value.newPassword === "" || value.currentPassword !== "", {
       message: t("validation.required"),
       path: ["currentPassword"],
     });
 
-  const updateMutation = useUpdateMyProfileEndpoint({
+  const updateMutation = useUpdateMyProfile({
     mutation: {
       meta: { silent: true },
       onSuccess: () => {

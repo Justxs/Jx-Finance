@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { useGetTransactionsSummaryEndpointSuspense } from "@/api/generated";
-import type { GetTransactionsSummaryEndpointParams } from "@/api/generated/model";
+import { useGetTransactionsSummarySuspense } from "@/api/generated";
+import type { GetTransactionsSummaryParams } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMoney } from "@/hooks/use-formatters";
@@ -51,12 +51,12 @@ export function TransactionsTotalsLine({
 }
 
 interface Props {
-  params: GetTransactionsSummaryEndpointParams;
+  params: GetTransactionsSummaryParams;
   stale: boolean;
 }
 
 function LoadedTotals({ params, stale }: Readonly<Props>) {
-  const summary = useGetTransactionsSummaryEndpointSuspense(params);
+  const summary = useGetTransactionsSummarySuspense(params);
 
   return (
     <TransactionsTotalsLine

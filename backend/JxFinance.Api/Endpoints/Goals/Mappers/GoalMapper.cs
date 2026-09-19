@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
 using JxFinance.Endpoints.Goals.CreateGoal;
 using JxFinance.Endpoints.Goals.Shared;
@@ -12,23 +12,23 @@ public sealed class GoalMapper : Mapper<CreateGoalRequest, GoalResponse, Goal>
     public override Goal ToEntity(CreateGoalRequest request) => new()
     {
         Name = request.Name.Trim(),
-        TargetAmount = MoneyWire.Parse(request.TargetAmount),
-        CurrentAmount = MoneyWire.Parse(request.CurrentAmount ?? "0.00"),
+        TargetAmount = new Money(request.TargetAmount),
+        CurrentAmount = new Money(request.CurrentAmount ?? 0m),
         TargetDate = request.TargetDate,
     };
 
     public void UpdateEntity(UpdateGoalRequest request, Goal goal)
     {
         goal.Name = request.Name.Trim();
-        goal.TargetAmount = MoneyWire.Parse(request.TargetAmount);
-        goal.CurrentAmount = MoneyWire.Parse(request.CurrentAmount);
+        goal.TargetAmount = new Money(request.TargetAmount);
+        goal.CurrentAmount = new Money(request.CurrentAmount);
         goal.TargetDate = request.TargetDate;
     }
 
     public override GoalResponse FromEntity(Goal goal) => new(
         goal.Id.Value,
         goal.Name,
-        MoneyWire.ToWire(goal.TargetAmount),
-        MoneyWire.ToWire(goal.CurrentAmount),
+        goal.TargetAmount.Amount,
+        goal.CurrentAmount.Amount,
         goal.TargetDate);
 }

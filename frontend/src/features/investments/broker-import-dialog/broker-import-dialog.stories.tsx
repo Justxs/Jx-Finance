@@ -1,8 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import {
+  getGetBrokerConnectionsMockHandler,
+  getImportBrokerReportMockHandler,
+  getSyncBrokerConnectionMockHandler,
+} from "@/api/generated/investments/investments.msw";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import {
   brokerImportNothingNew,
   brokerSyncProblem,
@@ -59,12 +63,7 @@ export const UploadResult: Story = {
 export const UploadNothingNew: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/investments/import/interactive-brokers", () =>
-          HttpResponse.json(brokerImportNothingNew),
-        ),
-        ...handlers,
-      ],
+      handlers: [getImportBrokerReportMockHandler(brokerImportNothingNew), ...handlers],
     },
   },
   play: async () => {
@@ -109,13 +108,7 @@ export const ConnectionSavedClearsToken: Story = {
 export const UploadPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/investments/import/interactive-brokers", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getImportBrokerReportMockHandler(pending), ...handlers],
     },
   },
   play: async () => {
@@ -130,10 +123,7 @@ export const ConnectionNew: Story = {
   args: { initialTab: "sync" },
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/investments/connections", () => HttpResponse.json([])),
-        ...handlers,
-      ],
+      handlers: [getGetBrokerConnectionsMockHandler([]), ...handlers],
     },
   },
 };
@@ -143,15 +133,8 @@ export const ConnectionError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/investments/connections", () =>
-          HttpResponse.json([failedBrokerConnection]),
-        ),
-        http.post("*/api/investments/connections/:accountId/sync", () =>
-          HttpResponse.json(brokerSyncProblem, {
-            status: 400,
-            headers: { "Content-Type": "application/problem+json" },
-          }),
-        ),
+        getGetBrokerConnectionsMockHandler([failedBrokerConnection]),
+        getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem, 400)),
         ...handlers,
       ],
     },
@@ -171,13 +154,7 @@ export const SyncPending: Story = {
   args: { initialTab: "sync" },
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/investments/connections/:accountId/sync", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getSyncBrokerConnectionMockHandler(pending), ...handlers],
     },
   },
   play: async () => {

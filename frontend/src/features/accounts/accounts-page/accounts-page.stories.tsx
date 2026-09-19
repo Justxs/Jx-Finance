@@ -1,14 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http, HttpResponse } from "msw";
+import { getCreateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { AccountsPage } from "./accounts-page";
-
-async function neverResolve() {
-  await delay("infinite");
-  return new HttpResponse(null, { status: 204 });
-}
 
 const meta = {
   title: "Features/Accounts/AccountsPage",
@@ -45,5 +46,5 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [http.post("*/api/accounts", neverResolve), ...handlers] } },
+  parameters: { msw: { handlers: [getCreateAccountMockHandler(pending), ...handlers] } },
 };

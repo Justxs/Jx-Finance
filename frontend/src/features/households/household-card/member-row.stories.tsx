@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { fn } from "storybook/test";
+import { getUpdateMemberRoleMockHandler } from "@/api/generated/households/households.msw";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { handlers, pending } from "@/storybook/handlers";
 import { MemberRow } from "./member-row";
 
 const meta = {
@@ -16,7 +16,6 @@ const meta = {
     onRemove: fn(),
     removePending: false,
     removeDisabled: false,
-    onSaved: fn(),
   },
   render: (args) => (
     <ul className="rows w-[36rem] max-w-full">
@@ -56,13 +55,7 @@ export const RemoveDisabled: Story = { args: { removeDisabled: true } };
 export const RoleChangePendingAfterSelect: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.put("*/api/households/:id/members/:userId", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getUpdateMemberRoleMockHandler(pending), ...handlers],
     },
   },
 };

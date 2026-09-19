@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
@@ -6,7 +7,7 @@ public sealed record ImportConfirmRow(
     string ImportRef,
     DateOnly Date,
     string? Description,
-    string Amount,
+    [property: Money] decimal Amount,
     FlowType Type,
     Guid? CategoryId,
     Guid? TransferAccountId = null,

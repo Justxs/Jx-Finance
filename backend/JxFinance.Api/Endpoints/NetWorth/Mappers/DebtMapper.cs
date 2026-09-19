@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -13,7 +13,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
     {
         Name = request.Name.Trim(),
         Type = request.Type,
-        OutstandingAmount = MoneyWire.Parse(request.OutstandingAmount),
+        OutstandingAmount = new Money(request.OutstandingAmount),
         InterestRate = request.InterestRate,
         AsOf = request.AsOf,
     };
@@ -22,7 +22,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
     {
         debt.Name = request.Name.Trim();
         debt.Type = request.Type;
-        debt.OutstandingAmount = MoneyWire.Parse(request.OutstandingAmount);
+        debt.OutstandingAmount = new Money(request.OutstandingAmount);
         debt.InterestRate = request.InterestRate;
         debt.AsOf = request.AsOf;
     }
@@ -31,7 +31,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
         debt.Id.Value,
         debt.Name,
         debt.Type,
-        MoneyWire.ToWire(debt.OutstandingAmount),
+        debt.OutstandingAmount.Amount,
         debt.InterestRate,
         debt.AsOf);
 }

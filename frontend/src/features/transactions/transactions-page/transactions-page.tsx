@@ -5,20 +5,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetAccountsEndpointQueryKey,
-  getGetBudgetsEndpointQueryKey,
-  getGetCategoryBreakdownEndpointQueryKey,
-  getGetDashboardSummaryEndpointQueryKey,
-  getGetReportSummaryEndpointQueryKey,
-  getGetTransactionsEndpointQueryKey,
-  getGetTransactionsSummaryEndpointQueryKey,
-  useBulkCategorizeTransactionsEndpoint,
-  useCreateTransactionEndpoint,
-  useDeleteTransactionEndpoint,
-  useGetAccountsEndpointSuspense,
-  useGetCategoriesEndpointSuspense,
-  useGetTransactionsEndpointSuspense,
-  useUpdateTransactionEndpoint,
+  getGetTransactionsQueryKey,
+  useBulkCategorizeTransactions,
+  useCreateTransaction,
+  useDeleteTransaction,
+  useGetAccountsSuspense,
+  useGetCategoriesSuspense,
+  useGetTransactionsSuspense,
+  useUpdateTransaction,
 } from "@/api/generated";
 import type {
   PagedResponseOfTransactionResponse,
@@ -113,25 +107,18 @@ export function TransactionsPage() {
     sort,
     direction,
   };
-  const listKey = getGetTransactionsEndpointQueryKey(listParams);
+  const listKey = getGetTransactionsQueryKey(listParams);
   const filterParams = { search: searchText, accountId, categoryId, type, dateFrom, dateTo };
 
-  const accounts = useGetAccountsEndpointSuspense();
-  const categories = useGetCategoriesEndpointSuspense();
-  const transactions = useGetTransactionsEndpointSuspense(listParams);
+  const accounts = useGetAccountsSuspense();
+  const categories = useGetCategoriesSuspense();
+  const transactions = useGetTransactionsSuspense(listParams);
 
-  function invalidateLedger() {
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsSummaryEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
-  }
-
-  const createMutation = useCreateTransactionEndpoint({
+  const createMutation = useCreateTransaction({
     mutation: {
       meta: { silent: true },
       onMutate: async ({ data }) => {
-        await queryClient.cancelQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
+        await queryClient.cancelQueries({ queryKey: getGetTransactionsQueryKey() });
         const previous = queryClient.getQueryData<PagedResponseOfTransactionResponse>(listKey);
         if (previous) {
           const optimistic: TransactionResponse = {
@@ -169,39 +156,30 @@ export function TransactionsPage() {
         }
       },
       onSuccess: () => toast.success(t("transactions.created")),
-      onSettled: invalidateLedger,
     },
   });
 
-  const updateMutation = useUpdateTransactionEndpoint({
+  const updateMutation = useUpdateTransaction({
     mutation: {
       meta: { silent: true },
       onSuccess: () => {
         toast.success(t("transactions.updated"));
         setEditing(null);
       },
-      onSettled: invalidateLedger,
     },
   });
 
-  const deleteMutation = useDeleteTransactionEndpoint({
+  const deleteMutation = useDeleteTransaction({
     mutation: {
       onSuccess: () => toast.success(t("transactions.deleted")),
-      onSettled: invalidateLedger,
     },
   });
 
-  const bulkCategoryMutation = useBulkCategorizeTransactionsEndpoint({
+  const bulkCategoryMutation = useBulkCategorizeTransactions({
     mutation: {
       onSuccess: (result) => {
         toast.success(t("transactions.recategorized", { count: result.updated }));
         setSelectedIds(NO_SELECTION);
-      },
-      onSettled: () => {
-        invalidateLedger();
-        queryClient.invalidateQueries({ queryKey: getGetCategoryBreakdownEndpointQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetReportSummaryEndpointQueryKey() });
-        queryClient.invalidateQueries({ queryKey: getGetBudgetsEndpointQueryKey() });
       },
     },
   });

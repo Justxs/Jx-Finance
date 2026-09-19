@@ -17,7 +17,7 @@ public sealed class CreateAccountSummary : Summary<CreateAccountEndpoint, Create
             "Salary lands here",
             "LT121000011101001000",
             AccountType.Checking,
-            "1250.00",
+            1250.00m,
             Scope.Personal,
             null);
         RequestParam(r => r.Name, "Display name, up to 100 characters.");

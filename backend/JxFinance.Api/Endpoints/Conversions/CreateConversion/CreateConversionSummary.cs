@@ -14,13 +14,13 @@ public sealed class CreateConversionSummary : Summary<CreateConversionEndpoint, 
             + "transaction on the same account so it shows in reports and budgets.";
         ExampleRequest = new CreateConversionRequest(
             Guid.Empty,
-            "1000.00",
+            1000.00m,
             Currency.Eur,
-            "1084.20",
+            1084.20m,
             Currency.Usd,
             new DateOnly(2026, 9, 12),
             "Fund the USD sleeve",
-            "2.00",
+            2.00m,
             Currency.Eur);
         RequestParam(r => r.FromAmount, "Amount sold, as a decimal string greater than zero.");
         RequestParam(r => r.ToAmount, "Amount bought, as a decimal string greater than zero.");

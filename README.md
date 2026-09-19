@@ -40,7 +40,7 @@ dotnet test backend/JxFinance.Tests -- --coverage --coverage-output-format cober
 
 `ApiDocsTests` validates `/openapi/v1.json` with [Microsoft.OpenApi.Hidi](https://www.nuget.org/packages/Microsoft.OpenApi.Hidi), a local tool pinned in `backend/dotnet-tools.json`; run `dotnet tool restore` in `backend` once per checkout. The same tests compare the document with the approved contract in `backend/JxFinance.Tests/Integration/Diagnostics/Snapshots/openapi-v1.json`. After an intentional API change, run the backend tests once with `JX_UPDATE_SNAPSHOTS=1`, review the diff, commit the snapshot and regenerate the frontend client.
 
-With the API running, `just gen` refreshes the OpenAPI document and generated frontend client. The CI workflow also checks client drift.
+`just gen` exports the OpenAPI document straight from the backend build (no running API or database needed) and regenerates the frontend client, MSW handlers and zod schemas; `just gen-client` reruns only the frontend half against the spec already on disk. The CI workflow runs the same export and fails on drift. See "API contract and generated client" in `docs/7. Architecture notes.md`.
 
 ## Docker
 

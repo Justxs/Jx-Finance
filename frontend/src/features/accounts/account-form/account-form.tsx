@@ -1,13 +1,17 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
+import { useGetHouseholdsSuspense } from "@/api/generated";
 import {
   type AccountResponse,
   type AccountType,
   Currency,
   type Scope,
 } from "@/api/generated/model";
+import {
+  createAccountBodyDescriptionMax,
+  createAccountBodyNameMax,
+} from "@/api/schemas/accounts/accounts.zod";
 import { CurrencySelect } from "@/components/currency-select";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -50,7 +54,7 @@ interface Props {
 
 export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsEndpointSuspense();
+  const households = useGetHouseholdsSuspense();
   const householdList = households.data ?? [];
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
@@ -60,8 +64,16 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       name: z
         .string()
         .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
-      description: z.string().max(500, t("validation.maxLength", { max: 500 })),
+        .refine(
+          (value) => value.trim().length <= createAccountBodyNameMax,
+          t("validation.maxLength", { max: createAccountBodyNameMax }),
+        ),
+      description: z
+        .string()
+        .max(
+          createAccountBodyDescriptionMax,
+          t("validation.maxLength", { max: createAccountBodyDescriptionMax }),
+        ),
       iban: z.string().refine((value) => !value.trim() || isIban(value), t("validation.iban")),
       type: z.enum(accountTypes),
       startingBalance: z.string().refine(isMoney, t("validation.money")),

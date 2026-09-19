@@ -1,4 +1,3 @@
-using System.Globalization;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -112,25 +111,25 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
 
         return new PortfolioResponse(
             reporting,
-            Wire(marketValue),
-            Wire(costBasis),
-            Wire(marketValue - costBasis),
-            Wire(years.Values.Sum(y => y.RealizedGain)),
-            Wire(years.Values.Sum(y => y.Dividends)),
-            Wire(years.Values.Sum(y => y.WithholdingTax)),
-            Wire(years.Values.Sum(y => y.Fees)),
+            marketValue,
+            costBasis,
+            marketValue - costBasis,
+            years.Values.Sum(y => y.RealizedGain),
+            years.Values.Sum(y => y.Dividends),
+            years.Values.Sum(y => y.WithholdingTax),
+            years.Values.Sum(y => y.Fees),
             isComplete,
             holdings
-                .OrderByDescending(h => h.MarketValueReporting is null ? 0m : decimal.Parse(h.MarketValueReporting, CultureInfo.InvariantCulture))
+                .OrderByDescending(h => h.MarketValueReporting ?? 0m)
                 .ThenBy(h => h.Security.Symbol, StringComparer.Ordinal)
                 .ToList(),
             years.Select(y => new PortfolioYear(
                 y.Key,
-                Wire(y.Value.Dividends),
-                Wire(y.Value.WithholdingTax),
-                Wire(y.Value.Interest),
-                Wire(y.Value.Fees),
-                Wire(y.Value.RealizedGain))).ToList());
+                y.Value.Dividends,
+                y.Value.WithholdingTax,
+                y.Value.Interest,
+                y.Value.Fees,
+                y.Value.RealizedGain)).ToList());
     }
 
     public async Task<PagedResponse<InvestmentTransactionResponse>> GetTransactionsAsync(
@@ -409,8 +408,6 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
 
         return Portfolio.Positions(change(history)).GetValueOrDefault(securityId)?.IsOversold == true;
     }
-
-    private static string Wire(decimal amount) => MoneyWire.ToWire(new Money(amount));
 
     private sealed class YearTotals
     {

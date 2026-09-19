@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { getGetDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { dashboardSummary } from "@/storybook/fixtures";
@@ -30,31 +30,31 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 function overspentSummary() {
-  return HttpResponse.json({
+  return {
     ...dashboardSummary,
     totalBalance: "-1284.55",
     monthIncome: "1200.00",
     monthExpense: "4875.90",
-  });
+  };
 }
 
 function largeSummary() {
-  return HttpResponse.json({
+  return {
     ...dashboardSummary,
     totalBalance: "12345678901.23",
     monthIncome: "9876543.21",
     monthExpense: "8765432.10",
-  });
+  };
 }
 
 export const Overspent: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/dashboard/summary", overspentSummary), ...handlers] },
+    msw: { handlers: [getGetDashboardSummaryMockHandler(overspentSummary), ...handlers] },
   },
 };
 
 export const LargeAmounts: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/dashboard/summary", largeSummary), ...handlers] },
+    msw: { handlers: [getGetDashboardSummaryMockHandler(largeSummary), ...handlers] },
   },
 };

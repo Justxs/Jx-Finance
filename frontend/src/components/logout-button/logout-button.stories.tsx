@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
-import { handlers } from "@/storybook/handlers";
+import { getLogoutMockHandler } from "@/api/generated/auth/auth.msw";
+import { failWithStatus, handlers, pending } from "@/storybook/handlers";
 import { LogoutButton } from "./logout-button";
 
 const meta = {
@@ -16,13 +16,7 @@ export const Default: Story = {};
 export const PendingAfterClick: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/auth/logout", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getLogoutMockHandler(pending), ...handlers],
     },
   },
 };
@@ -30,10 +24,7 @@ export const PendingAfterClick: Story = {
 export const FailsAfterClick: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/auth/logout", () => new HttpResponse(null, { status: 500 })),
-        ...handlers,
-      ],
+      handlers: [getLogoutMockHandler(failWithStatus(500)), ...handlers],
     },
   },
 };

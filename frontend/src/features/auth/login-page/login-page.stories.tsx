@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import { getLoginMockHandler } from "@/api/generated/auth/auth.msw";
 import { loginTwoFactorRequired, unauthorizedProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { LoginPage } from "./login-page";
 
 const meta = {
@@ -24,10 +24,7 @@ export const Default: Story = {};
 export const TwoFactorStepAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/auth/login", () => HttpResponse.json(loginTwoFactorRequired)),
-        ...handlers,
-      ],
+      handlers: [getLoginMockHandler(loginTwoFactorRequired), ...handlers],
     },
   },
 };
@@ -36,10 +33,10 @@ export const InvalidCredentialsAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/auth/login", () =>
-          HttpResponse.json(
+        getLoginMockHandler(
+          failWith(
             { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
-            { status: 401, headers: { "Content-Type": "application/problem+json" } },
+            401,
           ),
         ),
         ...handlers,
@@ -58,13 +55,7 @@ export const InvalidCredentialsAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/auth/login", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getLoginMockHandler(pending), ...handlers],
     },
   },
 };

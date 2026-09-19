@@ -1,7 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetHouseholdsEndpointSuspense } from "@/api/generated";
+import { useGetHouseholdsSuspense } from "@/api/generated";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { RowTransition } from "@/components/row-transition";
@@ -15,7 +15,6 @@ interface Props {
   deletePending: boolean;
   deleteDisabled: boolean;
   onDelete: () => void;
-  onSaved: () => void;
 }
 
 export function CategoryRow({
@@ -23,11 +22,10 @@ export function CategoryRow({
   deletePending,
   deleteDisabled,
   onDelete,
-  onSaved,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
-  const households = useGetHouseholdsEndpointSuspense();
+  const households = useGetHouseholdsSuspense();
   const householdNames = new Map(households.data?.map((h) => [h.id, h.name]) ?? []);
 
   return (
@@ -74,10 +72,7 @@ export function CategoryRow({
         <Modal open={editing} onOpenChange={setEditing} title={t("categories.editTitle")}>
           <CategoryEditForm
             category={category}
-            onSaved={() => {
-              setEditing(false);
-              onSaved();
-            }}
+            onSaved={() => setEditing(false)}
             onCancel={() => setEditing(false)}
           />
         </Modal>

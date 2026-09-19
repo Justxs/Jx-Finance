@@ -18,7 +18,7 @@ public sealed class UpdateAccountSummary : Summary<UpdateAccountEndpoint, Update
             "Salary lands here",
             "LT121000011101001000",
             AccountType.Checking,
-            "1250.00",
+            1250.00m,
             Scope.Personal,
             null);
         Params["id"] = "The account id. Takes precedence over the id in the body.";

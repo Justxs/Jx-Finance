@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import QRCode from "qrcode";
 import { type ComponentProps, Suspense, use } from "react";
 import { fn } from "storybook/test";
+import { getEnableTwoFactorMockHandler } from "@/api/generated/auth/auth.msw";
 import { Skeleton } from "@/components/ui/skeleton";
 import { twoFactorSetup, validationProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { TwoFactorSetup } from "./two-factor-setup";
 
 const qrDataUrlPromise = QRCode.toDataURL(twoFactorSetup.authenticatorUri ?? "");
@@ -61,11 +61,8 @@ export const InvalidCodeAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/auth/2fa/enable", () =>
-          HttpResponse.json(
-            { ...validationProblem, detail: "The verification code is invalid." },
-            { status: 400, headers: { "Content-Type": "application/problem+json" } },
-          ),
+        getEnableTwoFactorMockHandler(
+          failWith({ ...validationProblem, detail: "The verification code is invalid." }, 400),
         ),
         ...handlers,
       ],
@@ -76,13 +73,7 @@ export const InvalidCodeAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/auth/2fa/enable", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getEnableTwoFactorMockHandler(pending), ...handlers],
     },
   },
 };

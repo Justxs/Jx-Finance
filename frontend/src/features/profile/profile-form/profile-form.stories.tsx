@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
+import { getUpdateMyProfileMockHandler } from "@/api/generated/users/users.msw";
 import { currentUser, longNameUser, validationProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { ProfileForm } from "./profile-form";
 
 const meta = {
@@ -37,11 +37,8 @@ export const WrongPasswordAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.put("*/api/users/me", () =>
-          HttpResponse.json(
-            { ...validationProblem, detail: "Current password is incorrect." },
-            { status: 400, headers: { "Content-Type": "application/problem+json" } },
-          ),
+        getUpdateMyProfileMockHandler(
+          failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
         ),
         ...handlers,
       ],
@@ -52,13 +49,7 @@ export const WrongPasswordAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.put("*/api/users/me", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getUpdateMyProfileMockHandler(pending), ...handlers],
     },
   },
 };

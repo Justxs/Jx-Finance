@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useGetTransfersEndpoint } from "@/api/generated";
+import { useGetTransfers } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
@@ -20,7 +20,7 @@ export function ImportTransferPicker({
   const money = useMoney();
   const formatDate = useIsoDate();
   const receiving = row.type === "income";
-  const transfers = useGetTransfersEndpoint(
+  const transfers = useGetTransfers(
     { date: row.date, page: 1, pageSize: 200 },
     { query: { enabled: Boolean(row.transferAccountId) } },
   );

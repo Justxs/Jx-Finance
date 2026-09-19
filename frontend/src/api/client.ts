@@ -1,3 +1,4 @@
+import { decimalFields } from "@/api/generated/decimal-fields";
 import { normalizeMoney } from "@/lib/validation";
 
 interface ApiErrorDetail {
@@ -6,30 +7,34 @@ interface ApiErrorDetail {
   code?: string | null;
 }
 
-export interface ApiError {
+interface ApiProblem {
   status: number;
   title?: string;
   detail?: string;
   errors?: ApiErrorDetail[];
 }
 
-const moneyKeys = new Set([
-  "amount",
-  "startingBalance",
-  "limitAmount",
-  "targetAmount",
-  "currentAmount",
-  "currentValue",
-  "outstandingAmount",
-  "fromAmount",
-  "toAmount",
-  "feeAmount",
-  "receivedAmount",
-  "fee",
-  "price",
-  "quantity",
-  "lastPrice",
-]);
+export class ApiError extends Error implements ApiProblem {
+  readonly status: number;
+  readonly title?: string;
+  readonly detail?: string;
+  readonly errors?: ApiErrorDetail[];
+
+  constructor({ status, title, detail, errors }: ApiProblem) {
+    super(detail ?? title ?? `Request failed with status ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.title = title;
+    this.detail = detail;
+    this.errors = errors;
+  }
+}
+
+export type ErrorType<_Problem> = ApiError;
+
+export function isApiError(error: unknown): error is ApiError {
+  return error instanceof ApiError;
+}
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -65,7 +70,7 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
     requestOptions = {
       ...options,
       body: JSON.stringify(JSON.parse(options.body), (key, value) =>
-        moneyKeys.has(key) && typeof value === "string" ? normalizeMoney(value) : value,
+        decimalFields.has(key) && typeof value === "string" ? normalizeMoney(value) : value,
       ),
     };
   }
@@ -92,15 +97,14 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
     if (response.status === 401 && canRenewSession(url)) {
       window.dispatchEvent(new Event("jx:session-expired"));
     }
-    const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiError>;
+    const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiProblem>;
     const errors = Array.isArray(problem.errors) ? problem.errors : undefined;
-    const apiError: ApiError = {
+    throw new ApiError({
       status: response.status,
       title: problem.title ?? response.statusText,
       detail: problem.detail ?? errors?.map((error) => error.reason).join(" "),
       errors,
-    };
-    throw apiError;
+    });
   }
 
   return body as T;

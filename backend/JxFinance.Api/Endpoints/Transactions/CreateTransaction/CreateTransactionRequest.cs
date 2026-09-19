@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.Shared;
 
@@ -7,7 +8,7 @@ public sealed record CreateTransactionRequest(
     Guid AccountId,
     Guid? CategoryId,
     FlowType Type,
-    string Amount,
+    [property: Money] decimal Amount,
     DateOnly Date,
     string? Description,
     IReadOnlyList<TransactionLineRequest>? Lines,

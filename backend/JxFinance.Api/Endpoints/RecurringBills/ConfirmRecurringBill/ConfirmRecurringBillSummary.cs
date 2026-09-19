@@ -10,7 +10,7 @@ public sealed class ConfirmRecurringBillSummary : Summary<ConfirmRecurringBillEn
         Description = "Posts the transaction for one occurrence of the schedule and rolls the next due "
             + "date forward by the cadence. expectedDueDate identifies which occurrence is being "
             + "confirmed, so a retry or a double click cannot post the same bill twice.";
-        ExampleRequest = new ConfirmRecurringBillRequest(Guid.Empty, "650.00", null, new DateOnly(2026, 10, 1));
+        ExampleRequest = new ConfirmRecurringBillRequest(Guid.Empty, 650.00m, null, new DateOnly(2026, 10, 1));
         Params["id"] = "The recurring bill id. Takes precedence over the id in the body.";
         RequestParam(r => r.Amount, "Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.");
         RequestParam(r => r.AccountId, "Account to post to. Defaults to the account on the schedule.");

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import type { NotificationResponse } from "@/api/generated/model";
+import { getGetNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
 import { notifications } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { QueryBoundary } from "../query-boundary";
@@ -8,9 +8,9 @@ import { Skeleton } from "../ui/skeleton";
 import { NotificationBell } from "./notification-bell";
 
 function notificationsHandler(items: NotificationResponse[]) {
-  return http.get("*/api/notifications", ({ request }) => {
+  return getGetNotificationsMockHandler(({ request }) => {
     const unreadOnly = new URL(request.url).searchParams.get("unread") === "true";
-    return HttpResponse.json(unreadOnly ? items.filter((item) => !item.isRead) : items);
+    return unreadOnly ? items.filter((item) => !item.isRead) : items;
   });
 }
 

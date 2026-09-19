@@ -1,9 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { getCreateCategoryMockHandler } from "@/api/generated/categories/categories.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { AddCategoryForm } from "./add-category-form";
 
 const meta = {
@@ -50,12 +56,7 @@ export const ValidationError: Story = {
 export const SubmitPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/categories", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateCategoryMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

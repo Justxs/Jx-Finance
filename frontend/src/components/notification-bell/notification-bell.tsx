@@ -1,12 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  getGetNotificationsEndpointQueryKey,
-  useGetNotificationsEndpointSuspense,
-  useMarkAllNotificationsReadEndpoint,
-  useMarkNotificationReadEndpoint,
+  useGetNotificationsSuspense,
+  useMarkAllNotificationsRead,
+  useMarkNotificationRead,
 } from "@/api/generated";
 import type { NotificationResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
@@ -42,10 +40,9 @@ interface Props {
 export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const { t } = useTranslation();
   const date = useDate();
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
 
-  const notifications = useGetNotificationsEndpointSuspense({ unread: true });
+  const notifications = useGetNotificationsSuspense({ unread: true });
   const unreadList = notifications.data;
 
   const bellLabel =
@@ -53,14 +50,8 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       ? t("notifications.titleWithCount", { count: unreadList.length })
       : t("notifications.title");
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetNotificationsEndpointQueryKey() });
-  }
-
-  const markReadMutation = useMarkNotificationReadEndpoint({ mutation: { onSettled: invalidate } });
-  const markAllReadMutation = useMarkAllNotificationsReadEndpoint({
-    mutation: { onSettled: invalidate },
-  });
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
 
   function describe(notification: NotificationResponse) {
     const dueDate = notification.type === "billDue" ? parseIso(notification.message ?? "") : null;

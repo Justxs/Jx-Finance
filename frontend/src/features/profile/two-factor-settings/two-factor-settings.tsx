@@ -1,14 +1,8 @@
-import { useQueryClient } from "@tanstack/react-query";
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  getMeEndpointQueryKey,
-  useDisableTwoFactorEndpoint,
-  useMeEndpointSuspense,
-  useSetupTwoFactorEndpoint,
-} from "@/api/generated";
+import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,19 +66,14 @@ function PasswordPrompt({
 
 export function TwoFactorSettings() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
-  const me = useMeEndpointSuspense();
+  const me = useMeSuspense();
 
   const [password, setPassword] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [sharedKey, setSharedKey] = useState<string | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
-  function invalidateMe() {
-    queryClient.invalidateQueries({ queryKey: getMeEndpointQueryKey() });
-  }
-
-  const setupMutation = useSetupTwoFactorEndpoint({
+  const setupMutation = useSetupTwoFactor({
     mutation: {
       onSuccess: async (data) => {
         setPassword("");
@@ -95,12 +84,11 @@ export function TwoFactorSettings() {
     },
   });
 
-  const disableMutation = useDisableTwoFactorEndpoint({
+  const disableMutation = useDisableTwoFactor({
     mutation: {
       onSuccess: () => {
         setPassword("");
         toast.success(t("profile.twoFactorDisabled"));
-        invalidateMe();
       },
       onError: () => setPassword(""),
     },
@@ -114,7 +102,6 @@ export function TwoFactorSettings() {
   function handleEnabled(codes: string[]) {
     setRecoveryCodes(codes);
     cancelSetup();
-    invalidateMe();
   }
 
   if (recoveryCodes) {

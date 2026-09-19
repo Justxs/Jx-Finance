@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -15,13 +14,13 @@ public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, B
     public override Budget ToEntity(CreateBudgetRequest request) => new()
     {
         CategoryId = new CategoryId(request.CategoryId),
-        LimitAmount = MoneyWire.Parse(request.LimitAmount),
+        LimitAmount = new Money(request.LimitAmount),
     };
 
     public void UpdateEntity(UpdateBudgetRequest request, Budget budget)
     {
         budget.CategoryId = new CategoryId(request.CategoryId);
-        budget.LimitAmount = MoneyWire.Parse(request.LimitAmount);
+        budget.LimitAmount = new Money(request.LimitAmount);
     }
 
     public BudgetResponse FromEntity(Budget budget, string? categoryName, decimal spent)
@@ -31,9 +30,9 @@ public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, B
             budget.Id.Value,
             budget.CategoryId.Value,
             categoryName ?? "Unknown",
-            MoneyWire.ToWire(budget.LimitAmount),
-            MoneyWire.ToWire(new Money(spent)),
-            MoneyWire.ToWire(new Money(limit - spent)),
+            budget.LimitAmount.Amount,
+            spent,
+            limit - spent,
             budget.Period.ToString());
     }
 }

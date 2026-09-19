@@ -1,5 +1,6 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.Shared;
 
-public sealed record AssetResponse(Guid Id, string Name, AssetType Type, string CurrentValue, DateOnly AsOf);
+public sealed record AssetResponse(Guid Id, string Name, AssetType Type, [property: Money] decimal CurrentValue, DateOnly AsOf);

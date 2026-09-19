@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Budgets.CreateBudget;
 
@@ -10,7 +10,7 @@ public sealed class CreateBudgetValidator : Validator<CreateBudgetRequest>
     {
         RuleFor(r => r.CategoryId).NotEmpty();
         RuleFor(r => r.LimitAmount)
-            .Must(MoneyWire.IsPositive)
+            .IsPositiveMoney()
             .WithMessage("Limit must be a positive decimal with at most 2 decimal places.");
     }
 }

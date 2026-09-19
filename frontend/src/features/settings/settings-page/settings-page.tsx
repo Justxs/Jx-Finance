@@ -3,10 +3,10 @@ import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetSettingsEndpointQueryKey,
-  useGetAccountsEndpointSuspense,
-  useSyncExchangeRatesEndpoint,
-  useUpdateSettingsEndpoint,
+  getGetSettingsQueryKey,
+  useGetAccountsSuspense,
+  useSyncExchangeRates,
+  useUpdateSettings,
 } from "@/api/generated";
 import { FontPicker } from "@/components/font-picker";
 import { PageHeader } from "@/components/page-header";
@@ -23,22 +23,20 @@ function SettingsContent() {
   const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const settings = useSettingsSuspense();
-  const accounts = useGetAccountsEndpointSuspense();
+  const accounts = useGetAccountsSuspense();
 
-  const updateMutation = useUpdateSettingsEndpoint({
+  const updateMutation = useUpdateSettings({
     mutation: {
-      onSuccess: async (saved) => {
-        queryClient.setQueryData(getGetSettingsEndpointQueryKey(), saved);
-        await queryClient.invalidateQueries();
+      onSuccess: (saved) => {
+        queryClient.setQueryData(getGetSettingsQueryKey(), saved);
         toast.success(t("settings.savedToast"));
       },
     },
   });
 
-  const syncMutation = useSyncExchangeRatesEndpoint({
+  const syncMutation = useSyncExchangeRates({
     mutation: {
-      onSuccess: async (result) => {
-        await queryClient.invalidateQueries({ queryKey: getGetSettingsEndpointQueryKey() });
+      onSuccess: (result) => {
         toast.success(
           result.added > 0
             ? t("settings.rates.synced", { count: result.added })

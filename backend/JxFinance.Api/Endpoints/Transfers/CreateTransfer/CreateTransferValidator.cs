@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 
 namespace JxFinance.Endpoints.Transfers.CreateTransfer;
 
@@ -14,10 +14,10 @@ public sealed class CreateTransferValidator : Validator<CreateTransferRequest>
             .NotEqual(r => r.FromAccountId)
             .WithMessage("Source and destination accounts must differ.");
         RuleFor(r => r.Amount)
-            .Must(MoneyWire.IsPositive)
+            .IsPositiveMoney()
             .WithMessage("Amount must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.ReceivedAmount)
-            .Must(a => a is null || MoneyWire.IsPositive(a))
+            .IsPositiveMoney()
             .WithMessage("Received amount must be a decimal greater than 0 with at most 2 decimal places.");
         RuleFor(r => r.Description).MaximumLength(500);
     }

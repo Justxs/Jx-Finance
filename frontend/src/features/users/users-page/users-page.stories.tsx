@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
+import { getGetUsersMockHandler } from "@/api/generated/users/users.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { inactiveUser, longNameUser, memberUser } from "@/storybook/fixtures";
@@ -38,17 +39,14 @@ export const OnlyCurrentUser: Story = { parameters: { msw: { handlers: emptyHand
 
 export const NoUsers: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/users", () => HttpResponse.json([])), ...handlers] },
+    msw: { handlers: [getGetUsersMockHandler([]), ...handlers] },
   },
 };
 
 export const SignedInAsAnotherAdmin: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/auth/me", () => HttpResponse.json({ ...memberUser, role: "Admin" })),
-        ...handlers,
-      ],
+      handlers: [getMeMockHandler({ ...memberUser, role: "Admin" }), ...handlers],
     },
   },
 };
@@ -56,10 +54,7 @@ export const SignedInAsAnotherAdmin: Story = {
 export const LongNamesAndInactive: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/users", () => HttpResponse.json([longNameUser, inactiveUser])),
-        ...handlers,
-      ],
+      handlers: [getGetUsersMockHandler([longNameUser, inactiveUser]), ...handlers],
     },
   },
 };

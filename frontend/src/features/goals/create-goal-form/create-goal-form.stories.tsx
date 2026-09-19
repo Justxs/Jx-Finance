@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
-import { handlers } from "@/storybook/handlers";
+import { getCreateGoalMockHandler } from "@/api/generated/goals/goals.msw";
+import { handlers, pending } from "@/storybook/handlers";
 import { CreateGoalForm } from "./create-goal-form";
 
 const meta = {
@@ -48,12 +48,7 @@ export const ValidationErrors: Story = {
 export const SubmitPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/goals", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateGoalMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

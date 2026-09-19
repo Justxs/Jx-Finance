@@ -1,7 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { I18nextProvider } from "react-i18next";
-import { getGetSettingsEndpointQueryKey } from "@/api/generated";
+import { getGetSettingsQueryKey } from "@/api/generated";
 import type { SettingsResponse } from "@/api/generated/model";
 import { RouteError } from "@/components/route-error";
 import { RoutePending } from "@/components/route-pending";
@@ -40,7 +40,7 @@ function handleSessionExpired() {
 
 window.addEventListener("jx:session-expired", handleSessionExpired);
 function isFeatureOn(feature: FeatureKey) {
-  const settings = queryClient.getQueryData<SettingsResponse>(getGetSettingsEndpointQueryKey());
+  const settings = queryClient.getQueryData<SettingsResponse>(getGetSettingsQueryKey());
   return settings?.features[feature] ?? true;
 }
 

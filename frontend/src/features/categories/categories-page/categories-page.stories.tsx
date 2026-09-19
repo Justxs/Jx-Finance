@@ -1,10 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import {
+  getDeleteCategoryMockHandler,
+  getGetCategoriesMockHandler,
+} from "@/api/generated/categories/categories.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
-import { categories, incomeCategories } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { categories, incomeCategories, cycle } from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { CategoriesPage } from "./categories-page";
 
 function CategoriesPageStory() {
@@ -18,7 +27,7 @@ function CategoriesPageStory() {
 }
 
 const manyCategories = Array.from({ length: 40 }, (_, index) => ({
-  ...categories[index % categories.length],
+  ...cycle(categories, index),
   id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
 }));
 
@@ -43,10 +52,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyIncomeCategories: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/categories", () => HttpResponse.json(incomeCategories)),
-        ...handlers,
-      ],
+      handlers: [getGetCategoriesMockHandler(incomeCategories), ...handlers],
     },
   },
 };
@@ -54,10 +60,7 @@ export const OnlyIncomeCategories: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/categories", () => HttpResponse.json(manyCategories)),
-        ...handlers,
-      ],
+      handlers: [getGetCategoriesMockHandler(manyCategories), ...handlers],
     },
   },
 };
@@ -75,12 +78,7 @@ export const AddDialogOpen: Story = {
 export const DeletePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.delete("*/api/categories/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getDeleteCategoryMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

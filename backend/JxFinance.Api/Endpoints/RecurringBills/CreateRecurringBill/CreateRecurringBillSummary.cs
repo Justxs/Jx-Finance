@@ -14,7 +14,7 @@ public sealed class CreateRecurringBillSummary : Summary<CreateRecurringBillEndp
         ExampleRequest = new CreateRecurringBillRequest(
             "Rent",
             RecurringBillKind.Fixed,
-            "650.00",
+            650.00m,
             null,
             null,
             RecurringBillCadence.Monthly,

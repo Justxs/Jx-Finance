@@ -59,7 +59,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
             return Result<TransferResponse>.Failure(ErrorCodes.Validation, "Destination account does not exist.");
         }
 
-        var sent = MoneyWire.Parse(request.Amount, request.Currency ?? fromCurrency);
+        var sent = new Money(request.Amount, request.Currency ?? fromCurrency);
         var receivedCurrency = request.ReceivedCurrency ?? (request.Currency is null ? toCurrency : sent.Currency);
         if (receivedCurrency != sent.Currency && request.ReceivedAmount is null)
         {
@@ -68,7 +68,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
                 "A transfer between currencies needs the received amount.");
         }
 
-        var received = request.ReceivedAmount is null ? sent : MoneyWire.Parse(request.ReceivedAmount, receivedCurrency);
+        var received = request.ReceivedAmount is { } receivedAmount ? new Money(receivedAmount, receivedCurrency) : sent;
         if (received.Currency == sent.Currency && received.Amount != sent.Amount)
         {
             return Result<TransferResponse>.Failure(

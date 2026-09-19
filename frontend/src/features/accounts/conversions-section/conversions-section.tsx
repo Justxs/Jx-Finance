@@ -1,15 +1,10 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  getGetAccountsEndpointQueryKey,
-  getGetConversionsEndpointQueryKey,
-  getGetDashboardSummaryEndpointQueryKey,
-  getGetTransactionsEndpointQueryKey,
-  useCreateConversionEndpoint,
-  useDeleteConversionEndpoint,
-  useGetConversionsEndpointSuspense,
+  useCreateConversion,
+  useDeleteConversion,
+  useGetConversionsSuspense,
 } from "@/api/generated";
 import type { AccountResponse, ConversionResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -34,7 +29,6 @@ export function ConversionsSection({
   onConvertAccountChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const money = useMoney();
   const formatDate = useIsoDate();
   const rateFormat = useRateFormat();
@@ -43,28 +37,20 @@ export function ConversionsSection({
   const [page, setPage] = useState(1);
   const shownPage = useDeferredValue(page);
   const stale = shownPage !== page;
-  const conversions = useGetConversionsEndpointSuspense({ page: shownPage, pageSize });
+  const conversions = useGetConversionsSuspense({ page: shownPage, pageSize });
   const pages = Math.max(1, Math.ceil((conversions.data?.total ?? 0) / pageSize));
   if (page > pages) {
     setPage(pages);
   }
   const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetConversionsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetAccountsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
-    queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryEndpointQueryKey() });
-  }
-
-  const createMutation = useCreateConversionEndpoint({
+  const createMutation = useCreateConversion({
     mutation: {
       onSuccess: () => onConvertAccountChange(null),
-      onSettled: invalidate,
     },
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const deleteMutation = useDeleteConversionEndpoint({ mutation: { onSettled: invalidate } });
+  const deleteMutation = useDeleteConversion();
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   const items = useDeferredValue(conversions.data?.items) ?? [];

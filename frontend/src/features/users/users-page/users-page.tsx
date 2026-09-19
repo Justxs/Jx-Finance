@@ -1,15 +1,13 @@
-import { useQueryClient } from "@tanstack/react-query";
 import { useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetUsersEndpointQueryKey,
-  useDeactivateUserEndpoint,
-  useGetUsersEndpointSuspense,
-  useMeEndpointSuspense,
-  useUpdateUserRoleEndpoint,
+  useDeactivateUser,
+  useGetUsersSuspense,
+  useMeSuspense,
+  useUpdateUserRole,
 } from "@/api/generated";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
@@ -20,12 +18,11 @@ import { UsersTable } from "../users-table";
 
 export function UsersPage() {
   const { t } = useTranslation();
-  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const me = useMeEndpointSuspense();
+  const me = useMeSuspense();
   const [shown, stale] = useDeferredParams(useSearch({ from: "/users" }));
-  const users = useGetUsersEndpointSuspense({
+  const users = useGetUsersSuspense({
     search: shown.search,
     role: shown.role,
     isActive: shown.isActive,
@@ -33,20 +30,14 @@ export function UsersPage() {
     direction: shown.direction,
   });
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: getGetUsersEndpointQueryKey() });
-  }
-
-  const roleMutation = useUpdateUserRoleEndpoint({
+  const roleMutation = useUpdateUserRole({
     mutation: {
       onSuccess: () => toast.success(t("users.roleUpdated")),
-      onSettled: invalidate,
     },
   });
-  const deactivateMutation = useDeactivateUserEndpoint({
+  const deactivateMutation = useDeactivateUser({
     mutation: {
       onSuccess: () => toast.success(t("users.deactivated_toast")),
-      onSettled: invalidate,
     },
   });
 
@@ -60,13 +51,7 @@ export function UsersPage() {
       </PageHeader>
 
       <Modal open={addOpen} onOpenChange={setAddOpen} title={t("users.add")}>
-        <CreateUserForm
-          onCreated={() => {
-            invalidate();
-            setAddOpen(false);
-          }}
-          onCancel={() => setAddOpen(false)}
-        />
+        <CreateUserForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
 
       <UsersTable

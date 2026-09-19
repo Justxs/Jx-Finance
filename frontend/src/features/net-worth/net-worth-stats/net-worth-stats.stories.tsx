@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import type { NetWorthResponse } from "@/api/generated/model";
+import { getGetNetWorthMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -17,7 +17,7 @@ function NetWorthStatsStory() {
 }
 
 function netWorthHandlers(body: NetWorthResponse) {
-  return [http.get("*/api/networth", () => HttpResponse.json(body)), ...handlers];
+  return [getGetNetWorthMockHandler(body), ...handlers];
 }
 
 const meta = {

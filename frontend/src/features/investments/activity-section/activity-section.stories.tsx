@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import { expect, userEvent, waitFor, within } from "storybook/test";
+import { getGetInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
@@ -37,14 +37,12 @@ export const WithSplit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/investments/transactions", () =>
-          HttpResponse.json({
-            items: [splitEntry, ...investmentTransactions.slice(0, 4)],
-            page: 1,
-            pageSize: 15,
-            total: 5,
-          }),
-        ),
+        getGetInvestmentTransactionsMockHandler({
+          items: [splitEntry, ...investmentTransactions.slice(0, 4)],
+          page: 1,
+          pageSize: 15,
+          total: 5,
+        }),
         ...handlers,
       ],
     },

@@ -1,27 +1,92 @@
-import { HttpHandler, HttpResponse, delay, http } from "msw";
-import type { RequestHandler } from "msw";
+import { HttpHandler, HttpResponse, delay } from "msw";
+import type { HttpResponseResolver, RequestHandler } from "msw";
+import {
+  getCreateAccountMockHandler,
+  getDeleteAccountMockHandler,
+  getGetAccountMockHandler,
+  getGetAccountsMockHandler,
+  getUpdateAccountMockHandler,
+} from "@/api/generated/accounts/accounts.msw";
+import {
+  getDisableTwoFactorMockHandler,
+  getEnableTwoFactorMockHandler,
+  getLoginMockHandler,
+  getLogoutMockHandler,
+  getMeMockHandler,
+  getSetupTwoFactorMockHandler,
+} from "@/api/generated/auth/auth.msw";
+import {
+  getCreateBudgetMockHandler,
+  getDeleteBudgetMockHandler,
+  getGetBudgetsMockHandler,
+  getUpdateBudgetMockHandler,
+} from "@/api/generated/budgets/budgets.msw";
+import {
+  getCreateCategoryMockHandler,
+  getDeleteCategoryMockHandler,
+  getGetCategoriesMockHandler,
+  getUpdateCategoryMockHandler,
+} from "@/api/generated/categories/categories.msw";
+import {
+  getCreateConversionMockHandler,
+  getDeleteConversionMockHandler,
+  getGetConversionsMockHandler,
+} from "@/api/generated/conversions/conversions.msw";
+import {
+  getGetCurrenciesMockHandler,
+  getGetExchangeRateMockHandler,
+} from "@/api/generated/currencies/currencies.msw";
+import {
+  getGetCategoryBreakdownMockHandler,
+  getGetDashboardSummaryMockHandler,
+  getGetMonthlyTrendMockHandler,
+} from "@/api/generated/dashboard/dashboard.msw";
+import {
+  getCreateGoalMockHandler,
+  getDeleteGoalMockHandler,
+  getGetGoalsMockHandler,
+  getUpdateGoalMockHandler,
+} from "@/api/generated/goals/goals.msw";
+import {
+  getAddMemberMockHandler,
+  getCreateHouseholdMockHandler,
+  getDeleteHouseholdMockHandler,
+  getGetHouseholdMockHandler,
+  getGetHouseholdsMockHandler,
+  getRemoveMemberMockHandler,
+  getUpdateHouseholdMockHandler,
+  getUpdateMemberRoleMockHandler,
+} from "@/api/generated/households/households.msw";
+import {
+  getImportConfirmMockHandler,
+  getImportPreviewMockHandler,
+} from "@/api/generated/imports/imports.msw";
+import {
+  getCreateInvestmentTransactionMockHandler,
+  getCreateSecurityMockHandler,
+  getDeleteBrokerConnectionMockHandler,
+  getDeleteInvestmentTransactionMockHandler,
+  getGetBrokerConnectionsMockHandler,
+  getGetInvestmentTransactionsMockHandler,
+  getGetPortfolioMockHandler,
+  getGetSecuritiesMockHandler,
+  getImportBrokerReportMockHandler,
+  getSaveBrokerConnectionMockHandler,
+  getSyncBrokerConnectionMockHandler,
+  getUpdateInvestmentTransactionMockHandler,
+  getUpdateSecurityMockHandler,
+} from "@/api/generated/investments/investments.msw";
 import type {
   ConversionResponse,
   Currency,
-  ExchangeRateResponse,
   AccountResponse,
-  AssetResponse,
-  BrokerConnectionResponse,
   BudgetResponse,
   CategoryBreakdownResponse,
   CategoryResponse,
-  ConfirmRecurringBillResponse,
-  DebtResponse,
-  GoalResponse,
   HouseholdResponse,
-  ImportConfirmResponse,
-  InvestmentTransactionResponse,
   InvestmentTransactionType,
-  LoginResponse,
   MonthlyTrendResponse,
-  NotificationResponse,
   ProblemDetails,
-  RecurringBillResponse,
   SecurityResponse,
   ReportSummaryResponse,
   TransactionLineResponse,
@@ -29,6 +94,62 @@ import type {
   TransferResponse,
   UserProfileResponse,
 } from "@/api/generated/model";
+import {
+  getCreateAssetMockHandler,
+  getCreateDebtMockHandler,
+  getDeleteAssetMockHandler,
+  getDeleteDebtMockHandler,
+  getGetAssetsMockHandler,
+  getGetDebtsMockHandler,
+  getGetNetWorthHistoryMockHandler,
+  getGetNetWorthMockHandler,
+  getUpdateAssetMockHandler,
+  getUpdateDebtMockHandler,
+} from "@/api/generated/net-worth/net-worth.msw";
+import {
+  getGetNotificationsMockHandler,
+  getMarkAllNotificationsReadMockHandler,
+  getMarkNotificationReadMockHandler,
+} from "@/api/generated/notifications/notifications.msw";
+import {
+  getConfirmRecurringBillMockHandler,
+  getCreateRecurringBillMockHandler,
+  getDeleteRecurringBillMockHandler,
+  getGetRecurringBillMockHandler,
+  getGetRecurringBillsMockHandler,
+  getUpdateRecurringBillMockHandler,
+} from "@/api/generated/recurring-bills/recurring-bills.msw";
+import { getGetReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
+import {
+  getGetPublicSettingsMockHandler,
+  getGetSettingsMockHandler,
+  getSyncExchangeRatesMockHandler,
+  getUpdateSettingsMockHandler,
+} from "@/api/generated/settings/settings.msw";
+import { getGetSetupStatusMockHandler, getSetupMockHandler } from "@/api/generated/setup/setup.msw";
+import {
+  getBulkCategorizeTransactionsMockHandler,
+  getCreateTransactionMockHandler,
+  getDeleteTransactionMockHandler,
+  getExportTransactionsMockHandler,
+  getExportTransactionsPdfMockHandler,
+  getGetTransactionMockHandler,
+  getGetTransactionsMockHandler,
+  getGetTransactionsSummaryMockHandler,
+  getUpdateTransactionMockHandler,
+} from "@/api/generated/transactions/transactions.msw";
+import {
+  getCreateTransferMockHandler,
+  getDeleteTransferMockHandler,
+  getGetTransfersMockHandler,
+} from "@/api/generated/transfers/transfers.msw";
+import {
+  getCreateUserMockHandler,
+  getDeactivateUserMockHandler,
+  getGetUsersMockHandler,
+  getUpdateMyProfileMockHandler,
+  getUpdateUserRoleMockHandler,
+} from "@/api/generated/users/users.msw";
 import {
   FIXTURE_MONTH,
   FIXTURE_MONTH_END,
@@ -102,10 +223,6 @@ const NEW_USER_ID = "dddddddd-0000-4000-8000-000000000003";
 const CREATED_AT = `${FIXTURE_TODAY}T07:30:00Z`;
 const PROBLEM_HEADERS = { "Content-Type": "application/problem+json" };
 
-function api(path: string): string {
-  return `*/api${path}`;
-}
-
 async function readBody(request: Request): Promise<Body> {
   try {
     const body: unknown = await request.clone().json();
@@ -119,7 +236,7 @@ function text(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function problem(body: ProblemDetails, status: number) {
+export function problem(body: ProblemDetails, status: number) {
   return HttpResponse.json(body, { status, headers: PROBLEM_HEADERS });
 }
 
@@ -127,8 +244,32 @@ function notFound() {
   return problem(notFoundProblem, 404);
 }
 
-function noContent() {
-  return new HttpResponse(null, { status: 204 });
+function found<T>(item: T | undefined): T {
+  if (item === undefined) {
+    throw notFound();
+  }
+  return item;
+}
+
+export function failWith(body: ProblemDetails, status: number) {
+  return function fail(): never {
+    throw problem(body, status);
+  };
+}
+
+export function failWithStatus(status: number) {
+  return function fail(): never {
+    throw new HttpResponse(null, { status });
+  };
+}
+
+export async function pending(): Promise<never> {
+  await delay("infinite");
+  throw new HttpResponse(null, { status: 204 });
+}
+
+export function onRouteOf(handler: HttpHandler, resolver: HttpResponseResolver): HttpHandler {
+  return new HttpHandler(handler.info.method, handler.info.path, resolver);
 }
 
 function byId<T extends { id: string }>(items: T[], id: unknown): T | undefined {
@@ -373,10 +514,8 @@ function withAddedMember(household: HouseholdResponse, body: Body): HouseholdRes
 }
 
 const accountHandlers = [
-  http.get(api("/accounts"), ({ request }) =>
-    HttpResponse.json(filterAccounts(new URL(request.url).searchParams)),
-  ),
-  http.post(api("/accounts"), async ({ request }) => {
+  getGetAccountsMockHandler(({ request }) => filterAccounts(new URL(request.url).searchParams)),
+  getCreateAccountMockHandler(async ({ request }) => {
     const created: AccountResponse = {
       ...checkingAccount,
       id: NEW_ID,
@@ -385,72 +524,60 @@ const accountHandlers = [
       createdAt: CREATED_AT,
     };
     const merged = mergeAccount(created, await readBody(request));
-    return HttpResponse.json(
-      {
-        ...merged,
-        currentBalance: merged.startingBalance,
-        reportingBalance: merged.startingBalance,
-        holdingsValue: "0.00",
-        balances: [{ currency: merged.currency, amount: merged.startingBalance }],
-      },
-      { status: 201 },
-    );
+    return {
+      ...merged,
+      currentBalance: merged.startingBalance,
+      reportingBalance: merged.startingBalance,
+      holdingsValue: "0.00",
+      balances: [{ currency: merged.currency, amount: merged.startingBalance }],
+    };
   }),
-  http.get(api("/accounts/:id"), ({ params }) => {
-    const found = byId(accounts, params.id);
-    return found ? HttpResponse.json(found) : notFound();
-  }),
-  http.put(api("/accounts/:id"), async ({ params, request }) => {
-    const found = byId(accounts, params.id);
-    return found ? HttpResponse.json(mergeAccount(found, await readBody(request))) : notFound();
-  }),
-  http.delete(api("/accounts/:id"), noContent),
+  getGetAccountMockHandler(({ params }) => found(byId(accounts, params.id))),
+  getUpdateAccountMockHandler(async ({ params, request }) =>
+    mergeAccount(found(byId(accounts, params.id)), await readBody(request)),
+  ),
+  getDeleteAccountMockHandler(),
 ];
 
 const assetHandlers = [
-  http.get(api("/assets"), () => HttpResponse.json(assets)),
-  http.post(api("/assets"), async ({ request }) => {
-    const created: AssetResponse = {
-      id: NEW_ID,
-      name: "",
-      type: "other",
-      currentValue: "0.00",
-      asOf: FIXTURE_TODAY,
-      ...(await readBody(request)),
-    };
-    return HttpResponse.json(created, { status: 201 });
-  }),
-  http.put(api("/assets/:id"), async ({ params, request }) => {
-    const found = byId(assets, params.id);
-    const updated: AssetResponse | undefined = found && { ...found, ...(await readBody(request)) };
-    return updated ? HttpResponse.json(updated) : notFound();
-  }),
-  http.delete(api("/assets/:id"), noContent),
+  getGetAssetsMockHandler(assets),
+  getCreateAssetMockHandler(async ({ request }) => ({
+    id: NEW_ID,
+    name: "",
+    type: "other",
+    currentValue: "0.00",
+    asOf: FIXTURE_TODAY,
+    ...(await readBody(request)),
+  })),
+  getUpdateAssetMockHandler(async ({ params, request }) => ({
+    ...found(byId(assets, params.id)),
+    ...(await readBody(request)),
+  })),
+  getDeleteAssetMockHandler(),
 ];
 
 const authHandlers = [
-  http.get(api("/auth/me"), () => HttpResponse.json(currentUser)),
-  http.post(api("/auth/login"), async ({ request }) => {
+  getMeMockHandler(currentUser),
+  getLoginMockHandler(async ({ request }) => {
     const body = await readBody(request);
     if (body.password === "wrong") {
-      return problem(
+      throw problem(
         { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
         401,
       );
     }
     const needsCode = (text(body.email) ?? "").includes("2fa") && !text(body.twoFactorCode);
-    const response: LoginResponse = needsCode ? loginTwoFactorRequired : loginSuccess;
-    return HttpResponse.json(response);
+    return needsCode ? loginTwoFactorRequired : loginSuccess;
   }),
-  http.post(api("/auth/logout"), noContent),
-  http.post(api("/auth/2fa/setup"), () => HttpResponse.json(twoFactorSetup)),
-  http.post(api("/auth/2fa/enable"), () => HttpResponse.json(twoFactorRecoveryCodes)),
-  http.post(api("/auth/2fa/disable"), noContent),
+  getLogoutMockHandler(),
+  getSetupTwoFactorMockHandler(twoFactorSetup),
+  getEnableTwoFactorMockHandler(twoFactorRecoveryCodes),
+  getDisableTwoFactorMockHandler(),
 ];
 
 const budgetHandlers = [
-  http.get(api("/budgets"), () => HttpResponse.json(budgets)),
-  http.post(api("/budgets"), async ({ request }) => {
+  getGetBudgetsMockHandler(budgets),
+  getCreateBudgetMockHandler(async ({ request }) => {
     const base: BudgetResponse = {
       id: NEW_ID,
       categoryId: "",
@@ -460,18 +587,17 @@ const budgetHandlers = [
       remaining: "0.00",
       period: "Monthly",
     };
-    return HttpResponse.json(mergeBudget(base, await readBody(request)), { status: 201 });
+    return mergeBudget(base, await readBody(request));
   }),
-  http.put(api("/budgets/:id"), async ({ params, request }) => {
-    const found = byId(budgets, params.id);
-    return found ? HttpResponse.json(mergeBudget(found, await readBody(request))) : notFound();
-  }),
-  http.delete(api("/budgets/:id"), noContent),
+  getUpdateBudgetMockHandler(async ({ params, request }) =>
+    mergeBudget(found(byId(budgets, params.id)), await readBody(request)),
+  ),
+  getDeleteBudgetMockHandler(),
 ];
 
 const categoryHandlers = [
-  http.get(api("/categories"), () => HttpResponse.json(categories)),
-  http.post(api("/categories"), async ({ request }) => {
+  getGetCategoriesMockHandler(categories),
+  getCreateCategoryMockHandler(async ({ request }) => {
     const base: CategoryResponse = {
       id: NEW_ID,
       name: "",
@@ -481,144 +607,118 @@ const categoryHandlers = [
       scope: "personal",
       householdId: null,
     };
-    return HttpResponse.json(mergeCategory(base, await readBody(request)), { status: 201 });
+    return mergeCategory(base, await readBody(request));
   }),
-  http.put(api("/categories/:id"), async ({ params, request }) => {
-    const found = byId(categories, params.id);
-    return found ? HttpResponse.json(mergeCategory(found, await readBody(request))) : notFound();
-  }),
-  http.delete(api("/categories/:id"), noContent),
+  getUpdateCategoryMockHandler(async ({ params, request }) =>
+    mergeCategory(found(byId(categories, params.id)), await readBody(request)),
+  ),
+  getDeleteCategoryMockHandler(),
 ];
 
 const dashboardHandlers = [
-  http.get(api("/dashboard/summary"), () => HttpResponse.json(dashboardSummary)),
-  http.get(api("/dashboard/monthly-trend"), ({ request }) =>
-    HttpResponse.json(resolveTrend(new URL(request.url).searchParams)),
-  ),
-  http.get(api("/dashboard/category-breakdown"), ({ request }) =>
-    HttpResponse.json(resolveBreakdown(new URL(request.url).searchParams)),
+  getGetDashboardSummaryMockHandler(dashboardSummary),
+  getGetMonthlyTrendMockHandler(({ request }) => resolveTrend(new URL(request.url).searchParams)),
+  getGetCategoryBreakdownMockHandler(({ request }) =>
+    resolveBreakdown(new URL(request.url).searchParams),
   ),
 ];
 
 const debtHandlers = [
-  http.get(api("/debts"), () => HttpResponse.json(debts)),
-  http.post(api("/debts"), async ({ request }) => {
-    const created: DebtResponse = {
-      id: NEW_ID,
-      name: "",
-      type: "other",
-      outstandingAmount: "0.00",
-      interestRate: null,
-      asOf: FIXTURE_TODAY,
-      ...(await readBody(request)),
-    };
-    return HttpResponse.json(created, { status: 201 });
-  }),
-  http.put(api("/debts/:id"), async ({ params, request }) => {
-    const found = byId(debts, params.id);
-    const updated: DebtResponse | undefined = found && { ...found, ...(await readBody(request)) };
-    return updated ? HttpResponse.json(updated) : notFound();
-  }),
-  http.delete(api("/debts/:id"), noContent),
+  getGetDebtsMockHandler(debts),
+  getCreateDebtMockHandler(async ({ request }) => ({
+    id: NEW_ID,
+    name: "",
+    type: "other",
+    outstandingAmount: "0.00",
+    interestRate: null,
+    asOf: FIXTURE_TODAY,
+    ...(await readBody(request)),
+  })),
+  getUpdateDebtMockHandler(async ({ params, request }) => ({
+    ...found(byId(debts, params.id)),
+    ...(await readBody(request)),
+  })),
+  getDeleteDebtMockHandler(),
 ];
 
 const goalHandlers = [
-  http.get(api("/goals"), () => HttpResponse.json(goals)),
-  http.post(api("/goals"), async ({ request }) => {
-    const created: GoalResponse = {
-      id: NEW_ID,
-      name: "",
-      targetAmount: "0.00",
-      currentAmount: "0.00",
-      targetDate: null,
-      ...(await readBody(request)),
-    };
-    return HttpResponse.json(created, { status: 201 });
-  }),
-  http.put(api("/goals/:id"), async ({ params, request }) => {
-    const found = byId(goals, params.id);
-    const updated: GoalResponse | undefined = found && { ...found, ...(await readBody(request)) };
-    return updated ? HttpResponse.json(updated) : notFound();
-  }),
-  http.delete(api("/goals/:id"), noContent),
+  getGetGoalsMockHandler(goals),
+  getCreateGoalMockHandler(async ({ request }) => ({
+    id: NEW_ID,
+    name: "",
+    targetAmount: "0.00",
+    currentAmount: "0.00",
+    targetDate: null,
+    ...(await readBody(request)),
+  })),
+  getUpdateGoalMockHandler(async ({ params, request }) => ({
+    ...found(byId(goals, params.id)),
+    ...(await readBody(request)),
+  })),
+  getDeleteGoalMockHandler(),
 ];
 
 const householdHandlers = [
-  http.get(api("/households"), () => HttpResponse.json(households)),
-  http.post(api("/households"), async ({ request }) => {
+  getGetHouseholdsMockHandler(households),
+  getCreateHouseholdMockHandler(async ({ request }) => {
     const body = await readBody(request);
-    const created: HouseholdResponse = {
+    return {
       id: NEW_ID,
       name: text(body.name) ?? "",
       myRole: "owner",
       members: familyHousehold.members.slice(0, 1),
     };
-    return HttpResponse.json(created, { status: 201 });
   }),
-  http.get(api("/households/:id"), ({ params }) => {
-    const found = byId(households, params.id);
-    return found ? HttpResponse.json(found) : notFound();
-  }),
-  http.put(api("/households/:id"), async ({ params, request }) => {
-    const found = byId(households, params.id);
+  getGetHouseholdMockHandler(({ params }) => found(byId(households, params.id))),
+  getUpdateHouseholdMockHandler(async ({ params, request }) => {
+    const household = found(byId(households, params.id));
     const body = await readBody(request);
-    const updated: HouseholdResponse | undefined = found && {
-      ...found,
-      name: text(body.name) ?? found.name,
-    };
-    return updated ? HttpResponse.json(updated) : notFound();
+    return { ...household, name: text(body.name) ?? household.name };
   }),
-  http.delete(api("/households/:id"), noContent),
-  http.post(api("/households/:id/members"), async ({ params, request }) => {
-    const found = byId(households, params.id);
-    return found ? HttpResponse.json(withAddedMember(found, await readBody(request))) : notFound();
-  }),
-  http.put(api("/households/:id/members/:userId"), async ({ params, request }) => {
-    const found = byId(households, params.id);
+  getDeleteHouseholdMockHandler(),
+  getAddMemberMockHandler(async ({ params, request }) =>
+    withAddedMember(found(byId(households, params.id)), await readBody(request)),
+  ),
+  getUpdateMemberRoleMockHandler(async ({ params, request }) => {
+    const household = found(byId(households, params.id));
     const body = await readBody(request);
-    const updated: HouseholdResponse | undefined = found && {
-      ...found,
-      members: found.members.map((member) =>
+    return {
+      ...household,
+      members: household.members.map((member) =>
         member.userId === params.userId
           ? { ...member, role: body.role === "owner" ? "owner" : "member" }
           : member,
       ),
     };
-    return updated ? HttpResponse.json(updated) : notFound();
   }),
-  http.delete(api("/households/:id/members/:userId"), ({ params }) => {
-    const found = byId(households, params.id);
-    const updated: HouseholdResponse | undefined = found && {
-      ...found,
-      members: found.members.filter((member) => member.userId !== params.userId),
+  getRemoveMemberMockHandler(({ params }) => {
+    const household = found(byId(households, params.id));
+    return {
+      ...household,
+      members: household.members.filter((member) => member.userId !== params.userId),
     };
-    return updated ? HttpResponse.json(updated) : notFound();
   }),
 ];
 
 const importHandlers = [
-  http.post(api("/import/swedbank/preview"), () => HttpResponse.json(importPreview)),
-  http.post(api("/import/swedbank/confirm"), async ({ request }) => {
+  getImportPreviewMockHandler(importPreview),
+  getImportConfirmMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const rows: Body[] = Array.isArray(body.rows) ? body.rows : [];
     const skipped = rows.filter((row) =>
       importPreview.rows.some((item) => item.importRef === row.importRef && item.isDuplicate),
     ).length;
-    const result: ImportConfirmResponse = {
-      imported: rows.length - skipped,
-      skippedDuplicates: skipped,
-    };
-    return HttpResponse.json(result);
+    return { imported: rows.length - skipped, skippedDuplicates: skipped };
   }),
 ];
 
 const investmentHandlers = [
-  http.get(api("/investments/portfolio"), ({ request }) => {
+  getGetPortfolioMockHandler(({ request }) => {
     const accountId = new URL(request.url).searchParams.get("accountId");
     const held = portfolio.holdings.some((holding) => holding.accountId === accountId);
-    return HttpResponse.json(!accountId || held ? portfolio : emptyPortfolio);
+    return !accountId || held ? portfolio : emptyPortfolio;
   }),
-  http.get(api("/investments/transactions"), ({ request }) => {
+  getGetInvestmentTransactionsMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
     const accountId = params.get("accountId");
     const securityId = params.get("securityId");
@@ -629,16 +729,16 @@ const investmentHandlers = [
         (!securityId || item.securityId === securityId) &&
         (!type || item.type === type),
     );
-    return HttpResponse.json(paginate(items, params));
+    return paginate(items, params);
   }),
-  http.post(api("/investments/transactions"), async ({ request }) => {
+  getCreateInvestmentTransactionMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const security = securities.find((item) => item.id === body.securityId);
     const type = (text(body.type) ?? "buy") as InvestmentTransactionType;
     const quantity = Number(text(body.quantity) ?? 0);
     const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
     if (type === "sell" && quantity > Number(held?.quantity ?? 0)) {
-      return problem(oversellProblem, 400);
+      throw problem(oversellProblem, 400);
     }
 
     const gross = quantity * Number(text(body.price) ?? 0);
@@ -653,7 +753,7 @@ const investmentHandlers = [
       fee: -amount,
       split: 0,
     };
-    const created: InvestmentTransactionResponse = {
+    return {
       id: NEW_ID,
       accountId: text(body.accountId) ?? "",
       securityId: security?.id ?? null,
@@ -669,30 +769,26 @@ const investmentHandlers = [
       source: "manual",
       createdAt: CREATED_AT,
     };
-    return HttpResponse.json(created, { status: 201 });
   }),
-  http.put(api("/investments/transactions/:id"), ({ params }) => {
-    const found = byId(investmentTransactions, params.id);
-    return found ? HttpResponse.json(found) : notFound();
-  }),
-  http.delete(api("/investments/transactions/:id"), noContent),
-  http.get(api("/investments/securities"), ({ request }) => {
+  getUpdateInvestmentTransactionMockHandler(({ params }) =>
+    found(byId(investmentTransactions, params.id)),
+  ),
+  getDeleteInvestmentTransactionMockHandler(),
+  getGetSecuritiesMockHandler(({ request }) => {
     const search = new URL(request.url).searchParams.get("search")?.toLowerCase() ?? "";
-    return HttpResponse.json(
-      securities.filter((item) =>
-        [item.symbol, item.name, item.isin ?? ""].some((value) =>
-          value.toLowerCase().includes(search),
-        ),
+    return securities.filter((item) =>
+      [item.symbol, item.name, item.isin ?? ""].some((value) =>
+        value.toLowerCase().includes(search),
       ),
     );
   }),
-  http.post(api("/investments/securities"), async ({ request }) => {
+  getCreateSecurityMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const exists = securities.some(
       (item) => item.symbol === body.symbol && item.currency === body.currency,
     );
     if (exists) {
-      return problem(duplicateSecurityProblem, 409);
+      throw problem(duplicateSecurityProblem, 409);
     }
 
     const created: SecurityResponse = {
@@ -708,106 +804,80 @@ const investmentHandlers = [
       ...body,
     };
     const lastPriceDate = created.lastPrice ? (created.lastPriceDate ?? FIXTURE_TODAY) : null;
-    return HttpResponse.json({ ...created, lastPriceDate }, { status: 201 });
+    return { ...created, lastPriceDate };
   }),
-  http.put(api("/investments/securities/:id"), async ({ params, request }) => {
-    const found = byId(securities, params.id);
-    return found ? HttpResponse.json({ ...found, ...(await readBody(request)) }) : notFound();
-  }),
-  http.post(api("/investments/import/interactive-brokers"), () =>
-    HttpResponse.json(brokerImportResult),
-  ),
-  http.get(api("/investments/connections"), () => HttpResponse.json(brokerConnections)),
-  http.put(api("/investments/connections/:accountId"), async ({ params, request }) => {
+  getUpdateSecurityMockHandler(async ({ params, request }) => ({
+    ...found(byId(securities, params.id)),
+    ...(await readBody(request)),
+  })),
+  getImportBrokerReportMockHandler(brokerImportResult),
+  getGetBrokerConnectionsMockHandler(brokerConnections),
+  getSaveBrokerConnectionMockHandler(async ({ params, request }) => {
     const body = await readBody(request);
-    const found = brokerConnections.find((item) => item.accountId === params.accountId);
-    const saved: BrokerConnectionResponse = {
+    const existing = brokerConnections.find((item) => item.accountId === params.accountId);
+    return {
       accountId: String(params.accountId),
       fundingAccountId: text(body.fundingAccountId),
       queryId: text(body.queryId) ?? "",
       isEnabled: body.isEnabled !== false,
-      lastSyncAt: found?.lastSyncAt ?? null,
+      lastSyncAt: existing?.lastSyncAt ?? null,
       lastError: null,
     };
-    return HttpResponse.json(saved);
   }),
-  http.delete(api("/investments/connections/:accountId"), noContent),
-  http.post(api("/investments/connections/:accountId/sync"), () =>
-    HttpResponse.json(brokerImportResult),
-  ),
+  getDeleteBrokerConnectionMockHandler(),
+  getSyncBrokerConnectionMockHandler(brokerImportResult),
 ];
 
 const netWorthHandlers = [
-  http.get(api("/networth"), () => HttpResponse.json(netWorth)),
-  http.get(api("/networth/history"), () => HttpResponse.json(netWorthHistory)),
+  getGetNetWorthMockHandler(netWorth),
+  getGetNetWorthHistoryMockHandler(netWorthHistory),
 ];
 
 const notificationHandlers = [
-  http.get(api("/notifications"), ({ request }) => {
+  getGetNotificationsMockHandler(({ request }) => {
     const unread = new URL(request.url).searchParams.get("unread") === "true";
-    const items: NotificationResponse[] = unread
-      ? notifications.filter((item) => !item.isRead)
-      : notifications;
-    return HttpResponse.json(items);
+    return unread ? notifications.filter((item) => !item.isRead) : notifications;
   }),
-  http.post(api("/notifications/read-all"), noContent),
-  http.patch(api("/notifications/:id/read"), noContent),
+  getMarkAllNotificationsReadMockHandler(),
+  getMarkNotificationReadMockHandler(),
 ];
 
 const recurringBillHandlers = [
-  http.get(api("/recurring-bills"), () => HttpResponse.json(recurringBills)),
-  http.post(api("/recurring-bills"), async ({ request }) => {
-    const created: RecurringBillResponse = {
-      ...dueSoonBill,
-      id: NEW_ID,
-      isActive: true,
-      ...(await readBody(request)),
-    };
-    return HttpResponse.json(created, { status: 201 });
-  }),
-  http.get(api("/recurring-bills/:id"), ({ params }) => {
-    const found = byId(recurringBills, params.id);
-    return found ? HttpResponse.json(found) : notFound();
-  }),
-  http.put(api("/recurring-bills/:id"), async ({ params, request }) => {
-    const found = byId(recurringBills, params.id);
-    const updated: RecurringBillResponse | undefined = found && {
-      ...found,
-      ...(await readBody(request)),
-    };
-    return updated ? HttpResponse.json(updated) : notFound();
-  }),
-  http.delete(api("/recurring-bills/:id"), noContent),
-  http.post(api("/recurring-bills/:id/confirm"), ({ params }) => {
-    const found = byId(recurringBills, params.id);
-    if (!found) {
-      return notFound();
-    }
-    const [year, month, day] = found.nextDueDate.split("-").map(Number);
+  getGetRecurringBillsMockHandler(recurringBills),
+  getCreateRecurringBillMockHandler(async ({ request }) => ({
+    ...dueSoonBill,
+    id: NEW_ID,
+    isActive: true,
+    ...(await readBody(request)),
+  })),
+  getGetRecurringBillMockHandler(({ params }) => found(byId(recurringBills, params.id))),
+  getUpdateRecurringBillMockHandler(async ({ params, request }) => ({
+    ...found(byId(recurringBills, params.id)),
+    ...(await readBody(request)),
+  })),
+  getDeleteRecurringBillMockHandler(),
+  getConfirmRecurringBillMockHandler(({ params }) => {
+    const bill = found(byId(recurringBills, params.id));
+    const [year, month, day] = bill.nextDueDate.split("-").map(Number);
     const next = new Date(Date.UTC(year ?? 2026, month ?? 9, day ?? 1));
-    const result: ConfirmRecurringBillResponse = {
-      bill: { ...found, nextDueDate: next.toISOString().slice(0, 10) },
+    return {
+      bill: { ...bill, nextDueDate: next.toISOString().slice(0, 10) },
       transactionId: NEW_TRANSACTION_ID,
     };
-    return HttpResponse.json(result);
   }),
 ];
 
 const reportHandlers = [
-  http.get(api("/reports/summary"), ({ request }) =>
-    HttpResponse.json(resolveReport(new URL(request.url).searchParams)),
-  ),
+  getGetReportSummaryMockHandler(({ request }) => resolveReport(new URL(request.url).searchParams)),
 ];
 
 const setupHandlers = [
-  http.get(api("/setup/status"), () => HttpResponse.json(setupStatus)),
-  http.post(api("/setup"), async ({ request }) =>
-    HttpResponse.json(mergeProfile(currentUser, await readBody(request)), { status: 201 }),
-  ),
+  getGetSetupStatusMockHandler(setupStatus),
+  getSetupMockHandler(async ({ request }) => mergeProfile(currentUser, await readBody(request))),
 ];
 
 const transactionHandlers = [
-  http.get(api("/transactions/export/pdf"), () =>
+  onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
     HttpResponse.arrayBuffer(new TextEncoder().encode("%PDF-1.4\n%%EOF\n").buffer, {
       headers: {
         "Content-Type": "application/pdf",
@@ -815,7 +885,7 @@ const transactionHandlers = [
       },
     }),
   ),
-  http.get(api("/transactions/export"), () =>
+  onRouteOf(getExportTransactionsMockHandler(new ArrayBuffer(0)), () =>
     HttpResponse.text(transactionsCsv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
@@ -823,25 +893,23 @@ const transactionHandlers = [
       },
     }),
   ),
-  http.get(api("/transactions/summary"), ({ request }) =>
-    HttpResponse.json(
-      buildTransactionsSummary(filterTransactions(new URL(request.url).searchParams)),
-    ),
+  getGetTransactionsSummaryMockHandler(({ request }) =>
+    buildTransactionsSummary(filterTransactions(new URL(request.url).searchParams)),
   ),
-  http.post(api("/transactions/bulk-category"), async ({ request }) => {
+  getBulkCategorizeTransactionsMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
-    const found = requested.map((id) => byId(transactions, id));
-    if (found.some((item) => item === undefined)) {
-      return notFound();
+    const matched = requested.map((id) => byId(transactions, id));
+    if (matched.some((item) => item === undefined)) {
+      throw notFound();
     }
-    return HttpResponse.json({ updated: found.length });
+    return { updated: matched.length };
   }),
-  http.get(api("/transactions"), ({ request }) => {
+  getGetTransactionsMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
-    return HttpResponse.json(paginate(filterTransactions(params), params));
+    return paginate(filterTransactions(params), params);
   }),
-  http.post(api("/transactions"), async ({ request }) => {
+  getCreateTransactionMockHandler(async ({ request }) => {
     const base: TransactionResponse = {
       id: NEW_TRANSACTION_ID,
       accountId: checkingAccount.id,
@@ -857,31 +925,25 @@ const transactionHandlers = [
       createdAt: CREATED_AT,
       lines: null,
     };
-    return HttpResponse.json(mergeTransaction(base, await readBody(request)), { status: 201 });
+    return mergeTransaction(base, await readBody(request));
   }),
-  http.get(api("/transactions/:id"), ({ params }) => {
-    const found = byId(transactions, params.id);
-    return found ? HttpResponse.json(found) : notFound();
-  }),
-  http.put(api("/transactions/:id"), async ({ params, request }) => {
-    const found = byId(transactions, params.id);
-    return found ? HttpResponse.json(mergeTransaction(found, await readBody(request))) : notFound();
-  }),
-  http.delete(api("/transactions/:id"), noContent),
+  getGetTransactionMockHandler(({ params }) => found(byId(transactions, params.id))),
+  getUpdateTransactionMockHandler(async ({ params, request }) =>
+    mergeTransaction(found(byId(transactions, params.id)), await readBody(request)),
+  ),
+  getDeleteTransactionMockHandler(),
 ];
 
 const transferHandlers = [
-  http.get(api("/transfers"), ({ request }) => {
+  getGetTransfersMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
     const date = params.get("date");
-    return HttpResponse.json(
-      paginate(
-        transfers.filter((item) => !date || item.date === date),
-        params,
-      ),
+    return paginate(
+      transfers.filter((item) => !date || item.date === date),
+      params,
     );
   }),
-  http.post(api("/transfers"), async ({ request }) => {
+  getCreateTransferMockHandler(async ({ request }) => {
     const created: TransferResponse = {
       id: NEW_ID,
       fromAccountId: checkingAccount.id,
@@ -895,26 +957,21 @@ const transferHandlers = [
       createdAt: CREATED_AT,
       ...(await readBody(request)),
     };
-    return HttpResponse.json(
-      { ...created, receivedAmount: created.receivedAmount ?? created.amount },
-      { status: 201 },
-    );
+    return { ...created, receivedAmount: created.receivedAmount ?? created.amount };
   }),
-  http.delete(api("/transfers/:id"), noContent),
+  getDeleteTransferMockHandler(),
 ];
 
 const conversionHandlers = [
-  http.get(api("/conversions"), ({ request }) => {
+  getGetConversionsMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
     const accountId = params.get("accountId");
-    return HttpResponse.json(
-      paginate(
-        conversions.filter((item) => !accountId || item.accountId === accountId),
-        params,
-      ),
+    return paginate(
+      conversions.filter((item) => !accountId || item.accountId === accountId),
+      params,
     );
   }),
-  http.post(api("/conversions"), async ({ request }) => {
+  getCreateConversionMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const created: ConversionResponse = {
       ...conversions[0]!,
@@ -927,52 +984,46 @@ const conversionHandlers = [
       ...body,
     };
     const rate = Number(created.toAmount) / Number(created.fromAmount);
-    return HttpResponse.json({ ...created, rate: rate.toFixed(6) }, { status: 201 });
+    return { ...created, rate: rate.toFixed(6) };
   }),
-  http.delete(api("/conversions/:id"), noContent),
+  getDeleteConversionMockHandler(),
 ];
 
 const settingsHandlers = [
-  http.get(api("/settings/public"), () =>
-    HttpResponse.json({
-      instanceName: settings.instanceName,
-      defaultLanguage: settings.defaultLanguage,
-    }),
-  ),
-  http.get(api("/settings"), () => HttpResponse.json(settings)),
-  http.put(api("/settings"), async ({ request }) =>
-    HttpResponse.json({ ...settings, ...(await readBody(request)) }),
-  ),
-  http.post(api("/settings/exchange-rates/sync"), () =>
-    HttpResponse.json({ added: 62, ratesAsOf: FIXTURE_TODAY }),
-  ),
+  getGetPublicSettingsMockHandler({
+    instanceName: settings.instanceName,
+    defaultLanguage: settings.defaultLanguage,
+  }),
+  getGetSettingsMockHandler(settings),
+  getUpdateSettingsMockHandler(async ({ request }) => ({
+    ...settings,
+    ...(await readBody(request)),
+  })),
+  getSyncExchangeRatesMockHandler({ added: 62, ratesAsOf: FIXTURE_TODAY }),
 ];
 
 const currencyHandlers = [
-  http.get(api("/currencies"), () => HttpResponse.json(currencies)),
-  http.get(api("/exchange-rates"), ({ request }) => {
+  getGetCurrenciesMockHandler(currencies),
+  getGetExchangeRateMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
     const from = ratesPerEuro[params.get("from") as Currency];
     const to = ratesPerEuro[params.get("to") as Currency];
     if (!from || !to) {
-      return notFound();
+      throw notFound();
     }
 
-    const response: ExchangeRateResponse = {
+    return {
       from: params.get("from") as Currency,
       to: params.get("to") as Currency,
       rate: (to / from).toFixed(6),
       asOf: currencies.ratesAsOf ?? FIXTURE_TODAY,
     };
-    return HttpResponse.json(response);
   }),
 ];
 
 const userHandlers = [
-  http.get(api("/users"), ({ request }) =>
-    HttpResponse.json(filterUsers(new URL(request.url).searchParams)),
-  ),
-  http.post(api("/users"), async ({ request }) => {
+  getGetUsersMockHandler(({ request }) => filterUsers(new URL(request.url).searchParams)),
+  getCreateUserMockHandler(async ({ request }) => {
     const base: UserProfileResponse = {
       id: NEW_USER_ID,
       email: "",
@@ -981,17 +1032,17 @@ const userHandlers = [
       twoFactorEnabled: false,
       isActive: true,
     };
-    return HttpResponse.json(mergeProfile(base, await readBody(request)), { status: 201 });
+    return mergeProfile(base, await readBody(request));
   }),
-  http.put(api("/users/me"), async ({ request }) => {
+  getUpdateMyProfileMockHandler(async ({ request }) => {
     const body = await readBody(request);
-    return HttpResponse.json(mergeProfile(currentUser, { displayName: body.displayName }));
+    return mergeProfile(currentUser, { displayName: body.displayName });
   }),
-  http.post(api("/users/:id/deactivate"), noContent),
-  http.put(api("/users/:id/role"), async ({ params, request }) => {
-    const found = byId(users, params.id);
+  getDeactivateUserMockHandler(),
+  getUpdateUserRoleMockHandler(async ({ params, request }) => {
+    const user = found(byId(users, params.id));
     const body = await readBody(request);
-    return found ? HttpResponse.json(mergeProfile(found, { role: body.role })) : notFound();
+    return mergeProfile(user, { role: body.role });
   }),
 ];
 
@@ -1020,72 +1071,73 @@ export const handlers: RequestHandler[] = [
   ...userHandlers,
 ];
 
-const SESSION_GET_PATHS = new Set([api("/auth/me"), api("/setup/status")]);
+const SESSION_GET_PATHS = new Set([
+  getMeMockHandler(currentUser).info.path,
+  getGetSetupStatusMockHandler(setupStatus).info.path,
+]);
 
-function dataGetPaths(): string[] {
-  const paths = handlers.flatMap((handler) => {
+function dataGetHandlers(): HttpHandler[] {
+  const seen = new Set<HttpHandler["info"]["path"]>();
+  return handlers.flatMap((handler) => {
     if (!(handler instanceof HttpHandler) || handler.info.method !== "GET") {
       return [];
     }
     const { path } = handler.info;
-    return typeof path === "string" && !SESSION_GET_PATHS.has(path) ? [path] : [];
+    if (SESSION_GET_PATHS.has(path) || seen.has(path)) {
+      return [];
+    }
+    seen.add(path);
+    return [handler];
   });
-  return [...new Set(paths)];
 }
 
-function emptyPage(request: Request) {
-  return HttpResponse.json(paginate([], new URL(request.url).searchParams));
-}
-
-function emptyList() {
-  return HttpResponse.json([]);
+function emptyPage({ request }: { request: Request }) {
+  return paginate<never>([], new URL(request.url).searchParams);
 }
 
 const emptyInvestmentHandlers: RequestHandler[] = [
-  http.get(api("/investments/portfolio"), () => HttpResponse.json(emptyPortfolio)),
-  http.get(api("/investments/transactions"), ({ request }) => emptyPage(request)),
-  http.get(api("/investments/securities"), emptyList),
-  http.get(api("/investments/connections"), emptyList),
+  getGetPortfolioMockHandler(emptyPortfolio),
+  getGetInvestmentTransactionsMockHandler(emptyPage),
+  getGetSecuritiesMockHandler([]),
+  getGetBrokerConnectionsMockHandler([]),
 ];
 
 export const emptyHandlers: RequestHandler[] = [
-  ...[
-    "/accounts",
-    "/assets",
-    "/budgets",
-    "/categories",
-    "/debts",
-    "/goals",
-    "/households",
-    "/notifications",
-    "/recurring-bills",
-  ].map((path) => http.get(api(path), emptyList)),
-  http.get(api("/users"), () => HttpResponse.json([currentUser])),
-  http.get(api("/transactions/summary"), () => HttpResponse.json(emptyTransactionsSummary)),
-  http.get(api("/transactions"), ({ request }) => emptyPage(request)),
-  http.get(api("/transfers"), ({ request }) => emptyPage(request)),
-  http.get(api("/conversions"), ({ request }) => emptyPage(request)),
-  http.get(api("/dashboard/summary"), () => HttpResponse.json(emptyDashboardSummary)),
-  http.get(api("/dashboard/monthly-trend"), () => HttpResponse.json({ items: [] })),
-  http.get(api("/dashboard/category-breakdown"), () => HttpResponse.json(emptyCategoryBreakdown)),
+  getGetAccountsMockHandler([]),
+  getGetAssetsMockHandler([]),
+  getGetBudgetsMockHandler([]),
+  getGetCategoriesMockHandler([]),
+  getGetDebtsMockHandler([]),
+  getGetGoalsMockHandler([]),
+  getGetHouseholdsMockHandler([]),
+  getGetNotificationsMockHandler([]),
+  getGetRecurringBillsMockHandler([]),
+  getGetUsersMockHandler([currentUser]),
+  getGetTransactionsSummaryMockHandler(emptyTransactionsSummary),
+  getGetTransactionsMockHandler(emptyPage),
+  getGetTransfersMockHandler(emptyPage),
+  getGetConversionsMockHandler(emptyPage),
+  getGetDashboardSummaryMockHandler(emptyDashboardSummary),
+  getGetMonthlyTrendMockHandler({ items: [] }),
+  getGetCategoryBreakdownMockHandler(emptyCategoryBreakdown),
   ...emptyInvestmentHandlers,
-  http.get(api("/networth"), () => HttpResponse.json(emptyNetWorth)),
-  http.get(api("/networth/history"), () => HttpResponse.json({ items: [] })),
-  http.get(api("/reports/summary"), ({ request }) => {
+  getGetNetWorthMockHandler(emptyNetWorth),
+  getGetNetWorthHistoryMockHandler({ items: [] }),
+  getGetReportSummaryMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
-    return HttpResponse.json({
+    return {
       ...emptyReportSummary,
       periodStart: params.get("dateFrom") ?? emptyReportSummary.periodStart,
       periodEnd: params.get("dateTo") ?? emptyReportSummary.periodEnd,
-    });
+    };
   }),
-  http.post(api("/import/swedbank/preview"), () => HttpResponse.json({ rows: [] })),
+  getImportPreviewMockHandler({ rows: [] }),
   ...handlers,
 ];
 
 export const errorHandlers: RequestHandler[] = [
-  ...dataGetPaths().map((path) =>
-    http.get(path, ({ request }) =>
+  ...dataGetHandlers().map((handler) =>
+    onRouteOf(handler, ({ request }) =>
       problem({ ...serverErrorProblem, instance: new URL(request.url).pathname }, 500),
     ),
   ),
@@ -1093,35 +1145,27 @@ export const errorHandlers: RequestHandler[] = [
 ];
 
 export const loadingHandlers: RequestHandler[] = [
-  ...dataGetPaths().map((path) =>
-    http.get(path, async () => {
-      await delay("infinite");
-      return noContent();
-    }),
-  ),
+  ...dataGetHandlers().map((handler) => onRouteOf(handler, pending)),
   ...handlers,
 ];
 
 export const importFormatErrorHandlers: RequestHandler[] = [
-  http.post(api("/import/swedbank/preview"), () => problem(importFormatProblem, 400)),
+  getImportPreviewMockHandler(failWith(importFormatProblem, 400)),
   ...handlers,
 ];
 
 export const importAllDuplicatesHandlers: RequestHandler[] = [
-  http.post(api("/import/swedbank/preview"), () => HttpResponse.json(importPreviewAllDuplicates)),
+  getImportPreviewMockHandler(importPreviewAllDuplicates),
   ...handlers,
 ];
 
 export const importPendingHandlers: RequestHandler[] = [
-  http.post(api("/import/swedbank/preview"), async () => {
-    await delay("infinite");
-    return noContent();
-  }),
+  getImportPreviewMockHandler(pending),
   ...handlers,
 ];
 
 export const unauthenticatedHandlers: RequestHandler[] = [
-  http.get(api("/auth/me"), () => problem(unauthorizedProblem, 401)),
+  getMeMockHandler(failWith(unauthorizedProblem, 401)),
   ...handlers,
 ];
 

@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateBudgetEndpoint, useUpdateBudgetEndpoint } from "@/api/generated";
+import { useCreateBudget, useUpdateBudget } from "@/api/generated";
 import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
@@ -32,11 +32,11 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
     limitAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
   });
 
-  const createMutation = useCreateBudgetEndpoint({
+  const createMutation = useCreateBudget({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 
-  const updateMutation = useUpdateBudgetEndpoint({
+  const updateMutation = useUpdateBudget({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

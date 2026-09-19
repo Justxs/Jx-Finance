@@ -1,7 +1,12 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateUserEndpoint } from "@/api/generated";
+import { useCreateUser } from "@/api/generated";
+import {
+  createUserBodyDisplayNameMax,
+  createUserBodyPasswordMax,
+  createUserBodyPasswordMin,
+} from "@/api/schemas/users/users.zod";
 import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -35,15 +40,21 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
     displayName: z
       .string()
       .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+      .refine(
+        (value) => value.trim().length <= createUserBodyDisplayNameMax,
+        t("validation.maxLength", { max: createUserBodyDisplayNameMax }),
+      ),
     role: z.enum(roles),
     password: z
       .string()
-      .min(8, t("validation.minLength", { min: 8 }))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .min(createUserBodyPasswordMin, t("validation.minLength", { min: createUserBodyPasswordMin }))
+      .max(
+        createUserBodyPasswordMax,
+        t("validation.maxLength", { max: createUserBodyPasswordMax }),
+      ),
   });
 
-  const createMutation = useCreateUserEndpoint({
+  const createMutation = useCreateUser({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
 

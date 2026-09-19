@@ -1,14 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  currentUserWithTwoFactor,
-  longNameUser,
-  serverErrorProblem,
-  unauthorizedProblem,
-} from "@/storybook/fixtures";
-import { handlers, unauthenticatedHandlers } from "@/storybook/handlers";
+import { currentUserWithTwoFactor, longNameUser, serverErrorProblem } from "@/storybook/fixtures";
+import { failWith, handlers, pending, unauthenticatedHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
 
 const meta = {
@@ -32,10 +27,7 @@ export const Default: Story = {};
 export const TwoFactorEnabled: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/auth/me", () => HttpResponse.json(currentUserWithTwoFactor)),
-        ...handlers,
-      ],
+      handlers: [getMeMockHandler(currentUserWithTwoFactor), ...handlers],
     },
   },
 };
@@ -43,7 +35,7 @@ export const TwoFactorEnabled: Story = {
 export const LongDisplayName: Story = {
   parameters: {
     msw: {
-      handlers: [http.get("*/api/auth/me", () => HttpResponse.json(longNameUser)), ...handlers],
+      handlers: [getMeMockHandler(longNameUser), ...handlers],
     },
   },
 };
@@ -51,13 +43,7 @@ export const LongDisplayName: Story = {
 export const Loading: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/auth/me", async () => {
-          await delay("infinite");
-          return HttpResponse.json(unauthorizedProblem, { status: 401 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getMeMockHandler(pending), ...handlers],
     },
   },
 };
@@ -66,12 +52,7 @@ export const ServerError: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get("*/api/auth/me", () =>
-          HttpResponse.json(
-            { ...serverErrorProblem, instance: "/api/auth/me" },
-            { status: 500, headers: { "Content-Type": "application/problem+json" } },
-          ),
-        ),
+        getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
         ...handlers,
       ],
     },

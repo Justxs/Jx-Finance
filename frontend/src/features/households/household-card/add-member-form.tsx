@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useAddMemberEndpoint } from "@/api/generated";
+import { useAddMember } from "@/api/generated";
 import type { HouseholdRole } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
     role: z.enum(["owner", "member"]),
   });
 
-  const addMutation = useAddMemberEndpoint({ mutation: { onSuccess: onAdded } });
+  const addMutation = useAddMember({ mutation: { onSuccess: onAdded } });
 
   const defaultValues: FormValues = { email: "", role: "member" };
 

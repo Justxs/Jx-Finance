@@ -15,7 +15,7 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
             Guid.Empty,
             Guid.Empty,
             FlowType.Expense,
-            "42.50",
+            42.50m,
             new DateOnly(2026, 9, 12),
             "Weekly shop",
             null);

@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 
@@ -11,5 +12,5 @@ public sealed record SecurityResponse(
     string? Exchange,
     SecurityType Type,
     Currency Currency,
-    string? LastPrice,
+    [property: Quantity] decimal? LastPrice,
     DateOnly? LastPriceDate);

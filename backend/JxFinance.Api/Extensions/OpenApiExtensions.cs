@@ -1,4 +1,5 @@
 using FastEndpoints.OpenApi;
+using JxFinance.Common.Json;
 using JxFinance.Common.OpenApi;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.OpenApi;
@@ -38,15 +39,45 @@ public static class OpenApiExtensions
                     Name = AuthCookies.AccessToken,
                     Description = "JWT access token cookie issued by POST /api/auth/login and renewed by POST /api/auth/refresh. Send requests with credentials included.",
                 });
-            options.ConfigureOpenApi = openApi => openApi.AddDocumentTransformer((document, _, _) =>
+            options.ConfigureOpenApi = openApi =>
             {
-                document.Info.Description = DocumentDescription;
-                SchemaVariants.Collapse(document);
-                return Task.CompletedTask;
-            });
+                openApi.AddSchemaTransformer((schema, context, _) =>
+                {
+                    if (context.JsonPropertyInfo is { AttributeProvider: { } attributes } property
+                        && (attributes.IsDefined(typeof(MoneyAttribute), inherit: false)
+                            || attributes.IsDefined(typeof(QuantityAttribute), inherit: false)))
+                    {
+                        DescribeDecimalString(schema, Nullable.GetUnderlyingType(property.PropertyType) is not null);
+                    }
+
+                    return Task.CompletedTask;
+                });
+                openApi.AddDocumentTransformer((document, _, _) =>
+                {
+                    document.Info.Description = DocumentDescription;
+                    SchemaVariants.Collapse(document);
+                    OperationNames.Shorten(document);
+                    return Task.CompletedTask;
+                });
+            };
         });
 
         return services;
+    }
+
+    private static void DescribeDecimalString(OpenApiSchema schema, bool nullable)
+    {
+        schema.Type = nullable ? JsonSchemaType.Null | JsonSchemaType.String : JsonSchemaType.String;
+        schema.Format = DecimalString.Format;
+        schema.Pattern = null;
+        schema.Minimum = null;
+        schema.Maximum = null;
+        schema.ExclusiveMinimum = null;
+        schema.ExclusiveMaximum = null;
+        schema.MultipleOf = null;
+        schema.OneOf = null;
+        schema.AnyOf = null;
+        schema.AllOf = null;
     }
 
     private static void AddTagDescriptions(IDictionary<string, string> tags)

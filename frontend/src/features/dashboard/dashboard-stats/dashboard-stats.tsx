@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { useGetDashboardSummaryEndpointSuspense } from "@/api/generated";
+import { useGetDashboardSummarySuspense } from "@/api/generated";
 import { SummaryStats } from "@/components/summary-stats";
 
 export function DashboardStats() {
   const { t } = useTranslation();
-  const summary = useGetDashboardSummaryEndpointSuspense();
+  const summary = useGetDashboardSummarySuspense();
 
   const income = Number(summary.data?.monthIncome ?? 0);
   const expense = Number(summary.data?.monthExpense ?? 0);

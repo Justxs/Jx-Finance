@@ -1,10 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { delay, http } from "msw";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { getUpdateCategoryMockHandler } from "@/api/generated/categories/categories.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { categories, ids } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
 import { CategoryEditForm } from "./category-edit-form";
 
 const personalCategory = categories.find((item) => item.id === ids.categories.food)!;
@@ -57,12 +63,7 @@ export const ValidationError: Story = {
 export const SavePending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.put("*/api/categories/:id", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getUpdateCategoryMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

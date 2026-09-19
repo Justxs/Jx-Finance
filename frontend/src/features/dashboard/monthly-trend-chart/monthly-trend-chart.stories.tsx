@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { http, HttpResponse } from "msw";
+import { getGetMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { monthlyTrendItems } from "@/storybook/fixtures";
@@ -30,23 +30,23 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 function singleMonthTrend() {
-  return HttpResponse.json({ items: monthlyTrendItems.slice(-1) });
+  return { items: monthlyTrendItems.slice(-1) };
 }
 
 function expenseOnlyTrend() {
-  return HttpResponse.json({
+  return {
     items: monthlyTrendItems.map((item) => ({ ...item, income: "0.00" })),
-  });
+  };
 }
 
 export const SingleMonth: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/dashboard/monthly-trend", singleMonthTrend), ...handlers] },
+    msw: { handlers: [getGetMonthlyTrendMockHandler(singleMonthTrend), ...handlers] },
   },
 };
 
 export const ExpenseOnly: Story = {
   parameters: {
-    msw: { handlers: [http.get("*/api/dashboard/monthly-trend", expenseOnlyTrend), ...handlers] },
+    msw: { handlers: [getGetMonthlyTrendMockHandler(expenseOnlyTrend), ...handlers] },
   },
 };

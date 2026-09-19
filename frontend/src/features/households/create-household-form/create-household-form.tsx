@@ -1,8 +1,9 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateHouseholdEndpoint, useUpdateHouseholdEndpoint } from "@/api/generated";
+import { useCreateHousehold, useUpdateHousehold } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
+import { createHouseholdBodyNameMax } from "@/api/schemas/households/households.zod";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
@@ -25,13 +26,16 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
     name: z
       .string()
       .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
+      .refine(
+        (value) => value.trim().length <= createHouseholdBodyNameMax,
+        t("validation.maxLength", { max: createHouseholdBodyNameMax }),
+      ),
   });
 
-  const createMutation = useCreateHouseholdEndpoint({
+  const createMutation = useCreateHousehold({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
-  const updateMutation = useUpdateHouseholdEndpoint({
+  const updateMutation = useUpdateHousehold({
     mutation: { meta: { silent: true }, onSuccess: onCreated },
   });
   const pending = createMutation.isPending || updateMutation.isPending;

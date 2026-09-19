@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import { getGetPortfolioMockHandler } from "@/api/generated/investments/investments.msw";
 import { brokerAccount } from "@/storybook/fixtures";
 import {
   errorHandlers,
@@ -44,10 +44,7 @@ export const Empty: Story = { parameters: { msw: { handlers: investmentsEmptyHan
 export const IncompletePrices: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/investments/portfolio", () => HttpResponse.json(incompletePortfolio)),
-        ...handlers,
-      ],
+      handlers: [getGetPortfolioMockHandler(incompletePortfolio), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

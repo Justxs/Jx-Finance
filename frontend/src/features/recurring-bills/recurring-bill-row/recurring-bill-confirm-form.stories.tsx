@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { fn, userEvent, within } from "storybook/test";
+import { getConfirmRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { accounts, dueSoonBill, serverErrorProblem, variableBill } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 
 const meta = {
   title: "Features/RecurringBills/RecurringBillConfirmForm",
   component: RecurringBillConfirmForm,
-  args: { bill: dueSoonBill, accounts, onSaved: fn(), onDone: fn() },
+  args: { bill: dueSoonBill, accounts, onDone: fn() },
   decorators: [
     function withFormWidth(Story) {
       return (
@@ -52,12 +52,7 @@ export const WithoutDefaultAccountNoAccounts: Story = {
 export const ConfirmPending: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/recurring-bills/:id/confirm", async () => {
-          await delay("infinite");
-        }),
-        ...handlers,
-      ],
+      handlers: [getConfirmRecurringBillMockHandler(pending), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {
@@ -70,9 +65,7 @@ export const ConfirmFails: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/recurring-bills/:id/confirm", () =>
-          HttpResponse.json(serverErrorProblem, { status: 500 }),
-        ),
+        getConfirmRecurringBillMockHandler(failWith(serverErrorProblem, 500)),
         ...handlers,
       ],
     },

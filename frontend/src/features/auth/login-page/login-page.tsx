@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useLoginEndpoint } from "@/api/generated";
+import { useLogin } from "@/api/generated";
 import { Brand } from "@/components/brand";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ export function LoginPage() {
     twoFactorCode: twoFactorRequired ? z.string().min(1, t("validation.required")) : z.string(),
   });
 
-  const loginMutation = useLoginEndpoint({
+  const loginMutation = useLogin({
     mutation: {
       meta: { silent: true },
       onSuccess: (data) => {

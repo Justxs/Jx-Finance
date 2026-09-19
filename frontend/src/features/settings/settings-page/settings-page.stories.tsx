@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
 import { expect, userEvent, within } from "storybook/test";
+import { getGetSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { settings } from "@/storybook/fixtures";
 import { errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { SettingsPage } from "./settings-page";
@@ -22,10 +22,7 @@ type Story = StoryObj<typeof meta>;
 function withSettings(patch: Partial<typeof settings>) {
   return {
     msw: {
-      handlers: [
-        http.get("*/api/settings", () => HttpResponse.json({ ...settings, ...patch })),
-        ...handlers,
-      ],
+      handlers: [getGetSettingsMockHandler({ ...settings, ...patch }), ...handlers],
     },
   };
 }

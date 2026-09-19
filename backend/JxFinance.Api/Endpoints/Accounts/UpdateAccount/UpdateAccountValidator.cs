@@ -1,6 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Shared;
 
@@ -16,7 +16,7 @@ public sealed class UpdateAccountValidator : Validator<UpdateAccountRequest>
             .Must(Iban.IsValid)
             .WithMessage("IBAN must be a valid IBAN (e.g. LT12 1000 0111 0100 1000).");
         RuleFor(r => r.StartingBalance)
-            .Must(MoneyWire.IsValid)
+            .IsMoney()
             .WithMessage("Starting balance must be a decimal with at most 2 decimal places.");
         RuleFor(r => r.HouseholdId)
             .NotNull()

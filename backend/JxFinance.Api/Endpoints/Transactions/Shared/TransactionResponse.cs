@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 
@@ -8,7 +9,7 @@ public sealed record TransactionResponse(
     Guid AccountId,
     Guid? CategoryId,
     FlowType Type,
-    string Amount,
+    [property: Money] decimal Amount,
     DateOnly Date,
     string? Description,
     TransactionSource Source,
@@ -16,4 +17,4 @@ public sealed record TransactionResponse(
     DateTimeOffset CreatedAt,
     IReadOnlyList<TransactionLineResponse>? Lines,
     Currency Currency,
-    string ReportingAmount);
+    [property: Money] decimal ReportingAmount);

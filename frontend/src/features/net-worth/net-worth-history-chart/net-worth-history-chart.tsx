@@ -8,7 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useGetNetWorthHistoryEndpointSuspense } from "@/api/generated";
+import { useGetNetWorthHistorySuspense } from "@/api/generated";
 import { axisTick, chartCursor, type ChartSeries, ChartTooltip } from "@/components/chart";
 import { useAxisMoney, useIsoDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
@@ -17,7 +17,7 @@ export function NetWorthHistoryChart() {
   const { t, i18n } = useTranslation();
   const axisMoney = useAxisMoney();
   const formatDate = useIsoDate();
-  const history = useGetNetWorthHistoryEndpointSuspense();
+  const history = useGetNetWorthHistorySuspense();
   const tickFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", year: "2-digit" });
 
   const items = history.data?.items ?? [];

@@ -10,6 +10,7 @@ import {
   type SettingsResponse,
   type UpdateSettingsRequest,
 } from "@/api/generated/model";
+import { updateSettingsBodyInstanceNameMax } from "@/api/schemas/settings/settings.zod";
 import { allCurrencies, CurrencySelect, orderCurrencies } from "@/components/currency-select";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -83,7 +84,12 @@ export function SettingsForm({
   const currencyName = useCurrencyName();
 
   const schema = z.object({
-    instanceName: z.string().max(40, t("validation.maxLength", { max: 40 })),
+    instanceName: z
+      .string()
+      .max(
+        updateSettingsBodyInstanceNameMax,
+        t("validation.maxLength", { max: updateSettingsBodyInstanceNameMax }),
+      ),
     features: z.object({
       budgets: z.boolean(),
       goals: z.boolean(),

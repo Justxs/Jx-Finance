@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { fn } from "storybook/test";
+import { getAddMemberMockHandler } from "@/api/generated/households/households.msw";
 import { Modal } from "@/components/modal";
 import { familyHousehold, notFoundProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { AddMemberForm } from "./add-member-form";
 
 const meta = {
@@ -45,11 +45,8 @@ export const UnknownEmailAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/households/:id/members", () =>
-          HttpResponse.json(
-            { ...notFoundProblem, detail: "No user with this email exists." },
-            { status: 404, headers: { "Content-Type": "application/problem+json" } },
-          ),
+        getAddMemberMockHandler(
+          failWith({ ...notFoundProblem, detail: "No user with this email exists." }, 404),
         ),
         ...handlers,
       ],
@@ -60,13 +57,7 @@ export const UnknownEmailAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/households/:id/members", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getAddMemberMockHandler(pending), ...handlers],
     },
   },
 };

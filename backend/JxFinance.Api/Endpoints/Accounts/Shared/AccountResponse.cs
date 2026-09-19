@@ -1,3 +1,4 @@
+using JxFinance.Common.Json;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 
@@ -9,12 +10,12 @@ public sealed record AccountResponse(
     string? Description,
     string? Iban,
     AccountType Type,
-    string StartingBalance,
-    string CurrentBalance,
+    [property: Money] decimal StartingBalance,
+    [property: Money] decimal CurrentBalance,
     DateTimeOffset CreatedAt,
     Scope Scope,
     Guid? HouseholdId,
     Currency Currency,
     IReadOnlyList<CurrencyBalance> Balances,
-    string ReportingBalance,
-    string HoldingsValue);
+    [property: Money] decimal ReportingBalance,
+    [property: Money] decimal HoldingsValue);

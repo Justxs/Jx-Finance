@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, delay, http } from "msw";
 import { fn } from "storybook/test";
+import { getCreateUserMockHandler } from "@/api/generated/users/users.msw";
 import { Modal } from "@/components/modal";
 import { validationProblem } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateUserForm } from "./create-user-form";
 
 const meta = {
@@ -42,11 +42,8 @@ export const ValidationErrorAfterSubmit: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.post("*/api/users", () =>
-          HttpResponse.json(
-            { ...validationProblem, detail: "A user with this email already exists." },
-            { status: 400, headers: { "Content-Type": "application/problem+json" } },
-          ),
+        getCreateUserMockHandler(
+          failWith({ ...validationProblem, detail: "A user with this email already exists." }, 400),
         ),
         ...handlers,
       ],
@@ -57,13 +54,7 @@ export const ValidationErrorAfterSubmit: Story = {
 export const PendingAfterSubmit: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.post("*/api/users", async () => {
-          await delay("infinite");
-          return new HttpResponse(null, { status: 204 });
-        }),
-        ...handlers,
-      ],
+      handlers: [getCreateUserMockHandler(pending), ...handlers],
     },
   },
 };

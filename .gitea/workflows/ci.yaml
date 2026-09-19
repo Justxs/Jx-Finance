@@ -127,14 +127,13 @@ jobs:
 
       - name: Regenerate client
         working-directory: frontend
-        run: |
-          nub run orval
-          nub run format src/api/generated
+        run: nub run orval
 
       - name: Fail on client drift
         run: |
-          if ! git diff --quiet -- frontend/src/api/generated; then
+          if [ -n "$(git status --porcelain -- frontend/src/api/generated frontend/src/api/schemas)" ]; then
             echo "::error::Generated API client is out of date. Run 'just gen' and commit the result."
-            git diff -- frontend/src/api/generated
+            git status --short -- frontend/src/api/generated frontend/src/api/schemas
+            git diff -- frontend/src/api/generated frontend/src/api/schemas
             exit 1
           fi

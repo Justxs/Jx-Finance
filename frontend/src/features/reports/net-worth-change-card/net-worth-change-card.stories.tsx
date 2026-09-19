@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { HttpResponse, http } from "msw";
+import { getGetNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { FIXTURE_MONTH_END, FIXTURE_YEAR_START, netWorthHistoryItems } from "@/storybook/fixtures";
@@ -44,10 +44,7 @@ export const ShorterRange: Story = { args: { dateFrom: "2026-06-01", dateTo: "20
 export const NegativeChange: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/networth/history", () => HttpResponse.json(decliningHistory)),
-        ...handlers,
-      ],
+      handlers: [getGetNetWorthHistoryMockHandler(decliningHistory), ...handlers],
     },
   },
 };
@@ -55,10 +52,7 @@ export const NegativeChange: Story = {
 export const LargeAmountsNarrow: Story = {
   parameters: {
     msw: {
-      handlers: [
-        http.get("*/api/networth/history", () => HttpResponse.json(hugeHistory)),
-        ...handlers,
-      ],
+      handlers: [getGetNetWorthHistoryMockHandler(hugeHistory), ...handlers],
     },
   },
   render: (args) => (

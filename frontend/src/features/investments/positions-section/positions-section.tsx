@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetSecuritiesEndpoint, useUpdateSecurityEndpoint } from "@/api/generated";
+import { useGetSecurities, useUpdateSecurity } from "@/api/generated";
 import type {
   AccountResponse,
   Currency,
@@ -8,7 +8,6 @@ import type {
   SecurityResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { useInvalidateInvestments } from "../use-invalidate-investments";
 import { PositionsTable } from "./positions-table";
 import { PriceForm } from "./price-form";
 
@@ -37,19 +36,17 @@ function sharedSecurities(holdings: readonly HoldingResponse[]) {
 
 export function PositionsSection({ holdings, reportingCurrency, accounts }: Readonly<Props>) {
   const { t } = useTranslation();
-  const { invalidateEntries } = useInvalidateInvestments();
   const [priceTarget, setPriceTarget] = useState<SecurityResponse | null>(null);
   const [priceOpen, setPriceOpen] = useState(false);
-  const securities = useGetSecuritiesEndpoint(undefined, {
+  const securities = useGetSecurities(undefined, {
     query: { throwOnError: false, meta: { silent: true } },
   });
   const priceSecurity =
     securities.data?.find((security) => security.id === priceTarget?.id) ?? priceTarget;
 
-  const updateMutation = useUpdateSecurityEndpoint({
+  const updateMutation = useUpdateSecurity({
     mutation: {
       onSuccess: () => setPriceOpen(false),
-      onSettled: invalidateEntries,
     },
   });
 
