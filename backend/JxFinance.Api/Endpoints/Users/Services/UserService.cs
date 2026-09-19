@@ -78,9 +78,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var identityResult = await userManager.CreateAsync(user, request.Password);
         if (!identityResult.Succeeded)
         {
-            return Result<UserProfileResponse>.Failure(
-                ErrorCodes.Validation,
-                string.Join("; ", identityResult.Errors.Select(e => e.Description)));
+            return Result<UserProfileResponse>.Failure(identityResult.ToDomainError());
         }
 
         await userManager.AddToRoleAsync(user, request.Role);
@@ -96,13 +94,13 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
     {
         if (id == currentUserId)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.Forbidden, "You cannot change your own role.");
+            return Result<UserProfileResponse>.Failure(ErrorCodes.UserSelfChange, "You cannot change your own role.");
         }
 
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.NotFound, "User not found.");
+            return Result<UserProfileResponse>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         var currentRoles = await userManager.GetRolesAsync(user);
@@ -117,13 +115,13 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
     {
         if (id == currentUserId)
         {
-            return Result<Guid>.Failure(ErrorCodes.Forbidden, "You cannot deactivate your own account.");
+            return Result<Guid>.Failure(ErrorCodes.UserSelfChange, "You cannot deactivate your own account.");
         }
 
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "User not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         user.LockoutEnabled = true;
@@ -141,14 +139,14 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.NotFound, "User not found.");
+            return Result<UserProfileResponse>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         user.DisplayName = request.DisplayName;
         var profileResult = await userManager.UpdateAsync(user);
         if (!profileResult.Succeeded)
-            return Result<UserProfileResponse>.Failure(ErrorCodes.Validation, string.Join("; ", profileResult.Errors.Select(e => e.Description)));
+            return Result<UserProfileResponse>.Failure(profileResult.ToDomainError());
 
         if (request.NewPassword is not null)
         {
@@ -158,9 +156,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
                 request.NewPassword);
             if (!passwordResult.Succeeded)
             {
-                return Result<UserProfileResponse>.Failure(
-                    ErrorCodes.Validation,
-                    string.Join("; ", passwordResult.Errors.Select(e => e.Description)));
+                return Result<UserProfileResponse>.Failure(passwordResult.ToDomainError());
             }
         }
 

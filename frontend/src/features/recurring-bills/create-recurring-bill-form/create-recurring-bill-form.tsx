@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateRecurringBill } from "@/api/generated";
@@ -9,15 +8,12 @@ import type {
   RecurringBillKind,
 } from "@/api/generated/model";
 import { createRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/recurring-bills.zod";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useToday } from "@/hooks/use-settings";
-import { isPositiveMoney } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { isPositiveMoney, requiredText, requiredValue } from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -49,19 +45,13 @@ export function CreateRecurringBillForm({
 
   const schema = z
     .object({
-      name: z
-        .string()
-        .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine(
-          (value) => value.trim().length <= createRecurringBillBodyNameMax,
-          t("validation.maxLength", { max: createRecurringBillBodyNameMax }),
-        ),
+      name: requiredText(t, createRecurringBillBodyNameMax),
       kind: z.enum(["fixed", "variable"]),
       amount: z.string(),
       categoryId: z.string(),
       accountId: z.string(),
       cadence: z.enum(["weekly", "monthly", "quarterly", "yearly"]),
-      nextDueDate: z.string().min(1, t("validation.required")),
+      nextDueDate: requiredValue(t),
       remindDaysBefore: z.string().refine((v) => Number.isInteger(Number(v)) && Number(v) >= 0),
     })
     .superRefine((value, ctx) => {
@@ -85,22 +75,26 @@ export function CreateRecurringBillForm({
     remindDaysBefore: "3",
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      createMutation.mutate({
-        data: {
-          name: value.name.trim(),
-          kind: value.kind,
-          amount: value.kind === "fixed" ? value.amount : null,
-          categoryId: value.categoryId || null,
-          accountId: value.accountId || null,
-          cadence: value.cadence,
-          nextDueDate: value.nextDueDate,
-          remindDaysBefore: Number(value.remindDaysBefore),
-        },
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        createMutation.mutateAsync({
+          data: {
+            name: value.name.trim(),
+            kind: value.kind,
+            amount: value.kind === "fixed" ? value.amount : null,
+            categoryId: value.categoryId || null,
+            accountId: value.accountId || null,
+            cadence: value.cadence,
+            nextDueDate: value.nextDueDate,
+            remindDaysBefore: Number(value.remindDaysBefore),
+          },
+        }),
+      );
     },
   });
 
@@ -109,89 +103,60 @@ export function CreateRecurringBillForm({
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="name">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-name">{t("recurringBills.name")}</Label>
-            <Input
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="name">
+          {(field) => (
+            <field.TextField
               id="bill-name"
+              label={t("recurringBills.name")}
               placeholder={t("recurringBills.namePlaceholder")}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "bill-name-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError id="bill-name-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="kind">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-kind">{t("recurringBills.kind")}</Label>
-            <SelectField
+        <form.Field name="kind">
+          {(field) => (
+            <field.SelectFieldControl
               id="bill-kind"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
+              label={t("recurringBills.kind")}
               options={[
                 { value: "fixed", label: t("recurringBills.kinds.fixed") },
                 { value: "variable", label: t("recurringBills.kinds.variable") },
               ]}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Subscribe selector={(state) => state.values.kind}>
-        {(kind) => (
-          <form.Field name="amount">
-            {(field) =>
-              kind === "fixed" ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor="bill-amount">{t("recurringBills.amount")}</Label>
-                  <Input
-                    id="bill-amount"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={field.value}
-                    aria-invalid={field.errors.length > 0}
-                    aria-describedby={field.errors.length > 0 ? "bill-amount-error" : undefined}
-                    onBlur={field.handleBlur}
-                    onChange={(e) => field.handleChange(e.target.value)}
-                  />
-                  <FieldError id="bill-amount-error" message={field.errors[0]?.message} />
-                </div>
-              ) : (
-                <p className="pt-6 text-xs text-muted-foreground">
-                  {t("recurringBills.variableAmountHint")}
-                </p>
-              )
-            }
-          </form.Field>
-        )}
-      </form.Subscribe>
+        <form.Subscribe selector={(state) => state.values.kind}>
+          {(kind) => (
+            <form.Field name="amount">
+              {(field) =>
+                kind === "fixed" ? (
+                  <field.MoneyInputField id="bill-amount" label={t("recurringBills.amount")} />
+                ) : (
+                  <p className="pt-6 text-xs text-muted-foreground">
+                    {t("recurringBills.variableAmountHint")}
+                  </p>
+                )
+              }
+            </form.Field>
+          )}
+        </form.Subscribe>
 
-      <form.Field name="cadence">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-cadence">{t("recurringBills.cadence")}</Label>
-            <SelectField
+        <form.Field name="cadence">
+          {(field) => (
+            <field.SelectFieldControl
               id="bill-cadence"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
+              label={t("recurringBills.cadence")}
               options={[
                 { value: "weekly", label: t("recurringBills.cadences.weekly") },
                 { value: "monthly", label: t("recurringBills.cadences.monthly") },
@@ -199,19 +164,14 @@ export function CreateRecurringBillForm({
                 { value: "yearly", label: t("recurringBills.cadences.yearly") },
               ]}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="categoryId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-category">{t("recurringBills.category")}</Label>
-            <SelectField
+        <form.Field name="categoryId">
+          {(field) => (
+            <field.SelectFieldControl
               id="bill-category"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
+              label={t("recurringBills.category")}
               options={[
                 { value: "", label: t("recurringBills.noCategory") },
                 ...expenseCategories.map((category) => ({
@@ -220,78 +180,50 @@ export function CreateRecurringBillForm({
                 })),
               ]}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="accountId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-account">{t("recurringBills.account")}</Label>
-            <SelectField
+        <form.Field name="accountId">
+          {(field) => (
+            <field.SelectFieldControl
               id="bill-account"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => field.handleChange(value)}
+              label={t("recurringBills.account")}
               options={[
                 { value: "", label: t("recurringBills.noAccount") },
                 ...accounts.map((account) => ({ value: account.id, label: account.name })),
               ]}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="nextDueDate">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-due-date">{t("recurringBills.nextDueDate")}</Label>
-            <DatePicker
-              id="bill-due-date"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "bill-due-date-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            />
-            <FieldError id="bill-due-date-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="nextDueDate">
+          {(field) => (
+            <field.DateField id="bill-due-date" label={t("recurringBills.nextDueDate")} />
+          )}
+        </form.Field>
 
-      <form.Field name="remindDaysBefore">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="bill-remind">{t("recurringBills.remindDaysBefore")}</Label>
-            <Input
+        <form.Field name="remindDaysBefore">
+          {(field) => (
+            <field.TextField
               id="bill-remind"
+              label={t("recurringBills.remindDaysBefore")}
               type="number"
               min={0}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "bill-remind-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError id="bill-remind-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <FormError error={createMutation.error} />
-
-      <div className="col-span-full flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={createMutation.isPending} disabled={!canSubmit}>
-              {t("recurringBills.add")}
-            </Button>
           )}
-        </form.Subscribe>
-      </div>
-    </form>
+        </form.Field>
+
+        <FormError error={createMutation.error} />
+
+        <div className="col-span-full flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+          <form.SubmitButton pending={createMutation.isPending}>
+            {t("recurringBills.add")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

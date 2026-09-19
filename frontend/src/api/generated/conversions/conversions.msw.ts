@@ -5,72 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency } from "../model";
 import type { ConversionResponse, PagedResponseOfConversionResponse } from "../model";
-
-export const getCreateConversionResponseMock = (
-  overrideResponse: Partial<Extract<ConversionResponse, object>> = {},
-): ConversionResponse => ({
-  id: faker.string.uuid(),
-  accountId: faker.string.uuid(),
-  fromAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  fromCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  toAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  toCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-  rate: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  date: faker.date.past().toISOString().slice(0, 10),
-  description: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  feeAmount: faker.helpers.arrayElement([
-    faker.string.alpha({ length: { min: 10, max: 20 } }),
-    null,
-  ]),
-  feeCurrency: faker.helpers.arrayElement([
-    null,
-    faker.helpers.arrayElement(Object.values(Currency)),
-  ]),
-  feeTransactionId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  ...overrideResponse,
-});
-
-export const getGetConversionsResponseMock = (
-  overrideResponse: Partial<Extract<PagedResponseOfConversionResponse, object>> = {},
-): PagedResponseOfConversionResponse => ({
-  items: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    accountId: faker.string.uuid(),
-    fromAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    fromCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-    toAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    toCurrency: faker.helpers.arrayElement(Object.values(Currency)),
-    rate: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    date: faker.date.past().toISOString().slice(0, 10),
-    description: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    feeAmount: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    feeCurrency: faker.helpers.arrayElement([
-      null,
-      faker.helpers.arrayElement(Object.values(Currency)),
-    ]),
-    feeTransactionId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    createdAt: faker.date.past().toISOString().slice(0, 19) + "Z",
-  })),
-  page: faker.number.int(),
-  pageSize: faker.number.int(),
-  total: faker.number.int(),
-  ...overrideResponse,
-});
 
 export const getCreateConversionMockHandler = (
   overrideResponse?:
@@ -88,7 +25,7 @@ export const getCreateConversionMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateConversionResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -96,7 +33,7 @@ export const getCreateConversionMockHandler = (
   );
 };
 
-export const getGetConversionsMockHandler = (
+export const getConversionsMockHandler = (
   overrideResponse?:
     | PagedResponseOfConversionResponse
     | ((
@@ -112,7 +49,7 @@ export const getGetConversionsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetConversionsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -140,6 +77,6 @@ export const getDeleteConversionMockHandler = (
 };
 export const getConversionsMock = () => [
   getCreateConversionMockHandler(),
-  getGetConversionsMockHandler(),
+  getConversionsMockHandler(),
   getDeleteConversionMockHandler(),
 ];

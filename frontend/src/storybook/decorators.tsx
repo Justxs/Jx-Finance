@@ -110,6 +110,7 @@ export function AppAt({
     setAuthenticated(authenticated);
     return createRouter({
       routeTree,
+      context: { queryClient },
       history: createMemoryHistory({ initialEntries: [path] }),
       defaultViewTransition: pageViewTransition,
     });

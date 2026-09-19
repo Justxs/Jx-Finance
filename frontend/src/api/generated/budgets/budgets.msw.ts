@@ -5,47 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { BudgetResponse, IReadOnlyListOfBudgetResponse } from "../model";
-
-export const getCreateBudgetResponseMock = (
-  overrideResponse: Partial<Extract<BudgetResponse, object>> = {},
-): BudgetResponse => ({
-  id: faker.string.uuid(),
-  categoryId: faker.string.uuid(),
-  categoryName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  limitAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  spent: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  remaining: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  period: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
-
-export const getGetBudgetsResponseMock = (): IReadOnlyListOfBudgetResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    categoryId: faker.string.uuid(),
-    categoryName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    limitAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    spent: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    remaining: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    period: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  }));
-
-export const getUpdateBudgetResponseMock = (
-  overrideResponse: Partial<Extract<BudgetResponse, object>> = {},
-): BudgetResponse => ({
-  id: faker.string.uuid(),
-  categoryId: faker.string.uuid(),
-  categoryName: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  limitAmount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  spent: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  remaining: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  period: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  ...overrideResponse,
-});
+import type { BudgetResponse } from "../model";
 
 export const getCreateBudgetMockHandler = (
   overrideResponse?:
@@ -63,7 +25,7 @@ export const getCreateBudgetMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateBudgetResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -71,12 +33,12 @@ export const getCreateBudgetMockHandler = (
   );
 };
 
-export const getGetBudgetsMockHandler = (
+export const getBudgetsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfBudgetResponse
+    | BudgetResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfBudgetResponse> | IReadOnlyListOfBudgetResponse),
+      ) => Promise<BudgetResponse[]> | BudgetResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -87,7 +49,7 @@ export const getGetBudgetsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetBudgetsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -130,7 +92,7 @@ export const getUpdateBudgetMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateBudgetResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -139,7 +101,7 @@ export const getUpdateBudgetMockHandler = (
 };
 export const getBudgetsMock = () => [
   getCreateBudgetMockHandler(),
-  getGetBudgetsMockHandler(),
+  getBudgetsMockHandler(),
   getDeleteBudgetMockHandler(),
   getUpdateBudgetMockHandler(),
 ];

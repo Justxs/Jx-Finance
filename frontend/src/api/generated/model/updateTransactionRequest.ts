@@ -8,7 +8,7 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
-import type { IReadOnlyListOfTransactionLineRequest } from "./iReadOnlyListOfTransactionLineRequest";
+import type { TransactionLineRequest } from "./transactionLineRequest";
 
 export interface UpdateTransactionRequest {
   /** @minLength 1 */
@@ -24,6 +24,7 @@ export interface UpdateTransactionRequest {
    * @nullable
    */
   description: string | null;
-  lines: null | IReadOnlyListOfTransactionLineRequest;
+  /** @nullable */
+  lines: TransactionLineRequest[] | null;
   currency?: null | Currency;
 }

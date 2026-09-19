@@ -1,8 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateBudgetMockHandler } from "@/api/generated/budgets/budgets.msw";
-import { budgets, categories, incomeCategories, overLimitBudget } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import {
+  budgets,
+  categories,
+  incomeCategories,
+  overLimitBudget,
+  validationProblem,
+} from "@/storybook/fixtures";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateBudgetForm } from "./create-budget-form";
 
 const meta = {
@@ -50,5 +56,46 @@ export const SubmitPending: Story = {
     const canvas = within(canvasElement);
     fireEvent.change(canvas.getByRole("textbox"), { target: { value: "250.00" } });
     await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));
+  },
+};
+
+export const ServerFieldError: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getCreateBudgetMockHandler(
+          failWith(
+            {
+              ...validationProblem,
+              instance: "/api/budgets",
+              errors: [
+                {
+                  name: "limitAmount",
+                  reason: "Limit must be a decimal greater than 0.",
+                  code: "money.positive",
+                },
+              ],
+            },
+            400,
+          ),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const limit = canvas.getByRole("textbox");
+    fireEvent.change(limit, { target: { value: "250.00" } });
+    await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));
+
+    const message = await canvas.findByText("Enter an amount greater than 0, e.g. 12.34.");
+    await expect(message).toHaveAttribute("id", "budget-limit-error");
+    await expect(limit).toHaveAttribute("aria-invalid", "true");
+    await expect(limit).toHaveAttribute("aria-describedby", "budget-limit-error");
+    await expect(canvas.queryByRole("alert")).toBeNull();
+
+    fireEvent.change(limit, { target: { value: "260.00" } });
+    await expect(limit).toHaveAttribute("aria-invalid", "false");
   },
 };

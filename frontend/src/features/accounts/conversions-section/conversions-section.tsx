@@ -1,18 +1,26 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  getConversionsQueryKey,
   useCreateConversion,
   useDeleteConversion,
-  useGetConversionsSuspense,
+  useConversionsSuspense,
 } from "@/api/generated";
-import type { AccountResponse, ConversionResponse } from "@/api/generated/model";
+import type {
+  AccountResponse,
+  ConversionResponse,
+  PagedResponseOfConversionResponse,
+} from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
 import { useIsoDate, useMoney, useRateFormat, useUsableCurrencies } from "@/hooks/use-formatters";
+import { optimisticPagedRemoval } from "@/lib/optimistic";
+import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
 import { ConversionForm } from "./conversion-form";
 
 interface Props {
@@ -20,8 +28,6 @@ interface Props {
   convertAccountId: string | null;
   onConvertAccountChange: (accountId: string | null) => void;
 }
-
-const pageSize = 10;
 
 export function ConversionsSection({
   accounts,
@@ -32,12 +38,14 @@ export function ConversionsSection({
   const money = useMoney();
   const formatDate = useIsoDate();
   const rateFormat = useRateFormat();
+  const queryClient = useQueryClient();
   const canConvert = useUsableCurrencies().length >= 2;
 
   const [page, setPage] = useState(1);
   const shownPage = useDeferredValue(page);
   const stale = shownPage !== page;
-  const conversions = useGetConversionsSuspense({ page: shownPage, pageSize });
+  const listParams = conversionsPageParams(shownPage);
+  const conversions = useConversionsSuspense(listParams);
   const pages = Math.max(1, Math.ceil((conversions.data?.total ?? 0) / pageSize));
   if (page > pages) {
     setPage(pages);
@@ -50,7 +58,13 @@ export function ConversionsSection({
     },
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-  const deleteMutation = useDeleteConversion();
+  const deleteMutation = useDeleteConversion({
+    mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
+      queryClient,
+      getConversionsQueryKey(listParams),
+      getConversionsQueryKey(),
+    ),
+  });
   const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   const items = useDeferredValue(conversions.data?.items) ?? [];
@@ -153,7 +167,7 @@ export function ConversionsSection({
             accounts={accounts}
             accountId={convertAccountId}
             pending={createMutation.isPending}
-            onSubmit={(values) => createMutation.mutate({ data: values })}
+            onSubmit={(values) => createMutation.mutateAsync({ data: values })}
             onCancel={() => onConvertAccountChange(null)}
           />
         ) : null}

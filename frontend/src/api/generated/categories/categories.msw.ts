@@ -5,48 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { FlowType, Scope } from "../model";
-import type { CategoryResponse, IReadOnlyListOfCategoryResponse } from "../model";
-
-export const getCreateCategoryResponseMock = (
-  overrideResponse: Partial<Extract<CategoryResponse, object>> = {},
-): CategoryResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(FlowType)),
-  icon: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  isDefault: faker.datatype.boolean(),
-  scope: faker.helpers.arrayElement(Object.values(Scope)),
-  householdId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  ...overrideResponse,
-});
-
-export const getGetCategoriesResponseMock = (): IReadOnlyListOfCategoryResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    type: faker.helpers.arrayElement(Object.values(FlowType)),
-    icon: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-    isDefault: faker.datatype.boolean(),
-    scope: faker.helpers.arrayElement(Object.values(Scope)),
-    householdId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  }));
-
-export const getUpdateCategoryResponseMock = (
-  overrideResponse: Partial<Extract<CategoryResponse, object>> = {},
-): CategoryResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  type: faker.helpers.arrayElement(Object.values(FlowType)),
-  icon: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  isDefault: faker.datatype.boolean(),
-  scope: faker.helpers.arrayElement(Object.values(Scope)),
-  householdId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  ...overrideResponse,
-});
+import type { CategoryResponse } from "../model";
 
 export const getCreateCategoryMockHandler = (
   overrideResponse?:
@@ -64,7 +25,7 @@ export const getCreateCategoryMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateCategoryResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -72,12 +33,12 @@ export const getCreateCategoryMockHandler = (
   );
 };
 
-export const getGetCategoriesMockHandler = (
+export const getCategoriesMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfCategoryResponse
+    | CategoryResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfCategoryResponse> | IReadOnlyListOfCategoryResponse),
+      ) => Promise<CategoryResponse[]> | CategoryResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -88,7 +49,7 @@ export const getGetCategoriesMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetCategoriesResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -131,7 +92,7 @@ export const getUpdateCategoryMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateCategoryResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -140,7 +101,7 @@ export const getUpdateCategoryMockHandler = (
 };
 export const getCategoriesMock = () => [
   getCreateCategoryMockHandler(),
-  getGetCategoriesMockHandler(),
+  getCategoriesMockHandler(),
   getDeleteCategoryMockHandler(),
   getUpdateCategoryMockHandler(),
 ];

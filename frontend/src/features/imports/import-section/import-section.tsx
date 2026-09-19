@@ -2,8 +2,8 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  useGetCategoriesSuspense,
-  useGetTransactionsSuspense,
+  useCategoriesSuspense,
+  useTransactionsSuspense,
   useImportConfirm,
   useImportPreview,
 } from "@/api/generated";
@@ -14,12 +14,12 @@ import {
   type PreviewRowState,
   toPreviewRows,
 } from "../import-preview-table";
+import { recallParams } from "../import-queries";
 import { ImportPreviewError } from "./import-preview-error";
 import { type ImportResult, ImportResultLine } from "./import-result";
 import { ImportUploadForm } from "./import-upload-form";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
-const RECALL_PAGE_SIZE = 200;
 
 interface Props {
   accounts: AccountResponse[];
@@ -38,14 +38,9 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
-  const categories = useGetCategoriesSuspense();
+  const categories = useCategoriesSuspense();
   const categoryList = categories.data ?? [];
-  const history = useGetTransactionsSuspense({
-    page: 1,
-    pageSize: RECALL_PAGE_SIZE,
-    sort: "date",
-    direction: "desc",
-  });
+  const history = useTransactionsSuspense(recallParams);
 
   const previewMutation = useImportPreview({
     mutation: {

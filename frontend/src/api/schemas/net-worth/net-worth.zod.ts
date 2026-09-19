@@ -37,7 +37,7 @@ export const CreateAssetResponse = zod.object({
  * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.
  * @summary List assets
  */
-export const GetAssetsResponseItem = zod.object({
+export const AssetsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod
@@ -46,26 +46,18 @@ export const GetAssetsResponseItem = zod.object({
   currentValue: zod.string(),
   asOf: zod.iso.date(),
 });
-export const GetAssetsResponse = zod.array(GetAssetsResponseItem);
+export const AssetsResponse = zod.array(AssetsResponseItem);
 
 /**
  * Stops tracking the asset. Snapshots already recorded keep the value it had.
  * @summary Delete an asset
  */
-export const DeleteAssetParams = zod.object({
-  id: zod.string().describe("The asset id."),
-});
-
 export const DeleteAssetResponse = zod.void();
 
 /**
  * Revalues or renames an asset. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
  * @summary Update an asset
  */
-export const UpdateAssetParams = zod.object({
-  id: zod.uuid().describe("The asset id. Takes precedence over the id in the body."),
-});
-
 export const updateAssetBodyNameMin = 0;
 export const updateAssetBodyNameMax = 100;
 
@@ -124,7 +116,7 @@ export const CreateDebtResponse = zod.object({
  * Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.
  * @summary List debts
  */
-export const GetDebtsResponseItem = zod.object({
+export const DebtsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
@@ -132,26 +124,18 @@ export const GetDebtsResponseItem = zod.object({
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
 });
-export const GetDebtsResponse = zod.array(GetDebtsResponseItem);
+export const DebtsResponse = zod.array(DebtsResponseItem);
 
 /**
  * Stops tracking the debt, for instance once it is settled. Snapshots already recorded keep the balance it had.
  * @summary Delete a debt
  */
-export const DeleteDebtParams = zod.object({
-  id: zod.string().describe("The debt id."),
-});
-
 export const DeleteDebtResponse = zod.void();
 
 /**
  * Records a new outstanding balance, rate, or name. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down.
  * @summary Update a debt
  */
-export const UpdateDebtParams = zod.object({
-  id: zod.uuid().describe("The debt id. Takes precedence over the id in the body."),
-});
-
 export const updateDebtBodyNameMin = 0;
 export const updateDebtBodyNameMax = 100;
 
@@ -183,7 +167,7 @@ export const UpdateDebtResponse = zod.object({
  * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.
  * @summary Get current net worth
  */
-export const GetNetWorthResponse = zod.object({
+export const NetWorthResponse = zod.object({
   accounts: zod.string(),
   assets: zod.string(),
   debts: zod.string(),
@@ -194,7 +178,7 @@ export const GetNetWorthResponse = zod.object({
  * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.
  * @summary Get the net worth history
  */
-export const GetNetWorthHistoryResponse = zod.object({
+export const NetWorthHistoryResponse = zod.object({
   items: zod.array(
     zod.object({
       date: zod.iso.date(),

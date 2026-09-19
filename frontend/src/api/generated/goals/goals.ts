@@ -5,32 +5,21 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
-import type {
-  CreateGoalRequest,
-  GoalResponse,
-  IReadOnlyListOfGoalResponse,
-  ProblemDetails,
-  UpdateGoalRequest,
-} from "../model";
+import type { CreateGoalRequest, GoalResponse, ProblemDetails, UpdateGoalRequest } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -153,7 +142,7 @@ export const useCreateGoal = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getCreateGoalMutationOptions(options), queryClient);
 };
-export const getGetGoalsUrl = () => {
+export const getGoalsUrl = () => {
   return `/api/goals`;
 };
 
@@ -161,162 +150,69 @@ export const getGetGoalsUrl = () => {
  * Returns your savings goals with the amount saved so far against each target.
  * @summary List savings goals
  */
-export const getGoals = async (
+export const goals = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfGoalResponse> => {
-  return customFetch<IReadOnlyListOfGoalResponse>(getGetGoalsUrl(), {
+): Promise<GoalResponse[]> => {
+  return customFetch<GoalResponse[]>(getGoalsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetGoalsQueryKey = () => {
+export const getGoalsQueryKey = () => {
   return [`/api/goals`] as const;
 };
 
-export const getGetGoalsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getGoals>>,
+export const getGoalsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetGoalsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGoalsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGoals>>> = ({ signal }) =>
-    getGoals({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getGoals>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetGoalsQueryResult = NonNullable<Awaited<ReturnType<typeof getGoals>>>;
-export type GetGoalsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetGoals<
-  TData = Awaited<ReturnType<typeof getGoals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGoals>>,
-          TError,
-          Awaited<ReturnType<typeof getGoals>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetGoals<
-  TData = Awaited<ReturnType<typeof getGoals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getGoals>>,
-          TError,
-          Awaited<ReturnType<typeof getGoals>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetGoals<
-  TData = Awaited<ReturnType<typeof getGoals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List savings goals
- */
-
-export function useGetGoals<
-  TData = Awaited<ReturnType<typeof getGoals>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetGoalsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetGoalsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getGoals>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetGoalsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getGoals>>> = ({ signal }) =>
-    getGoals({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof goals>>> = ({ signal }) =>
+    goals({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getGoals>>,
+    Awaited<ReturnType<typeof goals>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetGoalsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getGoals>>>;
-export type GetGoalsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type GoalsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof goals>>>;
+export type GoalsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetGoalsSuspense<
-  TData = Awaited<ReturnType<typeof getGoals>>,
+export function useGoalsSuspense<
+  TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetGoalsSuspense<
-  TData = Awaited<ReturnType<typeof getGoals>>,
+export function useGoalsSuspense<
+  TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetGoalsSuspense<
-  TData = Awaited<ReturnType<typeof getGoals>>,
+export function useGoalsSuspense<
+  TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -325,17 +221,17 @@ export function useGetGoalsSuspense<
  * @summary List savings goals
  */
 
-export function useGetGoalsSuspense<
-  TData = Awaited<ReturnType<typeof getGoals>>,
+export function useGoalsSuspense<
+  TData = Awaited<ReturnType<typeof goals>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getGoals>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof goals>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetGoalsSuspenseQueryOptions(options);
+  const queryOptions = getGoalsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

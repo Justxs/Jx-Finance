@@ -36,7 +36,7 @@ export const CreateBudgetResponse = zod.object({
  * Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.
  * @summary List budgets
  */
-export const GetBudgetsResponseItem = zod.object({
+export const BudgetsResponseItem = zod.object({
   id: zod.uuid(),
   categoryId: zod.uuid(),
   categoryName: zod.string(),
@@ -45,25 +45,18 @@ export const GetBudgetsResponseItem = zod.object({
   remaining: zod.string(),
   period: zod.string(),
 });
-export const GetBudgetsResponse = zod.array(GetBudgetsResponseItem);
+export const BudgetsResponse = zod.array(BudgetsResponseItem);
 
 /**
  * Removes the spending limit. Transactions in the category are untouched.
  * @summary Delete a budget
  */
-export const DeleteBudgetParams = zod.object({
-  id: zod.string().describe("The budget id."),
-});
-
 export const DeleteBudgetResponse = zod.void();
 
 /**
  * Changes the limit, or moves the budget to a different category. Spending already recorded is re-evaluated against the new limit the next time the budget is read.
  * @summary Update a budget
  */
-export const UpdateBudgetParams = zod.object({
-  id: zod.uuid().describe("The budget id. Takes precedence over the id in the body."),
-});
 
 export const UpdateBudgetBody = zod.object({
   categoryId: zod.uuid().min(1),

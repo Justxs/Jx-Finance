@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { type RefObject, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -9,20 +8,16 @@ import {
   type FlowType,
   type TransactionResponse,
 } from "@/api/generated/model";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { MoneyField } from "@/components/money-field";
-import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
+import { submitToServer } from "@/lib/form-server-errors";
 import { toCents } from "@/lib/money";
-import { isPositiveMoney } from "@/lib/validation";
+import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { emptyLine, type LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
 
@@ -66,7 +61,7 @@ interface Props {
   initial?: TransactionResponse;
   pending: boolean;
   error?: unknown;
-  onSubmit: (values: TransactionFormValues) => void;
+  onSubmit: (values: TransactionFormValues) => Promise<unknown> | void;
   onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onCancel?: () => void;
 }
@@ -98,11 +93,11 @@ function useTransactionForm({
   const schema = z
     .object({
       type: z.enum(["income", "expense"]),
-      accountId: z.string().min(1, t("validation.required")),
+      accountId: requiredValue(t),
       categoryId: z.string(),
-      amount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+      amount: positiveMoney(t),
       currency: z.enum(Currency),
-      date: z.string().min(1, t("validation.required")),
+      date: requiredValue(t),
       description: z.string(),
       isSplit: z.boolean(),
       lines: z.array(
@@ -162,10 +157,11 @@ function useTransactionForm({
       : [],
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: async ({ value, formApi }) => {
+    onSubmit: async (submission) => {
+      const { value, formApi } = submission;
       const values: TransactionFormValues = {
         accountId: value.accountId,
         categoryId: value.isSplit ? null : value.categoryId || null,
@@ -184,11 +180,13 @@ function useTransactionForm({
       };
 
       if (intent.current !== "another" || !onSubmitAndAddAnother) {
-        onSubmit(values);
-        return;
+        return submitToServer(submission, () => onSubmit(values));
       }
 
-      const saved = await onSubmitAndAddAnother(values);
+      let saved = false;
+      const fieldErrors = await submitToServer(submission, async () => {
+        saved = await onSubmitAndAddAnother(values);
+      });
       onAnotherSettled();
       if (saved) {
         formApi.reset({
@@ -200,6 +198,8 @@ function useTransactionForm({
         });
         amountInput.current?.focus();
       }
+
+      return fieldErrors;
     },
   });
 
@@ -216,21 +216,16 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
       {(typeField) => (
         <form.Field name="categoryId">
           {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="tx-category">{t("transactions.category")}</Label>
-              <SelectField
-                id="tx-category"
-                value={field.value}
-                onBlur={field.handleBlur}
-                onChange={(value) => field.handleChange(value)}
-                options={[
-                  { value: "", label: t("transactions.uncategorized") },
-                  ...categories
-                    .filter((c) => c.type === typeField.value)
-                    .map((category) => ({ value: category.id, label: category.name })),
-                ]}
-              />
-            </div>
+            <field.SelectFieldControl
+              id="tx-category"
+              label={t("transactions.category")}
+              options={[
+                { value: "", label: t("transactions.uncategorized") },
+                ...categories
+                  .filter((c) => c.type === typeField.value)
+                  .map((category) => ({ value: category.id, label: category.name })),
+              ]}
+            />
           )}
         </form.Field>
       )}
@@ -263,53 +258,46 @@ export function TransactionForm({
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        intent.current = "save";
-        setAnotherPending(false);
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="type">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-type">{t("transactions.type")}</Label>
-            <SelectField
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          intent.current = "save";
+          setAnotherPending(false);
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="type">
+          {(field) => (
+            <field.SelectFieldControl
               id="tx-type"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(next) => {
-                field.handleChange(next);
+              label={t("transactions.type")}
+              options={[
+                { value: "expense", label: t("transactions.expense") },
+                { value: "income", label: t("transactions.income") },
+              ]}
+              onValueChange={(next) => {
                 const categoryId = form.getFieldValue("categoryId");
                 if (categoryId && !categories.some((c) => c.id === categoryId && c.type === next)) {
                   form.setFieldValue("categoryId", "");
                 }
               }}
-              options={[
-                { value: "expense", label: t("transactions.expense") },
-                { value: "income", label: t("transactions.income") },
-              ]}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="accountId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-account">{t("transactions.account")}</Label>
-            <SelectField
+        <form.Field name="accountId">
+          {(field) => (
+            <field.SelectFieldControl
               id="tx-account"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => {
-                const previous = accounts.find((account) => account.id === field.value);
+              label={t("transactions.account")}
+              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              onValueChange={(value, previousId) => {
+                const previous = accounts.find((account) => account.id === previousId);
                 const next = accounts.find((account) => account.id === value);
-                field.handleChange(value);
                 if (
                   next &&
                   form.getFieldValue("currency") === (previous?.currency ?? next.currency)
@@ -317,143 +305,119 @@ export function TransactionForm({
                   form.setFieldValue("currency", next.currency);
                 }
               }}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Subscribe selector={(state) => state.values.isSplit}>
-        {(isSplit) =>
-          isSplit ? (
-            <div className="space-y-1.5">
-              <Label>{t("transactions.category")}</Label>
-              <p className="pt-2 text-xs text-muted-foreground">
-                {t("transactions.splitTransaction")}
-              </p>
-            </div>
-          ) : (
-            <CategoryField form={form} categories={categories} />
-          )
-        }
-      </form.Subscribe>
+        <form.Subscribe selector={(state) => state.values.isSplit}>
+          {(isSplit) =>
+            isSplit ? (
+              <div className="space-y-1.5">
+                <Label>{t("transactions.category")}</Label>
+                <p className="pt-2 text-xs text-muted-foreground">
+                  {t("transactions.splitTransaction")}
+                </p>
+              </div>
+            ) : (
+              <CategoryField form={form} categories={categories} />
+            )
+          }
+        </form.Subscribe>
 
-      <form.Subscribe selector={(state) => state.values.accountId}>
-        {(accountId) => (
-          <form.Field name="amount">
-            {(field) => (
-              <form.Field name="currency">
-                {(currencyField) => (
-                  <MoneyField
-                    id="tx-amount"
-                    ref={amountInput}
-                    label={t("transactions.amount")}
-                    value={field.value}
-                    error={field.errors[0]?.message}
-                    onBlur={field.handleBlur}
-                    onChange={field.handleChange}
-                    currency={currencyField.value}
-                    currencyLabel={t("transactions.currency")}
-                    preferred={heldCurrencies(accounts.find((account) => account.id === accountId))}
-                    onCurrencyChange={currencyField.handleChange}
-                  />
-                )}
-              </form.Field>
-            )}
-          </form.Field>
-        )}
-      </form.Subscribe>
-
-      <form.Field name="date">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-date">{t("transactions.date")}</Label>
-            <DatePicker
-              id="tx-date"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "tx-date-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            />
-            <FieldError id="tx-date-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="description">
-        {(field) => (
-          <div className="col-span-full space-y-1.5">
-            <Label htmlFor="tx-description">{t("transactions.description")}</Label>
-            <Input
-              id="tx-description"
-              placeholder={t("transactions.descriptionPlaceholder")}
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="isSplit">
-        {(splitField) => (
-          <div className="col-span-full">
-            <label className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Checkbox
-                checked={splitField.value}
-                onCheckedChange={(next) => {
-                  splitField.handleChange(next);
-                  if (next && form.getFieldValue("lines").length === 0) {
-                    form.setFieldValue("lines", [emptyLine()]);
-                  }
-                }}
-              />
-              {t("transactions.splitTransaction")}
-            </label>
-          </div>
-        )}
-      </form.Field>
-
-      <SplitLinesEditor form={form} categories={categories} />
-
-      <FormError error={error} />
-
-      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <>
-              {onSubmitAndAddAnother && !initial ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  pending={pending && anotherPending}
-                  disabled={!canSubmit || pending}
-                  onClick={() => {
-                    intent.current = "another";
-                    setAnotherPending(true);
-                    void form.handleSubmit();
-                  }}
-                >
-                  {t("transactions.saveAndAddAnother")}
-                </Button>
-              ) : null}
-              <Button
-                type="submit"
-                pending={pending && !anotherPending}
-                disabled={!canSubmit || pending}
-              >
-                {initial ? t("actions.save") : t("actions.add")}
-              </Button>
-            </>
+        <form.Subscribe selector={(state) => state.values.accountId}>
+          {(accountId) => (
+            <form.Field name="currency">
+              {(currencyField) => (
+                <form.Field name="amount">
+                  {(field) => (
+                    <field.MoneyAmountField
+                      id="tx-amount"
+                      ref={amountInput}
+                      label={t("transactions.amount")}
+                      currencyField={currencyField}
+                      currencyLabel={t("transactions.currency")}
+                      preferred={heldCurrencies(
+                        accounts.find((account) => account.id === accountId),
+                      )}
+                    />
+                  )}
+                </form.Field>
+              )}
+            </form.Field>
           )}
         </form.Subscribe>
-      </div>
-    </form>
+
+        <form.Field name="date">
+          {(field) => <field.DateField id="tx-date" label={t("transactions.date")} />}
+        </form.Field>
+
+        <form.Field name="description">
+          {(field) => (
+            <field.TextField
+              id="tx-description"
+              label={t("transactions.description")}
+              placeholder={t("transactions.descriptionPlaceholder")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
+        <form.Field name="isSplit">
+          {(field) => (
+            <field.CheckboxField
+              id="tx-split"
+              label={t("transactions.splitTransaction")}
+              tone="muted"
+              className="col-span-full"
+              onCheckedChange={(next) => {
+                if (next && form.getFieldValue("lines").length === 0) {
+                  form.setFieldValue("lines", [emptyLine()]);
+                }
+              }}
+            />
+          )}
+        </form.Field>
+
+        <SplitLinesEditor form={form} categories={categories} />
+
+        <FormError error={error} />
+
+        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t("actions.cancel")}
+            </Button>
+          ) : null}
+          <form.Subscribe selector={(state) => state.canSubmit}>
+            {(canSubmit) => (
+              <>
+                {onSubmitAndAddAnother && !initial ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    pending={pending && anotherPending}
+                    disabled={!canSubmit || pending}
+                    onClick={() => {
+                      intent.current = "another";
+                      setAnotherPending(true);
+                      void form.handleSubmit();
+                    }}
+                  >
+                    {t("transactions.saveAndAddAnother")}
+                  </Button>
+                ) : null}
+                <Button
+                  type="submit"
+                  pending={pending && !anotherPending}
+                  disabled={!canSubmit || pending}
+                >
+                  {initial ? t("actions.save") : t("actions.add")}
+                </Button>
+              </>
+            )}
+          </form.Subscribe>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

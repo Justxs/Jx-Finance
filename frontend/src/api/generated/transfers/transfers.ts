@@ -26,10 +26,10 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   CreateTransferRequest,
-  GetTransfersParams,
   PagedResponseOfTransferResponse,
   ProblemDetails,
   TransferResponse,
+  TransfersParams,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -153,7 +153,7 @@ export const useCreateTransfer = <TError = ErrorType<ProblemDetails>, TContext =
 > => {
   return useMutation(getCreateTransferMutationOptions(options), queryClient);
 };
-export const getGetTransfersUrl = (params: GetTransfersParams) => {
+export const getTransfersUrl = (params: TransfersParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -171,59 +171,59 @@ export const getGetTransfersUrl = (params: GetTransfersParams) => {
  * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
  * @summary List transfers
  */
-export const getTransfers = async (
-  params: GetTransfersParams,
+export const transfers = async (
+  params: TransfersParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<PagedResponseOfTransferResponse> => {
-  return customFetch<PagedResponseOfTransferResponse>(getGetTransfersUrl(params), {
+  return customFetch<PagedResponseOfTransferResponse>(getTransfersUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTransfersQueryKey = (params?: GetTransfersParams) => {
+export const getTransfersQueryKey = (params?: TransfersParams) => {
   return [`/api/transfers`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetTransfersQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export const getTransfersQueryOptions = <
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTransfersQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getTransfersQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransfers>>> = ({ signal }) =>
-    getTransfers(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof transfers>>> = ({ signal }) =>
+    transfers(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getTransfers>>,
+    Awaited<ReturnType<typeof transfers>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetTransfersQueryResult = NonNullable<Awaited<ReturnType<typeof getTransfers>>>;
-export type GetTransfersQueryError = ErrorType<ProblemDetails>;
+export type TransfersQueryResult = NonNullable<Awaited<ReturnType<typeof transfers>>>;
+export type TransfersQueryError = ErrorType<ProblemDetails>;
 
-export function useGetTransfers<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfers<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>> &
+    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>> &
       Pick<
         DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransfers>>,
+          Awaited<ReturnType<typeof transfers>>,
           TError,
-          Awaited<ReturnType<typeof getTransfers>>
+          Awaited<ReturnType<typeof transfers>>
         >,
         "initialData"
       >;
@@ -231,18 +231,18 @@ export function useGetTransfers<
   },
   queryClient?: QueryClient,
 ): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransfers<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfers<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>> &
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>> &
       Pick<
         UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getTransfers>>,
+          Awaited<ReturnType<typeof transfers>>,
           TError,
-          Awaited<ReturnType<typeof getTransfers>>
+          Awaited<ReturnType<typeof transfers>>
         >,
         "initialData"
       >;
@@ -250,13 +250,13 @@ export function useGetTransfers<
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransfers<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfers<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -265,18 +265,18 @@ export function useGetTransfers<
  * @summary List transfers
  */
 
-export function useGetTransfers<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfers<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>>;
+    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransfersQueryOptions(params, options);
+  const queryOptions = getTransfersQueryOptions(params, options);
 
   const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
     queryKey: DataTag<QueryKey, TData, TError>;
@@ -285,70 +285,62 @@ export function useGetTransfers<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetTransfersSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export const getTransfersSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTransfersQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getTransfersQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTransfers>>> = ({ signal }) =>
-    getTransfers(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof transfers>>> = ({ signal }) =>
+    transfers(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getTransfers>>,
+    Awaited<ReturnType<typeof transfers>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetTransfersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getTransfers>>>;
-export type GetTransfersSuspenseQueryError = ErrorType<ProblemDetails>;
+export type TransfersSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transfers>>>;
+export type TransfersSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetTransfersSuspense<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfersSuspense<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransfersSuspense<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfersSuspense<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetTransfersSuspense<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfersSuspense<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -357,20 +349,18 @@ export function useGetTransfersSuspense<
  * @summary List transfers
  */
 
-export function useGetTransfersSuspense<
-  TData = Awaited<ReturnType<typeof getTransfers>>,
+export function useTransfersSuspense<
+  TData = Awaited<ReturnType<typeof transfers>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetTransfersParams,
+  params: TransfersParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getTransfers>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof transfers>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetTransfersSuspenseQueryOptions(params, options);
+  const queryOptions = getTransfersSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

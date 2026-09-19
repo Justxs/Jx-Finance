@@ -1,6 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import {
+  getAccountsSuspenseQueryOptions,
+  getCategoriesSuspenseQueryOptions,
+  getTransactionsSummarySuspenseQueryOptions,
+  getTransactionsSuspenseQueryOptions,
+} from "@/api/generated";
+import {
+  transactionFilterParams,
+  transactionListParams,
+  transactionView,
+} from "@/features/transactions/transaction-queries";
 import { TransactionsPage } from "@/features/transactions/transactions-page";
+import { warm, warmWithSettings } from "@/lib/route-prefetch";
 
 export const transactionsSearchSchema = z.object({
   page: z.coerce.number().int().min(1).optional().default(1).catch(1),
@@ -20,5 +32,17 @@ export const transactionsSearchSchema = z.object({
 
 export const Route = createFileRoute("/transactions")({
   validateSearch: transactionsSearchSchema,
+  loaderDeps: ({ search }) => transactionView(search),
+  loader: ({ context: { queryClient }, deps }) => {
+    warm(queryClient, getAccountsSuspenseQueryOptions());
+    warm(queryClient, getCategoriesSuspenseQueryOptions());
+    warm(queryClient, getTransactionsSummarySuspenseQueryOptions(transactionFilterParams(deps)));
+    warmWithSettings(queryClient, (settings) => {
+      warm(
+        queryClient,
+        getTransactionsSuspenseQueryOptions(transactionListParams(deps, settings.defaultPageSize)),
+      );
+    });
+  },
   component: TransactionsPage,
 });

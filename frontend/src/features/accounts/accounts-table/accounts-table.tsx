@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Archive, ArrowLeftRight, Pencil } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetHouseholdsSuspense } from "@/api/generated";
+import { useHouseholdsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field";
@@ -31,7 +31,7 @@ interface Props {
   onEdit: (id: string) => void;
   onCancelEdit: () => void;
   updatePending: boolean;
-  onUpdate: (id: string, values: AccountFormValues) => void;
+  onUpdate: (id: string, values: AccountFormValues) => Promise<unknown> | void;
   deletingId: string | null;
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
@@ -58,7 +58,7 @@ export function AccountsTable({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const households = useGetHouseholdsSuspense();
+  const households = useHouseholdsSuspense();
   const search = useSearch({ from: "/accounts" });
   const navigate = useNavigate({ from: "/accounts" });
 

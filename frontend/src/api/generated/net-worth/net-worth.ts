@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -29,8 +24,6 @@ import type {
   CreateAssetRequest,
   CreateDebtRequest,
   DebtResponse,
-  IReadOnlyListOfAssetResponse,
-  IReadOnlyListOfDebtResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
   ProblemDetails,
@@ -159,7 +152,7 @@ export const useCreateAsset = <TError = ErrorType<ProblemDetails>, TContext = un
 > => {
   return useMutation(getCreateAssetMutationOptions(options), queryClient);
 };
-export const getGetAssetsUrl = () => {
+export const getAssetsUrl = () => {
   return `/api/assets`;
 };
 
@@ -167,162 +160,69 @@ export const getGetAssetsUrl = () => {
  * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.
  * @summary List assets
  */
-export const getAssets = async (
+export const assets = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfAssetResponse> => {
-  return customFetch<IReadOnlyListOfAssetResponse>(getGetAssetsUrl(), {
+): Promise<AssetResponse[]> => {
+  return customFetch<AssetResponse[]>(getAssetsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAssetsQueryKey = () => {
+export const getAssetsQueryKey = () => {
   return [`/api/assets`] as const;
 };
 
-export const getGetAssetsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAssets>>,
+export const getAssetsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAssetsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getAssetsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssets>>> = ({ signal }) =>
-    getAssets({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getAssets>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof getAssets>>>;
-export type GetAssetsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetAssets<
-  TData = Awaited<ReturnType<typeof getAssets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAssets>>,
-          TError,
-          Awaited<ReturnType<typeof getAssets>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAssets<
-  TData = Awaited<ReturnType<typeof getAssets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAssets>>,
-          TError,
-          Awaited<ReturnType<typeof getAssets>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAssets<
-  TData = Awaited<ReturnType<typeof getAssets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List assets
- */
-
-export function useGetAssets<
-  TData = Awaited<ReturnType<typeof getAssets>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAssetsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetAssetsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAssets>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetAssetsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssets>>> = ({ signal }) =>
-    getAssets({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof assets>>> = ({ signal }) =>
+    assets({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getAssets>>,
+    Awaited<ReturnType<typeof assets>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetAssetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getAssets>>>;
-export type GetAssetsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type AssetsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof assets>>>;
+export type AssetsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetAssetsSuspense<
-  TData = Awaited<ReturnType<typeof getAssets>>,
+export function useAssetsSuspense<
+  TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAssetsSuspense<
-  TData = Awaited<ReturnType<typeof getAssets>>,
+export function useAssetsSuspense<
+  TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAssetsSuspense<
-  TData = Awaited<ReturnType<typeof getAssets>>,
+export function useAssetsSuspense<
+  TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -331,17 +231,17 @@ export function useGetAssetsSuspense<
  * @summary List assets
  */
 
-export function useGetAssetsSuspense<
-  TData = Awaited<ReturnType<typeof getAssets>>,
+export function useAssetsSuspense<
+  TData = Awaited<ReturnType<typeof assets>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof assets>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAssetsSuspenseQueryOptions(options);
+  const queryOptions = getAssetsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -643,7 +543,7 @@ export const useCreateDebt = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getCreateDebtMutationOptions(options), queryClient);
 };
-export const getGetDebtsUrl = () => {
+export const getDebtsUrl = () => {
   return `/api/debts`;
 };
 
@@ -651,162 +551,69 @@ export const getGetDebtsUrl = () => {
  * Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.
  * @summary List debts
  */
-export const getDebts = async (
+export const debts = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfDebtResponse> => {
-  return customFetch<IReadOnlyListOfDebtResponse>(getGetDebtsUrl(), {
+): Promise<DebtResponse[]> => {
+  return customFetch<DebtResponse[]>(getDebtsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDebtsQueryKey = () => {
+export const getDebtsQueryKey = () => {
   return [`/api/debts`] as const;
 };
 
-export const getGetDebtsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDebts>>,
+export const getDebtsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetDebtsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getDebtsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDebts>>> = ({ signal }) =>
-    getDebts({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDebts>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetDebtsQueryResult = NonNullable<Awaited<ReturnType<typeof getDebts>>>;
-export type GetDebtsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetDebts<
-  TData = Awaited<ReturnType<typeof getDebts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDebts>>,
-          TError,
-          Awaited<ReturnType<typeof getDebts>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDebts<
-  TData = Awaited<ReturnType<typeof getDebts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDebts>>,
-          TError,
-          Awaited<ReturnType<typeof getDebts>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDebts<
-  TData = Awaited<ReturnType<typeof getDebts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List debts
- */
-
-export function useGetDebts<
-  TData = Awaited<ReturnType<typeof getDebts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetDebtsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetDebtsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDebts>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetDebtsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDebts>>> = ({ signal }) =>
-    getDebts({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof debts>>> = ({ signal }) =>
+    debts({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getDebts>>,
+    Awaited<ReturnType<typeof debts>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetDebtsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getDebts>>>;
-export type GetDebtsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type DebtsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debts>>>;
+export type DebtsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetDebtsSuspense<
-  TData = Awaited<ReturnType<typeof getDebts>>,
+export function useDebtsSuspense<
+  TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDebtsSuspense<
-  TData = Awaited<ReturnType<typeof getDebts>>,
+export function useDebtsSuspense<
+  TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDebtsSuspense<
-  TData = Awaited<ReturnType<typeof getDebts>>,
+export function useDebtsSuspense<
+  TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -815,17 +622,17 @@ export function useGetDebtsSuspense<
  * @summary List debts
  */
 
-export function useGetDebtsSuspense<
-  TData = Awaited<ReturnType<typeof getDebts>>,
+export function useDebtsSuspense<
+  TData = Awaited<ReturnType<typeof debts>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDebts>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof debts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetDebtsSuspenseQueryOptions(options);
+  const queryOptions = getDebtsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -1023,7 +830,7 @@ export const useUpdateDebt = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getUpdateDebtMutationOptions(options), queryClient);
 };
-export const getGetNetWorthUrl = () => {
+export const getNetWorthUrl = () => {
   return `/api/networth`;
 };
 
@@ -1031,166 +838,69 @@ export const getGetNetWorthUrl = () => {
  * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.
  * @summary Get current net worth
  */
-export const getNetWorth = async (
+export const netWorth = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<NetWorthResponse> => {
-  return customFetch<NetWorthResponse>(getGetNetWorthUrl(), {
+  return customFetch<NetWorthResponse>(getNetWorthUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetNetWorthQueryKey = () => {
+export const getNetWorthQueryKey = () => {
   return [`/api/networth`] as const;
 };
 
-export const getGetNetWorthQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
+export const getNetWorthSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetNetWorthQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getNetWorthQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorth>>> = ({ signal }) =>
-    getNetWorth({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getNetWorth>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetNetWorthQueryResult = NonNullable<Awaited<ReturnType<typeof getNetWorth>>>;
-export type GetNetWorthQueryError = ErrorType<ProblemDetails>;
-
-export function useGetNetWorth<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNetWorth>>,
-          TError,
-          Awaited<ReturnType<typeof getNetWorth>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorth<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNetWorth>>,
-          TError,
-          Awaited<ReturnType<typeof getNetWorth>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorth<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get current net worth
- */
-
-export function useGetNetWorth<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNetWorthQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetNetWorthSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetNetWorthQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorth>>> = ({ signal }) =>
-    getNetWorth({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof netWorth>>> = ({ signal }) =>
+    netWorth({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getNetWorth>>,
+    Awaited<ReturnType<typeof netWorth>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetNetWorthSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getNetWorth>>>;
-export type GetNetWorthSuspenseQueryError = ErrorType<ProblemDetails>;
+export type NetWorthSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof netWorth>>>;
+export type NetWorthSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetNetWorthSuspense<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
+export function useNetWorthSuspense<
+  TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthSuspense<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
+export function useNetWorthSuspense<
+  TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthSuspense<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
+export function useNetWorthSuspense<
+  TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -1199,19 +909,17 @@ export function useGetNetWorthSuspense<
  * @summary Get current net worth
  */
 
-export function useGetNetWorthSuspense<
-  TData = Awaited<ReturnType<typeof getNetWorth>>,
+export function useNetWorthSuspense<
+  TData = Awaited<ReturnType<typeof netWorth>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorth>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorth>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNetWorthSuspenseQueryOptions(options);
+  const queryOptions = getNetWorthSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -1221,7 +929,7 @@ export function useGetNetWorthSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetNetWorthHistoryUrl = () => {
+export const getNetWorthHistoryUrl = () => {
   return `/api/networth/history`;
 };
 
@@ -1229,175 +937,78 @@ export const getGetNetWorthHistoryUrl = () => {
  * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.
  * @summary Get the net worth history
  */
-export const getNetWorthHistory = async (
+export const netWorthHistory = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<NetWorthHistoryResponse> => {
-  return customFetch<NetWorthHistoryResponse>(getGetNetWorthHistoryUrl(), {
+  return customFetch<NetWorthHistoryResponse>(getNetWorthHistoryUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetNetWorthHistoryQueryKey = () => {
+export const getNetWorthHistoryQueryKey = () => {
   return [`/api/networth/history`] as const;
 };
 
-export const getGetNetWorthHistoryQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetNetWorthHistoryQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorthHistory>>> = ({ signal }) =>
-    getNetWorthHistory({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getNetWorthHistory>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetNetWorthHistoryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getNetWorthHistory>>
->;
-export type GetNetWorthHistoryQueryError = ErrorType<ProblemDetails>;
-
-export function useGetNetWorthHistory<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNetWorthHistory>>,
-          TError,
-          Awaited<ReturnType<typeof getNetWorthHistory>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthHistory<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNetWorthHistory>>,
-          TError,
-          Awaited<ReturnType<typeof getNetWorthHistory>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthHistory<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the net worth history
- */
-
-export function useGetNetWorthHistory<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNetWorthHistoryQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetNetWorthHistorySuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
+export const getNetWorthHistorySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
   >;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetNetWorthHistoryQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getNetWorthHistoryQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetWorthHistory>>> = ({ signal }) =>
-    getNetWorthHistory({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof netWorthHistory>>> = ({ signal }) =>
+    netWorthHistory({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getNetWorthHistory>>,
+    Awaited<ReturnType<typeof netWorthHistory>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetNetWorthHistorySuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getNetWorthHistory>>
+export type NetWorthHistorySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof netWorthHistory>>
 >;
-export type GetNetWorthHistorySuspenseQueryError = ErrorType<ProblemDetails>;
+export type NetWorthHistorySuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetNetWorthHistorySuspense<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
+export function useNetWorthHistorySuspense<
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthHistorySuspense<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
+export function useNetWorthHistorySuspense<
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNetWorthHistorySuspense<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
+export function useNetWorthHistorySuspense<
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -1407,19 +1018,19 @@ export function useGetNetWorthHistorySuspense<
  * @summary Get the net worth history
  */
 
-export function useGetNetWorthHistorySuspense<
-  TData = Awaited<ReturnType<typeof getNetWorthHistory>>,
+export function useNetWorthHistorySuspense<
+  TData = Awaited<ReturnType<typeof netWorthHistory>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNetWorthHistory>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof netWorthHistory>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNetWorthHistorySuspenseQueryOptions(options);
+  const queryOptions = getNetWorthHistorySuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

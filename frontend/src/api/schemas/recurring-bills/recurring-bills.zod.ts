@@ -60,7 +60,7 @@ export const CreateRecurringBillResponse = zod.object({
  * Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
  * @summary List recurring bills
  */
-export const GetRecurringBillsResponseItem = zod.object({
+export const RecurringBillsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
@@ -76,27 +76,19 @@ export const GetRecurringBillsResponseItem = zod.object({
   remindDaysBefore: zod.int(),
   isActive: zod.boolean(),
 });
-export const GetRecurringBillsResponse = zod.array(GetRecurringBillsResponseItem);
+export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
 /**
  * Removes the schedule and its reminders. Transactions already posted from it stay in the ledger.
  * @summary Delete a recurring bill
  */
-export const DeleteRecurringBillParams = zod.object({
-  id: zod.string().describe("The recurring bill id."),
-});
-
 export const DeleteRecurringBillResponse = zod.void();
 
 /**
  * Returns a single schedule with its cadence, reminder lead time, and next due date.
  * @summary Get one recurring bill
  */
-export const GetRecurringBillParams = zod.object({
-  id: zod.string().describe("The recurring bill id."),
-});
-
-export const GetRecurringBillResponse = zod.object({
+export const RecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   kind: zod
@@ -117,10 +109,6 @@ export const GetRecurringBillResponse = zod.object({
  * Changes the schedule, the expected amount, or the reminder lead time. Setting isActive to false stops reminders without losing the schedule or the transactions already posted from it.
  * @summary Update a recurring bill
  */
-export const UpdateRecurringBillParams = zod.object({
-  id: zod.uuid().describe("The recurring bill id. Takes precedence over the id in the body."),
-});
-
 export const updateRecurringBillBodyNameMin = 0;
 export const updateRecurringBillBodyNameMax = 100;
 
@@ -167,10 +155,6 @@ export const UpdateRecurringBillResponse = zod.object({
  * Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.
  * @summary Confirm a due occurrence
  */
-export const ConfirmRecurringBillParams = zod.object({
-  id: zod.uuid().describe("The recurring bill id. Takes precedence over the id in the body."),
-});
-
 export const ConfirmRecurringBillBody = zod.object({
   amount: zod
     .string()

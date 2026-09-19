@@ -1,4 +1,6 @@
+import type { TFunction } from "i18next";
 import { describe, expect, test } from "vitest";
+import type { z } from "zod";
 import {
   isEmail,
   isIban,
@@ -8,7 +10,19 @@ import {
   isPositiveQuantity,
   isQuantity,
   isRate,
+  money,
+  nonNegativeMoney,
   normalizeMoney,
+  optionalNonNegativeMoney,
+  optionalPositiveMoney,
+  optionalText,
+  password,
+  positiveMoney,
+  positiveQuantity,
+  quantity,
+  requiredEmail,
+  requiredText,
+  requiredValue,
 } from "./validation";
 
 describe("money", () => {
@@ -97,4 +111,72 @@ describe("IBANs", () => {
       expect(isIban(value)).toBe(false);
     },
   );
+});
+
+function messages(schema: z.ZodType, value: unknown) {
+  const result = schema.safeParse(value);
+  return result.success ? [] : result.error.issues.map((issue) => issue.message);
+}
+
+describe("schema builders", () => {
+  const t = ((key: string, options?: Record<string, unknown>) =>
+    options ? `${key}:${JSON.stringify(options)}` : key) as unknown as TFunction;
+
+  test("requiredValue rejects only the empty string", () => {
+    expect(messages(requiredValue(t), "")).toEqual(["validation.required"]);
+    expect(messages(requiredValue(t), "x")).toEqual([]);
+  });
+
+  test("optionalText allows blank and enforces the limit", () => {
+    expect(messages(optionalText(t, 3), "")).toEqual([]);
+    expect(messages(optionalText(t, 3), "abc")).toEqual([]);
+    expect(messages(optionalText(t, 3), "abcd")).toEqual(['validation.maxLength:{"max":3}']);
+  });
+
+  test("requiredText measures the trimmed value", () => {
+    expect(messages(requiredText(t, 3), "   ")).toContain("validation.required");
+    expect(messages(requiredText(t, 3), " abc ")).toEqual([]);
+    expect(messages(requiredText(t, 3), "abcd")).toEqual(['validation.maxLength:{"max":3}']);
+  });
+
+  test("requiredEmail trims before checking the address", () => {
+    expect(messages(requiredEmail(t), " ")).toContain("validation.required");
+    expect(messages(requiredEmail(t), "plain")).toEqual(["validation.email"]);
+    expect(messages(requiredEmail(t), " justas@example.com ")).toEqual([]);
+  });
+
+  test("password enforces both limits", () => {
+    expect(messages(password(t, 4, 6), "abc")).toEqual(['validation.minLength:{"min":4}']);
+    expect(messages(password(t, 4, 6), "abcd")).toEqual([]);
+    expect(messages(password(t, 4, 6), "abcdefg")).toEqual(['validation.maxLength:{"max":6}']);
+  });
+
+  test.each([
+    ["money", money(t), ["-1,50", "0"], ["", "abc"], "validation.money"],
+    ["positiveMoney", positiveMoney(t), ["0.01"], ["0", "-1", ""], "validation.positiveMoney"],
+    ["nonNegativeMoney", nonNegativeMoney(t), ["0", "2.5"], ["-1", ""], "validation.money"],
+    [
+      "optionalPositiveMoney",
+      optionalPositiveMoney(t),
+      ["", " ", "3"],
+      ["0", "x"],
+      "validation.positiveMoney",
+    ],
+    [
+      "optionalNonNegativeMoney",
+      optionalNonNegativeMoney(t),
+      ["", "0"],
+      ["-1", "x"],
+      "validation.money",
+    ],
+    ["quantity", quantity(t, "q.key"), ["0", "1.12345678"], ["-1", "1.123456789"], "q.key"],
+    ["positiveQuantity", positiveQuantity(t, "q.key"), ["0.5"], ["0", ""], "q.key"],
+  ] as const)("%s", (_name, schema, valid, invalid, message) => {
+    for (const value of valid) {
+      expect(messages(schema, value)).toEqual([]);
+    }
+    for (const value of invalid) {
+      expect(messages(schema, value)).toEqual([message]);
+    }
+  });
 });

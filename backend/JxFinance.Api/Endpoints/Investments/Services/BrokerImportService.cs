@@ -61,7 +61,7 @@ public sealed class BrokerImportService(
         if (statement.BrokerAccounts.Count > 1)
         {
             return Result<BrokerImportResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.ImportInvalidFile,
                 "The report covers several Interactive Brokers accounts. Create a Flex Query for one account.");
         }
 
@@ -69,7 +69,7 @@ public sealed class BrokerImportService(
         AccountId? funding = fundingAccountId is { } id ? new AccountId(id) : null;
         if (await AccountErrorAsync(account, funding, cancellationToken) is { } accountError)
         {
-            return Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, accountError);
+            return Result<BrokerImportResponse>.Failure(ErrorCodes.ReferenceNotFound, accountError);
         }
 
         var currencies = statement.Trades.SelectMany(t => new[] { t.Instrument.Currency, t.CommissionCurrency })
@@ -78,7 +78,7 @@ public sealed class BrokerImportService(
             .ToArray();
         if (rates.UnusableReason(currencies) is { } currencyError)
         {
-            return Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<BrokerImportResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var foreignDates = statement.Trades.Where(t => t.Instrument.Currency != rates.ReportingCurrency || t.CommissionCurrency != rates.ReportingCurrency)
@@ -248,7 +248,7 @@ public sealed class BrokerImportService(
 
             if (error is not null)
             {
-                return Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, error);
+                return Result<BrokerImportResponse>.Failure(ErrorCodes.ExchangeRateUnavailable, error);
             }
         }
 
@@ -317,7 +317,7 @@ public sealed class BrokerImportService(
                     entry.Description);
                 if (error is not null)
                 {
-                    return Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, error);
+                    return Result<BrokerImportResponse>.Failure(ErrorCodes.ExchangeRateUnavailable, error);
                 }
 
                 counts.CashEntries++;
@@ -364,12 +364,12 @@ public sealed class BrokerImportService(
         AccountId? funding = request.FundingAccountId is { } id ? new AccountId(id) : null;
         if (await AccountErrorAsync(account, funding, cancellationToken) is { } accountError)
         {
-            return Result<BrokerConnectionResponse>.Failure(ErrorCodes.Validation, accountError);
+            return Result<BrokerConnectionResponse>.Failure(ErrorCodes.ReferenceNotFound, accountError);
         }
 
         if (!await db.Accounts.AnyAsync(a => a.Id == account && a.UserId == currentUser.Id, cancellationToken))
         {
-            return Result<BrokerConnectionResponse>.Failure(ErrorCodes.Forbidden, "Only the account's owner can connect it to a broker.");
+            return Result<BrokerConnectionResponse>.Failure(ErrorCodes.AccessForbidden, "Only the account's owner can connect it to a broker.");
         }
 
         var connection = await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken);
@@ -377,7 +377,7 @@ public sealed class BrokerImportService(
         {
             if (string.IsNullOrEmpty(request.Token))
             {
-                return Result<BrokerConnectionResponse>.Failure(ErrorCodes.Validation, "Enter the Flex Web Service token.");
+                return Result<BrokerConnectionResponse>.Failure(ErrorCodes.BrokerTokenRequired, "Enter the Flex Web Service token.");
             }
 
             connection = new BrokerConnection { AccountId = account };
@@ -402,7 +402,7 @@ public sealed class BrokerImportService(
         var connection = await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken);
         if (connection is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Connection not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Connection not found.");
         }
 
         connection.ProtectedToken = string.Empty;
@@ -418,7 +418,7 @@ public sealed class BrokerImportService(
         var connection = await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken);
         if (connection is null)
         {
-            return Result<BrokerImportResponse>.Failure(ErrorCodes.NotFound, "Connection not found.");
+            return Result<BrokerImportResponse>.Failure(ErrorCodes.ResourceNotFound, "Connection not found.");
         }
 
         Result<BrokerImportResponse> result;
@@ -428,7 +428,7 @@ public sealed class BrokerImportService(
         }
         catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException)
         {
-            result = Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, "The report could not be imported.");
+            result = Result<BrokerImportResponse>.Failure(ErrorCodes.BrokerUnavailable, "The report could not be imported.");
         }
 
         db.ChangeTracker.Clear();
@@ -451,7 +451,7 @@ public sealed class BrokerImportService(
         }
         catch (CryptographicException)
         {
-            return Result<BrokerImportResponse>.Failure(ErrorCodes.Validation, "The stored token can no longer be read. Enter it again.");
+            return Result<BrokerImportResponse>.Failure(ErrorCodes.BrokerTokenRequired, "The stored token can no longer be read. Enter it again.");
         }
 
         var report = await flex.DownloadAsync(token, connection.QueryId, cancellationToken);

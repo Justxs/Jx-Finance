@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import {
-  getGetDebtsMockHandler,
-  getGetNetWorthHistoryMockHandler,
+  getDebtsMockHandler,
+  getNetWorthHistoryMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
 import {
@@ -42,7 +42,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyHistoryFails: Story = {
   parameters: {
     msw: {
-      handlers: [getGetNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
+      handlers: [getNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
     },
   },
 };
@@ -50,7 +50,7 @@ export const OnlyHistoryFails: Story = {
 export const AssetsWithoutDebts: Story = {
   parameters: {
     msw: {
-      handlers: [getGetDebtsMockHandler([]), ...handlers],
+      handlers: [getDebtsMockHandler([]), ...handlers],
     },
   },
 };

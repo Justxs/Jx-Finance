@@ -157,7 +157,7 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.NotFound, "Transaction not found.");
+            return Result<TransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var lines = transaction.IsSplit
@@ -178,7 +178,7 @@ public sealed class TransactionService(
             cancellationToken);
         if (referenceError is not null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.Validation, referenceError);
+            return Result<TransactionResponse>.Failure(referenceError);
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -187,7 +187,7 @@ public sealed class TransactionService(
             var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
             if (linesError is not null)
             {
-                return Result<TransactionResponse>.Failure(ErrorCodes.Validation, linesError);
+                return Result<TransactionResponse>.Failure(linesError);
             }
         }
 
@@ -221,7 +221,7 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.NotFound, "Transaction not found.");
+            return Result<TransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var referenceError = await ValidateReferencesAsync(
@@ -231,7 +231,7 @@ public sealed class TransactionService(
             cancellationToken);
         if (referenceError is not null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.Validation, referenceError);
+            return Result<TransactionResponse>.Failure(referenceError);
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -240,7 +240,7 @@ public sealed class TransactionService(
             var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
             if (linesError is not null)
             {
-                return Result<TransactionResponse>.Failure(ErrorCodes.Validation, linesError);
+                return Result<TransactionResponse>.Failure(linesError);
             }
         }
 
@@ -289,12 +289,12 @@ public sealed class TransactionService(
         var transactions = await db.Transactions.Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
         if (transactions.Count != ids.Count)
         {
-            return Result<int>.Failure(ErrorCodes.NotFound, "Transaction not found.");
+            return Result<int>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         if (transactions.Any(t => t.IsSplit))
         {
-            return Result<int>.Failure(ErrorCodes.Validation, "Split transactions cannot be bulk-recategorized.");
+            return Result<int>.Failure(ErrorCodes.TransactionSplitNotAllowed, "Split transactions cannot be bulk-recategorized.");
         }
 
         foreach (var type in transactions.Select(t => t.Type).Distinct())
@@ -302,7 +302,7 @@ public sealed class TransactionService(
             var categoryError = await ValidateCategoryAsync(request.CategoryId, type, cancellationToken);
             if (categoryError is not null)
             {
-                return Result<int>.Failure(ErrorCodes.Validation, categoryError);
+                return Result<int>.Failure(categoryError);
             }
         }
 
@@ -323,7 +323,7 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Transaction not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var lines = await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken);
@@ -354,7 +354,7 @@ public sealed class TransactionService(
 
         if (currency != existing && rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<(Currency, decimal)>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<(Currency, decimal)>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var reporting = await rates.ToReportingAsync(new Money(amount, currency), date, cancellationToken);
@@ -363,7 +363,7 @@ public sealed class TransactionService(
             : Result<(Currency, decimal)>.FailureFrom(reporting);
     }
 
-    private async Task<string?> ValidateReferencesAsync(
+    private async Task<DomainError?> ValidateReferencesAsync(
         Guid accountId,
         Guid? categoryId,
         FlowType type,
@@ -373,13 +373,13 @@ public sealed class TransactionService(
         var accountExists = await db.Accounts.AnyAsync(a => a.Id == typedAccountId, cancellationToken);
         if (!accountExists)
         {
-            return "Account does not exist.";
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         return await ValidateCategoryAsync(categoryId, type, cancellationToken);
     }
 
-    private async Task<string?> ValidateCategoryAsync(
+    private async Task<DomainError?> ValidateCategoryAsync(
         Guid? categoryId,
         FlowType type,
         CancellationToken cancellationToken)
@@ -393,13 +393,15 @@ public sealed class TransactionService(
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == typedCategoryId, cancellationToken);
         if (category is null)
         {
-            return "Category does not exist.";
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
         }
 
-        return category.Type != type ? "Category type does not match the transaction type." : null;
+        return category.Type != type
+            ? new DomainError(ErrorCodes.CategoryWrongType, "Category type does not match the transaction type.")
+            : null;
     }
 
-    private async Task<string?> ValidateLinesAsync(
+    private async Task<DomainError?> ValidateLinesAsync(
         IReadOnlyList<TransactionLineRequest> lines,
         FlowType type,
         CancellationToken cancellationToken)

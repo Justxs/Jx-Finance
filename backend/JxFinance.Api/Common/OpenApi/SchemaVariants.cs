@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Microsoft.OpenApi;
 
@@ -11,27 +12,54 @@ public static partial class SchemaVariants
         if (schemas is null) return;
 
         var canonical = new Dictionary<string, string>(StringComparer.Ordinal);
-        foreach (var (name, schema) in schemas)
-        {
-            var match = VariantSuffix().Match(name);
-            if (!match.Success) continue;
+        var variants = schemas.Keys
+            .Select(name => (Name: name, Match: VariantSuffix().Match(name)))
+            .Where(variant => variant.Match.Success)
+            .GroupBy(variant => variant.Match.Groups["name"].Value, variant => variant.Name, StringComparer.Ordinal);
 
-            var canonicalName = match.Groups["name"].Value;
-            if (schemas.TryGetValue(canonicalName, out var original) && DescribesTheSameValues(schema, original))
+        foreach (var group in variants)
+        {
+            if (schemas.TryGetValue(group.Key, out var original))
             {
-                canonical[name] = canonicalName;
+                foreach (var name in group.Where(name => DescribesTheSameValues(schemas[name], original)))
+                {
+                    canonical[name] = group.Key;
+                }
+            }
+            else if (group.Select(name => Json(schemas[name])).Distinct(StringComparer.Ordinal).Count() == 1)
+            {
+                foreach (var name in group)
+                {
+                    canonical[name] = group.Key;
+                }
             }
         }
 
         if (canonical.Count == 0) return;
 
+        foreach (var promoted in canonical.GroupBy(variant => variant.Value, variant => variant.Key).Where(group => !schemas.ContainsKey(group.Key)))
+        {
+            schemas[promoted.Key] = schemas[promoted.First()];
+        }
+
         PromoteAgreedDescriptions(schemas, canonical);
-        RepointProperties(document, schemas, canonical);
 
         foreach (var name in canonical.Keys)
         {
             schemas.Remove(name);
         }
+
+        SchemaRewriter.Rewrite(document, schema =>
+            schema is OpenApiSchemaReference { Reference.Id: { } id } && canonical.TryGetValue(id, out var canonicalName)
+                ? new OpenApiSchemaReference(canonicalName, document)
+                : schema);
+    }
+
+    private static string Json(IOpenApiSchema schema)
+    {
+        using var text = new StringWriter(CultureInfo.InvariantCulture);
+        schema.SerializeAsV31(new OpenApiJsonWriter(text));
+        return text.ToString();
     }
 
     private static void PromoteAgreedDescriptions(
@@ -52,25 +80,6 @@ public static partial class SchemaVariants
             if (schemas[name] is OpenApiSchema schema && string.IsNullOrWhiteSpace(schema.Description))
             {
                 schema.Description = description;
-            }
-        }
-    }
-
-    private static void RepointProperties(
-        OpenApiDocument document,
-        IDictionary<string, IOpenApiSchema> schemas,
-        Dictionary<string, string> canonical)
-    {
-        foreach (var schema in schemas.Values.OfType<OpenApiSchema>())
-        {
-            if (schema.Properties is null) continue;
-
-            foreach (var (name, property) in schema.Properties.ToList())
-            {
-                if (property is not OpenApiSchemaReference reference) continue;
-                if (reference.Reference.Id is not { } id || !canonical.TryGetValue(id, out var canonicalName)) continue;
-
-                schema.Properties[name] = new OpenApiSchemaReference(canonicalName, document);
             }
         }
     }

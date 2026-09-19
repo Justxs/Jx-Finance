@@ -1,16 +1,18 @@
 import { decimalFields } from "@/api/generated/decimal-fields";
+import type { ErrorCode } from "@/api/generated/model";
 import { normalizeMoney } from "@/lib/validation";
 
 interface ApiErrorDetail {
   name: string;
   reason: string;
-  code?: string | null;
+  code?: ErrorCode | null;
 }
 
 interface ApiProblem {
   status: number;
   title?: string;
   detail?: string;
+  code?: ErrorCode | null;
   errors?: ApiErrorDetail[];
 }
 
@@ -18,14 +20,16 @@ export class ApiError extends Error implements ApiProblem {
   readonly status: number;
   readonly title?: string;
   readonly detail?: string;
+  readonly code?: ErrorCode | null;
   readonly errors?: ApiErrorDetail[];
 
-  constructor({ status, title, detail, errors }: ApiProblem) {
+  constructor({ status, title, detail, code, errors }: ApiProblem) {
     super(detail ?? title ?? `Request failed with status ${status}`);
     this.name = "ApiError";
     this.status = status;
     this.title = title;
     this.detail = detail;
+    this.code = code;
     this.errors = errors;
   }
 }
@@ -103,6 +107,7 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
       status: response.status,
       title: problem.title ?? response.statusText,
       detail: problem.detail ?? errors?.map((error) => error.reason).join(" "),
+      code: problem.code,
       errors,
     });
   }

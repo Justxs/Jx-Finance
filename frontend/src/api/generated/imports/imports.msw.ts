@@ -5,39 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { Currency, FlowType } from "../model";
 import type { ImportConfirmResponse, ImportPreviewResponse } from "../model";
-
-export const getImportConfirmResponseMock = (
-  overrideResponse: Partial<Extract<ImportConfirmResponse, object>> = {},
-): ImportConfirmResponse => ({
-  imported: faker.number.int(),
-  skippedDuplicates: faker.number.int(),
-  ...overrideResponse,
-});
-
-export const getImportPreviewResponseMock = (
-  overrideResponse: Partial<Extract<ImportPreviewResponse, object>> = {},
-): ImportPreviewResponse => ({
-  rows: Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    importRef: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    date: faker.date.past().toISOString().slice(0, 10),
-    payee: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-    description: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    amount: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    type: faker.helpers.arrayElement(Object.values(FlowType)),
-    isDuplicate: faker.datatype.boolean(),
-    looksLikeTransfer: faker.datatype.boolean(),
-    currency: faker.helpers.arrayElement(Object.values(Currency)),
-  })),
-  ...overrideResponse,
-});
 
 export const getImportConfirmMockHandler = (
   overrideResponse?:
@@ -55,7 +25,7 @@ export const getImportConfirmMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getImportConfirmResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -79,7 +49,7 @@ export const getImportPreviewMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getImportPreviewResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },

@@ -23,7 +23,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<Category>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<Category>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         db.Categories.Add(category);
@@ -38,7 +38,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
         if (category is null)
         {
-            return Result<Category>.Failure(ErrorCodes.NotFound, "Category not found.");
+            return Result<Category>.Failure(ErrorCodes.ResourceNotFound, "Category not found.");
         }
 
         var (previousScope, previousHouseholdId) = (category.Scope, category.HouseholdId);
@@ -47,13 +47,13 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<Category>.Failure(ErrorCodes.Validation, membershipError);
+            return Result<Category>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         if (category.UserId != currentUser.Id &&
             (category.Scope != previousScope || category.HouseholdId != previousHouseholdId))
         {
-            return Result<Category>.Failure(ErrorCodes.Forbidden, "Only the owner can change sharing.");
+            return Result<Category>.Failure(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -85,12 +85,12 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
         if (category is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Category not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Category not found.");
         }
 
         if (category.UserId != currentUser.Id)
         {
-            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Only the owner can delete a shared category.");
+            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only the owner can delete a shared category.");
         }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);

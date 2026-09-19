@@ -1,0 +1,4 @@
+frontend/src/api/generated/** linguist-generated=true
+frontend/src/api/schemas/** linguist-generated=true
+frontend/src/route-tree.gen.ts linguist-generated=true
+backend/JxFinance.Tests/Integration/Diagnostics/Snapshots/*.json linguist-generated=true

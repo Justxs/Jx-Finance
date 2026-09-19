@@ -1,17 +1,23 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteDebt, useGetDebtsSuspense } from "@/api/generated";
+import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generated";
+import type { DebtResponse } from "@/api/generated/model";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
 import { DebtForm } from "./debt-form";
 
 export function DebtsSection() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
   const formatRate = useRatePercent();
-  const debts = useGetDebtsSuspense();
+  const debts = useDebtsSuspense();
 
-  const deleteMutation = useDeleteDebt();
+  const deleteMutation = useDeleteDebt({
+    mutation: optimisticRemoval<DebtResponse>(queryClient, getDebtsQueryKey()),
+  });
   const debtList = useDeferredValue(debts.data);
 
   return (

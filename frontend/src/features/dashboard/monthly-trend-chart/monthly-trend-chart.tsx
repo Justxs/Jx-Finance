@@ -1,10 +1,11 @@
 import { useTranslation } from "react-i18next";
-import { useGetMonthlyTrendSuspense } from "@/api/generated";
+import { useMonthlyTrendSuspense } from "@/api/generated";
 import { IncomeExpenseChart } from "@/components/chart";
+import { monthlyTrendParams } from "../dashboard-queries";
 
 export function MonthlyTrendChart() {
   const { i18n } = useTranslation();
-  const trend = useGetMonthlyTrendSuspense({ months: 6 });
+  const trend = useMonthlyTrendSuspense(monthlyTrendParams);
   const monthFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", year: "numeric" });
 
   const items = trend.data?.items ?? [];

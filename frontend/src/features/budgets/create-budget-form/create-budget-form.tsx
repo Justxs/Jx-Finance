@@ -1,15 +1,12 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudget, useUpdateBudget } from "@/api/generated";
 import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { isPositiveMoney } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { positiveMoney, requiredValue } from "@/lib/validation";
 
 interface FormValues {
   categoryId: string;
@@ -28,8 +25,8 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
   const schema = z.object({
-    categoryId: z.string().min(1, t("validation.required")),
-    limitAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+    categoryId: requiredValue(t),
+    limitAmount: positiveMoney(t),
   });
 
   const createMutation = useCreateBudget({
@@ -45,16 +42,18 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
     limitAmount: initial?.limitAmount ?? "",
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
+    onSubmit: (submission) => {
+      const { value } = submission;
       const data = { categoryId: value.categoryId, limitAmount: value.limitAmount };
-      if (initial?.id) {
-        updateMutation.mutate({ id: initial.id, data });
-      } else {
-        createMutation.mutate({ data });
-      }
+
+      return submitToServer(submission, () =>
+        initial?.id
+          ? updateMutation.mutateAsync({ id: initial.id, data })
+          : createMutation.mutateAsync({ data }),
+      );
     },
   });
 
@@ -63,72 +62,46 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   }
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="space-y-4"
-    >
-      <div className="form-grid">
-        <form.Field name="categoryId">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="budget-category">{t("budgets.category")}</Label>
-              <SelectField
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="space-y-4"
+      >
+        <div className="form-grid">
+          <form.Field name="categoryId">
+            {(field) => (
+              <field.SelectFieldControl
                 id="budget-category"
-                value={field.value}
-                onBlur={field.handleBlur}
-                onChange={(value) => field.handleChange(value)}
+                label={t("budgets.category")}
                 options={expenseCategories.map((category) => ({
                   value: category.id,
                   label: category.name,
                 }))}
               />
-            </div>
-          )}
-        </form.Field>
+            )}
+          </form.Field>
 
-        <form.Field name="limitAmount">
-          {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="budget-limit">{t("budgets.limit")}</Label>
-              <Input
-                id="budget-limit"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={field.value}
-                aria-invalid={field.errors.length > 0}
-                aria-describedby={field.errors.length > 0 ? "budget-limit-error" : undefined}
-                onBlur={field.handleBlur}
-                onChange={(e) => field.handleChange(e.target.value)}
-              />
-              <FieldError id="budget-limit-error" message={field.errors[0]?.message} />
-            </div>
-          )}
-        </form.Field>
-      </div>
+          <form.Field name="limitAmount">
+            {(field) => <field.MoneyInputField id="budget-limit" label={t("budgets.limit")} />}
+          </form.Field>
+        </div>
 
-      <FormError error={createMutation.error ?? updateMutation.error} />
+        <FormError error={createMutation.error ?? updateMutation.error} />
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button
-              type="submit"
-              pending={createMutation.isPending || updateMutation.isPending}
-              disabled={!canSubmit}
-            >
-              {t(initial ? "actions.save" : "budgets.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-    </form>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+          <form.SubmitButton pending={createMutation.isPending || updateMutation.isPending}>
+            {t(initial ? "actions.save" : "budgets.add")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

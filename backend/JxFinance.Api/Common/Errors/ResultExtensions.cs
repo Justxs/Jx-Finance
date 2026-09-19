@@ -18,7 +18,7 @@ public static class ResultExtensions
 
         ValidationContext.Instance.ThrowError(
             result.ErrorMessage ?? "The request could not be completed.",
-            result.ErrorCode ?? ErrorCodes.Validation,
+            result.ErrorCode ?? ErrorCodes.RequestInvalid,
             Severity.Error,
             ErrorCodes.StatusCodeFor(result.ErrorCode));
     }

@@ -10,23 +10,23 @@ interface Rule {
 }
 
 const ledger = [
-  api.getGetTransactionsQueryKey,
-  api.getGetAccountsQueryKey,
-  api.getGetDashboardSummaryQueryKey,
-  api.getGetCategoryBreakdownQueryKey,
-  api.getGetMonthlyTrendQueryKey,
-  api.getGetReportSummaryQueryKey,
-  api.getGetBudgetsQueryKey,
-  api.getGetNetWorthQueryKey,
+  api.getTransactionsQueryKey,
+  api.getAccountsQueryKey,
+  api.getDashboardSummaryQueryKey,
+  api.getCategoryBreakdownQueryKey,
+  api.getMonthlyTrendQueryKey,
+  api.getReportSummaryQueryKey,
+  api.getBudgetsQueryKey,
+  api.getNetWorthQueryKey,
 ] as const;
 
 const holdings = [
-  api.getGetPortfolioQueryKey,
-  api.getGetInvestmentTransactionsQueryKey,
-  api.getGetSecuritiesQueryKey,
-  api.getGetAccountsQueryKey,
-  api.getGetDashboardSummaryQueryKey,
-  api.getGetNetWorthQueryKey,
+  api.getPortfolioQueryKey,
+  api.getInvestmentTransactionsQueryKey,
+  api.getSecuritiesQueryKey,
+  api.getAccountsQueryKey,
+  api.getDashboardSummaryQueryKey,
+  api.getNetWorthQueryKey,
 ] as const;
 
 const rules: readonly Rule[] = [
@@ -41,11 +41,11 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getImportConfirmMutationKey],
-    refresh: [...ledger, api.getGetTransfersQueryKey],
+    refresh: [...ledger, api.getTransfersQueryKey],
   },
   {
     after: [api.getConfirmRecurringBillMutationKey],
-    refresh: [...ledger, api.getGetRecurringBillsQueryKey, api.getGetNotificationsQueryKey],
+    refresh: [...ledger, api.getRecurringBillsQueryKey, api.getNotificationsQueryKey],
   },
   {
     after: [
@@ -54,29 +54,29 @@ const rules: readonly Rule[] = [
       api.getDeleteAccountMutationKey,
     ],
     refresh: [
-      api.getGetAccountsQueryKey,
-      api.getGetTransactionsQueryKey,
-      api.getGetDashboardSummaryQueryKey,
-      api.getGetNetWorthQueryKey,
+      api.getAccountsQueryKey,
+      api.getTransactionsQueryKey,
+      api.getDashboardSummaryQueryKey,
+      api.getNetWorthQueryKey,
     ],
   },
   {
     after: [api.getCreateTransferMutationKey, api.getDeleteTransferMutationKey],
     refresh: [
-      api.getGetTransfersQueryKey,
-      api.getGetAccountsQueryKey,
-      api.getGetDashboardSummaryQueryKey,
-      api.getGetNetWorthQueryKey,
+      api.getTransfersQueryKey,
+      api.getAccountsQueryKey,
+      api.getDashboardSummaryQueryKey,
+      api.getNetWorthQueryKey,
     ],
   },
   {
     after: [api.getCreateConversionMutationKey, api.getDeleteConversionMutationKey],
     refresh: [
-      api.getGetConversionsQueryKey,
-      api.getGetAccountsQueryKey,
-      api.getGetTransactionsQueryKey,
-      api.getGetDashboardSummaryQueryKey,
-      api.getGetNetWorthQueryKey,
+      api.getConversionsQueryKey,
+      api.getAccountsQueryKey,
+      api.getTransactionsQueryKey,
+      api.getDashboardSummaryQueryKey,
+      api.getNetWorthQueryKey,
     ],
   },
   {
@@ -85,7 +85,7 @@ const rules: readonly Rule[] = [
       api.getUpdateBudgetMutationKey,
       api.getDeleteBudgetMutationKey,
     ],
-    refresh: [api.getGetBudgetsQueryKey],
+    refresh: [api.getBudgetsQueryKey],
   },
   {
     after: [
@@ -94,12 +94,12 @@ const rules: readonly Rule[] = [
       api.getDeleteCategoryMutationKey,
     ],
     refresh: [
-      api.getGetCategoriesQueryKey,
-      api.getGetTransactionsQueryKey,
-      api.getGetBudgetsQueryKey,
-      api.getGetCategoryBreakdownQueryKey,
-      api.getGetReportSummaryQueryKey,
-      api.getGetRecurringBillsQueryKey,
+      api.getCategoriesQueryKey,
+      api.getTransactionsQueryKey,
+      api.getBudgetsQueryKey,
+      api.getCategoryBreakdownQueryKey,
+      api.getReportSummaryQueryKey,
+      api.getRecurringBillsQueryKey,
     ],
   },
   {
@@ -108,7 +108,7 @@ const rules: readonly Rule[] = [
       api.getUpdateGoalMutationKey,
       api.getDeleteGoalMutationKey,
     ],
-    refresh: [api.getGetGoalsQueryKey],
+    refresh: [api.getGoalsQueryKey],
   },
   {
     after: [
@@ -119,7 +119,7 @@ const rules: readonly Rule[] = [
       api.getRemoveMemberMutationKey,
       api.getUpdateMemberRoleMutationKey,
     ],
-    refresh: [api.getGetHouseholdsQueryKey],
+    refresh: [api.getHouseholdsQueryKey],
   },
   {
     after: [
@@ -127,7 +127,7 @@ const rules: readonly Rule[] = [
       api.getUpdateAssetMutationKey,
       api.getDeleteAssetMutationKey,
     ],
-    refresh: [api.getGetAssetsQueryKey, api.getGetNetWorthQueryKey],
+    refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey],
   },
   {
     after: [
@@ -135,7 +135,7 @@ const rules: readonly Rule[] = [
       api.getUpdateDebtMutationKey,
       api.getDeleteDebtMutationKey,
     ],
-    refresh: [api.getGetDebtsQueryKey, api.getGetNetWorthQueryKey],
+    refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey],
   },
   {
     after: [
@@ -143,7 +143,7 @@ const rules: readonly Rule[] = [
       api.getUpdateRecurringBillMutationKey,
       api.getDeleteRecurringBillMutationKey,
     ],
-    refresh: [api.getGetRecurringBillsQueryKey],
+    refresh: [api.getRecurringBillsQueryKey],
   },
   {
     after: [
@@ -159,19 +159,19 @@ const rules: readonly Rule[] = [
     after: [api.getImportBrokerReportMutationKey, api.getSyncBrokerConnectionMutationKey],
     refresh: [
       ...holdings,
-      api.getGetBrokerConnectionsQueryKey,
-      api.getGetTransfersQueryKey,
-      api.getGetConversionsQueryKey,
-      api.getGetTransactionsQueryKey,
+      api.getBrokerConnectionsQueryKey,
+      api.getTransfersQueryKey,
+      api.getConversionsQueryKey,
+      api.getTransactionsQueryKey,
     ],
   },
   {
     after: [api.getSaveBrokerConnectionMutationKey, api.getDeleteBrokerConnectionMutationKey],
-    refresh: [api.getGetBrokerConnectionsQueryKey],
+    refresh: [api.getBrokerConnectionsQueryKey],
   },
   {
     after: [api.getMarkNotificationReadMutationKey, api.getMarkAllNotificationsReadMutationKey],
-    refresh: [api.getGetNotificationsQueryKey],
+    refresh: [api.getNotificationsQueryKey],
   },
   {
     after: [api.getUpdateSettingsMutationKey],
@@ -179,7 +179,7 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getSyncExchangeRatesMutationKey],
-    refresh: [api.getGetSettingsQueryKey, api.getGetExchangeRateQueryKey],
+    refresh: [api.getSettingsQueryKey, api.getExchangeRateQueryKey],
   },
   {
     after: [
@@ -187,11 +187,11 @@ const rules: readonly Rule[] = [
       api.getDeactivateUserMutationKey,
       api.getUpdateUserRoleMutationKey,
     ],
-    refresh: [api.getGetUsersQueryKey],
+    refresh: [api.getUsersQueryKey],
   },
   {
     after: [api.getUpdateMyProfileMutationKey],
-    refresh: [api.getMeQueryKey, api.getGetUsersQueryKey],
+    refresh: [api.getMeQueryKey, api.getUsersQueryKey],
   },
   {
     after: [api.getEnableTwoFactorMutationKey, api.getDisableTwoFactorMutationKey],

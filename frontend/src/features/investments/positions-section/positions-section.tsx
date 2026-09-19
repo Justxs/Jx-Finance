@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetSecurities, useUpdateSecurity } from "@/api/generated";
+import { useSecurities, useUpdateSecurity } from "@/api/generated";
 import type {
   AccountResponse,
   Currency,
@@ -38,7 +38,7 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
   const { t } = useTranslation();
   const [priceTarget, setPriceTarget] = useState<SecurityResponse | null>(null);
   const [priceOpen, setPriceOpen] = useState(false);
-  const securities = useGetSecurities(undefined, {
+  const securities = useSecurities(undefined, {
     query: { throwOnError: false, meta: { silent: true } },
   });
   const priceSecurity =
@@ -107,7 +107,7 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
             security={priceSecurity}
             pending={updateMutation.isPending}
             onSubmit={(values) =>
-              updateMutation.mutate({
+              updateMutation.mutateAsync({
                 id: priceSecurity.id,
                 data: {
                   symbol: priceSecurity.symbol,

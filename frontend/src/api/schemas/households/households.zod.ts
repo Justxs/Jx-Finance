@@ -40,7 +40,7 @@ export const CreateHouseholdResponse = zod.object({
  * Returns the households you belong to, each with its member list and their roles. Households you are not a member of are never listed.
  * @summary List households
  */
-export const GetHouseholdsResponseItem = zod.object({
+export const HouseholdsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   myRole: zod
@@ -57,27 +57,19 @@ export const GetHouseholdsResponseItem = zod.object({
     }),
   ),
 });
-export const GetHouseholdsResponse = zod.array(GetHouseholdsResponseItem);
+export const HouseholdsResponse = zod.array(HouseholdsResponseItem);
 
 /**
  * Disbands the household. Only an owner may do this, and only once nothing shared still points at it: accounts, categories, and transactions shared with the household must be made personal or removed first.
  * @summary Delete a household
  */
-export const DeleteHouseholdParams = zod.object({
-  id: zod.string().describe("The household id."),
-});
-
 export const DeleteHouseholdResponse = zod.void();
 
 /**
  * Returns a household with its members. A household you are not a member of is reported as missing rather than forbidden, so the endpoint cannot be used to discover that a given household exists.
  * @summary Get one household
  */
-export const GetHouseholdParams = zod.object({
-  id: zod.string().describe("The household id."),
-});
-
-export const GetHouseholdResponse = zod.object({
+export const HouseholdResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   myRole: zod
@@ -99,10 +91,6 @@ export const GetHouseholdResponse = zod.object({
  * Changes the household name. Only an owner may do this; a plain member gets 403 rather than 404, because membership already tells them the household exists.
  * @summary Rename a household
  */
-export const UpdateHouseholdParams = zod.object({
-  id: zod.uuid().describe("The household id. Takes precedence over the id in the body."),
-});
-
 export const updateHouseholdBodyNameMin = 0;
 export const updateHouseholdBodyNameMax = 100;
 
@@ -132,10 +120,6 @@ export const UpdateHouseholdResponse = zod.object({
  * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
-export const AddMemberParams = zod.object({
-  id: zod.uuid().describe("The household id. Takes precedence over the id in the body."),
-});
-
 export const AddMemberBody = zod.object({
   email: zod.string().describe("Email address of an existing, active user."),
   role: zod
@@ -165,11 +149,6 @@ export const AddMemberResponse = zod.object({
  * Revokes a member and with them their sight of the shared data. The last owner cannot be removed. Data the household owns stays with the household.
  * @summary Remove a member
  */
-export const RemoveMemberParams = zod.object({
-  id: zod.string().describe("The household id."),
-  userId: zod.string().describe("The id of the member to remove."),
-});
-
 export const RemoveMemberResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
@@ -192,11 +171,6 @@ export const RemoveMemberResponse = zod.object({
  * Promotes a member to owner or demotes an owner to member. The last owner cannot be demoted, so a household is never left without someone who can manage it.
  * @summary Change a member role
  */
-export const UpdateMemberRoleParams = zod.object({
-  id: zod.uuid().describe("The household id."),
-  userId: zod.uuid().describe("The id of the member whose role changes."),
-});
-
 export const UpdateMemberRoleBody = zod.object({
   role: zod
     .enum(["owner", "member"])

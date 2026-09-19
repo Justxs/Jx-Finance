@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -27,7 +22,6 @@ import type { ErrorType } from "../../client";
 import type {
   CategoryResponse,
   CreateCategoryRequest,
-  IReadOnlyListOfCategoryResponse,
   ProblemDetails,
   UpdateCategoryRequest,
 } from "../model";
@@ -153,7 +147,7 @@ export const useCreateCategory = <TError = ErrorType<ProblemDetails>, TContext =
 > => {
   return useMutation(getCreateCategoryMutationOptions(options), queryClient);
 };
-export const getGetCategoriesUrl = () => {
+export const getCategoriesUrl = () => {
   return `/api/categories`;
 };
 
@@ -161,172 +155,69 @@ export const getGetCategoriesUrl = () => {
  * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
  * @summary List categories
  */
-export const getCategories = async (
+export const categories = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfCategoryResponse> => {
-  return customFetch<IReadOnlyListOfCategoryResponse>(getGetCategoriesUrl(), {
+): Promise<CategoryResponse[]> => {
+  return customFetch<CategoryResponse[]>(getCategoriesUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetCategoriesQueryKey = () => {
+export const getCategoriesQueryKey = () => {
   return [`/api/categories`] as const;
 };
 
-export const getGetCategoriesQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCategories>>,
+export const getCategoriesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetCategoriesQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getCategoriesQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategories>>> = ({ signal }) =>
-    getCategories({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getCategories>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetCategoriesQueryResult = NonNullable<Awaited<ReturnType<typeof getCategories>>>;
-export type GetCategoriesQueryError = ErrorType<ProblemDetails>;
-
-export function useGetCategories<
-  TData = Awaited<ReturnType<typeof getCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCategories>>,
-          TError,
-          Awaited<ReturnType<typeof getCategories>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategories<
-  TData = Awaited<ReturnType<typeof getCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCategories>>,
-          TError,
-          Awaited<ReturnType<typeof getCategories>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategories<
-  TData = Awaited<ReturnType<typeof getCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List categories
- */
-
-export function useGetCategories<
-  TData = Awaited<ReturnType<typeof getCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCategoriesQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetCategoriesSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCategories>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetCategoriesQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategories>>> = ({ signal }) =>
-    getCategories({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof categories>>> = ({ signal }) =>
+    categories({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getCategories>>,
+    Awaited<ReturnType<typeof categories>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetCategoriesSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCategories>>
->;
-export type GetCategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
+export type CategoriesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof categories>>>;
+export type CategoriesSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof getCategories>>,
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>
-    >;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof getCategories>>,
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof getCategories>>,
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -335,19 +226,17 @@ export function useGetCategoriesSuspense<
  * @summary List categories
  */
 
-export function useGetCategoriesSuspense<
-  TData = Awaited<ReturnType<typeof getCategories>>,
+export function useCategoriesSuspense<
+  TData = Awaited<ReturnType<typeof categories>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategories>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof categories>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCategoriesSuspenseQueryOptions(options);
+  const queryOptions = getCategoriesSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

@@ -11,14 +11,7 @@ import * as zod from "zod";
  * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.
  * @summary Get spending split by category
  */
-export const GetCategoryBreakdownQueryParams = zod.object({
-  month: zod
-    .string()
-    .nullish()
-    .describe("Month to report on as YYYY-MM. Defaults to the current month."),
-});
-
-export const GetCategoryBreakdownResponse = zod.object({
+export const CategoryBreakdownResponse = zod.object({
   items: zod.array(
     zod.object({
       categoryId: zod.uuid().nullable(),
@@ -35,13 +28,7 @@ export const GetCategoryBreakdownResponse = zod.object({
  * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.
  * @summary Get the monthly income and expense trend
  */
-export const GetMonthlyTrendQueryParams = zod.object({
-  months: zod
-    .int()
-    .describe("How many months to include, counting back from the current one. Defaults to 6."),
-});
-
-export const GetMonthlyTrendResponse = zod.object({
+export const MonthlyTrendResponse = zod.object({
   items: zod.array(
     zod.object({
       year: zod.int(),
@@ -56,7 +43,7 @@ export const GetMonthlyTrendResponse = zod.object({
  * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.
  * @summary Get the dashboard summary
  */
-export const GetDashboardSummaryResponse = zod.object({
+export const DashboardSummaryResponse = zod.object({
   totalBalance: zod.string(),
   monthIncome: zod.string(),
   monthExpense: zod.string(),

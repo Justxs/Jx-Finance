@@ -38,7 +38,7 @@ public sealed class NetWorthService(
         var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assetId, cancellationToken);
         if (asset is null)
         {
-            return Result<Asset>.Failure(ErrorCodes.NotFound, "Asset not found.");
+            return Result<Asset>.Failure(ErrorCodes.ResourceNotFound, "Asset not found.");
         }
 
         apply(asset);
@@ -53,7 +53,7 @@ public sealed class NetWorthService(
         var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assetId, cancellationToken);
         if (asset is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Asset not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Asset not found.");
         }
 
         db.Assets.Remove(asset);
@@ -79,7 +79,7 @@ public sealed class NetWorthService(
         var debt = await db.Debts.FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
         if (debt is null)
         {
-            return Result<Debt>.Failure(ErrorCodes.NotFound, "Debt not found.");
+            return Result<Debt>.Failure(ErrorCodes.ResourceNotFound, "Debt not found.");
         }
 
         apply(debt);
@@ -94,7 +94,7 @@ public sealed class NetWorthService(
         var debt = await db.Debts.FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
         if (debt is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Debt not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Debt not found.");
         }
 
         db.Debts.Remove(debt);

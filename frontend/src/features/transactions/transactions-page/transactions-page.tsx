@@ -5,13 +5,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  getGetTransactionsQueryKey,
+  type CreateTransactionMutationVariables,
+  getTransactionsQueryKey,
   useBulkCategorizeTransactions,
   useCreateTransaction,
   useDeleteTransaction,
-  useGetAccountsSuspense,
-  useGetCategoriesSuspense,
-  useGetTransactionsSuspense,
+  useAccountsSuspense,
+  useCategoriesSuspense,
+  useTransactionsSuspense,
   useUpdateTransaction,
 } from "@/api/generated";
 import type {
@@ -26,11 +27,13 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
+import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { normalizeMoney } from "@/lib/validation";
 import { SelectionToolbar } from "../selection-toolbar";
 import { optimisticId, transactionName } from "../transaction-amount";
 import type { TransactionFormValues } from "../transaction-form";
 import { TransactionFormSection } from "../transaction-form-section";
+import { transactionFilterParams, transactionListParams } from "../transaction-queries";
 import { TransactionsFiltersDialog } from "../transactions-filters-dialog";
 import { TransactionsList } from "../transactions-list";
 import {
@@ -61,17 +64,7 @@ export function TransactionsPage() {
   const viewKey = JSON.stringify(view);
   const [shown, stale] = useDeferredParams(view);
 
-  const {
-    page,
-    search: searchText,
-    accountId,
-    categoryId,
-    type,
-    dateFrom,
-    dateTo,
-    sort,
-    direction,
-  } = shown;
+  const { page, accountId } = shown;
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -95,66 +88,67 @@ export function TransactionsPage() {
     setSelection({ viewKey, ids });
   }
 
-  const listParams = {
-    page,
-    pageSize,
-    search: searchText,
-    accountId,
-    categoryId,
-    type,
-    dateFrom,
-    dateTo,
-    sort,
-    direction,
-  };
-  const listKey = getGetTransactionsQueryKey(listParams);
-  const filterParams = { search: searchText, accountId, categoryId, type, dateFrom, dateTo };
+  const listParams = transactionListParams(shown, pageSize);
+  const listKey = getTransactionsQueryKey(listParams);
+  const filterParams = transactionFilterParams(shown);
 
-  const accounts = useGetAccountsSuspense();
-  const categories = useGetCategoriesSuspense();
-  const transactions = useGetTransactionsSuspense(listParams);
+  const accounts = useAccountsSuspense();
+  const categories = useCategoriesSuspense();
+  const transactions = useTransactionsSuspense(listParams);
+
+  function optimisticTransaction({ data }: CreateTransactionMutationVariables) {
+    const optimistic: TransactionResponse = {
+      id: optimisticId(crypto.randomUUID()),
+      accountId: data.accountId,
+      categoryId: data.categoryId,
+      type: data.type,
+      amount: normalizeMoney(data.amount),
+      currency: data.currency ?? reportingCurrency,
+      reportingAmount: normalizeMoney(data.amount),
+      date: data.date,
+      description: data.description,
+      source: "manual",
+      isSplit: (data.lines?.length ?? 0) > 0,
+      lines:
+        data.lines?.map((line, index) => ({
+          id: optimisticId(`line-${index}`),
+          categoryId: line.categoryId,
+          amount: normalizeMoney(line.amount),
+          description: line.description,
+        })) ?? null,
+      createdAt: new Date().toISOString(),
+    };
+    return optimistic;
+  }
+
+  function withOptimisticTransaction(
+    previous: PagedResponseOfTransactionResponse,
+    variables: CreateTransactionMutationVariables,
+  ) {
+    return {
+      ...previous,
+      items: [optimisticTransaction(variables), ...previous.items],
+      total: previous.total + 1,
+    };
+  }
+
+  const optimisticCreate = optimisticUpdate({
+    queryClient,
+    queryKey: listKey,
+    cancelKey: getTransactionsQueryKey(),
+    apply: withOptimisticTransaction,
+  });
+
+  const optimisticDelete = optimisticPagedRemoval<PagedResponseOfTransactionResponse>(
+    queryClient,
+    listKey,
+    getTransactionsQueryKey(),
+  );
 
   const createMutation = useCreateTransaction({
     mutation: {
       meta: { silent: true },
-      onMutate: async ({ data }) => {
-        await queryClient.cancelQueries({ queryKey: getGetTransactionsQueryKey() });
-        const previous = queryClient.getQueryData<PagedResponseOfTransactionResponse>(listKey);
-        if (previous) {
-          const optimistic: TransactionResponse = {
-            id: optimisticId(crypto.randomUUID()),
-            accountId: data.accountId,
-            categoryId: data.categoryId,
-            type: data.type,
-            amount: normalizeMoney(data.amount),
-            currency: data.currency ?? reportingCurrency,
-            reportingAmount: normalizeMoney(data.amount),
-            date: data.date,
-            description: data.description,
-            source: "manual",
-            isSplit: (data.lines?.length ?? 0) > 0,
-            lines:
-              data.lines?.map((line, index) => ({
-                id: optimisticId(`line-${index}`),
-                categoryId: line.categoryId,
-                amount: normalizeMoney(line.amount),
-                description: line.description,
-              })) ?? null,
-            createdAt: new Date().toISOString(),
-          };
-          queryClient.setQueryData<PagedResponseOfTransactionResponse>(listKey, {
-            ...previous,
-            items: [optimistic, ...previous.items],
-            total: previous.total + 1,
-          });
-        }
-        return { previous };
-      },
-      onError: (_error, _variables, context) => {
-        if (context?.previous) {
-          queryClient.setQueryData(listKey, context.previous);
-        }
-      },
+      ...optimisticCreate,
       onSuccess: () => toast.success(t("transactions.created")),
     },
   });
@@ -171,6 +165,7 @@ export function TransactionsPage() {
 
   const deleteMutation = useDeleteTransaction({
     mutation: {
+      ...optimisticDelete,
       onSuccess: () => toast.success(t("transactions.deleted")),
     },
   });
@@ -232,23 +227,19 @@ export function TransactionsPage() {
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
 
   function handleCreate(values: TransactionFormValues) {
-    createMutation.mutate({ data: values }, { onSuccess: () => setCreateOpen(false) });
+    return createMutation.mutateAsync({ data: values }, { onSuccess: () => setCreateOpen(false) });
   }
 
   async function handleCreateAnother(values: TransactionFormValues) {
-    try {
-      await createMutation.mutateAsync({ data: values });
-      return true;
-    } catch {
-      return false;
-    }
+    await createMutation.mutateAsync({ data: values });
+    return true;
   }
 
   function handleUpdate(values: TransactionFormValues) {
     if (!editing) {
       return;
     }
-    updateMutation.mutate({ id: editing.id, data: values });
+    return updateMutation.mutateAsync({ id: editing.id, data: values });
   }
 
   return (

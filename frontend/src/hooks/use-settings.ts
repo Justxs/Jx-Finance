@@ -1,9 +1,9 @@
 import {
-  getGetPublicSettingsQueryOptions,
-  getGetSettingsQueryOptions,
-  useGetPublicSettings,
-  useGetSettings,
-  useGetSettingsSuspense,
+  getPublicSettingsQueryOptions,
+  getSettingsQueryOptions,
+  usePublicSettings as usePublicSettingsQuery,
+  useSettings as useSettingsQuery,
+  useSettingsSuspense as useSettingsSuspenseQuery,
 } from "@/api/generated";
 import type { FeatureFlags, SettingsResponse } from "@/api/generated/model";
 import { parseIso, todayInZone } from "@/lib/calendar";
@@ -18,11 +18,11 @@ const quietSettingsQuery = {
 } as const;
 
 export function settingsQueryOptions() {
-  return getGetSettingsQueryOptions({ query: settingsQuery });
+  return getSettingsQueryOptions({ query: settingsQuery });
 }
 
 export function publicSettingsQueryOptions() {
-  return getGetPublicSettingsQueryOptions({ query: settingsQuery });
+  return getPublicSettingsQueryOptions({ query: settingsQuery });
 }
 
 const defaultSettings: SettingsResponse = {
@@ -54,17 +54,17 @@ interface SettingsOptions {
 }
 
 export function useSettings({ enabled = true }: Readonly<SettingsOptions> = {}): SettingsResponse {
-  const settings = useGetSettings({ query: { ...quietSettingsQuery, enabled } });
+  const settings = useSettingsQuery({ query: { ...quietSettingsQuery, enabled } });
 
   return settings.data ?? defaultSettings;
 }
 
 export function useSettingsSuspense(): SettingsResponse {
-  return useGetSettingsSuspense({ query: settingsQuery }).data;
+  return useSettingsSuspenseQuery({ query: settingsQuery }).data;
 }
 
 export function usePublicSettings() {
-  return useGetPublicSettings({ query: quietSettingsQuery }).data;
+  return usePublicSettingsQuery({ query: quietSettingsQuery }).data;
 }
 
 export function useFeature(feature: FeatureKey): boolean {

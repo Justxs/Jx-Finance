@@ -1,7 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import {
+  getAccountsSuspenseQueryOptions,
+  getConversionsSuspenseQueryOptions,
+  getHouseholdsSuspenseQueryOptions,
+  getTransfersSuspenseQueryOptions,
+} from "@/api/generated";
+import {
+  accountListParams,
+  conversionsPageParams,
+  transfersPageParams,
+} from "@/features/accounts/account-queries";
 import { accountTypes } from "@/features/accounts/account-types";
 import { AccountsPage } from "@/features/accounts/accounts-page";
+import { warm, warmWithSettings } from "@/lib/route-prefetch";
 
 export const accountsSearchSchema = z.object({
   search: z.string().optional().catch(undefined),
@@ -16,5 +28,17 @@ export const accountsSearchSchema = z.object({
 
 export const Route = createFileRoute("/accounts")({
   validateSearch: accountsSearchSchema,
+  loaderDeps: ({ search }) => accountListParams(search),
+  loader: ({ context: { queryClient }, deps }) => {
+    warm(queryClient, getAccountsSuspenseQueryOptions(deps));
+    warm(queryClient, getAccountsSuspenseQueryOptions());
+    warm(queryClient, getHouseholdsSuspenseQueryOptions());
+    warm(queryClient, getTransfersSuspenseQueryOptions(transfersPageParams(1)));
+    warmWithSettings(queryClient, (settings) => {
+      if (settings.features.multiCurrency) {
+        warm(queryClient, getConversionsSuspenseQueryOptions(conversionsPageParams(1)));
+      }
+    });
+  },
   component: AccountsPage,
 });

@@ -1,30 +1,37 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  getRecurringBillsQueryKey,
   useDeleteRecurringBill,
-  useGetAccountsSuspense,
-  useGetCategoriesSuspense,
-  useGetRecurringBillsSuspense,
+  useAccountsSuspense,
+  useCategoriesSuspense,
+  useRecurringBillsSuspense,
 } from "@/api/generated";
+import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { CreateRecurringBillForm } from "../create-recurring-bill-form";
 import { RecurringBillRow } from "../recurring-bill-row";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
-  const accounts = useGetAccountsSuspense();
-  const categories = useGetCategoriesSuspense();
-  const bills = useGetRecurringBillsSuspense();
+  const accounts = useAccountsSuspense();
+  const categories = useCategoriesSuspense();
+  const bills = useRecurringBillsSuspense();
 
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteRecurringBill();
+  const deleteMutation = useDeleteRecurringBill({
+    mutation: optimisticRemoval<RecurringBillResponse>(queryClient, getRecurringBillsQueryKey()),
+  });
 
   const accountList = accounts.data ?? [];
   const categoryList = categories.data ?? [];

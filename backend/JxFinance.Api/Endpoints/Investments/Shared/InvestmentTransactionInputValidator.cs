@@ -15,25 +15,25 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
 
     protected InvestmentTransactionInputValidator()
     {
-        RuleFor(r => r.AccountId).NotEmpty();
-        RuleFor(r => r.Type).IsInEnum();
-        RuleFor(r => r.Currency).IsInEnum();
-        RuleFor(r => r.Date).NotEmpty();
-        RuleFor(r => r.Description).MaximumLength(500);
+        RuleFor(r => r.AccountId).IsRequired();
+        RuleFor(r => r.Type).IsKnownEnum();
+        RuleFor(r => r.Currency).IsKnownEnum();
+        RuleFor(r => r.Date).IsRequired();
+        RuleFor(r => r.Description).HasMaxLength(500);
         RuleFor(r => r.Fee)
             .IsNonNegativeMoney()
             .WithMessage("Fee must be a decimal of 0 or more with at most 2 decimal places.");
 
         When(r => r.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell, () =>
         {
-            RuleFor(r => r.SecurityId).NotEmpty().WithMessage("Choose a security.");
+            RuleFor(r => r.SecurityId).IsRequired().WithMessage("Choose a security.");
             RuleFor(r => r.Quantity)
-                .NotNull()
+                .IsPresent()
                 .WithMessage(QuantityMessage)
                 .IsPositiveQuantity()
                 .WithMessage(QuantityMessage);
             RuleFor(r => r.Price)
-                .NotNull()
+                .IsPresent()
                 .WithMessage(PriceMessage)
                 .IsNonNegativeQuantity()
                 .WithMessage(PriceMessage);
@@ -41,9 +41,9 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
 
         When(r => r.Type is InvestmentTransactionType.Split, () =>
         {
-            RuleFor(r => r.SecurityId).NotEmpty().WithMessage("Choose a security.");
+            RuleFor(r => r.SecurityId).IsRequired().WithMessage("Choose a security.");
             RuleFor(r => r.Quantity)
-                .NotNull()
+                .IsPresent()
                 .WithMessage(SplitMessage)
                 .IsPositiveQuantity()
                 .WithMessage(SplitMessage);
@@ -57,7 +57,7 @@ public abstract class InvestmentTransactionInputValidator<TRequest> : Validator<
                 .WithMessage("Amount must be a decimal greater than 0 with at most 2 decimal places."));
 
         RuleFor(r => r.SecurityId)
-            .NotEmpty()
+            .IsRequired()
             .When(r => r.Type is InvestmentTransactionType.Dividend or InvestmentTransactionType.WithholdingTax)
             .WithMessage("Choose a security.");
     }

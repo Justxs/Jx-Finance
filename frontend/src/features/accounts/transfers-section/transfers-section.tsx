@@ -1,32 +1,44 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useCreateTransfer, useDeleteTransfer, useGetTransfersSuspense } from "@/api/generated";
-import type { AccountResponse, TransferResponse } from "@/api/generated/model";
+import {
+  getTransfersQueryKey,
+  useCreateTransfer,
+  useDeleteTransfer,
+  useTransfersSuspense,
+} from "@/api/generated";
+import type {
+  AccountResponse,
+  PagedResponseOfTransferResponse,
+  TransferResponse,
+} from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { optimisticPagedRemoval } from "@/lib/optimistic";
+import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
 import { TransferForm } from "./transfer-form";
 
 interface Props {
   accounts: AccountResponse[];
 }
 
-const pageSize = 10;
-
 export function TransfersSection({ accounts }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
+  const queryClient = useQueryClient();
   const [addOpen, setAddOpen] = useState(false);
 
   const [page, setPage] = useState(1);
   const shownPage = useDeferredValue(page);
   const stale = shownPage !== page;
-  const transfers = useGetTransfersSuspense({ page: shownPage, pageSize });
+  const listParams = transfersPageParams(shownPage);
+  const transfers = useTransfersSuspense(listParams);
   const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / pageSize));
   if (page > pages) {
     setPage(pages);
@@ -40,7 +52,13 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
-  const deleteMutation = useDeleteTransfer();
+  const deleteMutation = useDeleteTransfer({
+    mutation: optimisticPagedRemoval<PagedResponseOfTransferResponse>(
+      queryClient,
+      getTransfersQueryKey(listParams),
+      getTransfersQueryKey(),
+    ),
+  });
 
   const items = useDeferredValue(transfers.data?.items) ?? [];
 
@@ -122,7 +140,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}
-          onSubmit={(values) => createMutation.mutate({ data: values })}
+          onSubmit={(values) => createMutation.mutateAsync({ data: values })}
           onCancel={() => setAddOpen(false)}
         />
       </Modal>

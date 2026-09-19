@@ -8,7 +8,6 @@
 import type { Currency } from "./currency";
 import type { FeatureFlags } from "./featureFlags";
 import type { FirstDayOfWeek } from "./firstDayOfWeek";
-import type { IReadOnlyListOfCurrency } from "./iReadOnlyListOfCurrency";
 
 export interface UpdateSettingsRequest {
   /**
@@ -20,7 +19,8 @@ export interface UpdateSettingsRequest {
   instanceName: string | null;
   features: FeatureFlags;
   reportingCurrency: Currency;
-  enabledCurrencies: IReadOnlyListOfCurrency;
+  /** Currencies offered when entering data. The reporting currency is always included. */
+  enabledCurrencies: Currency[];
   exchangeRateSyncEnabled: boolean;
   defaultLanguage: string;
   /** IANA time zone id that decides what today and this month mean. */

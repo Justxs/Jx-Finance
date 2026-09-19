@@ -7,7 +7,7 @@
  */
 import type { AccountType } from "./accountType";
 import type { Currency } from "./currency";
-import type { IReadOnlyListOfCurrencyBalance } from "./iReadOnlyListOfCurrencyBalance";
+import type { CurrencyBalance } from "./currencyBalance";
 import type { Scope } from "./scope";
 
 export interface AccountResponse {
@@ -25,7 +25,7 @@ export interface AccountResponse {
   /** @nullable */
   householdId: string | null;
   currency: Currency;
-  balances: IReadOnlyListOfCurrencyBalance;
+  balances: CurrencyBalance[];
   reportingBalance: string;
   holdingsValue: string;
 }

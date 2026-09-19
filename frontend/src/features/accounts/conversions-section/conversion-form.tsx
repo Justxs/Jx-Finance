@@ -1,16 +1,10 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetExchangeRate } from "@/api/generated";
+import { useExchangeRate } from "@/api/generated";
 import { type AccountResponse, Currency } from "@/api/generated/model";
 import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/conversions.zod";
-import { MoneyField } from "@/components/money-field";
-import { SelectField } from "@/components/select-field";
+import { useAppForm } from "@/components/form";
 import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   EMPTY_VALUE,
   useIsoDate,
@@ -18,7 +12,15 @@ import {
   useUsableCurrencies,
 } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import {
+  isPositiveMoney,
+  normalizeMoney,
+  optionalPositiveMoney,
+  optionalText,
+  positiveMoney,
+  requiredValue,
+} from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
 interface ConversionFormValues {
@@ -49,7 +51,7 @@ interface Props {
   accounts: AccountResponse[];
   accountId?: string;
   pending: boolean;
-  onSubmit: (values: ConversionFormValues) => void;
+  onSubmit: (values: ConversionFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
 }
 
@@ -71,6 +73,22 @@ function otherCurrency(
   return held ?? usable.find((currency) => currency !== sold) ?? sold;
 }
 
+function buildValues(value: FormValues): ConversionFormValues {
+  const hasFee = value.feeAmount.trim() !== "";
+
+  return {
+    accountId: value.accountId,
+    fromAmount: value.fromAmount,
+    fromCurrency: value.fromCurrency,
+    toAmount: value.toAmount,
+    toCurrency: value.toCurrency,
+    date: value.date,
+    description: value.description.trim() || null,
+    feeAmount: hasFee ? value.feeAmount : null,
+    feeCurrency: hasFee ? value.feeCurrency : null,
+  };
+}
+
 function ConversionRate({
   fromAmount,
   fromCurrency,
@@ -81,7 +99,7 @@ function ConversionRate({
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const rateFormat = useRateFormat();
-  const reference = useGetExchangeRate(
+  const reference = useExchangeRate(
     { from: fromCurrency, to: toCurrency, date },
     {
       query: {
@@ -133,24 +151,14 @@ export function ConversionForm({
 
   const schema = z
     .object({
-      accountId: z.string().min(1, t("validation.required")),
-      fromAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+      accountId: requiredValue(t),
+      fromAmount: positiveMoney(t),
       fromCurrency: z.enum(Currency),
-      toAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
+      toAmount: positiveMoney(t),
       toCurrency: z.enum(Currency),
-      date: z.string().min(1, t("validation.required")),
-      description: z
-        .string()
-        .max(
-          createConversionBodyDescriptionMax,
-          t("validation.maxLength", { max: createConversionBodyDescriptionMax }),
-        ),
-      feeAmount: z
-        .string()
-        .refine(
-          (value) => value.trim() === "" || isPositiveMoney(value),
-          t("validation.positiveMoney"),
-        ),
+      date: requiredValue(t),
+      description: optionalText(t, createConversionBodyDescriptionMax),
+      feeAmount: optionalPositiveMoney(t),
       feeCurrency: z.enum(Currency),
     })
     .refine((value) => value.fromCurrency !== value.toCurrency, {
@@ -173,212 +181,155 @@ export function ConversionForm({
     feeCurrency: initialSold,
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      const hasFee = value.feeAmount.trim() !== "";
-
-      onSubmit({
-        accountId: value.accountId,
-        fromAmount: value.fromAmount,
-        fromCurrency: value.fromCurrency,
-        toAmount: value.toAmount,
-        toCurrency: value.toCurrency,
-        date: value.date,
-        description: value.description.trim() || null,
-        feeAmount: hasFee ? value.feeAmount : null,
-        feeCurrency: hasFee ? value.feeCurrency : null,
-      });
-    },
+    onSubmit: (submission) =>
+      submitToServer(submission, () => onSubmit(buildValues(submission.value))),
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="form-grid"
-    >
-      <form.Field name="accountId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="conversion-account">{t("transactions.account")}</Label>
-            <SelectField
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="form-grid"
+      >
+        <form.Field name="accountId">
+          {(field) => (
+            <field.SelectFieldControl
               id="conversion-account"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={(value) => {
+              label={t("transactions.account")}
+              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              onValueChange={(value) => {
                 const next = accounts.find((account) => account.id === value);
                 const sold = next?.currency ?? form.getFieldValue("fromCurrency");
-                field.handleChange(value);
                 form.setFieldValue("fromCurrency", sold);
                 form.setFieldValue("toCurrency", otherCurrency(next, sold, usable));
                 form.setFieldValue("feeCurrency", sold);
               }}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
             />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="date">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="conversion-date">{t("transactions.date")}</Label>
-            <DatePicker
-              id="conversion-date"
-              value={field.value}
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
-            />
-          </div>
-        )}
-      </form.Field>
+        <form.Field name="date">
+          {(field) => <field.DateField id="conversion-date" label={t("transactions.date")} />}
+        </form.Field>
 
-      <form.Subscribe selector={(state) => state.values.accountId}>
-        {(selectedAccountId) => {
-          const held = heldCurrencies(accounts.find((account) => account.id === selectedAccountId));
+        <form.Subscribe selector={(state) => state.values.accountId}>
+          {(selectedAccountId) => {
+            const held = heldCurrencies(
+              accounts.find((account) => account.id === selectedAccountId),
+            );
 
-          return (
-            <>
-              <form.Field name="fromAmount">
-                {(field) => (
-                  <form.Field name="fromCurrency">
-                    {(currencyField) => (
-                      <MoneyField
-                        id="conversion-from-amount"
-                        label={t("conversions.sold")}
-                        value={field.value}
-                        error={field.errors[0]?.message}
-                        onBlur={field.handleBlur}
-                        onChange={field.handleChange}
-                        currency={currencyField.value}
-                        currencyLabel={t("conversions.soldCurrency")}
-                        preferred={held}
-                        onCurrencyChange={(value) => {
-                          currencyField.handleChange(value);
-                          if (
-                            form.getFieldValue("feeCurrency") !== form.getFieldValue("toCurrency")
-                          ) {
-                            form.setFieldValue("feeCurrency", value);
-                          }
-                        }}
-                      />
-                    )}
-                  </form.Field>
-                )}
-              </form.Field>
+            return (
+              <>
+                <form.Field name="fromCurrency">
+                  {(currencyField) => (
+                    <form.Field name="fromAmount">
+                      {(field) => (
+                        <field.MoneyAmountField
+                          id="conversion-from-amount"
+                          label={t("conversions.sold")}
+                          currencyLabel={t("conversions.soldCurrency")}
+                          currencyField={currencyField}
+                          preferred={held}
+                          onCurrencyChange={(value) => {
+                            if (
+                              form.getFieldValue("feeCurrency") !== form.getFieldValue("toCurrency")
+                            ) {
+                              form.setFieldValue("feeCurrency", value);
+                            }
+                          }}
+                        />
+                      )}
+                    </form.Field>
+                  )}
+                </form.Field>
 
-              <form.Field name="toAmount">
-                {(field) => (
-                  <form.Field name="toCurrency">
-                    {(currencyField) => (
-                      <MoneyField
-                        id="conversion-to-amount"
-                        label={t("conversions.bought")}
-                        value={field.value}
-                        error={field.meta.isTouched ? field.errors[0]?.message : undefined}
-                        onBlur={field.handleBlur}
-                        onChange={field.handleChange}
-                        currency={currencyField.value}
-                        currencyLabel={t("conversions.boughtCurrency")}
-                        currencyError={currencyField.errors[0]?.message}
-                        preferred={held}
-                        onCurrencyChange={(value) => {
-                          currencyField.handleChange(value);
-                          if (
-                            form.getFieldValue("feeCurrency") !== form.getFieldValue("fromCurrency")
-                          ) {
-                            form.setFieldValue("feeCurrency", value);
-                          }
-                        }}
-                      />
-                    )}
-                  </form.Field>
-                )}
-              </form.Field>
-            </>
-          );
-        }}
-      </form.Subscribe>
+                <form.Field name="toCurrency">
+                  {(currencyField) => (
+                    <form.Field name="toAmount">
+                      {(field) => (
+                        <field.MoneyAmountField
+                          id="conversion-to-amount"
+                          label={t("conversions.bought")}
+                          currencyLabel={t("conversions.boughtCurrency")}
+                          currencyField={currencyField}
+                          touchedOnly
+                          preferred={held}
+                          onCurrencyChange={(value) => {
+                            if (
+                              form.getFieldValue("feeCurrency") !==
+                              form.getFieldValue("fromCurrency")
+                            ) {
+                              form.setFieldValue("feeCurrency", value);
+                            }
+                          }}
+                        />
+                      )}
+                    </form.Field>
+                  )}
+                </form.Field>
+              </>
+            );
+          }}
+        </form.Subscribe>
 
-      <form.Subscribe
-        selector={(state) => ({
-          fromAmount: state.values.fromAmount,
-          fromCurrency: state.values.fromCurrency,
-          toAmount: state.values.toAmount,
-          toCurrency: state.values.toCurrency,
-          date: state.values.date,
-        })}
-      >
-        {(values) => <ConversionRate {...values} />}
-      </form.Subscribe>
+        <form.Subscribe
+          selector={(state) => ({
+            fromAmount: state.values.fromAmount,
+            fromCurrency: state.values.fromCurrency,
+            toAmount: state.values.toAmount,
+            toCurrency: state.values.toCurrency,
+            date: state.values.date,
+          })}
+        >
+          {(values) => <ConversionRate {...values} />}
+        </form.Subscribe>
 
-      <form.Subscribe
-        selector={(state) => [state.values.fromCurrency, state.values.toCurrency] as const}
-      >
-        {(tradedCurrencies) => (
-          <form.Field name="feeAmount">
-            {(field) => (
-              <form.Field name="feeCurrency">
-                {(currencyField) => (
-                  <MoneyField
-                    id="conversion-fee"
-                    label={t("conversions.fee")}
-                    hint={t("conversions.feeHint")}
-                    value={field.value}
-                    error={field.errors[0]?.message}
-                    onBlur={field.handleBlur}
-                    onChange={field.handleChange}
-                    currency={currencyField.value}
-                    currencyLabel={t("conversions.feeCurrency")}
-                    only={tradedCurrencies}
-                    onCurrencyChange={currencyField.handleChange}
-                  />
-                )}
-              </form.Field>
-            )}
-          </form.Field>
-        )}
-      </form.Subscribe>
-
-      <form.Field name="description">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="conversion-description">{t("transactions.description")}</Label>
-            <Input
-              id="conversion-description"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={
-                field.errors.length > 0 ? "conversion-description-error" : undefined
-              }
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id="conversion-description-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
-
-      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {t("conversions.submit")}
-            </Button>
+        <form.Subscribe
+          selector={(state) => [state.values.fromCurrency, state.values.toCurrency] as const}
+        >
+          {(tradedCurrencies) => (
+            <form.Field name="feeCurrency">
+              {(currencyField) => (
+                <form.Field name="feeAmount">
+                  {(field) => (
+                    <field.MoneyAmountField
+                      id="conversion-fee"
+                      label={t("conversions.fee")}
+                      currencyLabel={t("conversions.feeCurrency")}
+                      currencyField={currencyField}
+                      hint={t("conversions.feeHint")}
+                      only={tradedCurrencies}
+                    />
+                  )}
+                </form.Field>
+              )}
+            </form.Field>
           )}
         </form.Subscribe>
-      </div>
-    </form>
+
+        <form.Field name="description">
+          {(field) => (
+            <field.TextField id="conversion-description" label={t("transactions.description")} />
+          )}
+        </form.Field>
+
+        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+          {onCancel ? (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              {t("actions.cancel")}
+            </Button>
+          ) : null}
+          <form.SubmitButton pending={pending}>{t("conversions.submit")}</form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

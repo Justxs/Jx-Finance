@@ -40,33 +40,25 @@ export const CreateGoalResponse = zod.object({
  * Returns your savings goals with the amount saved so far against each target.
  * @summary List savings goals
  */
-export const GetGoalsResponseItem = zod.object({
+export const GoalsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   targetAmount: zod.string(),
   currentAmount: zod.string(),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
 });
-export const GetGoalsResponse = zod.array(GetGoalsResponseItem);
+export const GoalsResponse = zod.array(GoalsResponseItem);
 
 /**
  * Removes the goal and its recorded progress. Nothing else in the ledger changes.
  * @summary Delete a savings goal
  */
-export const DeleteGoalParams = zod.object({
-  id: zod.string().describe("The goal id."),
-});
-
 export const DeleteGoalResponse = zod.void();
 
 /**
  * Changes the name, the target, the target date, or how much has been put aside. This is how progress is recorded: raise currentAmount as money is saved.
  * @summary Update a savings goal
  */
-export const UpdateGoalParams = zod.object({
-  id: zod.uuid().describe("The goal id. Takes precedence over the id in the body."),
-});
-
 export const updateGoalBodyNameMin = 0;
 export const updateGoalBodyNameMax = 100;
 

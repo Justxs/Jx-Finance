@@ -19,7 +19,7 @@ public sealed class ImportBrokerReportEndpoint(IBrokerImportService importServic
     {
         if (req.File is null || req.File.Length is <= 0 or > 20 * 1024 * 1024)
         {
-            ThrowError(r => r.File, "Choose a non-empty Flex Query XML file no larger than 20 MB.", ErrorCodes.Validation);
+            ThrowError(r => r.File, "Choose a non-empty Flex Query XML file no larger than 20 MB.", ErrorCodes.ImportInvalidFile);
         }
 
         await using var stream = req.File.OpenReadStream();

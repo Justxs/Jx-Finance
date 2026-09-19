@@ -5,30 +5,21 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
-import type {
-  GetNotificationsParams,
-  IReadOnlyListOfNotificationResponse,
-  ProblemDetails,
-} from "../model";
+import type { NotificationResponse, NotificationsParams, ProblemDetails } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
@@ -47,7 +38,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetNotificationsUrl = (params?: GetNotificationsParams) => {
+export const getNotificationsUrl = (params?: NotificationsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -67,185 +58,85 @@ export const getGetNotificationsUrl = (params?: GetNotificationsParams) => {
  * Returns your notifications, newest first. These are raised by background jobs, for example when a recurring bill is about to fall due.
  * @summary List notifications
  */
-export const getNotifications = async (
-  params?: GetNotificationsParams,
+export const notifications = async (
+  params?: NotificationsParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfNotificationResponse> => {
-  return customFetch<IReadOnlyListOfNotificationResponse>(getGetNotificationsUrl(params), {
+): Promise<NotificationResponse[]> => {
+  return customFetch<NotificationResponse[]>(getNotificationsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetNotificationsQueryKey = (params?: GetNotificationsParams) => {
+export const getNotificationsQueryKey = (params?: NotificationsParams) => {
   return [`/api/notifications`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetNotificationsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNotifications>>,
+export const getNotificationsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetNotificationsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetNotificationsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotifications>>> = ({ signal }) =>
-    getNotifications(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getNotifications>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetNotificationsQueryResult = NonNullable<Awaited<ReturnType<typeof getNotifications>>>;
-export type GetNotificationsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetNotifications<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetNotificationsParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNotifications>>,
-          TError,
-          Awaited<ReturnType<typeof getNotifications>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNotifications<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetNotificationsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getNotifications>>,
-          TError,
-          Awaited<ReturnType<typeof getNotifications>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNotifications<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetNotificationsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List notifications
- */
-
-export function useGetNotifications<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetNotificationsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNotificationsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetNotificationsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getNotifications>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetNotificationsParams,
+  params?: NotificationsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetNotificationsQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getNotificationsQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNotifications>>> = ({ signal }) =>
-    getNotifications(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof notifications>>> = ({ signal }) =>
+    notifications(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getNotifications>>,
+    Awaited<ReturnType<typeof notifications>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetNotificationsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getNotifications>>
+export type NotificationsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof notifications>>
 >;
-export type GetNotificationsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type NotificationsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetNotificationsSuspense<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
+export function useNotificationsSuspense<
+  TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetNotificationsParams,
+  params: undefined | NotificationsParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNotificationsSuspense<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
+export function useNotificationsSuspense<
+  TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetNotificationsParams,
+  params?: NotificationsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetNotificationsSuspense<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
+export function useNotificationsSuspense<
+  TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetNotificationsParams,
+  params?: NotificationsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -255,20 +146,20 @@ export function useGetNotificationsSuspense<
  * @summary List notifications
  */
 
-export function useGetNotificationsSuspense<
-  TData = Awaited<ReturnType<typeof getNotifications>>,
+export function useNotificationsSuspense<
+  TData = Awaited<ReturnType<typeof notifications>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetNotificationsParams,
+  params?: NotificationsParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getNotifications>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof notifications>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetNotificationsSuspenseQueryOptions(params, options);
+  const queryOptions = getNotificationsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

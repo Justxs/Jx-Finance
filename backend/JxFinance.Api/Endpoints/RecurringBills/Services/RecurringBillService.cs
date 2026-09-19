@@ -31,14 +31,14 @@ public sealed class RecurringBillService(
         var billId = new RecurringBillId(id);
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         return bill is null
-            ? Result<RecurringBill>.Failure(ErrorCodes.NotFound, "Recurring bill not found.")
+            ? Result<RecurringBill>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.")
             : Result<RecurringBill>.Success(bill);
     }
 
     public async Task<Result<RecurringBill>> CreateAsync(RecurringBill bill, CancellationToken cancellationToken)
     {
         var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
-        if (error is not null) return Result<RecurringBill>.Failure(ErrorCodes.Validation, error);
+        if (error is not null) return Result<RecurringBill>.Failure(error);
 
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
@@ -52,12 +52,12 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<RecurringBill>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
+            return Result<RecurringBill>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
         }
 
         apply(bill);
         var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
-        if (error is not null) return Result<RecurringBill>.Failure(ErrorCodes.Validation, error);
+        if (error is not null) return Result<RecurringBill>.Failure(error);
         await db.SaveChangesAsync(cancellationToken);
 
         return Result<RecurringBill>.Success(bill);
@@ -69,7 +69,7 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
         }
 
         db.RecurringBills.Remove(bill);
@@ -89,13 +89,13 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.NotFound, "Recurring bill not found.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
         }
 
         if (!bill.IsActive)
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "This bill is inactive.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.RecurringBillInactive, "This bill is inactive.");
         if (request.ExpectedDueDate != bill.NextDueDate)
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Conflict, "This occurrence has changed or was already confirmed. Refresh the bill.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the bill.");
 
         Money amount;
         if (bill.Kind == RecurringBillKind.Fixed)
@@ -107,7 +107,7 @@ public sealed class RecurringBillService(
             if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
             {
                 return Result<RecurringBillConfirmation>.Failure(
-                    ErrorCodes.Validation,
+                    ErrorCodes.MoneyPositive,
                     "A variable bill needs an amount to confirm.");
             }
 
@@ -118,18 +118,18 @@ public sealed class RecurringBillService(
         if (accountId is null)
         {
             return Result<RecurringBillConfirmation>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.Required,
                 "An account is required to confirm this bill.");
         }
 
         var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
         if (!accountExists)
         {
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "Account does not exist.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         if (bill.CategoryId is { } categoryId && !await db.Categories.AnyAsync(c => c.Id == categoryId && c.Type == FlowType.Expense, cancellationToken))
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.Validation, "The bill category is no longer available.");
+            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ReferenceNotFound, "The bill category is no longer available.");
 
         var transaction = new Transaction
         {
@@ -156,10 +156,10 @@ public sealed class RecurringBillService(
             new RecurringBillConfirmation(bill, transaction.Id.Value));
     }
 
-    private async Task<string?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)
+    private async Task<DomainError?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)
     {
-        if (accountId is { } a && !await db.Accounts.AnyAsync(x => x.Id == new AccountId(a), ct)) return "Account does not exist.";
-        if (categoryId is { } c && !await db.Categories.AnyAsync(x => x.Id == new CategoryId(c) && x.Type == FlowType.Expense, ct)) return "Choose an accessible expense category.";
+        if (accountId is { } a && !await db.Accounts.AnyAsync(x => x.Id == new AccountId(a), ct)) return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+        if (categoryId is { } c && !await db.Categories.AnyAsync(x => x.Id == new CategoryId(c) && x.Type == FlowType.Expense, ct)) return new DomainError(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
         return null;
     }
 }

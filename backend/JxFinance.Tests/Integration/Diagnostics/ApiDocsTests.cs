@@ -3,6 +3,7 @@ using System.Net;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using JxFinance.Common.Errors;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
@@ -11,6 +12,8 @@ namespace JxFinance.Tests.Integration.Diagnostics;
 public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
     private const string UpdateVariable = "JX_UPDATE_SNAPSHOTS";
+
+    private static readonly string[] LeakedCollectionPrefixes = ["IReadOnlyListOf", "IEnumerableOf", "ListOf", "IListOf", "ICollectionOf"];
 
     [Fact]
     public async Task Root_redirects_to_scalar_docs()
@@ -36,6 +39,30 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         Assert.True(
             approved == actual,
             $"The API contract changed. Review the difference, then run with {UpdateVariable}=1 and regenerate the frontend client.");
+    }
+
+    [Fact]
+    public async Task OpenApi_schema_names_do_not_leak_implementation_details()
+    {
+        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
+        var names = document["components"]!["schemas"]!.AsObject().Select(schema => schema.Key).ToList();
+
+        Assert.NotEmpty(names);
+        Assert.DoesNotContain(names, name => name.Contains("__op", StringComparison.Ordinal));
+        Assert.DoesNotContain(names, name => LeakedCollectionPrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task OpenApi_document_publishes_the_closed_set_of_error_codes()
+    {
+        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
+        var schemas = document["components"]!["schemas"]!;
+        var published = schemas["ErrorCode"]!["enum"]!.AsArray().Select(code => code!.GetValue<string>()).ToList();
+
+        Assert.Equal(ErrorCodes.All, published);
+        Assert.Equal(
+            "#/components/schemas/ErrorCode",
+            schemas["ProblemDetails"]!["properties"]!["errors"]!["items"]!["properties"]!["code"]!["$ref"]!.GetValue<string>());
     }
 
     [Fact]

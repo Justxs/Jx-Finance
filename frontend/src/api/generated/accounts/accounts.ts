@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -26,9 +21,8 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   AccountResponse,
+  AccountsParams,
   CreateAccountRequest,
-  GetAccountsParams,
-  IReadOnlyListOfAccountResponse,
   ProblemDetails,
   UpdateAccountRequest,
 } from "../model";
@@ -154,7 +148,7 @@ export const useCreateAccount = <TError = ErrorType<ProblemDetails>, TContext = 
 > => {
   return useMutation(getCreateAccountMutationOptions(options), queryClient);
 };
-export const getGetAccountsUrl = (params?: GetAccountsParams) => {
+export const getAccountsUrl = (params?: AccountsParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -172,182 +166,76 @@ export const getGetAccountsUrl = (params?: GetAccountsParams) => {
  * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.
  * @summary List accounts
  */
-export const getAccounts = async (
-  params?: GetAccountsParams,
+export const accounts = async (
+  params?: AccountsParams,
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfAccountResponse> => {
-  return customFetch<IReadOnlyListOfAccountResponse>(getGetAccountsUrl(params), {
+): Promise<AccountResponse[]> => {
+  return customFetch<AccountResponse[]>(getAccountsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAccountsQueryKey = (params?: GetAccountsParams) => {
+export const getAccountsQueryKey = (params?: AccountsParams) => {
   return [`/api/accounts`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetAccountsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAccounts>>,
+export const getAccountsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetAccountsParams,
+  params?: AccountsParams,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAccountsQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getAccountsQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccounts>>> = ({ signal }) =>
-    getAccounts(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getAccounts>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetAccountsQueryResult = NonNullable<Awaited<ReturnType<typeof getAccounts>>>;
-export type GetAccountsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetAccounts<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetAccountsParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAccounts>>,
-          TError,
-          Awaited<ReturnType<typeof getAccounts>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccounts<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetAccountsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAccounts>>,
-          TError,
-          Awaited<ReturnType<typeof getAccounts>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccounts<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetAccountsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List accounts
- */
-
-export function useGetAccounts<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetAccountsParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAccountsQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetAccountsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAccounts>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetAccountsParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetAccountsQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccounts>>> = ({ signal }) =>
-    getAccounts(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof accounts>>> = ({ signal }) =>
+    accounts(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getAccounts>>,
+    Awaited<ReturnType<typeof accounts>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetAccountsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getAccounts>>>;
-export type GetAccountsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type AccountsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof accounts>>>;
+export type AccountsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetAccountsSuspense<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
+export function useAccountsSuspense<
+  TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetAccountsParams,
+  params: undefined | AccountsParams,
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccountsSuspense<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
+export function useAccountsSuspense<
+  TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetAccountsParams,
+  params?: AccountsParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccountsSuspense<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
+export function useAccountsSuspense<
+  TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetAccountsParams,
+  params?: AccountsParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -356,20 +244,18 @@ export function useGetAccountsSuspense<
  * @summary List accounts
  */
 
-export function useGetAccountsSuspense<
-  TData = Awaited<ReturnType<typeof getAccounts>>,
+export function useAccountsSuspense<
+  TData = Awaited<ReturnType<typeof accounts>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetAccountsParams,
+  params?: AccountsParams,
   options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccounts>>, TError, TData>
-    >;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof accounts>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAccountsSuspenseQueryOptions(params, options);
+  const queryOptions = getAccountsSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -462,7 +348,7 @@ export const useDeleteAccount = <TError = ErrorType<ProblemDetails>, TContext = 
 > => {
   return useMutation(getDeleteAccountMutationOptions(options), queryClient);
 };
-export const getGetAccountUrl = (id: string) => {
+export const getAccountUrl = (id: string) => {
   return `/api/accounts/${id}`;
 };
 
@@ -470,179 +356,76 @@ export const getGetAccountUrl = (id: string) => {
  * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
  * @summary Get one account
  */
-export const getAccount = async (
+export const account = async (
   id: string,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<AccountResponse> => {
-  return customFetch<AccountResponse>(getGetAccountUrl(id), {
+  return customFetch<AccountResponse>(getAccountUrl(id), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAccountQueryKey = (id: string) => {
+export const getAccountQueryKey = (id: string) => {
   return [`/api/accounts/${id}`] as const;
 };
 
-export const getGetAccountQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAccount>>,
+export const getAccountSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAccountQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getAccountQueryKey(id);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccount>>> = ({ signal }) =>
-    getAccount(id, { signal, ...requestOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: id !== null && id !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-};
-
-export type GetAccountQueryResult = NonNullable<Awaited<ReturnType<typeof getAccount>>>;
-export type GetAccountQueryError = ErrorType<ProblemDetails>;
-
-export function useGetAccount<
-  TData = Awaited<ReturnType<typeof getAccount>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAccount>>,
-          TError,
-          Awaited<ReturnType<typeof getAccount>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccount<
-  TData = Awaited<ReturnType<typeof getAccount>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getAccount>>,
-          TError,
-          Awaited<ReturnType<typeof getAccount>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccount<
-  TData = Awaited<ReturnType<typeof getAccount>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get one account
- */
-
-export function useGetAccount<
-  TData = Awaited<ReturnType<typeof getAccount>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAccountQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetAccountSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getAccount>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetAccountQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccount>>> = ({ signal }) =>
-    getAccount(id, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof account>>> = ({ signal }) =>
+    account(id, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getAccount>>,
+    Awaited<ReturnType<typeof account>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetAccountSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getAccount>>>;
-export type GetAccountSuspenseQueryError = ErrorType<ProblemDetails>;
+export type AccountSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof account>>>;
+export type AccountSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetAccountSuspense<
-  TData = Awaited<ReturnType<typeof getAccount>>,
+export function useAccountSuspense<
+  TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccountSuspense<
-  TData = Awaited<ReturnType<typeof getAccount>>,
+export function useAccountSuspense<
+  TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetAccountSuspense<
-  TData = Awaited<ReturnType<typeof getAccount>>,
+export function useAccountSuspense<
+  TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -651,18 +434,18 @@ export function useGetAccountSuspense<
  * @summary Get one account
  */
 
-export function useGetAccountSuspense<
-  TData = Awaited<ReturnType<typeof getAccount>>,
+export function useAccountSuspense<
+  TData = Awaited<ReturnType<typeof account>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getAccount>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof account>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetAccountSuspenseQueryOptions(id, options);
+  const queryOptions = getAccountSuspenseQueryOptions(id, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

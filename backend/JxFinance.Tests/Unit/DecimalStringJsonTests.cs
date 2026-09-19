@@ -34,8 +34,8 @@ public sealed class DecimalStringJsonTests
     [InlineData("true")]
     public void Anything_but_an_invariant_decimal_string_is_refused_and_names_the_property(string token)
     {
-        var money = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<Sample>($$"""{"amount":{{token}}}""", Options));
-        var quantity = Assert.Throws<JsonException>(() => JsonSerializer.Deserialize<Sample>($$"""{"quantity":{{token}}}""", Options));
+        var money = Assert.Throws<DecimalStringException>(() => JsonSerializer.Deserialize<Sample>($$"""{"amount":{{token}}}""", Options));
+        var quantity = Assert.Throws<DecimalStringException>(() => JsonSerializer.Deserialize<Sample>($$"""{"quantity":{{token}}}""", Options));
 
         Assert.Equal("$.amount", money.Path);
         Assert.Equal(DecimalString.Invalid, money.Message);

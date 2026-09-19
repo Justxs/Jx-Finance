@@ -5,27 +5,22 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
 import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
+  CategoryBreakdownParams,
   CategoryBreakdownResponse,
   DashboardSummaryResponse,
-  GetCategoryBreakdownParams,
-  GetMonthlyTrendParams,
+  MonthlyTrendParams,
   MonthlyTrendResponse,
   ProblemDetails,
 } from "../model";
@@ -47,7 +42,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetCategoryBreakdownUrl = (params?: GetCategoryBreakdownParams) => {
+export const getCategoryBreakdownUrl = (params?: CategoryBreakdownParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -67,197 +62,85 @@ export const getGetCategoryBreakdownUrl = (params?: GetCategoryBreakdownParams) 
  * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.
  * @summary Get spending split by category
  */
-export const getCategoryBreakdown = async (
-  params?: GetCategoryBreakdownParams,
+export const categoryBreakdown = async (
+  params?: CategoryBreakdownParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<CategoryBreakdownResponse> => {
-  return customFetch<CategoryBreakdownResponse>(getGetCategoryBreakdownUrl(params), {
+  return customFetch<CategoryBreakdownResponse>(getCategoryBreakdownUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetCategoryBreakdownQueryKey = (params?: GetCategoryBreakdownParams) => {
+export const getCategoryBreakdownQueryKey = (params?: CategoryBreakdownParams) => {
   return [`/api/dashboard/category-breakdown`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetCategoryBreakdownQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
+export const getCategoryBreakdownSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetCategoryBreakdownParams,
+  params?: CategoryBreakdownParams,
   options?: {
     query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetCategoryBreakdownQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getCategoryBreakdownQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoryBreakdown>>> = ({ signal }) =>
-    getCategoryBreakdown(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getCategoryBreakdown>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetCategoryBreakdownQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCategoryBreakdown>>
->;
-export type GetCategoryBreakdownQueryError = ErrorType<ProblemDetails>;
-
-export function useGetCategoryBreakdown<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: undefined | GetCategoryBreakdownParams,
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCategoryBreakdown>>,
-          TError,
-          Awaited<ReturnType<typeof getCategoryBreakdown>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoryBreakdown<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetCategoryBreakdownParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getCategoryBreakdown>>,
-          TError,
-          Awaited<ReturnType<typeof getCategoryBreakdown>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoryBreakdown<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetCategoryBreakdownParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get spending split by category
- */
-
-export function useGetCategoryBreakdown<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetCategoryBreakdownParams,
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCategoryBreakdownQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetCategoryBreakdownSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params?: GetCategoryBreakdownParams,
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetCategoryBreakdownQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getCategoryBreakdown>>> = ({ signal }) =>
-    getCategoryBreakdown(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof categoryBreakdown>>> = ({ signal }) =>
+    categoryBreakdown(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getCategoryBreakdown>>,
+    Awaited<ReturnType<typeof categoryBreakdown>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetCategoryBreakdownSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getCategoryBreakdown>>
+export type CategoryBreakdownSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof categoryBreakdown>>
 >;
-export type GetCategoryBreakdownSuspenseQueryError = ErrorType<ProblemDetails>;
+export type CategoryBreakdownSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetCategoryBreakdownSuspense<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
+export function useCategoryBreakdownSuspense<
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: undefined | GetCategoryBreakdownParams,
+  params: undefined | CategoryBreakdownParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoryBreakdownSuspense<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
+export function useCategoryBreakdownSuspense<
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetCategoryBreakdownParams,
+  params?: CategoryBreakdownParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetCategoryBreakdownSuspense<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
+export function useCategoryBreakdownSuspense<
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetCategoryBreakdownParams,
+  params?: CategoryBreakdownParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -267,20 +150,20 @@ export function useGetCategoryBreakdownSuspense<
  * @summary Get spending split by category
  */
 
-export function useGetCategoryBreakdownSuspense<
-  TData = Awaited<ReturnType<typeof getCategoryBreakdown>>,
+export function useCategoryBreakdownSuspense<
+  TData = Awaited<ReturnType<typeof categoryBreakdown>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params?: GetCategoryBreakdownParams,
+  params?: CategoryBreakdownParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getCategoryBreakdown>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof categoryBreakdown>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetCategoryBreakdownSuspenseQueryOptions(params, options);
+  const queryOptions = getCategoryBreakdownSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -290,7 +173,7 @@ export function useGetCategoryBreakdownSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetMonthlyTrendUrl = (params: GetMonthlyTrendParams) => {
+export const getMonthlyTrendUrl = (params: MonthlyTrendParams) => {
   const normalizedParams = new URLSearchParams();
 
   Object.entries(params || {}).forEach(([key, value]) => {
@@ -310,185 +193,83 @@ export const getGetMonthlyTrendUrl = (params: GetMonthlyTrendParams) => {
  * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.
  * @summary Get the monthly income and expense trend
  */
-export const getMonthlyTrend = async (
-  params: GetMonthlyTrendParams,
+export const monthlyTrend = async (
+  params: MonthlyTrendParams,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<MonthlyTrendResponse> => {
-  return customFetch<MonthlyTrendResponse>(getGetMonthlyTrendUrl(params), {
+  return customFetch<MonthlyTrendResponse>(getMonthlyTrendUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetMonthlyTrendQueryKey = (params?: GetMonthlyTrendParams) => {
+export const getMonthlyTrendQueryKey = (params?: MonthlyTrendParams) => {
   return [`/api/dashboard/monthly-trend`, ...(params ? [params] : [])] as const;
 };
 
-export const getGetMonthlyTrendQueryOptions = <
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
+export const getMonthlyTrendSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetMonthlyTrendParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetMonthlyTrendQueryKey(params);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlyTrend>>> = ({ signal }) =>
-    getMonthlyTrend(params, { signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getMonthlyTrend>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetMonthlyTrendQueryResult = NonNullable<Awaited<ReturnType<typeof getMonthlyTrend>>>;
-export type GetMonthlyTrendQueryError = ErrorType<ProblemDetails>;
-
-export function useGetMonthlyTrend<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetMonthlyTrendParams,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getMonthlyTrend>>,
-          TError,
-          Awaited<ReturnType<typeof getMonthlyTrend>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetMonthlyTrend<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetMonthlyTrendParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getMonthlyTrend>>,
-          TError,
-          Awaited<ReturnType<typeof getMonthlyTrend>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetMonthlyTrend<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetMonthlyTrendParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the monthly income and expense trend
- */
-
-export function useGetMonthlyTrend<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetMonthlyTrendParams,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetMonthlyTrendQueryOptions(params, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetMonthlyTrendSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  params: GetMonthlyTrendParams,
+  params: MonthlyTrendParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetMonthlyTrendQueryKey(params);
+  const queryKey = queryOptions?.queryKey ?? getMonthlyTrendQueryKey(params);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlyTrend>>> = ({ signal }) =>
-    getMonthlyTrend(params, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof monthlyTrend>>> = ({ signal }) =>
+    monthlyTrend(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getMonthlyTrend>>,
+    Awaited<ReturnType<typeof monthlyTrend>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetMonthlyTrendSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getMonthlyTrend>>
->;
-export type GetMonthlyTrendSuspenseQueryError = ErrorType<ProblemDetails>;
+export type MonthlyTrendSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof monthlyTrend>>>;
+export type MonthlyTrendSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetMonthlyTrendSuspense<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
+export function useMonthlyTrendSuspense<
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetMonthlyTrendParams,
+  params: MonthlyTrendParams,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetMonthlyTrendSuspense<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
+export function useMonthlyTrendSuspense<
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetMonthlyTrendParams,
+  params: MonthlyTrendParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetMonthlyTrendSuspense<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
+export function useMonthlyTrendSuspense<
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetMonthlyTrendParams,
+  params: MonthlyTrendParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -498,20 +279,20 @@ export function useGetMonthlyTrendSuspense<
  * @summary Get the monthly income and expense trend
  */
 
-export function useGetMonthlyTrendSuspense<
-  TData = Awaited<ReturnType<typeof getMonthlyTrend>>,
+export function useMonthlyTrendSuspense<
+  TData = Awaited<ReturnType<typeof monthlyTrend>>,
   TError = ErrorType<ProblemDetails>,
 >(
-  params: GetMonthlyTrendParams,
+  params: MonthlyTrendParams,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getMonthlyTrend>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof monthlyTrend>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetMonthlyTrendSuspenseQueryOptions(params, options);
+  const queryOptions = getMonthlyTrendSuspenseQueryOptions(params, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -521,7 +302,7 @@ export function useGetMonthlyTrendSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
-export const getGetDashboardSummaryUrl = () => {
+export const getDashboardSummaryUrl = () => {
   return `/api/dashboard/summary`;
 };
 
@@ -529,181 +310,78 @@ export const getGetDashboardSummaryUrl = () => {
  * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.
  * @summary Get the dashboard summary
  */
-export const getDashboardSummary = async (
+export const dashboardSummary = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<DashboardSummaryResponse> => {
-  return customFetch<DashboardSummaryResponse>(getGetDashboardSummaryUrl(), {
+  return customFetch<DashboardSummaryResponse>(getDashboardSummaryUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetDashboardSummaryQueryKey = () => {
+export const getDashboardSummaryQueryKey = () => {
   return [`/api/dashboard/summary`] as const;
 };
 
-export const getGetDashboardSummaryQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummary>>> = ({ signal }) =>
-    getDashboardSummary({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardSummary>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetDashboardSummaryQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDashboardSummary>>
->;
-export type GetDashboardSummaryQueryError = ErrorType<ProblemDetails>;
-
-export function useGetDashboardSummary<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
-    > &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDashboardSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getDashboardSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDashboardSummary<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
-    > &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getDashboardSummary>>,
-          TError,
-          Awaited<ReturnType<typeof getDashboardSummary>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDashboardSummary<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get the dashboard summary
- */
-
-export function useGetDashboardSummary<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetDashboardSummaryQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetDashboardSummarySuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+export const getDashboardSummarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
   >;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetDashboardSummaryQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getDashboardSummaryQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getDashboardSummary>>> = ({ signal }) =>
-    getDashboardSummary({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardSummary>>> = ({ signal }) =>
+    dashboardSummary({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getDashboardSummary>>,
+    Awaited<ReturnType<typeof dashboardSummary>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetDashboardSummarySuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getDashboardSummary>>
+export type DashboardSummarySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardSummary>>
 >;
-export type GetDashboardSummarySuspenseQueryError = ErrorType<ProblemDetails>;
+export type DashboardSummarySuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetDashboardSummarySuspense<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+export function useDashboardSummarySuspense<
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDashboardSummarySuspense<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+export function useDashboardSummarySuspense<
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetDashboardSummarySuspense<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+export function useDashboardSummarySuspense<
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -713,19 +391,19 @@ export function useGetDashboardSummarySuspense<
  * @summary Get the dashboard summary
  */
 
-export function useGetDashboardSummarySuspense<
-  TData = Awaited<ReturnType<typeof getDashboardSummary>>,
+export function useDashboardSummarySuspense<
+  TData = Awaited<ReturnType<typeof dashboardSummary>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getDashboardSummary>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardSummary>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetDashboardSummarySuspenseQueryOptions(options);
+  const queryOptions = getDashboardSummarySuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

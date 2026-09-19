@@ -2,6 +2,7 @@ import { MutationCache, QueryCache, QueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { type ApiError, isApiError } from "@/api/client";
 import { invalidateAfterMutation } from "@/api/invalidation";
+import { errorCodeText, serverErrorText } from "@/lib/form-server-errors";
 import { i18n } from "@/lib/i18n";
 
 const ERROR_TOAST_DURATION = 12_000;
@@ -13,7 +14,9 @@ export function errorMessage(error: unknown) {
 
   return {
     title: error.title ?? i18n.t("errors.generic"),
-    description: error.detail ?? error.errors?.map((detail) => detail.reason).join(" "),
+    description: error.errors?.length
+      ? error.errors.map(serverErrorText).join(" ")
+      : (errorCodeText(error.code, error.detail) ?? error.detail),
   };
 }
 

@@ -1,10 +1,10 @@
-import { useGetCategoryBreakdownSuspense } from "@/api/generated";
+import { useCategoryBreakdownSuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 
 export function CategoryBreakdownChart() {
-  const breakdown = useGetCategoryBreakdownSuspense();
+  const breakdown = useCategoryBreakdownSuspense();
   const { dateFrom, dateTo } = monthBounds(useTodayDate());
 
   return (

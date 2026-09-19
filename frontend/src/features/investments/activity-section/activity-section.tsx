@@ -1,10 +1,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useDeleteInvestmentTransaction,
-  useGetInvestmentTransactionsSuspense,
-} from "@/api/generated";
+import { useDeleteInvestmentTransaction, useInvestmentTransactionsSuspense } from "@/api/generated";
 import type {
   AccountResponse,
   InvestmentTransactionResponse,
@@ -21,14 +18,13 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
+import { ACTIVITY_PAGE_SIZE, activityParams } from "../investment-queries";
 import { entryTypes, isTrade } from "../investment-types";
 
 interface Props {
   accounts: readonly AccountResponse[];
   accountId?: string;
 }
-
-const ACTIVITY_PAGE_SIZE = 15;
 
 export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -46,12 +42,9 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   }
 
   const [shown, stale] = useDeferredParams({ page, type });
-  const transactions = useGetInvestmentTransactionsSuspense({
-    page: shown.page,
-    pageSize: ACTIVITY_PAGE_SIZE,
-    accountId,
-    type: shown.type || undefined,
-  });
+  const transactions = useInvestmentTransactionsSuspense(
+    activityParams(shown.page, accountId, shown.type),
+  );
   const pages = Math.max(1, Math.ceil((transactions.data?.total ?? 0) / ACTIVITY_PAGE_SIZE));
   if (page > pages) {
     setPage(pages);

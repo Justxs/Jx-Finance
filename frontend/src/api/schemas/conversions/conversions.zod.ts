@@ -255,13 +255,7 @@ export const CreateConversionResponse = zod.object({
  * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
  * @summary List currency conversions
  */
-export const GetConversionsQueryParams = zod.object({
-  page: zod.int(),
-  pageSize: zod.int(),
-  accountId: zod.uuid().nullish().describe("Only conversions on this account."),
-});
-
-export const GetConversionsResponse = zod.object({
+export const ConversionsResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
@@ -384,8 +378,4 @@ export const GetConversionsResponse = zod.object({
  * Removes the conversion and the fee transaction it created, restoring both balances.
  * @summary Delete a currency conversion
  */
-export const DeleteConversionParams = zod.object({
-  id: zod.string(),
-});
-
 export const DeleteConversionResponse = zod.void();

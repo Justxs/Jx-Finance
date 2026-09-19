@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -9,13 +8,11 @@ import {
   setupBodyPasswordMin,
 } from "@/api/schemas/setup/setup.zod";
 import { Brand } from "@/components/brand";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { setSetupNeeded } from "@/lib/auth-gate";
-import { isEmail } from "@/lib/validation";
+import { submitToServer } from "@/lib/form-server-errors";
+import { password, requiredEmail, requiredText } from "@/lib/validation";
 
 interface FormValues {
   email: string;
@@ -28,21 +25,9 @@ export function SetupPage() {
   const navigate = useNavigate();
 
   const schema = z.object({
-    email: z
-      .string()
-      .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine((value) => isEmail(value.trim()), t("validation.email")),
-    password: z
-      .string()
-      .min(setupBodyPasswordMin, t("validation.minLength", { min: setupBodyPasswordMin }))
-      .max(setupBodyPasswordMax, t("validation.maxLength", { max: setupBodyPasswordMax })),
-    displayName: z
-      .string()
-      .refine((value) => value.trim().length > 0, t("validation.required"))
-      .refine(
-        (value) => value.trim().length <= setupBodyDisplayNameMax,
-        t("validation.maxLength", { max: setupBodyDisplayNameMax }),
-      ),
+    email: requiredEmail(t),
+    password: password(t, setupBodyPasswordMin, setupBodyPasswordMax),
+    displayName: requiredText(t, setupBodyDisplayNameMax),
   });
 
   const setupMutation = useSetup({
@@ -57,17 +42,21 @@ export function SetupPage() {
 
   const defaultValues: FormValues = { email: "", password: "", displayName: "" };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      setupMutation.mutate({
-        data: {
-          email: value.email.trim(),
-          password: value.password,
-          displayName: value.displayName.trim(),
-        },
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        setupMutation.mutateAsync({
+          data: {
+            email: value.email.trim(),
+            password: value.password,
+            displayName: value.displayName.trim(),
+          },
+        }),
+      );
     },
   });
 
@@ -80,89 +69,56 @@ export function SetupPage() {
         <h1 className="text-lg font-semibold">{t("auth.setupTitle")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.setupSubtitle")}</p>
 
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-            void form.handleSubmit();
-          }}
-          noValidate
-          className="mt-6 space-y-4"
-        >
-          <form.Field name="displayName">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="setup-display-name">{t("auth.displayName")}</Label>
-                <Input
+        <form.AppForm>
+          <form
+            onSubmit={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void form.handleSubmit();
+            }}
+            noValidate
+            className="mt-6 space-y-4"
+          >
+            <form.Field name="displayName">
+              {(field) => (
+                <field.TextField
                   id="setup-display-name"
+                  label={t("auth.displayName")}
                   autoComplete="name"
                   placeholder={t("auth.displayNamePlaceholder")}
-                  value={field.value}
-                  aria-invalid={field.errors.length > 0}
-                  aria-describedby={
-                    field.errors.length > 0 ? "setup-display-name-error" : undefined
-                  }
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError id="setup-display-name-error" message={field.errors[0]?.message} />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <form.Field name="email">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="setup-email">{t("auth.email")}</Label>
-                <Input
+            <form.Field name="email">
+              {(field) => (
+                <field.TextField
                   id="setup-email"
+                  label={t("auth.email")}
                   autoComplete="email"
                   type="email"
-                  value={field.value}
-                  aria-invalid={field.errors.length > 0}
-                  aria-describedby={field.errors.length > 0 ? "setup-email-error" : undefined}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError id="setup-email-error" message={field.errors[0]?.message} />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <form.Field name="password">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="setup-password">{t("auth.password")}</Label>
-                <Input
+            <form.Field name="password">
+              {(field) => (
+                <field.TextField
                   id="setup-password"
+                  label={t("auth.password")}
                   autoComplete="new-password"
                   type="password"
-                  value={field.value}
-                  aria-invalid={field.errors.length > 0}
-                  aria-describedby={field.errors.length > 0 ? "setup-password-error" : undefined}
-                  onBlur={field.handleBlur}
-                  onChange={(e) => field.handleChange(e.target.value)}
                 />
-                <FieldError id="setup-password-error" message={field.errors[0]?.message} />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <FormError error={setupMutation.error} />
+            <FormError error={setupMutation.error} />
 
-          <form.Subscribe selector={(state) => state.canSubmit}>
-            {(canSubmit) => (
-              <Button
-                type="submit"
-                pending={setupMutation.isPending}
-                disabled={!canSubmit}
-                className="w-full"
-              >
-                {t("auth.createAdmin")}
-              </Button>
-            )}
-          </form.Subscribe>
-        </form>
+            <form.SubmitButton pending={setupMutation.isPending} className="w-full">
+              {t("auth.createAdmin")}
+            </form.SubmitButton>
+          </form>
+        </form.AppForm>
       </div>
     </div>
   );

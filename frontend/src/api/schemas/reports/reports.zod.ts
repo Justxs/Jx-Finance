@@ -11,15 +11,7 @@ import * as zod from "zod";
  * Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months.
  * @summary Summarise income and expenses over a range
  */
-export const GetReportSummaryQueryParams = zod.object({
-  dateFrom: zod.iso
-    .date()
-    .nullish()
-    .describe("Inclusive start date as YYYY-MM-DD. Defaults to the start of the current month."),
-  dateTo: zod.iso.date().nullish().describe("Inclusive end date as YYYY-MM-DD. Defaults to today."),
-});
-
-export const GetReportSummaryResponse = zod.object({
+export const ReportSummaryResponse = zod.object({
   periodStart: zod.iso.date(),
   periodEnd: zod.iso.date(),
   totalIncome: zod.string(),

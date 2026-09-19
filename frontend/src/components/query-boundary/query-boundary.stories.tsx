@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { useGetAccountsSuspense } from "@/api/generated";
+import { useAccountsSuspense } from "@/api/generated";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton";
 import { QueryBoundary } from "./query-boundary";
 
 function AccountNames() {
-  const accounts = useGetAccountsSuspense();
+  const accounts = useAccountsSuspense();
 
   return (
     <ul className="divide-y divide-border text-sm">

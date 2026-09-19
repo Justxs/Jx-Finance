@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import { getGetAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
+import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import {
   getDeleteRecurringBillMockHandler,
-  getGetRecurringBillsMockHandler,
+  getRecurringBillsMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
@@ -53,7 +53,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const OnlyInactive: Story = {
   parameters: {
     msw: {
-      handlers: [getGetRecurringBillsMockHandler([inactiveBill]), ...handlers],
+      handlers: [getRecurringBillsMockHandler([inactiveBill]), ...handlers],
     },
   },
 };
@@ -61,7 +61,7 @@ export const OnlyInactive: Story = {
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getGetRecurringBillsMockHandler(manyBills), ...handlers],
+      handlers: [getRecurringBillsMockHandler(manyBills), ...handlers],
     },
   },
 };
@@ -79,7 +79,7 @@ export const AddDialogOpen: Story = {
 export const AddDialogWithoutAccounts: Story = {
   parameters: {
     msw: {
-      handlers: [getGetAccountsMockHandler([]), ...handlers],
+      handlers: [getAccountsMockHandler([]), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {

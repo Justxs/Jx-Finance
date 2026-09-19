@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -8,11 +7,10 @@ import {
   updateMyProfileBodyDisplayNameMax,
   updateMyProfileBodyNewPasswordMin,
 } from "@/api/schemas/users/users.zod";
+import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { submitToServer } from "@/lib/form-server-errors";
+import { requiredText } from "@/lib/validation";
 
 interface FormValues {
   displayName: string;
@@ -29,13 +27,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
 
   const schema = z
     .object({
-      displayName: z
-        .string()
-        .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine(
-          (value) => value.trim().length <= updateMyProfileBodyDisplayNameMax,
-          t("validation.maxLength", { max: updateMyProfileBodyDisplayNameMax }),
-        ),
+      displayName: requiredText(t, updateMyProfileBodyDisplayNameMax),
       currentPassword: z.string(),
       newPassword: z.string(),
     })
@@ -69,97 +61,68 @@ export function ProfileForm({ profile }: Readonly<Props>) {
     newPassword: "",
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      updateMutation.mutate({
-        data: {
-          displayName: value.displayName.trim(),
-          currentPassword: value.currentPassword || null,
-          newPassword: value.newPassword || null,
-        },
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        updateMutation.mutateAsync({
+          data: {
+            displayName: value.displayName.trim(),
+            currentPassword: value.currentPassword || null,
+            newPassword: value.newPassword || null,
+          },
+        }),
+      );
     },
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="section max-w-md space-y-4"
-    >
-      <h2 className="section-title">{t("profile.detailsTitle")}</h2>
-      <form.Field name="displayName">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="profile-display-name">{t("users.displayName")}</Label>
-            <Input
-              id="profile-display-name"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "profile-display-name-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-            />
-            <FieldError id="profile-display-name-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="section max-w-md space-y-4"
+      >
+        <h2 className="section-title">{t("profile.detailsTitle")}</h2>
+        <form.Field name="displayName">
+          {(field) => <field.TextField id="profile-display-name" label={t("users.displayName")} />}
+        </form.Field>
 
-      <form.Field name="currentPassword">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="profile-current-password">{t("profile.currentPassword")}</Label>
-            <Input
+        <form.Field name="currentPassword">
+          {(field) => (
+            <field.TextField
               id="profile-current-password"
+              label={t("profile.currentPassword")}
               type="password"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={
-                field.errors.length > 0 ? "profile-current-password-error" : undefined
-              }
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError id="profile-current-password-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="newPassword">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="profile-new-password">{t("profile.newPassword")}</Label>
-            <Input
+        <form.Field name="newPassword">
+          {(field) => (
+            <field.TextField
               id="profile-new-password"
+              label={t("profile.newPassword")}
               type="password"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "profile-new-password-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
             />
-            <FieldError id="profile-new-password-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <FormError error={updateMutation.error} />
+        <FormError error={updateMutation.error} />
 
-      <form.Subscribe selector={(state) => state.canSubmit}>
-        {(canSubmit) => (
-          <div className="flex justify-end">
-            <Button type="submit" pending={updateMutation.isPending} disabled={!canSubmit}>
-              {t("profile.save")}
-            </Button>
-          </div>
-        )}
-      </form.Subscribe>
-    </form>
+        <div className="flex justify-end">
+          <form.SubmitButton pending={updateMutation.isPending}>
+            {t("profile.save")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

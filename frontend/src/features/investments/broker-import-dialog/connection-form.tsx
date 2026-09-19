@@ -1,4 +1,3 @@
-import { useForm } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -7,12 +6,8 @@ import type {
   BrokerConnectionResponse,
   SaveBrokerConnectionRequest,
 } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useAppForm } from "@/components/form";
+import { submitToServer } from "@/lib/form-server-errors";
 
 interface FormValues {
   queryId: string;
@@ -27,8 +22,12 @@ interface Props {
   connection?: BrokerConnectionResponse;
   pending: boolean;
   disabled?: boolean;
-  onSubmit: (values: SaveBrokerConnectionRequest) => void;
+  onSubmit: (values: SaveBrokerConnectionRequest) => Promise<unknown> | void;
   secondaryActions?: ReactNode;
+}
+
+function trimmed(value: string) {
+  return value.trim();
 }
 
 export function ConnectionForm({
@@ -62,55 +61,53 @@ export function ConnectionForm({
     isEnabled: connection?.isEnabled ?? true,
   };
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      onSubmit({
-        queryId: value.queryId,
-        token: value.token === "" ? null : value.token,
-        fundingAccountId: value.fundingAccountId || null,
-        isEnabled: value.isEnabled,
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        onSubmit({
+          queryId: value.queryId,
+          token: value.token === "" ? null : value.token,
+          fundingAccountId: value.fundingAccountId || null,
+          isEnabled: value.isEnabled,
+        }),
+      );
     },
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      autoComplete="off"
-      className="form-grid"
-    >
-      <form.Field name="queryId">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="broker-query-id">{t("investments.connection.queryId")}</Label>
-            <Input
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        autoComplete="off"
+        className="form-grid"
+      >
+        <form.Field name="queryId">
+          {(field) => (
+            <field.TextField
               id="broker-query-id"
+              label={t("investments.connection.queryId")}
               inputMode="numeric"
               autoComplete="off"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={field.errors.length > 0 ? "broker-query-id-error" : undefined}
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value.trim())}
+              parse={trimmed}
             />
-            <FieldError id="broker-query-id-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="token">
-        {(field) => (
-          <div className="space-y-1.5">
-            <Label htmlFor="broker-token">{t("investments.connection.token")}</Label>
-            <Input
+        <form.Field name="token">
+          {(field) => (
+            <field.TextField
               id="broker-token"
+              label={t("investments.connection.token")}
+              hint={t("investments.connection.tokenHint")}
               type="password"
               autoComplete="new-password"
               data-1p-ignore
@@ -118,32 +115,18 @@ export function ConnectionForm({
               data-bwignore
               data-form-type="other"
               placeholder={stored ? t("investments.connection.tokenStored") : undefined}
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={
-                field.errors.length > 0 ? "broker-token-error" : "broker-token-hint"
-              }
-              onBlur={field.handleBlur}
-              onChange={(event) => field.handleChange(event.target.value.trim())}
+              parse={trimmed}
             />
-            <p id="broker-token-hint" className="text-xs text-muted-foreground">
-              {t("investments.connection.tokenHint")}
-            </p>
-            <FieldError id="broker-token-error" message={field.errors[0]?.message} />
-          </div>
-        )}
-      </form.Field>
+          )}
+        </form.Field>
 
-      <form.Field name="fundingAccountId">
-        {(field) => (
-          <div className="col-span-full space-y-1.5">
-            <Label htmlFor="broker-funding">{t("investments.import.fundingAccount")}</Label>
-            <SelectField
+        <form.Field name="fundingAccountId">
+          {(field) => (
+            <field.SelectFieldControl
               id="broker-funding"
-              value={field.value}
-              aria-describedby="broker-funding-hint"
-              onBlur={field.handleBlur}
-              onChange={field.handleChange}
+              label={t("investments.import.fundingAccount")}
+              hint={t("investments.import.fundingHint")}
+              className="col-span-full"
               options={[
                 { value: "", label: t("investments.import.noFundingAccount") },
                 ...accounts
@@ -151,41 +134,27 @@ export function ConnectionForm({
                   .map((account) => ({ value: account.id, label: account.name })),
               ]}
             />
-            <p id="broker-funding-hint" className="text-xs text-muted-foreground">
-              {t("investments.import.fundingHint")}
-            </p>
-          </div>
-        )}
-      </form.Field>
-
-      <form.Field name="isEnabled">
-        {(field) => (
-          <div className="col-span-full">
-            <label className="flex items-center gap-3 text-sm font-medium">
-              <Checkbox
-                checked={field.value}
-                aria-describedby="broker-enabled-hint"
-                onCheckedChange={(next) => field.handleChange(next)}
-              />
-              {t("investments.connection.syncDaily")}
-            </label>
-            <p id="broker-enabled-hint" className="mt-0.5 pl-7 text-xs text-muted-foreground">
-              {t("investments.connection.syncDailyHint")}
-            </p>
-          </div>
-        )}
-      </form.Field>
-
-      <div className="col-span-full flex flex-wrap items-center justify-end gap-2 pt-2">
-        {secondaryActions}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit || disabled}>
-              {t("actions.save")}
-            </Button>
           )}
-        </form.Subscribe>
-      </div>
-    </form>
+        </form.Field>
+
+        <form.Field name="isEnabled">
+          {(field) => (
+            <field.CheckboxField
+              id="broker-enabled"
+              label={t("investments.connection.syncDaily")}
+              hint={t("investments.connection.syncDailyHint")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
+        <div className="col-span-full flex flex-wrap items-center justify-end gap-2 pt-2">
+          {secondaryActions}
+          <form.SubmitButton pending={pending} disabled={disabled}>
+            {t("actions.save")}
+          </form.SubmitButton>
+        </div>
+      </form>
+    </form.AppForm>
   );
 }

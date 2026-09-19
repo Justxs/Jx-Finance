@@ -28,6 +28,7 @@ export function DebtForm({ editing, onCreated, onCancel }: Readonly<HoldingFormP
       withInterestRate
       pending={createMutation.isPending || updateMutation.isPending}
       error={createMutation.error ?? updateMutation.error}
+      errorAliases={{ outstandingAmount: "amount" }}
       onSubmit={(values) => {
         const rate = normalizeMoney(values.interestRate);
         const data = {
@@ -39,11 +40,10 @@ export function DebtForm({ editing, onCreated, onCancel }: Readonly<HoldingFormP
         };
 
         if (editing) {
-          updateMutation.mutate({ id: editing.id, data });
-          return;
+          return updateMutation.mutateAsync({ id: editing.id, data });
         }
 
-        createMutation.mutate({ data });
+        return createMutation.mutateAsync({ data });
       }}
       onCancel={onCancel}
     />

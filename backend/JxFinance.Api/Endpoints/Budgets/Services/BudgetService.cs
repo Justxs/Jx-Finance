@@ -56,7 +56,7 @@ public sealed class BudgetService(
         var categoryError = await ValidateCategoryAsync(request.CategoryId, cancellationToken);
         if (categoryError is not null)
         {
-            return Result<BudgetResponse>.Failure(ErrorCodes.Validation, categoryError);
+            return Result<BudgetResponse>.Failure(categoryError);
         }
 
         var budget = mapper.ToEntity(request);
@@ -75,13 +75,13 @@ public sealed class BudgetService(
         var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken);
         if (budget is null)
         {
-            return Result<BudgetResponse>.Failure(ErrorCodes.NotFound, "Budget not found.");
+            return Result<BudgetResponse>.Failure(ErrorCodes.ResourceNotFound, "Budget not found.");
         }
 
         var categoryError = await ValidateCategoryAsync(request.CategoryId, cancellationToken);
         if (categoryError is not null)
         {
-            return Result<BudgetResponse>.Failure(ErrorCodes.Validation, categoryError);
+            return Result<BudgetResponse>.Failure(categoryError);
         }
 
         mapper.UpdateEntity(request, budget);
@@ -96,7 +96,7 @@ public sealed class BudgetService(
         var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken);
         if (budget is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Budget not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Budget not found.");
         }
 
         db.Budgets.Remove(budget);
@@ -105,16 +105,18 @@ public sealed class BudgetService(
         return Result<Guid>.Success(id);
     }
 
-    private async Task<string?> ValidateCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
+    private async Task<DomainError?> ValidateCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
     {
         var typedCategoryId = new CategoryId(categoryId);
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == typedCategoryId, cancellationToken);
         if (category is null)
         {
-            return "Category does not exist.";
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
         }
 
-        return category.Type != FlowType.Expense ? "Budgets can only be set on expense categories." : null;
+        return category.Type != FlowType.Expense
+            ? new DomainError(ErrorCodes.CategoryWrongType, "Budgets can only be set on expense categories.")
+            : null;
     }
 
     private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken)

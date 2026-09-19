@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -28,7 +23,6 @@ import type {
   ConfirmRecurringBillRequest,
   ConfirmRecurringBillResponse,
   CreateRecurringBillRequest,
-  IReadOnlyListOfRecurringBillResponse,
   ProblemDetails,
   RecurringBillResponse,
   UpdateRecurringBillRequest,
@@ -157,7 +151,7 @@ export const useCreateRecurringBill = <TError = ErrorType<ProblemDetails>, TCont
 > => {
   return useMutation(getCreateRecurringBillMutationOptions(options), queryClient);
 };
-export const getGetRecurringBillsUrl = () => {
+export const getRecurringBillsUrl = () => {
   return `/api/recurring-bills`;
 };
 
@@ -165,173 +159,78 @@ export const getGetRecurringBillsUrl = () => {
  * Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
  * @summary List recurring bills
  */
-export const getRecurringBills = async (
+export const recurringBills = async (
   options?: Parameters<typeof customFetch>[1],
-): Promise<IReadOnlyListOfRecurringBillResponse> => {
-  return customFetch<IReadOnlyListOfRecurringBillResponse>(getGetRecurringBillsUrl(), {
+): Promise<RecurringBillResponse[]> => {
+  return customFetch<RecurringBillResponse[]>(getRecurringBillsUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetRecurringBillsQueryKey = () => {
+export const getRecurringBillsQueryKey = () => {
   return [`/api/recurring-bills`] as const;
 };
 
-export const getGetRecurringBillsQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillsQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBills>>> = ({ signal }) =>
-    getRecurringBills({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getRecurringBills>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetRecurringBillsQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getRecurringBills>>
->;
-export type GetRecurringBillsQueryError = ErrorType<ProblemDetails>;
-
-export function useGetRecurringBills<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRecurringBills>>,
-          TError,
-          Awaited<ReturnType<typeof getRecurringBills>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBills<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRecurringBills>>,
-          TError,
-          Awaited<ReturnType<typeof getRecurringBills>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBills<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary List recurring bills
- */
-
-export function useGetRecurringBills<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetRecurringBillsQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetRecurringBillsSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
+export const getRecurringBillsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
   query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
   >;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getRecurringBillsQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBills>>> = ({ signal }) =>
-    getRecurringBills({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof recurringBills>>> = ({ signal }) =>
+    recurringBills({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getRecurringBills>>,
+    Awaited<ReturnType<typeof recurringBills>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetRecurringBillsSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getRecurringBills>>
+export type RecurringBillsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof recurringBills>>
 >;
-export type GetRecurringBillsSuspenseQueryError = ErrorType<ProblemDetails>;
+export type RecurringBillsSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetRecurringBillsSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
+export function useRecurringBillsSuspense<
+  TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBillsSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
+export function useRecurringBillsSuspense<
+  TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBillsSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
+export function useRecurringBillsSuspense<
+  TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -341,19 +240,19 @@ export function useGetRecurringBillsSuspense<
  * @summary List recurring bills
  */
 
-export function useGetRecurringBillsSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBills>>,
+export function useRecurringBillsSuspense<
+  TData = Awaited<ReturnType<typeof recurringBills>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBills>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBills>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetRecurringBillsSuspenseQueryOptions(options);
+  const queryOptions = getRecurringBillsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -448,7 +347,7 @@ export const useDeleteRecurringBill = <TError = ErrorType<ProblemDetails>, TCont
 > => {
   return useMutation(getDeleteRecurringBillMutationOptions(options), queryClient);
 };
-export const getGetRecurringBillUrl = (id: string) => {
+export const getRecurringBillUrl = (id: string) => {
   return `/api/recurring-bills/${id}`;
 };
 
@@ -456,188 +355,85 @@ export const getGetRecurringBillUrl = (id: string) => {
  * Returns a single schedule with its cadence, reminder lead time, and next due date.
  * @summary Get one recurring bill
  */
-export const getRecurringBill = async (
+export const recurringBill = async (
   id: string,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RecurringBillResponse> => {
-  return customFetch<RecurringBillResponse>(getGetRecurringBillUrl(id), {
+  return customFetch<RecurringBillResponse>(getRecurringBillUrl(id), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetRecurringBillQueryKey = (id: string) => {
+export const getRecurringBillQueryKey = (id: string) => {
   return [`/api/recurring-bills/${id}`] as const;
 };
 
-export const getGetRecurringBillQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillQueryKey(id);
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBill>>> = ({ signal }) =>
-    getRecurringBill(id, { signal, ...requestOptions });
-
-  return {
-    queryKey,
-    queryFn,
-    enabled: id !== null && id !== undefined,
-    ...queryOptions,
-  } as UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-};
-
-export type GetRecurringBillQueryResult = NonNullable<Awaited<ReturnType<typeof getRecurringBill>>>;
-export type GetRecurringBillQueryError = ErrorType<ProblemDetails>;
-
-export function useGetRecurringBill<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRecurringBill>>,
-          TError,
-          Awaited<ReturnType<typeof getRecurringBill>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBill<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getRecurringBill>>,
-          TError,
-          Awaited<ReturnType<typeof getRecurringBill>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBill<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Get one recurring bill
- */
-
-export function useGetRecurringBill<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  id: string,
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetRecurringBillQueryOptions(id, options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetRecurringBillSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
+export const getRecurringBillSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
 ) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetRecurringBillQueryKey(id);
+  const queryKey = queryOptions?.queryKey ?? getRecurringBillQueryKey(id);
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getRecurringBill>>> = ({ signal }) =>
-    getRecurringBill(id, { signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof recurringBill>>> = ({ signal }) =>
+    recurringBill(id, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getRecurringBill>>,
+    Awaited<ReturnType<typeof recurringBill>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetRecurringBillSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getRecurringBill>>
+export type RecurringBillSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof recurringBill>>
 >;
-export type GetRecurringBillSuspenseQueryError = ErrorType<ProblemDetails>;
+export type RecurringBillSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetRecurringBillSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
+export function useRecurringBillSuspense<
+  TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options: {
     query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBillSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
+export function useRecurringBillSuspense<
+  TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetRecurringBillSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
+export function useRecurringBillSuspense<
+  TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -647,20 +443,20 @@ export function useGetRecurringBillSuspense<
  * @summary Get one recurring bill
  */
 
-export function useGetRecurringBillSuspense<
-  TData = Awaited<ReturnType<typeof getRecurringBill>>,
+export function useRecurringBillSuspense<
+  TData = Awaited<ReturnType<typeof recurringBill>>,
   TError = ErrorType<ProblemDetails>,
 >(
   id: string,
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getRecurringBill>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof recurringBill>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetRecurringBillSuspenseQueryOptions(id, options);
+  const queryOptions = getRecurringBillSuspenseQueryOptions(id, options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

@@ -11,14 +11,7 @@ import * as zod from "zod";
  * Returns your notifications, newest first. These are raised by background jobs, for example when a recurring bill is about to fall due.
  * @summary List notifications
  */
-export const GetNotificationsQueryParams = zod.object({
-  unread: zod
-    .boolean()
-    .nullish()
-    .describe("Set to true for unread only, false for read only. Omit for both."),
-});
-
-export const GetNotificationsResponseItem = zod.object({
+export const NotificationsResponseItem = zod.object({
   id: zod.uuid(),
   type: zod.enum(["billDue"]),
   title: zod.string(),
@@ -29,7 +22,7 @@ export const GetNotificationsResponseItem = zod.object({
   isRead: zod.boolean(),
   createdAt: zod.iso.datetime({ offset: true }),
 });
-export const GetNotificationsResponse = zod.array(GetNotificationsResponseItem);
+export const NotificationsResponse = zod.array(NotificationsResponseItem);
 
 /**
  * Clears the unread badge by marking all of your notifications read at once.
@@ -41,8 +34,4 @@ export const MarkAllNotificationsReadResponse = zod.void();
  * Marks a single notification as read. Marking an already read notification again changes nothing and still answers 204.
  * @summary Mark one notification read
  */
-export const MarkNotificationReadParams = zod.object({
-  id: zod.string().describe("The notification id."),
-});
-
 export const MarkNotificationReadResponse = zod.void();

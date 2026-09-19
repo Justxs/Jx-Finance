@@ -27,6 +27,7 @@ export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingForm
       withAsOf
       pending={createMutation.isPending || updateMutation.isPending}
       error={createMutation.error ?? updateMutation.error}
+      errorAliases={{ currentValue: "amount" }}
       onSubmit={(values) => {
         const data = {
           name: values.name,
@@ -36,11 +37,10 @@ export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingForm
         };
 
         if (editing) {
-          updateMutation.mutate({ id: editing.id, data });
-          return;
+          return updateMutation.mutateAsync({ id: editing.id, data });
         }
 
-        createMutation.mutate({ data });
+        return createMutation.mutateAsync({ data });
       }}
       onCancel={onCancel}
     />

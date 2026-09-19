@@ -1,14 +1,14 @@
-import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useGetHouseholdsSuspense, useUpdateCategory } from "@/api/generated";
+import { useHouseholdsSuspense, useUpdateCategory } from "@/api/generated";
 import type { CategoryResponse, Scope } from "@/api/generated/model";
 import { updateCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
-import { SelectField } from "@/components/select-field";
+import { useAppForm } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { submitToServer } from "@/lib/form-server-errors";
+import { requiredText } from "@/lib/validation";
 import { IconPicker } from "../icon-picker";
 
 interface FormValues {
@@ -26,18 +26,12 @@ interface Props {
 
 export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
-  const households = useGetHouseholdsSuspense();
+  const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
 
   const schema = z
     .object({
-      name: z
-        .string()
-        .refine((value) => value.trim().length > 0, t("validation.required"))
-        .refine(
-          (value) => value.trim().length <= updateCategoryBodyNameMax,
-          t("validation.maxLength", { max: updateCategoryBodyNameMax }),
-        ),
+      name: requiredText(t, updateCategoryBodyNameMax),
       icon: z.string().nullable(),
       scope: z.enum(["personal", "shared"]),
       householdId: z.string(),
@@ -53,7 +47,7 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
     },
   });
 
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       name: category.name ?? "",
       icon: category.icon ?? null,
@@ -61,113 +55,93 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
       householdId: category.householdId ?? "",
     } satisfies FormValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      updateMutation.mutate({
-        id: category.id,
-        data: {
-          name: value.name.trim(),
-          icon: value.icon,
-          scope: value.scope,
-          householdId: value.scope === "shared" ? value.householdId : null,
-        },
-      });
+    onSubmit: (submission) => {
+      const { value } = submission;
+
+      return submitToServer(submission, () =>
+        updateMutation.mutateAsync({
+          id: category.id,
+          data: {
+            name: value.name.trim(),
+            icon: value.icon,
+            scope: value.scope,
+            householdId: value.scope === "shared" ? value.householdId : null,
+          },
+        }),
+      );
     },
   });
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        void form.handleSubmit();
-      }}
-      noValidate
-      className="space-y-3"
-    >
-      <div className="flex flex-wrap items-center gap-2">
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="space-y-3"
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <form.Field name="name">
+            {(field) => (
+              <Input
+                aria-label={t("categories.name")}
+                className="w-full sm:w-auto sm:flex-1"
+                value={field.value}
+                aria-invalid={field.errors.length > 0}
+                aria-describedby={
+                  field.errors.length > 0 ? `category-${category.id}-name-error` : undefined
+                }
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.value)}
+                autoFocus
+              />
+            )}
+          </form.Field>
+          <form.SubmitButton size="sm" pending={updateMutation.isPending}>
+            {t("actions.save")}
+          </form.SubmitButton>
+          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+        </div>
         <form.Field name="name">
           {(field) => (
-            <Input
-              aria-label={t("categories.name")}
-              className="w-full sm:w-auto sm:flex-1"
-              value={field.value}
-              aria-invalid={field.errors.length > 0}
-              aria-describedby={
-                field.errors.length > 0 ? `category-${category.id}-name-error` : undefined
-              }
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.value)}
-              autoFocus
+            <FieldError
+              id={`category-${category.id}-name-error`}
+              message={field.errors[0]?.message}
             />
           )}
         </form.Field>
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button
-              type="submit"
-              size="sm"
-              pending={updateMutation.isPending}
-              disabled={!canSubmit}
-            >
-              {t("actions.save")}
-            </Button>
-          )}
-        </form.Subscribe>
-        <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-          {t("actions.cancel")}
-        </Button>
-      </div>
-      <form.Field name="name">
-        {(field) => (
-          <FieldError
-            id={`category-${category.id}-name-error`}
-            message={field.errors[0]?.message}
-          />
-        )}
-      </form.Field>
-      <form.Field name="icon">
-        {(field) => <IconPicker value={field.value} onChange={field.handleChange} />}
-      </form.Field>
+        <form.Field name="icon">
+          {(field) => <IconPicker value={field.value} onChange={field.handleChange} />}
+        </form.Field>
 
-      {householdList.length > 0 ? (
-        <div className="flex flex-wrap items-center gap-2">
-          <form.Field name="scope">
-            {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor={`category-${category.id}-scope`}>{t("sharing.scope")}</Label>
-                <SelectField
+        {householdList.length > 0 ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <form.Field name="scope">
+              {(field) => (
+                <field.SelectFieldControl
                   id={`category-${category.id}-scope`}
-                  value={field.value}
-                  onChange={(value) => field.handleChange(value)}
+                  label={t("sharing.scope")}
                   options={[
                     { value: "personal", label: t("sharing.personal") },
                     { value: "shared", label: t("sharing.shared") },
                   ]}
                 />
-              </div>
-            )}
-          </form.Field>
+              )}
+            </form.Field>
 
-          <form.Subscribe selector={(state) => state.values.scope}>
-            {(scope) =>
-              scope === "shared" ? (
-                <form.Field name="householdId">
-                  {(field) => (
-                    <div className="space-y-1.5">
-                      <Label htmlFor={`category-${category.id}-household`}>
-                        {t("sharing.household")}
-                      </Label>
-                      <SelectField
+            <form.Subscribe selector={(state) => state.values.scope}>
+              {(scope) =>
+                scope === "shared" ? (
+                  <form.Field name="householdId">
+                    {(field) => (
+                      <field.SelectFieldControl
                         id={`category-${category.id}-household`}
-                        value={field.value}
-                        aria-invalid={field.errors.length > 0}
-                        aria-describedby={
-                          field.errors.length > 0
-                            ? `category-${category.id}-household-error`
-                            : undefined
-                        }
-                        onBlur={field.handleBlur}
-                        onChange={(value) => field.handleChange(value)}
+                        label={t("sharing.household")}
                         options={[
                           { value: "", label: t("sharing.selectHousehold") },
                           ...householdList.map((household) => ({
@@ -176,18 +150,14 @@ export function CategoryEditForm({ category, onSaved, onCancel }: Readonly<Props
                           })),
                         ]}
                       />
-                      <FieldError
-                        id={`category-${category.id}-household-error`}
-                        message={field.errors[0]?.message}
-                      />
-                    </div>
-                  )}
-                </form.Field>
-              ) : null
-            }
-          </form.Subscribe>
-        </div>
-      ) : null}
-    </form>
+                    )}
+                  </form.Field>
+                ) : null
+              }
+            </form.Subscribe>
+          </div>
+        ) : null}
+      </form>
+    </form.AppForm>
   );
 }

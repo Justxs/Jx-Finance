@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import {
   getDeleteDebtMockHandler,
-  getGetDebtsMockHandler,
+  getDebtsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -52,7 +52,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getGetDebtsMockHandler(many), ...handlers],
+      handlers: [getDebtsMockHandler(many), ...handlers],
     },
   },
 };

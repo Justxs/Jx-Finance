@@ -858,5 +858,122 @@
     "netWorthLabel": "Net worth over time",
     "net": "Net",
     "netWorth": "Net worth"
+  },
+  "serverErrors": {
+    "access": {
+      "forbidden": "You do not have permission to do this."
+    },
+    "broker": {
+      "rejected": "Interactive Brokers rejected the request: {{reason}}",
+      "tokenRequired": "Enter the Flex token again.",
+      "unavailable": "Interactive Brokers is not available right now. Try again later."
+    },
+    "category": {
+      "wrongType": "Choose a category of the matching type."
+    },
+    "collection": {
+      "invalidSize": "Too few or too many items."
+    },
+    "conflict": {
+      "duplicate": "This already exists.",
+      "stale": "This changed in the meantime. Refresh and try again."
+    },
+    "credentials": {
+      "invalid": "Wrong email or password."
+    },
+    "currency": {
+      "disabled": "This currency is not enabled."
+    },
+    "decimal": {
+      "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
+    },
+    "email": {
+      "invalid": "Enter a valid email address.",
+      "taken": "This email is already in use."
+    },
+    "enum": {
+      "invalid": "Choose one of the available options."
+    },
+    "exchangeRate": {
+      "unavailable": "No exchange rate for that date. Sync rates in settings first."
+    },
+    "feature": {
+      "disabled": "This feature is turned off."
+    },
+    "holding": {
+      "dependentSales": "Later sales depend on this entry.",
+      "oversold": "This would sell more than was held on that date."
+    },
+    "household": {
+      "lastOwner": "A household needs at least one owner.",
+      "notMember": "You are not a member of that household.",
+      "required": "Choose a household for a shared item."
+    },
+    "iban": {
+      "invalid": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000."
+    },
+    "import": {
+      "invalidFile": "The file is empty, too large or not in the expected format.",
+      "transferMismatch": "The chosen transfer does not match this row."
+    },
+    "money": {
+      "invalid": "Enter a valid amount, e.g. 12.34.",
+      "nonNegative": "Enter an amount of 0 or more, e.g. 12.34.",
+      "positive": "Enter an amount greater than 0, e.g. 12.34."
+    },
+    "password": {
+      "incorrect": "The current password is wrong.",
+      "tooWeak": "Choose a stronger password."
+    },
+    "quantity": {
+      "nonNegative": "Enter 0 or more with up to 8 decimals.",
+      "positive": "Enter more than 0 with up to 8 decimals."
+    },
+    "range": {
+      "invalid": "The value is outside the allowed range."
+    },
+    "recurringBill": {
+      "inactive": "This bill is inactive."
+    },
+    "reference": {
+      "notFound": "The selected item no longer exists."
+    },
+    "request": {
+      "invalid": "The request could not be processed.",
+      "malformed": "The request could not be read."
+    },
+    "required": "This field is required.",
+    "resource": {
+      "notFound": "This no longer exists.",
+      "readOnly": "Imported entries cannot be edited."
+    },
+    "setup": {
+      "alreadyCompleted": "Setup was already completed."
+    },
+    "text": {
+      "invalidFormat": "The format is not valid.",
+      "tooLong": "This is too long.",
+      "tooShort": "This is too short."
+    },
+    "transaction": {
+      "linesMismatch": "Split lines must add up to the transaction amount.",
+      "splitNotAllowed": "Split transactions cannot be recategorized in bulk."
+    },
+    "transfer": {
+      "amountMismatch": "Sent and received amounts must match in the same currency.",
+      "receivedAmountRequired": "Enter the received amount for a transfer between currencies.",
+      "sameAccount": "Choose two different accounts."
+    },
+    "twoFactor": {
+      "invalidCode": "The code is not valid."
+    },
+    "user": {
+      "selfChange": "You cannot change your own role or deactivate yourself."
+    },
+    "value": {
+      "locked": "This can no longer be changed.",
+      "mustBeEmpty": "Leave this empty.",
+      "mustDiffer": "Choose a different value."
+    }
   }
 }

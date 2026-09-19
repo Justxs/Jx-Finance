@@ -5,17 +5,12 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -40,7 +35,7 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
   return result;
 };
 
-export const getGetPingUrl = () => {
+export const getPingUrl = () => {
   return `/api/ping`;
 };
 
@@ -48,162 +43,69 @@ export const getGetPingUrl = () => {
  * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
  * @summary Ping the API
  */
-export const getPing = async (
+export const ping = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<GetPingResponse> => {
-  return customFetch<GetPingResponse>(getGetPingUrl(), {
+  return customFetch<GetPingResponse>(getPingUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetPingQueryKey = () => {
+export const getPingQueryKey = () => {
   return [`/api/ping`] as const;
 };
 
-export const getGetPingQueryOptions = <
-  TData = Awaited<ReturnType<typeof getPing>>,
+export const getPingSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetPingQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getPingQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPing>>> = ({ signal }) =>
-    getPing({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getPing>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetPingQueryResult = NonNullable<Awaited<ReturnType<typeof getPing>>>;
-export type GetPingQueryError = ErrorType<ProblemDetails>;
-
-export function useGetPing<
-  TData = Awaited<ReturnType<typeof getPing>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPing>>,
-          TError,
-          Awaited<ReturnType<typeof getPing>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPing<
-  TData = Awaited<ReturnType<typeof getPing>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getPing>>,
-          TError,
-          Awaited<ReturnType<typeof getPing>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPing<
-  TData = Awaited<ReturnType<typeof getPing>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Ping the API
- */
-
-export function useGetPing<
-  TData = Awaited<ReturnType<typeof getPing>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetPingQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetPingSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getPing>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetPingQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPing>>> = ({ signal }) =>
-    getPing({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof ping>>> = ({ signal }) =>
+    ping({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getPing>>,
+    Awaited<ReturnType<typeof ping>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetPingSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof getPing>>>;
-export type GetPingSuspenseQueryError = ErrorType<ProblemDetails>;
+export type PingSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof ping>>>;
+export type PingSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetPingSuspense<
-  TData = Awaited<ReturnType<typeof getPing>>,
+export function usePingSuspense<
+  TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPingSuspense<
-  TData = Awaited<ReturnType<typeof getPing>>,
+export function usePingSuspense<
+  TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetPingSuspense<
-  TData = Awaited<ReturnType<typeof getPing>>,
+export function usePingSuspense<
+  TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
@@ -212,17 +114,17 @@ export function useGetPingSuspense<
  * @summary Ping the API
  */
 
-export function useGetPingSuspense<
-  TData = Awaited<ReturnType<typeof getPing>>,
+export function usePingSuspense<
+  TData = Awaited<ReturnType<typeof ping>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
-    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPing>>, TError, TData>>;
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof ping>>, TError, TData>>;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetPingSuspenseQueryOptions(options);
+  const queryOptions = getPingSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

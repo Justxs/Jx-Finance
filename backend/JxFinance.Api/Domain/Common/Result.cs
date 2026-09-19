@@ -20,5 +20,7 @@ public sealed class Result<T>
 
     public static Result<T> Failure(string code, string message) => new(false, default, code, message);
 
+    public static Result<T> Failure(DomainError error) => Failure(error.Code, error.Message);
+
     public static Result<T> FailureFrom<TOther>(Result<TOther> failed) => Failure(failed.ErrorCode!, failed.ErrorMessage!);
 }

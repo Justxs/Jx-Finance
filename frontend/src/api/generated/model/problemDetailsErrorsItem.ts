@@ -5,6 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { ErrorCode } from "./errorCode";
 
 /**
  * the error details object
@@ -14,11 +15,8 @@ export type ProblemDetailsErrorsItem = {
   name?: string;
   /** the reason for the error */
   reason?: string;
-  /**
-   * the code of the error
-   * @nullable
-   */
-  code?: string | null;
+  /** The kind of failure. The name says which field it concerns. */
+  code?: ErrorCode;
   /**
    * the severity of the error
    * @nullable

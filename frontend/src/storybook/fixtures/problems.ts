@@ -1,0 +1,41 @@
+import type { ProblemDetails } from "@/api/generated/model";
+
+export const serverErrorProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.6.1",
+  title: "Internal Server Error",
+  status: 500,
+  instance: "/api",
+  traceId: "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-00",
+  detail: "Something went wrong while processing the request.",
+};
+
+export const unauthorizedProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7235#section-3.1",
+  title: "Unauthorized",
+  status: 401,
+  instance: "/api/auth/me",
+  traceId: "00-7c1d2a9e4f5b4c6d8e9f0a1b2c3d4e5f-1a2b3c4d5e6f7a8b-00",
+  detail: "You are not signed in.",
+};
+
+export const notFoundProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.4",
+  title: "Not Found",
+  status: 404,
+  detail: "The requested resource does not exist.",
+};
+
+export const validationProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  detail: "Amount must be greater than zero.",
+  errors: [
+    {
+      name: "amount",
+      reason: "Amount must be greater than zero.",
+      code: "money.positive",
+      severity: "Error",
+    },
+  ],
+};

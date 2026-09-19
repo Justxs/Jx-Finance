@@ -6,11 +6,11 @@
  * OpenAPI spec version: v1
  */
 import type { Currency } from "./currency";
-import type { IReadOnlyListOfCurrency } from "./iReadOnlyListOfCurrency";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface CurrenciesResponse {
   reportingCurrency: Currency;
-  currencies: IReadOnlyListOfCurrency;
+  /** Currencies offered when entering data. The reporting currency is always included. */
+  currencies: Currency[];
   ratesAsOf: null | NullableOfDateOnly;
 }

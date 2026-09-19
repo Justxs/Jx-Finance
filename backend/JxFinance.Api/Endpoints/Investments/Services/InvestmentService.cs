@@ -191,7 +191,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         if (transaction.SecurityId is { } tradedId
             && await IsOversoldAsync(transaction.AccountId, tradedId, history => history.Append(transaction), cancellationToken))
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, OversoldMessage);
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.HoldingOversold, OversoldMessage);
         }
 
         db.InvestmentTransactions.Add(transaction);
@@ -208,13 +208,13 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.NotFound, "Investment transaction not found.");
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
         }
 
         if (transaction.Source != InvestmentSource.Manual)
         {
             return Result<InvestmentTransactionResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.ResourceReadOnly,
                 "This entry was imported from a broker. Correct it there and import again.");
         }
 
@@ -237,7 +237,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 cancellationToken))
         {
             return Result<InvestmentTransactionResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.HoldingDependentSales,
                 "Later sales depend on this entry. Correct those first.");
         }
 
@@ -248,7 +248,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 history => history.Where(t => t.Id != transactionId).Append(corrected),
                 cancellationToken))
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.Validation, OversoldMessage);
+            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.HoldingOversold, OversoldMessage);
         }
 
         transaction.AccountId = corrected.AccountId;
@@ -277,7 +277,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             .FirstOrDefaultAsync(cancellationToken);
         if (accountCurrency is null)
         {
-            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, "Account does not exist.");
+            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         Security? security = null;
@@ -287,7 +287,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             security = await db.Securities.FirstOrDefaultAsync(s => s.Id == typedSecurityId, cancellationToken);
             if (security is null)
             {
-                return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, "Security does not exist.");
+                return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.ReferenceNotFound, "Security does not exist.");
             }
         }
 
@@ -295,7 +295,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency.Value;
         if (rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var transaction = mapper.ToEntity(request, currency);
@@ -315,7 +315,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Investment transaction not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
         }
 
         if (transaction.SecurityId is { } securityId
@@ -323,7 +323,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             && await IsOversoldAsync(transaction.AccountId, securityId, history => history.Where(t => t.Id != transactionId), cancellationToken))
         {
             return Result<Guid>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.HoldingDependentSales,
                 "Later sales depend on this entry. Delete those first.");
         }
 
@@ -358,7 +358,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         if (await db.Securities.AnyAsync(s => s.Id != id && s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))
         {
             return Result<SecurityResponse>.Failure(
-                ErrorCodes.Conflict,
+                ErrorCodes.ConflictDuplicate,
                 $"{symbol} in {request.Currency.ToCode()} already exists.");
         }
 
@@ -373,14 +373,14 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
             if (security is null)
             {
-                return Result<SecurityResponse>.Failure(ErrorCodes.NotFound, "Security not found.");
+                return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
             }
 
             if (security.Currency != request.Currency
                 && await db.InvestmentTransactions.IgnoreQueryFilters().AnyAsync(t => t.SecurityId == id && !t.IsDeleted, cancellationToken))
             {
                 return Result<SecurityResponse>.Failure(
-                    ErrorCodes.Validation,
+                    ErrorCodes.ValueLocked,
                     "The currency cannot change once the security has transactions.");
             }
         }

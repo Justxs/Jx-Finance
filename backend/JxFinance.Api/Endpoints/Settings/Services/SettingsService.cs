@@ -37,7 +37,7 @@ public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore stor
                 .AnyAsync(a => a.Id == typedAccountId && !a.IsDeleted, cancellationToken);
             if (!exists)
             {
-                return Result<SettingsResponse>.Failure(ErrorCodes.Validation, "The default account does not exist.");
+                return Result<SettingsResponse>.Failure(ErrorCodes.ReferenceNotFound, "The default account does not exist.");
             }
         }
 
@@ -55,7 +55,7 @@ public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore stor
             var error = await RevalueAsync(request.ReportingCurrency, cancellationToken);
             if (error is not null)
             {
-                return Result<SettingsResponse>.Failure(ErrorCodes.Validation, error);
+                return Result<SettingsResponse>.Failure(ErrorCodes.ExchangeRateUnavailable, error);
             }
         }
 

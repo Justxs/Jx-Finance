@@ -43,11 +43,14 @@ public static class OpenApiExtensions
             {
                 openApi.AddSchemaTransformer((schema, context, _) =>
                 {
-                    if (context.JsonPropertyInfo is { AttributeProvider: { } attributes } property
-                        && (attributes.IsDefined(typeof(MoneyAttribute), inherit: false)
-                            || attributes.IsDefined(typeof(QuantityAttribute), inherit: false)))
+                    if (context.JsonPropertyInfo is { AttributeProvider: { } attributes } property)
                     {
-                        DescribeDecimalString(schema, Nullable.GetUnderlyingType(property.PropertyType) is not null);
+                        var money = attributes.GetCustomAttributes(typeof(MoneyAttribute), inherit: false).OfType<MoneyAttribute>().FirstOrDefault();
+                        if (money is not null || attributes.IsDefined(typeof(QuantityAttribute), inherit: false))
+                        {
+                            var nullable = Nullable.GetUnderlyingType(property.PropertyType) is not null && money is not { NotNull: true };
+                            DescribeDecimalString(schema, nullable);
+                        }
                     }
 
                     return Task.CompletedTask;
@@ -56,6 +59,8 @@ public static class OpenApiExtensions
                 {
                     document.Info.Description = DocumentDescription;
                     SchemaVariants.Collapse(document);
+                    ArrayWrappers.Inline(document);
+                    ErrorContract.Describe(document);
                     OperationNames.Shorten(document);
                     return Task.CompletedTask;
                 });

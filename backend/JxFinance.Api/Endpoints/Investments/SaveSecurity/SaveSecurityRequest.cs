@@ -1,3 +1,4 @@
+using FastEndpoints;
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
@@ -14,5 +15,6 @@ public sealed record SaveSecurityRequest(
     [property: Quantity] decimal? LastPrice = null,
     DateOnly? LastPriceDate = null)
 {
+    [RouteParam, HideFromDocs]
     public Guid Id { get; init; }
 }

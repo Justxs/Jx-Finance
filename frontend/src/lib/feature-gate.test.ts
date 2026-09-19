@@ -5,6 +5,8 @@ import { settingsQueryOptions } from "@/hooks/use-settings";
 import { requireFeature } from "./feature-gate";
 import { queryClient } from "./query-client";
 
+const gateArgs = { context: { queryClient } };
+
 function settingsWith(budgets: boolean) {
   return { features: { budgets } } as SettingsResponse;
 }
@@ -25,13 +27,13 @@ afterEach(() => {
 test("an enabled feature loads", async () => {
   queryClient.setQueryData(settingsQueryOptions().queryKey, settingsWith(true));
 
-  await expect(requireFeature("budgets")()).resolves.toBeUndefined();
+  await expect(requireFeature("budgets")(gateArgs)).resolves.toBeUndefined();
 });
 
 test("a disabled feature redirects home", async () => {
   queryClient.setQueryData(settingsQueryOptions().queryKey, settingsWith(false));
 
-  const thrown = await thrownBy(requireFeature("budgets"));
+  const thrown = await thrownBy(() => requireFeature("budgets")(gateArgs));
 
   expect(isRedirect(thrown)).toBe(true);
   expect(thrown).toMatchObject({ options: { to: "/" } });
@@ -43,5 +45,5 @@ test("settings that fail to load let the page through", async () => {
     vi.fn(() => Promise.resolve(new Response(null, { status: 500 }))),
   );
 
-  await expect(requireFeature("budgets")()).resolves.toBeUndefined();
+  await expect(requireFeature("budgets")(gateArgs)).resolves.toBeUndefined();
 });

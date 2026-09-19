@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
+import { getCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { categoryBreakdown } from "@/storybook/fixtures";
@@ -36,7 +36,7 @@ function singleCategoryBreakdown() {
 export const SingleCategory: Story = {
   parameters: {
     msw: {
-      handlers: [getGetCategoryBreakdownMockHandler(singleCategoryBreakdown), ...handlers],
+      handlers: [getCategoryBreakdownMockHandler(singleCategoryBreakdown), ...handlers],
     },
   },
 };

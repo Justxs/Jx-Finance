@@ -1,0 +1,100 @@
+import type { AccountResponse } from "@/api/generated/model";
+import { ids } from "./base";
+
+export const checkingAccount: AccountResponse = {
+  id: ids.accounts.checking,
+  name: "Swedbank einamoji",
+  description: "Pagrindinė atlyginimo sąskaita",
+  iban: "LT127300010123456789",
+  type: "checking",
+  startingBalance: "1250.00",
+  currentBalance: "2843.17",
+  createdAt: "2025-01-04T09:15:00Z",
+  scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "2843.17" }],
+  reportingBalance: "2843.17",
+  holdingsValue: "0.00",
+  householdId: null,
+};
+
+export const savingsAccount: AccountResponse = {
+  id: ids.accounts.savings,
+  name: "Taupomoji sąskaita",
+  description: null,
+  iban: "LT647044001231465456",
+  type: "savings",
+  startingBalance: "8000.00",
+  currentBalance: "12500.00",
+  createdAt: "2025-01-04T09:20:00Z",
+  scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "12500.00" }],
+  reportingBalance: "12500.00",
+  holdingsValue: "0.00",
+  householdId: null,
+};
+
+const cashAccount: AccountResponse = {
+  id: ids.accounts.cash,
+  name: "Grynieji",
+  description: "Piniginė ir namų stalčius",
+  iban: null,
+  type: "cash",
+  startingBalance: "100.00",
+  currentBalance: "185.50",
+  createdAt: "2025-02-11T17:42:00Z",
+  scope: "personal",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "185.50" }],
+  reportingBalance: "185.50",
+  holdingsValue: "0.00",
+  householdId: null,
+};
+
+export const sharedAccount: AccountResponse = {
+  id: ids.accounts.shared,
+  name: "Bendra šeimos sąskaita kasdienėms išlaidoms ir komunaliniams mokesčiams",
+  description:
+    "Į šią sąskaitą abu kas mėnesį pervedame po lygiai; iš jos mokame už maistą, komunalines paslaugas, būsto paskolą ir visus kitus bendrus namų ūkio pirkinius.",
+  iban: "LT601010012345678901",
+  type: "checking",
+  startingBalance: "500.00",
+  currentBalance: "1620.40",
+  createdAt: "2025-03-01T08:00:00Z",
+  scope: "shared",
+  currency: "eur",
+  balances: [{ currency: "eur", amount: "1620.40" }],
+  reportingBalance: "1620.40",
+  holdingsValue: "0.00",
+  householdId: ids.households.family,
+};
+
+export const brokerAccount: AccountResponse = {
+  id: ids.accounts.broker,
+  name: "Interactive Brokers",
+  description: "Investicinė sąskaita keliomis valiutomis",
+  iban: null,
+  type: "investment",
+  startingBalance: "5000.00",
+  currentBalance: "5412.63",
+  createdAt: "2025-05-19T10:05:00Z",
+  scope: "personal",
+  currency: "eur",
+  balances: [
+    { currency: "eur", amount: "2498.00" },
+    { currency: "usd", amount: "2710.40" },
+    { currency: "gbp", amount: "350.00" },
+  ],
+  reportingBalance: "15987.62",
+  holdingsValue: "10574.99",
+  householdId: null,
+};
+
+export const accounts: AccountResponse[] = [
+  checkingAccount,
+  savingsAccount,
+  cashAccount,
+  sharedAccount,
+  brokerAccount,
+];

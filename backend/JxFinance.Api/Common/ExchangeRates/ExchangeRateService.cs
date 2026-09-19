@@ -72,7 +72,7 @@ public sealed class ExchangeRateService(
         return !IsStale(table, date) && table.Convert(amount.Amount, amount.Currency, to) is { } converted
             ? Result<decimal>.Success(converted)
             : Result<decimal>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.ExchangeRateUnavailable,
                 $"No exchange rate is available for {amount.Currency.ToCode()} to {to.ToCode()} on {date:yyyy-MM-dd}. Sync exchange rates and try again.");
     }
 

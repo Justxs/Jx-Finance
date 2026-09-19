@@ -1,6 +1,16 @@
-import { Link, Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
+import {
+  Link,
+  Outlet,
+  createRootRouteWithContext,
+  redirect,
+  useLocation,
+} from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import { useMe } from "@/api/generated";
+import {
+  getMeSuspenseQueryOptions,
+  getNotificationsSuspenseQueryOptions,
+  useMe,
+} from "@/api/generated";
 import {
   AppSidebar,
   type NavItem,
@@ -11,19 +21,24 @@ import {
 import { Brand } from "@/components/brand";
 import { LanguageToggle } from "@/components/language-toggle";
 import { LogoutButton } from "@/components/logout-button";
-import { NotificationBell, NotificationBellUnavailable } from "@/components/notification-bell";
+import {
+  NotificationBell,
+  NotificationBellUnavailable,
+  unreadParams,
+} from "@/components/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RouteError } from "@/components/route-error";
 import { RoutePending } from "@/components/route-pending";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePublicSettings, useSettings } from "@/hooks/use-settings";
+import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
+import { type RouterContext, warm } from "@/lib/route-prefetch";
 import { cn } from "@/lib/utils";
 
 const UNAUTHENTICATED_PATHS = new Set(["/login", "/setup"]);
 
-export const Route = createRootRoute({
+export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
     const needsSetup = await checkSetupNeeded();
     if (needsSetup) {
@@ -48,6 +63,14 @@ export const Route = createRootRoute({
     if (location.pathname !== "/login") {
       throw redirect({ to: "/login" });
     }
+  },
+  loader: ({ context: { queryClient }, location }) => {
+    if (UNAUTHENTICATED_PATHS.has(location.pathname)) {
+      return;
+    }
+    warm(queryClient, settingsQueryOptions());
+    warm(queryClient, getMeSuspenseQueryOptions());
+    warm(queryClient, getNotificationsSuspenseQueryOptions(unreadParams));
   },
   component: RootLayout,
 });

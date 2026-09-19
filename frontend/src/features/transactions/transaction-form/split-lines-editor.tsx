@@ -1,10 +1,8 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
-import { Input } from "@/components/ui/input";
 import { emptyLine } from "./line-form-value";
 import type { TransactionFormApi } from "./transaction-form";
 
@@ -27,11 +25,9 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
     <div className="form-grid">
       <form.Field name={`lines[${index}].categoryId`}>
         {(field) => (
-          <SelectField
+          <field.SelectFieldControl
+            id={`tx-line-${index}-category`}
             aria-label={t("transactions.lineCategory")}
-            value={field.value}
-            onBlur={field.handleBlur}
-            onChange={(value) => field.handleChange(value)}
             options={[
               { value: "", label: t("transactions.uncategorized") },
               ...categories.map((category) => ({ value: category.id, label: category.name })),
@@ -41,24 +37,18 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
       </form.Field>
       <form.Field name={`lines[${index}].amount`}>
         {(field) => (
-          <Input
+          <field.MoneyInputField
+            id={`tx-line-${index}-amount`}
             aria-label={t("transactions.lineAmount")}
-            inputMode="decimal"
-            placeholder="0.00"
-            value={field.value}
-            onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
           />
         )}
       </form.Field>
       <form.Field name={`lines[${index}].description`}>
         {(field) => (
-          <Input
+          <field.TextField
+            id={`tx-line-${index}-description`}
             aria-label={t("transactions.lineDescription")}
             placeholder={t("transactions.lineDescription")}
-            value={field.value}
-            onBlur={field.handleBlur}
-            onChange={(e) => field.handleChange(e.target.value)}
           />
         )}
       </form.Field>

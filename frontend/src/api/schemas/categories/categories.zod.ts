@@ -51,7 +51,7 @@ export const CreateCategoryResponse = zod.object({
  * Returns your personal categories plus the shared categories of the households you belong to. Each one carries its flow type, so the client can offer income categories and expense categories separately.
  * @summary List categories
  */
-export const GetCategoriesResponseItem = zod.object({
+export const CategoriesResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
   type: zod.enum(["income", "expense"]),
@@ -60,26 +60,18 @@ export const GetCategoriesResponseItem = zod.object({
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
 });
-export const GetCategoriesResponse = zod.array(GetCategoriesResponseItem);
+export const CategoriesResponse = zod.array(CategoriesResponseItem);
 
 /**
  * Removes the category. Transactions filed under it are kept and become uncategorised rather than being deleted along with it.
  * @summary Delete a category
  */
-export const DeleteCategoryParams = zod.object({
-  id: zod.string().describe("The category id."),
-});
-
 export const DeleteCategoryResponse = zod.void();
 
 /**
  * Renames a category, changes its icon, or moves it between personal and shared. The flow type is deliberately absent: it cannot be changed after creation.
  * @summary Update a category
  */
-export const UpdateCategoryParams = zod.object({
-  id: zod.uuid().describe("The category id. Takes precedence over the id in the body."),
-});
-
 export const updateCategoryBodyNameMin = 0;
 export const updateCategoryBodyNameMax = 100;
 

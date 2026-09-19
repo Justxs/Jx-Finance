@@ -11,7 +11,7 @@ import * as zod from "zod";
  * Answers with a fixed message and the server time in UTC. It touches no database and needs no session, so it checks that the process is up and serving. For a check that includes the database, use /health instead.
  * @summary Ping the API
  */
-export const GetPingResponse = zod.object({
+export const PingResponse = zod.object({
   message: zod.string(),
   utcNow: zod.iso.datetime({ offset: true }),
 });

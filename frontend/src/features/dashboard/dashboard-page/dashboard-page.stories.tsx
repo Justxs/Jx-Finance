@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getGetMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
+import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -35,7 +35,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const PartialFailure: Story = {
   parameters: {
     msw: {
-      handlers: [getGetMonthlyTrendMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
+      handlers: [getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
     },
   },
 };

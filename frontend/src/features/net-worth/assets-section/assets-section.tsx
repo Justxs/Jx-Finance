@@ -1,16 +1,22 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { useDeleteAsset, useGetAssetsSuspense } from "@/api/generated";
+import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
+import type { AssetResponse } from "@/api/generated/model";
 import { useIsoDate } from "@/hooks/use-formatters";
+import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
 import { AssetForm } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const formatDate = useIsoDate();
-  const assets = useGetAssetsSuspense();
+  const assets = useAssetsSuspense();
 
-  const deleteMutation = useDeleteAsset();
+  const deleteMutation = useDeleteAsset({
+    mutation: optimisticRemoval<AssetResponse>(queryClient, getAssetsQueryKey()),
+  });
   const assetList = useDeferredValue(assets.data) ?? [];
 
   return (

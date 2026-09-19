@@ -51,12 +51,12 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
             .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
         if (!currencies.TryGetValue(fromAccountId, out var fromCurrency))
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.Validation, "Source account does not exist.");
+            return Result<TransferResponse>.Failure(ErrorCodes.ReferenceNotFound, "Source account does not exist.");
         }
 
         if (!currencies.TryGetValue(toAccountId, out var toCurrency))
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.Validation, "Destination account does not exist.");
+            return Result<TransferResponse>.Failure(ErrorCodes.ReferenceNotFound, "Destination account does not exist.");
         }
 
         var sent = new Money(request.Amount, request.Currency ?? fromCurrency);
@@ -64,7 +64,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         if (receivedCurrency != sent.Currency && request.ReceivedAmount is null)
         {
             return Result<TransferResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.TransferReceivedAmountRequired,
                 "A transfer between currencies needs the received amount.");
         }
 
@@ -72,13 +72,13 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         if (received.Currency == sent.Currency && received.Amount != sent.Amount)
         {
             return Result<TransferResponse>.Failure(
-                ErrorCodes.Validation,
+                ErrorCodes.TransferAmountMismatch,
                 "Sent and received amounts must match when the currency is the same.");
         }
 
         if (rates.UnusableReason(sent.Currency, received.Currency) is { } currencyError)
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.Validation, currencyError);
+            return Result<TransferResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var transfer = mapper.ToEntity(request, sent, received);
@@ -95,14 +95,14 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var transfer = await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken);
         if (transfer is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.NotFound, "Transfer not found.");
+            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Transfer not found.");
         }
 
         var visibleAccounts = await db.Accounts.CountAsync(
             a => a.Id == transfer.FromAccountId || a.Id == transfer.ToAccountId, cancellationToken);
         if (visibleAccounts != 2)
         {
-            return Result<Guid>.Failure(ErrorCodes.Forbidden, "Access to both accounts is required.");
+            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
         }
 
         db.Transfers.Remove(transfer);

@@ -2,7 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Download } from "lucide-react";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
-import { useGetReportSummarySuspense } from "@/api/generated";
+import { useReportSummarySuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { PageHeader } from "@/components/page-header";
 import { buttonVariants } from "@/components/ui/button";
@@ -10,7 +10,8 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
 import { NetWorthChangeCard } from "../net-worth-change-card";
-import { detectPreset, presetRange, ReportFilters } from "../report-filters";
+import { detectPreset, ReportFilters } from "../report-filters";
+import { reportRange } from "../report-queries";
 import { ReportStats } from "../report-stats";
 import { ReportTrendChart } from "../report-trend-chart";
 
@@ -18,16 +19,14 @@ export function ReportsPage() {
   const { t } = useTranslation();
   const netWorthEnabled = useFeature("netWorth");
   const navigate = useNavigate({ from: "/reports" });
-  const { dateFrom: searchFrom, dateTo: searchTo } = useSearch({ from: "/reports" });
+  const search = useSearch({ from: "/reports" });
 
   const today = useTodayDate();
-  const fallback = presetRange("thisMonth", today);
-  const dateFrom = searchFrom ?? fallback.dateFrom;
-  const dateTo = searchTo ?? fallback.dateTo;
+  const { dateFrom, dateTo } = reportRange(search, today);
   const preset = detectPreset(dateFrom, dateTo, today);
 
   const [shown, stale] = useDeferredParams({ dateFrom, dateTo });
-  const summary = useGetReportSummarySuspense(shown);
+  const summary = useReportSummarySuspense(shown);
 
   function handleRangeChange(range: { dateFrom: string; dateTo: string }) {
     navigate({ search: () => range });

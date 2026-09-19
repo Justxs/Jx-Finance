@@ -29,16 +29,14 @@ export const CreateTransactionBody = zod.object({
     .max(createTransactionBodyDescriptionMax)
     .nullable(),
   lines: zod
-    .union([
-      zod.null(),
-      zod.array(
-        zod.object({
-          categoryId: zod.uuid().nullable(),
-          amount: zod.string(),
-          description: zod.string().nullable(),
-        }),
-      ),
-    ])
+    .array(
+      zod.object({
+        categoryId: zod.uuid().nullable(),
+        amount: zod.string(),
+        description: zod.string().nullable(),
+      }),
+    )
+    .nullable()
     .describe("Optional split lines. Their amounts must sum to the transaction amount."),
   currency: zod
     .union([
@@ -139,23 +137,7 @@ export const CreateTransactionResponse = zod.object({
  * Returns a page of the ledger, newest first, restricted to what you can see: your own transactions plus those on the shared accounts of your households. Every filter is optional and they combine with AND.
  * @summary List transactions
  */
-export const GetTransactionsQueryParams = zod.object({
-  page: zod.int().describe("One-based page number. Defaults to 1."),
-  pageSize: zod.int().describe("Rows per page. Defaults to 20."),
-  accountId: zod.uuid().nullish().describe("Keep only transactions on this account."),
-  categoryId: zod
-    .uuid()
-    .nullish()
-    .describe("Keep only transactions in this category, including split lines filed under it."),
-  type: zod.enum(["income", "expense"]).optional().describe("Income or Expense."),
-  search: zod.string().nullish().describe("Case-insensitive match against the description."),
-  dateFrom: zod.iso.date().nullish().describe("Inclusive start date as YYYY-MM-DD."),
-  dateTo: zod.iso.date().nullish().describe("Inclusive end date as YYYY-MM-DD."),
-  sort: zod.enum(["date", "description", "category", "account", "amount"]).optional(),
-  direction: zod.enum(["asc", "desc"]).optional(),
-});
-
-export const GetTransactionsResponse = zod.object({
+export const TransactionsResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
@@ -239,63 +221,19 @@ export const BulkCategorizeTransactionsResponse = zod.object({
  * Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.
  * @summary Export transactions as CSV
  */
-export const ExportTransactionsQueryParams = zod.object({
-  page: zod.int(),
-  pageSize: zod.int(),
-  accountId: zod.uuid().nullish().describe("Keep only transactions on this account."),
-  categoryId: zod.uuid().nullish().describe("Keep only transactions in this category."),
-  type: zod.enum(["income", "expense"]).optional().describe("Income or Expense."),
-  search: zod.string().nullish().describe("Case-insensitive match against the description."),
-  dateFrom: zod.iso.date().nullish().describe("Inclusive start date as YYYY-MM-DD."),
-  dateTo: zod.iso.date().nullish().describe("Inclusive end date as YYYY-MM-DD."),
-  sort: zod.enum(["date", "description", "category", "account", "amount"]).optional(),
-  direction: zod.enum(["asc", "desc"]).optional(),
-});
-
 export const ExportTransactionsResponse = zod.unknown();
 
 /**
  * Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.
  * @summary Export transactions as PDF
  */
-export const ExportTransactionsPdfQueryParams = zod.object({
-  page: zod.int(),
-  pageSize: zod.int(),
-  accountId: zod.uuid().nullish().describe("Keep only transactions on this account."),
-  categoryId: zod.uuid().nullish().describe("Keep only transactions in this category."),
-  type: zod.enum(["income", "expense"]).optional().describe("Income or Expense."),
-  search: zod.string().nullish().describe("Case-insensitive match against the description."),
-  dateFrom: zod.iso
-    .date()
-    .nullish()
-    .describe("Inclusive start date as YYYY-MM-DD; also printed in the header."),
-  dateTo: zod.iso
-    .date()
-    .nullish()
-    .describe("Inclusive end date as YYYY-MM-DD; also printed in the header."),
-  sort: zod.enum(["date", "description", "category", "account", "amount"]).optional(),
-  direction: zod.enum(["asc", "desc"]).optional(),
-});
-
 export const ExportTransactionsPdfResponse = zod.unknown();
 
 /**
  * Returns the row count and the income and expense totals of every transaction the list endpoint would return for the same filters, across all pages. Transfers are not transactions and are never counted.
  * @summary Total the filtered transactions
  */
-export const GetTransactionsSummaryQueryParams = zod.object({
-  accountId: zod.uuid().nullish().describe("Keep only transactions on this account."),
-  categoryId: zod
-    .uuid()
-    .nullish()
-    .describe("Keep only transactions in this category, including split lines filed under it."),
-  type: zod.enum(["income", "expense"]).optional().describe("Income or Expense."),
-  search: zod.string().nullish().describe("Case-insensitive match against the description."),
-  dateFrom: zod.iso.date().nullish().describe("Inclusive start date as YYYY-MM-DD."),
-  dateTo: zod.iso.date().nullish().describe("Inclusive end date as YYYY-MM-DD."),
-});
-
-export const GetTransactionsSummaryResponse = zod.object({
+export const TransactionsSummaryResponse = zod.object({
   count: zod.int(),
   totalIncome: zod.string(),
   totalExpense: zod.string(),
@@ -305,21 +243,13 @@ export const GetTransactionsSummaryResponse = zod.object({
  * Removes the transaction and any split lines, and adjusts the account balance accordingly.
  * @summary Delete a transaction
  */
-export const DeleteTransactionParams = zod.object({
-  id: zod.string().describe("The transaction id."),
-});
-
 export const DeleteTransactionResponse = zod.void();
 
 /**
  * Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
-export const GetTransactionParams = zod.object({
-  id: zod.string().describe("The transaction id."),
-});
-
-export const GetTransactionResponse = zod.object({
+export const TransactionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
   categoryId: zod.uuid().nullable(),
@@ -379,9 +309,6 @@ export const GetTransactionResponse = zod.object({
  * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Moving it to another account adjusts both balances.
  * @summary Update a transaction
  */
-export const UpdateTransactionParams = zod.object({
-  id: zod.uuid().describe("The transaction id. Takes precedence over the id in the body."),
-});
 
 export const updateTransactionBodyDescriptionMin = 0;
 export const updateTransactionBodyDescriptionMax = 500;
@@ -397,16 +324,15 @@ export const UpdateTransactionBody = zod.object({
     .min(updateTransactionBodyDescriptionMin)
     .max(updateTransactionBodyDescriptionMax)
     .nullable(),
-  lines: zod.union([
-    zod.null(),
-    zod.array(
+  lines: zod
+    .array(
       zod.object({
         categoryId: zod.uuid().nullable(),
         amount: zod.string(),
         description: zod.string().nullable(),
       }),
-    ),
-  ]),
+    )
+    .nullable(),
   currency: zod
     .union([
       zod.null(),

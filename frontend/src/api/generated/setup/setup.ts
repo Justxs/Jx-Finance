@@ -5,20 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
-  DefinedInitialDataOptions,
-  DefinedUseQueryResult,
   MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
-  UndefinedInitialDataOptions,
   UseMutationOptions,
   UseMutationResult,
-  UseQueryOptions,
-  UseQueryResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -151,7 +146,7 @@ export const useSetup = <TError = ErrorType<ProblemDetails | void>, TContext = u
 > => {
   return useMutation(getSetupMutationOptions(options), queryClient);
 };
-export const getGetSetupStatusUrl = () => {
+export const getSetupStatusUrl = () => {
   return `/api/setup/status`;
 };
 
@@ -159,171 +154,72 @@ export const getGetSetupStatusUrl = () => {
  * Reports whether the instance still has no administrator. The client calls this before choosing between the setup screen and the login screen. It stays callable without a session and discloses nothing beyond the single flag.
  * @summary Check whether first-run setup is needed
  */
-export const getSetupStatus = async (
+export const setupStatus = async (
   options?: Parameters<typeof customFetch>[1],
 ): Promise<SetupStatusResponse> => {
-  return customFetch<SetupStatusResponse>(getGetSetupStatusUrl(), {
+  return customFetch<SetupStatusResponse>(getSetupStatusUrl(), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetSetupStatusQueryKey = () => {
+export const getSetupStatusQueryKey = () => {
   return [`/api/setup/status`] as const;
 };
 
-export const getGetSetupStatusQueryOptions = <
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
+export const getSetupStatusSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
 >(options?: {
-  query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>>;
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>>;
   request?: SecondParameter<typeof customFetch>;
 }) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetSetupStatusQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getSetupStatusQueryKey();
 
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSetupStatus>>> = ({ signal }) =>
-    getSetupStatus({ signal, ...requestOptions });
-
-  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
-    Awaited<ReturnType<typeof getSetupStatus>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
-};
-
-export type GetSetupStatusQueryResult = NonNullable<Awaited<ReturnType<typeof getSetupStatus>>>;
-export type GetSetupStatusQueryError = ErrorType<ProblemDetails>;
-
-export function useGetSetupStatus<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options: {
-    query: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>> &
-      Pick<
-        DefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSetupStatus>>,
-          TError,
-          Awaited<ReturnType<typeof getSetupStatus>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSetupStatus<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>> &
-      Pick<
-        UndefinedInitialDataOptions<
-          Awaited<ReturnType<typeof getSetupStatus>>,
-          TError,
-          Awaited<ReturnType<typeof getSetupStatus>>
-        >,
-        "initialData"
-      >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSetupStatus<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-/**
- * @summary Check whether first-run setup is needed
- */
-
-export function useGetSetupStatus<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<UseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>>;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSetupStatusQueryOptions(options);
-
-  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
-    queryKey: DataTag<QueryKey, TData, TError>;
-  };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-export const getGetSetupStatusSuspenseQueryOptions = <
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(options?: {
-  query?: Partial<
-    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
-  const { query: queryOptions, request: requestOptions } = options ?? {};
-
-  const queryKey = queryOptions?.queryKey ?? getGetSetupStatusQueryKey();
-
-  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSetupStatus>>> = ({ signal }) =>
-    getSetupStatus({ signal, ...requestOptions });
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof setupStatus>>> = ({ signal }) =>
+    setupStatus({ signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof getSetupStatus>>,
+    Awaited<ReturnType<typeof setupStatus>>,
     TError,
     TData
   > & { queryKey: DataTag<QueryKey, TData, TError> };
 };
 
-export type GetSetupStatusSuspenseQueryResult = NonNullable<
-  Awaited<ReturnType<typeof getSetupStatus>>
->;
-export type GetSetupStatusSuspenseQueryError = ErrorType<ProblemDetails>;
+export type SetupStatusSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof setupStatus>>>;
+export type SetupStatusSuspenseQueryError = ErrorType<ProblemDetails>;
 
-export function useGetSetupStatusSuspense<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
+export function useSetupStatusSuspense<
+  TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options: {
-    query: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSetupStatusSuspense<
+  TData = Awaited<ReturnType<typeof setupStatus>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSetupStatusSuspense<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
+export function useSetupStatusSuspense<
+  TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>
-    >;
-    request?: SecondParameter<typeof customFetch>;
-  },
-  queryClient?: QueryClient,
-): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
-export function useGetSetupStatusSuspense<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
-  TError = ErrorType<ProblemDetails>,
->(
-  options?: {
-    query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
@@ -333,19 +229,19 @@ export function useGetSetupStatusSuspense<
  * @summary Check whether first-run setup is needed
  */
 
-export function useGetSetupStatusSuspense<
-  TData = Awaited<ReturnType<typeof getSetupStatus>>,
+export function useSetupStatusSuspense<
+  TData = Awaited<ReturnType<typeof setupStatus>>,
   TError = ErrorType<ProblemDetails>,
 >(
   options?: {
     query?: Partial<
-      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSetupStatus>>, TError, TData>
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof setupStatus>>, TError, TData>
     >;
     request?: SecondParameter<typeof customFetch>;
   },
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
-  const queryOptions = getGetSetupStatusSuspenseQueryOptions(options);
+  const queryOptions = getSetupStatusSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,

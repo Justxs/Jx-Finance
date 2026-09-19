@@ -5,102 +5,9 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { faker } from "@faker-js/faker";
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import { RecurringBillCadence, RecurringBillKind } from "../model";
-import type {
-  ConfirmRecurringBillResponse,
-  IReadOnlyListOfRecurringBillResponse,
-  RecurringBillResponse,
-} from "../model";
-
-export const getCreateRecurringBillResponseMock = (
-  overrideResponse: Partial<Extract<RecurringBillResponse, object>> = {},
-): RecurringBillResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  kind: faker.helpers.arrayElement(Object.values(RecurringBillKind)),
-  amount: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  accountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  cadence: faker.helpers.arrayElement(Object.values(RecurringBillCadence)),
-  nextDueDate: faker.date.past().toISOString().slice(0, 10),
-  remindDaysBefore: faker.number.int(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getGetRecurringBillsResponseMock = (): IReadOnlyListOfRecurringBillResponse =>
-  Array.from({ length: faker.number.int({ min: 1, max: 10 }) }, (_, i) => i + 1).map(() => ({
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    kind: faker.helpers.arrayElement(Object.values(RecurringBillKind)),
-    amount: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    accountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    cadence: faker.helpers.arrayElement(Object.values(RecurringBillCadence)),
-    nextDueDate: faker.date.past().toISOString().slice(0, 10),
-    remindDaysBefore: faker.number.int(),
-    isActive: faker.datatype.boolean(),
-  }));
-
-export const getGetRecurringBillResponseMock = (
-  overrideResponse: Partial<Extract<RecurringBillResponse, object>> = {},
-): RecurringBillResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  kind: faker.helpers.arrayElement(Object.values(RecurringBillKind)),
-  amount: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  accountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  cadence: faker.helpers.arrayElement(Object.values(RecurringBillCadence)),
-  nextDueDate: faker.date.past().toISOString().slice(0, 10),
-  remindDaysBefore: faker.number.int(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getUpdateRecurringBillResponseMock = (
-  overrideResponse: Partial<Extract<RecurringBillResponse, object>> = {},
-): RecurringBillResponse => ({
-  id: faker.string.uuid(),
-  name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-  kind: faker.helpers.arrayElement(Object.values(RecurringBillKind)),
-  amount: faker.helpers.arrayElement([faker.string.alpha({ length: { min: 10, max: 20 } }), null]),
-  categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  accountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-  cadence: faker.helpers.arrayElement(Object.values(RecurringBillCadence)),
-  nextDueDate: faker.date.past().toISOString().slice(0, 10),
-  remindDaysBefore: faker.number.int(),
-  isActive: faker.datatype.boolean(),
-  ...overrideResponse,
-});
-
-export const getConfirmRecurringBillResponseMock = (
-  overrideResponse: Partial<Extract<ConfirmRecurringBillResponse, object>> = {},
-): ConfirmRecurringBillResponse => ({
-  bill: {
-    id: faker.string.uuid(),
-    name: faker.string.alpha({ length: { min: 10, max: 20 } }),
-    kind: faker.helpers.arrayElement(Object.values(RecurringBillKind)),
-    amount: faker.helpers.arrayElement([
-      faker.string.alpha({ length: { min: 10, max: 20 } }),
-      null,
-    ]),
-    categoryId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    accountId: faker.helpers.arrayElement([faker.string.uuid(), null]),
-    cadence: faker.helpers.arrayElement(Object.values(RecurringBillCadence)),
-    nextDueDate: faker.date.past().toISOString().slice(0, 10),
-    remindDaysBefore: faker.number.int(),
-    isActive: faker.datatype.boolean(),
-  },
-  transactionId: faker.string.uuid(),
-  ...overrideResponse,
-});
+import type { ConfirmRecurringBillResponse, RecurringBillResponse } from "../model";
 
 export const getCreateRecurringBillMockHandler = (
   overrideResponse?:
@@ -118,7 +25,7 @@ export const getCreateRecurringBillMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getCreateRecurringBillResponseMock(),
+          : undefined,
         { status: 201 },
       );
     },
@@ -126,12 +33,12 @@ export const getCreateRecurringBillMockHandler = (
   );
 };
 
-export const getGetRecurringBillsMockHandler = (
+export const getRecurringBillsMockHandler = (
   overrideResponse?:
-    | IReadOnlyListOfRecurringBillResponse
+    | RecurringBillResponse[]
     | ((
         info: Parameters<Parameters<typeof http.get>[1]>[0],
-      ) => Promise<IReadOnlyListOfRecurringBillResponse> | IReadOnlyListOfRecurringBillResponse),
+      ) => Promise<RecurringBillResponse[]> | RecurringBillResponse[]),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -142,7 +49,7 @@ export const getGetRecurringBillsMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetRecurringBillsResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -169,7 +76,7 @@ export const getDeleteRecurringBillMockHandler = (
   );
 };
 
-export const getGetRecurringBillMockHandler = (
+export const getRecurringBillMockHandler = (
   overrideResponse?:
     | RecurringBillResponse
     | ((
@@ -185,7 +92,7 @@ export const getGetRecurringBillMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getGetRecurringBillResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -209,7 +116,7 @@ export const getUpdateRecurringBillMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getUpdateRecurringBillResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -233,7 +140,7 @@ export const getConfirmRecurringBillMockHandler = (
           ? typeof overrideResponse === "function"
             ? await overrideResponse(info)
             : overrideResponse
-          : getConfirmRecurringBillResponseMock(),
+          : undefined,
         { status: 200 },
       );
     },
@@ -242,9 +149,9 @@ export const getConfirmRecurringBillMockHandler = (
 };
 export const getRecurringBillsMock = () => [
   getCreateRecurringBillMockHandler(),
-  getGetRecurringBillsMockHandler(),
+  getRecurringBillsMockHandler(),
   getDeleteRecurringBillMockHandler(),
-  getGetRecurringBillMockHandler(),
+  getRecurringBillMockHandler(),
   getUpdateRecurringBillMockHandler(),
   getConfirmRecurringBillMockHandler(),
 ];

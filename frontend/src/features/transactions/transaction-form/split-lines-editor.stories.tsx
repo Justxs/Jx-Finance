@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useForm } from "@tanstack/react-form";
 import type { CategoryResponse, FlowType } from "@/api/generated/model";
+import { useAppForm } from "@/components/form";
 import { categories, splitTransactionLines } from "@/storybook/fixtures";
 import type { LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
@@ -33,7 +33,7 @@ function SplitLinesHarness({
   lines = fixtureLines,
   categories: categoryList = categories,
 }: Readonly<HarnessProps>) {
-  const form = useForm({
+  const form = useAppForm({
     defaultValues: {
       type,
       accountId: "",
