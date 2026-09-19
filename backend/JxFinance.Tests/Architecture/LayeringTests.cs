@@ -22,7 +22,7 @@ public class LayeringTests
     }
 
     [Fact]
-    public void Domain_DependsOnNothing()
+    public void Domain_depends_on_nothing()
     {
         var result = Types.InAssembly(ApiAssembly)
             .That().ResideInNamespace("JxFinance.Domain")
@@ -34,6 +34,32 @@ public class LayeringTests
                 "Microsoft.EntityFrameworkCore",
                 "Microsoft.AspNetCore",
                 "FastEndpoints")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FailureMessage(result));
+    }
+
+    [Fact]
+    public void Infrastructure_outside_background_jobs_does_not_depend_on_endpoints()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ResideInNamespace("JxFinance.Infrastructure")
+            .And().DoNotResideInNamespace("JxFinance.Infrastructure.BackgroundJobs")
+            .ShouldNot().HaveDependencyOnAny("JxFinance.Endpoints")
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FailureMessage(result));
+    }
+
+    [Fact]
+    public void Endpoints_validators_and_services_are_sealed()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ResideInNamespace("JxFinance.Endpoints")
+            .And().AreClasses()
+            .And().AreNotAbstract()
+            .And().AreNotStatic()
+            .Should().BeSealed()
             .GetResult();
 
         Assert.True(result.IsSuccessful, FailureMessage(result));

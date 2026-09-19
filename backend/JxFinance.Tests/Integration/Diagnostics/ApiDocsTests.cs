@@ -1,4 +1,8 @@
+using System.Diagnostics;
 using System.Net;
+using System.Runtime.CompilerServices;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Diagnostics;
@@ -6,6 +10,8 @@ namespace JxFinance.Tests.Integration.Diagnostics;
 [Collection<IntegrationCollection>]
 public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
+    private const string UpdateVariable = "JX_UPDATE_SNAPSHOTS";
+
     [Fact]
     public async Task Root_redirects_to_scalar_docs()
     {
@@ -16,12 +22,68 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     }
 
     [Fact]
-    public async Task OpenApi_document_is_served_and_lists_the_ping_endpoint()
+    public async Task OpenApi_document_matches_the_approved_contract()
     {
-        var response = await Client.GetAsync("/openapi/v1.json");
-        response.EnsureSuccessStatusCode();
+        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
+        var actual = document.ToJsonString(new JsonSerializerOptions { WriteIndented = true }).ReplaceLineEndings("\n");
+        var path = SnapshotPath();
 
-        var json = await response.Content.ReadAsStringAsync();
-        Assert.Contains("/api/ping", json);
+        if (Environment.GetEnvironmentVariable(UpdateVariable) == "1")
+            await File.WriteAllTextAsync(path, actual);
+
+        Assert.True(File.Exists(path), $"No approved contract. Run the tests once with {UpdateVariable}=1.");
+        var approved = (await File.ReadAllTextAsync(path)).ReplaceLineEndings("\n");
+        Assert.True(
+            approved == actual,
+            $"The API contract changed. Review the difference, then run with {UpdateVariable}=1 and regenerate the frontend client.");
     }
+
+    [Fact]
+    public async Task OpenApi_document_is_valid_according_to_hidi()
+    {
+        var file = Path.Combine(Path.GetTempPath(), $"jx-openapi-{Guid.NewGuid():N}.json");
+        await File.WriteAllTextAsync(file, await Client.GetStringAsync("/openapi/v1.json"));
+        try
+        {
+            var (exitCode, output) = await RunHidiAsync("validate", "-d", file, "--ll", "Warning");
+
+            Assert.True(
+                exitCode == 0 && !output.Contains("fail:", StringComparison.Ordinal),
+                $"hidi validate exited with {exitCode}. Run 'dotnet tool restore' in backend if the tool is missing.{Environment.NewLine}{output}");
+        }
+        finally
+        {
+            File.Delete(file);
+        }
+    }
+
+    private static async Task<(int ExitCode, string Output)> RunHidiAsync(params string[] arguments)
+    {
+        var start = new ProcessStartInfo("dotnet")
+        {
+            WorkingDirectory = ToolManifestDirectory(),
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+        start.ArgumentList.Add("hidi");
+        foreach (var argument in arguments)
+            start.ArgumentList.Add(argument);
+
+        using var process = Process.Start(start)!;
+        var output = process.StandardOutput.ReadToEndAsync();
+        var error = process.StandardError.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        return (process.ExitCode, await output + await error);
+    }
+
+    private static string ToolManifestDirectory([CallerFilePath] string testFile = "")
+    {
+        var directory = new DirectoryInfo(Path.GetDirectoryName(testFile)!);
+        while (!File.Exists(Path.Combine(directory.FullName, "dotnet-tools.json")))
+            directory = directory.Parent ?? throw new InvalidOperationException("dotnet-tools.json was not found above the test project.");
+        return directory.FullName;
+    }
+
+    private static string SnapshotPath([CallerFilePath] string testFile = "") =>
+        Path.Combine(Path.GetDirectoryName(testFile)!, "Snapshots", "openapi-v1.json");
 }

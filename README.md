@@ -32,6 +32,14 @@ nub run --cwd frontend build
 
 Backend integration tests start an isolated PostgreSQL 16 container through Testcontainers. To use a separate disposable PostgreSQL instance, set `JX_TEST_POSTGRES` to its connection string; its database name must begin with `jx_test_`. The fixture migrates and writes test data into that database. Never point it at application data. Unset the variable to return to Testcontainers.
 
+Backend coverage uses the Microsoft Testing Platform extension; the report lands in `backend/TestResults` (ignored by Git):
+
+```powershell
+dotnet test backend/JxFinance.Tests -- --coverage --coverage-output-format cobertura --coverage-output coverage.cobertura.xml
+```
+
+`ApiDocsTests` validates `/openapi/v1.json` with [Microsoft.OpenApi.Hidi](https://www.nuget.org/packages/Microsoft.OpenApi.Hidi), a local tool pinned in `backend/dotnet-tools.json`; run `dotnet tool restore` in `backend` once per checkout. The same tests compare the document with the approved contract in `backend/JxFinance.Tests/Integration/Diagnostics/Snapshots/openapi-v1.json`. After an intentional API change, run the backend tests once with `JX_UPDATE_SNAPSHOTS=1`, review the diff, commit the snapshot and regenerate the frontend client.
+
 With the API running, `just gen` refreshes the OpenAPI document and generated frontend client. The CI workflow also checks client drift.
 
 ## Docker

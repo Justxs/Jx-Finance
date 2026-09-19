@@ -12,7 +12,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Manual_trades_move_cash_and_build_a_fifo_holding()
     {
-        var account = await CreateAccountAsync("Manual broker", "5000.00");
+        var account = await CreateBrokerAccountAsync("5000.00");
         var security = await CreateSecurityAsync("MANUAL1");
 
         await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100", fee = "1.00" });
@@ -43,7 +43,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Selling_more_than_held_is_rejected()
     {
-        var account = await CreateAccountAsync("Short broker", "100.00");
+        var account = await CreateBrokerAccountAsync("100.00");
         var security = await CreateSecurityAsync("SHORT1");
 
         var response = await Client.PostAsJsonAsync(
@@ -56,8 +56,8 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Flex_report_imports_trades_cash_conversions_and_transfers_once()
     {
-        var broker = await CreateAccountAsync("IBKR upload", "0.00");
-        var bank = await CreateAccountAsync("Funding bank", "5000.00");
+        var broker = await CreateBrokerAccountAsync();
+        var bank = await CreateBrokerAccountAsync("5000.00");
 
         var first = await UploadAsync(broker, bank, SampleFlexReport.Xml);
         Assert.Equal(new ImportDto(3, 3, 1, 1, 0, 1, 0, 0), first with { SecuritiesCreated = 0, PricesUpdated = 0 });
@@ -86,9 +86,9 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     }
 
     [Fact]
-    public async Task Other_files_are_rejected()
+    public async Task Upload_that_is_not_a_flex_report_is_rejected()
     {
-        var broker = await CreateAccountAsync("IBKR bad file", "0.00");
+        var broker = await CreateBrokerAccountAsync();
 
         var response = await PostReportAsync(broker, null, "Statement,Header,Field Name");
 
@@ -98,7 +98,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Connection_hides_the_token_and_syncs_on_demand()
     {
-        var broker = await CreateAccountAsync("IBKR connected", "0.00");
+        var broker = await CreateBrokerAccountAsync();
 
         var saved = await Client.PutAsJsonAsync(
             $"/api/investments/connections/{broker}",
@@ -121,7 +121,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Failed_sync_is_remembered_on_the_connection()
     {
-        var broker = await CreateAccountAsync("IBKR wrong token", "0.00");
+        var broker = await CreateBrokerAccountAsync();
         await Client.PutAsJsonAsync(
             $"/api/investments/connections/{broker}",
             new { queryId = SampleFlexReport.QueryId, token = "000000" });
@@ -133,14 +133,8 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Contains("Token is invalid", connections!.Single(c => c.AccountId == broker).LastError);
     }
 
-    private async Task<Guid> CreateAccountAsync(string name, string startingBalance)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name, type = "investment", startingBalance, currency = "eur" });
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<AccountDto>())!.Id;
-    }
+    private Task<Guid> CreateBrokerAccountAsync(string startingBalance = "0.00") =>
+        CreateAccountAsync(startingBalance, "investment", "eur");
 
     private async Task<Guid> CreateSecurityAsync(string symbol)
     {

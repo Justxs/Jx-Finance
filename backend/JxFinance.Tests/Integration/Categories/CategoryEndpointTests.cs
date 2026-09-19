@@ -21,11 +21,22 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
+    public async Task New_users_start_with_their_own_starter_categories()
+    {
+        using var member = await CreateUserClientAsync();
+
+        var categories = await member.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+
+        Assert.Equal(10, categories!.Count);
+        Assert.All(categories, c => Assert.True(c.IsDefault));
+    }
+
+    [Fact]
     public async Task Create_and_rename_a_category_with_an_icon()
     {
         var createResponse = await Client.PostAsJsonAsync(
             "/api/categories",
-            new { name = "Pets", type = "expense", icon = "paw-print" });
+            new { name = $"Pets {Guid.NewGuid():N}", type = "expense", icon = "paw-print" });
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var created = await createResponse.Content.ReadFromJsonAsync<CategoryDto>();
         Assert.False(created!.IsDefault);
@@ -44,43 +55,25 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Deleting_a_category_uncategorizes_its_transactions()
     {
-        var accountResponse = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name = "Category delete test", type = "cash", startingBalance = "0.00" });
-        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
-
-        var categoryResponse = await Client.PostAsJsonAsync(
-            "/api/categories",
-            new { name = "Doomed", type = "expense" });
-        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
-
-        var transactionResponse = await Client.PostAsJsonAsync(
+        var account = await CreateAccountAsync();
+        var category = await CreateCategoryAsync();
+        var transaction = await PostAsync<TransactionDto>(
+            Client,
             "/api/transactions",
-            new
-            {
-                accountId = account!.Id,
-                categoryId = category!.Id,
-                type = "expense",
-                amount = "9.99",
-                date = "2026-06-02",
-            });
-        Assert.Equal(HttpStatusCode.Created, transactionResponse.StatusCode);
-        var transaction = await transactionResponse.Content.ReadFromJsonAsync<TransactionDto>();
-        Assert.Equal(category.Id, transaction!.CategoryId);
+            new { accountId = account, categoryId = category, type = "expense", amount = "9.99", date = "2026-06-02" });
+        Assert.Equal(category, transaction.CategoryId);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/categories/{category.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/categories/{category}");
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         var afterDelete = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
         Assert.Null(afterDelete!.CategoryId);
 
         var categories = await Client.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
-        Assert.DoesNotContain(categories!, c => c.Id == category.Id);
+        Assert.DoesNotContain(categories!, c => c.Id == category);
     }
 
     private sealed record CategoryDto(Guid Id, string Name, string Type, string? Icon, bool IsDefault);
-
-    private sealed record AccountDto(Guid Id);
 
     private sealed record TransactionDto(Guid Id, Guid? CategoryId);
 }

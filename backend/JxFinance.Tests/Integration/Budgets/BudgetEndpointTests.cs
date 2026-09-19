@@ -10,36 +10,30 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Create_budget_tracks_this_months_spend_including_split_lines()
     {
-        var accountResponse = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name = $"Budget test {Guid.NewGuid():N}", type = "cash", startingBalance = "1000.00" });
-        var account = await accountResponse.Content.ReadFromJsonAsync<AccountDto>();
-
-        var categoryResponse = await Client.PostAsJsonAsync(
-            "/api/categories",
-            new { name = $"Budget Food {Guid.NewGuid():N}", type = "expense" });
-        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        var account = await CreateAccountAsync("1000.00");
+        var category = await CreateCategoryAsync();
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/budgets",
-            new { categoryId = category!.Id, limitAmount = "200.00" });
+            new { categoryId = category, limitAmount = "200.00" });
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
         var budget = await createResponse.Content.ReadFromJsonAsync<BudgetDto>();
         Assert.Equal("200.00", budget!.LimitAmount);
 
-        var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
-        await Client.PostAsJsonAsync(
+        await PostAsync<IdDto>(
+            Client,
             "/api/transactions",
-            new { accountId = account!.Id, categoryId = category.Id, type = "expense", amount = "30.00", date = today });
-        await Client.PostAsJsonAsync(
+            new { accountId = account, categoryId = category, type = "expense", amount = "30.00", date = Today });
+        await PostAsync<IdDto>(
+            Client,
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "20.00",
-                date = today,
-                lines = new object[] { new { categoryId = category.Id, amount = "20.00" } },
+                date = Today,
+                lines = new object[] { new { categoryId = category, amount = "20.00" } },
             });
 
         var budgets = await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets");
@@ -54,20 +48,36 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Create_rejects_a_budget_on_an_income_category()
     {
-        var categoryResponse = await Client.PostAsJsonAsync(
-            "/api/categories",
-            new { name = $"Budget Income {Guid.NewGuid():N}", type = "income" });
-        var category = await categoryResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        var category = await CreateCategoryAsync("income");
 
         var response = await Client.PostAsJsonAsync(
             "/api/budgets",
-            new { categoryId = category!.Id, limitAmount = "100.00" });
+            new { categoryId = category, limitAmount = "100.00" });
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
-    private sealed record AccountDto(Guid Id);
+    [Fact]
+    public async Task Update_changes_the_limit_and_the_tracked_category()
+    {
+        var budget = await PostAsync<BudgetDto>(Client, "/api/budgets", new { categoryId = await CreateCategoryAsync(), limitAmount = "200.00" });
+        var otherCategory = await CreateCategoryAsync();
 
-    private sealed record CategoryDto(Guid Id);
+        var response = await Client.PutAsJsonAsync($"/api/budgets/{budget.Id}", new { categoryId = otherCategory, limitAmount = "350.00" });
 
-    private sealed record BudgetDto(Guid Id, string LimitAmount, string Spent, string Remaining);
+        response.EnsureSuccessStatusCode();
+        var updated = await response.Content.ReadFromJsonAsync<BudgetDto>();
+        Assert.Equal((otherCategory, "350.00", "350.00"), (updated!.CategoryId, updated.LimitAmount, updated.Remaining));
+    }
+
+    [Fact]
+    public async Task Updating_or_deleting_an_unknown_budget_answers_not_found()
+    {
+        var update = await Client.PutAsJsonAsync($"/api/budgets/{Guid.NewGuid()}", new { categoryId = await CreateCategoryAsync(), limitAmount = "1.00" });
+        var delete = await Client.DeleteAsync($"/api/budgets/{Guid.NewGuid()}");
+
+        Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
+    }
+
+    private sealed record BudgetDto(Guid Id, Guid CategoryId, string LimitAmount, string Spent, string Remaining);
 }

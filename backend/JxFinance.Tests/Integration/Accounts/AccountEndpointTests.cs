@@ -56,7 +56,7 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
             new { name = "Bad", type = "cash", startingBalance = "12.345" });
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertValidationErrorAsync(response, "startingBalance");
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
             new { name = "Bad iban", iban = "NOT-AN-IBAN", type = "cash", startingBalance = "0.00" });
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        await AssertValidationErrorAsync(response, "iban");
     }
 
     private async Task<AccountDto> CreateAccountAsync(string name, string type, string startingBalance)

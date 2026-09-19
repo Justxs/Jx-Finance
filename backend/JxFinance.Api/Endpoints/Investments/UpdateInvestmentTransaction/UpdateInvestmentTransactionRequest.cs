@@ -2,9 +2,10 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 using JxFinance.Endpoints.Investments.Shared;
 
-namespace JxFinance.Endpoints.Investments.CreateInvestmentTransaction;
+namespace JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 
-public sealed record CreateInvestmentTransactionRequest(
+public sealed record UpdateInvestmentTransactionRequest(
+    Guid Id,
     Guid AccountId,
     InvestmentTransactionType Type,
     DateOnly Date,

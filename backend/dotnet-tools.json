@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "microsoft.openapi.hidi": {
+      "version": "3.10.2",
+      "commands": [
+        "hidi"
+      ],
+      "rollForward": false
+    }
+  }
+}

@@ -1,7 +1,8 @@
-using System.Globalization;
-using System.Net;
 using System.Net.Http.Json;
+using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
@@ -11,37 +12,41 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Net_worth_combines_accounts_assets_and_debts()
     {
-        var appTimeZone = TimeZoneInfo.FindSystemTimeZoneById("Europe/Vilnius");
-        var today = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, appTimeZone).ToString("yyyy-MM-dd");
+        using var member = await CreateUserClientAsync();
+        await CreateAccountAsync("500.00", client: member);
 
-        var before = await Client.GetFromJsonAsync<NetWorthDto>("/api/networth");
-
-        var assetResponse = await Client.PostAsJsonAsync(
+        await PostAsync<IdDto>(
+            member,
             "/api/assets",
-            new { name = $"Car {Guid.NewGuid():N}", type = "vehicle", currentValue = "10000.00", asOf = today });
-        Assert.Equal(HttpStatusCode.Created, assetResponse.StatusCode);
-        var asset = await assetResponse.Content.ReadFromJsonAsync<AssetDto>();
-
-        var debtResponse = await Client.PostAsJsonAsync(
+            new { name = $"Car {Guid.NewGuid():N}", type = "vehicle", currentValue = "10000.00", asOf = Today });
+        await PostAsync<IdDto>(
+            member,
             "/api/debts",
-            new { name = $"Car loan {Guid.NewGuid():N}", type = "loan", outstandingAmount = "4000.00", asOf = today });
-        Assert.Equal(HttpStatusCode.Created, debtResponse.StatusCode);
-        var debt = await debtResponse.Content.ReadFromJsonAsync<DebtDto>();
+            new { name = $"Car loan {Guid.NewGuid():N}", type = "loan", outstandingAmount = "4000.00", asOf = Today });
 
-        var after = await Client.GetFromJsonAsync<NetWorthDto>("/api/networth");
-        var expected = decimal.Parse(before!.NetWorth) + 10000.00m - 4000.00m;
-        Assert.Equal(expected, decimal.Parse(after!.NetWorth));
+        var after = await member.GetFromJsonAsync<NetWorthDto>("/api/networth");
+        Assert.Equal(new NetWorthDto("500.00", "10000.00", "4000.00", "6500.00"), after);
 
-        var history = await Client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
-        Assert.Contains(history!.Items, i => i.Date == DateOnly.Parse(today, CultureInfo.InvariantCulture));
-
-        await Client.DeleteAsync($"/api/assets/{asset!.Id}");
-        await Client.DeleteAsync($"/api/debts/{debt!.Id}");
+        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
+        Assert.Contains(history!.Items, i => i.Date == Today);
     }
 
-    private sealed record AssetDto(Guid Id);
+    [Fact]
+    public async Task Scheduled_snapshot_and_concurrent_views_keep_one_point_per_day()
+    {
+        using var member = await CreateUserClientAsync();
+        var job = new NetWorthSnapshotJob(
+            Services.GetRequiredService<IServiceScopeFactory>(),
+            NullLogger<NetWorthSnapshotJob>.Instance);
+        await job.RunOnceAsync(default);
 
-    private sealed record DebtDto(Guid Id);
+        var responses = await Task.WhenAll(member.GetAsync("/api/networth"), member.GetAsync("/api/networth"));
+        Assert.All(responses, r => r.EnsureSuccessStatusCode());
+
+        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
+        Assert.NotEmpty(history!.Items);
+        Assert.All(history.Items.GroupBy(i => i.Date), day => Assert.Single(day));
+    }
 
     private sealed record NetWorthDto(string Accounts, string Assets, string Debts, string NetWorth);
 

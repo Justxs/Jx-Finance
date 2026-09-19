@@ -10,22 +10,22 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
     [Fact]
     public async Task Create_a_split_transaction_and_read_back_its_lines()
     {
-        var account = await CreateAccountAsync();
-        var food = await CreateCategoryAsync("Split Food", "expense");
-        var clothes = await CreateCategoryAsync("Split Clothes", "expense");
+        var account = await CreateAccountAsync("1000.00");
+        var food = await CreateCategoryAsync();
+        var clothes = await CreateCategoryAsync();
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "50.00",
                 date = "2026-06-05",
                 lines = new object[]
                 {
-                    new { categoryId = food.Id, amount = "30.00", description = "Food" },
-                    new { categoryId = clothes.Id, amount = "20.00", description = "Clothes" },
+                    new { categoryId = food, amount = "30.00", description = "Food" },
+                    new { categoryId = clothes, amount = "20.00", description = "Clothes" },
                 },
             });
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
@@ -42,13 +42,13 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
     [Fact]
     public async Task Create_rejects_lines_that_do_not_sum_to_the_total()
     {
-        var account = await CreateAccountAsync();
+        var account = await CreateAccountAsync("1000.00");
 
         var response = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "50.00",
                 date = "2026-06-05",
@@ -64,19 +64,19 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
     [Fact]
     public async Task Editing_a_split_replaces_its_line_set()
     {
-        var account = await CreateAccountAsync();
-        var categoryA = await CreateCategoryAsync("Replace A", "expense");
-        var categoryB = await CreateCategoryAsync("Replace B", "expense");
+        var account = await CreateAccountAsync("1000.00");
+        var categoryA = await CreateCategoryAsync();
+        var categoryB = await CreateCategoryAsync();
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "40.00",
                 date = "2026-06-06",
-                lines = new object[] { new { categoryId = categoryA.Id, amount = "40.00" } },
+                lines = new object[] { new { categoryId = categoryA, amount = "40.00" } },
             });
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
         var firstLineId = created!.Lines![0].Id;
@@ -85,14 +85,14 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
             $"/api/transactions/{created.Id}",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "40.00",
                 date = "2026-06-06",
                 lines = new object[]
                 {
-                    new { categoryId = categoryB.Id, amount = "15.00" },
-                    new { categoryId = categoryB.Id, amount = "25.00" },
+                    new { categoryId = categoryB, amount = "15.00" },
+                    new { categoryId = categoryB, amount = "25.00" },
                 },
             });
         updateResponse.EnsureSuccessStatusCode();
@@ -105,18 +105,18 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
     [Fact]
     public async Task Unsplitting_a_transaction_removes_its_lines()
     {
-        var account = await CreateAccountAsync();
-        var category = await CreateCategoryAsync("Unsplit Cat", "expense");
+        var account = await CreateAccountAsync("1000.00");
+        var category = await CreateCategoryAsync();
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/transactions",
             new
             {
-                accountId = account.Id,
+                accountId = account,
                 type = "expense",
                 amount = "20.00",
                 date = "2026-06-07",
-                lines = new object[] { new { categoryId = category.Id, amount = "20.00" } },
+                lines = new object[] { new { categoryId = category, amount = "20.00" } },
             });
         var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
 
@@ -124,8 +124,8 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
             $"/api/transactions/{created!.Id}",
             new
             {
-                accountId = account.Id,
-                categoryId = category.Id,
+                accountId = account,
+                categoryId = category,
                 type = "expense",
                 amount = "20.00",
                 date = "2026-06-07",
@@ -137,26 +137,6 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
         Assert.False(updated!.IsSplit);
         Assert.Null(updated.Lines);
     }
-
-    private async Task<AccountDto> CreateAccountAsync()
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/accounts",
-            new { name = $"Split test {Guid.NewGuid():N}", type = "cash", startingBalance = "1000.00" });
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
-    }
-
-    private async Task<CategoryDto> CreateCategoryAsync(string name, string type)
-    {
-        var response = await Client.PostAsJsonAsync("/api/categories", new { name = $"{name} {Guid.NewGuid():N}", type });
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<CategoryDto>())!;
-    }
-
-    private sealed record AccountDto(Guid Id);
-
-    private sealed record CategoryDto(Guid Id);
 
     private sealed record TransactionLineDto(Guid Id, Guid? CategoryId, string Amount, string? Description);
 
