@@ -14,13 +14,6 @@ interface Props {
   disabled?: boolean;
 }
 
-function netSign(cents: number) {
-  if (cents === 0) {
-    return "";
-  }
-  return cents > 0 ? "+" : "−";
-}
-
 export function ImportSummaryBar({
   rows,
   categories,
@@ -71,8 +64,7 @@ export function ImportSummaryBar({
                 net.cents < 0 && "text-expense",
               )}
             >
-              {netSign(net.cents)}
-              {money.format(Math.abs(net.cents) / 100, net.currency)}
+              {money.formatSigned(net.cents / 100, "auto", net.currency)}
             </span>
           ))}
         </p>

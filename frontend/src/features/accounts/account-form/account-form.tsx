@@ -59,9 +59,8 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
     .object({
       name: z
         .string()
-        .trim()
-        .min(1, t("validation.required"))
-        .max(100, t("validation.maxLength", { max: 100 })),
+        .refine((value) => value.trim().length > 0, t("validation.required"))
+        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
       description: z.string().max(500, t("validation.maxLength", { max: 500 })),
       iban: z.string().refine((value) => !value.trim() || isIban(value), t("validation.iban")),
       type: z.enum(accountTypes),

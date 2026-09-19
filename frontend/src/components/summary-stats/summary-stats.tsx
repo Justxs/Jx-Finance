@@ -11,9 +11,10 @@ interface SummaryStat {
 
 interface Props {
   items: readonly SummaryStat[];
+  currency?: string;
 }
 
-export function SummaryStats({ items }: Readonly<Props>) {
+export function SummaryStats({ items, currency }: Readonly<Props>) {
   const money = useMoney();
   const lead = items.find((item) => item.lead) ?? items[0];
   const rest = items.filter((item) => item !== lead);
@@ -24,7 +25,9 @@ export function SummaryStats({ items }: Readonly<Props>) {
     }
 
     const amount = Number(item.value);
-    return item.sign ? money.formatSigned(amount, item.sign) : money.format(amount);
+    return item.sign
+      ? money.formatSigned(amount, item.sign, currency)
+      : money.format(amount, currency);
   }
 
   return (

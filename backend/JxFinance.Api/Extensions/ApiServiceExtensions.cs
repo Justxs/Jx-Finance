@@ -9,6 +9,7 @@ using JxFinance.Infrastructure.ExchangeRates;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.OpenApi;
 using Serilog;
+using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 
 namespace JxFinance.Extensions;
 
@@ -18,9 +19,11 @@ public static class ApiServiceExtensions
     {
         Log.Logger = new LoggerConfiguration()
             .ReadFrom.Configuration(builder.Configuration)
+            .WriteToTelemetry(builder.Configuration)
             .CreateLogger();
 
         builder.Host.UseSerilog();
+        builder.AddTelemetry();
 
         builder.Services.AddProblemDetails();
         builder.Services.ConfigureHttpJsonOptions(options =>
@@ -45,11 +48,22 @@ public static class ApiServiceExtensions
             client.Timeout = TimeSpan.FromSeconds(10);
         });
 
+        var flexUrl = builder.Configuration[$"{AppOptions.SectionName}:{nameof(AppOptions.InteractiveBrokersFlexUrl)}"]
+            ?? new AppOptions().InteractiveBrokersFlexUrl;
+        builder.Services.AddHttpClient<IFlexClient, FlexClient>(client =>
+        {
+            client.BaseAddress = new Uri(flexUrl);
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.MaxResponseContentBufferSize = 50 * 1024 * 1024;
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
+        }).RemoveAllLoggers();
+
         if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue("App:BackgroundJobs", true))
         {
             builder.Services.AddHostedService<RecurringBillReminderJob>();
             builder.Services.AddHostedService<NetWorthSnapshotJob>();
             builder.Services.AddHostedService<ExchangeRateSyncJob>();
+            builder.Services.AddHostedService<BrokerSyncJob>();
         }
 
         return builder;

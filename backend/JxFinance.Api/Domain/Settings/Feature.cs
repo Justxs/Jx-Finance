@@ -10,4 +10,5 @@ public enum Feature
     Import,
     Households,
     MultiCurrency,
+    Investments,
 }

@@ -14,20 +14,34 @@ export function parseIso(value: string): Date | null {
   return new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
 }
 
-export function todayInZone(timeZone: string) {
+export function safeTimeZone(timeZone: string | null | undefined): string | undefined {
+  if (!timeZone) {
+    return undefined;
+  }
+
   try {
-    return new Intl.DateTimeFormat("en-CA", {
-      timeZone,
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }).format(new Date());
+    const resolved = new Intl.DateTimeFormat("en-CA", { timeZone }).resolvedOptions();
+    return resolved.timeZone ? timeZone : undefined;
   } catch {
-    return toIso(new Date());
+    return undefined;
   }
 }
 
-export function monthBounds(date: Date = new Date()) {
+export function todayInZone(timeZone: string | null | undefined) {
+  const zone = safeTimeZone(timeZone);
+  if (!zone) {
+    return toIso(new Date());
+  }
+
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: zone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+export function monthBounds(date: Date) {
   return {
     dateFrom: toIso(new Date(date.getFullYear(), date.getMonth(), 1)),
     dateTo: toIso(new Date(date.getFullYear(), date.getMonth() + 1, 0)),

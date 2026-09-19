@@ -2,10 +2,7 @@ import { toIso } from "../../../lib/calendar.ts";
 
 export type ReportPreset = "thisMonth" | "lastMonth" | "thisYear" | "lastYear" | "custom";
 
-export function presetRange(
-  preset: ReportPreset,
-  now = new Date(),
-): { dateFrom: string; dateTo: string } {
+export function presetRange(preset: ReportPreset, now: Date): { dateFrom: string; dateTo: string } {
   const year = now.getFullYear();
   const month = now.getMonth();
 
@@ -27,7 +24,11 @@ export function presetRange(
   }
 }
 
-export function detectPreset(dateFrom?: string, dateTo?: string, now = new Date()): ReportPreset {
+export function detectPreset(
+  dateFrom: string | undefined,
+  dateTo: string | undefined,
+  now: Date,
+): ReportPreset {
   if (!dateFrom || !dateTo) {
     return "thisMonth";
   }

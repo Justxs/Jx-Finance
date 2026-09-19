@@ -65,15 +65,15 @@ export function RecurringBillEditForm({ bill, onSaved, onDone }: Readonly<Props>
         disabled={amountInvalid}
         onClick={() =>
           updateMutation.mutate({
-            id: bill.id!,
+            id: bill.id,
             data: {
               name: name.trim(),
-              kind: bill.kind!,
+              kind: bill.kind,
               amount: bill.kind === "fixed" ? amount : null,
               categoryId: bill.categoryId ?? null,
               accountId: bill.accountId ?? null,
-              cadence: bill.cadence!,
-              nextDueDate: bill.nextDueDate!,
+              cadence: bill.cadence,
+              nextDueDate: bill.nextDueDate,
               remindDaysBefore: Number(remindDaysBefore),
               isActive,
             },

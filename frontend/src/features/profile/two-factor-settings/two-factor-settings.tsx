@@ -37,7 +37,17 @@ function PasswordPrompt({
   const { t } = useTranslation();
 
   return (
-    <div className="section max-w-md space-y-4">
+    <form
+      noValidate
+      className="section max-w-md space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (password && !pending) {
+          onSubmit();
+        }
+      }}
+    >
       <h2 className="section-title">{t("profile.twoFactorTitle")}</h2>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
       <Label htmlFor="two-factor-password">{t("profile.currentPassword")}</Label>
@@ -49,15 +59,14 @@ function PasswordPrompt({
         onChange={(e) => onPasswordChange(e.target.value)}
       />
       <Button
-        type="button"
+        type="submit"
         variant={destructive ? "destructive" : "default"}
         pending={pending}
         disabled={!password}
-        onClick={onSubmit}
       >
         {submitLabel}
       </Button>
-    </div>
+    </form>
   );
 }
 
@@ -82,6 +91,7 @@ export function TwoFactorSettings() {
         setSharedKey(data.sharedKey ?? null);
         setQrDataUrl(await QRCode.toDataURL(data.authenticatorUri ?? ""));
       },
+      onError: () => setPassword(""),
     },
   });
 
@@ -92,6 +102,7 @@ export function TwoFactorSettings() {
         toast.success(t("profile.twoFactorDisabled"));
         invalidateMe();
       },
+      onError: () => setPassword(""),
     },
   });
 

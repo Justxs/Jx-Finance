@@ -13,7 +13,7 @@ import { useFeature, useToday } from "@/hooks/use-settings";
 import { isPositiveMoney } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
-export interface TransferFormValues {
+interface TransferFormValues {
   fromAccountId: string;
   toAccountId: string;
   amount: string;
@@ -196,7 +196,7 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
                       }
                       disabled={currency === receivedCurrency}
                       value={currency === receivedCurrency ? "" : field.value}
-                      error={field.errors[0]?.message}
+                      error={field.meta.isTouched ? field.errors[0]?.message : undefined}
                       onBlur={field.handleBlur}
                       onChange={field.handleChange}
                       currency={currencyField.value}
@@ -226,21 +226,6 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         )}
       </form.Field>
 
-      <div className="flex items-end gap-2 md:mt-6">
-        {onCancel ? (
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
-        <form.Subscribe selector={(state) => state.canSubmit}>
-          {(canSubmit) => (
-            <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {t("transfers.add")}
-            </Button>
-          )}
-        </form.Subscribe>
-      </div>
-
       <form.Field name="description">
         {(field) => (
           <div className="col-span-full space-y-1.5">
@@ -254,6 +239,21 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
           </div>
         )}
       </form.Field>
+
+      <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
+        {onCancel ? (
+          <Button type="button" variant="outline" onClick={onCancel}>
+            {t("actions.cancel")}
+          </Button>
+        ) : null}
+        <form.Subscribe selector={(state) => state.canSubmit}>
+          {(canSubmit) => (
+            <Button type="submit" pending={pending} disabled={!canSubmit}>
+              {t("transfers.add")}
+            </Button>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

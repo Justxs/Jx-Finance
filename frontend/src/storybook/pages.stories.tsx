@@ -35,6 +35,8 @@ export const RecurringBills: Story = { args: { path: "/recurring-bills" } };
 
 export const NetWorth: Story = { args: { path: "/net-worth" } };
 
+export const Investments: Story = { args: { path: "/investments" } };
+
 export const Reports: Story = { args: { path: "/reports" } };
 
 export const Households: Story = { args: { path: "/households" } };

@@ -21,7 +21,7 @@ export type ShortcutFeature = keyof FeatureFlags;
 
 const DISABLED_PATHS = new Set(["/login", "/setup"]);
 
-export type ShortcutAction =
+type ShortcutAction =
   | { type: "navigate"; to: string; search?: Record<string, unknown> }
   | { type: "search" }
   | { type: "help" };
@@ -76,6 +76,7 @@ export const shortcuts: readonly Shortcut[] = [
   goTo("o", "/goals", "nav.goals", "goals"),
   goTo("l", "/recurring-bills", "nav.recurringBills", "recurringBills"),
   goTo("w", "/net-worth", "nav.netWorth", "netWorth"),
+  goTo("v", "/investments", "nav.investments", "investments"),
   goTo("r", "/reports", "nav.reports", "reports"),
   goTo("h", "/households", "nav.households", "households"),
   goTo("i", "/import", "nav.import", "import"),
@@ -87,7 +88,7 @@ export function visibleShortcuts(isFeatureEnabled: (feature: ShortcutFeature) =>
   );
 }
 
-export interface ShortcutContext {
+interface ShortcutContext {
   defaultPrevented: boolean;
   repeat: boolean;
   editableTarget: boolean;

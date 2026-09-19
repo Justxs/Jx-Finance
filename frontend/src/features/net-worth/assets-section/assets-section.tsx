@@ -33,7 +33,7 @@ export function AssetsSection() {
       addLabel={t("netWorth.addAsset")}
       emptyLabel={t("netWorth.noAssets")}
       items={assetList.map((asset) => ({
-        id: asset.id!,
+        id: asset.id,
         name: asset.name ?? "",
         details: `${t(`netWorth.assetTypes.${asset.type}`)} · ${formatDate(asset.asOf)}`,
         amount: Number(asset.currentValue),

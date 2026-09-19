@@ -69,8 +69,8 @@ export function AccountsPage() {
     },
   });
 
-  const accountList = accounts.data ?? [];
-  const allAccountList = allAccounts.data ?? [];
+  const accountList = accounts.data;
+  const allAccountList = allAccounts.data;
 
   return (
     <div className="space-y-10">

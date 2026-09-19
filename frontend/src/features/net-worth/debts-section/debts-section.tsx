@@ -8,7 +8,7 @@ import {
   useDeleteDebtEndpoint,
   useGetDebtsEndpointSuspense,
 } from "@/api/generated";
-import { useIsoDate } from "@/hooks/use-formatters";
+import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
 import { HoldingsSection } from "../holdings-section";
 import { DebtForm } from "./debt-form";
 
@@ -16,6 +16,7 @@ export function DebtsSection() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const formatDate = useIsoDate();
+  const formatRate = useRatePercent();
   const debts = useGetDebtsEndpointSuspense();
 
   function invalidate() {
@@ -25,7 +26,7 @@ export function DebtsSection() {
   }
 
   const deleteMutation = useDeleteDebtEndpoint({ mutation: { onSettled: invalidate } });
-  const debtList = useDeferredValue(debts.data) ?? [];
+  const debtList = useDeferredValue(debts.data);
 
   return (
     <HoldingsSection
@@ -34,12 +35,12 @@ export function DebtsSection() {
       emptyLabel={t("netWorth.noDebts")}
       tone="expense"
       items={debtList.map((debt) => ({
-        id: debt.id!,
+        id: debt.id,
         name: debt.name ?? "",
         details: [
           t(`netWorth.debtTypes.${debt.type}`),
           formatDate(debt.asOf),
-          debt.interestRate ? `${debt.interestRate}%` : null,
+          debt.interestRate ? formatRate(Number(debt.interestRate)) : null,
         ]
           .filter(Boolean)
           .join(" · "),

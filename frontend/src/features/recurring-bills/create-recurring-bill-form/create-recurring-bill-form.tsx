@@ -49,9 +49,8 @@ export function CreateRecurringBillForm({
     .object({
       name: z
         .string()
-        .trim()
-        .min(1, t("validation.required"))
-        .max(100, t("validation.maxLength", { max: 100 })),
+        .refine((value) => value.trim().length > 0, t("validation.required"))
+        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
       kind: z.enum(["fixed", "variable"]),
       amount: z.string(),
       categoryId: z.string(),
@@ -209,7 +208,7 @@ export function CreateRecurringBillForm({
               options={[
                 { value: "", label: t("recurringBills.noCategory") },
                 ...expenseCategories.map((category) => ({
-                  value: category.id!,
+                  value: category.id,
                   label: category.name,
                 })),
               ]}
@@ -229,7 +228,7 @@ export function CreateRecurringBillForm({
               onChange={(value) => field.handleChange(value)}
               options={[
                 { value: "", label: t("recurringBills.noAccount") },
-                ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+                ...accounts.map((account) => ({ value: account.id, label: account.name })),
               ]}
             />
           </div>

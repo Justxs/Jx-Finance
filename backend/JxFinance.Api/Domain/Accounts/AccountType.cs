@@ -6,4 +6,5 @@ public enum AccountType
     Savings,
     Cash,
     Other,
+    Investment,
 }

@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMonthLabel } from "@/hooks/use-formatters";
+import { useTodayDate } from "@/hooks/use-settings";
 import { CategoryBreakdownChart } from "../category-breakdown-chart";
 import { DashboardStats } from "../dashboard-stats";
 import { MonthlyTrendChart } from "../monthly-trend-chart";
@@ -11,7 +12,7 @@ import { RecentTransactionsList } from "../recent-transactions-list";
 export function DashboardPage() {
   const { t } = useTranslation();
   const monthLabel = useMonthLabel();
-  const month = monthLabel();
+  const month = monthLabel(useTodayDate());
 
   return (
     <div className="space-y-10">

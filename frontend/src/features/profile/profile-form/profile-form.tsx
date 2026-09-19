@@ -26,9 +26,8 @@ export function ProfileForm({ profile }: Readonly<Props>) {
     .object({
       displayName: z
         .string()
-        .trim()
-        .min(1, t("validation.required"))
-        .max(100, t("validation.maxLength", { max: 100 })),
+        .refine((value) => value.trim().length > 0, t("validation.required"))
+        .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
       currentPassword: z.string(),
       newPassword: z.string(),
     })

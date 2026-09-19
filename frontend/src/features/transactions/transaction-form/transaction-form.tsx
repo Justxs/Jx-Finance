@@ -18,8 +18,10 @@ import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
+import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
-import { isPositiveMoney, normalizeMoney } from "@/lib/validation";
+import { toCents } from "@/lib/money";
+import { isPositiveMoney } from "@/lib/validation";
 import { emptyLine, type LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
 
@@ -88,6 +90,7 @@ function useTransactionForm({
   onAnotherSettled,
 }: Readonly<FormSource>) {
   const { t } = useTranslation();
+  const money = useMoney();
   const today = useToday();
 
   const schema = z
@@ -120,17 +123,14 @@ function useTransactionForm({
       }
 
       if (isPositiveMoney(value.amount)) {
-        const sum = value.lines.reduce(
-          (total, line) => total + Number(normalizeMoney(line.amount)),
-          0,
-        );
-        const total = Number(normalizeMoney(value.amount));
-        if (Math.round((sum - total) * 100) !== 0) {
+        const sum = value.lines.reduce((total, line) => total + toCents(line.amount), 0);
+        const total = toCents(value.amount);
+        if (sum !== total) {
           ctx.addIssue({
             code: "custom",
             message: t("transactions.splitTotalMismatch", {
-              linesTotal: sum.toFixed(2),
-              total: value.amount,
+              linesTotal: money.format(sum / 100, value.currency),
+              total: money.format(total / 100, value.currency),
             }),
             path: ["lines"],
           });

@@ -4,10 +4,13 @@ import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { ColumnHeader } from "@/components/ui/column-header";
+import {
+  type AriaSort,
+  ariaSortFor,
+  ColumnHeader,
+  nextSortDirection,
+} from "@/components/ui/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-
-type AriaSort = "ascending" | "descending" | undefined;
 
 interface Args {
   accounts: AccountResponse[];
@@ -23,9 +26,8 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
     navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
   }
 
-  function toggleSort(key: string) {
-    const sort = key as NonNullable<typeof search.sort>;
-    const direction = search.sort === sort && search.direction === "asc" ? "desc" : "asc";
+  function toggleSort(sort: NonNullable<typeof search.sort>) {
+    const direction = nextSortDirection(sort, search.sort, search.direction);
     navigate({ search: (prev) => ({ ...prev, sort, direction, page: 1 }) });
   }
 
@@ -37,7 +39,9 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
     Boolean(search.dateFrom) ||
     Boolean(search.dateTo);
 
-  function header(sortKey: string, label: string, filter: ReactNode) {
+  type SortKey = NonNullable<typeof search.sort>;
+
+  function header(sortKey: SortKey, label: string, filter: ReactNode) {
     return (
       <ColumnHeader
         label={label}
@@ -50,12 +54,8 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
     );
   }
 
-  function ariaSort(sortKey: string): AriaSort {
-    if (search.sort !== sortKey) {
-      return undefined;
-    }
-
-    return search.direction === "desc" ? "descending" : "ascending";
+  function ariaSort(sortKey: SortKey): AriaSort {
+    return ariaSortFor(sortKey, search.sort, search.direction);
   }
 
   const ariaSortByColumn: Record<string, AriaSort> = {

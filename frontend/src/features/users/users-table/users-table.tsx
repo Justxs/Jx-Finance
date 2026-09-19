@@ -6,7 +6,7 @@ import type { UserProfileResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { SortableTableHead } from "@/components/ui/column-header";
+import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
 import {
   Table,
   TableBody,
@@ -46,9 +46,8 @@ export function UsersTable({
     navigate({ search: (prev) => ({ ...prev, ...patch }) });
   }
 
-  function toggleSort(key: string) {
-    const sort = key as NonNullable<typeof search.sort>;
-    const direction = search.sort === sort && search.direction === "asc" ? "desc" : "asc";
+  function toggleSort(sort: NonNullable<typeof search.sort>) {
+    const direction = nextSortDirection(sort, search.sort, search.direction);
     navigate({ search: (prev) => ({ ...prev, sort, direction }) });
   }
 
@@ -80,7 +79,7 @@ export function UsersTable({
               className={rolePendingId === user.id ? "is-stale" : undefined}
               aria-busy={rolePendingId === user.id}
               disabled={isSelf || rolePendingId !== null}
-              onChange={(role) => onRoleChange(user.id!, role)}
+              onChange={(role) => onRoleChange(user.id, role)}
               options={roleOptions}
             />
           </TableCell>
@@ -97,7 +96,7 @@ export function UsersTable({
                 className="size-8"
                 pending={deactivatePendingId === user.id}
                 disabled={isSelf || !user.isActive || deactivatePendingId !== null}
-                onClick={() => onDeactivate(user.id!)}
+                onClick={() => onDeactivate(user.id)}
                 aria-label={`${t("users.deactivate")}: ${user.displayName || user.email}`}
                 tooltip={`${t("users.deactivate")}: ${user.displayName || user.email}`}
               >

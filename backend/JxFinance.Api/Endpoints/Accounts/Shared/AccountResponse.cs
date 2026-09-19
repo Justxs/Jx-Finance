@@ -16,4 +16,5 @@ public sealed record AccountResponse(
     Guid? HouseholdId,
     Currency Currency,
     IReadOnlyList<CurrencyBalance> Balances,
-    string ReportingBalance);
+    string ReportingBalance,
+    string HoldingsValue);

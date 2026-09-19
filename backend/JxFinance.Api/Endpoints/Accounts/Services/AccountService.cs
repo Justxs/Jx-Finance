@@ -10,6 +10,7 @@ using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Shared;
 using JxFinance.Endpoints.Accounts.UpdateAccount;
+using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +21,8 @@ public sealed class AccountService(
     AppDbContext db,
     ICurrentUser currentUser,
     AccountMapper mapper,
-    IExchangeRateService rates) : IAccountService
+    IExchangeRateService rates,
+    IHoldingsValuation holdings) : IAccountService
 {
     public Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken) =>
         GetAllAsync(new GetAccountsRequest(), cancellationToken);
@@ -245,6 +247,15 @@ public sealed class AccountService(
             .ToListAsync(cancellationToken);
         bought.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
 
+        var invested = await db.InvestmentTransactions
+            .Where(t => ids.Contains(t.AccountId))
+            .GroupBy(t => new { t.AccountId, t.CashAmount.Currency })
+            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.CashAmount.Amount) })
+            .ToListAsync(cancellationToken);
+        invested.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
+
+        var holdingValues = await holdings.ValueAsync(ids, cancellationToken);
+
         var latest = await rates.GetLatestAsync(cancellationToken);
         var reporting = rates.ReportingCurrency;
 
@@ -259,14 +270,16 @@ public sealed class AccountService(
                     .ThenBy(m => m.Currency.ToCode(), StringComparer.Ordinal)
                     .ToList();
 
+                (decimal Value, bool IsComplete) holdingValue = holdingValues.GetValueOrDefault(account.Id, (0m, true));
                 decimal? In(Money money, Currency currency) => latest.Convert(money.Amount, money.Currency, currency);
 
                 return new AccountBalance(
                     held,
                     new Money(held.Sum(m => In(m, account.Currency) ?? 0m), account.Currency),
-                    new Money(held.Sum(m => In(m, reporting) ?? 0m), reporting),
+                    new Money(held.Sum(m => In(m, reporting) ?? 0m) + holdingValue.Value, reporting),
+                    new Money(holdingValue.Value, reporting),
                     In(account.StartingBalance, reporting) ?? 0m,
-                    held.All(m => In(m, reporting) is not null));
+                    holdingValue.IsComplete && held.All(m => In(m, reporting) is not null));
             });
     }
 }

@@ -1,17 +1,12 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  useDeleteHouseholdEndpoint,
-  useRemoveMemberEndpoint,
-  useUpdateHouseholdEndpoint,
-} from "@/api/generated";
+import { useDeleteHouseholdEndpoint, useRemoveMemberEndpoint } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { CreateHouseholdForm } from "../create-household-form";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
 
@@ -24,14 +19,10 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
   const members = useDeferredValue(household.members);
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState(false);
-  const [name, setName] = useState(household.name ?? "");
   const [addMemberOpen, setAddMemberOpen] = useState(false);
 
   const isOwner = household.myRole === "owner";
 
-  const renameMutation = useUpdateHouseholdEndpoint({
-    mutation: { onSuccess: () => setRenaming(false), onSettled: onChanged },
-  });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteHouseholdEndpoint({ mutation: { onSettled: onChanged } });
@@ -48,10 +39,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
               variant="ghost"
               size="icon"
               className="size-8"
-              onClick={() => {
-                setName(household.name ?? "");
-                setRenaming(true);
-              }}
+              onClick={() => setRenaming(true)}
               aria-label={`${t("actions.edit")}: ${household.name}`}
               tooltip={`${t("actions.edit")}: ${household.name}`}
             >
@@ -62,7 +50,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
               size="icon"
               className="size-8"
               pending={deleteMutation.isPending}
-              onClick={() => setDeleteTarget(household.id!)}
+              onClick={() => setDeleteTarget(household.id)}
               aria-label={`${t("actions.delete")}: ${household.name}`}
               tooltip={`${t("actions.delete")}: ${household.name}`}
             >
@@ -73,50 +61,28 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
       </div>
 
       <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor={`household-${household.id}-name`}>{t("households.name")}</Label>
-            <Input
-              id={`household-${household.id}-name`}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              disabled={renameMutation.isPending}
-              onClick={() => setRenaming(false)}
-            >
-              {t("actions.cancel")}
-            </Button>
-            <Button
-              pending={renameMutation.isPending}
-              disabled={!name.trim()}
-              onClick={() =>
-                renameMutation.mutate({ id: household.id!, data: { name: name.trim() } })
-              }
-            >
-              {t("actions.save")}
-            </Button>
-          </div>
-        </div>
+        <CreateHouseholdForm
+          initial={household}
+          onCreated={() => {
+            onChanged();
+            setRenaming(false);
+          }}
+          onCancel={() => setRenaming(false)}
+        />
       </Modal>
 
       <ul className="rows">
         {members?.map((member) => (
           <MemberRow
             key={member.userId}
-            householdId={household.id!}
+            householdId={household.id}
             member={member}
             isOwnerView={isOwner}
             removePending={
               removeMutation.isPending && removeMutation.variables?.userId === member.userId
             }
             removeDisabled={removeMutation.isPending}
-            onRemove={() => removeMutation.mutate({ id: household.id!, userId: member.userId! })}
+            onRemove={() => removeMutation.mutate({ id: household.id, userId: member.userId })}
             onSaved={onChanged}
           />
         ))}
@@ -133,7 +99,7 @@ export function HouseholdCard({ household, onChanged }: Readonly<Props>) {
 
       <Modal open={addMemberOpen} onOpenChange={setAddMemberOpen} title={t("households.addMember")}>
         <AddMemberForm
-          householdId={household.id!}
+          householdId={household.id}
           onAdded={() => {
             onChanged();
             setAddMemberOpen(false);

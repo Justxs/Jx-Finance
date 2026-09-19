@@ -13,4 +13,5 @@ public sealed class CurrencyConversion : OwnableEntity
     public DateOnly Date { get; set; }
     public string? Description { get; set; }
     public TransactionId? FeeTransactionId { get; set; }
+    public string? ImportRef { get; set; }
 }

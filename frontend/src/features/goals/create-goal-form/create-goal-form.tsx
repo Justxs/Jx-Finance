@@ -8,7 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { isMoney, isPositiveMoney, normalizeMoney } from "@/lib/validation";
+import { isNonNegativeMoney, isPositiveMoney } from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -24,7 +24,7 @@ interface Props {
 }
 
 function isCurrentAmount(value: string) {
-  return value === "" || (isMoney(value) && Number(normalizeMoney(value)) >= 0);
+  return value === "" || isNonNegativeMoney(value);
 }
 
 export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>) {
@@ -33,9 +33,8 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
   const schema = z.object({
     name: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .max(100, t("validation.maxLength", { max: 100 })),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => value.trim().length <= 100, t("validation.maxLength", { max: 100 })),
     targetAmount: z.string().refine(isPositiveMoney, t("validation.positiveMoney")),
     currentAmount: z.string().refine(isCurrentAmount, t("validation.money")),
     targetDate: z.string(),

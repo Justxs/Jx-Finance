@@ -15,4 +15,5 @@ export interface FeatureFlags {
   import: boolean;
   households: boolean;
   multiCurrency: boolean;
+  investments: boolean;
 }

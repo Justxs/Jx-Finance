@@ -8,7 +8,7 @@ import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { SortableTableHead } from "@/components/ui/column-header";
+import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
 import {
   Table,
   TableBody,
@@ -58,9 +58,8 @@ export function AccountsTable({
     navigate({ search: (prev) => ({ ...prev, ...patch }) });
   }
 
-  function toggleSort(key: string) {
-    const sort = key as NonNullable<typeof search.sort>;
-    const direction = search.sort === sort && search.direction === "asc" ? "desc" : "asc";
+  function toggleSort(sort: NonNullable<typeof search.sort>) {
+    const direction = nextSortDirection(sort, search.sort, search.direction);
     navigate({ search: (prev) => ({ ...prev, sort, direction }) });
   }
 
@@ -131,6 +130,11 @@ export function AccountsTable({
                 </li>
               ))}
             </ul>
+          ) : null}
+          {Number(account.holdingsValue ?? 0) > 0 ? (
+            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+              {t("accounts.holdings", { value: money.format(Number(account.holdingsValue)) })}
+            </p>
           ) : null}
         </TableCell>
         <TableCell>

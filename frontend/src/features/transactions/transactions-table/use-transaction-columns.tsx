@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
-import { useIsoDate } from "@/hooks/use-formatters";
+import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
 import type { transactionTableFeatures } from "./table-features";
@@ -59,7 +59,7 @@ export function useTransactionColumns({
       cell: (info) => {
         const description = info.getValue();
         if (!description) {
-          return <span className="text-muted-foreground">—</span>;
+          return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
         }
         return (
           <span className="line-clamp-2 font-medium wrap-break-word" title={description}>

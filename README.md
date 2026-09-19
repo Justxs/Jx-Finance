@@ -16,7 +16,7 @@ nub install -C frontend --frozen-lockfile
 ./scripts/dev.ps1
 ```
 
-The script starts PostgreSQL and waits for it to become healthy, then starts the API and Vite. Open http://localhost:5173 and create the first administrator. Subsequent users are created from Users by an administrator. API documentation is at http://localhost:8091/scalar/v1. `just dev` runs the same script.
+The script starts PostgreSQL and waits for it to become healthy, then starts the API and Vite. Open http://localhost:5173 and create the first administrator. Subsequent users are created from Users by an administrator. API documentation is at http://localhost:8091/scalar/v1. The script also starts the .NET Aspire dashboard at http://localhost:18888, which shows API logs, traces and metrics. `just dev` runs the same script.
 
 Nub is pinned in `frontend/package.json`; commit `frontend/nub.lock` when dependencies change. npm is only used above to bootstrap the nub CLI. `frontend/nub.jsonc` keeps standard Node behavior so Vite and the tests retain their existing loaders and environment handling.
 

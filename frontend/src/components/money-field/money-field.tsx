@@ -45,7 +45,8 @@ export function MoneyField({
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
   const currencyErrorId = `${id}-currency-error`;
-  const describedBy = error ? errorId : undefined;
+  const describedBy =
+    [hint ? hintId : null, error ? errorId : null].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className="space-y-1.5">
@@ -60,7 +61,7 @@ export function MoneyField({
           disabled={disabled}
           value={value}
           aria-invalid={Boolean(error)}
-          aria-describedby={describedBy ?? (hint ? hintId : undefined)}
+          aria-describedby={describedBy}
           onBlur={onBlur}
           onChange={(event) => onChange(event.target.value)}
         />

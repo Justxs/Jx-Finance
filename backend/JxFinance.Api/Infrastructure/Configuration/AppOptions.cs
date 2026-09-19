@@ -13,6 +13,9 @@ public sealed class AppOptions
     public Currency ReportingCurrency { get; set; } = Currency.Eur;
 
     public ExchangeRateOptions ExchangeRates { get; set; } = new();
+
+    public string InteractiveBrokersFlexUrl { get; set; } =
+        "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/";
 }
 
 public sealed class ExchangeRateOptions

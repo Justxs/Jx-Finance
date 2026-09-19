@@ -25,7 +25,7 @@ interface Props {
   accounts: AccountResponse[];
   pending: boolean;
   exchangeRates: ReactNode;
-  onSubmit: (values: UpdateSettingsRequest) => void;
+  onSubmit: (values: UpdateSettingsRequest, onSaved: () => void) => void;
 }
 
 interface FormValues {
@@ -43,7 +43,7 @@ interface FormValues {
 
 const featureGroups: { titleKey: string; features: FeatureKey[] }[] = [
   { titleKey: "settings.featureGroups.plan", features: ["budgets", "goals", "recurringBills"] },
-  { titleKey: "settings.featureGroups.review", features: ["netWorth", "reports"] },
+  { titleKey: "settings.featureGroups.review", features: ["netWorth", "investments", "reports"] },
   {
     titleKey: "settings.featureGroups.ledger",
     features: ["import", "households", "multiCurrency"],
@@ -79,6 +79,7 @@ export function SettingsForm({
       import: z.boolean(),
       households: z.boolean(),
       multiCurrency: z.boolean(),
+      investments: z.boolean(),
     }),
     reportingCurrency: z.enum(Currency),
     enabledCurrencies: z.array(z.enum(Currency)),
@@ -106,19 +107,22 @@ export function SettingsForm({
   const form = useForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: ({ value }) => {
-      onSubmit({
-        instanceName: value.instanceName.trim() || null,
-        features: value.features,
-        reportingCurrency: value.reportingCurrency,
-        enabledCurrencies: value.enabledCurrencies,
-        exchangeRateSyncEnabled: value.exchangeRateSyncEnabled,
-        defaultLanguage: value.defaultLanguage,
-        timeZone: value.timeZone,
-        firstDayOfWeek: value.firstDayOfWeek,
-        defaultAccountId: value.defaultAccountId || null,
-        defaultPageSize: Number(value.defaultPageSize),
-      });
+    onSubmit: ({ value, formApi }) => {
+      onSubmit(
+        {
+          instanceName: value.instanceName.trim() || null,
+          features: value.features,
+          reportingCurrency: value.reportingCurrency,
+          enabledCurrencies: value.enabledCurrencies,
+          exchangeRateSyncEnabled: value.exchangeRateSyncEnabled,
+          defaultLanguage: value.defaultLanguage,
+          timeZone: value.timeZone,
+          firstDayOfWeek: value.firstDayOfWeek,
+          defaultAccountId: value.defaultAccountId || null,
+          defaultPageSize: Number(value.defaultPageSize),
+        },
+        () => formApi.reset(value),
+      );
     },
   });
 

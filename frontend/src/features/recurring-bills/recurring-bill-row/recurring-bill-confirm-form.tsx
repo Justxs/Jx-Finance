@@ -55,7 +55,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
             onChange={setAccountId}
             options={[
               { value: "", label: t("recurringBills.noAccount") },
-              ...accounts.map((account) => ({ value: account.id!, label: account.name })),
+              ...accounts.map((account) => ({ value: account.id, label: account.name })),
             ]}
           />
           <p className="text-xs text-muted-foreground">
@@ -69,9 +69,9 @@ export function RecurringBillConfirmForm({ bill, accounts, onSaved, onDone }: Re
         disabled={amountRequired || accountRequired}
         onClick={() =>
           confirmMutation.mutate({
-            id: bill.id!,
+            id: bill.id,
             data: {
-              expectedDueDate: bill.nextDueDate!,
+              expectedDueDate: bill.nextDueDate,
               amount: isVariable ? amount : null,
               accountId: bill.accountId ? null : accountId,
             },

@@ -26,9 +26,8 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
   const schema = z.object({
     email: z
       .string()
-      .trim()
-      .min(1, t("validation.required"))
-      .refine(isEmail, t("validation.email")),
+      .refine((value) => value.trim().length > 0, t("validation.required"))
+      .refine((value) => isEmail(value.trim()), t("validation.email")),
     role: z.enum(["owner", "member"]),
   });
 

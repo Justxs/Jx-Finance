@@ -1,0 +1,51 @@
+namespace JxFinance.Domain.Investments;
+
+public static class Portfolio
+{
+    public static IReadOnlyDictionary<SecurityId, Position> Positions(IEnumerable<InvestmentTransaction> transactions)
+    {
+        var positions = new Dictionary<SecurityId, Position>();
+        foreach (var transaction in transactions
+            .OrderBy(t => t.Date)
+            .ThenBy(t => t.Type == InvestmentTransactionType.Sell)
+            .ThenBy(t => t.CreatedAt))
+        {
+            if (transaction.SecurityId is not { } securityId)
+            {
+                continue;
+            }
+
+            if (!positions.TryGetValue(securityId, out var position))
+            {
+                position = positions[securityId] = new Position(securityId);
+            }
+
+            switch (transaction.Type)
+            {
+                case InvestmentTransactionType.Buy:
+                    position.Buy(transaction.Quantity, -transaction.CashAmount.Amount, -transaction.ReportingAmount);
+                    break;
+                case InvestmentTransactionType.Sell:
+                    position.Sell(transaction.Date, transaction.Quantity, transaction.CashAmount.Amount, transaction.ReportingAmount);
+                    break;
+                case InvestmentTransactionType.Split:
+                    position.Split(transaction.Quantity);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        return positions;
+    }
+
+    public static decimal CashEffect(InvestmentTransactionType type, decimal quantity, decimal price, decimal amount, decimal fee) =>
+        type switch
+        {
+            InvestmentTransactionType.Buy => -((quantity * price) + fee),
+            InvestmentTransactionType.Sell => (quantity * price) - fee,
+            InvestmentTransactionType.Dividend or InvestmentTransactionType.Interest => amount,
+            InvestmentTransactionType.WithholdingTax or InvestmentTransactionType.Fee => -amount,
+            _ => 0m,
+        };
+}

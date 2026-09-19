@@ -1,4 +1,5 @@
 import type { TransactionResponse } from "@/api/generated/model";
+import { ApproximateAmount } from "@/components/approximate-amount";
 import { useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { isOptimistic } from "./transaction-row";
@@ -28,12 +29,12 @@ export function TransactionAmount({
         className,
       )}
     >
-      {isIncome ? "+" : "−"}
-      {money.format(Number(transaction.amount), transaction.currency)}
+      {money.formatSigned(Number(transaction.amount), isIncome ? "+" : "−", transaction.currency)}
       {reportingVisible ? (
-        <span className="block text-xs font-normal text-muted-foreground">
-          ≈ {money.format(Number(transaction.reportingAmount))}
-        </span>
+        <ApproximateAmount
+          value={Number(transaction.reportingAmount)}
+          currency={reportingCurrency}
+        />
       ) : null}
     </span>
   );

@@ -95,9 +95,16 @@ public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore stor
             .IgnoreQueryFilters()
             .Where(t => t.Amount.Currency != reportingCurrency)
             .ToListAsync(cancellationToken);
-        if (foreign.Count > 0)
+        var entries = await db.InvestmentTransactions
+            .IgnoreQueryFilters()
+            .Where(t => !t.IsDeleted)
+            .ToListAsync(cancellationToken);
+        var dates = foreign.Select(t => t.Date)
+            .Concat(entries.Where(e => e.CashAmount.Currency != reportingCurrency).Select(e => e.Date))
+            .ToList();
+        if (dates.Count > 0)
         {
-            await rates.EnsureRangeAsync(foreign.Min(t => t.Date), foreign.Max(t => t.Date), cancellationToken);
+            await rates.EnsureRangeAsync(dates.Min(), dates.Max(), cancellationToken);
         }
 
         foreach (var transaction in foreign)
@@ -115,6 +122,17 @@ public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore stor
             .IgnoreQueryFilters()
             .Where(t => t.Amount.Currency == reportingCurrency)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.Amount.Amount), cancellationToken);
+
+        foreach (var entry in entries)
+        {
+            var value = await rates.ConvertAsync(entry.CashAmount, reportingCurrency, entry.Date, cancellationToken);
+            if (value.IsFailure)
+            {
+                return value.ErrorMessage;
+            }
+
+            entry.ReportingAmount = value.Value;
+        }
 
         return null;
     }

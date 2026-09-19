@@ -14,7 +14,7 @@ import { useAxisMoney } from "@/hooks/use-formatters";
 import { ChartLegend } from "./chart-legend";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 
-export interface IncomeExpensePoint {
+interface IncomeExpensePoint {
   label: string;
   income: number;
   expense: number;

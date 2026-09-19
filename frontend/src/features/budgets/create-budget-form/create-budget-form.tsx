@@ -78,7 +78,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
                 onBlur={field.handleBlur}
                 onChange={(value) => field.handleChange(value)}
                 options={expenseCategories.map((category) => ({
-                  value: category.id!,
+                  value: category.id,
                   label: category.name,
                 }))}
               />

@@ -37,6 +37,9 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const stale = shownPage !== page;
   const transfers = useGetTransfersEndpointSuspense({ page: shownPage, pageSize });
   const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / pageSize));
+  if (page > pages) {
+    setPage(pages);
+  }
   const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
 
   function invalidate() {

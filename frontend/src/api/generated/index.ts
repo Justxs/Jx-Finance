@@ -27,6 +27,8 @@ import type {
   AccountResponse,
   AddMemberRequest,
   AssetResponse,
+  BrokerConnectionResponse,
+  BrokerImportResponse,
   BudgetResponse,
   BulkCategorizeTransactionsRequest,
   BulkCategorizeTransactionsResponse,
@@ -43,6 +45,7 @@ import type {
   CreateDebtRequest,
   CreateGoalRequest,
   CreateHouseholdRequest,
+  CreateInvestmentTransactionRequest,
   CreateRecurringBillRequest,
   CreateTransactionRequest,
   CreateTransferRequest,
@@ -60,10 +63,13 @@ import type {
   GetCategoryBreakdownEndpointParams,
   GetConversionsEndpointParams,
   GetExchangeRateEndpointParams,
+  GetInvestmentTransactionsEndpointParams,
   GetMonthlyTrendEndpointParams,
   GetNotificationsEndpointParams,
   GetPingResponse,
+  GetPortfolioEndpointParams,
   GetReportSummaryEndpointParams,
+  GetSecuritiesEndpointParams,
   GetTransactionsEndpointParams,
   GetTransactionsSummaryEndpointParams,
   GetTransfersEndpointParams,
@@ -72,6 +78,7 @@ import type {
   HouseholdResponse,
   IReadOnlyListOfAccountResponse,
   IReadOnlyListOfAssetResponse,
+  IReadOnlyListOfBrokerConnectionResponse,
   IReadOnlyListOfBudgetResponse,
   IReadOnlyListOfCategoryResponse,
   IReadOnlyListOfDebtResponse,
@@ -79,24 +86,33 @@ import type {
   IReadOnlyListOfHouseholdResponse,
   IReadOnlyListOfNotificationResponse,
   IReadOnlyListOfRecurringBillResponse,
+  IReadOnlyListOfSecurityResponse,
   IReadOnlyListOfUserProfileResponse,
+  ImportBrokerReportRequest,
   ImportConfirmRequest,
   ImportConfirmResponse,
   ImportPreviewRequest,
   ImportPreviewResponse,
+  InvestmentTransactionResponse,
   LoginRequest,
   LoginResponse,
   MonthlyTrendResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
   PagedResponseOfConversionResponse,
+  PagedResponseOfInvestmentTransactionResponse,
   PagedResponseOfTransactionResponse,
   PagedResponseOfTransferResponse,
+  PortfolioResponse,
   ProblemDetails,
   PublicSettingsResponse,
   ReauthenticateRequest,
   RecurringBillResponse,
   ReportSummaryResponse,
+  SaveBrokerConnectionRequest,
+  SaveSecurityRequestOp2EFFB26FBA95,
+  SaveSecurityRequestOpA040D7350AFF,
+  SecurityResponse,
   SettingsResponse,
   SetupRequest,
   SetupStatusResponse,
@@ -7098,6 +7114,1804 @@ export const useImportPreviewEndpoint = <TError = ProblemDetails, TContext = unk
   TContext
 > => {
   return useMutation(getImportPreviewEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetBrokerConnectionsEndpointUrl = () => {
+  return `/api/investments/connections`;
+};
+
+/**
+ * One connection per account. The Flex token is write-only and never returned.
+ * @summary List your Interactive Brokers connections
+ */
+export const getBrokerConnectionsEndpoint = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<IReadOnlyListOfBrokerConnectionResponse> => {
+  return customFetch<IReadOnlyListOfBrokerConnectionResponse>(
+    getGetBrokerConnectionsEndpointUrl(),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetBrokerConnectionsEndpointQueryKey = () => {
+  return [`/api/investments/connections`] as const;
+};
+
+export const getGetBrokerConnectionsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetBrokerConnectionsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>> = ({
+    signal,
+  }) => getBrokerConnectionsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetBrokerConnectionsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>
+>;
+export type GetBrokerConnectionsEndpointQueryError = ProblemDetails;
+
+export function useGetBrokerConnectionsEndpoint<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBrokerConnectionsEndpoint<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBrokerConnectionsEndpoint<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List your Interactive Brokers connections
+ */
+
+export function useGetBrokerConnectionsEndpoint<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetBrokerConnectionsEndpointQueryOptions(options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetBrokerConnectionsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetBrokerConnectionsEndpointQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>> = ({
+    signal,
+  }) => getBrokerConnectionsEndpoint({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetBrokerConnectionsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>
+>;
+export type GetBrokerConnectionsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetBrokerConnectionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBrokerConnectionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetBrokerConnectionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List your Interactive Brokers connections
+ */
+
+export function useGetBrokerConnectionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getBrokerConnectionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetBrokerConnectionsEndpointSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteBrokerConnectionEndpointUrl = (accountId: string) => {
+  return `/api/investments/connections/${accountId}`;
+};
+
+/**
+ * Forgets the token and stops automatic sync. Imported entries stay.
+ * @summary Remove an Interactive Brokers connection
+ */
+export const deleteBrokerConnectionEndpoint = async (
+  accountId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteBrokerConnectionEndpointUrl(accountId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteBrokerConnectionEndpointMutationKey = () =>
+  ["deleteBrokerConnectionEndpoint"] as const;
+
+export const getDeleteBrokerConnectionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>,
+    TError,
+    DeleteBrokerConnectionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>,
+  TError,
+  DeleteBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteBrokerConnectionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>,
+    DeleteBrokerConnectionEndpointMutationVariables
+  > = (props) => {
+    const { accountId } = props ?? {};
+
+    return deleteBrokerConnectionEndpoint(accountId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteBrokerConnectionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>
+>;
+
+export type DeleteBrokerConnectionEndpointMutationError = ProblemDetails;
+export type DeleteBrokerConnectionEndpointMutationVariables = { accountId: string };
+
+/**
+ * @summary Remove an Interactive Brokers connection
+ */
+export const useDeleteBrokerConnectionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>,
+      TError,
+      DeleteBrokerConnectionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteBrokerConnectionEndpoint>>,
+  TError,
+  DeleteBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteBrokerConnectionEndpointMutationOptions(options), queryClient);
+};
+
+export const getSaveBrokerConnectionEndpointUrl = (accountId: string) => {
+  return `/api/investments/connections/${accountId}`;
+};
+
+/**
+ * Stores the Flex Query id and token so the server can download the report once a day and on demand. The token is encrypted at rest. Leave Token empty to keep the stored one.
+ * @summary Connect an account to the Interactive Brokers Flex Web Service
+ */
+export const saveBrokerConnectionEndpoint = async (
+  accountId: string,
+  saveBrokerConnectionRequest: SaveBrokerConnectionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BrokerConnectionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<BrokerConnectionResponse>(getSaveBrokerConnectionEndpointUrl(accountId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveBrokerConnectionRequest),
+  });
+};
+
+export const getSaveBrokerConnectionEndpointMutationKey = () =>
+  ["saveBrokerConnectionEndpoint"] as const;
+
+export const getSaveBrokerConnectionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>,
+    TError,
+    SaveBrokerConnectionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>,
+  TError,
+  SaveBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveBrokerConnectionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>,
+    SaveBrokerConnectionEndpointMutationVariables
+  > = (props) => {
+    const { accountId, data } = props ?? {};
+
+    return saveBrokerConnectionEndpoint(accountId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveBrokerConnectionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>
+>;
+export type SaveBrokerConnectionEndpointMutationBody = SaveBrokerConnectionRequest;
+export type SaveBrokerConnectionEndpointMutationError = ProblemDetails;
+export type SaveBrokerConnectionEndpointMutationVariables = {
+  accountId: string;
+  data: SaveBrokerConnectionRequest;
+};
+
+/**
+ * @summary Connect an account to the Interactive Brokers Flex Web Service
+ */
+export const useSaveBrokerConnectionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>,
+      TError,
+      SaveBrokerConnectionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveBrokerConnectionEndpoint>>,
+  TError,
+  SaveBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveBrokerConnectionEndpointMutationOptions(options), queryClient);
+};
+
+export const getSyncBrokerConnectionEndpointUrl = (accountId: string) => {
+  return `/api/investments/connections/${accountId}/sync`;
+};
+
+/**
+ * Asks Interactive Brokers to run the stored Flex Query, waits for it, and imports it the same way as an uploaded file. Can take up to a minute.
+ * @summary Download and import the Flex Query report now
+ */
+export const syncBrokerConnectionEndpoint = async (
+  accountId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BrokerImportResponse> => {
+  return customFetch<BrokerImportResponse>(getSyncBrokerConnectionEndpointUrl(accountId), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSyncBrokerConnectionEndpointMutationKey = () =>
+  ["syncBrokerConnectionEndpoint"] as const;
+
+export const getSyncBrokerConnectionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>,
+    TError,
+    SyncBrokerConnectionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>,
+  TError,
+  SyncBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSyncBrokerConnectionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>,
+    SyncBrokerConnectionEndpointMutationVariables
+  > = (props) => {
+    const { accountId } = props ?? {};
+
+    return syncBrokerConnectionEndpoint(accountId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SyncBrokerConnectionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>
+>;
+
+export type SyncBrokerConnectionEndpointMutationError = ProblemDetails;
+export type SyncBrokerConnectionEndpointMutationVariables = { accountId: string };
+
+/**
+ * @summary Download and import the Flex Query report now
+ */
+export const useSyncBrokerConnectionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>,
+      TError,
+      SyncBrokerConnectionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof syncBrokerConnectionEndpoint>>,
+  TError,
+  SyncBrokerConnectionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getSyncBrokerConnectionEndpointMutationOptions(options), queryClient);
+};
+
+export const getImportBrokerReportEndpointUrl = () => {
+  return `/api/investments/import/interactive-brokers`;
+};
+
+/**
+ * Reads the Trades, Cash Transactions and Open Positions sections of a Flex Query XML report. Stock, ETF, fund and bond trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing.
+ * @summary Import an Interactive Brokers Flex Query report
+ */
+export const importBrokerReportEndpoint = async (
+  importBrokerReportRequest: ImportBrokerReportRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BrokerImportResponse> => {
+  const formData = new FormData();
+  if (importBrokerReportRequest.file !== undefined) {
+    formData.append(`file`, importBrokerReportRequest.file);
+  }
+  if (importBrokerReportRequest.accountId !== undefined) {
+    formData.append(`accountId`, importBrokerReportRequest.accountId);
+  }
+  if (
+    importBrokerReportRequest.fundingAccountId !== undefined &&
+    importBrokerReportRequest.fundingAccountId !== null
+  ) {
+    formData.append(`fundingAccountId`, importBrokerReportRequest.fundingAccountId);
+  }
+
+  return customFetch<BrokerImportResponse>(getImportBrokerReportEndpointUrl(), {
+    ...options,
+    method: "POST",
+    body: formData,
+  });
+};
+
+export const getImportBrokerReportEndpointMutationKey = () =>
+  ["importBrokerReportEndpoint"] as const;
+
+export const getImportBrokerReportEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof importBrokerReportEndpoint>>,
+    TError,
+    ImportBrokerReportEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof importBrokerReportEndpoint>>,
+  TError,
+  ImportBrokerReportEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getImportBrokerReportEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof importBrokerReportEndpoint>>,
+    ImportBrokerReportEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return importBrokerReportEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ImportBrokerReportEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof importBrokerReportEndpoint>>
+>;
+export type ImportBrokerReportEndpointMutationBody = ImportBrokerReportRequest;
+export type ImportBrokerReportEndpointMutationError = ProblemDetails;
+export type ImportBrokerReportEndpointMutationVariables = { data: ImportBrokerReportRequest };
+
+/**
+ * @summary Import an Interactive Brokers Flex Query report
+ */
+export const useImportBrokerReportEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof importBrokerReportEndpoint>>,
+      TError,
+      ImportBrokerReportEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof importBrokerReportEndpoint>>,
+  TError,
+  ImportBrokerReportEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getImportBrokerReportEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetPortfolioEndpointUrl = (params?: GetPortfolioEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/portfolio?${stringifiedParams}`
+    : `/api/investments/portfolio`;
+};
+
+/**
+ * Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security's own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.
+ * @summary Get the investment portfolio
+ */
+export const getPortfolioEndpoint = async (
+  params?: GetPortfolioEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PortfolioResponse> => {
+  return customFetch<PortfolioResponse>(getGetPortfolioEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetPortfolioEndpointQueryKey = (params?: GetPortfolioEndpointParams) => {
+  return [`/api/investments/portfolio`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetPortfolioEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPortfolioEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortfolioEndpoint>>> = ({ signal }) =>
+    getPortfolioEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPortfolioEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPortfolioEndpoint>>
+>;
+export type GetPortfolioEndpointQueryError = ProblemDetails;
+
+export function useGetPortfolioEndpoint<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetPortfolioEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getPortfolioEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPortfolioEndpoint<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getPortfolioEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPortfolioEndpoint<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the investment portfolio
+ */
+
+export function useGetPortfolioEndpoint<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPortfolioEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetPortfolioEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetPortfolioEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getPortfolioEndpoint>>> = ({ signal }) =>
+    getPortfolioEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetPortfolioEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getPortfolioEndpoint>>
+>;
+export type GetPortfolioEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetPortfolioEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetPortfolioEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPortfolioEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetPortfolioEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the investment portfolio
+ */
+
+export function useGetPortfolioEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getPortfolioEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetPortfolioEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getPortfolioEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetPortfolioEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetSecuritiesEndpointUrl = (params?: GetSecuritiesEndpointParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/securities?${stringifiedParams}`
+    : `/api/investments/securities`;
+};
+
+/**
+ * Securities are shared by everyone on the installation, because a price is the same for all holders.
+ * @summary List securities
+ */
+export const getSecuritiesEndpoint = async (
+  params?: GetSecuritiesEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<IReadOnlyListOfSecurityResponse> => {
+  return customFetch<IReadOnlyListOfSecurityResponse>(getGetSecuritiesEndpointUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetSecuritiesEndpointQueryKey = (params?: GetSecuritiesEndpointParams) => {
+  return [`/api/investments/securities`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetSecuritiesEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSecuritiesEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecuritiesEndpoint>>> = ({ signal }) =>
+    getSecuritiesEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSecuritiesEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSecuritiesEndpoint>>
+>;
+export type GetSecuritiesEndpointQueryError = ProblemDetails;
+
+export function useGetSecuritiesEndpoint<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetSecuritiesEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getSecuritiesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritiesEndpoint<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getSecuritiesEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritiesEndpoint<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List securities
+ */
+
+export function useGetSecuritiesEndpoint<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSecuritiesEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetSecuritiesEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetSecuritiesEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getSecuritiesEndpoint>>> = ({ signal }) =>
+    getSecuritiesEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetSecuritiesEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getSecuritiesEndpoint>>
+>;
+export type GetSecuritiesEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetSecuritiesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: undefined | GetSecuritiesEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritiesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetSecuritiesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List securities
+ */
+
+export function useGetSecuritiesEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getSecuritiesEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params?: GetSecuritiesEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof getSecuritiesEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetSecuritiesEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getCreateSecurityEndpointUrl = () => {
+  return `/api/investments/securities`;
+};
+
+/**
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.
+ * @summary Add a security
+ */
+export const createSecurityEndpoint = async (
+  saveSecurityRequestOpA040D7350AFF: SaveSecurityRequestOpA040D7350AFF,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SecurityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SecurityResponse>(getCreateSecurityEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveSecurityRequestOpA040D7350AFF),
+  });
+};
+
+export const getCreateSecurityEndpointMutationKey = () => ["createSecurityEndpoint"] as const;
+
+export const getCreateSecurityEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createSecurityEndpoint>>,
+    TError,
+    CreateSecurityEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createSecurityEndpoint>>,
+  TError,
+  CreateSecurityEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateSecurityEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createSecurityEndpoint>>,
+    CreateSecurityEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createSecurityEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateSecurityEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createSecurityEndpoint>>
+>;
+export type CreateSecurityEndpointMutationBody = SaveSecurityRequestOpA040D7350AFF;
+export type CreateSecurityEndpointMutationError = ProblemDetails;
+export type CreateSecurityEndpointMutationVariables = { data: SaveSecurityRequestOpA040D7350AFF };
+
+/**
+ * @summary Add a security
+ */
+export const useCreateSecurityEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createSecurityEndpoint>>,
+      TError,
+      CreateSecurityEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createSecurityEndpoint>>,
+  TError,
+  CreateSecurityEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateSecurityEndpointMutationOptions(options), queryClient);
+};
+
+export const getUpdateSecurityEndpointUrl = (id: string) => {
+  return `/api/investments/securities/${id}`;
+};
+
+/**
+ * Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.
+ * @summary Update a security or its price
+ */
+export const updateSecurityEndpoint = async (
+  id: string,
+  saveSecurityRequestOp2EFFB26FBA95: SaveSecurityRequestOp2EFFB26FBA95,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SecurityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SecurityResponse>(getUpdateSecurityEndpointUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveSecurityRequestOp2EFFB26FBA95),
+  });
+};
+
+export const getUpdateSecurityEndpointMutationKey = () => ["updateSecurityEndpoint"] as const;
+
+export const getUpdateSecurityEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSecurityEndpoint>>,
+    TError,
+    UpdateSecurityEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSecurityEndpoint>>,
+  TError,
+  UpdateSecurityEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSecurityEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSecurityEndpoint>>,
+    UpdateSecurityEndpointMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateSecurityEndpoint(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSecurityEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSecurityEndpoint>>
+>;
+export type UpdateSecurityEndpointMutationBody = SaveSecurityRequestOp2EFFB26FBA95;
+export type UpdateSecurityEndpointMutationError = ProblemDetails;
+export type UpdateSecurityEndpointMutationVariables = {
+  id: string;
+  data: SaveSecurityRequestOp2EFFB26FBA95;
+};
+
+/**
+ * @summary Update a security or its price
+ */
+export const useUpdateSecurityEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSecurityEndpoint>>,
+      TError,
+      UpdateSecurityEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSecurityEndpoint>>,
+  TError,
+  UpdateSecurityEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSecurityEndpointMutationOptions(options), queryClient);
+};
+
+export const getCreateInvestmentTransactionEndpointUrl = () => {
+  return `/api/investments/transactions`;
+};
+
+/**
+ * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.
+ * @summary Record an investment transaction
+ */
+export const createInvestmentTransactionEndpoint = async (
+  createInvestmentTransactionRequest: CreateInvestmentTransactionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<InvestmentTransactionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<InvestmentTransactionResponse>(getCreateInvestmentTransactionEndpointUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(createInvestmentTransactionRequest),
+  });
+};
+
+export const getCreateInvestmentTransactionEndpointMutationKey = () =>
+  ["createInvestmentTransactionEndpoint"] as const;
+
+export const getCreateInvestmentTransactionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>,
+    TError,
+    CreateInvestmentTransactionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>,
+  TError,
+  CreateInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getCreateInvestmentTransactionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>,
+    CreateInvestmentTransactionEndpointMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createInvestmentTransactionEndpoint(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateInvestmentTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>
+>;
+export type CreateInvestmentTransactionEndpointMutationBody = CreateInvestmentTransactionRequest;
+export type CreateInvestmentTransactionEndpointMutationError = ProblemDetails;
+export type CreateInvestmentTransactionEndpointMutationVariables = {
+  data: CreateInvestmentTransactionRequest;
+};
+
+/**
+ * @summary Record an investment transaction
+ */
+export const useCreateInvestmentTransactionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>,
+      TError,
+      CreateInvestmentTransactionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof createInvestmentTransactionEndpoint>>,
+  TError,
+  CreateInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getCreateInvestmentTransactionEndpointMutationOptions(options), queryClient);
+};
+
+export const getGetInvestmentTransactionsEndpointUrl = (
+  params: GetInvestmentTransactionsEndpointParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/transactions?${stringifiedParams}`
+    : `/api/investments/transactions`;
+};
+
+/**
+ * Pages through trades, dividends, withholding tax, interest, fees and splits on accounts visible to you, newest first. CashAmount is signed: negative when cash left the account.
+ * @summary List investment transactions
+ */
+export const getInvestmentTransactionsEndpoint = async (
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfInvestmentTransactionResponse> => {
+  return customFetch<PagedResponseOfInvestmentTransactionResponse>(
+    getGetInvestmentTransactionsEndpointUrl(params),
+    {
+      ...options,
+      method: "GET",
+    },
+  );
+};
+
+export const getGetInvestmentTransactionsEndpointQueryKey = (
+  params?: GetInvestmentTransactionsEndpointParams,
+) => {
+  return [`/api/investments/transactions`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetInvestmentTransactionsEndpointQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetInvestmentTransactionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>> = ({
+    signal,
+  }) => getInvestmentTransactionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetInvestmentTransactionsEndpointQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>
+>;
+export type GetInvestmentTransactionsEndpointQueryError = ProblemDetails;
+
+export function useGetInvestmentTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options: {
+    query: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvestmentTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>, TError, TData>
+    > &
+      Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+          TError,
+          Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>
+        >,
+        "initialData"
+      >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvestmentTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List investment transactions
+ */
+
+export function useGetInvestmentTransactionsEndpoint<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseQueryOptions<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetInvestmentTransactionsEndpointQueryOptions(params, options);
+
+  const query = useQuery(queryOptions, queryClient) as UseQueryResult<TData, TError> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getGetInvestmentTransactionsEndpointSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetInvestmentTransactionsEndpointQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>> = ({
+    signal,
+  }) => getInvestmentTransactionsEndpoint(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type GetInvestmentTransactionsEndpointSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>
+>;
+export type GetInvestmentTransactionsEndpointSuspenseQueryError = ProblemDetails;
+
+export function useGetInvestmentTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvestmentTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useGetInvestmentTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List investment transactions
+ */
+
+export function useGetInvestmentTransactionsEndpointSuspense<
+  TData = Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+  TError = ProblemDetails,
+>(
+  params: GetInvestmentTransactionsEndpointParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<
+        Awaited<ReturnType<typeof getInvestmentTransactionsEndpoint>>,
+        TError,
+        TData
+      >
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getGetInvestmentTransactionsEndpointSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteInvestmentTransactionEndpointUrl = (id: string) => {
+  return `/api/investments/transactions/${id}`;
+};
+
+/**
+ * Removes the entry and its cash effect. A later broker import will not bring a deleted imported entry back.
+ * @summary Delete an investment transaction
+ */
+export const deleteInvestmentTransactionEndpoint = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteInvestmentTransactionEndpointUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteInvestmentTransactionEndpointMutationKey = () =>
+  ["deleteInvestmentTransactionEndpoint"] as const;
+
+export const getDeleteInvestmentTransactionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>,
+    TError,
+    DeleteInvestmentTransactionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>,
+  TError,
+  DeleteInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteInvestmentTransactionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>,
+    DeleteInvestmentTransactionEndpointMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return deleteInvestmentTransactionEndpoint(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteInvestmentTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>
+>;
+
+export type DeleteInvestmentTransactionEndpointMutationError = ProblemDetails;
+export type DeleteInvestmentTransactionEndpointMutationVariables = { id: string };
+
+/**
+ * @summary Delete an investment transaction
+ */
+export const useDeleteInvestmentTransactionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>,
+      TError,
+      DeleteInvestmentTransactionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteInvestmentTransactionEndpoint>>,
+  TError,
+  DeleteInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteInvestmentTransactionEndpointMutationOptions(options), queryClient);
 };
 
 export const getGetNetWorthEndpointUrl = () => {

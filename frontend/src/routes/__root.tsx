@@ -1,7 +1,13 @@
 import { Link, Outlet, createRootRoute, redirect, useLocation } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMeEndpoint } from "@/api/generated";
-import { AppSidebar, navLinkActiveClass, navLinkClass, visibleNav } from "@/components/app-sidebar";
+import {
+  AppSidebar,
+  type NavItem,
+  navLinkActiveClass,
+  navLinkClass,
+  visibleNav,
+} from "@/components/app-sidebar";
 import { Brand } from "@/components/brand";
 import { LanguageToggle } from "@/components/language-toggle";
 import { LogoutButton } from "@/components/logout-button";
@@ -45,6 +51,11 @@ export const Route = createRootRoute({
   component: RootLayout,
 });
 
+interface MobileNavItem {
+  to: NavItem["to"] | "/profile";
+  key: NavItem["key"] | "nav.profile";
+}
+
 function RootLayout() {
   const location = useLocation();
   const { t } = useTranslation();
@@ -53,11 +64,8 @@ function RootLayout() {
   const settings = useSettings({ enabled: authenticatedArea });
   const instanceName = usePublicSettings()?.instanceName;
 
-  const mobileNavItems = [
-    ...visibleNav(settings.features, me.data?.role === "Admin").map((item) => ({
-      to: item.to as string,
-      key: item.key as string,
-    })),
+  const mobileNavItems: readonly MobileNavItem[] = [
+    ...visibleNav(settings.features, me.data?.role === "Admin"),
     { to: "/profile", key: "nav.profile" },
   ];
 

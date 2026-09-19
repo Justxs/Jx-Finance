@@ -4,6 +4,7 @@ import type {
   ImportPreviewRow,
   TransactionResponse,
 } from "@/api/generated/model";
+import { toCents } from "../../../lib/money.ts";
 
 export interface PreviewRowState extends ImportPreviewRow {
   transferAccountId: string;
@@ -13,12 +14,12 @@ export interface PreviewRowState extends ImportPreviewRow {
   categorySuggested: boolean;
 }
 
-export interface CurrencyNet {
+interface CurrencyNet {
   currency: Currency;
   cents: number;
 }
 
-export interface SelectionSummary {
+interface SelectionSummary {
   total: number;
   selected: number;
   duplicates: number;
@@ -31,10 +32,6 @@ export interface SelectionSummary {
 
 function normalize(text: string | null | undefined) {
   return text?.trim().toLocaleLowerCase() ?? "";
-}
-
-function amountCents(amount: string) {
-  return Math.round(Number(amount.replace(",", ".")) * 100);
 }
 
 export function recallCategoryId(
@@ -81,7 +78,7 @@ export function toPreviewRows(
 function netByCurrency(rows: PreviewRowState[]): CurrencyNet[] {
   const cents = new Map<Currency, number>();
   for (const row of rows) {
-    const signed = (row.type === "income" ? 1 : -1) * amountCents(row.amount);
+    const signed = (row.type === "income" ? 1 : -1) * toCents(row.amount);
     cents.set(row.currency, (cents.get(row.currency) ?? 0) + signed);
   }
   return [...cents].map(([currency, total]) => ({ currency, cents: total }));

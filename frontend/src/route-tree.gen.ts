@@ -14,6 +14,7 @@ import { Route as CategoriesRouteImport } from './routes/categories'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HouseholdsRouteImport } from './routes/households'
 import { Route as ImportRouteImport } from './routes/import'
+import { Route as InvestmentsRouteImport } from './routes/investments'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as NetWorthRouteImport } from './routes/net-worth'
 import { Route as ProfileRouteImport } from './routes/profile'
@@ -57,6 +58,11 @@ const HouseholdsRoute = HouseholdsRouteImport.update({
 const ImportRoute = ImportRouteImport.update({
   id: '/import',
   path: '/import',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestmentsRoute = InvestmentsRouteImport.update({
+  id: '/investments',
+  path: '/investments',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/import': typeof ImportRoute
+  '/investments': typeof InvestmentsRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
@@ -131,6 +138,7 @@ export interface FileRoutesByTo {
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/import': typeof ImportRoute
+  '/investments': typeof InvestmentsRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
@@ -150,6 +158,7 @@ export interface FileRoutesById {
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/import': typeof ImportRoute
+  '/investments': typeof InvestmentsRoute
   '/login': typeof LoginRoute
   '/net-worth': typeof NetWorthRoute
   '/profile': typeof ProfileRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/households'
     | '/import'
+    | '/investments'
     | '/login'
     | '/net-worth'
     | '/profile'
@@ -188,6 +198,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/households'
     | '/import'
+    | '/investments'
     | '/login'
     | '/net-worth'
     | '/profile'
@@ -206,6 +217,7 @@ export interface FileRouteTypes {
     | '/goals'
     | '/households'
     | '/import'
+    | '/investments'
     | '/login'
     | '/net-worth'
     | '/profile'
@@ -225,6 +237,7 @@ export interface RootRouteChildren {
   GoalsRoute: typeof GoalsRoute
   HouseholdsRoute: typeof HouseholdsRoute
   ImportRoute: typeof ImportRoute
+  InvestmentsRoute: typeof InvestmentsRoute
   LoginRoute: typeof LoginRoute
   NetWorthRoute: typeof NetWorthRoute
   ProfileRoute: typeof ProfileRoute
@@ -285,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/import'
       fullPath: '/import'
       preLoaderRoute: typeof ImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investments': {
+      id: '/investments'
+      path: '/investments'
+      fullPath: '/investments'
+      preLoaderRoute: typeof InvestmentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -361,6 +381,7 @@ const rootRouteChildren: RootRouteChildren = {
   GoalsRoute: GoalsRoute,
   HouseholdsRoute: HouseholdsRoute,
   ImportRoute: ImportRoute,
+  InvestmentsRoute: InvestmentsRoute,
   LoginRoute: LoginRoute,
   NetWorthRoute: NetWorthRoute,
   ProfileRoute: ProfileRoute,

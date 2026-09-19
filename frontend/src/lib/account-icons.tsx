@@ -1,11 +1,12 @@
-import { Banknote, Landmark, PiggyBank, Wallet } from "lucide-react";
+import { Banknote, ChartCandlestick, Landmark, PiggyBank, Wallet } from "lucide-react";
 import type { AccountType } from "@/api/generated/model";
 import { cn } from "@/lib/utils";
 
-export const accountTypeIcons: Record<AccountType, typeof Landmark> = {
+const accountTypeIcons: Record<AccountType, typeof Landmark> = {
   checking: Landmark,
   savings: PiggyBank,
   cash: Banknote,
+  investment: ChartCandlestick,
   other: Wallet,
 };
 
