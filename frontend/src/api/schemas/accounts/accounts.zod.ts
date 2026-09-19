@@ -17,6 +17,8 @@ export const createAccountBodyNameMax = 100;
 export const createAccountBodyDescriptionMin = 0;
 export const createAccountBodyDescriptionMax = 500;
 
+export const createAccountBodyStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateAccountBody = zod.object({
   name: zod
     .string()
@@ -37,7 +39,7 @@ export const CreateAccountBody = zod.object({
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
   startingBalance: zod
-    .string()
+    .stringFormat("decimal", createAccountBodyStartingBalanceRegExp)
     .describe('Decimal string with at most two decimal places, for example "1250.00".'),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod
@@ -83,6 +85,12 @@ export const CreateAccountBody = zod.object({
     .optional(),
 });
 
+export const createAccountResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAccountResponseCurrentBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAccountResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAccountResponseReportingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAccountResponseHoldingsValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateAccountResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
@@ -91,8 +99,8 @@ export const CreateAccountResponse = zod.object({
   type: zod
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
-  startingBalance: zod.string(),
-  currentBalance: zod.string(),
+  startingBalance: zod.stringFormat("decimal", createAccountResponseStartingBalanceRegExp),
+  currentBalance: zod.stringFormat("decimal", createAccountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
@@ -162,17 +170,23 @@ export const CreateAccountResponse = zod.object({
         "ils",
         "zar",
       ]),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", createAccountResponseBalancesItemAmountRegExp),
     }),
   ),
-  reportingBalance: zod.string(),
-  holdingsValue: zod.string(),
+  reportingBalance: zod.stringFormat("decimal", createAccountResponseReportingBalanceRegExp),
+  holdingsValue: zod.stringFormat("decimal", createAccountResponseHoldingsValueRegExp),
 });
 
 /**
  * Returns the accounts you can see: your own plus the shared accounts of your households, each with its current balance. Filters are optional and combine with AND.
  * @summary List accounts
  */
+export const accountsResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountsResponseCurrentBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountsResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountsResponseReportingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountsResponseHoldingsValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const AccountsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
@@ -181,8 +195,8 @@ export const AccountsResponseItem = zod.object({
   type: zod
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
-  startingBalance: zod.string(),
-  currentBalance: zod.string(),
+  startingBalance: zod.stringFormat("decimal", accountsResponseStartingBalanceRegExp),
+  currentBalance: zod.stringFormat("decimal", accountsResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
@@ -252,11 +266,11 @@ export const AccountsResponseItem = zod.object({
         "ils",
         "zar",
       ]),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", accountsResponseBalancesItemAmountRegExp),
     }),
   ),
-  reportingBalance: zod.string(),
-  holdingsValue: zod.string(),
+  reportingBalance: zod.stringFormat("decimal", accountsResponseReportingBalanceRegExp),
+  holdingsValue: zod.stringFormat("decimal", accountsResponseHoldingsValueRegExp),
 });
 export const AccountsResponse = zod.array(AccountsResponseItem);
 
@@ -270,6 +284,12 @@ export const DeleteAccountResponse = zod.void();
  * Returns a single account with its current balance. An account that belongs to another user, or to a household you are not a member of, is reported as missing rather than forbidden, so the endpoint cannot be used to probe for other people's data.
  * @summary Get one account
  */
+export const accountResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountResponseCurrentBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountResponseReportingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const accountResponseHoldingsValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const AccountResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
@@ -278,8 +298,8 @@ export const AccountResponse = zod.object({
   type: zod
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
-  startingBalance: zod.string(),
-  currentBalance: zod.string(),
+  startingBalance: zod.stringFormat("decimal", accountResponseStartingBalanceRegExp),
+  currentBalance: zod.stringFormat("decimal", accountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
@@ -349,11 +369,11 @@ export const AccountResponse = zod.object({
         "ils",
         "zar",
       ]),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", accountResponseBalancesItemAmountRegExp),
     }),
   ),
-  reportingBalance: zod.string(),
-  holdingsValue: zod.string(),
+  reportingBalance: zod.stringFormat("decimal", accountResponseReportingBalanceRegExp),
+  holdingsValue: zod.stringFormat("decimal", accountResponseHoldingsValueRegExp),
 });
 
 /**
@@ -366,6 +386,8 @@ export const updateAccountBodyNameMax = 100;
 export const updateAccountBodyDescriptionMin = 0;
 export const updateAccountBodyDescriptionMax = 500;
 
+export const updateAccountBodyStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateAccountBody = zod.object({
   name: zod.string().min(updateAccountBodyNameMin).max(updateAccountBodyNameMax),
   description: zod
@@ -377,7 +399,7 @@ export const UpdateAccountBody = zod.object({
   type: zod
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
-  startingBalance: zod.string(),
+  startingBalance: zod.stringFormat("decimal", updateAccountBodyStartingBalanceRegExp),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
   currency: zod
@@ -419,6 +441,12 @@ export const UpdateAccountBody = zod.object({
     .optional(),
 });
 
+export const updateAccountResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAccountResponseCurrentBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAccountResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAccountResponseReportingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAccountResponseHoldingsValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateAccountResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
@@ -427,8 +455,8 @@ export const UpdateAccountResponse = zod.object({
   type: zod
     .enum(["checking", "savings", "cash", "other", "investment"])
     .describe("Checking, Savings, Cash, or Other."),
-  startingBalance: zod.string(),
-  currentBalance: zod.string(),
+  startingBalance: zod.stringFormat("decimal", updateAccountResponseStartingBalanceRegExp),
+  currentBalance: zod.stringFormat("decimal", updateAccountResponseCurrentBalanceRegExp),
   createdAt: zod.iso.datetime({ offset: true }),
   scope: zod.enum(["personal", "shared"]),
   householdId: zod.uuid().nullable(),
@@ -498,9 +526,9 @@ export const UpdateAccountResponse = zod.object({
         "ils",
         "zar",
       ]),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", updateAccountResponseBalancesItemAmountRegExp),
     }),
   ),
-  reportingBalance: zod.string(),
-  holdingsValue: zod.string(),
+  reportingBalance: zod.stringFormat("decimal", updateAccountResponseReportingBalanceRegExp),
+  holdingsValue: zod.stringFormat("decimal", updateAccountResponseHoldingsValueRegExp),
 });

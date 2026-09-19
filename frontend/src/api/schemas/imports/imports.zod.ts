@@ -12,6 +12,8 @@ import * as zod from "zod";
  * @summary Commit previewed statement rows
  */
 
+export const importConfirmBodyRowsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ImportConfirmBody = zod.object({
   accountId: zod.uuid().min(1).describe("The account the rows post to; must be the one previewed."),
   rows: zod
@@ -20,7 +22,7 @@ export const ImportConfirmBody = zod.object({
         importRef: zod.string(),
         date: zod.iso.date(),
         description: zod.string().nullable(),
-        amount: zod.string(),
+        amount: zod.stringFormat("decimal", importConfirmBodyRowsItemAmountRegExp),
         type: zod.enum(["income", "expense"]),
         categoryId: zod.uuid().nullable(),
         transferAccountId: zod.uuid().nullish(),
@@ -81,6 +83,8 @@ export const ImportPreviewBody = zod.object({
   accountId: zod.uuid().optional().describe("The account the statement belongs to."),
 });
 
+export const importPreviewResponseRowsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ImportPreviewResponse = zod.object({
   rows: zod.array(
     zod.object({
@@ -88,7 +92,7 @@ export const ImportPreviewResponse = zod.object({
       date: zod.iso.date(),
       payee: zod.string().nullable(),
       description: zod.string().nullable(),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", importPreviewResponseRowsItemAmountRegExp),
       type: zod.enum(["income", "expense"]),
       isDuplicate: zod.boolean(),
       looksLikeTransfer: zod.boolean(),

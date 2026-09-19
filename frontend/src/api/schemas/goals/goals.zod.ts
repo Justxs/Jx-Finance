@@ -14,13 +14,16 @@ import * as zod from "zod";
 export const createGoalBodyNameMin = 0;
 export const createGoalBodyNameMax = 100;
 
+export const createGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateGoalBody = zod.object({
   name: zod.string().min(createGoalBodyNameMin).max(createGoalBodyNameMax),
   targetAmount: zod
-    .string()
+    .stringFormat("decimal", createGoalBodyTargetAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
   currentAmount: zod
-    .string()
+    .stringFormat("decimal", createGoalBodyCurrentAmountRegExp)
     .nullable()
     .describe("Amount already saved. Defaults to zero when omitted."),
   targetDate: zod
@@ -28,11 +31,14 @@ export const CreateGoalBody = zod.object({
     .describe("Optional date to reach the target by, as YYYY-MM-DD."),
 });
 
+export const createGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createGoalResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateGoalResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
-  targetAmount: zod.string(),
-  currentAmount: zod.string(),
+  targetAmount: zod.stringFormat("decimal", createGoalResponseTargetAmountRegExp),
+  currentAmount: zod.stringFormat("decimal", createGoalResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
 });
 
@@ -40,11 +46,14 @@ export const CreateGoalResponse = zod.object({
  * Returns your savings goals with the amount saved so far against each target.
  * @summary List savings goals
  */
+export const goalsResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const goalsResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const GoalsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
-  targetAmount: zod.string(),
-  currentAmount: zod.string(),
+  targetAmount: zod.stringFormat("decimal", goalsResponseTargetAmountRegExp),
+  currentAmount: zod.stringFormat("decimal", goalsResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
 });
 export const GoalsResponse = zod.array(GoalsResponseItem);
@@ -62,17 +71,23 @@ export const DeleteGoalResponse = zod.void();
 export const updateGoalBodyNameMin = 0;
 export const updateGoalBodyNameMax = 100;
 
+export const updateGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const UpdateGoalBody = zod.object({
   name: zod.string().min(updateGoalBodyNameMin).max(updateGoalBodyNameMax),
-  targetAmount: zod.string(),
-  currentAmount: zod.string(),
+  targetAmount: zod.stringFormat("decimal", updateGoalBodyTargetAmountRegExp),
+  currentAmount: zod.stringFormat("decimal", updateGoalBodyCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
 });
+
+export const updateGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateGoalResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
-  targetAmount: zod.string(),
-  currentAmount: zod.string(),
+  targetAmount: zod.stringFormat("decimal", updateGoalResponseTargetAmountRegExp),
+  currentAmount: zod.stringFormat("decimal", updateGoalResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
 });

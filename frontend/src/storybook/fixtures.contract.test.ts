@@ -41,6 +41,14 @@ function asPortfolio(fixture: unknown) {
 }
 
 const contracts: Record<string, Contract> = {
+  importFormatProblem: { schema: schemas.ProblemDetailsResponse },
+  serverErrorProblem: { schema: schemas.ProblemDetailsResponse },
+  unauthorizedProblem: { schema: schemas.ProblemDetailsResponse },
+  notFoundProblem: { schema: schemas.ProblemDetailsResponse },
+  validationProblem: { schema: schemas.ProblemDetailsResponse },
+  oversellProblem: { schema: schemas.ProblemDetailsResponse },
+  duplicateSecurityProblem: { schema: schemas.ProblemDetailsResponse },
+  brokerSyncProblem: { schema: schemas.ProblemDetailsResponse },
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
   memberUser: { schema: schemas.UsersResponseItem },
@@ -158,17 +166,6 @@ const builtResponses: Record<string, { schema: ZodType; build: () => unknown }> 
   },
 };
 
-const problemDetailsWithoutGeneratedSchema = [
-  "importFormatProblem",
-  "serverErrorProblem",
-  "unauthorizedProblem",
-  "notFoundProblem",
-  "validationProblem",
-  "oversellProblem",
-  "duplicateSecurityProblem",
-  "brokerSyncProblem",
-];
-
 const notApiResponses = [
   "FIXTURE_TODAY",
   "FIXTURE_MONTH",
@@ -211,20 +208,12 @@ describe("storybook fixtures match the generated response schemas", () => {
   });
 
   test("every exported fixture is checked or explicitly listed as not checkable", () => {
-    const accounted = new Set([
-      ...Object.keys(contracts),
-      ...problemDetailsWithoutGeneratedSchema,
-      ...notApiResponses,
-    ]);
+    const accounted = new Set([...Object.keys(contracts), ...notApiResponses]);
     expect(fixtureNames().filter((name) => !accounted.has(name))).toEqual([]);
   });
 
   test("the lists of unchecked names only hold existing exports", () => {
-    const listed = [
-      ...problemDetailsWithoutGeneratedSchema,
-      ...notApiResponses,
-      ...Object.keys(schemaExclusions),
-    ];
+    const listed = [...notApiResponses, ...Object.keys(schemaExclusions)];
     expect(listed.filter((name) => !(name in exported))).toEqual([]);
   });
 });

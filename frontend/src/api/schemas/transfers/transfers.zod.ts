@@ -12,14 +12,17 @@ import * as zod from "zod";
  * @summary Create a transfer
  */
 
+export const createTransferBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransferBodyDescriptionMin = 0;
 export const createTransferBodyDescriptionMax = 500;
+
+export const createTransferBodyReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateTransferBody = zod.object({
   fromAccountId: zod.uuid().min(1),
   toAccountId: zod.uuid().min(1),
   amount: zod
-    .string()
+    .stringFormat("decimal", createTransferBodyAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
   date: zod.iso.date(),
   description: zod
@@ -64,7 +67,7 @@ export const CreateTransferBody = zod.object({
       ]),
     ])
     .optional(),
-  receivedAmount: zod.string().nullish(),
+  receivedAmount: zod.stringFormat("decimal", createTransferBodyReceivedAmountRegExp).nullish(),
   receivedCurrency: zod
     .union([
       zod.null(),
@@ -104,11 +107,14 @@ export const CreateTransferBody = zod.object({
     .optional(),
 });
 
+export const createTransferResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransferResponseReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateTransferResponse = zod.object({
   id: zod.uuid(),
   fromAccountId: zod.uuid(),
   toAccountId: zod.uuid(),
-  amount: zod.string(),
+  amount: zod.stringFormat("decimal", createTransferResponseAmountRegExp),
   date: zod.iso.date(),
   description: zod.string().nullable(),
   createdAt: zod.iso.datetime({ offset: true }),
@@ -144,7 +150,7 @@ export const CreateTransferResponse = zod.object({
     "ils",
     "zar",
   ]),
-  receivedAmount: zod.string(),
+  receivedAmount: zod.stringFormat("decimal", createTransferResponseReceivedAmountRegExp),
   receivedCurrency: zod.enum([
     "eur",
     "usd",
@@ -183,13 +189,16 @@ export const CreateTransferResponse = zod.object({
  * Returns a page of transfers between your own accounts, newest first. Transfers are kept apart from transactions on purpose: moving money between your accounts is neither income nor an expense and must not distort reports.
  * @summary List transfers
  */
+export const transfersResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transfersResponseItemsItemReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const TransfersResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
       fromAccountId: zod.uuid(),
       toAccountId: zod.uuid(),
-      amount: zod.string(),
+      amount: zod.stringFormat("decimal", transfersResponseItemsItemAmountRegExp),
       date: zod.iso.date(),
       description: zod.string().nullable(),
       createdAt: zod.iso.datetime({ offset: true }),
@@ -225,7 +234,7 @@ export const TransfersResponse = zod.object({
         "ils",
         "zar",
       ]),
-      receivedAmount: zod.string(),
+      receivedAmount: zod.stringFormat("decimal", transfersResponseItemsItemReceivedAmountRegExp),
       receivedCurrency: zod.enum([
         "eur",
         "usd",

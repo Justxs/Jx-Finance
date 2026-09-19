@@ -12,12 +12,18 @@ import * as zod from "zod";
  * @summary Convert currency inside an account
  */
 
+export const createConversionBodyFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createConversionBodyToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createConversionBodyDescriptionMin = 0;
 export const createConversionBodyDescriptionMax = 500;
 
+export const createConversionBodyFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateConversionBody = zod.object({
   accountId: zod.uuid().min(1),
-  fromAmount: zod.string().describe("Amount sold, as a decimal string greater than zero."),
+  fromAmount: zod
+    .stringFormat("decimal", createConversionBodyFromAmountRegExp)
+    .describe("Amount sold, as a decimal string greater than zero."),
   fromCurrency: zod.enum([
     "eur",
     "usd",
@@ -50,7 +56,9 @@ export const CreateConversionBody = zod.object({
     "ils",
     "zar",
   ]),
-  toAmount: zod.string().describe("Amount bought, as a decimal string greater than zero."),
+  toAmount: zod
+    .stringFormat("decimal", createConversionBodyToAmountRegExp)
+    .describe("Amount bought, as a decimal string greater than zero."),
   toCurrency: zod.enum([
     "eur",
     "usd",
@@ -90,7 +98,7 @@ export const CreateConversionBody = zod.object({
     .max(createConversionBodyDescriptionMax)
     .nullable(),
   feeAmount: zod
-    .string()
+    .stringFormat("decimal", createConversionBodyFeeAmountRegExp)
     .nullish()
     .describe("Optional fee. It is charged on top of the sold or bought amount."),
   feeCurrency: zod
@@ -139,10 +147,14 @@ export const CreateConversionBody = zod.object({
     .describe("Optional expense category for the fee transaction."),
 });
 
+export const createConversionResponseFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createConversionResponseToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createConversionResponseFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const CreateConversionResponse = zod.object({
   id: zod.uuid(),
   accountId: zod.uuid(),
-  fromAmount: zod.string(),
+  fromAmount: zod.stringFormat("decimal", createConversionResponseFromAmountRegExp),
   fromCurrency: zod.enum([
     "eur",
     "usd",
@@ -175,7 +187,7 @@ export const CreateConversionResponse = zod.object({
     "ils",
     "zar",
   ]),
-  toAmount: zod.string(),
+  toAmount: zod.stringFormat("decimal", createConversionResponseToAmountRegExp),
   toCurrency: zod.enum([
     "eur",
     "usd",
@@ -211,7 +223,7 @@ export const CreateConversionResponse = zod.object({
   rate: zod.string(),
   date: zod.iso.date(),
   description: zod.string().nullable(),
-  feeAmount: zod.string().nullable(),
+  feeAmount: zod.stringFormat("decimal", createConversionResponseFeeAmountRegExp).nullable(),
   feeCurrency: zod.union([
     zod.null(),
     zod.enum([
@@ -255,12 +267,16 @@ export const CreateConversionResponse = zod.object({
  * Pages through conversions on accounts visible to you, newest first. Rate is the bought amount divided by the sold amount.
  * @summary List currency conversions
  */
+export const conversionsResponseItemsItemFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const conversionsResponseItemsItemToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const conversionsResponseItemsItemFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
 export const ConversionsResponse = zod.object({
   items: zod.array(
     zod.object({
       id: zod.uuid(),
       accountId: zod.uuid(),
-      fromAmount: zod.string(),
+      fromAmount: zod.stringFormat("decimal", conversionsResponseItemsItemFromAmountRegExp),
       fromCurrency: zod.enum([
         "eur",
         "usd",
@@ -293,7 +309,7 @@ export const ConversionsResponse = zod.object({
         "ils",
         "zar",
       ]),
-      toAmount: zod.string(),
+      toAmount: zod.stringFormat("decimal", conversionsResponseItemsItemToAmountRegExp),
       toCurrency: zod.enum([
         "eur",
         "usd",
@@ -329,7 +345,9 @@ export const ConversionsResponse = zod.object({
       rate: zod.string(),
       date: zod.iso.date(),
       description: zod.string().nullable(),
-      feeAmount: zod.string().nullable(),
+      feeAmount: zod
+        .stringFormat("decimal", conversionsResponseItemsItemFeeAmountRegExp)
+        .nullable(),
       feeCurrency: zod.union([
         zod.null(),
         zod.enum([
