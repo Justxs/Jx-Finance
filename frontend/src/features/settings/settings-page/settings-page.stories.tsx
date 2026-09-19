@@ -58,10 +58,10 @@ export const LoadError: Story = { parameters: { msw: { handlers: errorHandlers }
 export const UnsavedChanges: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const save = await canvas.findByRole("button", { name: "Save" });
-    await expect(save).toBeDisabled();
-    await userEvent.click(canvas.getByText("Goals"));
-    await expect(save).toBeEnabled();
+    const name = await canvas.findByLabelText("Installation name");
+    await expect(canvas.queryByRole("button", { name: "Save" })).toBeNull();
+    await userEvent.type(name, " Home");
+    await expect(await canvas.findByRole("button", { name: "Save" })).toBeEnabled();
     await expect(canvas.getByText("You have unsaved changes.")).toBeInTheDocument();
   },
 };

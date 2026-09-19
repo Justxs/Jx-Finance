@@ -88,7 +88,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
           void form.handleSubmit();
         }}
         noValidate
-        className="section max-w-md space-y-4"
+        className="section space-y-4 *:max-w-md"
       >
         <h2 className="section-title">{t("profile.detailsTitle")}</h2>
         <form.Field name="displayName">

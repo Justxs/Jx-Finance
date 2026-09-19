@@ -21,8 +21,10 @@ import type { FeatureKey } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
 import type { TranslationKey } from "@/lib/i18n";
 import { optionalText, requiredValue } from "@/lib/validation";
+import type { SettingsSection } from "../settings-nav";
 
 interface Props {
+  section: SettingsSection;
   settings: SettingsResponse;
   accounts: AccountResponse[];
   pending: boolean;
@@ -75,6 +77,7 @@ function zoneRegions(zones: readonly string[]) {
 }
 
 export function SettingsForm({
+  section,
   settings,
   accounts,
   pending,
@@ -157,7 +160,11 @@ export function SettingsForm({
         noValidate
         className="space-y-5"
       >
-        <section className="section" aria-labelledby="settings-general">
+        <section
+          className="section"
+          aria-labelledby="settings-general"
+          hidden={section !== "general"}
+        >
           <h2 id="settings-general" className="section-title">
             {t("settings.general.title")}
           </h2>
@@ -175,7 +182,11 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="section" aria-labelledby="settings-features">
+        <section
+          className="section"
+          aria-labelledby="settings-features"
+          hidden={section !== "features"}
+        >
           <h2 id="settings-features" className="section-title">
             {t("settings.features.title")}
           </h2>
@@ -185,9 +196,7 @@ export function SettingsForm({
           <div className="mt-4 grid gap-x-10 gap-y-6 md:grid-cols-3">
             {featureGroups.map((group) => (
               <fieldset key={group.titleKey} className="min-w-0">
-                <legend className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                  {t(group.titleKey)}
-                </legend>
+                <legend className="text-sm font-semibold">{t(group.titleKey)}</legend>
                 <ul className="rows mt-1">
                   {group.features.map((feature) => (
                     <form.Field key={feature} name={`features.${feature}`}>
@@ -208,7 +217,11 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="section" aria-labelledby="settings-currencies">
+        <section
+          className="section"
+          aria-labelledby="settings-currencies"
+          hidden={section !== "currencies"}
+        >
           <h2 id="settings-currencies" className="section-title">
             {t("settings.currencies.title")}
           </h2>
@@ -314,7 +327,11 @@ export function SettingsForm({
           </form.Subscribe>
         </section>
 
-        <section className="section" aria-labelledby="settings-rates">
+        <section
+          className="section"
+          aria-labelledby="settings-rates"
+          hidden={section !== "currencies"}
+        >
           <h2 id="settings-rates" className="section-title">
             {t("settings.rates.title")}
           </h2>
@@ -331,7 +348,11 @@ export function SettingsForm({
           {exchangeRates}
         </section>
 
-        <section className="section" aria-labelledby="settings-regional">
+        <section
+          className="section"
+          aria-labelledby="settings-regional"
+          hidden={section !== "regional"}
+        >
           <h2 id="settings-regional" className="section-title">
             {t("settings.regional.title")}
           </h2>
@@ -408,7 +429,11 @@ export function SettingsForm({
           </div>
         </section>
 
-        <section className="section" aria-labelledby="settings-defaults">
+        <section
+          className="section"
+          aria-labelledby="settings-defaults"
+          hidden={section !== "defaults"}
+        >
           <h2 id="settings-defaults" className="section-title">
             {t("settings.defaults.title")}
           </h2>
@@ -440,28 +465,28 @@ export function SettingsForm({
           </div>
         </section>
 
-        <div className="sticky bottom-0 -mx-3 flex flex-wrap items-center justify-end gap-3 border-t border-rule bg-background px-3 py-3">
-          <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit] as const}>
-            {([isDirty, canSubmit]) => (
-              <>
-                <p className="mr-auto text-sm text-muted-foreground" aria-live="polite">
-                  {isDirty ? t("settings.unsaved") : t("settings.saved")}
+        <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit] as const}>
+          {([isDirty, canSubmit]) =>
+            isDirty ? (
+              <div className="sticky bottom-4 flex flex-wrap items-center justify-end gap-3 rounded-lg border bg-popover px-4 py-3 shadow-lg">
+                <p className="mr-auto text-sm font-medium" role="status">
+                  {t("settings.unsaved")}
                 </p>
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={!isDirty || pending}
+                  disabled={pending}
                   onClick={() => form.reset()}
                 >
                   {t("settings.discard")}
                 </Button>
-                <Button type="submit" pending={pending} disabled={!isDirty || !canSubmit}>
+                <Button type="submit" pending={pending} disabled={!canSubmit}>
                   {t("actions.save")}
                 </Button>
-              </>
-            )}
-          </form.Subscribe>
-        </div>
+              </div>
+            ) : null
+          }
+        </form.Subscribe>
       </form>
     </form.AppForm>
   );

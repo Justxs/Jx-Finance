@@ -18,7 +18,9 @@ import { createToastingMutationCache } from "@/lib/query-client";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
 import { investmentsSearchSchema } from "@/routes/investments";
+import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
+import { settingsSearchSchema } from "@/routes/settings";
 import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
 
@@ -34,9 +36,9 @@ const STORY_ROUTES = [
   { path: "/goals" },
   { path: "/households" },
   { path: "/net-worth" },
-  { path: "/profile" },
+  { path: "/profile", validateSearch: profileSearchSchema },
   { path: "/recurring-bills" },
-  { path: "/settings" },
+  { path: "/settings", validateSearch: settingsSearchSchema },
   { path: "/login" },
   { path: "/setup" },
 ] as const;

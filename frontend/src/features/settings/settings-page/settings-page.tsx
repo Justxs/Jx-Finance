@@ -1,4 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
+import { useSearch } from "@tanstack/react-router";
 import { RefreshCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -16,11 +17,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImportDataSection } from "@/features/imports/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
-import { useSettingsSuspense } from "@/hooks/use-settings";
+import { useSettings, useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section";
 import { SettingsForm } from "../settings-form";
+import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav";
 
-function SettingsContent() {
+function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const formatDate = useIsoDate();
@@ -49,7 +51,7 @@ function SettingsContent() {
   });
 
   const exchangeRates = (
-    <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-3 border-y border-rule py-2.5 text-sm">
+    <div className="mt-5 flex max-w-3xl flex-wrap items-center gap-x-6 gap-y-3 rounded-md bg-background px-4 py-3 text-sm">
       <p>
         <span className="text-muted-foreground">{t("settings.rates.newest")}</span>{" "}
         <span className="font-semibold tabular-nums">
@@ -85,6 +87,7 @@ function SettingsContent() {
 
   return (
     <SettingsForm
+      section={section}
       key={JSON.stringify(editable)}
       settings={settings}
       accounts={accounts.data ?? []}
@@ -99,17 +102,30 @@ function SettingsContent() {
 
 export function SettingsPage() {
   const { t } = useTranslation();
+  const search = useSearch({ from: "/settings" });
+  const { features } = useSettings();
+  const sections = settingsSections.filter((item) => item !== "import" || features.import);
+  const section = sections.find((item) => item === search.section) ?? "general";
 
   return (
     <div className="space-y-5">
       <PageHeader title={t("settings.title")} description={t("settings.description")} />
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-        <SettingsContent />
-      </QueryBoundary>
-      <ImportDataSection />
-      <BackupSection />
-      <PalettePicker />
-      <FontPicker />
+      <div className="grid gap-x-8 gap-y-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
+        <SettingsNav current={section} sections={sections} />
+        <div className="min-w-0 space-y-5">
+          <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
+            <SettingsContent section={section} />
+          </QueryBoundary>
+          {section === "import" ? <ImportDataSection /> : null}
+          {section === "backups" ? <BackupSection /> : null}
+          {section === "appearance" ? (
+            <>
+              <PalettePicker />
+              <FontPicker />
+            </>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }
