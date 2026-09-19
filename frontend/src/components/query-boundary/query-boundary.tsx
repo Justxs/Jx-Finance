@@ -5,7 +5,9 @@ import { ErrorState } from "@/components/error-state";
 interface FallbackProps {
   onReset: () => void;
   className?: string;
+  subject?: string;
   errorFallback?: ReactNode;
+  renderError?: (retry: () => void) => ReactNode;
 }
 
 interface BoundaryProps extends FallbackProps {
@@ -32,18 +34,21 @@ class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
       return this.props.children;
     }
 
+    const retry = () => {
+      this.setState({ failed: false });
+      this.props.onReset();
+    };
+
+    if (this.props.renderError) {
+      return this.props.renderError(retry);
+    }
+
     if (this.props.errorFallback !== undefined) {
       return this.props.errorFallback;
     }
 
     return (
-      <ErrorState
-        className={this.props.className}
-        onRetry={() => {
-          this.setState({ failed: false });
-          this.props.onReset();
-        }}
-      />
+      <ErrorState className={this.props.className} subject={this.props.subject} onRetry={retry} />
     );
   }
 }
@@ -52,7 +57,9 @@ interface Props {
   fallback: ReactNode;
   children: ReactNode;
   errorClassName?: string;
+  errorSubject?: string;
   errorFallback?: ReactNode;
+  renderError?: (retry: () => void) => ReactNode;
   reveal?: boolean;
 }
 
@@ -60,13 +67,21 @@ export function QueryBoundary({
   fallback,
   children,
   errorClassName,
+  errorSubject,
   errorFallback,
+  renderError,
   reveal = true,
 }: Readonly<Props>) {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
-        <ErrorBoundary onReset={reset} className={errorClassName} errorFallback={errorFallback}>
+        <ErrorBoundary
+          onReset={reset}
+          className={errorClassName}
+          subject={errorSubject}
+          errorFallback={errorFallback}
+          renderError={renderError}
+        >
           {reveal ? (
             <Suspense
               fallback={

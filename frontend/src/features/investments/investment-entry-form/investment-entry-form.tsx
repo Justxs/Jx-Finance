@@ -7,9 +7,11 @@ import {
   type AccountResponse,
   type CreateInvestmentTransactionRequest,
   Currency,
+  type InvestmentTransactionResponse,
   InvestmentTransactionType,
   type SecurityResponse,
 } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -54,7 +56,9 @@ interface Props {
   securities: readonly SecurityResponse[];
   accountId?: string;
   initialType?: InvestmentTransactionType;
+  editing?: InvestmentTransactionResponse;
   pending: boolean;
+  serverError?: unknown;
   onSubmit: (values: CreateInvestmentTransactionRequest) => void;
   onCancel?: () => void;
 }
@@ -99,7 +103,9 @@ export function InvestmentEntryForm({
   securities,
   accountId,
   initialType = "buy",
+  editing,
   pending,
+  serverError,
   onSubmit,
   onCancel,
 }: Readonly<Props>) {
@@ -153,18 +159,31 @@ export function InvestmentEntryForm({
 
   const initialAccount = defaultInvestmentAccount(accounts, accountId);
 
-  const defaultValues: FormValues = {
-    type: initialType,
-    accountId: initialAccount?.id ?? "",
-    date: today,
-    securityId: "",
-    quantity: "",
-    price: "",
-    fee: "",
-    amount: "",
-    currency: initialAccount?.currency ?? "eur",
-    description: "",
-  };
+  const defaultValues: FormValues = editing
+    ? {
+        type: editing.type,
+        accountId: editing.accountId,
+        date: editing.date,
+        securityId: editing.securityId ?? "",
+        quantity: usesAmount(editing.type) ? "" : editing.quantity,
+        price: isTrade(editing.type) ? editing.price : "",
+        fee: isTrade(editing.type) && Number(editing.fee) > 0 ? editing.fee : "",
+        amount: usesAmount(editing.type) ? editing.cashAmount.replace(/^[-−]/, "") : "",
+        currency: editing.currency,
+        description: editing.description ?? "",
+      }
+    : {
+        type: initialType,
+        accountId: initialAccount?.id ?? "",
+        date: today,
+        securityId: "",
+        quantity: "",
+        price: "",
+        fee: "",
+        amount: "",
+        currency: initialAccount?.currency ?? "eur",
+        description: "",
+      };
 
   const form = useForm({
     defaultValues,
@@ -490,6 +509,8 @@ export function InvestmentEntryForm({
         )}
       </form.Subscribe>
 
+      <FormError error={serverError} />
+
       <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
         {onCancel ? (
           <Button type="button" variant="outline" onClick={onCancel}>
@@ -499,7 +520,7 @@ export function InvestmentEntryForm({
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
             <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {t("investments.entry.submit")}
+              {editing ? t("actions.save") : t("investments.entry.submit")}
             </Button>
           )}
         </form.Subscribe>

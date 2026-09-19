@@ -51,6 +51,7 @@ describe("query errors", () => {
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith("Conflict", {
       description: "Name is taken.",
+      duration: 12_000,
     });
   });
 
@@ -67,13 +68,17 @@ describe("query errors", () => {
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith(generic, {
       description: "Amount is required. Date is invalid.",
+      duration: 12_000,
     });
   });
 
   test("unknown errors toast the generic message", async () => {
     await failingQuery(new TypeError("offline"));
 
-    expect(toastError).toHaveBeenCalledExactlyOnceWith(generic);
+    expect(toastError).toHaveBeenCalledExactlyOnceWith(generic, {
+      description: undefined,
+      duration: 12_000,
+    });
   });
 
   test("silent queries do not toast", async () => {
@@ -87,7 +92,10 @@ describe("mutation errors", () => {
   test("toast like query errors", async () => {
     await failingMutation({ status: 422, title: "Invalid", detail: "Bad amount." });
 
-    expect(toastError).toHaveBeenCalledExactlyOnceWith("Invalid", { description: "Bad amount." });
+    expect(toastError).toHaveBeenCalledExactlyOnceWith("Invalid", {
+      description: "Bad amount.",
+      duration: 12_000,
+    });
   });
 });
 

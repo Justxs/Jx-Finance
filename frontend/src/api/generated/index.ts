@@ -127,6 +127,7 @@ import type {
   UpdateDebtRequest,
   UpdateGoalRequest,
   UpdateHouseholdRequest,
+  UpdateInvestmentTransactionRequest,
   UpdateMemberRoleRequest,
   UpdateMyProfileRequest,
   UpdateRecurringBillRequest,
@@ -8912,6 +8913,118 @@ export const useDeleteInvestmentTransactionEndpoint = <TError = ProblemDetails, 
   TContext
 > => {
   return useMutation(getDeleteInvestmentTransactionEndpointMutationOptions(options), queryClient);
+};
+
+export const getUpdateInvestmentTransactionEndpointUrl = (id: string) => {
+  return `/api/investments/transactions/${id}`;
+};
+
+/**
+ * Replaces every field of an entry that was recorded by hand, under the same rules as recording one. Entries imported from a broker are corrected at the broker and imported again. A correction that would leave a later sale without enough shares is refused.
+ * @summary Correct an investment transaction
+ */
+export const updateInvestmentTransactionEndpoint = async (
+  id: string,
+  updateInvestmentTransactionRequest: UpdateInvestmentTransactionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<InvestmentTransactionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<InvestmentTransactionResponse>(getUpdateInvestmentTransactionEndpointUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateInvestmentTransactionRequest),
+  });
+};
+
+export const getUpdateInvestmentTransactionEndpointMutationKey = () =>
+  ["updateInvestmentTransactionEndpoint"] as const;
+
+export const getUpdateInvestmentTransactionEndpointMutationOptions = <
+  TError = ProblemDetails,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>,
+    TError,
+    UpdateInvestmentTransactionEndpointMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>,
+  TError,
+  UpdateInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateInvestmentTransactionEndpointMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>,
+    UpdateInvestmentTransactionEndpointMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateInvestmentTransactionEndpoint(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateInvestmentTransactionEndpointMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>
+>;
+export type UpdateInvestmentTransactionEndpointMutationBody = UpdateInvestmentTransactionRequest;
+export type UpdateInvestmentTransactionEndpointMutationError = ProblemDetails;
+export type UpdateInvestmentTransactionEndpointMutationVariables = {
+  id: string;
+  data: UpdateInvestmentTransactionRequest;
+};
+
+/**
+ * @summary Correct an investment transaction
+ */
+export const useUpdateInvestmentTransactionEndpoint = <TError = ProblemDetails, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>,
+      TError,
+      UpdateInvestmentTransactionEndpointMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateInvestmentTransactionEndpoint>>,
+  TError,
+  UpdateInvestmentTransactionEndpointMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateInvestmentTransactionEndpointMutationOptions(options), queryClient);
 };
 
 export const getGetNetWorthEndpointUrl = () => {

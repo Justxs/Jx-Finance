@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { FormError } from "@/components/form-error";
 import { SelectField, type SelectOption } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -10,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToday } from "@/hooks/use-settings";
 import { isMoney, isRate } from "@/lib/validation";
 
-interface HoldingFormValues {
+export interface HoldingFormValues {
   name: string;
   type: string;
   amount: string;
@@ -22,10 +23,12 @@ interface Props {
   idPrefix: string;
   typeOptions: SelectOption[];
   defaultType: string;
+  initialValues?: HoldingFormValues;
   amountLabel: string;
   withInterestRate?: boolean;
   withAsOf?: boolean;
   pending: boolean;
+  error?: unknown;
   onSubmit: (values: HoldingFormValues) => void;
   onCancel: () => void;
 }
@@ -34,10 +37,12 @@ export function HoldingForm({
   idPrefix,
   typeOptions,
   defaultType,
+  initialValues,
   amountLabel,
   withInterestRate = false,
   withAsOf = false,
   pending,
+  error,
   onSubmit,
   onCancel,
 }: Readonly<Props>) {
@@ -55,7 +60,7 @@ export function HoldingForm({
     asOf: z.string().min(1, t("validation.required")),
   });
 
-  const defaultValues: HoldingFormValues = {
+  const defaultValues: HoldingFormValues = initialValues ?? {
     name: "",
     type: defaultType,
     amount: "",
@@ -169,6 +174,8 @@ export function HoldingForm({
         </form.Field>
       ) : null}
 
+      <FormError error={error} />
+
       <div className="col-span-full flex items-end justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
           {t("actions.cancel")}
@@ -176,7 +183,7 @@ export function HoldingForm({
         <form.Subscribe selector={(state) => state.canSubmit}>
           {(canSubmit) => (
             <Button type="submit" pending={pending} disabled={!canSubmit}>
-              {t("actions.add")}
+              {initialValues ? t("actions.save") : t("actions.add")}
             </Button>
           )}
         </form.Subscribe>

@@ -45,7 +45,14 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           </dd>
         </dl>
       ) : null}
-      <dl className="grid min-w-0 grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-x-8 gap-y-4">
+      <dl
+        className={cn(
+          "grid min-w-0 gap-x-8 gap-y-4",
+          rest.length === 4
+            ? "grid-cols-2"
+            : "grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))]",
+        )}
+      >
         {rest.map((item) => (
           <div key={item.label} className="min-w-0 border-t pt-2.5">
             <dt className="text-sm text-muted-foreground">{item.label}</dt>

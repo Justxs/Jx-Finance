@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useLoginEndpoint } from "@/api/generated";
 import { Brand } from "@/components/brand";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FieldError } from "@/components/ui/field-error";
@@ -37,6 +38,7 @@ export function LoginPage() {
 
   const loginMutation = useLoginEndpoint({
     mutation: {
+      meta: { silent: true },
       onSuccess: (data) => {
         if (data.twoFactorRequired) {
           setTwoFactorRequired(true);
@@ -165,6 +167,8 @@ export function LoginPage() {
               )}
             </form.Field>
           )}
+
+          <FormError error={loginMutation.error} />
 
           <form.Subscribe selector={(state) => state.canSubmit}>
             {(canSubmit) => (

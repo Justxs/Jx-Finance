@@ -112,7 +112,7 @@ export const Stats: Story = {
       items={[
         { label: "Total balance", value: "12840.55" },
         { label: "Income this month", value: "2450", tone: "text-secondary" },
-        { label: "Expenses this month", value: "1312.4", tone: "text-destructive" },
+        { label: "Expenses this month", value: "1312.4", tone: "text-expense" },
         { label: "Loading value", value: undefined },
       ]}
     />

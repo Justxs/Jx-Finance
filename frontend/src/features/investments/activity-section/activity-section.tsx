@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,9 +16,11 @@ import { RowTransition } from "@/components/row-transition";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
+import { Tooltip } from "@/components/ui/tooltip";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
+import { InvestmentEntryModal } from "../investment-entry-form";
 import { entryTypes, isTrade } from "../investment-types";
 import { useInvalidateInvestments } from "../use-invalidate-investments";
 
@@ -60,6 +62,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
   const severalAccounts = new Set(items.map((entry) => entry.accountId)).size > 1;
 
+  const [editing, setEditing] = useState<InvestmentTransactionResponse | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteInvestmentTransactionEndpoint({
     mutation: { onSettled: invalidateEntries },
@@ -130,7 +133,16 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                     <span className="font-medium">{t(`investments.types.${entry.type}`)}</span>
                     {entry.symbol ? <span className="font-semibold">{entry.symbol}</span> : null}
                     {entry.source === "interactiveBrokers" ? (
-                      <Tag>{t("investments.activity.imported")}</Tag>
+                      <Tooltip content={t("investments.activity.importedLocked")}>
+                        <span className="inline-flex">
+                          <Tag>
+                            {t("investments.activity.imported")}
+                            <span className="sr-only">
+                              . {t("investments.activity.importedLocked")}
+                            </span>
+                          </Tag>
+                        </span>
+                      </Tooltip>
                     ) : null}
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
@@ -146,6 +158,20 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                 >
                   {entry.type === "split" ? t("investments.activity.noCash") : cash(entry)}
                 </span>
+                {entry.source === "manual" ? (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8 shrink-0"
+                    onClick={() => setEditing(entry)}
+                    aria-label={`${t("actions.edit")}: ${label}`}
+                    tooltip={`${t("actions.edit")}: ${label}`}
+                  >
+                    <Pencil />
+                  </Button>
+                ) : (
+                  <span className="size-8 shrink-0 max-sm:hidden" aria-hidden="true" />
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -192,6 +218,16 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
         {content}
       </div>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <InvestmentEntryModal
+        open={editing !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditing(null);
+          }
+        }}
+        accounts={accounts}
+        editing={editing ?? undefined}
+      />
       <ConfirmDeleteDialog
         target={deleteTarget}
         itemLabel={deleteLabel}

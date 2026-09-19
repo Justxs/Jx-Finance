@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { ActivitySection } from "../activity-section";
 import { BrokerImportDialog } from "../broker-import-dialog";
@@ -48,7 +48,7 @@ function InvestmentsOverview({
           {t("investments.empty.description")}
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
-          <Button onClick={onAddEntry} disabled={accounts.length === 0}>
+          <Button variant="outline" onClick={onAddEntry} disabled={accounts.length === 0}>
             <Plus />
             {t("investments.empty.addFirst")}
           </Button>
@@ -73,7 +73,7 @@ function InvestmentsOverview({
         accounts={accounts}
       />
       <IncomeByYear years={portfolio.data.years} currency={portfolio.data.reportingCurrency} />
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+      <QueryBoundary fallback={<RowsSkeleton rows={5} />}>
         <ActivitySection accounts={accounts} accountId={shownAccountId} />
       </QueryBoundary>
     </div>
@@ -96,19 +96,6 @@ export function InvestmentsPage() {
   return (
     <div className="space-y-10">
       <PageHeader title={t("investments.title")} description={t("investments.description")}>
-        <div className="w-full sm:w-56">
-          <SelectField
-            aria-label={t("investments.accountFilter")}
-            value={accountId ?? ""}
-            onChange={(value) =>
-              void navigate({ search: { accountId: value || undefined }, replace: true })
-            }
-            options={[
-              { value: "", label: t("investments.allAccounts") },
-              ...accountList.map((account) => ({ value: account.id, label: account.name })),
-            ]}
-          />
-        </div>
         <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
           {t("investments.securities.title")}
         </Button>
@@ -127,11 +114,28 @@ export function InvestmentsPage() {
         </Button>
       </PageHeader>
 
+      {accountList.length > 1 ? (
+        <div className="mb-4 w-full sm:w-56">
+          <SelectField
+            aria-label={t("investments.accountFilter")}
+            value={accountId ?? ""}
+            onChange={(value) =>
+              void navigate({ search: { accountId: value || undefined }, replace: true })
+            }
+            options={[
+              { value: "", label: t("investments.allAccounts") },
+              ...accountList.map((account) => ({ value: account.id, label: account.name })),
+            ]}
+          />
+        </div>
+      ) : null}
+
       <QueryBoundary
+        errorSubject={t("investments.title")}
         fallback={
           <div className="space-y-10">
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-56 w-full" />
+            <StatsSkeleton />
+            <RowsSkeleton rows={6} />
           </div>
         }
       >

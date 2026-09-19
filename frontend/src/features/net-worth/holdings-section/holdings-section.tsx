@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
@@ -7,15 +7,18 @@ import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
+import type { HoldingFormValues } from "./holding-form";
 
 export interface HoldingItem {
   id: string;
   name: string;
   details: string;
   amount: number;
+  values: HoldingFormValues;
 }
 
 export interface HoldingFormProps {
+  editing?: { id: string; values: HoldingFormValues };
   onCreated: () => void;
   onCancel: () => void;
 }
@@ -49,6 +52,8 @@ export function HoldingsSection({
   const money = useMoney();
   const [addOpen, setAddOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<string | null>(null);
+  const editItem = items.find((item) => item.id === editTarget);
 
   const total = items.reduce((sum, item) => sum + item.amount, 0);
   const amountClass = cn(
@@ -71,6 +76,15 @@ export function HoldingsSection({
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <span className={cn("text-right", amountClass)}>{money.format(item.amount)}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setEditTarget(item.id)}
+                  aria-label={`${t("actions.edit")}: ${item.name}`}
+                  tooltip={`${t("actions.edit")}: ${item.name}`}
+                >
+                  <Pencil />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -108,6 +122,27 @@ export function HoldingsSection({
           }}
           onCancel={() => setAddOpen(false)}
         />
+      </Modal>
+      <Modal
+        open={editItem !== undefined}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditTarget(null);
+          }
+        }}
+        title={editItem ? `${t("actions.edit")}: ${editItem.name}` : ""}
+      >
+        {editItem ? (
+          <Form
+            key={editItem.id}
+            editing={{ id: editItem.id, values: editItem.values }}
+            onCreated={() => {
+              onCreated();
+              setEditTarget(null);
+            }}
+            onCancel={() => setEditTarget(null)}
+          />
+        ) : null}
       </Modal>
       {content}
       <ConfirmDeleteDialog

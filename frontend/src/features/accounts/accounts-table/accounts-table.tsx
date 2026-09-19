@@ -20,6 +20,7 @@ import {
 import { Tag } from "@/components/ui/tag";
 import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
+import { cn } from "@/lib/utils";
 import { AccountForm, type AccountFormValues } from "../account-form";
 import { accountTypes } from "../account-types";
 
@@ -34,6 +35,13 @@ interface Props {
   deletingId: string | null;
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
+}
+
+function balanceClass(account: AccountResponse) {
+  return cn(
+    "text-right font-semibold tabular-nums",
+    Number(account.currentBalance) < 0 && "text-expense",
+  );
 }
 
 export function AccountsTable({
@@ -68,6 +76,70 @@ export function AccountsTable({
   const householdNames = new Map(households.data.map((h) => [h.id, h.name]));
 
   const editingAccount = accounts.find((account) => account.id === editingId);
+
+  function balanceLines(account: AccountResponse) {
+    return (
+      <>
+        {money.format(Number(account.currentBalance), account.currency)}
+        {account.balances.length > 1 ? (
+          <ul className="mt-0.5 text-xs font-normal text-muted-foreground">
+            {account.balances.map((balance) => (
+              <li key={balance.currency}>
+                {money.format(Number(balance.amount), balance.currency)}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {Number(account.holdingsValue ?? 0) > 0 ? (
+          <p className="mt-0.5 text-xs font-normal text-muted-foreground">
+            {t("accounts.holdings", { value: money.format(Number(account.holdingsValue)) })}
+          </p>
+        ) : null}
+      </>
+    );
+  }
+
+  function actions(account: AccountResponse) {
+    return (
+      <div className="flex justify-end gap-1">
+        {onConvert ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8"
+            disabled={!canConvert}
+            onClick={() => onConvert(account.id)}
+            aria-label={`${t("conversions.add")}: ${account.name}`}
+            tooltip={`${t("conversions.add")}: ${account.name}`}
+          >
+            <ArrowLeftRight />
+          </Button>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => onEdit(account.id)}
+          aria-label={`${t("actions.edit")}: ${account.name}`}
+          tooltip={`${t("actions.edit")}: ${account.name}`}
+        >
+          <Pencil />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          pending={deletingId === account.id}
+          disabled={deletingId !== null}
+          onClick={() => onDelete(account.id)}
+          aria-label={`${t("actions.archive")}: ${account.name}`}
+          tooltip={`${t("actions.archive")}: ${account.name}`}
+        >
+          <Archive />
+        </Button>
+      </div>
+    );
+  }
 
   let body: ReactNode;
   if (accounts.length === 0) {
@@ -116,73 +188,55 @@ export function AccountsTable({
         <TableCell className="hidden text-right text-muted-foreground tabular-nums xl:table-cell">
           {money.format(Number(account.startingBalance), account.currency)}
         </TableCell>
-        <TableCell
-          className={`text-right font-semibold tabular-nums ${
-            Number(account.currentBalance) < 0 ? "text-expense" : ""
-          }`}
-        >
-          {money.format(Number(account.currentBalance), account.currency)}
-          {account.balances.length > 1 ? (
-            <ul className="mt-0.5 text-xs font-normal text-muted-foreground">
-              {account.balances.map((balance) => (
-                <li key={balance.currency}>
-                  {money.format(Number(balance.amount), balance.currency)}
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {Number(account.holdingsValue ?? 0) > 0 ? (
-            <p className="mt-0.5 text-xs font-normal text-muted-foreground">
-              {t("accounts.holdings", { value: money.format(Number(account.holdingsValue)) })}
-            </p>
-          ) : null}
-        </TableCell>
-        <TableCell>
-          <div className="flex justify-end gap-1">
-            {onConvert ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                disabled={!canConvert}
-                onClick={() => onConvert(account.id)}
-                aria-label={`${t("conversions.add")}: ${account.name}`}
-                tooltip={`${t("conversions.add")}: ${account.name}`}
-              >
-                <ArrowLeftRight />
-              </Button>
-            ) : null}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              onClick={() => onEdit(account.id)}
-              aria-label={`${t("actions.edit")}: ${account.name}`}
-              tooltip={`${t("actions.edit")}: ${account.name}`}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8"
-              pending={deletingId === account.id}
-              disabled={deletingId !== null}
-              onClick={() => onDelete(account.id)}
-              aria-label={`${t("actions.archive")}: ${account.name}`}
-              tooltip={`${t("actions.archive")}: ${account.name}`}
-            >
-              <Archive />
-            </Button>
-          </div>
-        </TableCell>
+        <TableCell className={balanceClass(account)}>{balanceLines(account)}</TableCell>
+        <TableCell>{actions(account)}</TableCell>
       </TableRow>
     ));
   }
 
   return (
     <>
-      <section className="-mx-3">
+      <div className={cn("md:hidden", stale && "is-stale")} aria-busy={stale}>
+        {accounts.length === 0 ? (
+          <p className="py-6 text-sm text-muted-foreground">
+            {filtered ? t("filters.noMatches") : t("accounts.empty")}
+          </p>
+        ) : (
+          <ul className="rows" aria-label={t("accounts.title")}>
+            {accounts.map((account) => {
+              const secondary = [
+                t(`accounts.types.${account.type}`),
+                account.scope === "shared"
+                  ? t("sharing.sharedWith", {
+                      household: householdNames.get(account.householdId ?? "") ?? "",
+                    })
+                  : null,
+                account.iban,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+
+              return (
+                <li key={account.id} className="py-2.5 text-sm">
+                  <div className="flex items-start gap-3">
+                    <p className="min-w-0 flex-1 font-medium wrap-break-word">{account.name}</p>
+                    <div className={cn("shrink-0", balanceClass(account))}>
+                      {balanceLines(account)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <p className="min-w-0 flex-1 text-xs wrap-break-word text-muted-foreground">
+                      {secondary}
+                    </p>
+                    <div className="-mr-2 shrink-0">{actions(account)}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+      <section className="-mx-3 hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
           <div
             className="overflow-x-auto"

@@ -3,8 +3,9 @@ import { toast } from "sonner";
 import {
   useCreateInvestmentTransactionEndpoint,
   useGetSecuritiesEndpointSuspense,
+  useUpdateInvestmentTransactionEndpoint,
 } from "@/api/generated";
-import type { AccountResponse } from "@/api/generated/model";
+import type { AccountResponse, InvestmentTransactionResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,17 +17,19 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   accounts: readonly AccountResponse[];
   accountId?: string;
+  editing?: InvestmentTransactionResponse;
 }
 
 type ContentProps = Omit<Props, "open">;
 
-function EntryModalContent({ onOpenChange, accounts, accountId }: Readonly<ContentProps>) {
+function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Readonly<ContentProps>) {
   const { t } = useTranslation();
   const { invalidateEntries } = useInvalidateInvestments();
   const securities = useGetSecuritiesEndpointSuspense();
 
   const createMutation = useCreateInvestmentTransactionEndpoint({
     mutation: {
+      meta: { silent: true },
       onSuccess: () => {
         toast.success(t("investments.entry.saved"));
         onOpenChange(false);
@@ -35,27 +38,54 @@ function EntryModalContent({ onOpenChange, accounts, accountId }: Readonly<Conte
     },
   });
 
+  const updateMutation = useUpdateInvestmentTransactionEndpoint({
+    mutation: {
+      meta: { silent: true },
+      onSuccess: () => {
+        toast.success(t("investments.entry.corrected"));
+        onOpenChange(false);
+      },
+      onSettled: invalidateEntries,
+    },
+  });
+
   return (
     <InvestmentEntryForm
+      key={editing?.id ?? "new"}
       accounts={accounts}
       securities={securities.data ?? []}
       accountId={accountId}
-      pending={createMutation.isPending}
-      onSubmit={(values) => createMutation.mutate({ data: values })}
+      editing={editing}
+      pending={createMutation.isPending || updateMutation.isPending}
+      serverError={createMutation.error ?? updateMutation.error}
+      onSubmit={(values) => {
+        if (editing) {
+          updateMutation.mutate({ id: editing.id, data: values });
+          return;
+        }
+
+        createMutation.mutate({ data: values });
+      }}
       onCancel={() => onOpenChange(false)}
     />
   );
 }
 
-export function InvestmentEntryModal({ open, onOpenChange, accounts, accountId }: Readonly<Props>) {
+export function InvestmentEntryModal({
+  open,
+  onOpenChange,
+  accounts,
+  accountId,
+  editing,
+}: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      title={t("investments.entry.title")}
-      description={t("investments.entry.description")}
+      title={editing ? t("investments.entry.editTitle") : t("investments.entry.title")}
+      description={editing ? undefined : t("investments.entry.description")}
     >
       {open ? (
         <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
@@ -63,6 +93,7 @@ export function InvestmentEntryModal({ open, onOpenChange, accounts, accountId }
             onOpenChange={onOpenChange}
             accounts={accounts}
             accountId={accountId}
+            editing={editing}
           />
         </QueryBoundary>
       ) : null}

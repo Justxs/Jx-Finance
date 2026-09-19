@@ -1,4 +1,4 @@
-import type { RefObject } from "react";
+import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
@@ -33,6 +33,10 @@ export function ImportUploadForm({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const locked = previewPending || disabled;
+  const [fileName, setFileName] = useState("");
+  const [expanded, setExpanded] = useState(false);
+  const collapsed = secondary && !expanded;
+  const accountName = accounts.find((account) => account.id === accountId)?.name;
 
   return (
     <form
@@ -43,7 +47,21 @@ export function ImportUploadForm({
       }}
     >
       <h2 className="section-title mb-4">{t("imports.fileSection")}</h2>
-      <div className="form-grid">
+      {collapsed ? (
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+          <span className="min-w-0 font-medium wrap-break-word">{fileName}</span>
+          <span className="text-muted-foreground">{accountName}</span>
+          <button
+            type="button"
+            disabled={locked}
+            onClick={() => setExpanded(true)}
+            className="rounded-sm font-medium text-primary underline-offset-4 outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50"
+          >
+            {t("imports.changeFile")}
+          </button>
+        </p>
+      ) : null}
+      <div className={collapsed ? "hidden" : "form-grid"}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="import-account">
             {t("transactions.account")}
@@ -65,7 +83,10 @@ export function ImportUploadForm({
             ref={fileInputRef}
             accept=".csv,text/csv"
             disabled={locked}
-            onChange={onFileChange}
+            onChange={(event) => {
+              setFileName(event.target.files?.[0]?.name ?? "");
+              onFileChange();
+            }}
             placeholder={t("imports.chooseFile")}
             aria-invalid={fileError ? true : undefined}
             aria-describedby={fileError ? "import-file-hint import-file-error" : "import-file-hint"}
@@ -76,7 +97,7 @@ export function ImportUploadForm({
           <FieldError id="import-file-error" message={fileError} />
         </div>
       </div>
-      <div className="mt-4 flex justify-end">
+      <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>
         <Button
           type="submit"
           variant={secondary ? "outline" : "default"}

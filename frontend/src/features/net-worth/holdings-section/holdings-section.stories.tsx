@@ -14,15 +14,31 @@ function StubForm({ onCreated, onCancel }: Readonly<HoldingFormProps>) {
   );
 }
 
+function holding(id: string, name: string, details: string, amount: number): HoldingItem {
+  return {
+    id,
+    name,
+    details,
+    amount,
+    values: {
+      name,
+      type: "other",
+      amount: amount.toFixed(2),
+      interestRate: "",
+      asOf: "2026-09-01",
+    },
+  };
+}
+
 const items: HoldingItem[] = [
-  { id: "1", name: "Apartment in Zirmunai", details: "Real estate · Sep 1, 2026", amount: 145000 },
-  { id: "2", name: "Index fund portfolio", details: "Investment · Sep 1, 2026", amount: 38250.4 },
-  {
-    id: "3",
-    name: "A holding with a very long name that has to wrap onto a second line in narrow layouts",
-    details: "Other · Sep 1, 2026",
-    amount: 1200,
-  },
+  holding("1", "Apartment in Zirmunai", "Real estate · Sep 1, 2026", 145000),
+  holding("2", "Index fund portfolio", "Investment · Sep 1, 2026", 38250.4),
+  holding(
+    "3",
+    "A holding with a very long name that has to wrap onto a second line in narrow layouts",
+    "Other · Sep 1, 2026",
+    1200,
+  ),
 ];
 
 const meta = {

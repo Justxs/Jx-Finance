@@ -14,7 +14,9 @@ export function PageHeader({ title, description, children }: Readonly<Props>) {
         {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {children ? (
-        <div className="flex max-w-full flex-wrap items-center gap-2">{children}</div>
+        <div className="flex max-w-full flex-wrap items-center gap-2 sm:ml-auto sm:justify-end">
+          {children}
+        </div>
       ) : null}
     </div>
   );

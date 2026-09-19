@@ -12,6 +12,8 @@ interface Props {
   onCancelEdit: () => void;
   updatePending: boolean;
   createPending: boolean;
+  createError?: unknown;
+  updateError?: unknown;
   onCreate: (values: TransactionFormValues) => void;
   onCreateAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onUpdate: (values: TransactionFormValues) => void;
@@ -26,6 +28,8 @@ export function TransactionFormSection({
   onCancelEdit,
   updatePending,
   createPending,
+  createError,
+  updateError,
   onCreate,
   onCreateAnother,
   onUpdate,
@@ -44,6 +48,7 @@ export function TransactionFormSection({
           accounts={accounts}
           categories={categories}
           pending={createPending}
+          error={createError}
           onSubmit={onCreate}
           onSubmitAndAddAnother={onCreateAnother}
           onCancel={() => onCreateOpenChange(false)}
@@ -67,6 +72,7 @@ export function TransactionFormSection({
             categories={categories}
             initial={editing}
             pending={updatePending}
+            error={updateError}
             onSubmit={onUpdate}
             onCancel={onCancelEdit}
           />

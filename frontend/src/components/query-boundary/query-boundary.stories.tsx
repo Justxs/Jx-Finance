@@ -80,7 +80,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ErrorWithRetry: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CustomErrorClassName: Story = {
-  args: { errorClassName: "px-2 py-2 text-destructive" },
+  args: { errorClassName: "px-2 py-2 text-expense" },
   parameters: { msw: { handlers: errorHandlers } },
 };
 

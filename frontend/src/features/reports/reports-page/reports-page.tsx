@@ -1,11 +1,14 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { Download } from "lucide-react";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useGetReportSummaryEndpointSuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { PageHeader } from "@/components/page-header";
+import { buttonVariants } from "@/components/ui/button";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
+import { buildExportUrl } from "@/lib/export-url";
 import { NetWorthChangeCard } from "../net-worth-change-card";
 import { detectPreset, presetRange, ReportFilters } from "../report-filters";
 import { ReportStats } from "../report-stats";
@@ -32,7 +35,22 @@ export function ReportsPage() {
 
   return (
     <div className="space-y-10">
-      <PageHeader title={t("reports.title")} />
+      <PageHeader title={t("reports.title")}>
+        <a
+          href={buildExportUrl("/api/transactions/export", { dateFrom, dateTo })}
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
+        >
+          <Download />
+          {t("reports.exportCsv")}
+        </a>
+        <a
+          href={buildExportUrl("/api/transactions/export/pdf", { dateFrom, dateTo })}
+          className={buttonVariants({ variant: "ghost", size: "sm" })}
+        >
+          <Download />
+          {t("reports.exportPdf")}
+        </a>
+      </PageHeader>
 
       <ReportFilters dateFrom={dateFrom} dateTo={dateTo} onChange={handleRangeChange} />
 

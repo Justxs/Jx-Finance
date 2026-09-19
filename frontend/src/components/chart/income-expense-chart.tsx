@@ -25,7 +25,11 @@ interface Props {
   height?: number;
 }
 
-export const axisTick = { fill: "var(--muted-foreground)", fontSize: 12 } as const;
+export const axisTick = {
+  fill: "var(--muted-foreground)",
+  fontSize: 12,
+  style: { fontVariantNumeric: "tabular-nums" },
+} as const;
 
 export const chartCursor = {
   stroke: "var(--muted-foreground)",
@@ -57,6 +61,10 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
 
   const chartData = data.map((point) => ({ ...point, net: point.income - point.expense }));
   const showDots = chartData.length <= 16;
+
+  if (chartData.every((point) => point.income === 0 && point.expense === 0)) {
+    return <p className="py-6 text-sm text-muted-foreground">{t("charts.empty")}</p>;
+  }
 
   return (
     <div className="space-y-3">

@@ -9,7 +9,7 @@ const meta = {
     items: [
       { label: "Total balance", value: "12840.55" },
       { label: "Income this month", value: "2450", tone: "text-secondary" },
-      { label: "Expenses this month", value: "1312.4", tone: "text-destructive" },
+      { label: "Expenses this month", value: "1312.4", tone: "text-expense" },
     ],
   },
 } satisfies Meta<typeof SummaryStats>;
@@ -35,7 +35,7 @@ export const ZeroAndNegative: Story = {
   args: {
     items: [
       { label: "Balance", value: "0" },
-      { label: "Net change", value: "-532.19", tone: "text-destructive" },
+      { label: "Net change", value: "-532.19", tone: "text-expense" },
     ],
   },
 };
@@ -48,7 +48,7 @@ export const LongLabelsAndLargeValues: Story = {
         value: "123456789012.34",
       },
       { label: "Income", value: "9876543210.99", tone: "text-secondary" },
-      { label: "Expenses", value: "8765432109.01", tone: "text-destructive" },
+      { label: "Expenses", value: "8765432109.01", tone: "text-expense" },
       { label: "Savings", value: "1111111101.98" },
       { label: "Transfers", value: "42" },
     ],

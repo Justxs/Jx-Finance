@@ -12,6 +12,8 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
+export const WithPageTitle: Story = { args: { title: "Transactions" } };
+
 export const NarrowContainer: Story = {
   decorators: [
     (Story) => (

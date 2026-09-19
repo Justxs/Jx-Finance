@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateGoalEndpoint, useUpdateGoalEndpoint } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { FieldError } from "@/components/ui/field-error";
@@ -40,8 +41,12 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
     targetDate: z.string(),
   });
 
-  const createMutation = useCreateGoalEndpoint({ mutation: { onSuccess: onCreated } });
-  const updateMutation = useUpdateGoalEndpoint({ mutation: { onSuccess: onCreated } });
+  const createMutation = useCreateGoalEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
+  const updateMutation = useUpdateGoalEndpoint({
+    mutation: { meta: { silent: true }, onSuccess: onCreated },
+  });
 
   const defaultValues: FormValues = {
     name: initial?.name ?? "",
@@ -160,6 +165,8 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
           )}
         </form.Field>
       </div>
+
+      <FormError error={createMutation.error ?? updateMutation.error} />
 
       <div className="flex justify-end gap-2 pt-2">
         <Button type="button" variant="outline" onClick={onCancel}>

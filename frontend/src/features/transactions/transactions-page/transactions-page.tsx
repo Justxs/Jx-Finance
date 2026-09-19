@@ -31,6 +31,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
+import { buildExportUrl } from "@/lib/export-url";
 import { normalizeMoney } from "@/lib/validation";
 import { SelectionToolbar } from "../selection-toolbar";
 import { optimisticId, transactionName } from "../transaction-amount";
@@ -52,16 +53,6 @@ const NO_SELECTION: ReadonlySet<string> = new Set();
 interface SelectionState {
   viewKey: string;
   ids: ReadonlySet<string>;
-}
-
-function buildExportUrl(path: string, params: Record<string, string | number | undefined>) {
-  const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
-    if (value) {
-      search.set(key, String(value));
-    }
-  }
-  return `${path}?${search.toString()}`;
 }
 
 export function TransactionsPage() {
@@ -94,10 +85,16 @@ export function TransactionsPage() {
   const selectedIds = selection.viewKey === viewKey ? selection.ids : NO_SELECTION;
 
   function setCreateOpen(open: boolean) {
+    createMutation.reset();
     navigate({
       search: (prev) => ({ ...prev, new: open ? true : undefined }),
       replace: !open,
     });
+  }
+
+  function startEditing(transaction: TransactionResponse) {
+    updateMutation.reset();
+    setEditing(transaction);
   }
 
   function setSelectedIds(ids: ReadonlySet<string>) {
@@ -132,6 +129,7 @@ export function TransactionsPage() {
 
   const createMutation = useCreateTransactionEndpoint({
     mutation: {
+      meta: { silent: true },
       onMutate: async ({ data }) => {
         await queryClient.cancelQueries({ queryKey: getGetTransactionsEndpointQueryKey() });
         const previous = queryClient.getQueryData<PagedResponseOfTransactionResponse>(listKey);
@@ -177,6 +175,7 @@ export function TransactionsPage() {
 
   const updateMutation = useUpdateTransactionEndpoint({
     mutation: {
+      meta: { silent: true },
       onSuccess: () => {
         toast.success(t("transactions.updated"));
         setEditing(null);
@@ -237,7 +236,7 @@ export function TransactionsPage() {
   const columns = useTransactionColumns({
     accountNames,
     categoryById,
-    onEdit: setEditing,
+    onEdit: startEditing,
     onDelete: setDeleteTarget,
     deletingId,
   });
@@ -312,6 +311,8 @@ export function TransactionsPage() {
         onCancelEdit={() => setEditing(null)}
         updatePending={updateMutation.isPending}
         createPending={createMutation.isPending}
+        createError={createMutation.error}
+        updateError={updateMutation.error}
         onCreate={handleCreate}
         onCreateAnother={handleCreateAnother}
         onUpdate={handleUpdate}
@@ -369,7 +370,7 @@ export function TransactionsPage() {
             categoryById={categoryById}
             isPlaceholder={stale}
             filtered={columnHeaders.active}
-            onEdit={setEditing}
+            onEdit={startEditing}
             onDelete={setDeleteTarget}
             deletingId={deletingId}
           />

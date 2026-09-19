@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useUpdateMyProfileEndpoint } from "@/api/generated";
 import type { UserProfileResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
 
   const updateMutation = useUpdateMyProfileEndpoint({
     mutation: {
+      meta: { silent: true },
       onSuccess: () => {
         toast.success(t("profile.updated"));
         form.setFieldValue("currentPassword", "");
@@ -136,11 +138,15 @@ export function ProfileForm({ profile }: Readonly<Props>) {
         )}
       </form.Field>
 
+      <FormError error={updateMutation.error} />
+
       <form.Subscribe selector={(state) => state.canSubmit}>
         {(canSubmit) => (
-          <Button type="submit" pending={updateMutation.isPending} disabled={!canSubmit}>
-            {t("profile.save")}
-          </Button>
+          <div className="flex justify-end">
+            <Button type="submit" pending={updateMutation.isPending} disabled={!canSubmit}>
+              {t("profile.save")}
+            </Button>
+          </div>
         )}
       </form.Subscribe>
     </form>

@@ -9,6 +9,7 @@ import {
   type FlowType,
   type TransactionResponse,
 } from "@/api/generated/model";
+import { FormError } from "@/components/form-error";
 import { MoneyField } from "@/components/money-field";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ interface Props {
   categories: CategoryResponse[];
   initial?: TransactionResponse;
   pending: boolean;
+  error?: unknown;
   onSubmit: (values: TransactionFormValues) => void;
   onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
   onCancel?: () => void;
@@ -241,6 +243,7 @@ export function TransactionForm({
   categories,
   initial,
   pending,
+  error,
   onSubmit,
   onSubmitAndAddAnother,
   onCancel,
@@ -413,6 +416,8 @@ export function TransactionForm({
       </form.Field>
 
       <SplitLinesEditor form={form} categories={categories} />
+
+      <FormError error={error} />
 
       <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
         {onCancel ? (
