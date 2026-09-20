@@ -1,17 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card/card";
 import { accounts } from "@/storybook/fixtures";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableFooter,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "./table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
 const wideColumns = Array.from({ length: 12 }, (_, index) => `Month ${index + 1}`);
 
@@ -91,24 +82,6 @@ export const Default: Story = {
       <TableBody>
         <AccountRows />
       </TableBody>
-    </Table>
-  ),
-};
-
-export const WithFooterAndCaption: Story = {
-  render: () => (
-    <Table>
-      <TableCaption>Balances as of 18 September 2026.</TableCaption>
-      <AccountHeader />
-      <TableBody>
-        <AccountRows />
-      </TableBody>
-      <TableFooter>
-        <TableRow>
-          <TableCell colSpan={3}>Accounts</TableCell>
-          <TableCell className="text-right tabular-nums">{accounts.length}</TableCell>
-        </TableRow>
-      </TableFooter>
     </Table>
   ),
 };

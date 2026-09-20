@@ -1,10 +1,9 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { isApiError } from "@/api/client";
 import { restoreBackupBodyPasswordMax } from "@/api/schemas/backups/backups.zod";
 import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
+import { FormError } from "@/components/form-error/form-error";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,8 +12,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/alert-dialog/alert-dialog";
+import { Button } from "@/components/ui/button/button";
+import { useRetained } from "@/hooks/use-retained";
 import { submitToServer } from "@/lib/form-server-errors";
 import { requiredValue } from "@/lib/validation";
 
@@ -68,15 +68,7 @@ function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <form.Field name="confirmation">
           {(field) => (
             <field.TextField
@@ -115,7 +107,7 @@ function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
             )}
           </form.Subscribe>
         </AlertDialogFooter>
-      </form>
+      </form.FormShell>
     </form.AppForm>
   );
 }
@@ -129,11 +121,7 @@ export function RestoreBackupDialog({
   onRestore,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [shownLabel, setShownLabel] = useState(label);
-
-  if (label !== null && label !== shownLabel) {
-    setShownLabel(label);
-  }
+  const shownLabel = useRetained(label);
 
   return (
     <AlertDialog

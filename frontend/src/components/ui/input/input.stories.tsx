@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Label } from "../label";
+import { withWidth } from "@/storybook/decorators";
+import { Label } from "../label/label";
 import { Input } from "./input";
 
 const inputTypes = [
@@ -17,13 +18,7 @@ const meta = {
   title: "UI/Input",
   component: Input,
   args: { "aria-label": "Description" },
-  decorators: [
-    (Story) => (
-      <div className="w-64">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-64")],
 } satisfies Meta<typeof Input>;
 
 export default meta;

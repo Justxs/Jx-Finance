@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
 import { useFormContext } from "../form-context";
 
 type Props = Omit<ComponentProps<typeof Button>, "type">;

@@ -2,8 +2,8 @@ import { createColumnHelper } from "@tanstack/react-table";
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
+import { Button } from "@/components/ui/button/button";
+import { Tag } from "@/components/ui/tag/tag";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
@@ -129,24 +129,20 @@ export function useTransactionColumns({
           <div className="flex justify-end gap-1">
             <Button
               variant="ghost"
-              size="icon"
-              className="size-8"
+              size="icon-sm"
               disabled={optimistic}
               onClick={() => onEdit(row)}
               aria-label={`${t("actions.edit")}: ${rowName(row)}`}
-              tooltip={`${t("actions.edit")}: ${rowName(row)}`}
             >
               <Pencil />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              className="size-8"
+              size="icon-sm"
               pending={deletingId === row.id}
               disabled={optimistic || deletingId !== null}
               onClick={() => onDelete(row.id)}
               aria-label={`${t("actions.delete")}: ${rowName(row)}`}
-              tooltip={`${t("actions.delete")}: ${rowName(row)}`}
             >
               <Trash2 />
             </Button>

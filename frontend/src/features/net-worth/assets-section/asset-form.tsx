@@ -1,18 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { useCreateAsset, useUpdateAsset } from "@/api/generated";
 import { AssetType } from "@/api/generated/model";
+import { silent, upsert } from "@/lib/mutations";
 import { HoldingForm, type HoldingFormProps } from "../holdings-section";
 
 const assetTypes = Object.values(AssetType);
 
 export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingFormProps>) {
   const { t } = useTranslation();
-  const createMutation = useCreateAsset({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
-  const updateMutation = useUpdateAsset({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
+  const { create, update, pending, error } = upsert(
+    useCreateAsset(silent({ onSuccess: onCreated })),
+    useUpdateAsset(silent({ onSuccess: onCreated })),
+  );
 
   return (
     <HoldingForm
@@ -25,8 +24,8 @@ export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingForm
       initialValues={editing?.values}
       amountLabel={t("netWorth.currentValue")}
       withAsOf
-      pending={createMutation.isPending || updateMutation.isPending}
-      error={createMutation.error ?? updateMutation.error}
+      pending={pending}
+      error={error}
       errorAliases={{ currentValue: "amount" }}
       onSubmit={(values) => {
         const data = {
@@ -37,10 +36,10 @@ export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingForm
         };
 
         if (editing) {
-          return updateMutation.mutateAsync({ id: editing.id, data });
+          return update({ id: editing.id, data });
         }
 
-        return createMutation.mutateAsync({ data });
+        return create({ data });
       }}
       onCancel={onCancel}
     />

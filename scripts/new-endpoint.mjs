@@ -26,7 +26,45 @@ if (existsSync(folder)) {
   process.exit(1);
 }
 
-const files = {
+const deleteFiles = {
+  [`${name}Endpoint.cs`]: `using FastEndpoints;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
+
+namespace ${namespace};
+
+public sealed class ${name}Endpoint : DeleteEndpoint
+{
+    public override void Configure()
+    {
+        Delete("${route}");
+        Group<${tag}Group>();
+        Description(d => d.ProducesProblemDetails(404));
+    }
+
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        Task.FromResult<Result<Guid>>(id);
+}
+`,
+  [`${name}Summary.cs`]: `using FastEndpoints;
+
+namespace ${namespace};
+
+public sealed class ${name}Summary : Summary<${name}Endpoint>
+{
+    public ${name}Summary()
+    {
+        Summary = "${name}";
+        Description = "Describe what this does and when to call it.";
+        Params["id"] = "The id.";
+        Responses[204] = "Deleted.";
+        Responses[404] = "Not found.";
+    }
+}
+`,
+};
+
+const requestFiles = {
   [`${name}Request.cs`]: `namespace ${namespace};
 
 public sealed record ${name}Request(Guid Id);
@@ -82,6 +120,8 @@ public sealed class ${name}Summary : Summary<${name}Endpoint, ${name}Request>
 }
 `,
 };
+
+const files = verb === "Delete" ? deleteFiles : requestFiles;
 
 mkdirSync(folder, { recursive: true });
 for (const [file, content] of Object.entries(files)) {

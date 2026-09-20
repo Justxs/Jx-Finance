@@ -74,6 +74,4 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     }
 
     private sealed record CategoryDto(Guid Id, string Name, string Type, string? Icon, bool IsDefault);
-
-    private sealed record TransactionDto(Guid Id, Guid? CategoryId);
 }

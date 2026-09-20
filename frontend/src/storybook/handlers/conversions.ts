@@ -5,7 +5,7 @@ import {
   getUpdateConversionMockHandler,
 } from "@/api/generated/conversions/conversions.msw";
 import type { ConversionResponse } from "@/api/generated/model";
-import { conversions } from "@/storybook/fixtures";
+import { conversionWithFee, conversions } from "@/storybook/fixtures";
 import { found, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { byId, paginate } from "./lists";
@@ -22,7 +22,7 @@ export const conversionHandlers = [
   getCreateConversionMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const created: ConversionResponse = {
-      ...conversions[0]!,
+      ...conversionWithFee,
       id: NEW_ID,
       description: null,
       feeAmount: null,

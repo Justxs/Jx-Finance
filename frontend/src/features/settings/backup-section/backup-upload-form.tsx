@@ -2,10 +2,11 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useUploadBackup } from "@/api/generated";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
+import { FormError } from "@/components/form-error/form-error";
+import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
-import { FileInput } from "@/components/ui/file-input";
+import { FileInput } from "@/components/ui/file-input/file-input";
+import { silent } from "@/lib/mutations";
 
 const MAX_FILE_BYTES = 100 * 1024 * 1024;
 
@@ -15,15 +16,14 @@ export function BackupUploadForm() {
   const [fileError, setFileError] = useState<string | undefined>(undefined);
   const [uploadKey, setUploadKey] = useState(0);
 
-  const uploadMutation = useUploadBackup({
-    mutation: {
-      meta: { silent: true },
+  const uploadMutation = useUploadBackup(
+    silent({
       onSuccess: () => {
         toast.success(t("backup.uploaded"));
         setUploadKey((key) => key + 1);
       },
-    },
-  });
+    }),
+  );
 
   function handleUpload() {
     const file = fileInputRef.current?.files?.[0];

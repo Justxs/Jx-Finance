@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Section } from "@/components/ui/section";
+import { Section } from "@/components/ui/section/section";
 import { reportSummaryMonth, reportSummaryYear } from "@/storybook/fixtures";
 import { ReportTrendChart } from "./report-trend-chart";
 

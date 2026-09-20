@@ -158,10 +158,6 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
 
     private sealed record ConversionDto(Guid Id, string? FeeAmount, string? FeeCurrency, Guid? FeeTransactionId);
 
-    private sealed record BalanceDto(string Currency, string Amount);
-
-    private sealed record AccountDto(List<BalanceDto> Balances);
-
     private sealed record TransactionDto(
         Guid Id,
         Guid AccountId,
@@ -170,6 +166,4 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
         string Amount,
         string Currency,
         string ReportingAmount);
-
-    private sealed record PageDto<T>(List<T> Items, int Total);
 }

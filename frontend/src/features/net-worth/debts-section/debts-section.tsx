@@ -30,7 +30,7 @@ export function DebtsSection() {
         details: [
           t(`netWorth.debtTypes.${debt.type}`),
           formatDate(debt.asOf),
-          debt.interestRate ? formatRate(Number(debt.interestRate)) : null,
+          debt.interestRate ? formatRate(debt.interestRate) : null,
         ]
           .filter(Boolean)
           .join(" · "),

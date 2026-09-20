@@ -1,6 +1,8 @@
+using JxFinance.Common;
+
 namespace JxFinance.Endpoints.Transfers.GetTransfers;
 
-public sealed class GetTransfersRequest
+public sealed class GetTransfersRequest : IPagedRequest
 {
     public int Page { get; init; } = 1;
 

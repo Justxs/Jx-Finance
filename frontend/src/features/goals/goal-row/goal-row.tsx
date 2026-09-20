@@ -3,12 +3,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { GoalResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Meter } from "@/components/ui/meter";
-import { Tag } from "@/components/ui/tag";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { Button } from "@/components/ui/button/button";
+import { Meter } from "@/components/ui/meter/meter";
+import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
-import { CreateGoalForm } from "../create-goal-form";
+import { CreateGoalForm } from "../create-goal-form/create-goal-form";
 
 interface Props {
   goal: GoalResponse;
@@ -60,7 +60,6 @@ export function GoalRow({ goal, onDelete, deletePending, deleteDisabled }: Reado
               size="icon"
               onClick={() => setEditing(true)}
               aria-label={`${t("actions.edit")}: ${goal.name}`}
-              tooltip={`${t("actions.edit")}: ${goal.name}`}
             >
               <Pencil />
             </Button>
@@ -71,7 +70,6 @@ export function GoalRow({ goal, onDelete, deletePending, deleteDisabled }: Reado
               disabled={deleteDisabled}
               onClick={onDelete}
               aria-label={`${t("actions.delete")}: ${goal.name}`}
-              tooltip={`${t("actions.delete")}: ${goal.name}`}
             >
               <Trash2 />
             </Button>

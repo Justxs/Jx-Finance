@@ -3,8 +3,9 @@ import type {
   TransactionResponse,
   TransactionsSummaryResponse,
 } from "@/api/generated/model";
+import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
-import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, fromCents, ids, toCents, uid } from "./base";
+import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, uid } from "./base";
 import { categories } from "./categories";
 
 function transaction(

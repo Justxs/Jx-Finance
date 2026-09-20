@@ -218,20 +218,7 @@ public sealed class MultiCurrencyEndpointTests(ApiFixture fixture) : Integration
         return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
     }
 
-    private sealed record BalanceDto(string Currency, string Amount);
-
-    private sealed record AccountDto(
-        Guid Id,
-        string Currency,
-        string CurrentBalance,
-        string ReportingBalance,
-        IReadOnlyList<BalanceDto> Balances);
-
-    private sealed record TransactionDto(Guid Id, string Amount, string Currency, string ReportingAmount);
-
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
-
-    private sealed record TransferDto(Guid Id, string Amount, string Currency, string ReceivedAmount, string ReceivedCurrency);
 
     private sealed record ConversionDto(
         Guid Id,
@@ -239,8 +226,6 @@ public sealed class MultiCurrencyEndpointTests(ApiFixture fixture) : Integration
         string? FeeAmount,
         string? FeeCurrency,
         Guid? FeeTransactionId);
-
-    private sealed record PageDto<T>(IReadOnlyList<T> Items, int Total);
 
     private sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
 

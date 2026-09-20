@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { categories, transactions } from "@/storybook/fixtures";
 import { SelectionToolbar } from "./selection-toolbar";
 
@@ -16,11 +17,7 @@ const meta = {
     onApply: fn(),
     onClear: fn(),
   },
-  render: (args) => (
-    <div className="w-[min(56rem,92vw)]">
-      <SelectionToolbar {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(56rem,92vw)]")],
 } satisfies Meta<typeof SelectionToolbar>;
 
 export default meta;
@@ -38,9 +35,5 @@ export const Pending: Story = { args: { pending: true } };
 
 export const Narrow: Story = {
   args: { selected: [...expenses.slice(0, 2), ...incomes.slice(0, 1)] },
-  render: (args) => (
-    <div className="w-80">
-      <SelectionToolbar {...args} />
-    </div>
-  ),
+  decorators: [withWidth("card")],
 };

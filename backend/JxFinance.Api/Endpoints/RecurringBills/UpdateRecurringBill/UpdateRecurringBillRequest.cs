@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 
@@ -13,4 +14,4 @@ public sealed record UpdateRecurringBillRequest(
     RecurringBillCadence Cadence,
     DateOnly NextDueDate,
     int RemindDaysBefore,
-    bool IsActive);
+    bool IsActive) : IRecurringBillInput;

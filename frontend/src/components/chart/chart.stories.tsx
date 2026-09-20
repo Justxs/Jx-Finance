@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { ChartLegend } from "./chart-legend";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 import { IncomeExpenseChart } from "./income-expense-chart";
@@ -6,13 +7,7 @@ import { IncomeExpenseChart } from "./income-expense-chart";
 const meta = {
   title: "Components/Chart",
   component: IncomeExpenseChart,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(40rem,calc(100vw-5rem))]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(40rem,calc(100vw-5rem))]")],
 } satisfies Meta<typeof IncomeExpenseChart>;
 
 export default meta;

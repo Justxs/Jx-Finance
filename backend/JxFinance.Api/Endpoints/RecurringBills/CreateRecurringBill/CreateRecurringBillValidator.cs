@@ -1,27 +1,14 @@
-using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
-using JxFinance.Common.Validation;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 
-public sealed class CreateRecurringBillValidator : Validator<CreateRecurringBillRequest>
+public sealed class CreateRecurringBillValidator : RecurringBillInputValidator<CreateRecurringBillRequest>
 {
     public CreateRecurringBillValidator()
     {
-        RuleFor(r => r.Kind).IsKnownEnum();
-        RuleFor(r => r.Cadence).IsKnownEnum();
-        RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
-        RuleFor(r => r.RemindDaysBefore).IsWithin(0, 365);
-        RuleFor(r => r.NextDueDate).IsRequired();
-        RuleFor(r => r.Amount)
-            .IsPositiveMoney()
-            .WithMessage("Amount must be a positive decimal with at most 2 decimal places.");
-        RuleFor(r => r.Amount)
-            .IsPresent()
-            .WithMessage("A fixed bill must have an amount.")
-            .When(r => r.Kind == RecurringBillKind.Fixed);
         RuleFor(r => r.Amount)
             .Must(a => a is null)
             .WithErrorCode(ErrorCodes.ValueMustBeEmpty)

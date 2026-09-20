@@ -1,4 +1,5 @@
-import { choose, createAccount, expect, test, today, unique } from "./support";
+import { z } from "zod";
+import { choose, createAccount, expect, readJson, test, today, unique } from "./support";
 
 function statement(reference: string, date: string) {
   const header =
@@ -66,9 +67,14 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
   await dialog.getByRole("button", { name: "Import 3 rows" }).click();
   await expect(dialog.getByText("Imported 3 rows.")).toBeVisible();
 
-  const transfers = (await (
-    await page.request.get(`/api/transfers?date=${date}&page=1&pageSize=200`)
-  ).json()) as { items: { description: string | null; fromAccountImported: boolean }[] };
+  const transfers = await readJson(
+    await page.request.get(`/api/transfers?date=${date}&page=1&pageSize=200`),
+    z.object({
+      items: z.array(
+        z.object({ description: z.string().nullable(), fromAccountImported: z.boolean() }),
+      ),
+    }),
+  );
   const matched = transfers.items.filter((item) => item.description?.includes(reference));
   expect(matched).toHaveLength(1);
   expect(matched[0]?.fromAccountImported).toBe(true);
@@ -79,9 +85,9 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
     page.getByRole("row", { name: new RegExp(`Atlyginimas ${reference}`) }),
   ).toBeVisible();
 
-  const accounts = (await (await page.request.get("/api/accounts")).json()) as {
-    id: string;
-    currentBalance: string;
-  }[];
+  const accounts = await readJson(
+    await page.request.get("/api/accounts"),
+    z.array(z.object({ id: z.string(), currentBalance: z.string() })),
+  );
   expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
 });

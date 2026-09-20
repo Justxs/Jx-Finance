@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
-import { accounts, brokerAccount } from "@/storybook/fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { accounts, brokerAccount, securities, usStock, worldEtf } from "@/storybook/fixtures";
 import { chooseOption } from "@/storybook/interactions";
-import { securities, usStock, worldEtf } from "@/storybook/investment-fixtures";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
 const meta = {
@@ -16,11 +16,7 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
-  render: (args) => (
-    <div className="w-[min(36rem,90vw)]">
-      <InvestmentEntryForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(36rem,90vw)]")],
 } satisfies Meta<typeof InvestmentEntryForm>;
 
 export default meta;

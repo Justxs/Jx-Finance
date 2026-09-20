@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { inactiveBill, recurringBills, variableBill } from "@/storybook/fixtures";
 import { BillsForecastChart } from "./bills-forecast-chart";
 
 const meta = {
   title: "Features/RecurringBills/BillsForecastChart",
   component: BillsForecastChart,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(40rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("panel")],
   args: { bills: recurringBills },
 } satisfies Meta<typeof BillsForecastChart>;
 

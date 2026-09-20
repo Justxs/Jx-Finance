@@ -1,6 +1,8 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.References;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -18,32 +20,36 @@ namespace JxFinance.Endpoints.RecurringBills.Services;
 [RegisterService<IRecurringBillService>(LifeTime.Scoped)]
 public sealed class RecurringBillService(
     AppDbContext db,
-    IExchangeRateService rates) : IRecurringBillService
+    IExchangeRateService rates,
+    IReferenceGuard references) : IRecurringBillService
 {
+    private static readonly DomainError CategoryGone =
+        new(ErrorCodes.ReferenceNotFound, "The bill category is no longer available.");
+
+    private static readonly DomainError CategoryNotExpense =
+        new(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
+
     public async Task<IReadOnlyList<RecurringBill>> GetAllAsync(CancellationToken cancellationToken)
     {
         var bills = await db.RecurringBills.OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
         return bills;
     }
 
-    public async Task<Result<RecurringBill>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<RecurringBill>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
-        return bill is null
-            ? Result<RecurringBill>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.")
-            : Result<RecurringBill>.Success(bill);
+        return db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring bill not found.", cancellationToken);
     }
 
     public async Task<Result<RecurringBill>> CreateAsync(RecurringBill bill, CancellationToken cancellationToken)
     {
         var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
-        if (error is not null) return Result<RecurringBill>.Failure(error);
+        if (error is not null) return error;
 
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<RecurringBill>.Success(bill);
+        return bill;
     }
 
     public async Task<Result<RecurringBill>> UpdateAsync(Guid id, Action<RecurringBill> apply, CancellationToken cancellationToken)
@@ -52,30 +58,21 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<RecurringBill>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
         }
 
         apply(bill);
         var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
-        if (error is not null) return Result<RecurringBill>.Failure(error);
+        if (error is not null) return error;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<RecurringBill>.Success(bill);
+        return bill;
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
-        if (bill is null)
-        {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
-        }
-
-        db.RecurringBills.Remove(bill);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Guid>.Success(id);
+        return db.DeleteOrNotFoundAsync<RecurringBill>(id, b => b.Id == billId, "Recurring bill not found.", cancellationToken);
     }
 
     public async Task<Result<RecurringBillConfirmation>> ConfirmAsync(
@@ -83,19 +80,18 @@ public sealed class RecurringBillService(
         CancellationToken cancellationToken)
     {
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var lockId = BitConverter.ToInt64(request.Id.ToByteArray(), 0);
-        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
+        await db.Database.LockAsync(request.Id, cancellationToken);
         var billId = new RecurringBillId(request.Id);
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
         }
 
         if (!bill.IsActive)
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.RecurringBillInactive, "This bill is inactive.");
+            return new DomainError(ErrorCodes.RecurringBillInactive, "This bill is inactive.");
         if (request.ExpectedDueDate != bill.NextDueDate)
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the bill.");
+            return new DomainError(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the bill.");
 
         Money amount;
         if (bill.Kind == RecurringBillKind.Fixed)
@@ -106,7 +102,7 @@ public sealed class RecurringBillService(
         {
             if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
             {
-                return Result<RecurringBillConfirmation>.Failure(
+                return new DomainError(
                     ErrorCodes.MoneyPositive,
                     "A variable bill needs an amount to confirm.");
             }
@@ -117,19 +113,21 @@ public sealed class RecurringBillService(
         var accountId = request.AccountId is { } requestAccountId ? new AccountId(requestAccountId) : bill.AccountId;
         if (accountId is null)
         {
-            return Result<RecurringBillConfirmation>.Failure(
+            return new DomainError(
                 ErrorCodes.Required,
                 "An account is required to confirm this bill.");
         }
 
-        var accountExists = await db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
-        if (!accountExists)
+        var referenceError = await references.AccountExistsAsync(accountId.Value, cancellationToken);
+        if (referenceError is null && bill.CategoryId is { } categoryId)
         {
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            referenceError = await references.CategoryOfTypeAsync(categoryId, FlowType.Expense, CategoryGone, cancellationToken);
         }
 
-        if (bill.CategoryId is { } categoryId && !await db.Categories.AnyAsync(c => c.Id == categoryId && c.Type == FlowType.Expense, cancellationToken))
-            return Result<RecurringBillConfirmation>.Failure(ErrorCodes.ReferenceNotFound, "The bill category is no longer available.");
+        if (referenceError is not null)
+        {
+            return referenceError;
+        }
 
         var transaction = new Transaction
         {
@@ -152,14 +150,14 @@ public sealed class RecurringBillService(
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
-        return Result<RecurringBillConfirmation>.Success(
-            new RecurringBillConfirmation(bill, transaction.Id.Value));
+        return new RecurringBillConfirmation(bill, transaction.Id.Value);
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)
     {
-        if (accountId is { } a && !await db.Accounts.AnyAsync(x => x.Id == new AccountId(a), ct)) return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
-        if (categoryId is { } c && !await db.Categories.AnyAsync(x => x.Id == new CategoryId(c) && x.Type == FlowType.Expense, ct)) return new DomainError(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
-        return null;
+        if (accountId is { } a && await references.AccountExistsAsync(new AccountId(a), ct) is { } accountError) return accountError;
+        return categoryId is { } c
+            ? await references.CategoryOfTypeAsync(new CategoryId(c), FlowType.Expense, CategoryNotExpense, ct)
+            : null;
     }
 }

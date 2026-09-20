@@ -19,7 +19,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
 
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
 
         Assert.Equal(HttpStatusCode.OK, login.StatusCode);
         var cookies = SetCookies(login);
@@ -35,7 +35,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
         var issued = SetCookies(login);
 
         var refresh = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]);
@@ -52,7 +52,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
         var issued = SetCookies(login);
         var firstTab = SetCookies(await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]));
 
@@ -74,7 +74,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
         var issued = SetCookies(login);
 
         var responses = await Task.WhenAll(Enumerable.Range(0, 4)
@@ -91,7 +91,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
         var issued = SetCookies(login);
         var rotated = SetCookies(await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]));
 
@@ -134,7 +134,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var login = await TryLoginAsync(client, user.Email, user.Password);
         var issued = SetCookies(login);
 
         var logout = await SendAsync(client, HttpMethod.Post, "/api/auth/logout", issued[AuthCookies.AccessToken]);

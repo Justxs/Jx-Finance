@@ -3,6 +3,7 @@ import {
   getDebtsMockHandler,
   getNetWorthHistoryMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
+import { withPageFrame } from "@/storybook/decorators";
 import { serverErrorProblem } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -13,19 +14,11 @@ import {
 } from "@/storybook/handlers";
 import { NetWorthPage } from "./net-worth-page";
 
-function NetWorthPageStory() {
-  return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <NetWorthPage />
-    </div>
-  );
-}
-
 const meta = {
   title: "Features/NetWorth/NetWorthPage",
   component: NetWorthPage,
   parameters: { layout: "fullscreen", route: "/net-worth" },
-  render: () => <NetWorthPageStory />,
+  decorators: [withPageFrame],
 } satisfies Meta<typeof NetWorthPage>;
 
 export default meta;

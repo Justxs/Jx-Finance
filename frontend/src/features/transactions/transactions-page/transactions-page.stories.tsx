@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   emptyHandlers,
   errorHandlers,
@@ -52,7 +52,7 @@ export const SaveAndAddAnother: Story = {
     const page = within(canvasElement.ownerDocument.body);
     const dialog = within(await page.findByRole("dialog"));
     const amount = await dialog.findByLabelText("Amount");
-    fireEvent.change(amount, { target: { value: "12,50" } });
+    await fireEvent.change(amount, { target: { value: "12,50" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save and add another" }));
     await waitFor(() => expect(amount).toHaveValue(""));
     await expect(page.getByRole("dialog")).not.toHaveAttribute("data-closed");

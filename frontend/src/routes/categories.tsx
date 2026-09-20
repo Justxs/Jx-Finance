@@ -3,7 +3,7 @@ import {
   getCategoriesSuspenseQueryOptions,
   getHouseholdsSuspenseQueryOptions,
 } from "@/api/generated";
-import { CategoriesPage } from "@/features/categories/categories-page";
+import { CategoriesPage } from "@/features/categories/categories-page/categories-page";
 import { warm } from "@/lib/route-prefetch";
 
 export const Route = createFileRoute("/categories")({

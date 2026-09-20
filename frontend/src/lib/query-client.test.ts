@@ -19,7 +19,7 @@ async function failingQuery(failure: unknown, { silent, cached = true }: Failing
     queryClient.setQueryData(queryKey, "earlier result");
   }
   try {
-    await queryClient.fetchQuery({
+    await queryClient.query({
       queryKey,
       queryFn: () => Promise.reject(failure),
       retry: false,

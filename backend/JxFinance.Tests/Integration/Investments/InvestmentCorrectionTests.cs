@@ -11,8 +11,8 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
     public async Task Correcting_a_buy_recomputes_cost_basis_and_cash()
     {
         var account = await CreateAccountAsync("5000.00", "investment", "eur");
-        var security = await CreateSecurityAsync("FIX1");
-        var entry = await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
+        var security = await CreateSecurityAsync(Client, "FIX1");
+        var entry = await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{entry}",
@@ -36,9 +36,9 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
     public async Task Correction_that_leaves_a_later_sale_short_is_rejected()
     {
         var account = await CreateAccountAsync("5000.00", "investment", "eur");
-        var security = await CreateSecurityAsync("FIX2");
-        var buy = await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
-        await RecordAsync(new { accountId = account, securityId = security, type = "sell", date = "2026-06-02", quantity = "10", price = "110" });
+        var security = await CreateSecurityAsync(Client, "FIX2");
+        var buy = await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "sell", date = "2026-06-02", quantity = "10", price = "110" });
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{buy}",
@@ -58,28 +58,6 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
-
-    private async Task<Guid> CreateSecurityAsync(string symbol)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/investments/securities",
-            new { symbol, name = "Manual fund", type = "etf", currency = "eur" });
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<SecurityDto>())!.Id;
-    }
-
-    private async Task<Guid> RecordAsync(object entry)
-    {
-        var response = await Client.PostAsJsonAsync("/api/investments/transactions", entry);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<EntryDto>())!.Id;
-    }
-
-    private sealed record BalanceDto(string Currency, string Amount);
-
-    private sealed record AccountDto(Guid Id, List<BalanceDto> Balances);
-
-    private sealed record SecurityDto(Guid Id);
 
     private sealed record EntryDto(Guid Id, string Quantity);
 

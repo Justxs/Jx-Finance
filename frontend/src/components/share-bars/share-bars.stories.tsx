@@ -1,16 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { ShareBars } from "./share-bars";
 
 const meta = {
   title: "Components/ShareBars",
   component: ShareBars,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(28rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(28rem,90vw)]")],
   args: {
     rows: [
       { id: "broker", name: "Interactive Brokers", amount: 15987.62 },

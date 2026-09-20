@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
-import { Rows } from "../rows";
+import { Rows } from "../rows/rows";
 import { StaleRegion } from "./stale-region";
 
 const meta = {

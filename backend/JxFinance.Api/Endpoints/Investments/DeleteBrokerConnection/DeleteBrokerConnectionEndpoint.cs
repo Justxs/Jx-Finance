@@ -1,10 +1,11 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Investments.Interfaces;
 
 namespace JxFinance.Endpoints.Investments.DeleteBrokerConnection;
 
-public sealed class DeleteBrokerConnectionEndpoint(IBrokerImportService importService) : EndpointWithoutRequest
+public sealed class DeleteBrokerConnectionEndpoint(IBrokerImportService importService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -13,9 +14,8 @@ public sealed class DeleteBrokerConnectionEndpoint(IBrokerImportService importSe
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        (await importService.DeleteConnectionAsync(Route<Guid>("accountId"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
-    }
+    protected override string IdParameter => "accountId";
+
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        importService.DeleteConnectionAsync(id, ct);
 }

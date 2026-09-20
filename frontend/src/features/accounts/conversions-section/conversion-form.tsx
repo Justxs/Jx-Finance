@@ -8,10 +8,9 @@ import {
   Currency,
 } from "@/api/generated/model";
 import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/conversions.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
+import { MoneyPairField, useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import {
   EMPTY_VALUE,
   useIsoDate,
@@ -19,7 +18,8 @@ import {
   useUsableCurrencies,
 } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
+import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { namedOptions, withMissingOption } from "@/lib/options";
 import {
   isPositiveMoney,
   normalizeMoney,
@@ -216,35 +216,25 @@ export function ConversionForm({
         feeCategoryId: "",
       };
 
-  const accountOptions = accounts.map((account) => ({ value: account.id, label: account.name }));
-  if (conversion && !accounts.some((account) => account.id === conversion.accountId)) {
-    accountOptions.push({ value: conversion.accountId, label: t("transfers.unavailableAccount") });
-  }
-  const feeCategoryOptions = [
-    { value: "", label: t("recurringBills.noCategory") },
-    ...categories
-      .filter((category) => category.type === "expense")
-      .map((category) => ({ value: category.id, label: category.name })),
-  ];
+  const accountOptions = withMissingOption(
+    namedOptions(accounts),
+    conversion?.accountId,
+    t("transfers.unavailableAccount"),
+  );
+  const feeCategoryOptions = namedOptions(
+    categories.filter((category) => category.type === "expense"),
+    t("recurringBills.noCategory"),
+  );
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, () => onSubmit(buildValues(submission.value))),
+    schema,
+    submit: (value) => onSubmit(buildValues(value)),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="accountId">
           {(field) => (
             <field.SelectFieldControl
@@ -276,53 +266,34 @@ export function ConversionForm({
 
             return (
               <>
-                <form.Field name="fromCurrency">
-                  {(currencyField) => (
-                    <form.Field name="fromAmount">
-                      {(field) => (
-                        <field.MoneyAmountField
-                          id="conversion-from-amount"
-                          label={t("conversions.sold")}
-                          currencyLabel={t("conversions.soldCurrency")}
-                          currencyField={currencyField}
-                          preferred={held}
-                          onCurrencyChange={(value) => {
-                            if (
-                              form.getFieldValue("feeCurrency") !== form.getFieldValue("toCurrency")
-                            ) {
-                              form.setFieldValue("feeCurrency", value);
-                            }
-                          }}
-                        />
-                      )}
-                    </form.Field>
-                  )}
-                </form.Field>
+                <MoneyPairField
+                  form={form}
+                  fields={{ amount: "fromAmount", currency: "fromCurrency" }}
+                  id="conversion-from-amount"
+                  label={t("conversions.sold")}
+                  currencyLabel={t("conversions.soldCurrency")}
+                  preferred={held}
+                  onCurrencyChange={(value) => {
+                    if (form.getFieldValue("feeCurrency") !== form.getFieldValue("toCurrency")) {
+                      form.setFieldValue("feeCurrency", value);
+                    }
+                  }}
+                />
 
-                <form.Field name="toCurrency">
-                  {(currencyField) => (
-                    <form.Field name="toAmount">
-                      {(field) => (
-                        <field.MoneyAmountField
-                          id="conversion-to-amount"
-                          label={t("conversions.bought")}
-                          currencyLabel={t("conversions.boughtCurrency")}
-                          currencyField={currencyField}
-                          touchedOnly
-                          preferred={held}
-                          onCurrencyChange={(value) => {
-                            if (
-                              form.getFieldValue("feeCurrency") !==
-                              form.getFieldValue("fromCurrency")
-                            ) {
-                              form.setFieldValue("feeCurrency", value);
-                            }
-                          }}
-                        />
-                      )}
-                    </form.Field>
-                  )}
-                </form.Field>
+                <MoneyPairField
+                  form={form}
+                  fields={{ amount: "toAmount", currency: "toCurrency" }}
+                  id="conversion-to-amount"
+                  label={t("conversions.bought")}
+                  currencyLabel={t("conversions.boughtCurrency")}
+                  touchedOnly
+                  preferred={held}
+                  onCurrencyChange={(value) => {
+                    if (form.getFieldValue("feeCurrency") !== form.getFieldValue("fromCurrency")) {
+                      form.setFieldValue("feeCurrency", value);
+                    }
+                  }}
+                />
               </>
             );
           }}
@@ -344,22 +315,15 @@ export function ConversionForm({
           selector={(state) => [state.values.fromCurrency, state.values.toCurrency] as const}
         >
           {(tradedCurrencies) => (
-            <form.Field name="feeCurrency">
-              {(currencyField) => (
-                <form.Field name="feeAmount">
-                  {(field) => (
-                    <field.MoneyAmountField
-                      id="conversion-fee"
-                      label={t("conversions.fee")}
-                      currencyLabel={t("conversions.feeCurrency")}
-                      currencyField={currencyField}
-                      hint={conversion ? t("conversions.feeEditHint") : t("conversions.feeHint")}
-                      only={tradedCurrencies}
-                    />
-                  )}
-                </form.Field>
-              )}
-            </form.Field>
+            <MoneyPairField
+              form={form}
+              fields={{ amount: "feeAmount", currency: "feeCurrency" }}
+              id="conversion-fee"
+              label={t("conversions.fee")}
+              currencyLabel={t("conversions.feeCurrency")}
+              hint={conversion ? t("conversions.feeEditHint") : t("conversions.feeHint")}
+              only={tradedCurrencies}
+            />
           )}
         </form.Subscribe>
 
@@ -399,17 +363,13 @@ export function ConversionForm({
           <FormError error={error} />
         )}
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          {onCancel ? (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t("actions.cancel")}
-            </Button>
-          ) : null}
-          <form.SubmitButton pending={pending}>
-            {conversion ? t("actions.save") : t("conversions.submit")}
-          </form.SubmitButton>
-        </div>
-      </FormGrid>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={conversion ? t("actions.save") : t("conversions.submit")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

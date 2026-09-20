@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import { ApiError } from "@/api/client";
+import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
@@ -58,11 +59,7 @@ const meta = {
   title: "Features/Transactions/TransactionForm",
   component: TransactionForm,
   args: { accounts, categories, pending: false, onSubmit: fn(), onCancel: fn() },
-  render: (args) => (
-    <div className="w-[min(42rem,90vw)]">
-      <TransactionForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(42rem,90vw)]")],
 } satisfies Meta<typeof TransactionForm>;
 
 export default meta;
@@ -106,8 +103,8 @@ export const SaveAndAddAnother: Story = {
     const canvas = within(canvasElement);
     const amount = await canvas.findByLabelText("Amount");
     const description = canvas.getByLabelText("Description");
-    fireEvent.change(amount, { target: { value: "12,50" } });
-    fireEvent.change(description, { target: { value: "Lidl" } });
+    await fireEvent.change(amount, { target: { value: "12,50" } });
+    await fireEvent.change(description, { target: { value: "Lidl" } });
     await userEvent.click(canvas.getByRole("button", { name: "Save and add another" }));
     await waitFor(() => expect(args.onSubmitAndAddAnother).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(amount).toHaveValue(""));

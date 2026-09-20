@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Transfers.Shared;
 
 namespace JxFinance.Endpoints.Transfers.UpdateTransfer;
 
@@ -12,4 +13,4 @@ public sealed record UpdateTransferRequest(
     string? Description,
     Currency? Currency = null,
     [property: Money] decimal? ReceivedAmount = null,
-    Currency? ReceivedCurrency = null);
+    Currency? ReceivedCurrency = null) : ITransferInput;

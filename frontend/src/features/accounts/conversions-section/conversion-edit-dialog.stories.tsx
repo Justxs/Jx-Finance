@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 async function saveWithBought(amount: string) {
   const dialog = within(await openedDialog());
-  fireEvent.change(dialog.getByLabelText("Bought"), { target: { value: amount } });
+  await fireEvent.change(dialog.getByLabelText("Bought"), { target: { value: amount } });
   await userEvent.click(dialog.getByRole("button", { name: "Save" }));
   return dialog;
 }
@@ -68,7 +68,7 @@ export const NoCategories: Story = { args: { categories: [] } };
 export const ClearsTheFee: Story = {
   play: async ({ args }) => {
     const dialog = within(await openedDialog());
-    fireEvent.change(dialog.getByLabelText("Fee (optional)"), { target: { value: "" } });
+    await fireEvent.change(dialog.getByLabelText("Fee (optional)"), { target: { value: "" } });
     await waitFor(() =>
       expect(dialog.getByRole("combobox", { name: "Fee category" })).toBeDisabled(),
     );
@@ -82,7 +82,7 @@ export const AddsFeeWithCategory: Story = {
   args: { conversion: conversionWithoutFee },
   play: async ({ args }) => {
     const dialog = within(await openedDialog());
-    fireEvent.change(dialog.getByLabelText("Fee (optional)"), { target: { value: "1,50" } });
+    await fireEvent.change(dialog.getByLabelText("Fee (optional)"), { target: { value: "1,50" } });
     const category = dialog.getByRole("combobox", { name: "Fee category" });
     await waitFor(() => expect(category).toBeEnabled());
     await chooseOption(category, "Apsipirkimas");

@@ -21,7 +21,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { first, openedDialog } from "@/storybook/interactions";
 import { BackupSection } from "./backup-section";
 
 const meta = {
@@ -38,20 +38,24 @@ async function confirmRestoreOfNewest(
   password = backupRestorePassword,
 ) {
   const canvas = within(canvasElement);
-  const [restore] = await canvas.findAllByRole("button", { name: /^Restore:/u });
-  await userEvent.click(restore as HTMLElement);
+  const restore = first(await canvas.findAllByRole("button", { name: /^Restore:/u }));
+  await userEvent.click(restore);
 
   const dialog = within(await screen.findByRole("alertdialog"));
   const confirm = dialog.getByRole("button", { name: "Replace all data" });
   await expect(confirm).toBeDisabled();
   const word = dialog.getByLabelText("Type RESTORE to confirm");
-  fireEvent.change(word, { target: { value: "restore" } });
-  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: password } });
+  await fireEvent.change(word, { target: { value: "restore" } });
+  await fireEvent.change(dialog.getByLabelText("Current password"), {
+    target: { value: password },
+  });
   await expect(confirm).toBeDisabled();
-  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: "" } });
-  fireEvent.change(word, { target: { value: "RESTORE" } });
+  await fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: "" } });
+  await fireEvent.change(word, { target: { value: "RESTORE" } });
   await expect(confirm).toBeDisabled();
-  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: password } });
+  await fireEvent.change(dialog.getByLabelText("Current password"), {
+    target: { value: password },
+  });
   await waitFor(() => expect(confirm).toBeEnabled());
   await userEvent.click(confirm);
   return dialog;
@@ -97,8 +101,8 @@ export const BackUpNow: Story = {
 export const EditNote: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const [edit] = await canvas.findAllByRole("button", { name: /^Edit note:/u });
-    await userEvent.click(edit as HTMLElement);
+    const edit = first(await canvas.findAllByRole("button", { name: /^Edit note:/u }));
+    await userEvent.click(edit);
     const dialog = within(await screen.findByRole("dialog"));
     await expect(dialog.getByLabelText("Note")).toHaveValue("Before the Swedbank import");
   },
@@ -107,8 +111,8 @@ export const EditNote: Story = {
 export const DeleteAsksFirst: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const [remove] = await canvas.findAllByRole("button", { name: /^Delete backup:/u });
-    await userEvent.click(remove as HTMLElement);
+    const remove = first(await canvas.findAllByRole("button", { name: /^Delete backup:/u }));
+    await userEvent.click(remove);
     await openedDialog("alertdialog");
   },
 };

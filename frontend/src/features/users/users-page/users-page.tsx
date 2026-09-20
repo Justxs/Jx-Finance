@@ -10,21 +10,21 @@ import {
   useMeSuspense,
   useUpdateUserRole,
 } from "@/api/generated";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/section";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Button } from "@/components/ui/button/button";
+import { Panel } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { CreateUserForm } from "../create-user-form";
-import { ResetPasswordDialog } from "../reset-password-dialog";
+import { CreateUserForm } from "../create-user-form/create-user-form";
+import { ResetPasswordDialog } from "../reset-password-dialog/reset-password-dialog";
 import { userListParams } from "../user-queries";
-import { UsersTable } from "../users-table";
+import { UsersTable } from "../users-table/users-table";
 
 export function UsersPage() {
   const { t } = useTranslation();
   const [addOpen, setAddOpen] = useState(false);
-  const [deactivateId, setDeactivateId] = useState<string | null>(null);
   const [resetId, setResetId] = useState<string | null>(null);
 
   const me = useMeSuspense();
@@ -48,7 +48,11 @@ export function UsersPage() {
   });
 
   const list = users.data ?? [];
-  const deactivateTarget = list.find((user) => user.id === deactivateId);
+  const deactivate = useConfirmedDelete(
+    deactivateMutation,
+    list,
+    (user) => user.displayName || user.email,
+  );
 
   return (
     <div className="space-y-5">
@@ -70,10 +74,8 @@ export function UsersPage() {
           currentUserId={me.data?.id}
           onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
           rolePendingId={roleMutation.isPending ? (roleMutation.variables?.id ?? null) : null}
-          onDeactivate={setDeactivateId}
-          deactivatePendingId={
-            deactivateMutation.isPending ? (deactivateMutation.variables?.id ?? null) : null
-          }
+          onDeactivate={deactivate.request}
+          deactivatePendingId={deactivate.pendingId ?? null}
           onReactivate={(id) => reactivateMutation.mutate({ id })}
           reactivatePendingId={
             reactivateMutation.isPending ? (reactivateMutation.variables?.id ?? null) : null
@@ -83,13 +85,10 @@ export function UsersPage() {
       </Panel>
 
       <ConfirmDeleteDialog
-        target={deactivateId}
-        itemLabel={deactivateTarget?.displayName || deactivateTarget?.email}
+        {...deactivate.dialogProps}
         title={t("users.deactivateConfirm.title")}
         description={t("users.deactivateConfirm.description")}
         confirmLabel={t("users.deactivate")}
-        onCancel={() => setDeactivateId(null)}
-        onConfirm={(id) => deactivateMutation.mutate({ id })}
       />
 
       <ResetPasswordDialog

@@ -3,28 +3,25 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Shared;
-using JxFinance.Endpoints.NetWorth.UpdateDebt;
 
 namespace JxFinance.Endpoints.NetWorth.Mappers;
 
 public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
 {
-    public override Debt ToEntity(CreateDebtRequest request) => new()
+    public override Debt ToEntity(CreateDebtRequest request)
     {
-        Name = request.Name.Trim(),
-        Type = request.Type,
-        OutstandingAmount = new Money(request.OutstandingAmount!.Value),
-        InterestRate = request.InterestRate,
-        AsOf = request.AsOf,
-    };
+        var debt = new Debt { Name = request.Name };
+        Apply(request, debt);
+        return debt;
+    }
 
-    public void UpdateEntity(UpdateDebtRequest request, Debt debt)
+    public void Apply(IDebtInput input, Debt debt)
     {
-        debt.Name = request.Name.Trim();
-        debt.Type = request.Type;
-        debt.OutstandingAmount = new Money(request.OutstandingAmount!.Value);
-        debt.InterestRate = request.InterestRate;
-        debt.AsOf = request.AsOf;
+        debt.Name = input.Name.Trim();
+        debt.Type = input.Type;
+        debt.OutstandingAmount = new Money(input.OutstandingAmount!.Value);
+        debt.InterestRate = input.InterestRate;
+        debt.AsOf = input.AsOf;
     }
 
     public override DebtResponse FromEntity(Debt debt) => new(

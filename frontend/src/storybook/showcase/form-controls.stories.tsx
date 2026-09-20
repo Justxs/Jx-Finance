@@ -1,14 +1,17 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { SelectField } from "@/components/select-field";
-import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/date-picker";
-import { type DateRange, DateRangePicker } from "@/components/ui/date-range-picker";
+import { SelectField } from "@/components/select-field/select-field";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { DatePicker } from "@/components/ui/date-picker/date-picker";
+import {
+  type DateRange,
+  DateRangePicker,
+} from "@/components/ui/date-range-picker/date-range-picker";
 import { FieldError } from "@/components/ui/field-error";
-import { FileInput } from "@/components/ui/file-input";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FileInput } from "@/components/ui/file-input/file-input";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
 
 const meta = { title: "UI/Form controls" } satisfies Meta;
 
@@ -40,26 +43,12 @@ function FormExample() {
         <FieldError message="Enter a positive amount." />
       </div>
       <div className="space-y-1.5">
-        <Label htmlFor="story-disabled">Disabled</Label>
-        <Input id="story-disabled" defaultValue="Locked" disabled />
-      </div>
-      <div className="space-y-1.5">
         <Label htmlFor="story-account">Account</Label>
         <SelectField
           id="story-account"
           value={account}
           onChange={setAccount}
           options={accountOptions}
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="story-account-invalid">Account (invalid)</Label>
-        <SelectField
-          id="story-account-invalid"
-          value=""
-          onChange={setAccount}
-          options={accountOptions}
-          aria-invalid
         />
       </div>
       <div className="space-y-1.5">

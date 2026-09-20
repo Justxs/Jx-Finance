@@ -1,14 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { ErrorState } from "@/components/error-state";
-import { PageHeader } from "@/components/page-header";
-import { Pagination } from "@/components/pagination";
-import { SummaryStats } from "@/components/summary-stats";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TextColumnFilter } from "@/components/ui/column-filter";
-import { ColumnHeader } from "@/components/ui/column-header";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/error-state/error-state";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Pagination } from "@/components/pagination/pagination";
+import { SummaryStats } from "@/components/summary-stats/summary-stats";
+import { Button } from "@/components/ui/button/button";
+import { Card } from "@/components/ui/card/card";
+import { TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { ColumnHeader } from "@/components/ui/column-header/column-header";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   Table,
   TableBody,
@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table/table";
 
 const meta = {
   title: "Components/Data display",
@@ -98,35 +98,23 @@ function TableExample() {
   );
 }
 
-export const Header: Story = {
+export const Overview: Story = {
   render: () => (
-    <PageHeader title="Transactions">
-      <Button variant="outline">Export CSV</Button>
-      <Button>Add transaction</Button>
-    </PageHeader>
-  ),
-};
-
-export const Stats: Story = {
-  render: () => (
-    <SummaryStats
-      items={[
-        { label: "Total balance", value: "12840.55" },
-        { label: "Income this month", value: "2450", tone: "text-secondary" },
-        { label: "Expenses this month", value: "1312.4", tone: "text-expense" },
-        { label: "Loading value", value: undefined },
-      ]}
-    />
-  ),
-};
-
-export const DataTable: Story = { render: () => <TableExample /> };
-
-export const LoadingAndError: Story = {
-  render: () => (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <PageHeader title="Transactions">
+        <Button variant="outline">Export CSV</Button>
+        <Button>Add transaction</Button>
+      </PageHeader>
+      <SummaryStats
+        items={[
+          { label: "Total balance", value: "12840.55" },
+          { label: "Income this month", value: "2450", tone: "text-secondary" },
+          { label: "Expenses this month", value: "1312.4", tone: "text-expense" },
+          { label: "Loading value", value: undefined },
+        ]}
+      />
+      <TableExample />
       <Skeleton className="h-24 w-full" />
-      <Skeleton className="h-40 w-full" />
       <Card as="section">
         <ErrorState onRetry={() => {}} />
       </Card>

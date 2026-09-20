@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { twoFactorRecoveryCodes } from "@/storybook/fixtures";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 
@@ -7,11 +8,7 @@ const meta = {
   title: "Features/Profile/TwoFactorRecoveryCodes",
   component: TwoFactorRecoveryCodes,
   args: { codes: twoFactorRecoveryCodes.recoveryCodes ?? [], onDone: fn() },
-  render: (args) => (
-    <div className="w-[28rem] max-w-full">
-      <TwoFactorRecoveryCodes {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[28rem] max-w-full")],
 } satisfies Meta<typeof TwoFactorRecoveryCodes>;
 
 export default meta;
@@ -34,9 +31,5 @@ export const LongCodes: Story = {
 };
 
 export const Narrow: Story = {
-  render: (args) => (
-    <div className="w-64">
-      <TwoFactorRecoveryCodes {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-64")],
 };

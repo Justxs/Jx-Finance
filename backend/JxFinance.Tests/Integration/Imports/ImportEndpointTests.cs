@@ -76,7 +76,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var account = await CreateAccountAsync("100.00");
         await ConfirmAsync(account, Row("deleted"));
-        var imported = await Client.GetFromJsonAsync<PageDto>($"/api/transactions?accountId={account}");
+        var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}");
         (await Client.DeleteAsync($"/api/transactions/{imported!.Items.Single().Id}")).EnsureSuccessStatusCode();
 
         var retry = await ConfirmAsync(account, Row("deleted"));
@@ -92,13 +92,13 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var destination = await CreateAccountAsync("100.00");
 
         await ConfirmAsync(source, Row("outgoing", transferAccountId: destination));
-        var transfers = await Client.GetFromJsonAsync<TransferPageDto>("/api/transfers?pageSize=200");
+        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
         var transfer = transfers!.Items.Single(t => t.FromAccountId == source);
         await ConfirmAsync(destination, Row("incoming", type: "income", transferAccountId: source, existingTransferId: transfer.Id));
 
         Assert.Equal("90.00", await CurrentBalanceAsync(source));
         Assert.Equal("110.00", await CurrentBalanceAsync(destination));
-        var transactions = await Client.GetFromJsonAsync<PageDto>($"/api/transactions?accountId={source}");
+        var transactions = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={source}");
         Assert.Equal(0, transactions!.Total);
     }
 
@@ -198,10 +198,4 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record PreviewDto(List<PreviewRowDto> Rows);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
-
-    private sealed record PageDto(List<IdDto> Items, int Total);
-
-    private sealed record TransferDto(Guid Id, Guid FromAccountId);
-
-    private sealed record TransferPageDto(List<TransferDto> Items);
 }

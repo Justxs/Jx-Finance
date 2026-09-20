@@ -196,7 +196,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await UploadAsync(Encoding.UTF8.GetBytes("{\"format\":\"something-else\"}"));
 
-        await AssertCodeAsync(response, "backup.invalidFile");
+        await AssertRejectedAsync(response, "backup.invalidFile");
         Assert.Equal(before, (await ListAsync()).Count);
     }
 
@@ -212,7 +212,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await RestoreAsync(damaged.Id);
 
-        await AssertCodeAsync(response, "backup.invalidFile");
+        await AssertRejectedAsync(response, "backup.invalidFile");
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
     }
 
@@ -226,7 +226,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var response = await RestoreAsync(older.Id);
 
         Assert.False(older.Restorable);
-        await AssertCodeAsync(response, "backup.schemaMismatch");
+        await AssertRejectedAsync(response, "backup.schemaMismatch");
     }
 
     [Fact]
@@ -260,7 +260,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var wrong = await RestoreAsync(backup.Id, "Wrong-Password-123!", second);
 
         await AssertValidationErrorAsync(missing, "password");
-        await AssertCodeAsync(wrong, "password.incorrect");
+        await AssertRejectedAsync(wrong, "password.incorrect");
         Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/auth/me")).StatusCode);
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
     }
@@ -274,7 +274,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await AssertCodeAsync(await RestoreAsync(backup.Id, "Wrong-Password-123!", client), "password.incorrect");
+            await AssertRejectedAsync(await RestoreAsync(backup.Id, "Wrong-Password-123!", client), "password.incorrect");
         }
 
         var locked = await RestoreAsync(backup.Id, "Wrong-Password-123!", client);
@@ -319,7 +319,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await UploadAsync(await OversizedBackupAsync("20000101000000_Any"));
 
-        await AssertCodeAsync(response, "backup.tooLarge");
+        await AssertRejectedAsync(response, "backup.tooLarge");
         Assert.Equal(before, (await ListAsync()).Count);
     }
 
@@ -341,7 +341,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await RestoreAsync(id);
 
-        await AssertCodeAsync(response, "backup.tooLarge");
+        await AssertRejectedAsync(response, "backup.tooLarge");
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
         (await Client.DeleteAsync($"/api/backups/{id}")).EnsureSuccessStatusCode();
     }
@@ -431,9 +431,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
     private async Task SignInAgainAsync()
     {
-        var response = await Client.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = ApiFixture.TestAdminEmail, password = ApiFixture.TestAdminPassword, rememberMe = false });
+        var response = await TryLoginAsync(Client, ApiFixture.TestAdminEmail, ApiFixture.TestAdminPassword);
         response.EnsureSuccessStatusCode();
     }
 
@@ -441,12 +439,6 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         using var gzip = new GZipStream(new MemoryStream(file), CompressionMode.Decompress);
         return JsonNode.Parse(gzip)!;
-    }
-
-    private static async Task AssertCodeAsync(HttpResponseMessage response, string code)
-    {
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains(code, await response.Content.ReadAsStringAsync());
     }
 
     private sealed record BackupDto(

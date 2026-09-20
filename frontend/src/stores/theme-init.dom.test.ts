@@ -1,9 +1,15 @@
 import { readFileSync } from "node:fs";
+import { Script } from "node:vm";
 import { expect, test, vi } from "vitest";
 import { blockStorage, seedPreferences } from "@/test/preferences";
 
-const source = readFileSync("public/theme-init.js", "utf8");
-const runThemeInit = new Function(source);
+const themeInit = new Script(readFileSync("public/theme-init.js", "utf8"), {
+  filename: "public/theme-init.js",
+});
+
+function runThemeInit() {
+  themeInit.runInThisContext();
+}
 
 function root() {
   return document.documentElement;

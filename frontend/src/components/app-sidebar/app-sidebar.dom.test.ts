@@ -4,13 +4,25 @@ import { shortcuts } from "@/lib/shortcuts";
 import { settingsFixture } from "@/test/settings";
 import { visibleNav } from "./app-sidebar";
 
-const allOn = Object.fromEntries(
-  Object.keys(settingsFixture().features).map((feature) => [feature, true]),
-) as unknown as FeatureFlags;
+const baseFlags = settingsFixture().features;
 
-const allOff = Object.fromEntries(
-  Object.keys(allOn).map((feature) => [feature, false]),
-) as unknown as FeatureFlags;
+function isFeature(name: string): name is keyof FeatureFlags {
+  return name in baseFlags;
+}
+
+const featureNames = Object.keys(baseFlags).filter(isFeature);
+
+function flagsSetTo(value: boolean): FeatureFlags {
+  const flags = { ...baseFlags };
+  for (const feature of featureNames) {
+    flags[feature] = value;
+  }
+  return flags;
+}
+
+const allOn = flagsSetTo(true);
+
+const allOff = flagsSetTo(false);
 
 function paths(features: FeatureFlags, isAdmin: boolean) {
   return visibleNav(features, isAdmin).map((item) => item.to);
@@ -51,7 +63,7 @@ test("every go-to shortcut lands on a page the sidebar can show", () => {
 });
 
 test("shortcuts and sidebar gate pages on the same feature", () => {
-  for (const feature of Object.keys(allOn) as (keyof FeatureFlags)[]) {
+  for (const feature of featureNames) {
     const hidden = new Set<string>(paths(allOn, true));
     for (const to of paths({ ...allOn, [feature]: false }, true)) {
       hidden.delete(to);

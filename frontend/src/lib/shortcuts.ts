@@ -1,8 +1,8 @@
 import {
   getHotkeyManager,
   getSequenceManager,
-  type Hotkey,
-  type HotkeySequence,
+  normalizeHotkey,
+  normalizeRegisterableHotkey,
   type RegisterableHotkey,
 } from "@tanstack/react-hotkeys";
 import type { RegisteredRouter } from "@tanstack/react-router";
@@ -112,9 +112,7 @@ export function shouldIgnoreShortcut(context: ShortcutContext) {
 }
 
 export function toHotkeySteps(shortcut: Shortcut): RegisterableHotkey[] {
-  return shortcut.keys.map((key) =>
-    key === "?" ? { key, shift: true } : (key.toUpperCase() as Hotkey),
-  );
+  return shortcut.keys.map((key) => (key === "?" ? { key, shift: true } : normalizeHotkey(key)));
 }
 
 interface ShortcutRouter {
@@ -200,7 +198,8 @@ export function registerShortcuts(
       return getHotkeyManager().register(first, callback, HOTKEY_OPTIONS);
     }
 
-    return getSequenceManager().register(steps as HotkeySequence, callback, {
+    const sequence = steps.map((step) => normalizeRegisterableHotkey(step));
+    return getSequenceManager().register(sequence, callback, {
       ...HOTKEY_OPTIONS,
       timeout: PREFIX_TIMEOUT_MS,
     });

@@ -1,17 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { unpricedStock, usStock } from "@/storybook/investment-fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { unpricedStock, usStock } from "@/storybook/fixtures";
 import { PriceForm } from "./price-form";
 
 const meta = {
   title: "Features/Investments/PriceForm",
   component: PriceForm,
   args: { security: usStock, pending: false, onSubmit: fn(), onCancel: fn() },
-  render: (args) => (
-    <div className="w-[min(32rem,90vw)]">
-      <PriceForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(32rem,90vw)]")],
 } satisfies Meta<typeof PriceForm>;
 
 export default meta;

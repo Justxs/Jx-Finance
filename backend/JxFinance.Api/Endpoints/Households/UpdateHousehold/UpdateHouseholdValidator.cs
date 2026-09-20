@@ -1,12 +1,5 @@
-using FastEndpoints;
-using JxFinance.Common.Validation;
+using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Households.UpdateHousehold;
 
-public sealed class UpdateHouseholdValidator : Validator<UpdateHouseholdRequest>
-{
-    public UpdateHouseholdValidator()
-    {
-        RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
-    }
-}
+public sealed class UpdateHouseholdValidator : HouseholdInputValidator<UpdateHouseholdRequest>;

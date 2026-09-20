@@ -8,10 +8,15 @@ import {
   useMarkNotificationRead,
 } from "@/api/generated";
 import type { NotificationResponse, NotificationsParams } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
-import { staleVariants } from "@/components/ui/stale-region";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover/popover";
+import { staleVariants } from "@/components/ui/stale-region/stale-region";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
@@ -83,13 +88,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger
           render={
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              aria-label={bellLabel}
-              tooltip={bellLabel}
-            >
+            <Button type="button" variant="ghost" size="icon" aria-label={bellLabel}>
               <Bell />
             </Button>
           }

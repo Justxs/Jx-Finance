@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
 import type { TransactionResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
 import { accounts, categories, splitTransaction, transactions } from "@/storybook/fixtures";
 import { TransactionFormSection } from "./transaction-form-section";
 

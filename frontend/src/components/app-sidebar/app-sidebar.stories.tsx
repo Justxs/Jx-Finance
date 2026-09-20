@@ -4,7 +4,7 @@ import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { setSidebarCollapsed } from "@/stores/sidebar-store";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "../ui/skeleton/skeleton";
 import { AppSidebar } from "./app-sidebar";
 
 function SidebarExample() {

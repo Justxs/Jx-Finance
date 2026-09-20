@@ -31,7 +31,7 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
                 var response = Load(body);
                 if (response.Root?.Name.LocalName == "FlexQueryResponse")
                 {
-                    return Result<Stream>.Success(new MemoryStream(body));
+                    return new MemoryStream(body);
                 }
 
                 if (response.Root?.Element("ErrorCode")?.Value != NotReadyCode)
@@ -42,14 +42,14 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
                 await Task.Delay(RetryDelay, cancellationToken);
             }
 
-            return Result<Stream>.Failure(
+            return new DomainError(
                 ErrorCodes.BrokerUnavailable,
                 "Interactive Brokers is still preparing the report. Try again in a few minutes.");
         }
         catch (Exception ex) when (ex is HttpRequestException or XmlException
             || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
         {
-            return Result<Stream>.Failure(ErrorCodes.BrokerUnavailable, "Interactive Brokers could not be reached. Try again later.");
+            return new DomainError(ErrorCodes.BrokerUnavailable, "Interactive Brokers could not be reached. Try again later.");
         }
     }
 
@@ -63,7 +63,7 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
     private static Result<Stream> Failure(XDocument response)
     {
         var message = response.Root?.Element("ErrorMessage")?.Value ?? "unknown error";
-        return Result<Stream>.Failure(
+        return new DomainError(
             ErrorCodes.BrokerRejected,
             $"Interactive Brokers rejected the request: {(message.Length > 300 ? message[..300] : message)}");
     }

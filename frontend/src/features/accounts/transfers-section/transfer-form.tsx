@@ -1,12 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { type AccountResponse, Currency, type TransferResponse } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
+import { MoneyPairField, useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
-import { submitToServer } from "@/lib/form-server-errors";
+import { namedOptions, withMissingOption } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
@@ -112,11 +111,7 @@ export function TransferForm({
   }
 
   function accountOptions(selectedId: string | undefined) {
-    const options = accounts.map((account) => ({ value: account.id, label: account.name }));
-    if (selectedId && !accounts.some((account) => account.id === selectedId)) {
-      options.push({ value: selectedId, label: t("transfers.unavailableAccount") });
-    }
-    return options;
+    return withMissingOption(namedOptions(accounts), selectedId, t("transfers.unavailableAccount"));
   }
 
   function lockedNote() {
@@ -141,24 +136,15 @@ export function TransferForm({
         description: "",
       };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, () => onSubmit(buildValues(submission.value))),
+    schema,
+    submit: (value) => onSubmit(buildValues(value)),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         {anyLocked ? (
           <p className="col-span-full text-sm text-muted-foreground">{lockedNote()}</p>
         ) : null}
@@ -200,23 +186,16 @@ export function TransferForm({
           {([fromAccountId, sameCurrency]) => {
             const amountLocked = fromLocked || (toLocked && sameCurrency);
             return (
-              <form.Field name="currency">
-                {(currencyField) => (
-                  <form.Field name="amount">
-                    {(field) => (
-                      <field.MoneyAmountField
-                        id="transfer-amount"
-                        label={t("transactions.amount")}
-                        currencyLabel={t("transfers.sentCurrency")}
-                        currencyField={currencyField}
-                        hint={amountLocked ? lockedHint : undefined}
-                        disabled={amountLocked}
-                        preferred={heldBy(fromAccountId)}
-                      />
-                    )}
-                  </form.Field>
-                )}
-              </form.Field>
+              <MoneyPairField
+                form={form}
+                fields={{ amount: "amount", currency: "currency" }}
+                id="transfer-amount"
+                label={t("transactions.amount")}
+                currencyLabel={t("transfers.sentCurrency")}
+                hint={amountLocked ? lockedHint : undefined}
+                disabled={amountLocked}
+                preferred={heldBy(fromAccountId)}
+              />
             );
           }}
         </form.Subscribe>
@@ -232,28 +211,19 @@ export function TransferForm({
         >
           {([currency, receivedCurrency, toAccountId]) =>
             multiCurrency || currency !== receivedCurrency ? (
-              <form.Field name="receivedCurrency">
-                {(currencyField) => (
-                  <form.Field name="receivedAmount">
-                    {(field) => (
-                      <field.MoneyAmountField
-                        id="transfer-received"
-                        label={t("transfers.received")}
-                        currencyLabel={t("transfers.receivedCurrency")}
-                        currencyField={currencyField}
-                        placeholder={
-                          currency === receivedCurrency ? t("transfers.sameAsSent") : "0.00"
-                        }
-                        hint={toLocked && currency !== receivedCurrency ? lockedHint : undefined}
-                        disabled={toLocked || currency === receivedCurrency}
-                        blankWhenDisabled={currency === receivedCurrency}
-                        touchedOnly
-                        preferred={heldBy(toAccountId)}
-                      />
-                    )}
-                  </form.Field>
-                )}
-              </form.Field>
+              <MoneyPairField
+                form={form}
+                fields={{ amount: "receivedAmount", currency: "receivedCurrency" }}
+                id="transfer-received"
+                label={t("transfers.received")}
+                currencyLabel={t("transfers.receivedCurrency")}
+                placeholder={currency === receivedCurrency ? t("transfers.sameAsSent") : "0.00"}
+                hint={toLocked && currency !== receivedCurrency ? lockedHint : undefined}
+                disabled={toLocked || currency === receivedCurrency}
+                blankWhenDisabled={currency === receivedCurrency}
+                touchedOnly
+                preferred={heldBy(toAccountId)}
+              />
             ) : null
           }
         </form.Subscribe>
@@ -281,17 +251,13 @@ export function TransferForm({
 
         <FormError error={error} />
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          {onCancel ? (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t("actions.cancel")}
-            </Button>
-          ) : null}
-          <form.SubmitButton pending={pending}>
-            {transfer ? t("actions.save") : t("transfers.add")}
-          </form.SubmitButton>
-        </div>
-      </FormGrid>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={transfer ? t("actions.save") : t("transfers.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

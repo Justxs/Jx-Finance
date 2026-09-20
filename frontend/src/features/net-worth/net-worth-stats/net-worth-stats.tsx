@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthSuspense } from "@/api/generated";
-import { SummaryStats } from "@/components/summary-stats";
+import { SummaryStats } from "@/components/summary-stats/summary-stats";
 
 export function NetWorthStats() {
   const { t } = useTranslation();

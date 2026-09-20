@@ -1,12 +1,13 @@
 import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { FileInput } from "@/components/ui/file-input";
-import { FormGrid } from "@/components/ui/form-grid";
-import { SectionTitle } from "@/components/ui/section";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { FieldError, Hint } from "@/components/ui/field-error";
+import { FileInput } from "@/components/ui/file-input/file-input";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { SectionTitle } from "@/components/ui/section/section";
+import { namedOptions } from "@/lib/options";
 
 interface Props {
   accounts: AccountResponse[];
@@ -73,7 +74,7 @@ export function ImportUploadForm({
             value={accountId}
             disabled={locked}
             onChange={onAccountChange}
-            options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+            options={namedOptions(accounts)}
           />
         </div>
         <div className="col-span-full space-y-1.5">
@@ -93,9 +94,7 @@ export function ImportUploadForm({
             aria-invalid={fileError ? true : undefined}
             aria-describedby={fileError ? "import-file-hint import-file-error" : "import-file-hint"}
           />
-          <p id="import-file-hint" className="text-xs text-muted-foreground">
-            {t("imports.fileHint")}
-          </p>
+          <Hint id="import-file-hint">{t("imports.fileHint")}</Hint>
           <FieldError id="import-file-error" message={fileError} />
         </div>
       </FormGrid>

@@ -3,7 +3,7 @@ import QRCode from "qrcode";
 import { type ComponentProps, Suspense, use } from "react";
 import { fn } from "storybook/test";
 import { getEnableTwoFactorMockHandler } from "@/api/generated/auth/auth.msw";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { twoFactorSetup, validationProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { TwoFactorSetup } from "./two-factor-setup";

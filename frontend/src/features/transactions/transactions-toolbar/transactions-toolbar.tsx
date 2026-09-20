@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { ExportMenu } from "@/components/export-menu";
-import { Button } from "@/components/ui/button";
+import { ExportMenu } from "@/components/export-menu/export-menu";
+import { Button } from "@/components/ui/button/button";
 
 interface Props {
   exportUrl: string;

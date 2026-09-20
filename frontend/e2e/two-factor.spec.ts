@@ -1,5 +1,6 @@
 import type { Browser, Page, TestInfo } from "@playwright/test";
 import { Secret, TOTP } from "otpauth";
+import { z } from "zod";
 import {
   createMember,
   expect,
@@ -37,7 +38,9 @@ async function enrol(member: Page) {
   await member.getByRole("button", { name: "Confirm and enable" }).click();
   const response = await enabled;
   expect(response.status()).toBe(200);
-  const { recoveryCodes } = (await response.json()) as { recoveryCodes: string[] };
+  const { recoveryCodes } = z
+    .object({ recoveryCodes: z.array(z.string()) })
+    .parse(await response.json());
   expect(recoveryCodes.length).toBeGreaterThan(1);
   return { totp, recoveryCodes };
 }

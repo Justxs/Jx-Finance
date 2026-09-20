@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
 import { type Locale, useLocale } from "@/stores/app-store";
 
 const labels: Record<Locale, string> = { en: "English", lt: "Lietuvių" };

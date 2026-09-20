@@ -4,8 +4,8 @@ import {
   getMeMockHandler,
   getSetupTwoFactorMockHandler,
 } from "@/api/generated/auth/auth.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   currentUserWithTwoFactor,
   serverErrorProblem,

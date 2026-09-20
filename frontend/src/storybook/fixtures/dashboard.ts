@@ -6,7 +6,8 @@ import type {
   MonthlyTrendResponse,
   TransactionResponse,
 } from "@/api/generated/model";
-import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, fromCents } from "./base";
+import { fromCents } from "@/lib/money";
+import { FIXTURE_MONTH_END, FIXTURE_MONTH_START } from "./base";
 import { categories } from "./categories";
 import { netWorth } from "./net-worth";
 import {

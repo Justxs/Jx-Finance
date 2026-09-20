@@ -3,12 +3,13 @@ import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { CreateHouseholdForm } from "../create-household-form";
+import { Button } from "@/components/ui/button/button";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { CreateHouseholdForm } from "../create-household-form/create-household-form";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
 
@@ -24,42 +25,35 @@ export function HouseholdCard({ household }: Readonly<Props>) {
 
   const isOwner = household.myRole === "owner";
 
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
   const deleteMutation = useDeleteHousehold();
+  const remove = useConfirmedDelete(deleteMutation, [household], (item) => item.name);
   const removeMutation = useRemoveMember();
 
   return (
     <Section>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle className="min-w-0 wrap-break-word">{household.name}</SectionTitle>
-
+      <SectionHeader title={household.name} titleClassName="min-w-0 wrap-break-word">
         {isOwner ? (
           <div className="flex gap-1">
             <Button
               variant="ghost"
-              size="icon"
-              className="size-8"
+              size="icon-sm"
               onClick={() => setRenaming(true)}
               aria-label={`${t("actions.edit")}: ${household.name}`}
-              tooltip={`${t("actions.edit")}: ${household.name}`}
             >
               <Pencil />
             </Button>
             <Button
               variant="ghost"
-              size="icon"
-              className="size-8"
-              pending={deleteMutation.isPending}
-              onClick={() => setDeleteTarget(household.id)}
+              size="icon-sm"
+              pending={remove.busy}
+              onClick={() => remove.request(household.id)}
               aria-label={`${t("actions.delete")}: ${household.name}`}
-              tooltip={`${t("actions.delete")}: ${household.name}`}
             >
               <Trash2 />
             </Button>
           </div>
         ) : null}
-      </div>
+      </SectionHeader>
 
       <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
         <CreateHouseholdForm
@@ -101,12 +95,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
           onCancel={() => setAddMemberOpen(false)}
         />
       </Modal>
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={household.name ?? undefined}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );
 }

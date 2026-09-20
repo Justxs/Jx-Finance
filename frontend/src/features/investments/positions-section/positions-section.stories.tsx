@@ -1,26 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import { getSetSecurityPriceMockHandler } from "@/api/generated/investments/investments.msw";
-import { accounts } from "@/storybook/fixtures";
-import { failWith, handlers } from "@/storybook/handlers";
+import { withWidth } from "@/storybook/decorators";
 import {
+  accounts,
   closedHolding,
   incompletePortfolio,
   losingHolding,
   portfolio,
   securityNotHeldProblem,
-} from "@/storybook/investment-fixtures";
+} from "@/storybook/fixtures";
+import { failWith, handlers } from "@/storybook/handlers";
 import { PositionsSection } from "./positions-section";
 
 const meta = {
   title: "Features/Investments/PositionsSection",
   component: PositionsSection,
   args: { holdings: portfolio.holdings, reportingCurrency: "eur", accounts },
-  render: (args) => (
-    <div className="w-[min(64rem,calc(100vw-5rem))]">
-      <PositionsSection {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(64rem,calc(100vw-5rem))]")],
 } satisfies Meta<typeof PositionsSection>;
 
 export default meta;
@@ -80,7 +77,7 @@ async function openPriceDialog(canvasElement: HTMLElement) {
 export const SavesPrice: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement);
-    fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
+    await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
       target: { value: "131.20" },
     });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
@@ -100,7 +97,7 @@ export const PriceRefusedForSomeoneElsesSecurity: Story = {
   },
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement);
-    fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
+    await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
       target: { value: "131.20" },
     });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));

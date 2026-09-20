@@ -1,8 +1,9 @@
+using JxFinance.Common;
 using JxFinance.Domain.Investments;
 
 namespace JxFinance.Endpoints.Investments.GetInvestmentTransactions;
 
-public sealed class GetInvestmentTransactionsRequest
+public sealed class GetInvestmentTransactionsRequest : IPagedRequest
 {
     public int Page { get; init; } = 1;
 

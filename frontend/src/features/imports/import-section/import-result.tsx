@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
+import { TextLink } from "@/components/ui/text-link/text-link";
 
 export interface ImportResult {
   imported: number;
@@ -19,7 +19,7 @@ export function ImportResultLine({ result }: Readonly<{ result: ImportResult }>)
         {result.skipped > 0 ? ` ${t("imports.resultSkipped", { count: result.skipped })}` : ""}
       </span>{" "}
       {result.imported > 0 ? (
-        <Link
+        <TextLink
           to="/transactions"
           search={{
             page: 1,
@@ -27,10 +27,9 @@ export function ImportResultLine({ result }: Readonly<{ result: ImportResult }>)
             dateFrom: result.dateFrom,
             dateTo: result.dateTo,
           }}
-          className="font-medium text-primary underline-offset-4 hover:underline"
         >
           {t("imports.resultLink")}
-        </Link>
+        </TextLink>
       ) : null}
     </p>
   );

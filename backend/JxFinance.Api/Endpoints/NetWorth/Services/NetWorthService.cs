@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
@@ -18,6 +18,9 @@ public sealed class NetWorthService(
     IClock clock,
     ICurrentUser currentUser) : INetWorthService
 {
+    private const string AssetNotFound = "Asset not found.";
+    private const string DebtNotFound = "Debt not found.";
+
     public async Task<IReadOnlyList<Asset>> GetAssetsAsync(CancellationToken cancellationToken) =>
         await db.Assets.OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
 
@@ -29,34 +32,16 @@ public sealed class NetWorthService(
         return asset;
     }
 
-    public async Task<Result<Asset>> UpdateAssetAsync(Guid id, Action<Asset> apply, CancellationToken cancellationToken)
+    public Task<Result<Asset>> UpdateAssetAsync(Guid id, Action<Asset> apply, CancellationToken cancellationToken)
     {
         var assetId = new AssetId(id);
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assetId, cancellationToken);
-        if (asset is null)
-        {
-            return Result<Asset>.Failure(ErrorCodes.ResourceNotFound, "Asset not found.");
-        }
-
-        apply(asset);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Asset>.Success(asset);
+        return db.UpdateOrNotFoundAsync(a => a.Id == assetId, AssetNotFound, apply, cancellationToken);
     }
 
-    public async Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
     {
         var assetId = new AssetId(id);
-        var asset = await db.Assets.FirstOrDefaultAsync(a => a.Id == assetId, cancellationToken);
-        if (asset is null)
-        {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Asset not found.");
-        }
-
-        db.Assets.Remove(asset);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Guid>.Success(id);
+        return db.DeleteOrNotFoundAsync<Asset>(id, a => a.Id == assetId, AssetNotFound, cancellationToken);
     }
 
     public async Task<IReadOnlyList<Debt>> GetDebtsAsync(CancellationToken cancellationToken) =>
@@ -70,41 +55,22 @@ public sealed class NetWorthService(
         return debt;
     }
 
-    public async Task<Result<Debt>> UpdateDebtAsync(Guid id, Action<Debt> apply, CancellationToken cancellationToken)
+    public Task<Result<Debt>> UpdateDebtAsync(Guid id, Action<Debt> apply, CancellationToken cancellationToken)
     {
         var debtId = new DebtId(id);
-        var debt = await db.Debts.FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
-        if (debt is null)
-        {
-            return Result<Debt>.Failure(ErrorCodes.ResourceNotFound, "Debt not found.");
-        }
-
-        apply(debt);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Debt>.Success(debt);
+        return db.UpdateOrNotFoundAsync(d => d.Id == debtId, DebtNotFound, apply, cancellationToken);
     }
 
-    public async Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
     {
         var debtId = new DebtId(id);
-        var debt = await db.Debts.FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
-        if (debt is null)
-        {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Debt not found.");
-        }
-
-        db.Debts.Remove(debt);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Guid>.Success(id);
+        return db.DeleteOrNotFoundAsync<Debt>(id, d => d.Id == debtId, DebtNotFound, cancellationToken);
     }
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var lockId = BitConverter.ToInt64(currentUser.Id.ToByteArray(), 0);
-        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
+        await db.Database.LockAsync(currentUser.Id, cancellationToken);
         var (accountsTotal, assetsTotal, debtsTotal, netWorth, isComplete) = await ComputeTotalsAsync(cancellationToken);
         var fitsSnapshot = new[] { accountsTotal, assetsTotal, debtsTotal, netWorth }.All(total => DecimalRules.FitsMoney(Money.Round(total)));
         if (isComplete && fitsSnapshot)
@@ -181,19 +147,4 @@ public sealed class NetWorthService(
 
         await db.SaveChangesAsync(cancellationToken);
     }
-
-    private static AssetResponse ToResponse(Asset asset) => new(
-        asset.Id.Value,
-        asset.Name,
-        asset.Type,
-        asset.CurrentValue.Amount,
-        asset.AsOf);
-
-    private static DebtResponse ToResponse(Debt debt) => new(
-        debt.Id.Value,
-        debt.Name,
-        debt.Type,
-        debt.OutstandingAmount.Amount,
-        debt.InterestRate,
-        debt.AsOf);
 }

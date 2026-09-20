@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Budgets.CreateBudget;
 
@@ -11,7 +12,7 @@ public sealed class CreateBudgetSummary : Summary<CreateBudgetEndpoint, CreateBu
             + "creating a second one for the same category is rejected.";
         ExampleRequest = new CreateBudgetRequest(Guid.Empty, 400.00m);
         RequestParam(r => r.CategoryId, "The category the limit applies to; must be visible to you.");
-        RequestParam(r => r.LimitAmount, "Decimal string with at most two decimal places, greater than zero.");
+        RequestParam(r => r.LimitAmount, SummaryText.PositiveMoney);
         Responses[201] = "The budget was created. The Location header points at it.";
         Responses[400] = "Validation failed, the category is not visible to you, or it already has a budget.";
     }

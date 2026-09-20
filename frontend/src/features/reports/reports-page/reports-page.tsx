@@ -2,20 +2,20 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useReportSummarySuspense } from "@/api/generated";
-import { CategoryBreakdown } from "@/components/category-breakdown";
-import { ExportMenu } from "@/components/export-menu";
-import { PageHeader } from "@/components/page-header";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { SplitColumns } from "@/components/ui/split-columns";
-import { StaleRegion } from "@/components/ui/stale-region";
+import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
+import { ExportMenu } from "@/components/export-menu/export-menu";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { SplitColumns } from "@/components/ui/split-columns/split-columns";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
-import { NetWorthChangeCard } from "../net-worth-change-card";
+import { NetWorthChangeCard } from "../net-worth-change-card/net-worth-change-card";
 import { detectPreset, ReportFilters } from "../report-filters";
 import { reportRange } from "../report-queries";
-import { ReportStats } from "../report-stats";
-import { ReportTrendChart } from "../report-trend-chart";
+import { ReportStats } from "../report-stats/report-stats";
+import { ReportTrendChart } from "../report-trend-chart/report-trend-chart";
 
 export function ReportsPage() {
   const { t } = useTranslation();
@@ -31,7 +31,7 @@ export function ReportsPage() {
   const summary = useReportSummarySuspense(shown);
 
   function handleRangeChange(range: { dateFrom: string; dateTo: string }) {
-    navigate({ search: () => range });
+    void navigate({ search: () => range });
   }
 
   return (

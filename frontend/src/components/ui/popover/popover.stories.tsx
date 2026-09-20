@@ -1,16 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Button } from "../button";
-import { Input } from "../input";
-import { Label } from "../label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
-  PopoverTrigger,
-} from "./popover";
+import { Button } from "../button/button";
+import { Input } from "../input/input";
+import { Label } from "../label/label";
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "./popover";
 
 const sides = ["top", "right", "bottom", "left"] as const;
 
@@ -57,12 +50,12 @@ export const Default: Story = {
     <Popover defaultOpen>
       <PopoverTrigger render={<Button variant="outline" />}>About budgets</PopoverTrigger>
       <PopoverContent>
-        <PopoverHeader>
+        <div className="flex flex-col gap-0.5">
           <PopoverTitle>Budgets</PopoverTitle>
-          <PopoverDescription>
+          <p className="text-muted-foreground">
             A budget limits monthly spending in a single category.
-          </PopoverDescription>
-        </PopoverHeader>
+          </p>
+        </div>
       </PopoverContent>
     </Popover>
   ),
@@ -73,10 +66,10 @@ export const Closed: Story = {
     <Popover>
       <PopoverTrigger render={<Button variant="outline" />}>Open popover</PopoverTrigger>
       <PopoverContent>
-        <PopoverHeader>
+        <div className="flex flex-col gap-0.5">
           <PopoverTitle>Closed by default</PopoverTitle>
-          <PopoverDescription>Click outside or press Escape to dismiss.</PopoverDescription>
-        </PopoverHeader>
+          <p className="text-muted-foreground">Click outside or press Escape to dismiss.</p>
+        </div>
       </PopoverContent>
     </Popover>
   ),
@@ -104,17 +97,17 @@ export const LongContent: Story = {
     <Popover defaultOpen>
       <PopoverTrigger render={<Button variant="outline" />}>Import rules</PopoverTrigger>
       <PopoverContent align="start">
-        <PopoverHeader>
+        <div className="flex flex-col gap-0.5">
           <PopoverTitle>
             How imported Swedbank statement rows are matched to existing transactions
           </PopoverTitle>
-          <PopoverDescription>
+          <p className="text-muted-foreground">
             Rows are matched by date, amount and description. Rows that already exist are marked as
             duplicates and skipped unless you tick them again. Categories are suggested from earlier
             transactions with the same counterparty, and you can change every suggestion before the
             import is confirmed.
-          </PopoverDescription>
-        </PopoverHeader>
+          </p>
+        </div>
       </PopoverContent>
     </Popover>
   ),

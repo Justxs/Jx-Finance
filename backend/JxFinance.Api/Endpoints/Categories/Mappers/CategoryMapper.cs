@@ -5,27 +5,24 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Categories.CreateCategory;
 using JxFinance.Endpoints.Categories.Shared;
-using JxFinance.Endpoints.Categories.UpdateCategory;
 
 namespace JxFinance.Endpoints.Categories.Mappers;
 
 public sealed class CategoryMapper : Mapper<CreateCategoryRequest, CategoryResponse, Category>
 {
-    public override Category ToEntity(CreateCategoryRequest request) => new()
+    public override Category ToEntity(CreateCategoryRequest request)
     {
-        Name = request.Name.Trim(),
-        Type = request.Type,
-        Icon = OptionalText.Normalize(request.Icon),
-        Scope = request.Scope,
-        HouseholdId = HouseholdFor(request.Scope, request.HouseholdId),
-    };
+        var category = new Category { Name = request.Name, Type = request.Type };
+        Apply(request, category);
+        return category;
+    }
 
-    public void UpdateEntity(UpdateCategoryRequest request, Category category)
+    public void Apply(ICategoryInput input, Category category)
     {
-        category.Name = request.Name.Trim();
-        category.Icon = OptionalText.Normalize(request.Icon);
-        category.Scope = request.Scope;
-        category.HouseholdId = HouseholdFor(request.Scope, request.HouseholdId);
+        category.Name = input.Name.Trim();
+        category.Icon = OptionalText.Normalize(input.Icon);
+        category.Scope = input.Scope;
+        category.HouseholdId = HouseholdFor(input.Scope, input.HouseholdId);
     }
 
     public override CategoryResponse FromEntity(Category category) => new(

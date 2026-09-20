@@ -11,34 +11,33 @@ namespace JxFinance.Endpoints.RecurringBills.Mappers;
 
 public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, RecurringBillResponse, RecurringBill>
 {
-    public override RecurringBill ToEntity(CreateRecurringBillRequest request) => new()
+    public override RecurringBill ToEntity(CreateRecurringBillRequest request)
     {
-        Name = request.Name.Trim(),
-        Kind = request.Kind,
-        Amount = request.Amount is { } amount ? new Money(amount) : null,
-        CategoryId = request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null,
-        AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null,
-        Cadence = request.Cadence,
-        NextDueDate = request.NextDueDate,
-        AnchorDay = request.NextDueDate.Day,
-        RemindDaysBefore = request.RemindDaysBefore,
-    };
+        var bill = new RecurringBill { Name = request.Name };
+        Apply(request, bill);
+        return bill;
+    }
 
-    public void UpdateEntity(UpdateRecurringBillRequest request, RecurringBill bill)
+    public void Apply(UpdateRecurringBillRequest request, RecurringBill bill)
     {
-        bill.Name = request.Name.Trim();
-        bill.Kind = request.Kind;
-        bill.Amount = request.Amount is { } amount ? new Money(amount) : null;
-        bill.CategoryId = request.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
-        bill.AccountId = request.AccountId is { } accountId ? new AccountId(accountId) : null;
-        bill.Cadence = request.Cadence;
-        if (bill.NextDueDate != request.NextDueDate)
+        Apply((IRecurringBillInput)request, bill);
+        bill.IsActive = request.IsActive;
+    }
+
+    private static void Apply(IRecurringBillInput input, RecurringBill bill)
+    {
+        bill.Name = input.Name.Trim();
+        bill.Kind = input.Kind;
+        bill.Amount = input.Amount is { } amount ? new Money(amount) : null;
+        bill.CategoryId = input.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
+        bill.AccountId = input.AccountId is { } accountId ? new AccountId(accountId) : null;
+        bill.Cadence = input.Cadence;
+        if (bill.NextDueDate != input.NextDueDate)
         {
-            bill.Schedule(request.NextDueDate);
+            bill.Schedule(input.NextDueDate);
         }
 
-        bill.RemindDaysBefore = request.RemindDaysBefore;
-        bill.IsActive = request.IsActive;
+        bill.RemindDaysBefore = input.RemindDaysBefore;
     }
 
     public override RecurringBillResponse FromEntity(RecurringBill bill) => new(

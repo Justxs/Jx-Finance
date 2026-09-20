@@ -1,7 +1,7 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
-import { SelectField, type SelectOption } from "@/components/select-field";
-import { FieldShell, fieldAria } from "../field-shell";
+import { SelectField, type SelectOption } from "@/components/select-field/select-field";
+import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 interface Props {
   field: FieldWithValue<string>;

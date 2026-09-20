@@ -11,15 +11,20 @@ import {
   createAccountBodyDescriptionMax,
   createAccountBodyNameMax,
 } from "@/api/schemas/accounts/accounts.zod";
-import { CurrencySelect } from "@/components/currency-select";
-import { useAppForm } from "@/components/form";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Label } from "@/components/ui/label";
+import { useServerForm } from "@/components/form";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
-import { submitToServer } from "@/lib/form-server-errors";
-import { isIban, money, optionalText, requiredText } from "@/lib/validation";
+import {
+  isIban,
+  money,
+  optionalText,
+  refineSharing,
+  requiredText,
+  sharedHouseholdId,
+  sharingShape,
+} from "@/lib/validation";
 import { accountTypes } from "../account-types";
 
 export interface AccountFormValues {
@@ -60,7 +65,7 @@ function buildValues(value: FormValues): AccountFormValues {
     startingBalance: value.startingBalance,
     currency: value.currency,
     scope: value.scope,
-    householdId: value.scope === "shared" ? value.householdId : null,
+    householdId: sharedHouseholdId(value),
   };
 }
 
@@ -71,23 +76,20 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
 
-  const schema = z
-    .object({
+  const schema = refineSharing(
+    z.object({
       name: requiredText(t, createAccountBodyNameMax),
       description: optionalText(t, createAccountBodyDescriptionMax),
       iban: z.string().refine((value) => !value.trim() || isIban(value), t("validation.iban")),
       type: z.enum(accountTypes),
       startingBalance: money(t),
       currency: z.enum(Currency),
-      scope: z.enum(["personal", "shared"]),
-      householdId: z.string(),
-    })
-    .refine((value) => value.scope !== "shared" || value.householdId !== "", {
-      message: t("validation.required"),
-      path: ["householdId"],
-    });
+      ...sharingShape(),
+    }),
+    t,
+  );
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: {
       name: initial?.name ?? "",
       description: initial?.description ?? "",
@@ -98,22 +100,13 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       scope: initial?.scope ?? "personal",
       householdId: initial?.householdId ?? "",
     } satisfies FormValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, () => onSubmit(buildValues(submission.value))),
+    schema,
+    submit: (value) => onSubmit(buildValues(value)),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="name">
           {(field) => (
             <field.TextField
@@ -150,17 +143,12 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         {multiCurrency ? (
           <form.Field name="currency">
             {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="account-currency">{t("accounts.currency")}</Label>
-                <CurrencySelect
-                  id="account-currency"
-                  value={field.value}
-                  preferred={[reportingCurrency]}
-                  onBlur={field.handleBlur}
-                  onChange={(value) => field.handleChange(value)}
-                />
-                <p className="text-xs text-muted-foreground">{t("accounts.currencyHint")}</p>
-              </div>
+              <field.CurrencyField
+                id="account-currency"
+                label={t("accounts.currency")}
+                hint={t("accounts.currencyHint")}
+                preferred={[reportingCurrency]}
+              />
             )}
           </form.Field>
         ) : null}
@@ -187,55 +175,21 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
         </form.Field>
 
         {householdList.length > 0 ? (
-          <>
-            <form.Field name="scope">
-              {(field) => (
-                <field.SelectFieldControl
-                  id="account-scope"
-                  label={t("sharing.scope")}
-                  options={[
-                    { value: "personal", label: t("sharing.personal") },
-                    { value: "shared", label: t("sharing.shared") },
-                  ]}
-                />
-              )}
-            </form.Field>
-
-            <form.Subscribe selector={(state) => state.values.scope}>
-              {(scope) =>
-                scope === "shared" ? (
-                  <form.Field name="householdId">
-                    {(field) => (
-                      <field.SelectFieldControl
-                        id="account-household"
-                        label={t("sharing.household")}
-                        options={[
-                          { value: "", label: t("sharing.selectHousehold") },
-                          ...householdList.map((household) => ({
-                            value: household.id,
-                            label: household.name,
-                          })),
-                        ]}
-                      />
-                    )}
-                  </form.Field>
-                ) : null
-              }
-            </form.Subscribe>
-          </>
+          <SharingFields
+            form={form}
+            fields={{ scope: "scope", householdId: "householdId" }}
+            idPrefix="account"
+            households={householdList}
+          />
         ) : null}
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          {onCancel ? (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t("actions.cancel")}
-            </Button>
-          ) : null}
-          <form.SubmitButton pending={pending}>
-            {initial ? t("actions.save") : t("actions.add")}
-          </form.SubmitButton>
-        </div>
-      </FormGrid>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("actions.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

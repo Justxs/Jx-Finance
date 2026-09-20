@@ -2,11 +2,10 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudget, useUpdateBudget } from "@/api/generated";
 import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { silent, upsert } from "@/lib/mutations";
 import { positiveMoney, requiredValue } from "@/lib/validation";
 
 interface FormValues {
@@ -30,31 +29,23 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
     limitAmount: positiveMoney(t),
   });
 
-  const createMutation = useCreateBudget({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
-
-  const updateMutation = useUpdateBudget({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
+  const { create, update, pending, error } = upsert(
+    useCreateBudget(silent({ onSuccess: onCreated })),
+    useUpdateBudget(silent({ onSuccess: onCreated })),
+  );
 
   const defaultValues: FormValues = {
     categoryId: initial?.categoryId ?? expenseCategories[0]?.id ?? "",
     limitAmount: initial?.limitAmount ?? "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
+    schema,
+    submit: (value) => {
       const data = { categoryId: value.categoryId, limitAmount: value.limitAmount };
 
-      return submitToServer(submission, () =>
-        initial?.id
-          ? updateMutation.mutateAsync({ id: initial.id, data })
-          : createMutation.mutateAsync({ data }),
-      );
+      return initial?.id ? update({ id: initial.id, data }) : create({ data });
     },
   });
 
@@ -64,15 +55,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <FormGrid>
           <form.Field name="categoryId">
             {(field) => (
@@ -92,17 +75,14 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
           </form.Field>
         </FormGrid>
 
-        <FormError error={createMutation.error ?? updateMutation.error} />
+        <FormError error={error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={createMutation.isPending || updateMutation.isPending}>
-            {t(initial ? "actions.save" : "budgets.add")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={pending}
+          submitLabel={t(initial ? "actions.save" : "budgets.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

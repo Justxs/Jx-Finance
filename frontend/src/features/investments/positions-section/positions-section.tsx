@@ -8,7 +8,10 @@ import type {
   SecurityResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { silent } from "@/lib/mutations";
+import { nameById } from "@/lib/options";
 import { PositionsTable } from "./positions-table";
 import { PriceForm } from "./price-form";
 
@@ -45,12 +48,11 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
   const priceSecurity =
     securities.data?.find((security) => security.id === priceTarget?.id) ?? priceTarget;
 
-  const priceMutation = useSetSecurityPrice({
-    mutation: {
-      meta: { silent: true },
+  const priceMutation = useSetSecurityPrice(
+    silent({
       onSuccess: () => setPriceOpen(false),
-    },
-  });
+    }),
+  );
 
   function editPrice(security: SecurityResponse) {
     priceMutation.reset();
@@ -60,14 +62,14 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
 
   const open = holdings.filter(isOpen);
   const closed = holdings.filter((holding) => !isOpen(holding));
-  const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
+  const accountNames = nameById(accounts);
   const shared = sharedSecurities(holdings);
 
   return (
     <Section>
       <SectionTitle className="mb-2">{t("investments.holdings.title")}</SectionTitle>
       {open.length === 0 ? (
-        <p className="py-6 text-sm text-muted-foreground">{t("investments.holdings.empty")}</p>
+        <EmptyText>{t("investments.holdings.empty")}</EmptyText>
       ) : (
         <PositionsTable
           label={t("investments.holdings.title")}

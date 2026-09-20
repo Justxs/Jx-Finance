@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { emptyReportSummary, reportSummaryMonth, reportSummaryYear } from "@/storybook/fixtures";
 import { ReportStats } from "./report-stats";
 
@@ -43,9 +44,5 @@ export const LargeAmounts: Story = {
 };
 
 export const Narrow: Story = {
-  render: (args) => (
-    <div className="w-72">
-      <ReportStats {...args} />
-    </div>
-  ),
+  decorators: [withWidth("field")],
 };

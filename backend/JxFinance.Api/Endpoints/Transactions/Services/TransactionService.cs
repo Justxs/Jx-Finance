@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.References;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -27,30 +28,18 @@ public sealed class TransactionService(
     ICurrentUser currentUser,
     TransactionMapper mapper,
     IExchangeRateService rates,
+    IReferenceGuard references,
     IOptions<AppOptions> options) : ITransactionService
 {
     public async Task<PagedResponse<TransactionResponse>> GetPageAsync(
         GetTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 200);
+        var page = await Filtered(request).ToPageAsync(request, query => Sorted(query, request), cancellationToken);
 
-        var query = Filtered(request);
+        var linesByTransaction = await LoadLinesAsync(page.Items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
 
-        var total = await query.CountAsync(cancellationToken);
-        var items = await Sorted(query, request)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        var linesByTransaction = await LoadLinesAsync(items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
-
-        return new PagedResponse<TransactionResponse>(
-            items.Select(t => mapper.FromEntity(t, linesByTransaction.GetValueOrDefault(t.Id))).ToList(),
-            page,
-            pageSize,
-            total);
+        return page.Map(t => mapper.FromEntity(t, linesByTransaction.GetValueOrDefault(t.Id)));
     }
 
     public IAsyncEnumerable<TransactionResponse> StreamExportAsync(GetTransactionsRequest request) =>
@@ -70,12 +59,12 @@ public sealed class TransactionService(
             .ToListAsync(cancellationToken);
         if (items.Count > limit)
         {
-            return Result<IReadOnlyList<TransactionResponse>>.Failure(
+            return new DomainError(
                 ErrorCodes.ExportTooManyRows,
                 $"A PDF holds at most {limit} transactions. Narrow the filters, or export CSV instead.");
         }
 
-        return Result<IReadOnlyList<TransactionResponse>>.Success(items.Select(t => mapper.FromEntity(t, null)).ToList());
+        return items.Select(t => mapper.FromEntity(t, null)).ToList();
     }
 
     public async Task<TransactionsSummaryResponse> GetSummaryAsync(
@@ -174,14 +163,14 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var lines = transaction.IsSplit
             ? await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken)
             : [];
 
-        return Result<TransactionResponse>.Success(mapper.FromEntity(transaction, lines));
+        return mapper.FromEntity(transaction, lines);
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(
@@ -195,7 +184,7 @@ public sealed class TransactionService(
             cancellationToken);
         if (referenceError is not null)
         {
-            return Result<TransactionResponse>.Failure(referenceError);
+            return referenceError;
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -204,14 +193,14 @@ public sealed class TransactionService(
             var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
             if (linesError is not null)
             {
-                return Result<TransactionResponse>.Failure(linesError);
+                return linesError;
             }
         }
 
         var valuation = await ValueAsync(request.AccountId, request.Currency, null, request.Amount, request.Date, cancellationToken);
         if (valuation.IsFailure)
         {
-            return Result<TransactionResponse>.FailureFrom(valuation);
+            return valuation.Error;
         }
 
         var (currency, reportingAmount) = valuation.Value;
@@ -227,7 +216,7 @@ public sealed class TransactionService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<TransactionResponse>.Success(mapper.FromEntity(transaction, lines));
+        return mapper.FromEntity(transaction, lines);
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -238,7 +227,7 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<TransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var referenceError = await ValidateReferencesAsync(
@@ -248,7 +237,7 @@ public sealed class TransactionService(
             cancellationToken);
         if (referenceError is not null)
         {
-            return Result<TransactionResponse>.Failure(referenceError);
+            return referenceError;
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -257,7 +246,7 @@ public sealed class TransactionService(
             var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
             if (linesError is not null)
             {
-                return Result<TransactionResponse>.Failure(linesError);
+                return linesError;
             }
         }
 
@@ -270,7 +259,7 @@ public sealed class TransactionService(
             cancellationToken);
         if (valuation.IsFailure)
         {
-            return Result<TransactionResponse>.FailureFrom(valuation);
+            return valuation.Error;
         }
 
         var (currency, reportingAmount) = valuation.Value;
@@ -283,7 +272,7 @@ public sealed class TransactionService(
             db.TransactionLines.RemoveRange(existingLines);
         }
 
-        mapper.UpdateEntity(request, transaction, currency, reportingAmount);
+        mapper.Apply(request, transaction, currency, reportingAmount);
 
         var lines = isSplit ? mapper.ToLines(transactionId, currentUser.Id, request.Lines!, currency) : [];
         if (isSplit)
@@ -293,7 +282,7 @@ public sealed class TransactionService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<TransactionResponse>.Success(mapper.FromEntity(transaction, lines));
+        return mapper.FromEntity(transaction, lines);
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
@@ -304,12 +293,12 @@ public sealed class TransactionService(
         var transactions = await db.Transactions.Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
         if (transactions.Count != ids.Count)
         {
-            return Result<int>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         if (transactions.Any(t => t.IsSplit))
         {
-            return Result<int>.Failure(ErrorCodes.TransactionSplitNotAllowed, "Split transactions cannot be bulk-recategorized.");
+            return new DomainError(ErrorCodes.TransactionSplitNotAllowed, "Split transactions cannot be bulk-recategorized.");
         }
 
         foreach (var type in transactions.Select(t => t.Type).Distinct())
@@ -317,7 +306,7 @@ public sealed class TransactionService(
             var categoryError = await ValidateCategoryAsync(request.CategoryId, type, cancellationToken);
             if (categoryError is not null)
             {
-                return Result<int>.Failure(categoryError);
+                return categoryError;
             }
         }
 
@@ -329,7 +318,7 @@ public sealed class TransactionService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<int>.Success(transactions.Count);
+        return transactions.Count;
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -338,7 +327,7 @@ public sealed class TransactionService(
         var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
         var lines = await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken);
@@ -350,7 +339,7 @@ public sealed class TransactionService(
         db.Transactions.Remove(transaction);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     private async Task<Result<(Currency Currency, decimal ReportingAmount)>> ValueAsync(
@@ -369,13 +358,13 @@ public sealed class TransactionService(
 
         if (currency != existing && rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<(Currency, decimal)>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
+            return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var reporting = await rates.ToReportingAsync(new Money(amount, currency), date, cancellationToken);
         return reporting.IsSuccess
-            ? Result<(Currency, decimal)>.Success((currency, reporting.Value))
-            : Result<(Currency, decimal)>.FailureFrom(reporting);
+            ? (currency, reporting.Value)
+            : reporting.Error;
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(
@@ -384,14 +373,8 @@ public sealed class TransactionService(
         FlowType type,
         CancellationToken cancellationToken)
     {
-        var typedAccountId = new AccountId(accountId);
-        var accountExists = await db.Accounts.AnyAsync(a => a.Id == typedAccountId, cancellationToken);
-        if (!accountExists)
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
-        }
-
-        return await ValidateCategoryAsync(categoryId, type, cancellationToken);
+        return await references.AccountExistsAsync(new AccountId(accountId), cancellationToken)
+            ?? await ValidateCategoryAsync(categoryId, type, cancellationToken);
     }
 
     private async Task<DomainError?> ValidateCategoryAsync(
@@ -404,16 +387,11 @@ public sealed class TransactionService(
             return null;
         }
 
-        var typedCategoryId = new CategoryId(id);
-        var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == typedCategoryId, cancellationToken);
-        if (category is null)
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
-        }
-
-        return category.Type != type
-            ? new DomainError(ErrorCodes.CategoryWrongType, "Category type does not match the transaction type.")
-            : null;
+        return await references.CategoryOfTypeAsync(
+            new CategoryId(id),
+            type,
+            "Category type does not match the transaction type.",
+            cancellationToken);
     }
 
     private async Task<DomainError?> ValidateLinesAsync(

@@ -1,5 +1,13 @@
 import { expect, userEvent, waitFor, within } from "storybook/test";
 
+export function first<T>(items: readonly T[]): T {
+  const [item] = items;
+  if (item === undefined) {
+    throw new Error("expected at least one match");
+  }
+  return item;
+}
+
 export async function chooseOption(trigger: HTMLElement, option: string | RegExp) {
   const body = within(document.body);
   await userEvent.click(trigger);

@@ -13,7 +13,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         var member = await CreateUserAsync();
         var household = await CreateHouseholdAsync(member);
         var account = await CreateAccountAsync(householdId: household);
-        var transaction = await CreateExpenseAsync(Client, account, "42.00");
+        var transaction = (await CreateTransactionAsync(Client, account, null, "expense", "42.00", "2026-09-01")).Id;
 
         using var memberClient = await LoginAsync(member);
         var memberAccounts = await memberClient.GetFromJsonAsync<List<IdDto>>("/api/accounts");
@@ -51,7 +51,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         using var memberClient = await LoginAsync(member);
         var household = await CreateHouseholdAsync(member);
         var account = await CreateAccountAsync("100.00", householdId: household);
-        var transaction = await CreateExpenseAsync(memberClient, account, "10.00");
+        var transaction = (await CreateTransactionAsync(memberClient, account, null, "expense", "10.00", "2026-09-01")).Id;
         var makePersonal = new { name = "Now personal", type = "checking", startingBalance = "100.00", scope = "personal" };
 
         var byMember = await memberClient.PutAsJsonAsync($"/api/accounts/{account}", makePersonal);
@@ -89,7 +89,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         using var memberClient = await LoginAsync(member);
         var household = await CreateHouseholdAsync(member);
         var shared = await CreateAccountAsync("100.00", householdId: household);
-        var transaction = await CreateExpenseAsync(memberClient, shared, "5.00");
+        var transaction = (await CreateTransactionAsync(memberClient, shared, null, "expense", "5.00", "2026-09-01")).Id;
 
         (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}")).EnsureSuccessStatusCode();
 
@@ -128,10 +128,4 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     private sealed record ScopeDto(Guid Id, string Scope, Guid? HouseholdId);
-
-    private static async Task<Guid> CreateExpenseAsync(HttpClient client, Guid accountId, string amount) =>
-        (await PostAsync<IdDto>(
-            client,
-            "/api/transactions",
-            new { accountId, type = "expense", amount, date = "2026-09-01" })).Id;
 }

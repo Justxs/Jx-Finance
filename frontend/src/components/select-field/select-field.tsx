@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select/select";
 import { cn } from "@/lib/utils";
 
 export interface SelectOption<T extends string = string> {
@@ -48,7 +48,12 @@ export function SelectField<T extends string>({
       <Select
         items={options}
         value={value}
-        onValueChange={(next) => onChange(next as T)}
+        onValueChange={(next) => {
+          const chosen = options.find((option) => option.value === next);
+          if (chosen) {
+            onChange(chosen.value);
+          }
+        }}
         disabled={disabled}
       >
         <SelectTrigger

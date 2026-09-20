@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "../button";
+import { Button } from "../button/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,24 +10,15 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogMedia,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "./alert-dialog";
 
 interface ExampleProps {
-  size?: "default" | "sm";
-  media?: boolean;
   long?: boolean;
   initiallyOpen?: boolean;
 }
 
-function AlertDialogExample({
-  size = "default",
-  media,
-  long,
-  initiallyOpen = true,
-}: Readonly<ExampleProps>) {
+function AlertDialogExample({ long, initiallyOpen = true }: Readonly<ExampleProps>) {
   const [open, setOpen] = useState(initiallyOpen);
 
   function handleConfirm() {
@@ -38,16 +28,11 @@ function AlertDialogExample({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger render={<Button variant="destructive" />}>
+      <Button variant="destructive" onClick={() => setOpen(true)}>
         Leave household
-      </AlertDialogTrigger>
-      <AlertDialogContent size={size}>
+      </Button>
+      <AlertDialogContent>
         <AlertDialogHeader>
-          {media ? (
-            <AlertDialogMedia>
-              <Trash2 />
-            </AlertDialogMedia>
-          ) : null}
           <AlertDialogTitle>
             {long
               ? "Leave the Kazlauskai family household and lose access to every shared account?"
@@ -81,9 +66,5 @@ type Story = StoryObj;
 export const Default: Story = { render: () => <AlertDialogExample /> };
 
 export const Closed: Story = { render: () => <AlertDialogExample initiallyOpen={false} /> };
-
-export const Small: Story = { render: () => <AlertDialogExample size="sm" /> };
-
-export const WithMedia: Story = { render: () => <AlertDialogExample media /> };
 
 export const LongContent: Story = { render: () => <AlertDialogExample long /> };

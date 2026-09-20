@@ -1,4 +1,6 @@
 import { expect, type Page, test } from "@playwright/test";
+import { z } from "zod";
+import { readJson } from "./support";
 
 const admin = {
   displayName: "E2E Admin",
@@ -66,14 +68,14 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
 }) => {
   await signIn(page);
   const accounts = await page.request.get("/api/accounts");
-  const account = ((await accounts.json()) as { id: string; name: string }[]).find(
-    (candidate) => candidate.name === "E2E checking",
-  );
+  const account = (
+    await readJson(accounts, z.array(z.object({ id: z.string(), name: z.string() })))
+  ).find((candidate) => candidate.name === "E2E checking");
   expect(account).toBeDefined();
   const categories = await page.request.get("/api/categories");
-  const category = ((await categories.json()) as { id: string; type: string }[]).find(
-    (candidate) => candidate.type === "expense",
-  );
+  const category = (
+    await readJson(categories, z.array(z.object({ id: z.string(), type: z.string() })))
+  ).find((candidate) => candidate.type === "expense");
   expect(category).toBeDefined();
 
   const created = await page.request.post("/api/transactions", {
@@ -92,9 +94,9 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
   await expect(page.getByRole("row", { name: /E2E smoke lunch/ })).toBeVisible();
 
   const refreshed = await page.request.get("/api/accounts");
-  const balance = ((await refreshed.json()) as { id: string; currentBalance: string }[]).find(
-    (candidate) => candidate.id === account?.id,
-  )?.currentBalance;
+  const balance = (
+    await readJson(refreshed, z.array(z.object({ id: z.string(), currentBalance: z.string() })))
+  ).find((candidate) => candidate.id === account?.id)?.currentBalance;
   expect(balance).toBe("987.50");
 });
 

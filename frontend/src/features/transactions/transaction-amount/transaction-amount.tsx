@@ -1,5 +1,5 @@
 import type { TransactionResponse } from "@/api/generated/model";
-import { ApproximateAmount } from "@/components/approximate-amount";
+import { ApproximateAmount } from "@/components/approximate-amount/approximate-amount";
 import { useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { isOptimistic } from "./transaction-row";

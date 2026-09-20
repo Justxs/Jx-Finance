@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, HoldingResponse, SecurityResponse } from "@/api/generated/model";
-import { ApproximateAmount } from "@/components/approximate-amount";
-import { Rows } from "@/components/ui/rows";
+import { ApproximateAmount } from "@/components/approximate-amount/approximate-amount";
+import { Rows } from "@/components/ui/rows/rows";
 import {
   Table,
   TableBody,
@@ -9,8 +9,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
+  ScrollRegion,
+} from "@/components/ui/table/table";
+import { Tag } from "@/components/ui/tag/tag";
 import {
   EMPTY_VALUE,
   useIsoDate,
@@ -137,12 +138,7 @@ export function PositionsTable({
 
   return (
     <>
-      <div
-        className="-mx-3 hidden overflow-x-auto lg:block"
-        role="region"
-        aria-label={label}
-        tabIndex={0}
-      >
+      <ScrollRegion className="-mx-3 hidden lg:block" aria-label={label}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -219,7 +215,7 @@ export function PositionsTable({
             })}
           </TableBody>
         </Table>
-      </div>
+      </ScrollRegion>
 
       <Rows className="lg:hidden" aria-label={label}>
         {holdings.map((holding) => {

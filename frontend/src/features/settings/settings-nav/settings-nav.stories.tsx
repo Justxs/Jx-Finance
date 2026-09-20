@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { SettingsNav, settingsSections } from "./settings-nav";
 
 const meta = {
   title: "Features/Settings/SettingsNav",
   component: SettingsNav,
   parameters: { route: "/settings" },
-  decorators: [
-    (Story) => (
-      <div className="w-[min(16rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(16rem,90vw)]")],
   args: { current: "general", sections: settingsSections },
 } satisfies Meta<typeof SettingsNav>;
 

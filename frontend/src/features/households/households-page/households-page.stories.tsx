@@ -5,8 +5,8 @@ import {
   getHouseholdsMockHandler,
 } from "@/api/generated/households/households.msw";
 import type { HouseholdResponse } from "@/api/generated/model";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   familyHousehold,
   gardenHousehold,
@@ -92,7 +92,9 @@ export const CreatesHousehold: Story = {
       await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
     const dialog = await body.findByRole("dialog");
-    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Summer house" } });
+    await fireEvent.change(within(dialog).getByRole("textbox"), {
+      target: { value: "Summer house" },
+    });
     await userEvent.click(
       within(dialog).getByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
@@ -114,7 +116,9 @@ export const CreateFails: Story = {
       await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
     const dialog = await within(document.body).findByRole("dialog");
-    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Kazlauskų šeima" } });
+    await fireEvent.change(within(dialog).getByRole("textbox"), {
+      target: { value: "Kazlauskų šeima" },
+    });
     await userEvent.click(
       within(dialog).getByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );

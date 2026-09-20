@@ -7,10 +7,10 @@ import {
   updateMyProfileBodyDisplayNameMax,
   updateMyProfileBodyNewPasswordMin,
 } from "@/api/schemas/users/users.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { silent } from "@/lib/mutations";
 import { requiredText } from "@/lib/validation";
 
 interface FormValues {
@@ -45,16 +45,15 @@ export function ProfileForm({ profile }: Readonly<Props>) {
       path: ["currentPassword"],
     });
 
-  const updateMutation = useUpdateMyProfile({
-    mutation: {
-      meta: { silent: true },
+  const updateMutation = useUpdateMyProfile(
+    silent({
       onSuccess: () => {
         toast.success(t("profile.updated"));
         form.setFieldValue("currentPassword", "");
         form.setFieldValue("newPassword", "");
       },
-    },
-  });
+    }),
+  );
 
   const defaultValues: FormValues = {
     displayName: profile.displayName ?? "",
@@ -62,36 +61,22 @@ export function ProfileForm({ profile }: Readonly<Props>) {
     newPassword: "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        updateMutation.mutateAsync({
-          data: {
-            displayName: value.displayName.trim(),
-            currentPassword: value.currentPassword || null,
-            newPassword: value.newPassword || null,
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      updateMutation.mutateAsync({
+        data: {
+          displayName: value.displayName.trim(),
+          currentPassword: value.currentPassword || null,
+          newPassword: value.newPassword || null,
+        },
+      }),
   });
 
   return (
     <form.AppForm>
-      <Section
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4 *:max-w-md"
-      >
+      <form.FormShell as={Section} className="space-y-4 *:max-w-md">
         <SectionTitle>{t("profile.detailsTitle")}</SectionTitle>
         <form.Field name="displayName">
           {(field) => <field.TextField id="profile-display-name" label={t("users.displayName")} />}
@@ -124,7 +109,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
             {t("profile.save")}
           </form.SubmitButton>
         </div>
-      </Section>
+      </form.FormShell>
     </form.AppForm>
   );
 }

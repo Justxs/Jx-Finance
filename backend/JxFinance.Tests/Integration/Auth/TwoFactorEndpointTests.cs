@@ -134,9 +134,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     private static Task<HttpResponseMessage> LoginAsync(HttpClient client, TestUser user, string? twoFactorCode = null) =>
-        client.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = user.Email, password = user.Password, rememberMe = false, twoFactorCode });
+        TryLoginAsync(client, user.Email, user.Password, twoFactorCode);
 
     private sealed record Enrollment(HttpClient Client, TestUser User, string SharedKey, List<string> RecoveryCodes);
 

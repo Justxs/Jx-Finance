@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Input } from "../input";
-import { Label } from "../label";
+import { withWidth } from "@/storybook/decorators";
+import { Input } from "../input/input";
+import { Label } from "../label/label";
 import { FieldError } from "./field-error";
 
 const meta = {
@@ -21,13 +22,7 @@ export const LongMessage: Story = {
     message:
       "The amount has to be a positive number with at most two decimal places and cannot exceed the remaining balance of the selected account.",
   },
-  decorators: [
-    (Story) => (
-      <div className="w-56">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-56")],
 };
 
 export const BelowInput: Story = {

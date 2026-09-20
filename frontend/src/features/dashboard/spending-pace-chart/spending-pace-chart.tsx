@@ -11,12 +11,13 @@ import {
 import { useReportSummarySuspense } from "@/api/generated";
 import type { ReportTrendPoint } from "@/api/generated/model";
 import {
-  axisTick,
+  axisProps,
   chartCursor,
   ChartLegend,
   type ChartSeries,
   ChartTooltip,
 } from "@/components/chart";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useAxisMoney } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
@@ -70,7 +71,7 @@ export function SpendingPaceChart() {
   }));
 
   if ((currentTotals.at(-1) ?? 0) === 0 && (previousTotals.at(-1) ?? 0) === 0) {
-    return <p className="py-6 text-sm text-muted-foreground">{t("dashboard.noSpending")}</p>;
+    return <EmptyText>{t("dashboard.noSpending")}</EmptyText>;
   }
 
   return (
@@ -86,18 +87,14 @@ export function SpendingPaceChart() {
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="day"
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               tickMargin={8}
               minTickGap={24}
               interval="preserveStartEnd"
             />
             <YAxis
               tickFormatter={(value) => axisMoney.format(Number(value))}
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               tickCount={5}
               width={56}
             />

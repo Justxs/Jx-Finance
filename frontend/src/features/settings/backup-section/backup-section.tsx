@@ -5,11 +5,12 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useBackupsSuspense, useDeleteBackup, useRestoreBackup } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { BackupNoteForm } from "./backup-note-form";
@@ -27,7 +28,6 @@ function BackupList() {
   const list = backups.data ?? [];
   const [editing, setEditing] = useState<BackupResponse | null>(null);
   const [restoring, setRestoring] = useState<BackupResponse | null>(null);
-  const [deleting, setDeleting] = useState<BackupResponse | null>(null);
 
   const deleteMutation = useDeleteBackup({
     mutation: {
@@ -37,6 +37,10 @@ function BackupList() {
     },
   });
 
+  const remove = useConfirmedDelete(deleteMutation, list, (backup) =>
+    formatDateTime(backup.createdAt),
+  );
+
   const restoreMutation = useRestoreBackup({
     mutation: {
       meta: { silent: true },
@@ -44,7 +48,7 @@ function BackupList() {
         toast.success(t("backup.restored", { date: formatDateTime(restored.createdAt) }));
         setAuthenticated(false);
         queryClient.clear();
-        navigate({ to: "/login" });
+        void navigate({ to: "/login" });
       },
     },
   });
@@ -72,16 +76,12 @@ function BackupList() {
           restoreMutation.reset();
           setRestoring(backup);
         }}
-        onDelete={setDeleting}
+        onDelete={(backup) => remove.request(backup.id)}
       />
 
       <Modal
         open={editing !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditing(null);
-          }
-        }}
+        onClose={() => setEditing(null)}
         title={t("backup.editNote")}
         description={editing ? formatDateTime(editing.createdAt) : undefined}
       >
@@ -112,12 +112,7 @@ function BackupList() {
         }}
       />
 
-      <ConfirmDeleteDialog
-        target={deleting}
-        itemLabel={deleting ? formatDateTime(deleting.createdAt) : undefined}
-        onCancel={() => setDeleting(null)}
-        onConfirm={(backup) => deleteMutation.mutate({ id: backup.id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </>
   );
 }

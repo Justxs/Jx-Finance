@@ -45,7 +45,7 @@ export const Pending: Story = { args: { pending: true } };
 export const DisabledWhileInvalid: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(canvas.getByLabelText("Name"), { target: { value: "" } });
+    await fireEvent.change(canvas.getByLabelText("Name"), { target: { value: "" } });
     await waitFor(() => expect(canvas.getByRole("button", { name: "Save" })).toBeDisabled());
   },
 };

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
@@ -44,7 +45,7 @@ public sealed class SettingsService(
                 .AnyAsync(a => a.Id == typedAccountId && !a.IsDeleted, cancellationToken);
             if (!exists)
             {
-                return Result<SettingsResponse>.Failure(ErrorCodes.ReferenceNotFound, "The default account does not exist.");
+                return new DomainError(ErrorCodes.ReferenceNotFound, "The default account does not exist.");
             }
         }
 
@@ -62,7 +63,7 @@ public sealed class SettingsService(
             var error = await RevalueAsync(request.ReportingCurrency, cancellationToken);
             if (error is not null)
             {
-                return Result<SettingsResponse>.Failure(ErrorCodes.ExchangeRateUnavailable, error);
+                return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
             }
         }
 
@@ -71,7 +72,7 @@ public sealed class SettingsService(
             .Distinct()
             .OrderBy(c => c.ToCode(), StringComparer.Ordinal);
 
-        settings.InstanceName = string.IsNullOrWhiteSpace(request.InstanceName) ? null : request.InstanceName.Trim();
+        settings.InstanceName = OptionalText.Normalize(request.InstanceName);
         settings.Features = request.Features;
         settings.ReportingCurrency = request.ReportingCurrency;
         settings.EnabledCurrencyCodes = string.Join(',', currencies.Select(c => c.ToCode()));
@@ -86,7 +87,7 @@ public sealed class SettingsService(
         await transaction.CommitAsync(cancellationToken);
         store.Set(settings);
 
-        return Result<SettingsResponse>.Success(await GetAsync(cancellationToken));
+        return await GetAsync(cancellationToken);
     }
 
     public async Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken)

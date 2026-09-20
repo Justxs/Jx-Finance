@@ -24,15 +24,15 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
         var food = await CreateCategoryAsync(client: client);
         var travel = await CreateCategoryAsync(client: client);
 
-        await RecordAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "10.00", date = "2026-04-02" });
-        await RecordAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "0.01", date = "2026-04-02" });
-        await RecordAsync(client, new { accountId = dollars, categoryId = food, type = "expense", amount = "11.00", date = "2026-04-03" });
-        await RecordAsync(client, new { accountId = pounds, categoryId = food, type = "expense", amount = "8.00", date = "2026-04-04" });
-        await RecordAsync(client, new { accountId = dollars, categoryId = travel, type = "expense", amount = "33.33", date = "2026-04-05" });
-        await RecordAsync(client, new { accountId = euros, type = "expense", amount = "5.55", date = "2026-04-06" });
-        await RecordAsync(client, new { accountId = euros, type = "income", amount = "100.00", date = "2026-04-06" });
-        await RecordAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "999.00", date = "2026-05-01" });
-        await RecordAsync(
+        await RecordTransactionAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "10.00", date = "2026-04-02" });
+        await RecordTransactionAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "0.01", date = "2026-04-02" });
+        await RecordTransactionAsync(client, new { accountId = dollars, categoryId = food, type = "expense", amount = "11.00", date = "2026-04-03" });
+        await RecordTransactionAsync(client, new { accountId = pounds, categoryId = food, type = "expense", amount = "8.00", date = "2026-04-04" });
+        await RecordTransactionAsync(client, new { accountId = dollars, categoryId = travel, type = "expense", amount = "33.33", date = "2026-04-05" });
+        await RecordTransactionAsync(client, new { accountId = euros, type = "expense", amount = "5.55", date = "2026-04-06" });
+        await RecordTransactionAsync(client, new { accountId = euros, type = "income", amount = "100.00", date = "2026-04-06" });
+        await RecordTransactionAsync(client, new { accountId = euros, categoryId = food, type = "expense", amount = "999.00", date = "2026-05-01" });
+        await RecordTransactionAsync(
             client,
             new
             {
@@ -93,7 +93,4 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
         attributions
             .GroupBy(a => a.CategoryId)
             .ToDictionary(g => g.Key?.Value ?? Guid.Empty, g => g.Sum(a => a.Amount));
-
-    private static Task RecordAsync(HttpClient client, object transaction) =>
-        PostAsync<IdDto>(client, "/api/transactions", transaction);
 }

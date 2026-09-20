@@ -6,7 +6,10 @@ import type { RouterContext } from "@/lib/route-prefetch";
 
 async function isFeatureEnabled(queryClient: QueryClient, feature: FeatureKey): Promise<boolean> {
   try {
-    const settings = await queryClient.ensureQueryData(settingsQueryOptions());
+    const settings = await queryClient.query({
+      ...settingsQueryOptions(),
+      staleTime: "static",
+    });
     return settings.features[feature];
   } catch {
     return true;

@@ -4,10 +4,11 @@ import { ApiError, customFetch } from "./client";
 const fetchMock = vi.fn<typeof fetch>();
 
 function json(body: unknown, init: ResponseInit = {}) {
-  return new Response(JSON.stringify(body), {
-    ...init,
-    headers: { "content-type": "application/json", ...init.headers },
-  });
+  const headers = new Headers(init.headers);
+  if (!headers.has("content-type")) {
+    headers.set("content-type", "application/json");
+  }
+  return new Response(JSON.stringify(body), { ...init, headers });
 }
 
 function calledUrls() {
@@ -18,12 +19,29 @@ function sentInit(call = 0) {
   return fetchMock.mock.calls[call]?.[1] ?? {};
 }
 
+function sentJson(call = 0): unknown {
+  const body = sentInit(call).body;
+  if (typeof body !== "string") {
+    throw new TypeError("expected a string body");
+  }
+  return JSON.parse(body);
+}
+
+function requestUrl(input: RequestInfo | URL): string {
+  if (typeof input === "string") {
+    return input;
+  }
+  return input instanceof URL ? input.href : input.url;
+}
+
 async function rejection(promise: Promise<unknown>): Promise<ApiError> {
   try {
     await promise;
   } catch (error) {
-    expect(error).toBeInstanceOf(ApiError);
-    return error as ApiError;
+    if (error instanceof ApiError) {
+      return error;
+    }
+    throw error;
   }
   throw new Error("expected the request to fail");
 }
@@ -72,7 +90,7 @@ describe("requests", () => {
     });
 
     expect(sentInit().headers).toEqual({ "Content-Type": "application/json" });
-    expect(JSON.parse(sentInit().body as string)).toEqual({
+    expect(sentJson()).toEqual({
       amount: "12.50",
       description: "1,5 kg",
       lines: [{ amount: "0.99", note: "a,b" }],
@@ -120,7 +138,7 @@ describe("session renewal", () => {
   test("concurrent 401s share one refresh", async () => {
     const attempts = new Map<string, number>();
     fetchMock.mockImplementation((input) => {
-      const url = String(input);
+      const url = requestUrl(input);
       if (url === "/api/auth/refresh") {
         return Promise.resolve(new Response(null, { status: 204 }));
       }

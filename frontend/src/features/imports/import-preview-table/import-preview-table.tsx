@@ -1,12 +1,20 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
-import { Pagination } from "@/components/pagination";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Rows } from "@/components/ui/rows";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Pagination } from "@/components/pagination/pagination";
+import { Button } from "@/components/ui/button/button";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow,
+  ScrollRegion,
+} from "@/components/ui/table/table";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { ImportRow } from "./import-row";
 import { ImportSummaryBar } from "./import-summary-bar";
 import {
@@ -45,7 +53,7 @@ export function ImportPreviewTable({
   const [page, setPage] = useState(1);
 
   if (rows.length === 0) {
-    return <p className="py-6 text-sm text-muted-foreground">{t("imports.noRows")}</p>;
+    return <EmptyText>{t("imports.noRows")}</EmptyText>;
   }
 
   const summary = summarizeSelection(rows);
@@ -100,12 +108,7 @@ export function ImportPreviewTable({
       </div>
 
       <div className="-mx-3 hidden md:block">
-        <div
-          className="overflow-x-auto"
-          role="region"
-          aria-label={t("imports.preview")}
-          tabIndex={0}
-        >
+        <ScrollRegion aria-label={t("imports.preview")}>
           <Table className="min-w-176">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
@@ -133,7 +136,7 @@ export function ImportPreviewTable({
               ))}
             </TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
       </div>
 
       <Pagination page={shownPage} pages={pages} onPageChange={setPage} />

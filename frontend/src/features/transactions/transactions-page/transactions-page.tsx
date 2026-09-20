@@ -18,32 +18,35 @@ import type {
   PagedResponseOfTransactionResponse,
   TransactionResponse,
 } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { PageHeader } from "@/components/page-header";
-import { Pagination } from "@/components/pagination";
-import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/section";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Pagination } from "@/components/pagination/pagination";
+import { Button } from "@/components/ui/button/button";
+import { Panel } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
+import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
+import { nameById } from "@/lib/options";
 import { normalizeMoney } from "@/lib/validation";
-import { SelectionToolbar } from "../selection-toolbar";
+import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
 import { optimisticId, transactionName } from "../transaction-amount";
 import type { TransactionFormValues } from "../transaction-form";
-import { TransactionFormSection } from "../transaction-form-section";
+import { TransactionFormSection } from "../transaction-form-section/transaction-form-section";
 import { transactionFilterParams, transactionListParams } from "../transaction-queries";
-import { TransactionsFiltersDialog } from "../transactions-filters-dialog";
-import { TransactionsList } from "../transactions-list";
+import { TransactionsFiltersDialog } from "../transactions-filters-dialog/transactions-filters-dialog";
+import { TransactionsList } from "../transactions-list/transactions-list";
 import {
   TransactionsTable,
   isSelectableTransaction,
   useTransactionColumns,
   useTransactionColumnHeaders,
 } from "../transactions-table";
-import { TransactionsToolbar } from "../transactions-toolbar";
-import { TransactionsTotals } from "../transactions-totals";
+import { TransactionsToolbar } from "../transactions-toolbar/transactions-toolbar";
+import { TransactionsTotals } from "../transactions-totals/transactions-totals";
 
 const NO_SELECTION: ReadonlySet<string> = new Set();
 
@@ -66,13 +69,12 @@ export function TransactionsPage() {
   const { page } = shown;
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const [selection, setSelection] = useState<SelectionState>({ viewKey, ids: NO_SELECTION });
   const selectedIds = selection.viewKey === viewKey ? selection.ids : NO_SELECTION;
 
   function setCreateOpen(open: boolean) {
     createMutation.reset();
-    navigate({
+    void navigate({
       search: (prev) => ({ ...prev, new: open ? true : undefined }),
       replace: !open,
     });
@@ -150,15 +152,14 @@ export function TransactionsPage() {
     },
   });
 
-  const updateMutation = useUpdateTransaction({
-    mutation: {
-      meta: { silent: true },
+  const updateMutation = useUpdateTransaction(
+    silent({
       onSuccess: () => {
         toast.success(t("transactions.updated"));
         setEditing(null);
       },
-    },
-  });
+    }),
+  );
 
   const deleteMutation = useDeleteTransaction({
     mutation: {
@@ -178,13 +179,23 @@ export function TransactionsPage() {
 
   const accountList = accounts.data;
   const categoryList = categories.data;
-  const accountNames = new Map(accountList.map((a) => [a.id, a.name]));
+  const accountNames = nameById(accountList);
   const categoryById = new Map(categoryList.map((c) => [c.id, c]));
 
   const items = transactions.data.items;
   const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);
   const selectedItems = items.filter((item) => selectedIds.has(item.id));
-  const deletingId = deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null;
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    items,
+    (item) =>
+      `${formatDate(item.date)} · ${transactionName(item, categoryById, t)} · ${money.formatSigned(
+        Number(item.amount),
+        item.type === "income" ? "+" : "−",
+        item.currency,
+      )}`,
+  );
+  const deletingId = remove.pendingId ?? null;
 
   function handleToggleRow(id: string, selected: boolean) {
     setSelection((previous) => {
@@ -207,18 +218,9 @@ export function TransactionsPage() {
     accountNames,
     categoryById,
     onEdit: startEditing,
-    onDelete: setDeleteTarget,
+    onDelete: remove.request,
     deletingId,
   });
-
-  const deleteItem = items.find((item) => item.id === deleteTarget);
-  const deleteLabel = deleteItem
-    ? `${formatDate(deleteItem.date)} · ${transactionName(deleteItem, categoryById, t)} · ${money.formatSigned(
-        Number(deleteItem.amount),
-        deleteItem.type === "income" ? "+" : "−",
-        deleteItem.currency,
-      )}`
-    : undefined;
 
   const total = transactions.data.total;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -232,11 +234,11 @@ export function TransactionsPage() {
     return true;
   }
 
-  function handleUpdate(values: TransactionFormValues) {
+  async function handleUpdate(values: TransactionFormValues) {
     if (!editing) {
       return;
     }
-    return updateMutation.mutateAsync({ id: editing.id, data: values });
+    await updateMutation.mutateAsync({ id: editing.id, data: values });
   }
 
   return (
@@ -327,7 +329,7 @@ export function TransactionsPage() {
             isPlaceholder={stale}
             filtered={columnHeaders.active}
             onEdit={startEditing}
-            onDelete={setDeleteTarget}
+            onDelete={remove.request}
             deletingId={deletingId}
           />
         </div>
@@ -339,12 +341,7 @@ export function TransactionsPage() {
         />
       </Panel>
 
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={deleteLabel}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
 }

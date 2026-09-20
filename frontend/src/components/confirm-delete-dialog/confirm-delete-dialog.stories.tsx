@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "../ui/button";
+import { Button } from "../ui/button/button";
 import { ConfirmDeleteDialog } from "./confirm-delete-dialog";
 
 interface Row {

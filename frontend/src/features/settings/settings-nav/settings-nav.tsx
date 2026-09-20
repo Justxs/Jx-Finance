@@ -10,7 +10,7 @@ import {
   ToggleRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { SectionNav } from "@/components/section-nav";
+import { SectionNav } from "@/components/section-nav/section-nav";
 import type { TranslationKey } from "@/lib/i18n";
 
 export const settingsSections = [

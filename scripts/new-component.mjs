@@ -28,8 +28,6 @@ if (existsSync(folder)) {
 }
 
 const files = {
-  "index.ts": `export * from "./${name}";
-`,
   [`${name}.tsx`]: `interface ${component}Props {
   title: string;
 }

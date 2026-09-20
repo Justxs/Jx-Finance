@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Button } from "../ui/button";
+import { withWidth } from "@/storybook/decorators";
+import { Button } from "../ui/button/button";
 import { PageHeader } from "./page-header";
 
 const meta = {
@@ -41,11 +42,5 @@ export const LongTitleManyActions: Story = {
 
 export const NarrowContainer: Story = {
   args: WithActions.args,
-  decorators: [
-    (Story) => (
-      <div className="w-64 border border-dashed p-2">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-64 border border-dashed p-2")],
 };

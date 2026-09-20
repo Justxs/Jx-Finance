@@ -3,8 +3,8 @@ import type { NotificationResponse } from "@/api/generated/model";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
 import { notifications } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
-import { QueryBoundary } from "../query-boundary";
-import { Skeleton } from "../ui/skeleton";
+import { QueryBoundary } from "../query-boundary/query-boundary";
+import { Skeleton } from "../ui/skeleton/skeleton";
 import { NotificationBell } from "./notification-bell";
 
 function notificationsHandler(items: NotificationResponse[]) {

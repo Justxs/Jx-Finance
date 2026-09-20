@@ -1,3 +1,5 @@
+import { toCents } from "@/lib/money";
+
 export const FIXTURE_TODAY = "2026-09-18";
 export const FIXTURE_MONTH = "2026-09";
 export const FIXTURE_MONTH_START = "2026-09-01";
@@ -8,10 +10,6 @@ export function uid(prefix: string, n: number): string {
   return `${prefix}-0000-4000-8000-${String(n).padStart(12, "0")}`;
 }
 
-export function toCents(amount: string): number {
-  return Math.round(Number(amount) * 100);
-}
-
 export function cycle<T>(items: readonly T[], index: number): T {
   const item = items[index % items.length];
   if (item === undefined) {
@@ -20,8 +18,15 @@ export function cycle<T>(items: readonly T[], index: number): T {
   return item;
 }
 
-export function fromCents(cents: number): string {
-  return (cents / 100).toFixed(2);
+export function many<T extends { id: string }>(
+  items: readonly T[],
+  count: number,
+  prefix = "00000000",
+): T[] {
+  return Array.from({ length: count }, (_, index) => ({
+    ...cycle(items, index),
+    id: uid(prefix, index),
+  }));
 }
 
 export const ids = {

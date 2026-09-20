@@ -1,4 +1,4 @@
-import { enUS, lt } from "date-fns/locale";
+import { enUS, lt } from "react-day-picker/locale";
 import { useTranslation } from "react-i18next";
 import { useCurrencies } from "@/api/generated";
 import { Currency } from "@/api/generated/model";
@@ -205,4 +205,35 @@ export function useMonthLabel() {
   return function monthLabel(date: Date) {
     return month.format(date);
   };
+}
+
+export function useShortMonth() {
+  const { i18n } = useTranslation();
+
+  return new Intl.DateTimeFormat(i18n.language, { month: "short", year: "numeric" });
+}
+
+export function useShortDay() {
+  const { i18n } = useTranslation();
+
+  return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" });
+}
+
+export function useAxisDateTick(shortSpan: boolean) {
+  const { i18n } = useTranslation();
+  const shortDay = useShortDay();
+  const tick = shortSpan
+    ? shortDay
+    : new Intl.DateTimeFormat(i18n.language, { month: "short", year: "2-digit" });
+
+  return function formatTick(value: string) {
+    const parsed = parseIso(value);
+    return parsed ? tick.format(parsed) : value;
+  };
+}
+
+export function useNumberFormat(maximumFractionDigits?: number) {
+  const { i18n } = useTranslation();
+
+  return new Intl.NumberFormat(i18n.language, { maximumFractionDigits });
 }

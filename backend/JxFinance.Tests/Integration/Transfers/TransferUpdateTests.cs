@@ -33,7 +33,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("100.00", await CurrentBalanceAsync(second, member));
         Assert.Equal("20.00", await CurrentBalanceAsync(third, member));
         Assert.Equal("30.00", await CurrentBalanceAsync(fourth, member));
-        var listed = await member.GetFromJsonAsync<PageDto>("/api/transfers?date=2026-08-15");
+        var listed = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-08-15");
         Assert.Equal(transfer.Id, Assert.Single(listed!.Items).Id);
     }
 
@@ -164,7 +164,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var destination = await CreateAccountAsync("100.00");
         var elsewhere = await CreateAccountAsync("0.00");
         await ConfirmImportAsync(source, new { importRef = "out-1", amount = "10.00", type = "expense", date = "2026-09-01", transferAccountId = destination });
-        var transfer = (await Client.GetFromJsonAsync<PageDto>("/api/transfers?pageSize=200"))!.Items.Single(t => t.FromAccountId == source);
+        var transfer = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200"))!.Items.Single(t => t.FromAccountId == source);
         Assert.Equal((true, false), (transfer.FromAccountImported, transfer.ToAccountImported));
 
         var newDate = await PutAsync(transfer.Id, source, destination, "10.00", "2026-09-02");
@@ -210,7 +210,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         form.Add(new StringContent(brokerage.ToString()), "accountId");
         form.Add(new StringContent(bank.ToString()), "fundingAccountId");
         (await Client.PostAsync("/api/investments/import/interactive-brokers", form)).EnsureSuccessStatusCode();
-        var deposit = (await Client.GetFromJsonAsync<PageDto>("/api/transfers?pageSize=200"))!.Items.Single(t => t.ToAccountId == brokerage);
+        var deposit = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200"))!.Items.Single(t => t.ToAccountId == brokerage);
         Assert.Equal((false, true), (deposit.FromAccountImported, deposit.ToAccountImported));
 
         var newAmount = await PutAsync(deposit.Id, bank, brokerage, "2500.00", "2026-06-01");
@@ -267,21 +267,6 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
     private Task<ConfirmDto> ConfirmImportAsync(Guid accountId, object row) =>
         PostAsync<ConfirmDto>(Client, "/api/import/swedbank/confirm", new { accountId, rows = new[] { row } });
-
-    private sealed record TransferDto(
-        Guid Id,
-        Guid FromAccountId,
-        Guid ToAccountId,
-        string Amount,
-        DateOnly Date,
-        string? Description,
-        string Currency,
-        string ReceivedAmount,
-        string ReceivedCurrency,
-        bool FromAccountImported,
-        bool ToAccountImported);
-
-    private sealed record PageDto(List<TransferDto> Items, int Total);
 
     private sealed record ConfirmDto(int Imported, int SkippedDuplicates);
 }

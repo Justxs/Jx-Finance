@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -10,10 +9,10 @@ import {
   resetUserPasswordBodyNewPasswordMin,
 } from "@/api/schemas/users/users.zod";
 import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Modal } from "@/components/modal";
-import { Button } from "@/components/ui/button";
+import { FormError } from "@/components/form-error/form-error";
+import { EditModal } from "@/components/modal";
 import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
+import { silent } from "@/lib/mutations";
 import { password, requiredValue } from "@/lib/validation";
 
 interface FormProps {
@@ -48,15 +47,14 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
     ),
   });
 
-  const resetMutation = useResetUserPassword({
-    mutation: {
-      meta: { silent: true },
+  const resetMutation = useResetUserPassword(
+    silent({
       onSuccess: () => {
         toast.success(t("users.resetPassword.done", { name }));
         onDone();
       },
-    },
-  });
+    }),
+  );
 
   const form = useAppForm({
     defaultValues: { newPassword: "", resetTwoFactor: false, currentPassword: "" },
@@ -76,15 +74,7 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <p className="text-sm text-muted-foreground">
           {t("users.resetPassword.consequences", { name })}
         </p>
@@ -131,51 +121,28 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
 
         <FormError error={resetMutation.error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={resetMutation.isPending}
-            onClick={onCancel}
-          >
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={resetMutation.isPending}>
-            {t("users.resetPassword.submit")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={resetMutation.isPending}
+          cancelDisabled={resetMutation.isPending}
+          submitLabel={t("users.resetPassword.submit")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }
 
 export function ResetPasswordDialog({ user, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [shownUser, setShownUser] = useState(user);
-
-  if (user !== null && user !== shownUser) {
-    setShownUser(user);
-  }
 
   return (
-    <Modal
-      open={user !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
+    <EditModal
+      item={user}
       title={t("users.resetPassword.title")}
-      description={shownUser ? userName(shownUser) : undefined}
+      description={userName}
+      onClose={onClose}
     >
-      {shownUser ? (
-        <ResetPasswordForm
-          key={shownUser.id}
-          user={shownUser}
-          onDone={onClose}
-          onCancel={onClose}
-        />
-      ) : null}
-    </Modal>
+      {(shown) => <ResetPasswordForm user={shown} onDone={onClose} onCancel={onClose} />}
+    </EditModal>
   );
 }

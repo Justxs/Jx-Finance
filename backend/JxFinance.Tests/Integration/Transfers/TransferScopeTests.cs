@@ -59,8 +59,8 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
             "/api/transfers",
             new { fromAccountId = personal, toAccountId = shared, amount = "20.00", date = "2026-09-01" });
 
-        var partnerList = await partnerClient.GetFromJsonAsync<PageDto>("/api/transfers?pageSize=200");
-        var strangerList = await stranger.GetFromJsonAsync<PageDto>("/api/transfers?pageSize=200");
+        var partnerList = await partnerClient.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        var strangerList = await stranger.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
 
         Assert.Contains(partnerList!.Items, t => t.Id == transfer.Id);
         Assert.DoesNotContain(strangerList!.Items, t => t.Id == transfer.Id);
@@ -134,12 +134,12 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
                 new { fromAccountId = from, toAccountId = to, amount = "1.00", date = $"2026-06-{day:00}" })).Id);
         }
 
-        var first = await member.GetFromJsonAsync<PageDto>("/api/transfers?page=1&pageSize=2");
-        var second = await member.GetFromJsonAsync<PageDto>("/api/transfers?page=2&pageSize=2");
-        var third = await member.GetFromJsonAsync<PageDto>("/api/transfers?page=3&pageSize=2");
-        var beyond = await member.GetFromJsonAsync<PageDto>("/api/transfers?page=4&pageSize=2");
-        var byDate = await member.GetFromJsonAsync<PageDto>("/api/transfers?date=2026-06-03");
-        var clamped = await member.GetFromJsonAsync<PageDto>("/api/transfers?page=0&pageSize=1000");
+        var first = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=2");
+        var second = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=2&pageSize=2");
+        var third = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=3&pageSize=2");
+        var beyond = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=4&pageSize=2");
+        var byDate = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-06-03");
+        var clamped = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=0&pageSize=1000");
 
         created.Reverse();
         Assert.Equal(created, first!.Items.Concat(second!.Items).Concat(third!.Items).Select(t => t.Id));
@@ -149,8 +149,4 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
         Assert.Equal(created[2], Assert.Single(byDate!.Items).Id);
         Assert.Equal((1, 200, 5), (clamped!.Page, clamped.PageSize, clamped.Items.Count));
     }
-
-    private sealed record TransferDto(Guid Id, string Currency, string ReceivedAmount, string ReceivedCurrency);
-
-    private sealed record PageDto(List<TransferDto> Items, int Page, int PageSize, int Total);
 }

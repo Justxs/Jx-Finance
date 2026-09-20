@@ -2,11 +2,11 @@ import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUpdateMemberRole } from "@/api/generated";
 import type { HouseholdMemberResponse } from "@/api/generated/model";
-import { RowTransition } from "@/components/row-transition";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { staleVariants } from "@/components/ui/stale-region";
-import { Tag } from "@/components/ui/tag";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { staleVariants } from "@/components/ui/stale-region/stale-region";
+import { Tag } from "@/components/ui/tag/tag";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -59,13 +59,11 @@ export function MemberRow({
             />
             <Button
               variant="ghost"
-              size="icon"
-              className="size-8"
+              size="icon-sm"
               pending={removePending}
               disabled={removeDisabled}
               onClick={onRemove}
               aria-label={`${t("actions.delete")}: ${member.displayName || member.email}`}
-              tooltip={`${t("actions.delete")}: ${member.displayName || member.email}`}
             >
               <Trash2 />
             </Button>

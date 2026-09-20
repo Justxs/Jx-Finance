@@ -3,7 +3,7 @@ import { useSyncExternalStore } from "react";
 import { z } from "zod";
 import { browserStorage } from "@/lib/browser-storage";
 
-export const PREFERENCES_STORAGE_KEY = "jx-preferences";
+const PREFERENCES_STORAGE_KEY = "jx-preferences";
 const ROW_ID = "browser";
 
 export const themes = ["light", "dark"] as const;
@@ -21,7 +21,7 @@ export const fonts = [
 export const textSizes = ["small", "default", "large"] as const;
 export const locales = ["en", "lt"] as const;
 
-export const preferencesSchema = z.object({
+const preferencesSchema = z.object({
   id: z.literal(ROW_ID),
   theme: z.enum(themes).optional().catch(undefined),
   palette: z.enum(palettes).catch("ledger"),

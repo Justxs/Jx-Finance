@@ -16,9 +16,7 @@ public sealed class SystemClock : IClock
 
     public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
 
-    public DateTimeOffset ToAppTime(DateTimeOffset instant) => TimeZoneInfo.ConvertTime(instant, TimeZone);
-
-    public DateOnly Today => DateOnly.FromDateTime(ToAppTime(UtcNow).DateTime);
+    public DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(UtcNow, TimeZone).DateTime);
 
     public DateTimeOffset StartOfDay(DateOnly date)
     {

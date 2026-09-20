@@ -21,12 +21,26 @@
     "playwright-report",
     "test-results"
   ],
+  "options": {
+    "typeAware": true
+  },
   "categories": {
     "correctness": "error",
     "suspicious": "error",
     "perf": "error"
   },
   "rules": {
+    "typescript/no-deprecated": "error",
+    "typescript/no-unsafe-type-assertion": "error",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-unnecessary-type-assertion": "error",
+    "typescript/no-base-to-string": "error",
+    "typescript/no-unnecessary-type-conversion": "error",
+    "typescript/no-misused-spread": "error",
+    "typescript/no-implied-eval": "error",
+    "typescript/consistent-return": "error",
+    "typescript/no-unnecessary-type-parameters": "error",
+    "typescript/no-unnecessary-type-arguments": "error",
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "eqeqeq": [

@@ -6,34 +6,20 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Accounts.CreateAccount;
 using JxFinance.Endpoints.Accounts.Shared;
-using JxFinance.Endpoints.Accounts.UpdateAccount;
 
 namespace JxFinance.Endpoints.Accounts.Mappers;
 
 [RegisterService<AccountMapper>(LifeTime.Singleton)]
 public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<CreateAccountRequest, AccountResponse, Account>
 {
-    public override Account ToEntity(CreateAccountRequest request) => new()
+    public override Account ToEntity(CreateAccountRequest request)
     {
-        Name = request.Name.Trim(),
-        Description = OptionalText.Normalize(request.Description),
-        Iban = Iban.Normalize(request.Iban),
-        Type = request.Type,
-        StartingBalance = new Money(request.StartingBalance!.Value, request.Currency ?? settings.Current.ReportingCurrency),
-        Scope = request.Scope,
-        HouseholdId = HouseholdFor(request.Scope, request.HouseholdId),
-    };
-
-    public void UpdateEntity(UpdateAccountRequest request, Account account)
-    {
-        account.Name = request.Name.Trim();
-        account.Description = OptionalText.Normalize(request.Description);
-        account.Iban = Iban.Normalize(request.Iban);
-        account.Type = request.Type;
-        account.StartingBalance = new Money(request.StartingBalance!.Value, request.Currency ?? account.Currency);
-        account.Scope = request.Scope;
-        account.HouseholdId = HouseholdFor(request.Scope, request.HouseholdId);
+        var account = new Account { Name = request.Name };
+        Apply(request, account, settings.Current.ReportingCurrency);
+        return account;
     }
+
+    public void Apply(IAccountInput input, Account account) => Apply(input, account, account.Currency);
 
     public AccountResponse FromEntity(Account account, AccountBalance balance) => new(
         account.Id.Value,
@@ -52,6 +38,17 @@ public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<Crea
             .ToList(),
         balance.Reporting.Amount,
         balance.Holdings.Amount);
+
+    private static void Apply(IAccountInput input, Account account, Currency fallbackCurrency)
+    {
+        account.Name = input.Name.Trim();
+        account.Description = OptionalText.Normalize(input.Description);
+        account.Iban = Iban.Normalize(input.Iban);
+        account.Type = input.Type;
+        account.StartingBalance = new Money(input.StartingBalance!.Value, input.Currency ?? fallbackCurrency);
+        account.Scope = input.Scope;
+        account.HouseholdId = HouseholdFor(input.Scope, input.HouseholdId);
+    }
 
     private static HouseholdId? HouseholdFor(Scope scope, Guid? householdId) =>
         scope == Scope.Shared ? new HouseholdId(householdId!.Value) : null;

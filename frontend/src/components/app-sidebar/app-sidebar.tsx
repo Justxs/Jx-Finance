@@ -19,16 +19,19 @@ import {
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
-import { Brand } from "@/components/brand";
-import { LanguageToggle } from "@/components/language-toggle";
-import { LogoutButton } from "@/components/logout-button";
-import { NotificationBell, NotificationBellUnavailable } from "@/components/notification-bell";
-import { QueryBoundary } from "@/components/query-boundary";
-import { ShortcutsHelp } from "@/components/shortcuts-help";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Brand } from "@/components/brand/brand";
+import { LanguageToggle } from "@/components/language-toggle/language-toggle";
+import { LogoutButton } from "@/components/logout-button/logout-button";
+import {
+  NotificationBell,
+  NotificationBellUnavailable,
+} from "@/components/notification-bell/notification-bell";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
+import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
+import { Button } from "@/components/ui/button/button";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useSettings } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
@@ -158,7 +161,6 @@ export function AppSidebar() {
           className={collapsed ? undefined : "ml-auto"}
           onClick={toggleSidebar}
           aria-label={t(collapsed ? "nav.expand" : "nav.collapse")}
-          tooltip={t(collapsed ? "nav.expand" : "nav.collapse")}
         >
           {collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
         </Button>

@@ -1,6 +1,6 @@
-import { Rows } from "@/components/ui/rows";
-import { Panel } from "@/components/ui/section";
-import { SplitColumns } from "@/components/ui/split-columns";
+import { Rows } from "@/components/ui/rows/rows";
+import { Panel } from "@/components/ui/section/section";
+import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {

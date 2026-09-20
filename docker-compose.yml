@@ -30,7 +30,6 @@ services:
       context: .
       dockerfile: backend/JxFinance.Api/Dockerfile
     environment:
-      ASPNETCORE_URLS: http://+:8080
       App__DataProtectionDirectory: /keys
       App__BackupDirectory: /backups
     env_file:

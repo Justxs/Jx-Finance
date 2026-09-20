@@ -70,7 +70,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
 
-        var page = await Client.GetFromJsonAsync<PagedDto<TransactionDto>>(
+        var page = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
             $"/api/transactions?accountId={account}&page=1&pageSize=2");
 
         Assert.Equal(3, page!.Total);
@@ -196,17 +196,4 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         var pdf = await response.Content.ReadAsByteArrayAsync();
         Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
     }
-
-    private sealed record TransactionDto(
-        Guid Id,
-        Guid AccountId,
-        Guid? CategoryId,
-        string Type,
-        string Amount,
-        DateOnly Date,
-        string? Description,
-        string Source,
-        bool IsSplit);
-
-    private sealed record PagedDto<T>(List<T> Items, int Page, int PageSize, int Total);
 }

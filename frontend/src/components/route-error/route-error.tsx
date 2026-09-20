@@ -1,9 +1,9 @@
 import { useRouter } from "@tanstack/react-router";
 import { RotateCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { BrandMark } from "@/components/brand";
-import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/brand/brand";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Button } from "@/components/ui/button/button";
 
 interface Props {
   title?: string;

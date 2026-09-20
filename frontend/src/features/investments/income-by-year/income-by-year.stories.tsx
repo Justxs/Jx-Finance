@@ -1,16 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { portfolio } from "@/storybook/investment-fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { portfolio } from "@/storybook/fixtures";
 import { IncomeByYear } from "./income-by-year";
 
 const meta = {
   title: "Features/Investments/IncomeByYear",
   component: IncomeByYear,
   args: { years: portfolio.years, currency: portfolio.reportingCurrency },
-  render: (args) => (
-    <div className="w-[min(48rem,calc(100vw-3rem))]">
-      <IncomeByYear {...args} />
-    </div>
-  ),
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof IncomeByYear>;
 
 export default meta;

@@ -4,7 +4,6 @@ import { useAppForm } from "@/components/form";
 import { categories, splitTransactionLines } from "@/storybook/fixtures";
 import type { LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
-import type { TransactionFormApi } from "./transaction-form";
 
 interface HarnessProps {
   type?: FlowType;
@@ -48,7 +47,11 @@ function SplitLinesHarness({
 
   return (
     <div className="w-[min(42rem,90vw)]">
-      <SplitLinesEditor form={form as unknown as TransactionFormApi} categories={categoryList} />
+      <SplitLinesEditor
+        form={form}
+        fields={{ type: "type", isSplit: "isSplit", lines: "lines" }}
+        categories={categoryList}
+      />
     </div>
   );
 }

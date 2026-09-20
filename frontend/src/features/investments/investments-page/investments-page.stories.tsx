@@ -1,29 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { getPortfolioMockHandler } from "@/api/generated/investments/investments.msw";
-import { brokerAccount } from "@/storybook/fixtures";
+import { withPageFrame } from "@/storybook/decorators";
+import { brokerAccount, incompletePortfolio } from "@/storybook/fixtures";
 import {
   errorHandlers,
   handlers,
   investmentsEmptyHandlers,
   loadingHandlers,
 } from "@/storybook/handlers";
-import { incompletePortfolio } from "@/storybook/investment-fixtures";
 import { InvestmentsPage } from "./investments-page";
-
-function InvestmentsPageStory() {
-  return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <InvestmentsPage />
-    </div>
-  );
-}
 
 const meta = {
   title: "Features/Investments/InvestmentsPage",
   component: InvestmentsPage,
   parameters: { layout: "fullscreen", route: "/investments" },
-  render: () => <InvestmentsPageStory />,
+  decorators: [withPageFrame],
 } satisfies Meta<typeof InvestmentsPage>;
 
 export default meta;

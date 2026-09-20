@@ -4,13 +4,13 @@ import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
-import { Rows } from "@/components/ui/rows";
-import { StaleRegion, staleVariants } from "@/components/ui/stale-region";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { SortableTableHead } from "@/components/ui/column-header/column-header";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { StaleRegion, staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -18,22 +18,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
+  TableEmptyRow,
+  ScrollRegion,
+} from "@/components/ui/table/table";
+import { Tag } from "@/components/ui/tag/tag";
 import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatters";
+import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
+import { nameById } from "@/lib/options";
 import { cn } from "@/lib/utils";
-import { AccountForm, type AccountFormValues } from "../account-form";
 import { accountTypes } from "../account-types";
 
 interface Props {
   accounts: AccountResponse[];
   stale: boolean;
-  editingId: string | null;
   onEdit: (id: string) => void;
-  onCancelEdit: () => void;
-  updatePending: boolean;
-  onUpdate: (id: string, values: AccountFormValues) => Promise<unknown> | void;
   deletingId: string | null;
   onDelete: (id: string) => void;
   onConvert?: (id: string) => void;
@@ -49,11 +48,7 @@ function balanceClass(account: AccountResponse) {
 export function AccountsTable({
   accounts,
   stale,
-  editingId,
   onEdit,
-  onCancelEdit,
-  updatePending,
-  onUpdate,
   deletingId,
   onDelete,
   onConvert,
@@ -64,20 +59,14 @@ export function AccountsTable({
   const search = useSearch({ from: "/accounts" });
   const navigate = useNavigate({ from: "/accounts" });
 
-  function setFilter(patch: Partial<typeof search>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
-  }
-
-  function toggleSort(sort: NonNullable<typeof search.sort>) {
-    const direction = nextSortDirection(sort, search.sort, search.direction);
-    navigate({ search: (prev) => ({ ...prev, sort, direction }) });
-  }
+  const table = useSearchTable(search, (patch) =>
+    navigate({ search: (prev) => ({ ...prev, ...patch }) }),
+  );
+  const { setFilter } = table;
 
   const filtered = Boolean(search.search) || Boolean(search.iban) || Boolean(search.type);
   const canConvert = useUsableCurrencies().length >= 2;
-  const householdNames = new Map(households.data.map((h) => [h.id, h.name]));
-
-  const editingAccount = accounts.find((account) => account.id === editingId);
+  const householdNames = nameById(households.data);
 
   function balanceLines(account: AccountResponse) {
     return (
@@ -107,35 +96,29 @@ export function AccountsTable({
         {onConvert ? (
           <Button
             variant="ghost"
-            size="icon"
-            className="size-8"
+            size="icon-sm"
             disabled={!canConvert}
             onClick={() => onConvert(account.id)}
             aria-label={`${t("conversions.add")}: ${account.name}`}
-            tooltip={`${t("conversions.add")}: ${account.name}`}
           >
             <ArrowLeftRight />
           </Button>
         ) : null}
         <Button
           variant="ghost"
-          size="icon"
-          className="size-8"
+          size="icon-sm"
           onClick={() => onEdit(account.id)}
           aria-label={`${t("actions.edit")}: ${account.name}`}
-          tooltip={`${t("actions.edit")}: ${account.name}`}
         >
           <Pencil />
         </Button>
         <Button
           variant="ghost"
-          size="icon"
-          className="size-8"
+          size="icon-sm"
           pending={deletingId === account.id}
           disabled={deletingId !== null}
           onClick={() => onDelete(account.id)}
           aria-label={`${t("actions.archive")}: ${account.name}`}
-          tooltip={`${t("actions.archive")}: ${account.name}`}
         >
           <Archive />
         </Button>
@@ -146,11 +129,9 @@ export function AccountsTable({
   let body: ReactNode;
   if (accounts.length === 0) {
     body = (
-      <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={6} className="py-6 whitespace-normal text-muted-foreground">
-          {filtered ? t("filters.noMatches") : t("accounts.empty")}
-        </TableCell>
-      </TableRow>
+      <TableEmptyRow colSpan={6} filtered={filtered}>
+        {t("accounts.empty")}
+      </TableEmptyRow>
     );
   } else {
     body = accounts.map((account) => (
@@ -200,9 +181,7 @@ export function AccountsTable({
     <>
       <StaleRegion stale={stale} className="md:hidden">
         {accounts.length === 0 ? (
-          <p className="py-6 text-sm text-muted-foreground">
-            {filtered ? t("filters.noMatches") : t("accounts.empty")}
-          </p>
+          <EmptyText filtered={filtered}>{t("accounts.empty")}</EmptyText>
         ) : (
           <Rows aria-label={t("accounts.title")}>
             {accounts.map((account) => {
@@ -240,21 +219,13 @@ export function AccountsTable({
       </StaleRegion>
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
-          <div
-            className="overflow-x-auto"
-            role="region"
-            aria-label={t("accounts.title")}
-            tabIndex={0}
-          >
+          <ScrollRegion aria-label={t("accounts.title")}>
             <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead
                     label={t("accounts.name")}
-                    sortKey="name"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("name")}
                     filter={
                       <TextColumnFilter
                         label={t("accounts.name")}
@@ -266,10 +237,7 @@ export function AccountsTable({
                   />
                   <SortableTableHead
                     label={t("accounts.iban")}
-                    sortKey="iban"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("iban")}
                     filter={
                       <TextColumnFilter
                         label={t("accounts.iban")}
@@ -281,10 +249,7 @@ export function AccountsTable({
                   />
                   <SortableTableHead
                     label={t("accounts.type")}
-                    sortKey="type"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("type")}
                     filter={
                       <ColumnFilter
                         label={t("accounts.type")}
@@ -309,18 +274,12 @@ export function AccountsTable({
                   <SortableTableHead
                     className="hidden text-right xl:table-cell"
                     label={t("accounts.startingBalance")}
-                    sortKey="startingBalance"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("startingBalance")}
                   />
                   <SortableTableHead
                     className="text-right"
                     label={t("accounts.currentBalance")}
-                    sortKey="currentBalance"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("currentBalance")}
                   />
                   <TableHead>
                     <span className="sr-only">{t("common.actions")}</span>
@@ -329,27 +288,9 @@ export function AccountsTable({
               </TableHeader>
               <TableBody>{body}</TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
         </ViewTransition>
       </section>
-      <Modal
-        open={Boolean(editingAccount)}
-        onOpenChange={(open) => {
-          if (!open) {
-            onCancelEdit();
-          }
-        }}
-        title={t("actions.edit")}
-      >
-        {editingAccount ? (
-          <AccountForm
-            initial={editingAccount}
-            pending={updatePending}
-            onSubmit={(values) => onUpdate(editingAccount.id, values)}
-            onCancel={onCancelEdit}
-          />
-        ) : null}
-      </Modal>
     </>
   );
 }

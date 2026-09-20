@@ -23,31 +23,21 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         GetTransfersRequest request,
         CancellationToken cancellationToken)
     {
-        var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 200);
-
         var query = db.Transfers.AsQueryable();
         if (request.Date is { } date) query = query.Where(t => t.Date == date);
-        var total = await query.CountAsync(cancellationToken);
-        var items = await query
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+        var page = await query.ToPageAsync(
+            request,
+            sorted => sorted.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt),
+            cancellationToken);
 
-        var ids = items.Select(t => t.Id).ToList();
+        var ids = page.Items.Select(t => t.Id).ToList();
         var receipts = (await db.TransferImports
                 .Where(r => ids.Contains(r.TransferId))
                 .Select(r => new { r.TransferId, r.AccountId })
                 .ToListAsync(cancellationToken))
             .ToLookup(r => r.TransferId, r => r.AccountId);
 
-        return new PagedResponse<TransferResponse>(
-            items.Select(t => mapper.FromEntity(t, receipts[t.Id].ToList())).ToList(),
-            page,
-            pageSize,
-            total);
+        return page.Map(t => mapper.FromEntity(t, receipts[t.Id].ToList()));
     }
 
     public async Task<Result<TransferResponse>> CreateAsync(
@@ -64,7 +54,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var amounts = await ResolveAmountsAsync(draft, [], cancellationToken);
         if (amounts.IsFailure)
         {
-            return Result<TransferResponse>.FailureFrom(amounts);
+            return amounts.Error;
         }
 
         var transfer = mapper.ToEntity(request, amounts.Value.Sent, amounts.Value.Received);
@@ -72,7 +62,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         db.Transfers.Add(transfer);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<TransferResponse>.Success(mapper.FromEntity(transfer));
+        return mapper.FromEntity(transfer);
     }
 
     public async Task<Result<TransferResponse>> UpdateAsync(
@@ -83,12 +73,12 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var transfer = await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken);
         if (transfer is null)
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.ResourceNotFound, "Transfer not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transfer not found.");
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
+            return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
         }
 
         var draft = new TransferDraft(
@@ -104,7 +94,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
             cancellationToken);
         if (amounts.IsFailure)
         {
-            return Result<TransferResponse>.FailureFrom(amounts);
+            return amounts.Error;
         }
 
         var (sent, received) = amounts.Value;
@@ -114,7 +104,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
             .ToListAsync(cancellationToken);
         if (LockedChange(transfer, draft, request.Date, sent, received, receiptAccounts) is { } locked)
         {
-            return Result<TransferResponse>.Failure(ErrorCodes.ValueLocked, locked);
+            return new DomainError(ErrorCodes.ValueLocked, locked);
         }
 
         transfer.FromAccountId = draft.FromAccountId;
@@ -125,7 +115,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         transfer.Description = OptionalText.Normalize(request.Description);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<TransferResponse>.Success(mapper.FromEntity(transfer, receiptAccounts));
+        return mapper.FromEntity(transfer, receiptAccounts);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -134,18 +124,18 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var transfer = await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken);
         if (transfer is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Transfer not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Transfer not found.");
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))
         {
-            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
+            return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
         }
 
         db.Transfers.Remove(transfer);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     private static string? LockedChange(
@@ -199,19 +189,19 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
             .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
         if (!currencies.TryGetValue(draft.FromAccountId, out var fromCurrency))
         {
-            return Result<(Money, Money)>.Failure(ErrorCodes.ReferenceNotFound, "Source account does not exist.");
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Source account does not exist.");
         }
 
         if (!currencies.TryGetValue(draft.ToAccountId, out var toCurrency))
         {
-            return Result<(Money, Money)>.Failure(ErrorCodes.ReferenceNotFound, "Destination account does not exist.");
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Destination account does not exist.");
         }
 
         var sent = new Money(draft.Amount, draft.Currency ?? fromCurrency);
         var receivedCurrency = draft.ReceivedCurrency ?? (draft.Currency is null ? toCurrency : sent.Currency);
         if (receivedCurrency != sent.Currency && draft.ReceivedAmount is null)
         {
-            return Result<(Money, Money)>.Failure(
+            return new DomainError(
                 ErrorCodes.TransferReceivedAmountRequired,
                 "A transfer between currencies needs the received amount.");
         }
@@ -219,7 +209,7 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var received = draft.ReceivedAmount is { } receivedAmount ? new Money(receivedAmount, receivedCurrency) : sent;
         if (received.Currency == sent.Currency && received.Amount != sent.Amount)
         {
-            return Result<(Money, Money)>.Failure(
+            return new DomainError(
                 ErrorCodes.TransferAmountMismatch,
                 "Sent and received amounts must match when the currency is the same.");
         }
@@ -227,10 +217,10 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         var newCurrencies = new[] { sent.Currency, received.Currency }.Except(currenciesInUse).ToArray();
         if (rates.UnusableReason(newCurrencies) is { } currencyError)
         {
-            return Result<(Money, Money)>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
+            return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
-        return Result<(Money, Money)>.Success((sent, received));
+        return (sent, received);
     }
 
     private sealed record TransferDraft(

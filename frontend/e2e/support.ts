@@ -11,6 +11,7 @@ import {
   test as base,
   expect,
 } from "@playwright/test";
+import { z } from "zod";
 
 export const admin = {
   displayName: "E2E Admin",
@@ -60,13 +61,19 @@ export async function newVisitor(browser: Browser, testInfo: TestInfo, salt: str
   });
 }
 
-interface Created {
-  id: string;
+type JsonResponse = Awaited<ReturnType<APIRequestContext["get"]>>;
+
+export async function readJson<T>(response: JsonResponse, schema: z.ZodType<T>): Promise<T> {
+  return schema.parse(await response.json());
 }
 
-async function created(response: Awaited<ReturnType<APIRequestContext["post"]>>) {
+const createdBody = z.object({ id: z.string() });
+
+const settingsBody = z.looseObject({ features: z.record(z.string(), z.boolean()) });
+
+async function created(response: JsonResponse) {
   expect(response.status(), await response.text()).toBe(201);
-  return ((await response.json()) as Created).id;
+  return (await readJson(response, createdBody)).id;
 }
 
 export async function createAccount(
@@ -101,9 +108,7 @@ export async function createMember(request: APIRequestContext, email: string, pa
 export async function setFeature(request: APIRequestContext, feature: string, enabled: boolean) {
   const current = await request.get("/api/settings");
   expect(current.ok()).toBe(true);
-  const settings = (await current.json()) as Record<string, unknown> & {
-    features: Record<string, boolean>;
-  };
+  const settings = await readJson(current, settingsBody);
   const updated = await request.put("/api/settings", {
     data: {
       instanceName: settings.instanceName,

@@ -3,13 +3,14 @@ import { ErrorCode } from "@/api/generated/model";
 import en from "@/locales/en/common.json";
 import lt from "@/locales/lt/common.json";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 function lookup(tree: unknown, code: string): unknown {
   let node = tree;
   for (const part of code.split(".")) {
-    node =
-      typeof node === "object" && node !== null
-        ? (node as Record<string, unknown>)[part]
-        : undefined;
+    node = isRecord(node) ? node[part] : undefined;
   }
   return node;
 }

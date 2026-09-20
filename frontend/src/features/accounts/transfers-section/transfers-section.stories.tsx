@@ -4,9 +4,9 @@ import {
   getCreateTransferMockHandler,
   getTransfersMockHandler,
 } from "@/api/generated/transfers/transfers.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { accounts, ids, transfers, cycle } from "@/storybook/fixtures";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { accounts, ids, transfers, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -14,12 +14,11 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { first, openedDialog } from "@/storybook/interactions";
 import { TransfersSection } from "./transfers-section";
 
-const manyTransfers = Array.from({ length: 34 }, (_, index) => ({
-  ...cycle(transfers, index),
-  id: `99999999-0000-4000-8000-${String(index).padStart(12, "0")}`,
+const manyTransfers = many(transfers, 34, "99999999").map((item, index) => ({
+  ...item,
   fromAccountId: ids.accounts.checking,
   toAccountId: ids.accounts.savings,
   amount: `${(index + 1) * 25}.00`,
@@ -76,12 +75,12 @@ export const EditsTransfer: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const [edit] = await canvas.findAllByRole("button", { name: /^Edit: .*Taupomoji/u });
-    await userEvent.click(edit as HTMLElement);
+    const edit = first(await canvas.findAllByRole("button", { name: /^Edit: .*Taupomoji/u }));
+    await userEvent.click(edit);
 
     const dialog = within(await openedDialog());
     await expect(dialog.getByLabelText("Description")).toHaveValue("Mėnesio taupymas");
-    fireEvent.change(dialog.getByLabelText("Description"), { target: { value: "Taupymas" } });
+    await fireEvent.change(dialog.getByLabelText("Description"), { target: { value: "Taupymas" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());

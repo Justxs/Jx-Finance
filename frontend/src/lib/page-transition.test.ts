@@ -1,14 +1,13 @@
 import { expect, test } from "vitest";
-import { pageViewTransition } from "./page-transition";
-
-type TypesResolver = (info: { fromLocation?: object; pathChanged: boolean }) => string[] | false;
+import { pageTransitionTypes, pageViewTransition } from "./page-transition";
 
 function resolveTypes(pathChanged: boolean, fromLocation: object | undefined) {
-  if (typeof pageViewTransition !== "object" || typeof pageViewTransition.types !== "function") {
-    throw new TypeError("expected a view transition types resolver");
-  }
-  return (pageViewTransition.types as unknown as TypesResolver)({ fromLocation, pathChanged });
+  return pageTransitionTypes({ fromLocation, pathChanged });
 }
+
+test("the router option resolves types with the page resolver", () => {
+  expect(pageViewTransition).toEqual({ types: pageTransitionTypes });
+});
 
 test("page changes animate and search-only changes do not", () => {
   expect(resolveTypes(true, {})).toEqual(["page"]);

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
+import { withWidth } from "@/storybook/decorators";
 import { openedDialog } from "@/storybook/interactions";
 import { type HoldingFormProps, type HoldingItem, HoldingsSection } from "./holdings-section";
 
@@ -54,15 +55,7 @@ const meta = {
     onDelete: fn(),
     form: StubForm,
   },
-  decorators: [
-    function withSectionWidth(Story) {
-      return (
-        <div className="w-[min(48rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof HoldingsSection>;
 
 export default meta;

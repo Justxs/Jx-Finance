@@ -1,8 +1,9 @@
 using System.Text.Json;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.Backups;
 
-public sealed class BackupStore(IConfiguration configuration, IHostEnvironment environment)
+public sealed class BackupStore(IConfiguration configuration, IHostEnvironment environment, IClock clock)
 {
     private const string DataSuffix = ".json.gz";
     private const string InfoSuffix = ".info.json";
@@ -105,7 +106,7 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
     {
         if (!Directory.Exists(directory)) return 0;
 
-        var cutoff = DateTime.UtcNow - OrphanAge;
+        var cutoff = clock.UtcNow.UtcDateTime - OrphanAge;
         var orphans = Directory.EnumerateFiles(directory, $"*{TemporarySuffix}")
             .Concat(Directory.EnumerateFiles(directory, $"*{DataSuffix}")
                 .Where(data => !File.Exists(string.Concat(data.AsSpan(0, data.Length - DataSuffix.Length), InfoSuffix))))

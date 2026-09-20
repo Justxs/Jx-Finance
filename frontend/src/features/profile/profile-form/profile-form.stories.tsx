@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getUpdateMyProfileMockHandler } from "@/api/generated/users/users.msw";
+import { withWidth } from "@/storybook/decorators";
 import { currentUser, longNameUser, validationProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { ProfileForm } from "./profile-form";
@@ -9,11 +10,7 @@ const meta = {
   component: ProfileForm,
   parameters: { route: "/profile" },
   args: { profile: currentUser },
-  render: (args) => (
-    <div className="w-[28rem] max-w-full">
-      <ProfileForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[28rem] max-w-full")],
 } satisfies Meta<typeof ProfileForm>;
 
 export default meta;
@@ -26,11 +23,7 @@ export const LongDisplayName: Story = { args: { profile: longNameUser } };
 export const MissingDisplayName: Story = { args: { profile: { ...currentUser, displayName: "" } } };
 
 export const Narrow: Story = {
-  render: (args) => (
-    <div className="w-72">
-      <ProfileForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("field")],
 };
 
 export const WrongPasswordAfterSubmit: Story = {

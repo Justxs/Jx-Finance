@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
+import { withWidth } from "@/storybook/decorators";
 import { handlers, pending } from "@/storybook/handlers";
 import { DebtForm } from "./debt-form";
 
@@ -8,15 +9,7 @@ const meta = {
   title: "Features/NetWorth/DebtForm",
   component: DebtForm,
   args: { onCreated: fn(), onCancel: fn() },
-  decorators: [
-    function withFormWidth(Story) {
-      return (
-        <div className="w-[min(36rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
 } satisfies Meta<typeof DebtForm>;
 
 export default meta;
@@ -53,9 +46,9 @@ export const SubmitPending: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const fields = canvas.getAllByRole("textbox");
-    fireEvent.change(fields[0]!, { target: { value: "Mortgage (Swedbank)" } });
-    fireEvent.change(fields[1]!, { target: { value: "98450.32" } });
-    fireEvent.change(fields[2]!, { target: { value: "3.85" } });
+    await fireEvent.change(fields[0]!, { target: { value: "Mortgage (Swedbank)" } });
+    await fireEvent.change(fields[1]!, { target: { value: "98450.32" } });
+    await fireEvent.change(fields[2]!, { target: { value: "3.85" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
   },
 };

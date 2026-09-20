@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Checkbox } from "@/components/ui/checkbox";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
-import { Tooltip } from "@/components/ui/tooltip";
+import { SelectField } from "@/components/select-field/select-field";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { TableCell, TableRow } from "@/components/ui/table/table";
+import { Tag } from "@/components/ui/tag/tag";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
 import { ImportTransferPicker } from "./import-transfer-picker";
 import type { PreviewRowState } from "./preview-rows";
@@ -68,10 +69,7 @@ export function ImportRow({
       disabled={Boolean(row.transferAccountId)}
       value={row.categoryId}
       onChange={(categoryId) => onRowChange(index, { categoryId, categorySuggested: false })}
-      options={[
-        { value: "", label: t("transactions.uncategorized") },
-        ...rowCategories.map((item) => ({ value: item.id, label: item.name })),
-      ]}
+      options={namedOptions(rowCategories, t("transactions.uncategorized"))}
     />
   );
 

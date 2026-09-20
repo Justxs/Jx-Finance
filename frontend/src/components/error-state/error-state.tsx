@@ -1,6 +1,6 @@
 import { CircleAlert, RotateCw } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
 
 interface Props {

@@ -18,13 +18,13 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
 
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await AssertProblemAsync(await LoginAsync(client, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
+            await AssertProblemAsync(await TryLoginAsync(client, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
         }
 
-        await AssertProblemAsync(await LoginAsync(client, user.Email, WrongPassword), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
+        await AssertProblemAsync(await TryLoginAsync(client, user.Email, WrongPassword), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
 
         using var other = CreateClient();
-        await AssertProblemAsync(await LoginAsync(other, user.Email, user.Password), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
+        await AssertProblemAsync(await TryLoginAsync(other, user.Email, user.Password), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
     }
 
     [Fact]
@@ -35,15 +35,15 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
 
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await LoginAsync(client, user.Email, WrongPassword);
+            await TryLoginAsync(client, user.Email, WrongPassword);
         }
 
-        (await LoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
 
         using var other = CreateClient();
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await AssertProblemAsync(await LoginAsync(other, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
+            await AssertProblemAsync(await TryLoginAsync(other, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
         }
     }
 
@@ -56,7 +56,7 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
 
         for (var attempt = 1; attempt <= 5; attempt++)
         {
-            await LoginAsync(attacker, user.Email, WrongPassword);
+            await TryLoginAsync(attacker, user.Email, WrongPassword);
         }
 
         Assert.Equal(HttpStatusCode.OK, (await signedIn.GetAsync("/api/auth/me")).StatusCode);
@@ -77,21 +77,21 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         for (var attempt = 1; attempt <= 2; attempt++)
         {
             await AssertProblemAsync(
-                await LoginAsync(attacker, user.Email, user.Password, "000000"),
+                await TryLoginAsync(attacker, user.Email, user.Password, "000000"),
                 HttpStatusCode.Unauthorized,
                 "twoFactor.invalidCode");
-            (await LoginAsync(attacker, user.Email, user.Password)).EnsureSuccessStatusCode();
+            (await TryLoginAsync(attacker, user.Email, user.Password)).EnsureSuccessStatusCode();
         }
 
         using var second = CreateClient();
-        await LoginAsync(second, user.Email, user.Password, "000000");
-        await LoginAsync(second, user.Email, user.Password, "000000");
+        await TryLoginAsync(second, user.Email, user.Password, "000000");
+        await TryLoginAsync(second, user.Email, user.Password, "000000");
         await AssertProblemAsync(
-            await LoginAsync(second, user.Email, user.Password, "000000"),
+            await TryLoginAsync(second, user.Email, user.Password, "000000"),
             HttpStatusCode.TooManyRequests,
             "credentials.lockedOut");
         await AssertProblemAsync(
-            await LoginAsync(second, user.Email, user.Password, Totp.GenerateCode(setup.SharedKey)),
+            await TryLoginAsync(second, user.Email, user.Password, Totp.GenerateCode(setup.SharedKey)),
             HttpStatusCode.TooManyRequests,
             "credentials.lockedOut");
     }
@@ -121,21 +121,11 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
 
         for (var attempt = 1; attempt <= 6; attempt++)
         {
-            await AssertProblemAsync(await LoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
+            await AssertProblemAsync(await TryLoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
         }
 
         var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=false");
         Assert.Contains(users!, u => u.GetProperty("id").GetGuid() == user.Id);
-    }
-
-    private static Task<HttpResponseMessage> LoginAsync(HttpClient client, string email, string password, string? twoFactorCode = null) =>
-        client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false, twoFactorCode });
-
-    private static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)
-    {
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.True(response.StatusCode == status, $"Expected {(int)status}, got {(int)response.StatusCode}: {body}");
-        Assert.Contains($"\"{code}\"", body);
     }
 
     private sealed record SetupDto(string SharedKey);

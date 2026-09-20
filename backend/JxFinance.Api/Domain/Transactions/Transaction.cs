@@ -4,7 +4,7 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Domain.Transactions;
 
-public sealed class Transaction : OwnableEntity
+public sealed class Transaction : OwnableEntity, IAccountScoped
 {
     public TransactionId Id { get; set; } = TransactionId.New();
     public AccountId AccountId { get; set; }

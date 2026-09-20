@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.NetWorth;
+using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.CreateDebt;
 
@@ -8,4 +9,4 @@ public sealed record CreateDebtRequest(
     DebtType Type,
     [property: Money(NotNull = true)] decimal? OutstandingAmount,
     decimal? InterestRate,
-    DateOnly AsOf);
+    DateOnly AsOf) : IDebtInput;

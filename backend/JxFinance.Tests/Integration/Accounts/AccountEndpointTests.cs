@@ -42,8 +42,8 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var account = await CreateAccountAsync("Balance check", "cash", "100.00");
 
-        await CreateTransactionAsync(account.Id, "income", "50.00");
-        await CreateTransactionAsync(account.Id, "expense", "20.00");
+        await CreateTransactionAsync(Client, account.Id, null, "income", "50.00", "2026-06-01");
+        await CreateTransactionAsync(Client, account.Id, null, "expense", "20.00", "2026-06-01");
 
         var fetched = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account.Id}");
         Assert.Equal("130.00", fetched!.CurrentBalance);
@@ -95,21 +95,4 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<AccountDto>())!;
     }
-
-    private async Task CreateTransactionAsync(Guid accountId, string type, string amount)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/transactions",
-            new { accountId, type, amount, date = "2026-06-01" });
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    }
-
-    private sealed record AccountDto(
-        Guid Id,
-        string Name,
-        string? Description,
-        string? Iban,
-        string Type,
-        string StartingBalance,
-        string CurrentBalance);
 }

@@ -6,6 +6,7 @@ import {
   setShortcutsHelpOpen,
   toggleShortcutsHelp,
 } from "@/stores/shortcuts-help-store";
+import { withWidth } from "@/storybook/decorators";
 import { ShortcutsHelp } from "./shortcuts-help";
 
 const storyRouter = {
@@ -16,13 +17,7 @@ const storyRouter = {
 const meta = {
   title: "Components/ShortcutsHelp",
   component: ShortcutsHelp,
-  decorators: [
-    (Story) => (
-      <div className="flex min-h-[32rem] items-end p-4">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("flex min-h-[32rem] items-end p-4")],
   beforeEach: () => {
     setShortcutsHelpOpen(false);
     return () => setShortcutsHelpOpen(false);

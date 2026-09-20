@@ -1,40 +1,53 @@
-import type { ComponentProps } from "react";
-import type { PolymorphicProps } from "@/lib/polymorphic";
+import type { ComponentProps, ReactNode } from "react";
+import { type PolymorphicProps, rendersAs } from "@/lib/polymorphic";
 import { cn } from "@/lib/utils";
-import type { Rows } from "../rows";
-import type { SplitColumns } from "../split-columns";
+import { Rows } from "../rows/rows";
+import { SplitColumns } from "../split-columns/split-columns";
 
 const surface =
   "min-w-0 rounded-lg bg-muted/50 p-5 sm:p-6 dark:bg-card [:is([data-surface],[role=dialog])_&]:rounded-none [:is([data-surface],[role=dialog])_&]:bg-transparent [:is([data-surface],[role=dialog])_&]:p-0 dark:[:is([data-surface],[role=dialog])_&]:bg-transparent";
 
 type PanelProps = PolymorphicProps<"div", "section" | typeof Rows | typeof SplitColumns>;
 
-export function Panel({ as, className, ...props }: Readonly<PanelProps>) {
-  const Component = (as ?? "div") as "div";
+export function Panel({ className, ...props }: Readonly<PanelProps>) {
+  const slot = { "data-slot": "panel", "data-surface": "", className: cn(surface, className) };
 
-  return (
-    <Component
-      data-slot="panel"
-      data-surface=""
-      className={cn(surface, className)}
-      {...(props as ComponentProps<"div">)}
-    />
-  );
+  if (rendersAs(props, Rows)) {
+    const { as: Component, ...rest } = props;
+    return <Component {...slot} {...rest} />;
+  }
+
+  if (rendersAs(props, SplitColumns)) {
+    const { as: Component, ...rest } = props;
+    return <Component {...slot} {...rest} />;
+  }
+
+  if (props.as === "section") {
+    const { as: Component, ...rest } = props;
+    return <Component {...slot} {...rest} />;
+  }
+
+  const { as: Component = "div", ...rest } = props;
+  return <Component {...slot} {...rest} />;
 }
 
 type SectionProps = PolymorphicProps<"section", "div" | "form">;
 
-export function Section({ as, className, ...props }: Readonly<SectionProps>) {
-  const Component = (as ?? "section") as "div";
+export function Section({ className, ...props }: Readonly<SectionProps>) {
+  const slot = { "data-slot": "section", "data-surface": "", className: cn(surface, className) };
 
-  return (
-    <Component
-      data-slot="section"
-      data-surface=""
-      className={cn(surface, className)}
-      {...(props as ComponentProps<"div">)}
-    />
-  );
+  if (props.as === "div") {
+    const { as: Component, ...rest } = props;
+    return <Component {...slot} {...rest} />;
+  }
+
+  if (props.as === "form") {
+    const { as: Component, ...rest } = props;
+    return <Component {...slot} {...rest} />;
+  }
+
+  const { as: Component = "section", ...rest } = props;
+  return <Component {...slot} {...rest} />;
 }
 
 export function SectionTitle({ className, children, ...props }: Readonly<ComponentProps<"h2">>) {
@@ -46,5 +59,23 @@ export function SectionTitle({ className, children, ...props }: Readonly<Compone
     >
       {children}
     </h2>
+  );
+}
+
+interface SectionHeaderProps {
+  title: ReactNode;
+  titleClassName?: string;
+  children?: ReactNode;
+}
+
+export function SectionHeader({ title, titleClassName, children }: Readonly<SectionHeaderProps>) {
+  return (
+    <div
+      data-slot="section-header"
+      className="mb-2 flex flex-wrap items-center justify-between gap-3"
+    >
+      <SectionTitle className={titleClassName}>{title}</SectionTitle>
+      {children}
+    </div>
   );
 }

@@ -6,11 +6,10 @@ import {
   createUserBodyPasswordMax,
   createUserBodyPasswordMin,
 } from "@/api/schemas/users/users.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { silent } from "@/lib/mutations";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
 
 const roles = ["Member", "Admin"] as const;
@@ -37,9 +36,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
     password: password(t, createUserBodyPasswordMin, createUserBodyPasswordMax),
   });
 
-  const createMutation = useCreateUser({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
+  const createMutation = useCreateUser(silent({ onSuccess: onCreated }));
 
   const defaultValues: FormValues = {
     email: "",
@@ -48,36 +45,23 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
     password: "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        createMutation.mutateAsync({
-          data: {
-            email: value.email.trim(),
-            displayName: value.displayName.trim(),
-            role: value.role,
-            password: value.password,
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      createMutation.mutateAsync({
+        data: {
+          email: value.email.trim(),
+          displayName: value.displayName.trim(),
+          role: value.role,
+          password: value.password,
+        },
+      }),
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <FormGrid>
           <form.Field name="displayName">
             {(field) => (
@@ -110,13 +94,12 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
 
         <FormError error={createMutation.error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={createMutation.isPending}>{t("users.add")}</form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={createMutation.isPending}
+          submitLabel={t("users.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

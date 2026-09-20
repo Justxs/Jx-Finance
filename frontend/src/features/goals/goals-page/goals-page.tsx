@@ -3,15 +3,17 @@ import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getGoalsQueryKey, useDeleteGoal, useGoalsSuspense } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Panel } from "@/components/ui/section";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Panel } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
-import { CreateGoalForm } from "../create-goal-form";
-import { GoalRow } from "../goal-row";
+import { CreateGoalForm } from "../create-goal-form/create-goal-form";
+import { GoalRow } from "../goal-row/goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
@@ -19,19 +21,16 @@ export function GoalsPage() {
 
   const goals = useGoalsSuspense();
 
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
   const deleteMutation = useDeleteGoal({
     mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()),
   });
 
   const goalList = useDeferredValue(goals.data) ?? [];
-
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+  const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name);
 
   let content: ReactNode;
   if (goalList.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{t("goals.empty")}</p>;
+    content = <EmptyText>{t("goals.empty")}</EmptyText>;
   } else {
     content = (
       <Panel as={Rows} className="py-2 sm:py-3">
@@ -39,9 +38,9 @@ export function GoalsPage() {
           <GoalRow
             key={goal.id}
             goal={goal}
-            onDelete={() => setDeleteTarget(goal.id)}
-            deletePending={deletingId === goal.id}
-            deleteDisabled={deleteMutation.isPending}
+            onDelete={() => remove.request(goal.id)}
+            deletePending={remove.pendingId === goal.id}
+            deleteDisabled={remove.busy}
           />
         ))}
       </Panel>
@@ -62,12 +61,7 @@ export function GoalsPage() {
       </Modal>
 
       {content}
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={goalList.find((goal) => goal.id === deleteTarget)?.name ?? undefined}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
 }

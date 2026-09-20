@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Categories.Services;
 
 [RegisterService<ICategoryService>(LifeTime.Scoped)]
-public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) : ICategoryService
+public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, IClock clock) : ICategoryService
 {
     public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Categories
@@ -23,13 +23,13 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<Category>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
+            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         db.Categories.Add(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Category>.Success(category);
+        return category;
     }
 
     public async Task<Result<Category>> UpdateAsync(Guid id, Action<Category> apply, CancellationToken cancellationToken)
@@ -38,7 +38,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
         if (category is null)
         {
-            return Result<Category>.Failure(ErrorCodes.ResourceNotFound, "Category not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Category not found.");
         }
 
         var (previousScope, previousHouseholdId) = (category.Scope, category.HouseholdId);
@@ -47,18 +47,18 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
         if (membershipError is not null)
         {
-            return Result<Category>.Failure(ErrorCodes.HouseholdNotMember, membershipError);
+            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
         }
 
         if (category.UserId != currentUser.Id &&
             (category.Scope != previousScope || category.HouseholdId != previousHouseholdId))
         {
-            return Result<Category>.Failure(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
+            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
         }
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Category>.Success(category);
+        return category;
     }
 
     private async Task<string?> ValidateHouseholdAsync(
@@ -85,15 +85,16 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
         if (category is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Category not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Category not found.");
         }
 
         if (category.UserId != currentUser.Id)
         {
-            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only the owner can delete a shared category.");
+            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can delete a shared category.");
         }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var now = clock.UtcNow;
 
         await db.Transactions
             .IgnoreQueryFilters()
@@ -101,7 +102,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(t => t.CategoryId, (CategoryId?)null)
-                    .SetProperty(t => t.UpdatedAt, DateTimeOffset.UtcNow),
+                    .SetProperty(t => t.UpdatedAt, now),
                 cancellationToken);
 
         await db.TransactionLines.IgnoreQueryFilters().Where(l => l.CategoryId == categoryId)
@@ -115,6 +116,6 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser) :
 
         await dbTransaction.CommitAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 }

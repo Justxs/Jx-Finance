@@ -1,12 +1,14 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import type { HoldingFormValues } from "./holding-form";
@@ -51,7 +53,15 @@ export function HoldingsSection({
   const { t } = useTranslation();
   const money = useMoney();
   const [addOpen, setAddOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const remove = useConfirmedDelete(
+    {
+      mutate: ({ id }) => onDelete(id),
+      isPending: deleteDisabled,
+      variables: deletingId ? { id: deletingId } : undefined,
+    },
+    items,
+    (item) => item.name,
+  );
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const editItem = items.find((item) => item.id === editTarget);
 
@@ -63,7 +73,7 @@ export function HoldingsSection({
 
   let content: ReactNode;
   if (items.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{emptyLabel}</p>;
+    content = <EmptyText>{emptyLabel}</EmptyText>;
   } else {
     content = (
       <Rows>
@@ -81,18 +91,16 @@ export function HoldingsSection({
                   size="icon"
                   onClick={() => setEditTarget(item.id)}
                   aria-label={`${t("actions.edit")}: ${item.name}`}
-                  tooltip={`${t("actions.edit")}: ${item.name}`}
                 >
                   <Pencil />
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  pending={deletingId === item.id}
-                  disabled={deleteDisabled}
-                  onClick={() => setDeleteTarget(item.id)}
+                  pending={remove.pendingId === item.id}
+                  disabled={remove.busy}
+                  onClick={() => remove.request(item.id)}
                   aria-label={`${t("actions.delete")}: ${item.name}`}
-                  tooltip={`${t("actions.delete")}: ${item.name}`}
                 >
                   <Trash2 />
                 </Button>
@@ -119,11 +127,7 @@ export function HoldingsSection({
       </Modal>
       <Modal
         open={editItem !== undefined}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditTarget(null);
-          }
-        }}
+        onClose={() => setEditTarget(null)}
         title={editItem ? `${t("actions.edit")}: ${editItem.name}` : ""}
       >
         {editItem ? (
@@ -136,12 +140,7 @@ export function HoldingsSection({
         ) : null}
       </Modal>
       {content}
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={items.find((item) => item.id === deleteTarget)?.name}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={onDelete}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );
 }

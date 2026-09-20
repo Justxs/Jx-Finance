@@ -1,16 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { DashboardSection } from "./dashboard-section";
 
 const meta = {
   title: "Features/Dashboard/DashboardSection",
   component: DashboardSection,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(28rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(28rem,90vw)]")],
   args: {
     title: "Budgets this month",
     children: <p className="text-sm text-muted-foreground">Section content.</p>,

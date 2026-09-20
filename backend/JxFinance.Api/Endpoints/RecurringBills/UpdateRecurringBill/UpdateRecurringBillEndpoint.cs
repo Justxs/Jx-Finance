@@ -18,7 +18,7 @@ public sealed class UpdateRecurringBillEndpoint(IRecurringBillService recurringB
 
     public override async Task HandleAsync(UpdateRecurringBillRequest req, CancellationToken ct)
     {
-        var bill = (await recurringBillService.UpdateAsync(req.Id, entity => Map.UpdateEntity(req, entity), ct)).ValueOrThrow();
+        var bill = (await recurringBillService.UpdateAsync(req.Id, entity => Map.Apply(req, entity), ct)).ValueOrThrow();
         await Send.OkAsync(Map.FromEntity(bill), ct);
     }
 }

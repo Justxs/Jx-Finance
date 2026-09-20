@@ -34,13 +34,13 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
             cancellationToken);
         if (notification is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Notification not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Notification not found.");
         }
 
         notification.IsRead = true;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     public async Task MarkAllReadAsync(CancellationToken cancellationToken)

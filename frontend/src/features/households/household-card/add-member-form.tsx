@@ -3,9 +3,8 @@ import { z } from "zod";
 import { useAddMember } from "@/api/generated";
 import type { HouseholdRole } from "@/api/generated/model";
 import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
-import { useAppForm } from "@/components/form";
-import { Button } from "@/components/ui/button";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { Button } from "@/components/ui/button/button";
 import { requiredEmail } from "@/lib/validation";
 
 interface FormValues {
@@ -34,32 +33,19 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
 
   const defaultValues: FormValues = { email: "", role: "member" };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        addMutation.mutateAsync({
-          id: householdId,
-          data: { email: value.email.trim(), role: value.role },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      addMutation.mutateAsync({
+        id: householdId,
+        data: { email: value.email.trim(), role: value.role },
+      }),
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
-      >
+      <form.FormShell className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <form.Field name="email">
           {(field) => (
             <field.TextField
@@ -94,7 +80,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
         <form.SubmitButton size="sm" pending={addMutation.isPending}>
           {t("households.addMember")}
         </form.SubmitButton>
-      </form>
+      </form.FormShell>
     </form.AppForm>
   );
 }

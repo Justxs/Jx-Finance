@@ -1,10 +1,11 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Categories.Interfaces;
 
 namespace JxFinance.Endpoints.Categories.DeleteCategory;
 
-public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : EndpointWithoutRequest
+public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -13,9 +14,6 @@ public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : E
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        (await categoryService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
-    }
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        categoryService.DeleteAsync(id, ct);
 }

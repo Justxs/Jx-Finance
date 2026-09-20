@@ -71,7 +71,7 @@ export const Disabled: Story = { args: { disabled: true } };
 export const Invalid: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "abc" } });
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "abc" } });
     await expect(await canvas.findByText("Enter a positive amount.")).toHaveAttribute(
       "id",
       "demo-money-error",

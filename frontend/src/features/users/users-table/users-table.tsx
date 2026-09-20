@@ -3,12 +3,13 @@ import { KeyRound, UserCheck, UserX } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
-import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
-import { Rows } from "@/components/ui/rows";
-import { StaleRegion, staleVariants } from "@/components/ui/stale-region";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { SortableTableHead } from "@/components/ui/column-header/column-header";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { StaleRegion, staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -16,8 +17,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
+  TableEmptyRow,
+  ScrollRegion,
+} from "@/components/ui/table/table";
+import { Tag } from "@/components/ui/tag/tag";
+import { useSearchTable } from "@/hooks/use-search-table";
 import { cn } from "@/lib/utils";
 
 const roles = ["Member", "Admin"] as const;
@@ -51,14 +55,10 @@ export function UsersTable({
   const search = useSearch({ from: "/users" });
   const navigate = useNavigate({ from: "/users" });
 
-  function setFilter(patch: Partial<typeof search>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch }) });
-  }
-
-  function toggleSort(sort: NonNullable<typeof search.sort>) {
-    const direction = nextSortDirection(sort, search.sort, search.direction);
-    navigate({ search: (prev) => ({ ...prev, sort, direction }) });
-  }
+  const table = useSearchTable(search, (patch) =>
+    navigate({ search: (prev) => ({ ...prev, ...patch }) }),
+  );
+  const { setFilter } = table;
 
   const filtered = Boolean(search.search) || Boolean(search.role) || search.isActive !== undefined;
   const roleOptions = roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }));
@@ -98,23 +98,19 @@ export function UsersTable({
       <>
         <Button
           variant="ghost"
-          size="icon"
-          className="size-8"
+          size="icon-sm"
           onClick={() => onResetPassword(user.id)}
           aria-label={resetLabel}
-          tooltip={resetLabel}
         >
           <KeyRound />
         </Button>
         <Button
           variant="ghost"
-          size="icon"
-          className="size-8"
+          size="icon-sm"
           pending={(user.isActive ? deactivatePendingId : reactivatePendingId) === user.id}
           disabled={busy}
           onClick={() => (user.isActive ? onDeactivate(user.id) : onReactivate(user.id))}
           aria-label={statusLabel}
-          tooltip={statusLabel}
         >
           {user.isActive ? <UserX /> : <UserCheck />}
         </Button>
@@ -125,11 +121,9 @@ export function UsersTable({
   let body: ReactNode;
   if (users.length === 0) {
     body = (
-      <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={4} className="py-6 whitespace-normal text-muted-foreground">
-          {filtered ? t("filters.noMatches") : t("users.empty")}
-        </TableCell>
-      </TableRow>
+      <TableEmptyRow colSpan={4} filtered={filtered}>
+        {t("users.empty")}
+      </TableEmptyRow>
     );
   } else {
     body = users.map((user) => {
@@ -153,9 +147,7 @@ export function UsersTable({
     <>
       <StaleRegion stale={stale} className="md:hidden">
         {users.length === 0 ? (
-          <p className="py-6 text-sm text-muted-foreground">
-            {filtered ? t("filters.noMatches") : t("users.empty")}
-          </p>
+          <EmptyText filtered={filtered}>{t("users.empty")}</EmptyText>
         ) : (
           <Rows aria-label={t("users.title")}>
             {users.map((user) => (
@@ -178,16 +170,13 @@ export function UsersTable({
       </StaleRegion>
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="users-rows" enter="none" exit="none">
-          <div className="overflow-x-auto" role="region" aria-label={t("users.title")} tabIndex={0}>
+          <ScrollRegion aria-label={t("users.title")}>
             <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead
                     label={t("users.displayName")}
-                    sortKey="displayName"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("displayName")}
                     filter={
                       <TextColumnFilter
                         label={t("users.displayName")}
@@ -199,10 +188,7 @@ export function UsersTable({
                   />
                   <SortableTableHead
                     label={t("users.role")}
-                    sortKey="role"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("role")}
                     filter={
                       <ColumnFilter
                         label={t("users.role")}
@@ -220,10 +206,7 @@ export function UsersTable({
                   />
                   <SortableTableHead
                     label={t("users.status")}
-                    sortKey="status"
-                    activeSort={search.sort}
-                    direction={search.direction}
-                    onSort={toggleSort}
+                    {...table.sortProps("status")}
                     filter={
                       <ColumnFilter
                         label={t("users.status")}
@@ -252,7 +235,7 @@ export function UsersTable({
               </TableHeader>
               <TableBody>{body}</TableBody>
             </Table>
-          </div>
+          </ScrollRegion>
         </ViewTransition>
       </section>
     </>

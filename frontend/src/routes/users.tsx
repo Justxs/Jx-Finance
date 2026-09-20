@@ -2,7 +2,7 @@ import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
 import { getMeSuspenseQueryOptions, getUsersSuspenseQueryOptions } from "@/api/generated";
 import { userListParams } from "@/features/users/user-queries";
-import { UsersPage } from "@/features/users/users-page";
+import { UsersPage } from "@/features/users/users-page/users-page";
 import { checkIsAdmin } from "@/lib/auth-gate";
 import { warm } from "@/lib/route-prefetch";
 

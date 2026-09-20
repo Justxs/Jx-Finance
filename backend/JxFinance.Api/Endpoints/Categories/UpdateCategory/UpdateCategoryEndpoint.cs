@@ -18,7 +18,7 @@ public sealed class UpdateCategoryEndpoint(ICategoryService categoryService)
 
     public override async Task HandleAsync(UpdateCategoryRequest req, CancellationToken ct)
     {
-        var category = (await categoryService.UpdateAsync(req.Id, entity => Map.UpdateEntity(req, entity), ct)).ValueOrThrow();
+        var category = (await categoryService.UpdateAsync(req.Id, entity => Map.Apply(req, entity), ct)).ValueOrThrow();
         await Send.OkAsync(Map.FromEntity(category), ct);
     }
 }

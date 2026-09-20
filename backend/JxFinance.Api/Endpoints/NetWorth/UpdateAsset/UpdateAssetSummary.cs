@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.UpdateAsset;
@@ -13,7 +14,7 @@ public sealed class UpdateAssetSummary : Summary<UpdateAssetEndpoint, UpdateAsse
         ExampleRequest = new UpdateAssetRequest(Guid.Empty, "Flat", AssetType.Property, 185000.00m, new DateOnly(2026, 9, 1));
         Params["id"] = "The asset id. Takes precedence over the id in the body.";
         Responses[200] = "The updated asset.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
         Responses[404] = "No such asset belongs to the signed-in user.";
     }
 }

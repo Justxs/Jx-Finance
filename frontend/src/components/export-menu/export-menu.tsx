@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchFile } from "@/api/client";
-import { buttonVariants } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { buttonVariants } from "@/components/ui/button/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { saveFile } from "@/lib/save-file";
 
 interface Props {

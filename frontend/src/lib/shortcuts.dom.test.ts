@@ -59,13 +59,7 @@ describe("key map", () => {
       platform: "windows",
     });
     function press(key: string) {
-      return matcher.match({
-        key,
-        ctrlKey: false,
-        shiftKey: false,
-        altKey: false,
-        metaKey: false,
-      } as KeyboardEvent);
+      return matcher.match(new KeyboardEvent("keydown", { key }));
     }
 
     expect(press("g")).toBe(false);
@@ -218,9 +212,9 @@ describe("registerShortcuts", () => {
 
   test("typing in a field is left alone", async () => {
     const { navigate, toggleHelp, user } = setup();
-    document.body.innerHTML = "<input />";
-
-    await user.click(document.querySelector("input") as HTMLInputElement);
+    const input = document.createElement("input");
+    document.body.replaceChildren(input);
+    await user.click(input);
     await user.keyboard("n{Shift>}?{/Shift}");
 
     expect(navigate).not.toHaveBeenCalled();

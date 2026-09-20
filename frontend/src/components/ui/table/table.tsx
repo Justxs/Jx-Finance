@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
@@ -33,16 +34,6 @@ function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
   );
 }
 
-function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
-  return (
-    <tfoot
-      data-slot="table-footer"
-      className={cn("border-t border-rule font-semibold [&>tr]:last:border-b-0", className)}
-      {...props}
-    />
-  );
-}
-
 function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   return (
     <tr
@@ -61,7 +52,7 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
     <th
       data-slot="table-head"
       className={cn(
-        "h-9 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-muted-foreground [&:has([role=checkbox])]:pr-0",
+        "h-9 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-muted-foreground has-[[role=checkbox]]:pr-0",
         className,
       )}
       {...props}
@@ -74,7 +65,7 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
     <td
       data-slot="table-cell"
       className={cn(
-        "px-3 py-2.5 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
+        "px-3 py-2.5 align-middle whitespace-nowrap has-[[role=checkbox]]:pr-0",
         className,
       )}
       {...props}
@@ -82,14 +73,47 @@ function TableCell({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
-function TableCaption({ className, ...props }: React.ComponentProps<"caption">) {
+interface TableEmptyRowProps {
+  colSpan: number;
+  filtered?: boolean;
+  children: React.ReactNode;
+}
+
+function TableEmptyRow({ colSpan, filtered = false, children }: Readonly<TableEmptyRowProps>) {
+  const { t } = useTranslation();
+
   return (
-    <caption
-      data-slot="table-caption"
-      className={cn("mt-4 text-sm text-muted-foreground", className)}
+    <TableRow className="hover:bg-transparent">
+      <TableCell colSpan={colSpan} className="py-6 whitespace-normal text-muted-foreground">
+        {filtered ? t("filters.noMatches") : children}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+interface ScrollRegionProps extends Omit<React.ComponentProps<"div">, "aria-label"> {
+  "aria-label": string;
+}
+
+function ScrollRegion({ className, ...props }: Readonly<ScrollRegionProps>) {
+  return (
+    <div
+      data-slot="scroll-region"
+      role="region"
+      tabIndex={0}
+      className={cn("overflow-x-auto", className)}
       {...props}
     />
   );
 }
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableEmptyRow,
+  ScrollRegion,
+};

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AccountResponse } from "@/api/generated/model";
-import { Section } from "@/components/ui/section";
+import { Section } from "@/components/ui/section/section";
 import { accounts, checkingAccount } from "@/storybook/fixtures";
 import { ImportUploadForm } from "./import-upload-form";
 

@@ -1,11 +1,11 @@
-import { useDebouncer } from "@tanstack/react-pacer";
 import { ListFilter } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Tooltip } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -62,24 +62,7 @@ export function TextColumnFilter({
   debounceMs = 0,
   shortcut,
 }: Readonly<TextFilterProps>) {
-  const [draft, setDraft] = useState(value);
-  const [lastValue, setLastValue] = useState(value);
-  const debouncer = useDebouncer(onChange, { wait: debounceMs });
-
-  if (value !== lastValue) {
-    setLastValue(value);
-    setDraft(value);
-  }
-
-  function handleChange(next: string) {
-    setDraft(next);
-    if (debounceMs === 0) {
-      debouncer.cancel();
-      onChange(next);
-      return;
-    }
-    debouncer.maybeExecute(next);
-  }
+  const text = useDebouncedDraft(value, onChange, debounceMs);
 
   return (
     <ColumnFilter
@@ -87,14 +70,14 @@ export function TextColumnFilter({
       active={Boolean(value)}
       shortcut={shortcut}
       onClear={() => {
-        debouncer.cancel();
+        text.cancel();
         onChange("");
       }}
     >
       <Input
         placeholder={placeholder ?? label}
-        value={draft}
-        onChange={(e) => handleChange(e.target.value)}
+        value={text.draft}
+        onChange={(e) => text.change(e.target.value)}
       />
     </ColumnFilter>
   );

@@ -1,9 +1,10 @@
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactions;
 
-public sealed class GetTransactionsRequest : ITransactionFilter
+public sealed class GetTransactionsRequest : ITransactionFilter, IPagedRequest
 {
     public int Page { get; init; } = 1;
 

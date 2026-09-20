@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Endpoints.Transactions.GetTransactions;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
@@ -12,12 +13,7 @@ public sealed class ExportTransactionsSummary : Summary<ExportTransactionsEndpoi
             + "with account and category names resolved. It takes the same filters as the list endpoint "
             + "but ignores paging: every matching row is included. Rows are streamed from the database "
             + "into the response, so the size of the ledger does not matter.";
-        RequestParam(r => r.AccountId, "Keep only transactions on this account.");
-        RequestParam(r => r.CategoryId, "Keep only transactions in this category.");
-        RequestParam(r => r.Type, "Income or Expense.");
-        RequestParam(r => r.Search, "Case-insensitive match against the description.");
-        RequestParam(r => r.DateFrom, "Inclusive start date as YYYY-MM-DD.");
-        RequestParam(r => r.DateTo, "Inclusive end date as YYYY-MM-DD.");
+        this.DescribeTransactionFilter(TransactionFilterSummary.Category);
         Responses[200] = "The CSV document as an attachment.";
     }
 }

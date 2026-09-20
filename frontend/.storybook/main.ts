@@ -13,10 +13,7 @@ const config: StorybookConfig = {
   viteFinal(viteConfig) {
     viteConfig.plugins = (viteConfig.plugins ?? [])
       .flat()
-      .filter(
-        (plugin) =>
-          !(plugin && "name" in plugin && String(plugin.name).includes("tanstack-router")),
-      );
+      .filter((plugin) => !(plugin && "name" in plugin && plugin.name.includes("tanstack-router")));
     return viteConfig;
   },
 };

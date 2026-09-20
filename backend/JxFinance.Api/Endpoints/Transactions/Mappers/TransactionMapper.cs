@@ -6,7 +6,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.Shared;
-using JxFinance.Endpoints.Transactions.UpdateTransaction;
 
 namespace JxFinance.Endpoints.Transactions.Mappers;
 
@@ -15,31 +14,21 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
 {
     public Transaction ToEntity(CreateTransactionRequest request, Currency currency, decimal reportingAmount)
     {
-        var isSplit = request.Lines is { Count: > 0 };
-        return new Transaction
-        {
-            AccountId = new AccountId(request.AccountId),
-            CategoryId = ResolveCategoryId(request.CategoryId, isSplit),
-            Type = request.Type,
-            Amount = new Money(request.Amount, currency),
-            ReportingAmount = reportingAmount,
-            Date = request.Date,
-            Description = OptionalText.Normalize(request.Description),
-            Source = TransactionSource.Manual,
-            IsSplit = isSplit,
-        };
+        var transaction = new Transaction { Source = TransactionSource.Manual };
+        Apply(request, transaction, currency, reportingAmount);
+        return transaction;
     }
 
-    public void UpdateEntity(UpdateTransactionRequest request, Transaction transaction, Currency currency, decimal reportingAmount)
+    public void Apply(ITransactionInput input, Transaction transaction, Currency currency, decimal reportingAmount)
     {
-        var isSplit = request.Lines is { Count: > 0 };
-        transaction.AccountId = new AccountId(request.AccountId);
-        transaction.CategoryId = ResolveCategoryId(request.CategoryId, isSplit);
-        transaction.Type = request.Type;
-        transaction.Amount = new Money(request.Amount, currency);
+        var isSplit = input.Lines is { Count: > 0 };
+        transaction.AccountId = new AccountId(input.AccountId);
+        transaction.CategoryId = ResolveCategoryId(input.CategoryId, isSplit);
+        transaction.Type = input.Type;
+        transaction.Amount = new Money(input.Amount, currency);
         transaction.ReportingAmount = reportingAmount;
-        transaction.Date = request.Date;
-        transaction.Description = OptionalText.Normalize(request.Description);
+        transaction.Date = input.Date;
+        transaction.Description = OptionalText.Normalize(input.Description);
         transaction.IsSplit = isSplit;
     }
 

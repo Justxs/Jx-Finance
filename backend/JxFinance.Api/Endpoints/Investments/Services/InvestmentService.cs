@@ -93,8 +93,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 }
 
                 var security = securities[position.SecurityId];
-                var value = security.LastPrice is { } price ? position.Quantity * price : (decimal?)null;
-                var valueReporting = value is { } known ? latest.Convert(known, security.Currency, reporting) : null;
+                var (value, valueReporting, _) = position.Value(security.LastPrice, security.Currency, latest, reporting);
                 var costReporting = latest.Convert(position.CostBasis, security.Currency, reporting);
                 isComplete &= !position.IsOversold;
                 if (position.Quantity != 0m)
@@ -135,9 +134,6 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         GetInvestmentTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var page = Math.Max(request.Page, 1);
-        var pageSize = Math.Clamp(request.PageSize, 1, 200);
-
         var query = db.InvestmentTransactions.AsQueryable();
         if (request.AccountId is { } accountId)
         {
@@ -156,24 +152,17 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             query = query.Where(t => t.Type == type);
         }
 
-        var total = await query.CountAsync(cancellationToken);
-        var items = await query
-            .OrderByDescending(t => t.Date)
-            .ThenByDescending(t => t.CreatedAt)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToListAsync(cancellationToken);
+        var page = await query.ToPageAsync(
+            request,
+            sorted => sorted.OrderByDescending(t => t.Date).ThenByDescending(t => t.CreatedAt),
+            cancellationToken);
 
-        var securityIds = items.Where(t => t.SecurityId is not null).Select(t => t.SecurityId!.Value).Distinct().ToList();
+        var securityIds = page.Items.Where(t => t.SecurityId is not null).Select(t => t.SecurityId!.Value).Distinct().ToList();
         var symbols = await db.Securities
             .Where(s => securityIds.Contains(s.Id))
             .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
 
-        return new PagedResponse<InvestmentTransactionResponse>(
-            items.Select(t => mapper.FromEntity(t, t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null)).ToList(),
-            page,
-            pageSize,
-            total);
+        return page.Map(t => mapper.FromEntity(t, t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null));
     }
 
     public async Task<Result<InvestmentTransactionResponse>> CreateTransactionAsync(
@@ -183,20 +172,20 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var built = await BuildTransactionAsync(request, cancellationToken);
         if (built.IsFailure)
         {
-            return Result<InvestmentTransactionResponse>.FailureFrom(built);
+            return built.Error;
         }
 
         var (transaction, security) = built.Value;
         if (transaction.SecurityId is { } tradedId
             && await IsOversoldAsync(transaction.AccountId, tradedId, history => history.Append(transaction), cancellationToken))
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.HoldingOversold, OversoldMessage);
+            return new DomainError(ErrorCodes.HoldingOversold, OversoldMessage);
         }
 
         db.InvestmentTransactions.Add(transaction);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<InvestmentTransactionResponse>.Success(mapper.FromEntity(transaction, security?.Symbol));
+        return mapper.FromEntity(transaction, security?.Symbol);
     }
 
     public async Task<Result<InvestmentTransactionResponse>> UpdateTransactionAsync(
@@ -207,12 +196,12 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
         }
 
         if (transaction.Source != InvestmentSource.Manual)
         {
-            return Result<InvestmentTransactionResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.ResourceReadOnly,
                 "This entry was imported from a broker. Correct it there and import again.");
         }
@@ -220,7 +209,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var built = await BuildTransactionAsync(request, cancellationToken);
         if (built.IsFailure)
         {
-            return Result<InvestmentTransactionResponse>.FailureFrom(built);
+            return built.Error;
         }
 
         var (corrected, security) = built.Value;
@@ -235,7 +224,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 history => history.Where(t => t.Id != transactionId),
                 cancellationToken))
         {
-            return Result<InvestmentTransactionResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.HoldingDependentSales,
                 "Later sales depend on this entry. Correct those first.");
         }
@@ -247,7 +236,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 history => history.Where(t => t.Id != transactionId).Append(corrected),
                 cancellationToken))
         {
-            return Result<InvestmentTransactionResponse>.Failure(ErrorCodes.HoldingOversold, OversoldMessage);
+            return new DomainError(ErrorCodes.HoldingOversold, OversoldMessage);
         }
 
         transaction.AccountId = corrected.AccountId;
@@ -262,7 +251,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         transaction.Description = corrected.Description;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<InvestmentTransactionResponse>.Success(mapper.FromEntity(transaction, security?.Symbol));
+        return mapper.FromEntity(transaction, security?.Symbol);
     }
 
     private async Task<Result<(InvestmentTransaction Transaction, Security? Security)>> BuildTransactionAsync(
@@ -276,7 +265,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             .FirstOrDefaultAsync(cancellationToken);
         if (accountCurrency is null)
         {
-            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         Security? security = null;
@@ -286,7 +275,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             security = await db.Securities.FirstOrDefaultAsync(s => s.Id == typedSecurityId, cancellationToken);
             if (security is null)
             {
-                return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.ReferenceNotFound, "Security does not exist.");
+                return new DomainError(ErrorCodes.ReferenceNotFound, "Security does not exist.");
             }
         }
 
@@ -294,18 +283,18 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency.Value;
         if (rates.UnusableReason(currency) is { } currencyError)
         {
-            return Result<(InvestmentTransaction, Security?)>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
+            return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
         var transaction = mapper.ToEntity(request, currency);
         var reportingAmount = await rates.ToReportingAsync(transaction.CashAmount, transaction.Date, cancellationToken);
         if (reportingAmount.IsFailure)
         {
-            return Result<(InvestmentTransaction, Security?)>.FailureFrom(reportingAmount);
+            return reportingAmount.Error;
         }
 
         transaction.ReportingAmount = reportingAmount.Value;
-        return Result<(InvestmentTransaction, Security?)>.Success((transaction, security));
+        return (transaction, security);
     }
 
     public async Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken)
@@ -314,14 +303,14 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
         if (transaction is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
         }
 
         if (transaction.SecurityId is { } securityId
             && transaction.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Split
             && await IsOversoldAsync(transaction.AccountId, securityId, history => history.Where(t => t.Id != transactionId), cancellationToken))
         {
-            return Result<Guid>.Failure(
+            return new DomainError(
                 ErrorCodes.HoldingDependentSales,
                 "Later sales depend on this entry. Delete those first.");
         }
@@ -329,7 +318,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         db.InvestmentTransactions.Remove(transaction);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     public async Task<IReadOnlyList<SecurityResponse>> GetSecuritiesAsync(
@@ -370,7 +359,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
             return Duplicate(symbol, request.Currency);
         }
 
-        return Result<SecurityResponse>.Success(mapper.FromEntity(security));
+        return mapper.FromEntity(security);
     }
 
     public async Task<Result<SecurityResponse>> UpdateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
@@ -380,7 +369,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (security is null)
         {
-            return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
         }
 
         if (await db.Securities.AnyAsync(s => s.Id != id && s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))
@@ -391,7 +380,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         if (security.Currency != request.Currency
             && await db.InvestmentTransactions.IgnoreQueryFilters().AnyAsync(t => t.SecurityId == id && !t.IsDeleted, cancellationToken))
         {
-            return Result<SecurityResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.ValueLocked,
                 "The currency cannot change once the security has transactions.");
         }
@@ -399,7 +388,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         mapper.Apply(request, symbol, security, clock.Today);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<SecurityResponse>.Success(mapper.FromEntity(security));
+        return mapper.FromEntity(security);
     }
 
     public async Task<Result<SecurityResponse>> SetSecurityPriceAsync(
@@ -411,12 +400,12 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
         if (security is null)
         {
-            return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
         }
 
         if (!isAdministrator && !await HoldsAsync(id, cancellationToken))
         {
-            return Result<SecurityResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.SecurityNotHeld,
                 "Only someone who holds this security, or an administrator, can set its price.");
         }
@@ -425,7 +414,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         security.LastPriceDate = request.LastPriceDate ?? clock.Today;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<SecurityResponse>.Success(mapper.FromEntity(security));
+        return mapper.FromEntity(security);
     }
 
     private async Task<bool> HoldsAsync(SecurityId securityId, CancellationToken cancellationToken)
@@ -441,7 +430,7 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
     }
 
     private static Result<SecurityResponse> Duplicate(string symbol, Currency currency) =>
-        Result<SecurityResponse>.Failure(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");
+        new DomainError(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");
 
     private async Task<bool> IsOversoldAsync(
         AccountId accountId,

@@ -66,9 +66,7 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
         var deactivateResponse = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null);
         Assert.Equal(HttpStatusCode.NoContent, deactivateResponse.StatusCode);
 
-        var loginAfter = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = user.Email, password = user.Password, rememberMe = false });
+        var loginAfter = await TryLoginAsync(userClient, user.Email, user.Password);
         Assert.Equal(HttpStatusCode.Unauthorized, loginAfter.StatusCode);
     }
 
@@ -120,14 +118,10 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
         var updated = await updateResponse.Content.ReadFromJsonAsync<UserDto>();
         Assert.Equal("New Name", updated!.DisplayName);
 
-        var reloginOld = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = user.Email, password = user.Password, rememberMe = false });
+        var reloginOld = await TryLoginAsync(userClient, user.Email, user.Password);
         Assert.Equal(HttpStatusCode.Unauthorized, reloginOld.StatusCode);
 
-        var reloginNew = await userClient.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = user.Email, password = newPassword, rememberMe = false });
+        var reloginNew = await TryLoginAsync(userClient, user.Email, newPassword);
         Assert.Equal(HttpStatusCode.OK, reloginNew.StatusCode);
     }
 

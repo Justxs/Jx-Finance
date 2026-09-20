@@ -1,14 +1,14 @@
 import { isRedirect } from "@tanstack/react-router";
 import { afterEach, expect, test, vi } from "vitest";
-import type { SettingsResponse } from "@/api/generated/model";
 import { settingsQueryOptions } from "@/hooks/use-settings";
+import { settingsFixture } from "@/test/settings";
 import { requireFeature } from "./feature-gate";
 import { queryClient } from "./query-client";
 
 const gateArgs = { context: { queryClient } };
 
 function settingsWith(budgets: boolean) {
-  return { features: { budgets } } as SettingsResponse;
+  return settingsFixture({ features: { ...settingsFixture().features, budgets } });
 }
 
 async function thrownBy(run: () => Promise<void>): Promise<unknown> {

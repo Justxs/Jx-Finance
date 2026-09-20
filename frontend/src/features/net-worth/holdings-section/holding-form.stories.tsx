@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { HoldingForm } from "./holding-form";
 
 const meta = {
@@ -17,15 +18,7 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
-  decorators: [
-    function withFormWidth(Story) {
-      return (
-        <div className="w-[min(36rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
 } satisfies Meta<typeof HoldingForm>;
 
 export default meta;

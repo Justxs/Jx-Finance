@@ -1,5 +1,5 @@
-import { Panel } from "@/components/ui/section";
-import { SplitColumns } from "@/components/ui/split-columns";
+import { Panel } from "@/components/ui/section/section";
+import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 

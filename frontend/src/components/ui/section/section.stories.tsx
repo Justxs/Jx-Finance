@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Panel, Section, SectionTitle } from "./section";
+import { Button } from "../button/button";
+import { Panel, Section, SectionHeader, SectionTitle } from "./section";
 
 const meta = {
   title: "UI/Section",
@@ -14,6 +15,19 @@ export const Default: Story = {
     <Section className="w-[min(90vw,32rem)]">
       <SectionTitle className="mb-4">Spending by category</SectionTitle>
       <p className="text-sm text-muted-foreground">Groceries, transport and everything else.</p>
+    </Section>
+  ),
+};
+
+export const WithHeaderAction: Story = {
+  render: () => (
+    <Section className="w-[min(90vw,32rem)]">
+      <SectionHeader title="Transfers">
+        <Button variant="outline" size="sm">
+          Add transfer
+        </Button>
+      </SectionHeader>
+      <p className="text-sm text-muted-foreground">Money moved between your own accounts.</p>
     </Section>
   ),
 };

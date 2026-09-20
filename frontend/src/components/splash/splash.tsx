@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { BrandMark } from "@/components/brand";
+import { BrandMark } from "@/components/brand/brand";
 
 export function Splash() {
   const { t } = useTranslation();

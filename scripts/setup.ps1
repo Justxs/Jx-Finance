@@ -17,19 +17,11 @@ else {
     Write-Host ".env already exists; left untouched."
 }
 
-$envVars = @{}
-foreach ($line in Get-Content ".env") {
-    if ($line -match '^\s*([^#=]+)=(.*)$') {
-        $envVars[$Matches[1].Trim()] = $Matches[2].Trim()
-    }
-}
+. (Join-Path $PSScriptRoot "dev-env.ps1")
+$variables = Get-DevEnvironment -Root $root
+$variables["OTEL_EXPORTER_OTLP_ENDPOINT"] = "http://localhost:4317"
 New-Item -ItemType Directory -Force (Join-Path $root ".local") | Out-Null
-$debugEnv = @(
-    "ConnectionStrings__Default=Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])",
-    "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317",
-    "App__BackupDirectory=$(Join-Path $root '.local/backups')",
-    ""
-) -join "`n"
+$debugEnv = (@($variables.Keys | ForEach-Object { "$_=$($variables[$_])" }) + "") -join "`n"
 [System.IO.File]::WriteAllText((Join-Path $root ".local/api-debug.env"), $debugEnv, $utf8)
 Write-Host "Wrote .local/api-debug.env for the VS Code 'API' debug target."
 

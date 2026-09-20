@@ -29,7 +29,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         Assert.Equal(("15", "300.00"), holdings[report.Fractional]);
         Assert.Equal(("10", "200.00"), holdings[report.Merged]);
 
-        var splits = (await Client.GetFromJsonAsync<PageDto>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
+        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
         Assert.Equal(
             [(report.Forward, "2", new DateOnly(2026, 6, 10)), (report.Reverse, "0.1", new DateOnly(2026, 6, 15)), (report.Fractional, "1.5", new DateOnly(2026, 6, 16))],
             splits.OrderBy(s => s.Date).Select(s => (s.Symbol, s.Quantity, s.Date)));
@@ -48,7 +48,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         var report = NewReport();
         var broker = await CreateAccountAsync("10000.00", "investment", "eur");
         await UploadAsync(broker, report.Xml);
-        var splits = (await Client.GetFromJsonAsync<PageDto>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
+        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
         var fractional = splits.Single(s => s.Symbol == report.Fractional);
 
         Assert.Equal(HttpStatusCode.NoContent, (await Client.DeleteAsync($"/api/investments/transactions/{fractional.Id}")).StatusCode);
@@ -66,7 +66,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         var report = NewReport();
         var broker = await CreateAccountAsync("10000.00", "investment", "eur");
         await UploadAsync(broker, report.Xml);
-        var split = (await Client.GetFromJsonAsync<PageDto>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items[0];
+        var split = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items[0];
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{split.Id}",
@@ -153,6 +153,4 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
     private sealed record PortfolioDto(List<HoldingDto> Holdings);
 
     private sealed record EntryDto(Guid Id, Guid? SecurityId, string? Symbol, string Type, DateOnly Date, string Quantity, string CashAmount, string Source);
-
-    private sealed record PageDto(List<EntryDto> Items);
 }

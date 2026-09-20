@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Rows } from "@/components/ui/rows";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Rows } from "@/components/ui/rows/rows";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { categories, ids } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";

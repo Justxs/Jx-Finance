@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { IconPicker } from "./icon-picker";
 
 function ControlledIconPicker({ initial }: Readonly<{ initial: string | null }>) {
@@ -18,15 +19,7 @@ const meta = {
   title: "Features/Categories/IconPicker",
   component: IconPicker,
   args: { value: null, onChange: fn() },
-  decorators: [
-    function withPickerWidth(Story) {
-      return (
-        <div className="w-[min(28rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("w-[min(28rem,calc(100vw-3rem))]")],
 } satisfies Meta<typeof IconPicker>;
 
 export default meta;
@@ -41,13 +34,5 @@ export const UnknownValue: Story = { args: { value: "not-a-real-icon" } };
 export const Interactive: Story = { render: () => <ControlledIconPicker initial="coffee" /> };
 
 export const NarrowContainer: Story = {
-  decorators: [
-    function withNarrowWidth(Story) {
-      return (
-        <div className="w-40">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("w-40")],
 };

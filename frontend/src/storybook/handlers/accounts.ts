@@ -6,7 +6,8 @@ import {
   getUpdateAccountMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import type { AccountResponse } from "@/api/generated/model";
-import { accounts, checkingAccount, toCents } from "@/storybook/fixtures";
+import { toCents } from "@/lib/money";
+import { accounts, checkingAccount } from "@/storybook/fixtures";
 import { found, readBody } from "./http";
 import type { Body } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";

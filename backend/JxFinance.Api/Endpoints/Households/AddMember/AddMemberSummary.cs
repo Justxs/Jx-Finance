@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Domain.Households;
+using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Households.AddMember;
 
@@ -17,7 +18,7 @@ public sealed class AddMemberSummary : Summary<AddMemberEndpoint, AddMemberReque
         RequestParam(r => r.Role, "Owner may manage the household and its members; Member may not.");
         Responses[200] = "The household with the new member included.";
         Responses[400] = "No such user, or they are already a member.";
-        Responses[403] = "The signed-in user is a member but not an owner.";
-        Responses[404] = "No such household, or the signed-in user is not a member.";
+        Responses[403] = HouseholdSummaryText.NotOwner;
+        Responses[404] = HouseholdSummaryText.NotFound;
     }
 }

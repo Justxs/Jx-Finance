@@ -8,16 +8,17 @@ import {
   type FlowType,
   type TransactionResponse,
 } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Label } from "@/components/ui/label";
+import { MoneyPairField, useAppForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { Button } from "@/components/ui/button/button";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
 import { toCents } from "@/lib/money";
+import { namedOptions } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { emptyLine, type LineFormValue } from "./line-form-value";
 import { SplitLinesEditor } from "./split-lines-editor";
@@ -220,12 +221,10 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
             <field.SelectFieldControl
               id="tx-category"
               label={t("transactions.category")}
-              options={[
-                { value: "", label: t("transactions.uncategorized") },
-                ...categories
-                  .filter((c) => c.type === typeField.value)
-                  .map((category) => ({ value: category.id, label: category.name })),
-              ]}
+              options={namedOptions(
+                categories.filter((c) => c.type === typeField.value),
+                t("transactions.uncategorized"),
+              )}
             />
           )}
         </form.Field>
@@ -260,16 +259,12 @@ export function TransactionForm({
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
+      <form.FormShell
+        as={FormGrid}
+        onBeforeSubmit={() => {
           intent.current = "save";
           setAnotherPending(false);
-          void form.handleSubmit();
         }}
-        noValidate
       >
         <form.Field name="type">
           {(field) => (
@@ -295,7 +290,7 @@ export function TransactionForm({
             <field.SelectFieldControl
               id="tx-account"
               label={t("transactions.account")}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              options={namedOptions(accounts)}
               onValueChange={(value, previousId) => {
                 const previous = accounts.find((account) => account.id === previousId);
                 const next = accounts.find((account) => account.id === value);
@@ -327,24 +322,15 @@ export function TransactionForm({
 
         <form.Subscribe selector={(state) => state.values.accountId}>
           {(accountId) => (
-            <form.Field name="currency">
-              {(currencyField) => (
-                <form.Field name="amount">
-                  {(field) => (
-                    <field.MoneyAmountField
-                      id="tx-amount"
-                      ref={amountInput}
-                      label={t("transactions.amount")}
-                      currencyField={currencyField}
-                      currencyLabel={t("transactions.currency")}
-                      preferred={heldCurrencies(
-                        accounts.find((account) => account.id === accountId),
-                      )}
-                    />
-                  )}
-                </form.Field>
-              )}
-            </form.Field>
+            <MoneyPairField
+              form={form}
+              fields={{ amount: "amount", currency: "currency" }}
+              id="tx-amount"
+              ref={amountInput}
+              label={t("transactions.amount")}
+              currencyLabel={t("transactions.currency")}
+              preferred={heldCurrencies(accounts.find((account) => account.id === accountId))}
+            />
           )}
         </form.Subscribe>
 
@@ -379,7 +365,11 @@ export function TransactionForm({
           )}
         </form.Field>
 
-        <SplitLinesEditor form={form} categories={categories} />
+        <SplitLinesEditor
+          form={form}
+          fields={{ type: "type", isSplit: "isSplit", lines: "lines" }}
+          categories={categories}
+        />
 
         <FormError error={error} />
 
@@ -418,7 +408,7 @@ export function TransactionForm({
             )}
           </form.Subscribe>
         </div>
-      </FormGrid>
+      </form.FormShell>
     </form.AppForm>
   );
 }

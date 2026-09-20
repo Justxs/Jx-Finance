@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Transfers.UpdateTransfer;
 
@@ -19,7 +20,7 @@ public sealed class UpdateTransferSummary : Summary<UpdateTransferEndpoint, Upda
             + "while the description, the other account and, between currencies, the other amount stay editable.";
         ExampleRequest = new UpdateTransferRequest(Guid.Empty, Guid.Empty, Guid.Empty, 250.00m, new DateOnly(2026, 9, 12), "To savings");
         Params["id"] = "The transfer id. Takes precedence over the id in the body.";
-        RequestParam(r => r.Amount, "Decimal string with at most two decimal places, greater than zero.");
+        RequestParam(r => r.Amount, SummaryText.PositiveMoney);
         RequestParam(r => r.Date, "The date the money moved, as YYYY-MM-DD.");
         RequestParam(r => r.ReceivedAmount, "The amount that arrived. Required when the two currencies differ.");
         Responses[200] = "The updated transfer.";

@@ -1,4 +1,4 @@
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { CategoryIcon, categoryIconNames } from "@/lib/category-icons";
 import { cn } from "@/lib/utils";
 

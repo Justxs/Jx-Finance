@@ -1,5 +1,6 @@
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Categories.Shared;
 
 namespace JxFinance.Endpoints.Categories.UpdateCategory;
 
-public sealed record UpdateCategoryRequest(Guid Id, string Name, string? Icon, Scope Scope, Guid? HouseholdId);
+public sealed record UpdateCategoryRequest(Guid Id, string Name, string? Icon, Scope Scope, Guid? HouseholdId) : ICategoryInput;

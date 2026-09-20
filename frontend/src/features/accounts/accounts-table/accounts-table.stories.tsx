@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { accounts, checkingAccount, ids, sharedAccount } from "@/storybook/fixtures";
 import { AccountsTable } from "./accounts-table";
 
@@ -12,11 +12,7 @@ const meta = {
   args: {
     accounts,
     stale: false,
-    editingId: null,
     onEdit: fn(),
-    onCancelEdit: fn(),
-    updatePending: false,
-    onUpdate: fn(),
     deletingId: null,
     onDelete: fn(),
     onConvert: fn(),
@@ -45,14 +41,6 @@ export const FilteredNoMatches: Story = {
 export const Sorted: Story = { parameters: { route: "/accounts?sort=name&direction=asc" } };
 
 export const Stale: Story = { args: { stale: true } };
-
-export const Editing: Story = { args: { editingId: ids.accounts.checking } };
-
-export const EditingShared: Story = { args: { editingId: ids.accounts.shared } };
-
-export const UpdatePending: Story = {
-  args: { editingId: ids.accounts.checking, updatePending: true },
-};
 
 export const Deleting: Story = { args: { deletingId: ids.accounts.savings } };
 

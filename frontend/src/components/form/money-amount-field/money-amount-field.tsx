@@ -1,7 +1,10 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { Ref } from "react";
 import type { Currency } from "@/api/generated/model";
-import { MoneyField } from "@/components/money-field";
+import { CurrencySelect } from "@/components/currency-select/currency-select";
+import { FieldError } from "@/components/ui/field-error";
+import { Input } from "@/components/ui/input/input";
+import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 interface Props {
   field: FieldWithValue<string>;
@@ -27,7 +30,7 @@ export function MoneyAmountField({
   label,
   currencyLabel,
   hint,
-  placeholder,
+  placeholder = "0.00",
   disabled,
   blankWhenDisabled,
   touchedOnly,
@@ -36,29 +39,45 @@ export function MoneyAmountField({
   only,
   onCurrencyChange,
 }: Readonly<Props>) {
-  const visible = !touchedOnly || field.meta.isTouched;
+  const { error, ...aria } = fieldAria(field, { id, hint, touchedOnly });
+  const currencyErrorId = `${id}-currency-error`;
+  const currencyError: string | undefined = currencyField.errors[0]?.message;
 
   return (
-    <MoneyField
+    <FieldShell
       id={id}
-      ref={ref}
       label={label}
       hint={hint}
-      placeholder={placeholder}
-      disabled={disabled}
-      value={disabled && blankWhenDisabled ? "" : field.value}
-      error={visible ? field.errors[0]?.message : undefined}
-      onBlur={field.handleBlur}
-      onChange={field.handleChange}
-      currency={currencyField.value}
-      currencyLabel={currencyLabel}
-      currencyError={currencyField.errors[0]?.message}
-      preferred={preferred}
-      only={only}
-      onCurrencyChange={(next) => {
-        currencyField.handleChange(next);
-        onCurrencyChange?.(next);
-      }}
-    />
+      error={error}
+      footer={<FieldError id={currencyErrorId} message={currencyError} />}
+    >
+      <div className="flex gap-2">
+        <Input
+          {...aria}
+          id={id}
+          ref={ref}
+          inputMode="decimal"
+          placeholder={placeholder}
+          className="min-w-0 flex-1"
+          disabled={disabled}
+          value={disabled && blankWhenDisabled ? "" : field.value}
+          onBlur={field.handleBlur}
+          onChange={(event) => field.handleChange(event.target.value)}
+        />
+        <CurrencySelect
+          compact
+          aria-label={currencyLabel}
+          aria-invalid={Boolean(currencyError)}
+          aria-describedby={currencyError ? currencyErrorId : undefined}
+          value={currencyField.value}
+          preferred={preferred}
+          only={only}
+          onChange={(next) => {
+            currencyField.handleChange(next);
+            onCurrencyChange?.(next);
+          }}
+        />
+      </div>
+    </FieldShell>
   );
 }

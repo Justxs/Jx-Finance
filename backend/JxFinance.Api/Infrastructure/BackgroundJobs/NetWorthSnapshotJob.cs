@@ -1,4 +1,3 @@
-using JxFinance.Common.Settings;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -10,31 +9,18 @@ namespace JxFinance.Infrastructure.BackgroundJobs;
 public sealed class NetWorthSnapshotJob(
     IServiceScopeFactory scopes,
     INetWorthSnapshotter snapshotter,
-    ILogger<NetWorthSnapshotJob> logger) : BackgroundService
+    ILogger<NetWorthSnapshotJob> logger) : PeriodicJob(scopes, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromHours(1));
-        do
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { logger.LogError(ex, "Net worth snapshot failed."); }
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
-    }
+    protected override string Name => "Net worth snapshot";
 
-    public async Task RunOnceAsync(CancellationToken ct)
-    {
-        using var scope = scopes.CreateScope();
-        var settings = scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>();
-        if (!settings.Current.IsEnabled(Feature.NetWorth))
-        {
-            return;
-        }
+    protected override TimeSpan Interval => TimeSpan.FromHours(1);
 
-        var source = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var ids = await source.Users.Where(u => u.PasswordHash != null &&
-            (u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)).OrderBy(u => u.Id).Select(u => u.Id).ToListAsync(ct);
+    protected override Feature? RequiredFeature => Feature.NetWorth;
+
+    protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
+    {
+        var source = services.GetRequiredService<AppDbContext>();
+        var ids = await source.Users.Where(AppUser.IsActive).OrderBy(u => u.Id).Select(u => u.Id).ToListAsync(ct);
         foreach (var id in ids)
         {
             try
@@ -43,7 +29,7 @@ public sealed class NetWorthSnapshotJob(
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Net worth snapshot for user {UserId} failed.", id);
+                Logger.LogError(ex, "Net worth snapshot for user {UserId} failed.", id);
             }
         }
     }

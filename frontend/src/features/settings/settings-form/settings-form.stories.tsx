@@ -36,9 +36,12 @@ export const Saving: Story = {
   args: { pending: true, onSubmit: fn() },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(await canvas.findByLabelText(/installation name|sistemos pavadinimas/i), {
-      target: { value: "Kazlauskai" },
-    });
+    await fireEvent.change(
+      await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
+      {
+        target: { value: "Kazlauskai" },
+      },
+    );
 
     await expect(
       await canvas.findByRole("button", { name: /discard changes|atmesti pakeitimus/i }),
@@ -49,9 +52,12 @@ export const Saving: Story = {
 export const SavesTrimmedName: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(await canvas.findByLabelText(/installation name|sistemos pavadinimas/i), {
-      target: { value: "  Kazlauskai  " },
-    });
+    await fireEvent.change(
+      await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
+      {
+        target: { value: "  Kazlauskai  " },
+      },
+    );
     await userEvent.click(await canvas.findByRole("button", { name: /^(save|išsaugoti)$/i }));
 
     await waitFor(() =>
@@ -69,7 +75,7 @@ export const DiscardRestoresValues: Story = {
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     const name = await canvas.findByLabelText(/installation name|sistemos pavadinimas/i);
-    fireEvent.change(name, { target: { value: "Something else" } });
+    await fireEvent.change(name, { target: { value: "Something else" } });
     await userEvent.click(
       await canvas.findByRole("button", { name: /discard changes|atmesti pakeitimus/i }),
     );

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -15,7 +16,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Households.Services;
 
 [RegisterService<IHouseholdService>(LifeTime.Scoped)]
-public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, HouseholdMapper mapper) : IHouseholdService
+public sealed class HouseholdService(
+    AppDbContext db,
+    ICurrentUser currentUser,
+    HouseholdMapper mapper,
+    IClock clock) : IHouseholdService
 {
     public async Task<IReadOnlyList<HouseholdResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -31,13 +36,13 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
 
     public async Task<Result<HouseholdResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var household = await FindAsync(id, cancellationToken);
-        if (household is null)
+        var found = await FindAsync(id, cancellationToken);
+        if (!found.TryGetValue(out var household))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
+            return found.Error;
         }
 
-        return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+        return await ToResponseAsync(household, cancellationToken);
     }
 
     public async Task<HouseholdResponse> CreateAsync(
@@ -62,34 +67,24 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         UpdateHouseholdRequest request,
         CancellationToken cancellationToken)
     {
-        var household = await FindAsync(request.Id, cancellationToken);
-        if (household is null)
+        var owned = await FindOwnedAsync(request.Id, cancellationToken);
+        if (!owned.TryGetValue(out var household))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
+            return owned.Error;
         }
 
-        if (!await IsOwnerAsync(household.Id, cancellationToken))
-        {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
-        }
-
-        mapper.UpdateEntity(request, household);
+        mapper.Apply(request, household);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+        return await ToResponseAsync(household, cancellationToken);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        var household = await FindAsync(id, cancellationToken);
-        if (household is null)
+        var owned = await FindOwnedAsync(id, cancellationToken);
+        if (!owned.TryGetValue(out var household))
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
-        }
-
-        if (!await IsOwnerAsync(household.Id, cancellationToken))
-        {
-            return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
+            return owned.Error;
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -98,36 +93,31 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     public async Task<Result<HouseholdResponse>> AddMemberAsync(
         AddMemberRequest request,
         CancellationToken cancellationToken)
     {
-        var household = await FindAsync(request.Id, cancellationToken);
-        if (household is null)
+        var owned = await FindOwnedAsync(request.Id, cancellationToken);
+        if (!owned.TryGetValue(out var household))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
-        }
-
-        if (!await IsOwnerAsync(household.Id, cancellationToken))
-        {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
+            return owned.Error;
         }
 
         var normalizedEmail = request.Email.Trim().ToUpperInvariant();
         var user = await db.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail, cancellationToken);
         if (user is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ReferenceNotFound, "No user with that email exists.");
+            return new DomainError(ErrorCodes.ReferenceNotFound, "No user with that email exists.");
         }
 
         var alreadyMember = await db.HouseholdMemberships
             .AnyAsync(m => m.HouseholdId == household.Id && m.UserId == user.Id, cancellationToken);
         if (alreadyMember)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ConflictDuplicate, "That user is already a member.");
+            return new DomainError(ErrorCodes.ConflictDuplicate, "That user is already a member.");
         }
 
         db.HouseholdMemberships.Add(new HouseholdMembership
@@ -138,36 +128,31 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         });
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+        return await ToResponseAsync(household, cancellationToken);
     }
 
     public async Task<Result<HouseholdResponse>> UpdateMemberRoleAsync(
         UpdateMemberRoleRequest request,
         CancellationToken cancellationToken)
     {
-        var household = await FindAsync(request.Id, cancellationToken);
-        if (household is null)
+        var owned = await FindOwnedAsync(request.Id, cancellationToken);
+        if (!owned.TryGetValue(out var household))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
-        }
-
-        if (!await IsOwnerAsync(household.Id, cancellationToken))
-        {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
+            return owned.Error;
         }
 
         var membership = await db.HouseholdMemberships
             .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == request.UserId, cancellationToken);
         if (membership is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Membership not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Membership not found.");
         }
 
         if (membership.Role == HouseholdRole.Owner
             && request.Role != HouseholdRole.Owner
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.HouseholdLastOwner,
                 "A household needs at least one owner.");
         }
@@ -175,7 +160,7 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         membership.Role = request.Role;
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+        return await ToResponseAsync(household, cancellationToken);
     }
 
     public async Task<Result<HouseholdResponse>> RemoveMemberAsync(
@@ -183,28 +168,23 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         Guid userId,
         CancellationToken cancellationToken)
     {
-        var household = await FindAsync(householdId, cancellationToken);
-        if (household is null)
+        var owned = await FindOwnedAsync(householdId, cancellationToken);
+        if (!owned.TryGetValue(out var household))
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Household not found.");
-        }
-
-        if (!await IsOwnerAsync(household.Id, cancellationToken))
-        {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
+            return owned.Error;
         }
 
         var membership = await db.HouseholdMemberships
             .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == userId, cancellationToken);
         if (membership is null)
         {
-            return Result<HouseholdResponse>.Failure(ErrorCodes.ResourceNotFound, "Membership not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Membership not found.");
         }
 
         if (membership.Role == HouseholdRole.Owner
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
-            return Result<HouseholdResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.HouseholdLastOwner,
                 "A household needs at least one owner.");
         }
@@ -215,18 +195,20 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
         await db.SaveChangesAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
-        return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+        return await ToResponseAsync(household, cancellationToken);
     }
 
     private async Task MakePersonalAsync(HouseholdId householdId, Guid? ownerId, CancellationToken cancellationToken)
     {
+        var now = clock.UtcNow;
+
         await db.Accounts
             .Where(a => a.HouseholdId == householdId && (ownerId == null || a.UserId == ownerId))
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(a => a.Scope, Scope.Personal)
                     .SetProperty(a => a.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(a => a.UpdatedAt, DateTimeOffset.UtcNow),
+                    .SetProperty(a => a.UpdatedAt, now),
                 cancellationToken);
 
         await db.Categories
@@ -235,14 +217,25 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
                 setters => setters
                     .SetProperty(c => c.Scope, Scope.Personal)
                     .SetProperty(c => c.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(c => c.UpdatedAt, DateTimeOffset.UtcNow),
+                    .SetProperty(c => c.UpdatedAt, now),
                 cancellationToken);
     }
 
-    private Task<Household?> FindAsync(Guid id, CancellationToken cancellationToken)
+    private Task<Result<Household>> FindAsync(Guid id, CancellationToken cancellationToken)
     {
         var householdId = new HouseholdId(id);
-        return db.Households.FirstOrDefaultAsync(h => h.Id == householdId, cancellationToken);
+        return db.Households.FindOrNotFoundAsync(h => h.Id == householdId, "Household not found.", cancellationToken);
+    }
+
+    private async Task<Result<Household>> FindOwnedAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var found = await FindAsync(id, cancellationToken);
+        if (found.TryGetValue(out var household) && !await IsOwnerAsync(household.Id, cancellationToken))
+        {
+            return new DomainError(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
+        }
+
+        return found;
     }
 
     private Task<bool> IsOwnerAsync(HouseholdId householdId, CancellationToken cancellationToken) =>

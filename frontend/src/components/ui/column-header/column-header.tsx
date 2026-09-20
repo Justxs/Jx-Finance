@@ -1,8 +1,8 @@
 import { ArrowDown, ArrowUp, ChevronsUpDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { TableHead } from "@/components/ui/table";
-import { Tooltip } from "@/components/ui/tooltip";
+import { TableHead } from "@/components/ui/table/table";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { cn } from "@/lib/utils";
 
 export type SortDirection = "asc" | "desc";

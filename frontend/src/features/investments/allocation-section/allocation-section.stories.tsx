@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { portfolio } from "@/storybook/investment-fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { portfolio } from "@/storybook/fixtures";
 import { AllocationSection } from "./allocation-section";
 
 const meta = {
   title: "Features/Investments/AllocationSection",
   component: AllocationSection,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(32rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(32rem,90vw)]")],
   args: { holdings: portfolio.holdings, currency: portfolio.reportingCurrency },
 } satisfies Meta<typeof AllocationSection>;
 

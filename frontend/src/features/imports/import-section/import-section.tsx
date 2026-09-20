@@ -8,7 +8,7 @@ import {
   useImportPreview,
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import {
   importDateRange,
   ImportPreviewTable,

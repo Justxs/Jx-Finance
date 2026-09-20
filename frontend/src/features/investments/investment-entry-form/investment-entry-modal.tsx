@@ -7,8 +7,9 @@ import {
 } from "@/api/generated";
 import type { AccountResponse, InvestmentTransactionResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { silent, upsert } from "@/lib/mutations";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
 interface Props {
@@ -25,25 +26,19 @@ function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Reado
   const { t } = useTranslation();
   const securities = useSecuritiesSuspense();
 
-  const createMutation = useCreateInvestmentTransaction({
-    mutation: {
-      meta: { silent: true },
-      onSuccess: () => {
-        toast.success(t("investments.entry.saved"));
-        onOpenChange(false);
-      },
-    },
-  });
+  function closeWith(message: string) {
+    toast.success(message);
+    onOpenChange(false);
+  }
 
-  const updateMutation = useUpdateInvestmentTransaction({
-    mutation: {
-      meta: { silent: true },
-      onSuccess: () => {
-        toast.success(t("investments.entry.corrected"));
-        onOpenChange(false);
-      },
-    },
-  });
+  const { create, update, pending, error } = upsert(
+    useCreateInvestmentTransaction(
+      silent({ onSuccess: () => closeWith(t("investments.entry.saved")) }),
+    ),
+    useUpdateInvestmentTransaction(
+      silent({ onSuccess: () => closeWith(t("investments.entry.corrected")) }),
+    ),
+  );
 
   return (
     <InvestmentEntryForm
@@ -52,14 +47,14 @@ function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Reado
       securities={securities.data ?? []}
       accountId={accountId}
       editing={editing}
-      pending={createMutation.isPending || updateMutation.isPending}
-      serverError={createMutation.error ?? updateMutation.error}
+      pending={pending}
+      serverError={error}
       onSubmit={(values) => {
         if (editing) {
-          return updateMutation.mutateAsync({ id: editing.id, data: values });
+          return update({ id: editing.id, data: values });
         }
 
-        return createMutation.mutateAsync({ data: values });
+        return create({ data: values });
       }}
       onCancel={() => onOpenChange(false)}
     />

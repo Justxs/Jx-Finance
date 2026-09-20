@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card/card";
 import { categoryBreakdownItems } from "@/storybook/fixtures";
 import { CategoryBreakdown } from "./category-breakdown";
 

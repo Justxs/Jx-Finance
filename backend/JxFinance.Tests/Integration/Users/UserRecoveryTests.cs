@@ -24,7 +24,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         Assert.Equal(HttpStatusCode.Unauthorized, (await before.GetAsync("/api/auth/me")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await before.PostAsync("/api/auth/refresh", null)).StatusCode);
         using var client = CreateClient();
-        (await LoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
         var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=true");
         Assert.Contains(users!, u => u.GetProperty("id").GetGuid() == user.Id);
     }
@@ -50,7 +50,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         using var client = CreateClient();
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await LoginAsync(client, user.Email, WrongPassword);
+            await TryLoginAsync(client, user.Email, WrongPassword);
         }
 
         (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
@@ -59,7 +59,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         using var other = CreateClient();
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await AssertProblemAsync(await LoginAsync(other, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
+            await AssertProblemAsync(await TryLoginAsync(other, user.Email, WrongPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
         }
     }
 
@@ -92,8 +92,8 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.GetAsync("/api/auth/me")).StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.PostAsync("/api/auth/refresh", null)).StatusCode);
         using var client = CreateClient();
-        await AssertProblemAsync(await LoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
-        (await LoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
+        await AssertProblemAsync(await TryLoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
+        (await TryLoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, (await adminClient.GetAsync("/api/auth/me")).StatusCode);
     }
 
@@ -111,7 +111,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
 
         await AssertProblemAsync(await ResetAsync(adminClient, user.Id, WrongPassword), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
         using var client = CreateClient();
-        (await LoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "password.tooWeak");
         using var client = CreateClient();
-        (await LoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -163,7 +163,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         (await ResetAsync(adminClient, other.Id, admin.Password)).EnsureSuccessStatusCode();
 
         using var client = CreateClient();
-        (await LoginAsync(client, other.Email, TemporaryPassword)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, other.Email, TemporaryPassword)).EnsureSuccessStatusCode();
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/users")).StatusCode);
     }
 
@@ -195,14 +195,14 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         kept.EnsureSuccessStatusCode();
         Assert.True((await kept.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("twoFactorEnabled").GetBoolean());
         using var client = CreateClient();
-        var challenged = await (await LoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
+        var challenged = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
         Assert.True(challenged.GetProperty("twoFactorRequired").GetBoolean());
 
         var cleared = await ResetAsync(adminClient, user.Id, admin.Password, resetTwoFactor: true);
 
         cleared.EnsureSuccessStatusCode();
         Assert.False((await cleared.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("twoFactorEnabled").GetBoolean());
-        var signedIn = await (await LoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
+        var signedIn = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
         Assert.False(signedIn.GetProperty("twoFactorRequired").GetBoolean());
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
 
@@ -219,15 +219,15 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         using var attacker = CreateClient();
         for (var attempt = 1; attempt <= 5; attempt++)
         {
-            await LoginAsync(attacker, user.Email, WrongPassword);
+            await TryLoginAsync(attacker, user.Email, WrongPassword);
         }
 
         using var client = CreateClient();
-        await AssertProblemAsync(await LoginAsync(client, user.Email, user.Password), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
+        await AssertProblemAsync(await TryLoginAsync(client, user.Email, user.Password), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
 
         (await ResetAsync(adminClient, user.Id, admin.Password)).EnsureSuccessStatusCode();
 
-        (await LoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -243,10 +243,10 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         response.EnsureSuccessStatusCode();
         Assert.False((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("isActive").GetBoolean());
         using var client = CreateClient();
-        await AssertProblemAsync(await LoginAsync(client, user.Email, TemporaryPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
+        await AssertProblemAsync(await TryLoginAsync(client, user.Email, TemporaryPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
 
         (await Client.PostAsync($"/api/users/{user.Id}/reactivate", null)).EnsureSuccessStatusCode();
-        (await LoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
+        (await TryLoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -276,16 +276,6 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         string newPassword = TemporaryPassword,
         bool resetTwoFactor = false) =>
         client.PostAsJsonAsync($"/api/users/{userId}/reset-password", new { newPassword, currentPassword, resetTwoFactor });
-
-    private static Task<HttpResponseMessage> LoginAsync(HttpClient client, string email, string password) =>
-        client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false });
-
-    private static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)
-    {
-        var body = await response.Content.ReadAsStringAsync();
-        Assert.True(response.StatusCode == status, $"Expected {(int)status}, got {(int)response.StatusCode}: {body}");
-        Assert.Contains($"\"{code}\"", body);
-    }
 
     private sealed record SetupDto(string SharedKey);
 }

@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { Rows } from "@/components/ui/rows/rows";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportSection } from "../import-section";
 
 const providers = [

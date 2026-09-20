@@ -3,12 +3,11 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useLogin } from "@/api/generated";
-import { Brand } from "@/components/brand";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Card } from "@/components/ui/card";
+import { Brand } from "@/components/brand/brand";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { Card } from "@/components/ui/card/card";
 import { setAuthenticated } from "@/lib/auth-gate";
-import { submitToServer } from "@/lib/form-server-errors";
 import { requiredEmail, requiredValue } from "@/lib/validation";
 
 interface FormValues {
@@ -39,7 +38,7 @@ export function LoginPage() {
           return;
         }
         setAuthenticated(true);
-        navigate({ to: "/" });
+        void navigate({ to: "/" });
       },
     },
   });
@@ -51,23 +50,18 @@ export function LoginPage() {
     twoFactorCode: "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        loginMutation.mutateAsync({
-          data: {
-            email: value.email.trim(),
-            password: value.password,
-            rememberMe: value.rememberMe,
-            twoFactorCode: value.twoFactorCode || null,
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      loginMutation.mutateAsync({
+        data: {
+          email: value.email.trim(),
+          password: value.password,
+          rememberMe: value.rememberMe,
+          twoFactorCode: value.twoFactorCode || null,
+        },
+      }),
   });
 
   return (
@@ -80,15 +74,7 @@ export function LoginPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.signInSubtitle")}</p>
 
         <form.AppForm>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void form.handleSubmit();
-            }}
-            noValidate
-            className="mt-6 space-y-4"
-          >
+          <form.FormShell className="mt-6 space-y-4">
             <form.Field name="email">
               {(field) => (
                 <field.TextField
@@ -144,7 +130,7 @@ export function LoginPage() {
             <form.SubmitButton pending={loginMutation.isPending} className="w-full">
               {twoFactorRequired ? t("auth.verifyCode") : t("auth.signIn")}
             </form.SubmitButton>
-          </form>
+          </form.FormShell>
         </form.AppForm>
       </Card>
     </div>

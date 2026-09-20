@@ -1,10 +1,11 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 
 namespace JxFinance.Endpoints.NetWorth.DeleteDebt;
 
-public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : EndpointWithoutRequest
+public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -13,9 +14,6 @@ public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : Endpo
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        (await netWorthService.DeleteDebtAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
-    }
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        netWorthService.DeleteDebtAsync(id, ct);
 }

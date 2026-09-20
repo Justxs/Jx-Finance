@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { getCreateUserMockHandler } from "@/api/generated/users/users.msw";
 import { Modal } from "@/components/modal";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card/card";
 import { validationProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateUserForm } from "./create-user-form";

@@ -1,4 +1,5 @@
 import type { RequestHandler } from "msw";
+import { z } from "zod";
 import {
   getCreateInvestmentTransactionMockHandler,
   getCreateSecurityMockHandler,
@@ -15,9 +16,9 @@ import {
   getSetSecurityPriceMockHandler,
   getUpdateSecurityMockHandler,
 } from "@/api/generated/investments/investments.msw";
-import type { Currency, InvestmentTransactionType, SecurityResponse } from "@/api/generated/model";
-import { FIXTURE_TODAY } from "@/storybook/fixtures";
+import { InvestmentTransactionType, type SecurityResponse } from "@/api/generated/model";
 import {
+  FIXTURE_TODAY,
   brokerConnections,
   brokerImportResult,
   duplicateSecurityProblem,
@@ -26,10 +27,12 @@ import {
   oversellProblem,
   portfolio,
   securities,
-} from "@/storybook/investment-fixtures";
-import { found, problem, readBody, text } from "./http";
+} from "@/storybook/fixtures";
+import { currencyCode, found, problem, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { byId, emptyPage, paginate } from "./lists";
+
+const investmentType = z.enum(InvestmentTransactionType).catch("buy");
 
 export const investmentHandlers = [
   getPortfolioMockHandler(({ request }) => {
@@ -53,7 +56,7 @@ export const investmentHandlers = [
   getCreateInvestmentTransactionMockHandler(async ({ request }) => {
     const body = await readBody(request);
     const security = securities.find((item) => item.id === body.securityId);
-    const type = (text(body.type) ?? "buy") as InvestmentTransactionType;
+    const type = investmentType.parse(body.type);
     const quantity = Number(text(body.quantity) ?? 0);
     const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
     if (type === "sell" && quantity > Number(held?.quantity ?? 0)) {
@@ -83,7 +86,7 @@ export const investmentHandlers = [
       price: text(body.price) ?? "0",
       fee: fee.toFixed(2),
       cashAmount: cashByType[type].toFixed(2),
-      currency: security?.currency ?? ((text(body.currency) ?? "eur") as Currency),
+      currency: security?.currency ?? currencyCode.catch("eur").parse(body.currency),
       description: text(body.description),
       source: "manual",
       createdAt: CREATED_AT,

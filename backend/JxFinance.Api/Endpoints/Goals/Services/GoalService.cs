@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
 using JxFinance.Endpoints.Goals.Interfaces;
@@ -11,6 +11,8 @@ namespace JxFinance.Endpoints.Goals.Services;
 [RegisterService<IGoalService>(LifeTime.Scoped)]
 public sealed class GoalService(AppDbContext db) : IGoalService
 {
+    private const string NotFound = "Goal not found.";
+
     public async Task<IReadOnlyList<Goal>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Goals.OrderBy(g => g.CreatedAt).ToListAsync(cancellationToken);
 
@@ -22,33 +24,15 @@ public sealed class GoalService(AppDbContext db) : IGoalService
         return goal;
     }
 
-    public async Task<Result<Goal>> UpdateAsync(Guid id, Action<Goal> apply, CancellationToken cancellationToken)
+    public Task<Result<Goal>> UpdateAsync(Guid id, Action<Goal> apply, CancellationToken cancellationToken)
     {
         var goalId = new GoalId(id);
-        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken);
-        if (goal is null)
-        {
-            return Result<Goal>.Failure(ErrorCodes.ResourceNotFound, "Goal not found.");
-        }
-
-        apply(goal);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Goal>.Success(goal);
+        return db.UpdateOrNotFoundAsync(g => g.Id == goalId, NotFound, apply, cancellationToken);
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var goalId = new GoalId(id);
-        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken);
-        if (goal is null)
-        {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Goal not found.");
-        }
-
-        db.Goals.Remove(goal);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Guid>.Success(id);
+        return db.DeleteOrNotFoundAsync<Goal>(id, g => g.Id == goalId, NotFound, cancellationToken);
     }
 }

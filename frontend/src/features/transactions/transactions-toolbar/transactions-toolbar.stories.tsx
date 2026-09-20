@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { TransactionsToolbar } from "./transactions-toolbar";
 
 const meta = {
@@ -11,11 +12,7 @@ const meta = {
     filtered: false,
     onClearFilters: fn(),
   },
-  render: (args) => (
-    <div className="w-[min(48rem,90vw)]">
-      <TransactionsToolbar {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(48rem,90vw)]")],
 } satisfies Meta<typeof TransactionsToolbar>;
 
 export default meta;
@@ -33,9 +30,5 @@ export const Filtered: Story = {
 
 export const Narrow: Story = {
   args: { filtered: true },
-  render: (args) => (
-    <div className="w-56">
-      <TransactionsToolbar {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-56")],
 };

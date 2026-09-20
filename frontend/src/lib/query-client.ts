@@ -37,7 +37,7 @@ declare module "@tanstack/react-query" {
   }
 }
 
-export function createMutationCache(onError?: (error: unknown, silent: boolean) => void) {
+function createMutationCache(onError?: (error: unknown, silent: boolean) => void) {
   return new MutationCache({
     onError: (error, _variables, _result, mutation) => {
       onError?.(error, mutation.meta?.silent === true);
@@ -60,7 +60,7 @@ interface QueryWithData {
   state: { data: unknown };
 }
 
-export function hasNothingToShow(query: QueryWithData) {
+function hasNothingToShow(query: QueryWithData) {
   return query.state.data === undefined;
 }
 

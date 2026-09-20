@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,16 +13,21 @@ import type {
   ConversionResponse,
   PagedResponseOfConversionResponse,
 } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Pagination } from "@/components/pagination";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { StaleRegion } from "@/components/ui/stale-region";
+import { Pagination } from "@/components/pagination/pagination";
+import { RecordRow } from "@/components/record-row/record-row";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney, useRateFormat, useUsableCurrencies } from "@/hooks/use-formatters";
+import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
+import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
+import { nameById } from "@/lib/options";
 import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
 import { ConversionEditDialog } from "./conversion-edit-dialog";
 import { ConversionForm } from "./conversion-form";
@@ -44,24 +49,22 @@ export function ConversionsSection({
   const rateFormat = useRateFormat();
   const canConvert = useUsableCurrencies().length >= 2;
 
-  const [page, setPage] = useState(1);
-  const shownPage = useDeferredValue(page);
-  const stale = shownPage !== page;
+  const paging = usePagedList();
+  const { page, setPage, shownPage, stale } = paging;
   const listParams = conversionsPageParams(shownPage);
   const conversions = useConversionsSuspense(listParams);
-  const pages = Math.max(1, Math.ceil((conversions.data?.total ?? 0) / pageSize));
-  if (page > pages) {
-    setPage(pages);
-  }
-  const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
+  const pages = usePageClamp(paging, conversions.data?.total ?? 0, pageSize);
+  const accountNames = nameById(accounts);
 
-  const createMutation = useCreateConversion({
-    mutation: {
-      onSuccess: () => onConvertAccountChange(null),
-    },
-  });
+  const createMutation = useCreateConversion(
+    silent({ onSuccess: () => onConvertAccountChange(null) }),
+  );
   const categories = useCategoriesSuspense().data ?? [];
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+
+  function closeConvert() {
+    createMutation.reset();
+    onConvertAccountChange(null);
+  }
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteConversion({
     mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
@@ -69,8 +72,6 @@ export function ConversionsSection({
       getConversionsQueryKey(),
     ),
   });
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
-
   const items = useDeferredValue(conversions.data?.items) ?? [];
 
   function amounts(conversion: ConversionResponse) {
@@ -97,60 +98,31 @@ export function ConversionsSection({
       .join(" · ");
   }
 
-  const deleteItem = items.find((conversion) => conversion.id === deleteTarget);
-  const deleteLabel = deleteItem
-    ? `${accountNames.get(deleteItem.accountId) ?? ""} · ${amounts(deleteItem)}`
-    : undefined;
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    items,
+    (conversion) => `${accountNames.get(conversion.accountId) ?? ""} · ${amounts(conversion)}`,
+  );
 
   let content: ReactNode;
   if (items.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{t("conversions.empty")}</p>;
+    content = <EmptyText>{t("conversions.empty")}</EmptyText>;
   } else {
     content = (
       <Rows>
         {items.map((conversion) => (
-          <RowTransition key={conversion.id}>
-            <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 break-words">
-                <p className="text-sm font-medium">
-                  {accountNames.get(conversion.accountId) ?? ""}
-                </p>
-                <p className="text-xs text-muted-foreground">{details(conversion)}</p>
-                {conversion.isImported ? (
-                  <p className="text-xs text-muted-foreground">{t("conversions.importedHint")}</p>
-                ) : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-1">
-                <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">
-                  {amounts(conversion)}
-                </span>
-                {conversion.isImported ? null : (
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-8"
-                    onClick={() => setEditTarget(conversion.id)}
-                    aria-label={`${t("actions.edit")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
-                    tooltip={`${t("actions.edit")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
-                  >
-                    <Pencil />
-                  </Button>
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  pending={deletingId === conversion.id}
-                  disabled={deleteMutation.isPending}
-                  onClick={() => setDeleteTarget(conversion.id)}
-                  aria-label={`${t("actions.delete")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
-                  tooltip={`${t("actions.delete")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            </li>
-          </RowTransition>
+          <RecordRow
+            key={conversion.id}
+            title={accountNames.get(conversion.accountId) ?? ""}
+            subtitle={details(conversion)}
+            note={conversion.isImported ? t("conversions.importedHint") : null}
+            amount={amounts(conversion)}
+            label={`${amounts(conversion)}, ${formatDate(conversion.date)}`}
+            onEdit={conversion.isImported ? undefined : () => setEditTarget(conversion.id)}
+            onDelete={() => remove.request(conversion.id)}
+            deletePending={remove.pendingId === conversion.id}
+            deleteDisabled={remove.busy}
+          />
         ))}
       </Rows>
     );
@@ -158,8 +130,7 @@ export function ConversionsSection({
 
   return (
     <Section>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle>{t("conversions.heading")}</SectionTitle>
+      <SectionHeader title={t("conversions.heading")}>
         <Button
           variant="outline"
           disabled={accounts.length === 0 || !canConvert}
@@ -169,14 +140,10 @@ export function ConversionsSection({
           <Plus />
           {t("conversions.add")}
         </Button>
-      </div>
+      </SectionHeader>
       <Modal
         open={convertAccountId !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            onConvertAccountChange(null);
-          }
-        }}
+        onClose={closeConvert}
         title={t("conversions.title")}
         description={t("conversions.description")}
       >
@@ -187,8 +154,9 @@ export function ConversionsSection({
             categories={categories}
             accountId={convertAccountId}
             pending={createMutation.isPending}
+            error={createMutation.error}
             onSubmit={(values) => createMutation.mutateAsync({ data: values })}
-            onCancel={() => onConvertAccountChange(null)}
+            onCancel={closeConvert}
           />
         ) : null}
       </Modal>
@@ -200,12 +168,7 @@ export function ConversionsSection({
         conversion={items.find((conversion) => conversion.id === editTarget) ?? null}
         onClose={() => setEditTarget(null)}
       />
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={deleteLabel}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );
 }

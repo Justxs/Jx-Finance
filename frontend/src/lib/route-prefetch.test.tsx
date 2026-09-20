@@ -8,7 +8,7 @@ import type {
   TransactionsSummaryResponse,
   UserProfileResponse,
 } from "@/api/generated/model";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { routeTree } from "@/route-tree.gen";
 import { settingsFixture } from "@/test/settings";
@@ -64,14 +64,21 @@ function bodyFor(url: URL): unknown {
 let requested: string[] = [];
 let failing: ReadonlySet<string> = new Set();
 
-function respond(input: RequestInfo | URL): Promise<Response> {
-  const url = new URL(String(input), "http://localhost");
+function networkTurn() {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, 0);
+  });
+}
+
+async function respond(input: RequestInfo | URL): Promise<Response> {
+  const url = new URL(input instanceof Request ? input.url : input, "http://localhost");
   url.searchParams.sort();
   requested.push(`${url.pathname}${url.search}`);
+  await networkTurn();
   if (failing.has(url.pathname)) {
-    return Promise.resolve(Response.json({ title: "Broken" }, { status: 500 }));
+    return Response.json({ title: "Broken" }, { status: 500 });
   }
-  return Promise.resolve(Response.json(bodyFor(url)));
+  return Response.json(bodyFor(url));
 }
 
 function requestsTo(pathname: string) {
@@ -88,7 +95,7 @@ function mountAt(path: string) {
   render(
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <RouterProvider router={router as never} />
+        <RouterProvider router={router} />
       </TooltipProvider>
     </QueryClientProvider>,
   );
