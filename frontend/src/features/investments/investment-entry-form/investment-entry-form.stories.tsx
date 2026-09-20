@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
+import { chooseOption } from "@/storybook/interactions";
 import { securities, usStock, worldEtf } from "@/storybook/investment-fixtures";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
@@ -26,8 +27,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 async function choose(canvasElement: HTMLElement, label: string | RegExp, option: string | RegExp) {
-  await userEvent.click(await within(canvasElement).findByLabelText(label));
-  await userEvent.click(await within(document.body).findByRole("option", { name: option }));
+  await chooseOption(await within(canvasElement).findByLabelText(label), option);
 }
 
 export const Buy: Story = {};

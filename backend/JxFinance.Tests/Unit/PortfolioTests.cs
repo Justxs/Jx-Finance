@@ -88,6 +88,22 @@ public sealed class PortfolioTests
     }
 
     [Fact]
+    public void A_split_is_replayed_before_the_trades_of_its_own_day()
+    {
+        var position = Portfolio.Positions(
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Sell, 2, 4m, 60m),
+            Entry(InvestmentTransactionType.Buy, 2, 5m, 50m),
+            Entry(InvestmentTransactionType.Split, 2, 2m, 0m),
+        ])[Fund];
+
+        Assert.Equal(21m, position.Quantity);
+        Assert.Equal(1050m, position.CostBasis);
+        Assert.Equal(40m, Assert.Single(position.Sales).Gain);
+    }
+
+    [Fact]
     public void Sale_after_a_split_uses_the_diluted_cost_per_share()
     {
         var position = Portfolio.Positions(

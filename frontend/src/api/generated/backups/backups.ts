@@ -23,6 +23,7 @@ import type {
   BackupResponse,
   CreateBackupRequest,
   ProblemDetails,
+  RestoreBackupRequest,
   RestoreBackupResponse,
   UpdateBackupRequest,
   UploadBackupRequest,
@@ -87,7 +88,7 @@ export const createBackup = async (
 export const getCreateBackupMutationKey = () => ["createBackup"] as const;
 
 export const getCreateBackupMutationOptions = <
-  TError = ErrorType<ProblemDetails>,
+  TError = ErrorType<ProblemDetails | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -124,13 +125,13 @@ export const getCreateBackupMutationOptions = <
 
 export type CreateBackupMutationResult = NonNullable<Awaited<ReturnType<typeof createBackup>>>;
 export type CreateBackupMutationBody = CreateBackupRequest;
-export type CreateBackupMutationError = ErrorType<ProblemDetails>;
+export type CreateBackupMutationError = ErrorType<ProblemDetails | void>;
 export type CreateBackupMutationVariables = { data: CreateBackupRequest };
 
 /**
  * @summary Take a backup of the whole installation
  */
-export const useCreateBackup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+export const useCreateBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof createBackup>>,
@@ -278,7 +279,7 @@ export const uploadBackup = async (
 export const getUploadBackupMutationKey = () => ["uploadBackup"] as const;
 
 export const getUploadBackupMutationOptions = <
-  TError = ErrorType<ProblemDetails>,
+  TError = ErrorType<ProblemDetails | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -315,13 +316,13 @@ export const getUploadBackupMutationOptions = <
 
 export type UploadBackupMutationResult = NonNullable<Awaited<ReturnType<typeof uploadBackup>>>;
 export type UploadBackupMutationBody = UploadBackupRequest;
-export type UploadBackupMutationError = ErrorType<ProblemDetails>;
+export type UploadBackupMutationError = ErrorType<ProblemDetails | void>;
 export type UploadBackupMutationVariables = { data: UploadBackupRequest };
 
 /**
  * @summary Add a downloaded backup to the server
  */
-export const useUploadBackup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+export const useUploadBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof uploadBackup>>,
@@ -652,23 +653,45 @@ export const getRestoreBackupUrl = (id: string) => {
 };
 
 /**
- * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in once their short-lived access token runs out. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch.
+ * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in once their short-lived access token runs out. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.
  * @summary Replace all data with a stored backup
  */
 export const restoreBackup = async (
   id: string,
+  restoreBackupRequest: RestoreBackupRequest,
   options?: Parameters<typeof customFetch>[1],
 ): Promise<RestoreBackupResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
   return customFetch<RestoreBackupResponse>(getRestoreBackupUrl(id), {
     ...options,
     method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(restoreBackupRequest),
   });
 };
 
 export const getRestoreBackupMutationKey = () => ["restoreBackup"] as const;
 
 export const getRestoreBackupMutationOptions = <
-  TError = ErrorType<ProblemDetails>,
+  TError = ErrorType<ProblemDetails | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -695,23 +718,23 @@ export const getRestoreBackupMutationOptions = <
     Awaited<ReturnType<typeof restoreBackup>>,
     RestoreBackupMutationVariables
   > = (props) => {
-    const { id } = props ?? {};
+    const { id, data } = props ?? {};
 
-    return restoreBackup(id, requestOptions);
+    return restoreBackup(id, data, requestOptions);
   };
 
   return { mutationFn, ...mutationOptions };
 };
 
 export type RestoreBackupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreBackup>>>;
-
-export type RestoreBackupMutationError = ErrorType<ProblemDetails>;
-export type RestoreBackupMutationVariables = { id: string };
+export type RestoreBackupMutationBody = RestoreBackupRequest;
+export type RestoreBackupMutationError = ErrorType<ProblemDetails | void>;
+export type RestoreBackupMutationVariables = { id: string; data: RestoreBackupRequest };
 
 /**
  * @summary Replace all data with a stored backup
  */
-export const useRestoreBackup = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+export const useRestoreBackup = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
   options?: {
     mutation?: UseMutationOptions<
       Awaited<ReturnType<typeof restoreBackup>>,

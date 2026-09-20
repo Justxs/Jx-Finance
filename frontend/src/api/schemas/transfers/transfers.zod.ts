@@ -183,6 +183,8 @@ export const CreateTransferResponse = zod.object({
     "ils",
     "zar",
   ]),
+  fromAccountImported: zod.boolean(),
+  toAccountImported: zod.boolean(),
 });
 
 /**
@@ -267,6 +269,8 @@ export const TransfersResponse = zod.object({
         "ils",
         "zar",
       ]),
+      fromAccountImported: zod.boolean(),
+      toAccountImported: zod.boolean(),
     }),
   ),
   page: zod.int(),
@@ -279,3 +283,186 @@ export const TransfersResponse = zod.object({
  * @summary Delete a transfer
  */
 export const DeleteTransferResponse = zod.void();
+
+/**
+ * Replaces the date, amounts, description and both accounts of a transfer. The amount rules are those of creating one: between two currencies the received amount is required, within one currency it may be left out and must equal the sent amount when given. Send currency and receivedCurrency as the transfer has them; without them they default to the main currency of the chosen accounts. You need access to both accounts the transfer has now and to both accounts it should have afterwards. A transfer that was created or matched by a bank or broker import holds a receipt per imported account, flagged by fromAccountImported and toAccountImported: its date, that account's side of the transfer and the amount on that side are fixed and a change answers value.locked, while the description, the other account and, between currencies, the other amount stay editable.
+ * @summary Update a transfer
+ */
+
+export const updateTransferBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransferBodyDescriptionMin = 0;
+export const updateTransferBodyDescriptionMax = 500;
+
+export const updateTransferBodyReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateTransferBody = zod.object({
+  fromAccountId: zod.uuid().min(1),
+  toAccountId: zod.uuid().min(1),
+  amount: zod
+    .stringFormat("decimal", updateTransferBodyAmountRegExp)
+    .describe("Decimal string with at most two decimal places, greater than zero."),
+  date: zod.iso.date(),
+  description: zod
+    .string()
+    .min(updateTransferBodyDescriptionMin)
+    .max(updateTransferBodyDescriptionMax)
+    .nullable(),
+  currency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional(),
+  receivedAmount: zod
+    .stringFormat("decimal", updateTransferBodyReceivedAmountRegExp)
+    .nullish()
+    .describe("The amount that arrived. Required when the two currencies differ."),
+  receivedCurrency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional(),
+});
+
+export const updateTransferResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransferResponseReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateTransferResponse = zod.object({
+  id: zod.uuid(),
+  fromAccountId: zod.uuid(),
+  toAccountId: zod.uuid(),
+  amount: zod.stringFormat("decimal", updateTransferResponseAmountRegExp),
+  date: zod.iso.date(),
+  description: zod.string().nullable(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  receivedAmount: zod.stringFormat("decimal", updateTransferResponseReceivedAmountRegExp),
+  receivedCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  fromAccountImported: zod.boolean(),
+  toAccountImported: zod.boolean(),
+});

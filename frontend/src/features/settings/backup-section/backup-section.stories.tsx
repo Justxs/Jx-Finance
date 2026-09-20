@@ -1,12 +1,27 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getBackupsMockHandler,
   getRestoreBackupMockHandler,
   getUploadBackupMockHandler,
 } from "@/api/generated/backups/backups.msw";
-import { backupInvalidFileProblem, backupSchemaProblem } from "@/storybook/fixtures";
-import { errorHandlers, failWith, handlers, loadingHandlers, pending } from "@/storybook/handlers";
+import {
+  backupInvalidFileProblem,
+  backupRestorePassword,
+  backupSchemaProblem,
+  backupTooLargeProblem,
+  databaseBusyProblem,
+  lockedOutProblem,
+} from "@/storybook/fixtures";
+import {
+  errorHandlers,
+  failWith,
+  failWithStatus,
+  handlers,
+  loadingHandlers,
+  pending,
+} from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { BackupSection } from "./backup-section";
 
 const meta = {
@@ -18,7 +33,10 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-async function confirmRestoreOfNewest(canvasElement: HTMLElement) {
+async function confirmRestoreOfNewest(
+  canvasElement: HTMLElement,
+  password = backupRestorePassword,
+) {
   const canvas = within(canvasElement);
   const [restore] = await canvas.findAllByRole("button", { name: /^Restore:/u });
   await userEvent.click(restore as HTMLElement);
@@ -26,11 +44,17 @@ async function confirmRestoreOfNewest(canvasElement: HTMLElement) {
   const dialog = within(await screen.findByRole("alertdialog"));
   const confirm = dialog.getByRole("button", { name: "Replace all data" });
   await expect(confirm).toBeDisabled();
-  await userEvent.type(dialog.getByLabelText("Type RESTORE to confirm"), "restore");
+  const word = dialog.getByLabelText("Type RESTORE to confirm");
+  fireEvent.change(word, { target: { value: "restore" } });
+  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: password } });
   await expect(confirm).toBeDisabled();
-  await userEvent.clear(dialog.getByLabelText("Type RESTORE to confirm"));
-  await userEvent.type(dialog.getByLabelText("Type RESTORE to confirm"), "RESTORE");
+  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: "" } });
+  fireEvent.change(word, { target: { value: "RESTORE" } });
+  await expect(confirm).toBeDisabled();
+  fireEvent.change(dialog.getByLabelText("Current password"), { target: { value: password } });
+  await waitFor(() => expect(confirm).toBeEnabled());
   await userEvent.click(confirm);
+  return dialog;
 }
 
 export const Default: Story = {
@@ -85,16 +109,18 @@ export const DeleteAsksFirst: Story = {
     const canvas = within(canvasElement);
     const [remove] = await canvas.findAllByRole("button", { name: /^Delete backup:/u });
     await userEvent.click(remove as HTMLElement);
-    await expect(await screen.findByRole("alertdialog")).toBeVisible();
+    await openedDialog("alertdialog");
   },
 };
 
 export const RestorePending: Story = {
-  parameters: { msw: { handlers: [getRestoreBackupMockHandler(pending), ...handlers] } },
+  parameters: {
+    msw: { handlers: [getRestoreBackupMockHandler(pending), ...handlers] },
+  },
   play: async ({ canvasElement }) => {
-    await confirmRestoreOfNewest(canvasElement);
-    const [edit] = within(canvasElement).getAllByRole("button", { name: /^Edit note:/u });
-    await expect(edit).toBeDisabled();
+    const dialog = await confirmRestoreOfNewest(canvasElement);
+    await waitFor(() => expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled());
+    await expect(dialog.getByRole("button", { name: /Replace all data/u })).toBeDisabled();
   },
 };
 
@@ -105,10 +131,8 @@ export const OtherVersionRejected: Story = {
     },
   },
   play: async ({ canvasElement }) => {
-    await confirmRestoreOfNewest(canvasElement);
-    await expect(
-      await within(canvasElement).findByText(/another version of the application/u),
-    ).toBeVisible();
+    const dialog = await confirmRestoreOfNewest(canvasElement);
+    await expect(await dialog.findByText(/another version of the application/u)).toBeVisible();
   },
 };
 
@@ -132,5 +156,70 @@ export const UploadRejected: Story = {
     await userEvent.upload(canvas.getByLabelText("Backup file"), file);
     await userEvent.click(canvas.getByRole("button", { name: "Upload" }));
     await expect(await canvas.findByText(/not a usable backup/u)).toBeVisible();
+  },
+};
+
+export const RestoreWrongPassword: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await confirmRestoreOfNewest(canvasElement, "not-my-password");
+
+    await expect(await dialog.findByText("The current password is wrong.")).toBeVisible();
+    await expect(dialog.getByLabelText("Current password")).toHaveValue("");
+    await expect(dialog.getByRole("button", { name: "Replace all data" })).toBeDisabled();
+  },
+};
+
+export const RestoreLockedOut: Story = {
+  parameters: {
+    msw: { handlers: [getRestoreBackupMockHandler(failWith(lockedOutProblem, 429)), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await confirmRestoreOfNewest(canvasElement);
+
+    await expect(await dialog.findByText(/Wait 15 minutes and try again/u)).toBeVisible();
+  },
+};
+
+export const RestoreThrottledWithoutBody: Story = {
+  parameters: {
+    msw: { handlers: [getRestoreBackupMockHandler(failWithStatus(429)), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await confirmRestoreOfNewest(canvasElement);
+
+    await expect(
+      await dialog.findByText("Too many attempts. Wait a moment and try again."),
+    ).toBeVisible();
+  },
+};
+
+export const RestoreWhileDatabaseBusy: Story = {
+  parameters: {
+    msw: {
+      handlers: [getRestoreBackupMockHandler(failWith(databaseBusyProblem, 409)), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await confirmRestoreOfNewest(canvasElement);
+
+    await expect(await dialog.findByText(/Nothing was changed; try again/u)).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Replace all data" })).toBeEnabled();
+  },
+};
+
+export const UploadTooLarge: Story = {
+  parameters: {
+    msw: {
+      handlers: [getUploadBackupMockHandler(failWith(backupTooLargeProblem, 400)), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const file = new File(["{}"], "huge.json.gz", { type: "application/gzip" });
+    await userEvent.upload(canvas.getByLabelText("Backup file"), file);
+    await userEvent.click(canvas.getByRole("button", { name: "Upload" }));
+    await expect(
+      await canvas.findByText(/more data than this installation accepts/u),
+    ).toBeVisible();
   },
 };

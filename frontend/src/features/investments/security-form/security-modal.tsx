@@ -20,10 +20,10 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
   }
 
   const createMutation = useCreateSecurity({
-    mutation: { onSuccess: handleSaved },
+    mutation: { meta: { silent: true }, onSuccess: handleSaved },
   });
   const updateMutation = useUpdateSecurity({
-    mutation: { onSuccess: handleSaved },
+    mutation: { meta: { silent: true }, onSuccess: handleSaved },
   });
 
   return (
@@ -38,6 +38,7 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
           key={security?.id ?? "new"}
           initial={security}
           pending={createMutation.isPending || updateMutation.isPending}
+          error={createMutation.error ?? updateMutation.error}
           onSubmit={(values) => {
             if (security) {
               return updateMutation.mutateAsync({ id: security.id, data: values });

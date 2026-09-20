@@ -25,7 +25,7 @@ export const CreateGoalBody = zod.object({
   currentAmount: zod
     .stringFormat("decimal", createGoalBodyCurrentAmountRegExp)
     .nullable()
-    .describe("Amount already saved. Defaults to zero when omitted."),
+    .describe("Amount already saved, zero or more. Defaults to zero when omitted."),
   targetDate: zod
     .union([zod.null(), zod.iso.date()])
     .describe("Optional date to reach the target by, as YYYY-MM-DD."),

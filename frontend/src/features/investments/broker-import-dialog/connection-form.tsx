@@ -7,6 +7,7 @@ import type {
   SaveBrokerConnectionRequest,
 } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
+import { FormGrid } from "@/components/ui/form-grid";
 import { submitToServer } from "@/lib/form-server-errors";
 
 interface FormValues {
@@ -80,7 +81,8 @@ export function ConnectionForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -88,7 +90,6 @@ export function ConnectionForm({
         }}
         noValidate
         autoComplete="off"
-        className="form-grid"
       >
         <form.Field name="queryId">
           {(field) => (
@@ -154,7 +155,7 @@ export function ConnectionForm({
             {t("actions.save")}
           </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

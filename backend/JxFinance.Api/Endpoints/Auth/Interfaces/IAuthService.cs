@@ -25,7 +25,9 @@ public interface IAuthService
 
     Task<AppUser?> FindByIdAsync(Guid userId, CancellationToken cancellationToken);
 
-    Task<bool> ConsumeTwoFactorCodeAsync(AppUser user, string code);
+    Task<Result<bool>> ConfirmPasswordAsync(AppUser user, string? password, string rejectedCode);
+
+    Task<Result<bool>> ConsumeTwoFactorCodeAsync(AppUser user, string code);
 
     Task<TwoFactorSetupResponse> BeginTwoFactorSetupAsync(AppUser user);
 

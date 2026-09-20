@@ -1,8 +1,9 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getConversionsQueryKey,
+  useCategoriesSuspense,
   useCreateConversion,
   useDeleteConversion,
   useConversionsSuspense,
@@ -17,9 +18,13 @@ import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
+import { StaleRegion } from "@/components/ui/stale-region";
 import { useIsoDate, useMoney, useRateFormat, useUsableCurrencies } from "@/hooks/use-formatters";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
+import { ConversionEditDialog } from "./conversion-edit-dialog";
 import { ConversionForm } from "./conversion-form";
 
 interface Props {
@@ -55,7 +60,9 @@ export function ConversionsSection({
       onSuccess: () => onConvertAccountChange(null),
     },
   });
+  const categories = useCategoriesSuspense().data ?? [];
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteConversion({
     mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
       getConversionsQueryKey(listParams),
@@ -100,7 +107,7 @@ export function ConversionsSection({
     content = <p className="py-6 text-sm text-muted-foreground">{t("conversions.empty")}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <Rows>
         {items.map((conversion) => (
           <RowTransition key={conversion.id}>
             <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -109,11 +116,26 @@ export function ConversionsSection({
                   {accountNames.get(conversion.accountId) ?? ""}
                 </p>
                 <p className="text-xs text-muted-foreground">{details(conversion)}</p>
+                {conversion.isImported ? (
+                  <p className="text-xs text-muted-foreground">{t("conversions.importedHint")}</p>
+                ) : null}
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="font-semibold whitespace-nowrap tabular-nums">
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">
                   {amounts(conversion)}
                 </span>
+                {conversion.isImported ? null : (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    onClick={() => setEditTarget(conversion.id)}
+                    aria-label={`${t("actions.edit")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
+                    tooltip={`${t("actions.edit")}: ${amounts(conversion)}, ${formatDate(conversion.date)}`}
+                  >
+                    <Pencil />
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="icon"
@@ -130,14 +152,14 @@ export function ConversionsSection({
             </li>
           </RowTransition>
         ))}
-      </ul>
+      </Rows>
     );
   }
 
   return (
-    <section className="section">
+    <Section>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title">{t("conversions.heading")}</h2>
+        <SectionTitle>{t("conversions.heading")}</SectionTitle>
         <Button
           variant="outline"
           disabled={accounts.length === 0 || !canConvert}
@@ -162,6 +184,7 @@ export function ConversionsSection({
           <ConversionForm
             key={convertAccountId}
             accounts={accounts}
+            categories={categories}
             accountId={convertAccountId}
             pending={createMutation.isPending}
             onSubmit={(values) => createMutation.mutateAsync({ data: values })}
@@ -169,16 +192,20 @@ export function ConversionsSection({
           />
         ) : null}
       </Modal>
-      <div className={stale ? "is-stale" : undefined} aria-busy={stale}>
-        {content}
-      </div>
+      <StaleRegion stale={stale}>{content}</StaleRegion>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <ConversionEditDialog
+        accounts={accounts}
+        categories={categories}
+        conversion={items.find((conversion) => conversion.id === editTarget) ?? null}
+        onClose={() => setEditTarget(null)}
+      />
       <ConfirmDeleteDialog
         target={deleteTarget}
         itemLabel={deleteLabel}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />
-    </section>
+    </Section>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { useMoney } from "@/hooks/use-formatters";
@@ -259,7 +260,8 @@ export function TransactionForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -268,7 +270,6 @@ export function TransactionForm({
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="type">
           {(field) => (
@@ -417,7 +418,7 @@ export function TransactionForm({
             )}
           </form.Subscribe>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

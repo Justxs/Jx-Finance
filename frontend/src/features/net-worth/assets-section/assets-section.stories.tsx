@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { userEvent, within } from "storybook/test";
 import {
   getDeleteAssetMockHandler,
   getAssetsMockHandler,
@@ -14,6 +14,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { AssetsSection } from "./assets-section";
 
 function AssetsSectionStory() {
@@ -61,7 +62,7 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add asset|pridėti turtą/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 

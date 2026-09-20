@@ -19,6 +19,7 @@ import {
   password,
   positiveMoney,
   positiveQuantity,
+  wholeNumberBetween,
   quantity,
   requiredEmail,
   requiredText,
@@ -182,6 +183,13 @@ describe("schema builders", () => {
       ["0.5"],
       ["0", ""],
       "investments.validation.price",
+    ],
+    [
+      "wholeNumberBetween",
+      wholeNumberBetween(t, 0, 365),
+      ["0", "3", "365"],
+      ["", "-1", "1.5", "366", "abc"],
+      'validation.wholeNumberBetween:{"min":0,"max":365}',
     ],
   ] as const)("%s", (_name, schema, valid, invalid, message) => {
     for (const value of valid) {

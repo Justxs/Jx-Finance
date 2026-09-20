@@ -16,7 +16,7 @@ export interface CreateGoalRequest {
   /** Decimal string with at most two decimal places, greater than zero. */
   targetAmount: string;
   /**
-   * Amount already saved. Defaults to zero when omitted.
+   * Amount already saved, zero or more. Defaults to zero when omitted.
    * @nullable
    */
   currentAmount: string | null;

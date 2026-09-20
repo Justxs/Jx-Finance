@@ -12,8 +12,12 @@ export function errorMessage(error: unknown) {
     return { title: i18n.t("errors.generic"), description: undefined };
   }
 
+  if (error.status === 429 && !error.code && !error.errors?.length) {
+    return { title: i18n.t("errors.tooManyRequests"), description: undefined };
+  }
+
   return {
-    title: error.title ?? i18n.t("errors.generic"),
+    title: error.title || i18n.t("errors.generic"),
     description: error.errors?.length
       ? error.errors.map(serverErrorText).join(" ")
       : (errorCodeText(error.code, error.detail) ?? error.detail),
@@ -52,17 +56,29 @@ export function createToastingMutationCache() {
   });
 }
 
+interface QueryWithData {
+  state: { data: unknown };
+}
+
+export function hasNothingToShow(query: QueryWithData) {
+  return query.state.data === undefined;
+}
+
+export function throwWithoutData(_error: unknown, query: QueryWithData) {
+  return hasNothingToShow(query);
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       refetchOnWindowFocus: true,
       retry: 1,
-      throwOnError: true,
+      throwOnError: throwWithoutData,
     },
   },
   queryCache: new QueryCache({
     onError: (error, query) => {
-      if (query.meta?.silent !== true) {
+      if (query.meta?.silent !== true && !hasNothingToShow(query)) {
         toastError(error);
       }
     },

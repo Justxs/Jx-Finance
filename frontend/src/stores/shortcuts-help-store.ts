@@ -1,5 +1,4 @@
-import { useSelector } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
+import { Store, useSelector } from "@tanstack/react-store";
 
 const shortcutsHelpStore = new Store<{ open: boolean }>({ open: false });
 

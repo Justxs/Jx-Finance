@@ -25,6 +25,7 @@ import type {
   CreateConversionRequest,
   PagedResponseOfConversionResponse,
   ProblemDetails,
+  UpdateConversionRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -361,4 +362,111 @@ export const useDeleteConversion = <TError = ErrorType<ProblemDetails>, TContext
   TContext
 > => {
   return useMutation(getDeleteConversionMutationOptions(options), queryClient);
+};
+export const getUpdateConversionUrl = (id: string) => {
+  return `/api/conversions/${id}`;
+};
+
+/**
+ * Replaces the date, the sold and bought amounts and currencies, the description and the fee of a conversion; the account stays the same. The fee fields describe the fee as it should be afterwards: with feeAmount the linked expense transaction is created or updated (amount, currency, date, category, and its value in the reporting currency at the rate for the new date), without feeAmount an existing fee transaction is deleted. Conversion and fee change together or not at all. A fee transaction that the user has split into lines cannot be changed or removed from here and answers transaction.splitNotAllowed; edit that transaction instead. A conversion imported from a broker (isImported) answers resource.readOnly: correct it at the broker and import again.
+ * @summary Update a currency conversion
+ */
+export const updateConversion = async (
+  id: string,
+  updateConversionRequest: UpdateConversionRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ConversionResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<ConversionResponse>(getUpdateConversionUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateConversionRequest),
+  });
+};
+
+export const getUpdateConversionMutationKey = () => ["updateConversion"] as const;
+
+export const getUpdateConversionMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateConversion>>,
+    TError,
+    UpdateConversionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateConversion>>,
+  TError,
+  UpdateConversionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateConversionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateConversion>>,
+    UpdateConversionMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateConversion(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateConversionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateConversion>>
+>;
+export type UpdateConversionMutationBody = UpdateConversionRequest;
+export type UpdateConversionMutationError = ErrorType<ProblemDetails>;
+export type UpdateConversionMutationVariables = { id: string; data: UpdateConversionRequest };
+
+/**
+ * @summary Update a currency conversion
+ */
+export const useUpdateConversion = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateConversion>>,
+      TError,
+      UpdateConversionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateConversion>>,
+  TError,
+  UpdateConversionMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateConversionMutationOptions(options), queryClient);
 };

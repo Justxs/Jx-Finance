@@ -24,6 +24,7 @@ public static class RecoveryCommand
         await users.ResetAuthenticatorKeyAsync(user);
         await users.GenerateNewTwoFactorRecoveryCodesAsync(user, 0);
         await users.SetLockoutEndDateAsync(user, null);
+        await users.ResetAccessFailedCountAsync(user);
         await users.UpdateSecurityStampAsync(user);
         Console.WriteLine("Administrator recovered. Sign in and enrol 2FA again if needed.");
     }

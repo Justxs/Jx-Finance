@@ -12,7 +12,8 @@ public sealed class CreateBackupEndpoint(IBackupService backupService) : Endpoin
         Post("backups");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403));
+        Throttle(hitLimit: 10, durationSeconds: 300);
+        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(CreateBackupRequest req, CancellationToken ct)

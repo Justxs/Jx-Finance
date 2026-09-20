@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { Button } from "@/components/ui/button";
+import { openedDialog } from "@/storybook/interactions";
 import { type HoldingFormProps, type HoldingItem, HoldingsSection } from "./holdings-section";
 
 function StubForm({ onCreated, onCancel }: Readonly<HoldingFormProps>) {
@@ -81,6 +82,6 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Add asset" }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };

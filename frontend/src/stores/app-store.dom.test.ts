@@ -1,6 +1,7 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { i18n } from "@/lib/i18n";
+import { seedPreferences, storedPreferences } from "@/test/preferences";
 
 async function loadStore() {
   vi.resetModules();
@@ -22,11 +23,11 @@ describe("initial locale", () => {
   });
 
   test("restores a stored locale and ignores junk", async () => {
-    localStorage.setItem("jx.locale", "lt");
+    seedPreferences({ locale: "lt" });
     const lithuanian = await loadStore();
     expect(renderHook(() => lithuanian.useLocale()).result.current.locale).toBe("lt");
 
-    localStorage.setItem("jx.locale", "de");
+    seedPreferences({ locale: "de" });
     const junk = await loadStore();
     expect(renderHook(() => junk.useLocale()).result.current.locale).toBe("en");
   });
@@ -42,7 +43,7 @@ describe("setLocale", () => {
     expect(result.current.locale).toBe("lt");
     expect(document.documentElement.lang).toBe("lt");
     expect(i18n.language).toBe("lt");
-    expect(localStorage.getItem("jx.locale")).toBe("lt");
+    expect(storedPreferences().locale).toBe("lt");
   });
 
   test("still switches when storage is blocked", async () => {
@@ -58,7 +59,7 @@ describe("setLocale", () => {
 
 describe("initLocale", () => {
   test("a stored locale wins and the instance default is not loaded", async () => {
-    localStorage.setItem("jx.locale", "lt");
+    seedPreferences({ locale: "lt" });
     const store = await loadStore();
     const loadDefault = vi.fn(() => Promise.resolve("en"));
 
@@ -75,7 +76,7 @@ describe("initLocale", () => {
     await store.initLocale(() => Promise.resolve("lt"));
 
     expect(i18n.language).toBe("lt");
-    expect(localStorage.getItem("jx.locale")).toBeNull();
+    expect(storedPreferences().locale).toBeUndefined();
   });
 
   test.each([

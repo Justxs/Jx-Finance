@@ -1,15 +1,12 @@
 using FastEndpoints;
-using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
-using JxFinance.Infrastructure.Auth;
-using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, UserManager<AppUser> users, ISessionService sessions)
+public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, ISessionService sessions)
     : Endpoint<ReauthenticateRequest>
 {
     public override void Configure()
@@ -29,10 +26,7 @@ public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentU
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(req.Password) || !await users.CheckPasswordAsync(user, req.Password))
-        {
-            ThrowError("The password could not be confirmed.", ErrorCodes.CredentialsInvalid, Severity.Error, StatusCodes.Status401Unauthorized);
-        }
+        (await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid)).EnsureSuccess();
         await authService.DisableTwoFactorAsync(user);
         await sessions.RenewAsync(user, ct);
         await Send.NoContentAsync(ct);

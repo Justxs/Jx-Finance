@@ -221,6 +221,24 @@ describe("errors", () => {
     });
   });
 
+  test("a throttled request without a body still fails as an ApiError", async () => {
+    fetchMock.mockResolvedValueOnce(new Response(null, { status: 429 }));
+
+    await expect(rejection(customFetch("/api/backups"))).resolves.toMatchObject({
+      status: 429,
+      code: undefined,
+      errors: undefined,
+    });
+  });
+
+  test("a failure that promises JSON and sends none still fails as an ApiError", async () => {
+    fetchMock.mockResolvedValueOnce(
+      new Response("", { status: 429, headers: { "content-type": "application/problem+json" } }),
+    );
+
+    await expect(rejection(customFetch("/api/auth/login"))).resolves.toMatchObject({ status: 429 });
+  });
+
   test("a malformed errors field is dropped", async () => {
     fetchMock.mockResolvedValueOnce(json({ title: "Invalid", errors: "nope" }, { status: 400 }));
 

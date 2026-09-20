@@ -1,14 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { type AccountResponse, Currency } from "@/api/generated/model";
+import { type AccountResponse, Currency, type TransferResponse } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
-interface TransferFormValues {
+export interface TransferFormValues {
   fromAccountId: string;
   toAccountId: string;
   amount: string;
@@ -32,6 +34,8 @@ interface FormValues {
 
 interface Props {
   accounts: AccountResponse[];
+  transfer?: TransferResponse;
+  error?: unknown;
   pending: boolean;
   onSubmit: (values: TransferFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
@@ -50,10 +54,34 @@ function buildValues(value: FormValues): TransferFormValues {
   };
 }
 
-export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly<Props>) {
+function valuesOf(transfer: TransferResponse): FormValues {
+  return {
+    fromAccountId: transfer.fromAccountId,
+    toAccountId: transfer.toAccountId,
+    amount: transfer.amount,
+    currency: transfer.currency,
+    receivedAmount: transfer.currency === transfer.receivedCurrency ? "" : transfer.receivedAmount,
+    receivedCurrency: transfer.receivedCurrency,
+    date: transfer.date,
+    description: transfer.description ?? "",
+  };
+}
+
+export function TransferForm({
+  accounts,
+  transfer,
+  error,
+  pending,
+  onSubmit,
+  onCancel,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const multiCurrency = useFeature("multiCurrency");
+  const fromLocked = transfer?.fromAccountImported === true;
+  const toLocked = transfer?.toAccountImported === true;
+  const anyLocked = fromLocked || toLocked;
+  const lockedHint = t("transfers.lockedHint");
 
   const schema = z
     .object({
@@ -83,16 +111,35 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
     return heldCurrencies(accounts.find((account) => account.id === accountId));
   }
 
-  const defaultValues: FormValues = {
-    fromAccountId: accounts[0]?.id ?? "",
-    toAccountId: accounts[1]?.id ?? accounts[0]?.id ?? "",
-    amount: "",
-    currency: accounts[0]?.currency ?? "eur",
-    receivedAmount: "",
-    receivedCurrency: (accounts[1] ?? accounts[0])?.currency ?? "eur",
-    date: today,
-    description: "",
-  };
+  function accountOptions(selectedId: string | undefined) {
+    const options = accounts.map((account) => ({ value: account.id, label: account.name }));
+    if (selectedId && !accounts.some((account) => account.id === selectedId)) {
+      options.push({ value: selectedId, label: t("transfers.unavailableAccount") });
+    }
+    return options;
+  }
+
+  function lockedNote() {
+    if (fromLocked && toLocked) {
+      return t("transfers.lockedBoth");
+    }
+    const lockedId = fromLocked ? transfer?.fromAccountId : transfer?.toAccountId;
+    const account = accounts.find((item) => item.id === lockedId)?.name ?? "";
+    return t("transfers.lockedOne", { account });
+  }
+
+  const defaultValues: FormValues = transfer
+    ? valuesOf(transfer)
+    : {
+        fromAccountId: accounts[0]?.id ?? "",
+        toAccountId: accounts[1]?.id ?? accounts[0]?.id ?? "",
+        amount: "",
+        currency: accounts[0]?.currency ?? "eur",
+        receivedAmount: "",
+        receivedCurrency: (accounts[1] ?? accounts[0])?.currency ?? "eur",
+        date: today,
+        description: "",
+      };
 
   const form = useAppForm({
     defaultValues,
@@ -103,21 +150,27 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
+        {anyLocked ? (
+          <p className="col-span-full text-sm text-muted-foreground">{lockedNote()}</p>
+        ) : null}
+
         <form.Field name="fromAccountId">
           {(field) => (
             <field.SelectFieldControl
               id="transfer-from"
               label={t("transfers.from")}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              hint={fromLocked ? lockedHint : undefined}
+              disabled={fromLocked}
+              options={accountOptions(transfer?.fromAccountId)}
               onValueChange={(value) => form.setFieldValue("currency", currencyOf(value))}
             />
           )}
@@ -128,30 +181,44 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
             <field.SelectFieldControl
               id="transfer-to"
               label={t("transfers.to")}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              hint={toLocked ? lockedHint : undefined}
+              disabled={toLocked}
+              options={accountOptions(transfer?.toAccountId)}
               onValueChange={(value) => form.setFieldValue("receivedCurrency", currencyOf(value))}
             />
           )}
         </form.Field>
 
-        <form.Subscribe selector={(state) => state.values.fromAccountId}>
-          {(fromAccountId) => (
-            <form.Field name="currency">
-              {(currencyField) => (
-                <form.Field name="amount">
-                  {(field) => (
-                    <field.MoneyAmountField
-                      id="transfer-amount"
-                      label={t("transactions.amount")}
-                      currencyLabel={t("transfers.sentCurrency")}
-                      currencyField={currencyField}
-                      preferred={heldBy(fromAccountId)}
-                    />
-                  )}
-                </form.Field>
-              )}
-            </form.Field>
-          )}
+        <form.Subscribe
+          selector={(state) =>
+            [
+              state.values.fromAccountId,
+              state.values.currency === state.values.receivedCurrency,
+            ] as const
+          }
+        >
+          {([fromAccountId, sameCurrency]) => {
+            const amountLocked = fromLocked || (toLocked && sameCurrency);
+            return (
+              <form.Field name="currency">
+                {(currencyField) => (
+                  <form.Field name="amount">
+                    {(field) => (
+                      <field.MoneyAmountField
+                        id="transfer-amount"
+                        label={t("transactions.amount")}
+                        currencyLabel={t("transfers.sentCurrency")}
+                        currencyField={currencyField}
+                        hint={amountLocked ? lockedHint : undefined}
+                        disabled={amountLocked}
+                        preferred={heldBy(fromAccountId)}
+                      />
+                    )}
+                  </form.Field>
+                )}
+              </form.Field>
+            );
+          }}
         </form.Subscribe>
 
         <form.Subscribe
@@ -177,8 +244,9 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
                         placeholder={
                           currency === receivedCurrency ? t("transfers.sameAsSent") : "0.00"
                         }
-                        disabled={currency === receivedCurrency}
-                        blankWhenDisabled
+                        hint={toLocked && currency !== receivedCurrency ? lockedHint : undefined}
+                        disabled={toLocked || currency === receivedCurrency}
+                        blankWhenDisabled={currency === receivedCurrency}
                         touchedOnly
                         preferred={heldBy(toAccountId)}
                       />
@@ -191,7 +259,14 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
         </form.Subscribe>
 
         <form.Field name="date">
-          {(field) => <field.DateField id="transfer-date" label={t("transactions.date")} />}
+          {(field) => (
+            <field.DateField
+              id="transfer-date"
+              label={t("transactions.date")}
+              hint={anyLocked ? lockedHint : undefined}
+              disabled={anyLocked}
+            />
+          )}
         </form.Field>
 
         <form.Field name="description">
@@ -204,15 +279,19 @@ export function TransferForm({ accounts, pending, onSubmit, onCancel }: Readonly
           )}
         </form.Field>
 
+        <FormError error={error} />
+
         <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
           {onCancel ? (
             <Button type="button" variant="outline" onClick={onCancel}>
               {t("actions.cancel")}
             </Button>
           ) : null}
-          <form.SubmitButton pending={pending}>{t("transfers.add")}</form.SubmitButton>
+          <form.SubmitButton pending={pending}>
+            {transfer ? t("actions.save") : t("transfers.add")}
+          </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

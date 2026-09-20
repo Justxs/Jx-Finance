@@ -1,70 +1,63 @@
-import { useSelector } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
+import { Store, useSelector } from "@tanstack/react-store";
 import { i18n } from "@/lib/i18n";
+import {
+  type Preferences,
+  locales,
+  onPreferencesChange,
+  readPreferences,
+  savePreferences,
+  usePreferences,
+} from "./preferences";
 
-export type Locale = "en" | "lt";
+export type Locale = NonNullable<Preferences["locale"]>;
 
-interface AppState {
-  locale: Locale;
-}
-
-const LOCALE_KEY = "jx.locale";
+const fallbackLocale = new Store<Locale>("en");
 
 function isLocale(value: unknown): value is Locale {
-  return value === "en" || value === "lt";
+  return locales.some((locale) => locale === value);
 }
 
-function readStoredLocale(): Locale | null {
-  try {
-    const stored = window.localStorage.getItem(LOCALE_KEY);
-    return isLocale(stored) ? stored : null;
-  } catch {
-    return null;
+function applyLocale(next: Locale) {
+  document.documentElement.lang = next;
+  if (i18n.language !== next) {
+    void i18n.changeLanguage(next);
   }
 }
 
-const initialState: AppState = {
-  locale: readStoredLocale() ?? "en",
-};
-
-const appStore = new Store<AppState>(initialState);
-
-function applyLocale(next: Locale) {
-  appStore.setState((state) => ({ ...state, locale: next }));
-  document.documentElement.lang = next;
-  void i18n.changeLanguage(next);
+function applyChosenLocale() {
+  const chosen = readPreferences().locale;
+  if (chosen) {
+    applyLocale(chosen);
+  }
 }
 
-function storeLocale(next: Locale) {
-  try {
-    window.localStorage.setItem(LOCALE_KEY, next);
-  } catch {}
-}
-
-let localeChosen = false;
+onPreferencesChange(applyChosenLocale);
 
 export function setLocale(next: Locale) {
-  localeChosen = true;
+  savePreferences({ locale: next });
   applyLocale(next);
-  storeLocale(next);
 }
 
 export async function initLocale(loadDefault: () => Promise<string | null | undefined>) {
-  const stored = readStoredLocale();
+  const stored = readPreferences().locale;
   if (stored) {
     applyLocale(stored);
     return;
   }
 
   const fallback = await loadDefault().catch(() => null);
-  if (localeChosen || readStoredLocale()) {
+  if (readPreferences().locale) {
     return;
   }
 
-  applyLocale(isLocale(fallback) ? fallback : appStore.state.locale);
+  if (isLocale(fallback)) {
+    fallbackLocale.setState(() => fallback);
+  }
+  applyLocale(fallbackLocale.state);
 }
 
 export function useLocale() {
-  const locale = useSelector(appStore, (state) => state.locale);
+  const fallback = useSelector(fallbackLocale, (locale) => locale);
+  const locale = usePreferences().locale ?? fallback;
   return { locale, setLocale };
 }

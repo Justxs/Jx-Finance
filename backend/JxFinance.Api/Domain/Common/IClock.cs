@@ -9,4 +9,6 @@ public interface IClock
     DateTimeOffset ToAppTime(DateTimeOffset instant);
 
     DateOnly Today { get; }
+
+    DateTimeOffset StartOfDay(DateOnly date);
 }

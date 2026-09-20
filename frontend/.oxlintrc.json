@@ -46,6 +46,18 @@
     ],
     "no-alert": "error",
     "no-eval": "error",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "react",
+            "importNames": ["useEffect", "useLayoutEffect", "useMemo", "useCallback"],
+            "message": "The React Compiler memoizes; derive during render, use event handlers, TanStack Query, Hotkeys or Pacer instead of effects."
+          }
+        ]
+      }
+    ],
     "no-param-reassign": "error",
     "no-else-return": "error",
     "no-useless-return": "error",
@@ -193,6 +205,7 @@
       "files": ["src/components/ui/**"],
       "rules": {
         "no-shadow": "off",
+        "no-restricted-imports": "off",
         "react/no-unstable-nested-components": "off",
         "jsx-a11y/label-has-associated-control": "off"
       }

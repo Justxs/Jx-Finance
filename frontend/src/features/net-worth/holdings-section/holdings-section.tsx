@@ -5,6 +5,8 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import type { HoldingFormValues } from "./holding-form";
@@ -64,7 +66,7 @@ export function HoldingsSection({
     content = <p className="py-6 text-sm text-muted-foreground">{emptyLabel}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <Rows>
         {items.map((item) => (
           <RowTransition key={item.id}>
             <li className="flex items-center gap-3 py-3 text-sm">
@@ -98,14 +100,14 @@ export function HoldingsSection({
             </li>
           </RowTransition>
         ))}
-      </ul>
+      </Rows>
     );
   }
 
   return (
-    <section className="section">
+    <Section>
       <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <h2 className="section-title min-w-0 flex-1">{title}</h2>
+        <SectionTitle className="min-w-0 flex-1">{title}</SectionTitle>
         {items.length > 0 ? <span className={amountClass}>{money.format(total)}</span> : null}
         <Button variant="outline" size="sm" onClick={() => setAddOpen(true)}>
           <Plus />
@@ -140,6 +142,6 @@ export function HoldingsSection({
         onCancel={() => setDeleteTarget(null)}
         onConfirm={onDelete}
       />
-    </section>
+    </Section>
   );
 }

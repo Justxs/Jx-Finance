@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { monthlyTrendItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -10,11 +11,11 @@ const meta = {
   title: "Features/Dashboard/MonthlyTrendChart",
   component: MonthlyTrendChart,
   render: () => (
-    <div className="card w-[min(40rem,90vw)] p-6">
+    <Card className="w-[min(40rem,90vw)] p-6">
       <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
         <MonthlyTrendChart />
       </QueryBoundary>
-    </div>
+    </Card>
   ),
 } satisfies Meta<typeof MonthlyTrendChart>;
 

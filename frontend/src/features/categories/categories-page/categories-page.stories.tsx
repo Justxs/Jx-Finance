@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { userEvent, within } from "storybook/test";
 import {
   getDeleteCategoryMockHandler,
   getCategoriesMockHandler,
@@ -14,6 +14,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { CategoriesPage } from "./categories-page";
 
 function CategoriesPageStory() {
@@ -71,7 +72,7 @@ export const AddDialogOpen: Story = {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add category|pridėti kategoriją/i }),
     );
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 

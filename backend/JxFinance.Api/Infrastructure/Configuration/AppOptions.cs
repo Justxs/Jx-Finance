@@ -16,6 +16,14 @@ public sealed class AppOptions
 
     public string InteractiveBrokersFlexUrl { get; set; } =
         "https://ndcdyn.interactivebrokers.com/AccountManagement/FlexWebService/";
+
+    public long BackupMaxDecompressedBytes { get; set; } = 1024L * 1024 * 1024;
+
+    public int BackupLockTimeoutSeconds { get; set; } = 15;
+
+    public int RevalueBatchSize { get; set; } = 500;
+
+    public int PdfExportMaxRows { get; set; } = 5000;
 }
 
 public sealed class ExchangeRateOptions

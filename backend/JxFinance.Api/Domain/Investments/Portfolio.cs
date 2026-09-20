@@ -7,7 +7,12 @@ public static class Portfolio
         var positions = new Dictionary<SecurityId, Position>();
         foreach (var transaction in transactions
             .OrderBy(t => t.Date)
-            .ThenBy(t => t.Type == InvestmentTransactionType.Sell)
+            .ThenBy(t => t.Type switch
+            {
+                InvestmentTransactionType.Split => 0,
+                InvestmentTransactionType.Sell => 2,
+                _ => 1,
+            })
             .ThenBy(t => t.CreatedAt))
         {
             if (transaction.SecurityId is not { } securityId)

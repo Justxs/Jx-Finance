@@ -35,6 +35,36 @@ public sealed class TransactionSearchEndpointTests(ApiFixture fixture) : Integra
         Assert.Equal(1, dateRangeResults!.Total);
     }
 
+    [Fact]
+    public async Task Search_ignores_case()
+    {
+        var account = await CreateAccountAsync();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        await CreateTransactionAsync(account, null, "expense", "12.00", "2026-05-01", $"Maxima {marker} Vilnius");
+
+        var results = await Client.GetFromJsonAsync<PagedDto>(
+            $"/api/transactions?search={Uri.EscapeDataString($"MAXIMA {marker.ToUpperInvariant()} vil")}&pageSize=50");
+
+        Assert.Equal(1, results!.Total);
+    }
+
+    [Theory]
+    [InlineData("%")]
+    [InlineData("_")]
+    [InlineData("\\")]
+    public async Task Search_treats_pattern_characters_as_text(string special)
+    {
+        var account = await CreateAccountAsync();
+        var marker = Guid.NewGuid().ToString("N")[..8];
+        await CreateTransactionAsync(account, null, "expense", "12.00", "2026-05-01", $"{marker}{special}end");
+        await CreateTransactionAsync(account, null, "expense", "12.00", "2026-05-01", $"{marker}Xend");
+
+        var results = await Client.GetFromJsonAsync<PagedDto>(
+            $"/api/transactions?search={Uri.EscapeDataString($"{marker}{special}end")}&pageSize=50");
+
+        Assert.Equal(1, results!.Total);
+    }
+
     private async Task CreateTransactionAsync(
         Guid accountId,
         Guid? categoryId,

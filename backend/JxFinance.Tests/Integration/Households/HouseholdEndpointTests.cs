@@ -72,6 +72,44 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
     }
 
     [Fact]
+    public async Task Adding_a_member_without_an_email_or_with_an_undefined_role_is_a_validation_error()
+    {
+        var household = await CreateHouseholdAsync();
+        var user = await CreateUserAsync();
+
+        var missingEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { role = "member" });
+        await AssertValidationErrorAsync(missingEmail, "email");
+
+        var malformedEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = "not-an-email", role = "member" });
+        await AssertValidationErrorAsync(malformedEmail, "email");
+
+        var undefinedRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email, role = 7 });
+        await AssertValidationErrorAsync(undefinedRole, "role");
+
+        var missingRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email });
+        Assert.Equal(HttpStatusCode.BadRequest, missingRole.StatusCode);
+
+        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}");
+        Assert.Single(unchanged!.Members);
+    }
+
+    [Fact]
+    public async Task Changing_a_member_to_an_undefined_role_is_a_validation_error()
+    {
+        var member = await CreateUserAsync();
+        var household = await CreateHouseholdAsync(member);
+
+        var undefinedRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = 7 });
+        await AssertValidationErrorAsync(undefinedRole, "role");
+
+        var missingRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { });
+        Assert.Equal(HttpStatusCode.BadRequest, missingRole.StatusCode);
+
+        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}");
+        Assert.Contains(unchanged!.Members, m => m.UserId == member.Id && m.Role == "member");
+    }
+
+    [Fact]
     public async Task Cannot_remove_the_last_owner()
     {
         var household = await CreateHouseholdAsync();

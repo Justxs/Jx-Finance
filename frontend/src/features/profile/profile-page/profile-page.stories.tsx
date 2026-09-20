@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fireEvent, userEvent, within } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -61,4 +62,38 @@ export const ServerError: Story = {
 
 export const Unauthenticated: Story = {
   parameters: { msw: { handlers: unauthenticatedHandlers } },
+};
+
+export const SavesDisplayName: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    fireEvent.change(await canvas.findByLabelText(/display name|rodomas vardas/i), {
+      target: { value: "Rūta K." },
+    });
+    await userEvent.click(
+      canvas.getByRole("button", { name: /save changes|išsaugoti pakeitimus/i }),
+    );
+
+    await expect(
+      await within(document.body).findByText(/profile updated|profilis atnaujintas/i),
+    ).toBeInTheDocument();
+  },
+};
+
+export const SwitchesToSecurity: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const link = await canvas.findByRole("link", {
+      name: /two-factor authentication|dvigubas tapatybės patvirtinimas/i,
+    });
+    await userEvent.click(link);
+
+    await expect(
+      await canvas.findByRole("button", {
+        name: /enable two-factor authentication|įjungti dvigubą tapatybės patvirtinimą/i,
+      }),
+    ).toBeVisible();
+    await expect(link).toHaveAttribute("aria-current", "page");
+    await expect(canvas.queryByLabelText(/display name|rodomas vardas/i)).toBeNull();
+  },
 };

@@ -10,12 +10,13 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.Imports.Confirm;
+using JxFinance.Endpoints.Imports.Interfaces;
 using JxFinance.Endpoints.Imports.Preview;
 using JxFinance.Endpoints.Imports.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace JxFinance.Endpoints.Imports.Interfaces;
+namespace JxFinance.Endpoints.Imports.Services;
 
 [RegisterService<IImportService>(LifeTime.Scoped)]
 public sealed class ImportService(AppDbContext db, IExchangeRateService rates) : IImportService
@@ -79,7 +80,6 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
         CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        // Serialize imports per account across processes, including concurrent requests.
         var lockId = BitConverter.ToInt64(request.AccountId.ToByteArray(), 0);
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var accountId = new AccountId(request.AccountId);
@@ -101,6 +101,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
 
         var imported = 0;
         var skipped = 0;
+        var matchedTransfers = new HashSet<TransferId>();
 
         foreach (var row in request.Rows)
         {
@@ -131,6 +132,11 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                     if (match is null || match.FromAccountId != fromId || match.ToAccountId != toId
                         || (row.Type == FlowType.Expense ? match.Amount : match.ReceivedAmount) != amount || match.Date != row.Date)
                         return Result<ImportConfirmResponse>.Failure(ErrorCodes.ImportTransferMismatch, "The selected transfer does not match this bank entry.");
+                    if (!matchedTransfers.Add(match.Id)
+                        || await db.TransferImports.AnyAsync(r => r.AccountId == accountId && r.TransferId == match.Id, cancellationToken))
+                        return Result<ImportConfirmResponse>.Failure(
+                            ErrorCodes.ImportTransferAlreadyMatched,
+                            "The selected transfer is already matched to another bank entry of this account.");
                     transfer = match;
                 }
                 else

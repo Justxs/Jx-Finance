@@ -31,13 +31,32 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal("25.00", holding.UnrealizedGain);
         Assert.Equal("348.00", holding.RealizedGain);
         Assert.Equal("12.50", portfolio.Dividends);
-        Assert.Equal("2.00", portfolio.Fees);
+        Assert.Equal("0.00", portfolio.Fees);
         Assert.True(portfolio.IsComplete);
 
         var reloaded = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}");
         Assert.Equal("4760.50", Assert.Single(reloaded!.Balances).Amount);
         Assert.Equal("625.00", reloaded.HoldingsValue);
         Assert.Equal("5385.50", reloaded.ReportingBalance);
+    }
+
+    [Fact]
+    public async Task Trade_commissions_reduce_the_gain_once_and_only_standalone_fees_are_reported_as_fees()
+    {
+        var account = await CreateBrokerAccountAsync("5000.00");
+        var security = await CreateSecurityAsync($"FEE{Guid.NewGuid():N}"[..12].ToUpperInvariant());
+
+        await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-03-02", quantity = "10", price = "100", fee = "5.00" });
+        await RecordAsync(new { accountId = account, securityId = security, type = "sell", date = "2026-03-10", quantity = "10", price = "110", fee = "4.00" });
+        await RecordAsync(new { accountId = account, type = "fee", date = "2026-03-11", amount = "3.00" });
+
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}");
+
+        Assert.Equal("91.00", portfolio!.RealizedGain);
+        Assert.Equal("3.00", portfolio.Fees);
+        var year = Assert.Single(portfolio.Years);
+        Assert.Equal((2026, "91.00", "3.00"), (year.Year, year.RealizedGain, year.Fees));
+        Assert.Equal("5088.00", await CurrentBalanceAsync(account));
     }
 
     [Fact]
@@ -189,13 +208,17 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         string? UnrealizedGain,
         string RealizedGain);
 
+    private sealed record YearDto(int Year, string Fees, string RealizedGain);
+
     private sealed record PortfolioDto(
         string MarketValue,
+        string RealizedGain,
         string Dividends,
         string WithholdingTax,
         string Fees,
         bool IsComplete,
-        List<HoldingDto> Holdings);
+        List<HoldingDto> Holdings,
+        List<YearDto> Years);
 
     private sealed record ImportDto(
         int Trades,

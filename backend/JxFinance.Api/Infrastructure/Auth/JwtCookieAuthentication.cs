@@ -44,7 +44,7 @@ public static class JwtCookieAuthentication
         var user = await users.FindByIdAsync(userId.ToString());
         if (user is null
             || user.SecurityStamp != principal!.FindFirstValue(AuthClaims.SecurityStamp)
-            || await users.IsLockedOutAsync(user))
+            || user.IsDeactivated)
         {
             context.Fail("The session is no longer valid.");
         }

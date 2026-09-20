@@ -15,6 +15,8 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     protected IServiceProvider Services => fixture.Services;
 
+    protected string ConnectionString => fixture.ConnectionString;
+
     protected DateOnly Today => Services.GetRequiredService<IClock>().Today;
 
     protected HttpClient CreateClient(bool handleCookies = true)
@@ -113,6 +115,8 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     }
 
     protected sealed record IdDto(Guid Id);
+
+    protected sealed record TestCurrentUser(Guid Id) : ICurrentUser;
 
     private sealed record BalanceDto(string CurrentBalance);
 }

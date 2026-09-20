@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { currentUser, inactiveUser, longNameUser, memberUser, users } from "@/storybook/fixtures";
 import { UsersTable } from "./users-table";
 
@@ -15,6 +15,9 @@ const meta = {
     rolePendingId: null,
     onDeactivate: fn(),
     deactivatePendingId: null,
+    onReactivate: fn(),
+    reactivatePendingId: null,
+    onResetPassword: fn(),
   },
 } satisfies Meta<typeof UsersTable>;
 
@@ -52,6 +55,36 @@ export const Stale: Story = { args: { stale: true } };
 export const RoleChangePending: Story = { args: { rolePendingId: memberUser.id ?? null } };
 
 export const DeactivatePending: Story = { args: { deactivatePendingId: memberUser.id ?? null } };
+
+export const ReactivatePending: Story = {
+  args: { users: [inactiveUser], reactivatePendingId: inactiveUser.id },
+};
+
+export const OffersActionsPerRow: Story = {
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const own = new RegExp(`: ${currentUser.displayName}$`, "u");
+    await expect(canvas.queryAllByRole("button", { name: own })).toHaveLength(0);
+
+    const [reactivate] = canvas.getAllByRole("button", {
+      name: `Reactivate: ${inactiveUser.displayName}`,
+    });
+    await userEvent.click(reactivate as HTMLElement);
+    await expect(args.onReactivate).toHaveBeenCalledWith(inactiveUser.id);
+
+    const [deactivate] = canvas.getAllByRole("button", {
+      name: `Deactivate: ${memberUser.displayName}`,
+    });
+    await userEvent.click(deactivate as HTMLElement);
+    await expect(args.onDeactivate).toHaveBeenCalledWith(memberUser.id);
+
+    const [reset] = canvas.getAllByRole("button", {
+      name: `Reset password: ${memberUser.displayName}`,
+    });
+    await userEvent.click(reset as HTMLElement);
+    await expect(args.onResetPassword).toHaveBeenCalledWith(memberUser.id);
+  },
+};
 
 export const NarrowContainer: Story = {
   render: (args) => (

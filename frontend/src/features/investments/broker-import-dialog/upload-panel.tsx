@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input";
 import { Label } from "@/components/ui/label";
+import { BrokerImportFailure } from "./import-failure";
 import { BrokerImportResult } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
@@ -111,11 +112,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         ) : null}
         {!importMutation.isPending && result ? <BrokerImportResult result={result} /> : null}
       </div>
-      {failure ? (
-        <p className="text-sm wrap-break-word text-expense">
-          {failure.detail ?? failure.title ?? t("errors.generic")}
-        </p>
-      ) : null}
+      <BrokerImportFailure error={failure} />
 
       <div className="flex justify-end">
         <Button

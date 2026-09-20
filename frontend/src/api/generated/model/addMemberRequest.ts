@@ -8,7 +8,12 @@
 import type { HouseholdRole } from "./householdRole";
 
 export interface AddMemberRequest {
-  /** Email address of an existing, active user. */
+  /**
+   * Email address of an existing, active user.
+   * @minLength 0
+   * @maxLength 256
+   * @pattern ^[^@]+@[^@]+$
+   */
   email: string;
   role: HouseholdRole;
 }

@@ -29,14 +29,13 @@ public sealed class LoginEndpoint(IAuthService authService, ISessionService sess
                 return;
             }
 
-            if (!await authService.ConsumeTwoFactorCodeAsync(user, req.TwoFactorCode))
+            var consumed = await authService.ConsumeTwoFactorCodeAsync(user, req.TwoFactorCode);
+            if (consumed.ErrorCode == ErrorCodes.TwoFactorInvalidCode)
             {
-                ThrowError(
-                    "Invalid authenticator code.",
-                    ErrorCodes.TwoFactorInvalidCode,
-                    Severity.Error,
-                    StatusCodes.Status401Unauthorized);
+                ThrowError(consumed.ErrorMessage!, consumed.ErrorCode, Severity.Error, StatusCodes.Status401Unauthorized);
             }
+
+            consumed.EnsureSuccess();
         }
 
         await sessionService.SignInAsync(user, req.RememberMe, ct);

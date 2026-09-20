@@ -75,8 +75,33 @@ export const getDeleteConversionMockHandler = (
     options,
   );
 };
+
+export const getUpdateConversionMockHandler = (
+  overrideResponse?:
+    | ConversionResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<ConversionResponse> | ConversionResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/conversions/:id",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getConversionsMock = () => [
   getCreateConversionMockHandler(),
   getConversionsMockHandler(),
   getDeleteConversionMockHandler(),
+  getUpdateConversionMockHandler(),
 ];

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Panel } from "@/components/ui/section";
 import { RowsSkeleton, Skeleton } from "@/components/ui/skeleton";
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 import { useMonthLabel } from "@/hooks/use-formatters";
@@ -30,14 +31,14 @@ export function DashboardPage() {
       <PageHeader title={t("dashboard.title")} description={month} />
 
       <div className="grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5">
-        <section className={`panel ${narrow}`} aria-label={t("dashboard.totalBalance")}>
+        <Panel as="section" className={narrow} aria-label={t("dashboard.totalBalance")}>
           <QueryBoundary
             fallback={<Skeleton className="h-64 w-full rounded-sm" />}
             errorSubject={t("dashboard.totalBalance")}
           >
             <DashboardStats />
           </QueryBoundary>
-        </section>
+        </Panel>
         <DashboardSection
           className={wide}
           title={t("dashboard.monthlyTrend")}

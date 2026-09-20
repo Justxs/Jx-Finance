@@ -8,6 +8,10 @@ public sealed class UserSession
 
     public string TokenHash { get; set; } = string.Empty;
 
+    public string? PreviousTokenHash { get; set; }
+
+    public DateTimeOffset? RotatedAt { get; set; }
+
     public string SecurityStamp { get; set; } = string.Empty;
 
     public bool IsPersistent { get; set; }

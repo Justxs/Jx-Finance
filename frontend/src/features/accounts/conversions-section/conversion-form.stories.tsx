@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import { accounts, brokerAccount, checkingAccount } from "@/storybook/fixtures";
+import { accounts, brokerAccount, categories, checkingAccount } from "@/storybook/fixtures";
 import { ConversionForm } from "./conversion-form";
 
 const meta = {
@@ -8,6 +8,7 @@ const meta = {
   component: ConversionForm,
   args: {
     accounts,
+    categories,
     accountId: brokerAccount.id,
     pending: false,
     onSubmit: fn(),
@@ -60,7 +61,7 @@ export const ValidationErrors: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText("Sold"), "abc");
-    await userEvent.click(canvas.getByRole("button", { name: "Convert" }));
+    await expect(canvas.getByRole("button", { name: "Convert" })).toBeDisabled();
     await expect(args.onSubmit).not.toHaveBeenCalled();
     await expect(canvas.getByLabelText("Sold")).toHaveAttribute("aria-invalid", "true");
   },

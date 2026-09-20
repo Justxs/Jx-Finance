@@ -18,10 +18,14 @@ public sealed record JwtSigningKey(string Value)
 
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, FileName);
-        if (!File.Exists(path))
-            File.WriteAllText(path, Generate());
+        var stored = File.Exists(path) ? File.ReadAllText(path).Trim() : string.Empty;
+        if (stored.Length == 0)
+        {
+            stored = Generate();
+            File.WriteAllText(path, stored);
+        }
 
-        return new JwtSigningKey(File.ReadAllText(path).Trim());
+        return new JwtSigningKey(stored);
     }
 
     private static string Generate() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));

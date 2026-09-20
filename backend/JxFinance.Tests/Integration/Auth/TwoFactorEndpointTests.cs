@@ -110,6 +110,19 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
+    [Fact]
+    public async Task Enabling_keeps_the_session_signed_in()
+    {
+        var user = await CreateUserAsync();
+        using var client = await LoginAsync(user);
+        var setup = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
+
+        await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code = Totp.GenerateCode(setup.SharedKey) });
+
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/refresh", null)).StatusCode);
+    }
+
     private async Task<Enrollment> EnrollAsync()
     {
         var user = await CreateUserAsync();

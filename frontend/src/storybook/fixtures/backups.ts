@@ -66,3 +66,57 @@ export const backupInvalidFileProblem: ProblemDetails = {
     },
   ],
 };
+
+export const backupRestorePassword = "Correct-horse-42";
+
+export const backupWrongPasswordProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The current password is incorrect.",
+      code: "password.incorrect",
+    },
+  ],
+};
+
+export const backupPasswordRequiredProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore",
+  errors: [{ name: "password", reason: "Password is required.", code: "required" }],
+};
+
+export const backupTooLargeProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/backups/upload",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The backup holds more rows than this installation accepts.",
+      code: "backup.tooLarge",
+    },
+  ],
+};
+
+export const lockedOutProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc6585#section-4",
+  title: "Too many failed attempts.",
+  status: 429,
+  code: "credentials.lockedOut",
+  detail: "The account is locked for 15 minutes.",
+};
+
+export const databaseBusyProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
+  title: "The database was busy.",
+  status: 409,
+  code: "conflict.busy",
+  detail: "Another operation held the database. Nothing was changed.",
+};

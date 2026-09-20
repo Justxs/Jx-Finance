@@ -1,0 +1,24 @@
+using FastEndpoints;
+using JxFinance.Common.Errors;
+using JxFinance.Endpoints.Investments.Interfaces;
+using JxFinance.Endpoints.Investments.Shared;
+using JxFinance.Infrastructure.Auth;
+
+namespace JxFinance.Endpoints.Investments.SetSecurityPrice;
+
+public sealed class SetSecurityPriceEndpoint(IInvestmentService investmentService)
+    : Endpoint<SetSecurityPriceRequest, SecurityResponse>
+{
+    public override void Configure()
+    {
+        Put("investments/securities/{id:guid}/price");
+        Group<InvestmentsGroup>();
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
+    }
+
+    public override async Task HandleAsync(SetSecurityPriceRequest req, CancellationToken ct)
+    {
+        var updated = (await investmentService.SetSecurityPriceAsync(req, User.IsInRole(AppRoles.Admin), ct)).ValueOrThrow();
+        await Send.OkAsync(updated, ct);
+    }
+}

@@ -1,13 +1,27 @@
+{
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1/32}
+	}
+}
+
 :80
 
 encode zstd gzip
 header {
-  X-Content-Type-Options nosniff
-  Referrer-Policy same-origin
-  X-Frame-Options DENY
+	X-Content-Type-Options nosniff
+	Referrer-Policy same-origin
+	X-Frame-Options DENY
+	Cross-Origin-Opener-Policy same-origin
+	Permissions-Policy "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()"
+	-Server
 }
 
 handle /api/* {
+	header {
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		X-Content-Type-Options nosniff
+		defer
+	}
 	reverse_proxy api:8080
 }
 

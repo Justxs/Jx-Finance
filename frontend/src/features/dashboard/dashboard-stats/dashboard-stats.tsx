@@ -41,7 +41,7 @@ export function DashboardStats() {
     <div className="flex h-full flex-col justify-between gap-8">
       <dl>
         <dt className="text-sm text-muted-foreground">{t("dashboard.totalBalance")}</dt>
-        <dd className="figure mt-1 max-w-full text-[2.75rem] leading-[1.1] wrap-break-word">
+        <dd className="mt-1 max-w-full font-serif text-[2.75rem] leading-[1.1] font-semibold tracking-[-0.015em] wrap-break-word lining-nums tabular-nums">
           {money.format(Number(summary.data?.totalBalance ?? 0))}
         </dd>
       </dl>

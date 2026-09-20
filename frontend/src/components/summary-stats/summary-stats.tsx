@@ -1,3 +1,5 @@
+import { Panel } from "@/components/ui/section";
+import { SplitColumns } from "@/components/ui/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 
@@ -31,13 +33,13 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   }
 
   return (
-    <div className="panel split-columns gap-y-6 lg:items-end">
+    <Panel as={SplitColumns} className="gap-y-6 lg:items-end">
       {lead ? (
         <dl className="min-w-0">
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
           <dd
             className={cn(
-              "figure mt-1 max-w-full text-[2.5rem] leading-[1.1] break-words",
+              "mt-1 max-w-full font-serif text-[2.5rem] leading-[1.1] font-semibold tracking-[-0.015em] wrap-break-word lining-nums tabular-nums",
               lead.tone,
             )}
           >
@@ -56,12 +58,14 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
         {rest.map((item) => (
           <div key={item.label} className="min-w-0">
             <dt className="text-sm text-muted-foreground">{item.label}</dt>
-            <dd className={cn("mt-0.5 text-xl font-semibold break-words tabular-nums", item.tone)}>
+            <dd
+              className={cn("mt-0.5 text-xl font-semibold wrap-break-word tabular-nums", item.tone)}
+            >
               {formatValue(item)}
             </dd>
           </div>
         ))}
       </dl>
-    </div>
+    </Panel>
   );
 }

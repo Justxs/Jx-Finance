@@ -12,6 +12,7 @@ import {
   getSaveBrokerConnectionMockHandler,
   getSyncBrokerConnectionMockHandler,
   getUpdateInvestmentTransactionMockHandler,
+  getSetSecurityPriceMockHandler,
   getUpdateSecurityMockHandler,
 } from "@/api/generated/investments/investments.msw";
 import type { Currency, InvestmentTransactionType, SecurityResponse } from "@/api/generated/model";
@@ -128,6 +129,14 @@ export const investmentHandlers = [
     ...found(byId(securities, params.id)),
     ...(await readBody(request)),
   })),
+  getSetSecurityPriceMockHandler(async ({ params, request }) => {
+    const body = await readBody(request);
+    return {
+      ...found(byId(securities, params.id)),
+      lastPrice: text(body.lastPrice),
+      lastPriceDate: text(body.lastPriceDate) ?? FIXTURE_TODAY,
+    };
+  }),
   getImportBrokerReportMockHandler(brokerImportResult),
   getBrokerConnectionsMockHandler(brokerConnections),
   getSaveBrokerConnectionMockHandler(async ({ params, request }) => {

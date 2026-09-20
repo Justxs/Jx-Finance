@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -32,7 +33,7 @@ function ModalExample({
         description={description}
         className={className}
       >
-        <div className="form-grid">
+        <FormGrid>
           {Array.from({ length: fields }, (_, index) => (
             <div key={index} className="space-y-1.5">
               <Label htmlFor={`modal-story-field-${index}`}>Field {index + 1}</Label>
@@ -45,7 +46,7 @@ function ModalExample({
             </Button>
             <Button onClick={() => setOpen(false)}>Save</Button>
           </div>
-        </div>
+        </FormGrid>
       </Modal>
     </>
   );

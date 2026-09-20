@@ -17,7 +17,8 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
         Roles(AppRoles.Admin);
         AllowFileUploads();
         MaxRequestBodySize(MaxFileBytes + (1024 * 1024));
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403));
+        Throttle(hitLimit: 10, durationSeconds: 300);
+        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(UploadBackupRequest req, CancellationToken ct)

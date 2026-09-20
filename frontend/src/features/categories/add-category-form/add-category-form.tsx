@@ -6,6 +6,7 @@ import { createCategoryBodyNameMax } from "@/api/schemas/categories/categories.z
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
 import { submitToServer } from "@/lib/form-server-errors";
 import { requiredText } from "@/lib/validation";
@@ -85,7 +86,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
         noValidate
         className="space-y-4"
       >
-        <div className="form-grid">
+        <FormGrid>
           <form.Field name="name">
             {(field) => (
               <field.TextField
@@ -109,10 +110,10 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
               />
             )}
           </form.Field>
-        </div>
+        </FormGrid>
 
         {householdList.length > 0 ? (
-          <div className="form-grid">
+          <FormGrid>
             <form.Field name="scope">
               {(field) => (
                 <field.SelectFieldControl
@@ -147,7 +148,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
                 ) : null
               }
             </form.Subscribe>
-          </div>
+          </FormGrid>
         ) : null}
 
         <form.Field name="icon">

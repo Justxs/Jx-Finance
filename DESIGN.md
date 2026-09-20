@@ -130,8 +130,8 @@ Cool, slightly blue-tinted neutrals with a navy ink accent. Tokens live in `fron
 **Character:** A bookkeeping pair. The serif gives titles and totals the weight of a printed statement; the sans keeps dense rows, labels and controls calm and legible. Both cover Lithuanian diacritics. This pair is the default; a reader may switch their own browser to sans only, serif only, system fonts, Inter, Atkinson Hyperlegible, IBM Plex or Newsreader with Inter, and to a smaller or larger text size. Always use `font-sans` and `font-serif`, never a family name, so those choices apply.
 
 ### Hierarchy
-- **Page title** (serif 600, 1.75rem/2.25rem): one per page, class `page-title`.
-- **Lead figure** (serif 600, 2.5rem, lining tabular): the single most important number on a summary, class `figure`, with `total-rule` beneath it.
+- **Page title** (serif 600, 1.75rem/2.25rem): one per page, rendered by `PageHeader`.
+- **Lead figure** (serif 600, 2.5rem, lining tabular): the single most important number on a summary (`SummaryStats`, `DashboardStats`); a net total carries a double rule (`border-b-3 border-double border-rule`).
 - **Section title** (sans 600, 1.0625rem): class `section-title`, sits under a section rule.
 - **Body** (sans 400, 0.9375rem): rows, forms, table cells. Tailwind `text-sm`.
 - **Label / metadata** (sans 400–500, 0.8125rem): table headers, tags, secondary lines. Tailwind `text-xs`.
@@ -160,7 +160,7 @@ Controls and overlays use 6px corners. Tags use 2px. Meters and chart bars are s
 ## Components
 
 ### Sections
-`<section className="section">` is a tonal panel: 6px corners, `muted` at 50% in light and `card` in dark, 20 to 24px padding, no border and no shadow. `.panel` is the same surface for blocks without a section title (summary stats, a standalone table or list). Panels never nest: a panel inside a panel or a dialog drops its fill and padding. Pages stack panels 20px apart and use the full width beside the sidebar. The `h2.section-title` (sans 600, 1.125rem) opens a section. Lists inside use `ul.rows` (hairline dividers between rows, none above the first or below the last). On the dashboard, `DashboardSection` adds the title row with an optional "go to page" link. Do not wrap page content in `.card`.
+`Section` (`src/components/ui/section`) is a tonal panel: 6px corners, `muted` at 50% in light and `card` in dark, 20 to 24px padding, no border and no shadow. `Panel` is the same surface for blocks without a section title (summary stats, a standalone table or list). Panels never nest: a panel inside a panel or a dialog drops its fill and padding. Pages stack panels 20px apart and use the full width beside the sidebar. `SectionTitle` (an `h2`, sans 600, 1.125rem) opens a section. Lists inside use `Rows` (hairline dividers between rows, none above the first or below the last). On the dashboard, `DashboardSection` adds the title row with an optional "go to page" link. Do not wrap page content in `Card`.
 
 ### Summary stats
 `SummaryStats` renders one lead figure in the display serif, with no rule under it, and the remaining figures as a plain definition list with no rules. Mark the lead with `lead: true`.
@@ -209,7 +209,7 @@ Sidebar links are muted text; the current page gets a paper fill, a hairline bor
 ## Do's and Don'ts
 
 ### Do:
-- **Do** start every page section with `.section` and a `.section-title`.
+- **Do** start every page section with `Section` and a `SectionTitle`.
 - **Do** right-align amounts and keep them on one line.
 - **Do** use `text-expense` for validation and error text as well; `destructive` is a fill color and fails text contrast in the dark theme.
 - **Do** use `text-income` / `text-expense` for money text and `Tag`/`Meter` for status and progress.

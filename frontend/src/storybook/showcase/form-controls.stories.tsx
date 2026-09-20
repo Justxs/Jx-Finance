@@ -6,6 +6,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { type DateRange, DateRangePicker } from "@/components/ui/date-range-picker";
 import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -28,7 +29,7 @@ function FormExample() {
   const [split, setSplit] = useState(false);
 
   return (
-    <div className="form-grid w-[min(90vw,40rem)]">
+    <FormGrid className="w-[min(90vw,40rem)]">
       <div className="space-y-1.5">
         <Label htmlFor="story-amount">Amount</Label>
         <Input id="story-amount" inputMode="decimal" placeholder="0.00" />
@@ -76,7 +77,7 @@ function FormExample() {
       <div className="col-span-full">
         <FileInput id="story-file" placeholder="Choose a Swedbank CSV export" />
       </div>
-    </div>
+    </FormGrid>
   );
 }
 

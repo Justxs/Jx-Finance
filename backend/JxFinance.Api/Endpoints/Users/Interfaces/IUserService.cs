@@ -2,6 +2,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.CreateUser;
 using JxFinance.Endpoints.Users.GetUsers;
+using JxFinance.Endpoints.Users.ResetUserPassword;
 using JxFinance.Endpoints.Users.UpdateMyProfile;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 
@@ -22,6 +23,14 @@ public interface IUserService
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeactivateAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken);
+
+    Task<Result<Guid>> ReactivateAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<UserProfileResponse>> ResetPasswordAsync(
+        Guid id,
+        ResetUserPasswordRequest request,
+        Guid currentUserId,
+        CancellationToken cancellationToken);
 
     Task<Result<UserProfileResponse>> UpdateOwnProfileAsync(
         Guid userId,

@@ -1,14 +1,18 @@
 services:
+  db:
+    ports: !reset []
   api:
+    ports: !reset []
     environment:
       App__SecureCookies: "true"
+      AllowedHosts: "${SITE_ADDRESS:-finance.internal};localhost"
   frontend:
-    ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:443:443"
+    ports: !override
+      - "${BIND_ADDRESS:-127.0.0.1}:${HTTPS_PORT:-443}:443"
     environment:
       SITE_ADDRESS: ${SITE_ADDRESS:-finance.internal}
+    command: ["caddy", "run", "--config", "/etc/caddy/Caddyfile.production", "--adapter", "caddyfile"]
     volumes:
-      - ./frontend/Caddyfile.production:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
 volumes:

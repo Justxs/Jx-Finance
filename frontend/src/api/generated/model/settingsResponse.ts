@@ -15,7 +15,6 @@ export interface SettingsResponse {
   instanceName: string | null;
   features: FeatureFlags;
   reportingCurrency: Currency;
-  /** Currencies offered when entering data. The reporting currency is always included. */
   enabledCurrencies: Currency[];
   exchangeRateSyncEnabled: boolean;
   ratesAsOf: null | NullableOfDateOnly;

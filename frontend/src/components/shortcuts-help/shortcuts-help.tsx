@@ -66,7 +66,7 @@ export function ShortcutsHelp({ className }: Readonly<Props>) {
         align="start"
         className="w-[min(30rem,calc(100vw-2rem))] gap-4 p-4"
       >
-        <PopoverTitle className="section-title">{t("shortcuts.title")}</PopoverTitle>
+        <PopoverTitle className="text-lg leading-6">{t("shortcuts.title")}</PopoverTitle>
         <section aria-labelledby="shortcuts-actions">
           <h3 id="shortcuts-actions" className="text-xs font-medium text-muted-foreground">
             {t("shortcuts.actions")}

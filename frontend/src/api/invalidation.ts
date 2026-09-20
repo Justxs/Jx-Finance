@@ -70,7 +70,11 @@ const rules: readonly Rule[] = [
     ],
   },
   {
-    after: [api.getCreateTransferMutationKey, api.getDeleteTransferMutationKey],
+    after: [
+      api.getCreateTransferMutationKey,
+      api.getUpdateTransferMutationKey,
+      api.getDeleteTransferMutationKey,
+    ],
     refresh: [
       api.getTransfersQueryKey,
       api.getAccountsQueryKey,
@@ -79,14 +83,12 @@ const rules: readonly Rule[] = [
     ],
   },
   {
-    after: [api.getCreateConversionMutationKey, api.getDeleteConversionMutationKey],
-    refresh: [
-      api.getConversionsQueryKey,
-      api.getAccountsQueryKey,
-      api.getTransactionsQueryKey,
-      api.getDashboardSummaryQueryKey,
-      api.getNetWorthQueryKey,
+    after: [
+      api.getCreateConversionMutationKey,
+      api.getUpdateConversionMutationKey,
+      api.getDeleteConversionMutationKey,
     ],
+    refresh: [...ledger, api.getConversionsQueryKey],
   },
   {
     after: [
@@ -123,12 +125,21 @@ const rules: readonly Rule[] = [
     after: [
       api.getCreateHouseholdMutationKey,
       api.getUpdateHouseholdMutationKey,
-      api.getDeleteHouseholdMutationKey,
       api.getAddMemberMutationKey,
-      api.getRemoveMemberMutationKey,
       api.getUpdateMemberRoleMutationKey,
     ],
     refresh: [api.getHouseholdsQueryKey],
+  },
+  {
+    after: [api.getDeleteHouseholdMutationKey, api.getRemoveMemberMutationKey],
+    refresh: [
+      ...ledger,
+      api.getHouseholdsQueryKey,
+      api.getCategoriesQueryKey,
+      api.getTransfersQueryKey,
+      api.getConversionsQueryKey,
+      api.getRecurringBillsQueryKey,
+    ],
   },
   {
     after: [
@@ -161,17 +172,18 @@ const rules: readonly Rule[] = [
       api.getDeleteInvestmentTransactionMutationKey,
       api.getCreateSecurityMutationKey,
       api.getUpdateSecurityMutationKey,
+      api.getSetSecurityPriceMutationKey,
     ],
     refresh: holdings,
   },
   {
     after: [api.getImportBrokerReportMutationKey, api.getSyncBrokerConnectionMutationKey],
     refresh: [
+      ...ledger,
       ...holdings,
       api.getBrokerConnectionsQueryKey,
       api.getTransfersQueryKey,
       api.getConversionsQueryKey,
-      api.getTransactionsQueryKey,
     ],
   },
   {
@@ -188,12 +200,21 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getSyncExchangeRatesMutationKey],
-    refresh: [api.getSettingsQueryKey, api.getExchangeRateQueryKey],
+    refresh: [
+      api.getSettingsQueryKey,
+      api.getExchangeRateQueryKey,
+      api.getAccountsQueryKey,
+      api.getNetWorthQueryKey,
+      api.getDashboardSummaryQueryKey,
+      api.getPortfolioQueryKey,
+    ],
   },
   {
     after: [
       api.getCreateUserMutationKey,
       api.getDeactivateUserMutationKey,
+      api.getReactivateUserMutationKey,
+      api.getResetUserPasswordMutationKey,
       api.getUpdateUserRoleMutationKey,
     ],
     refresh: [api.getUsersQueryKey],

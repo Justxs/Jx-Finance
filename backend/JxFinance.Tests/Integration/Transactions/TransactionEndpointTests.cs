@@ -149,6 +149,30 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         Assert.Contains("12.34", csv);
     }
 
+    [Theory]
+    [InlineData("=HYPERLINK(\"http://x\")", "\"'=HYPERLINK(\"\"http://x\"\")\"")]
+    [InlineData("+1+1", "'+1+1")]
+    [InlineData("-2+3", "'-2+3")]
+    [InlineData("@SUM(A1)", "'@SUM(A1)")]
+    public async Task Export_neutralizes_spreadsheet_formulas_in_text_columns_only(string description, string expectedCell)
+    {
+        var account = await PostAsync<IdDto>(
+            Client,
+            "/api/accounts",
+            new { name = $"=Formula account {Guid.NewGuid():N}", type = "checking", startingBalance = "0.00" });
+
+        await PostAsync<IdDto>(
+            Client,
+            "/api/transactions",
+            new { accountId = account.Id, type = "expense", amount = "12.34", date = "2026-06-05", description });
+
+        var csv = await Client.GetStringAsync($"/api/transactions/export?accountId={account.Id}");
+        var row = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[1];
+
+        Assert.StartsWith($"2026-06-05,{expectedCell},'=Formula account", row);
+        Assert.EndsWith(",Expense,12.34,eur", row, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public async Task Export_pdf_returns_pdf_document()
     {

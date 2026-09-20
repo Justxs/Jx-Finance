@@ -98,6 +98,37 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("95.00", await CurrentBalanceAsync(shared));
     }
 
+    [Fact]
+    public async Task Removing_a_member_makes_their_shared_accounts_and_categories_personal_again()
+    {
+        var member = await CreateUserAsync();
+        using var memberClient = await LoginAsync(member);
+        var household = await CreateHouseholdAsync(member);
+        var membersAccount = await CreateAccountAsync("50.00", householdId: household, client: memberClient);
+        var membersCategory = (await PostAsync<IdDto>(
+            memberClient,
+            "/api/categories",
+            new { name = $"Shared {Guid.NewGuid():N}", type = "expense", scope = "shared", householdId = household })).Id;
+        var ownersAccount = await CreateAccountAsync("10.00", householdId: household);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{membersAccount}")).StatusCode);
+
+        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}")).EnsureSuccessStatusCode();
+
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/accounts/{membersAccount}")).StatusCode);
+        var ownersCategories = await Client.GetFromJsonAsync<List<IdDto>>("/api/categories");
+        Assert.DoesNotContain(ownersCategories!, c => c.Id == membersCategory);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{ownersAccount}")).StatusCode);
+
+        var kept = await memberClient.GetFromJsonAsync<ScopeDto>($"/api/accounts/{membersAccount}");
+        Assert.Equal("personal", kept!.Scope);
+        Assert.Null(kept.HouseholdId);
+        var membersCategories = await memberClient.GetFromJsonAsync<List<ScopeDto>>("/api/categories");
+        var keptCategory = Assert.Single(membersCategories!, c => c.Id == membersCategory);
+        Assert.Equal("personal", keptCategory.Scope);
+    }
+
+    private sealed record ScopeDto(Guid Id, string Scope, Guid? HouseholdId);
+
     private static async Task<Guid> CreateExpenseAsync(HttpClient client, Guid accountId, string amount) =>
         (await PostAsync<IdDto>(
             client,

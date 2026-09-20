@@ -20,4 +20,6 @@ export interface TransferResponse {
   currency: Currency;
   receivedAmount: string;
   receivedCurrency: Currency;
+  fromAccountImported: boolean;
+  toAccountImported: boolean;
 }

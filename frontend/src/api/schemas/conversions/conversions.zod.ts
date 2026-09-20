@@ -261,6 +261,8 @@ export const CreateConversionResponse = zod.object({
   ]),
   feeTransactionId: zod.uuid().nullable(),
   createdAt: zod.iso.datetime({ offset: true }),
+  feeCategoryId: zod.uuid().nullable(),
+  isImported: zod.boolean(),
 });
 
 /**
@@ -385,6 +387,8 @@ export const ConversionsResponse = zod.object({
       ]),
       feeTransactionId: zod.uuid().nullable(),
       createdAt: zod.iso.datetime({ offset: true }),
+      feeCategoryId: zod.uuid().nullable(),
+      isImported: zod.boolean(),
     }),
   ),
   page: zod.int(),
@@ -397,3 +401,259 @@ export const ConversionsResponse = zod.object({
  * @summary Delete a currency conversion
  */
 export const DeleteConversionResponse = zod.void();
+
+/**
+ * Replaces the date, the sold and bought amounts and currencies, the description and the fee of a conversion; the account stays the same. The fee fields describe the fee as it should be afterwards: with feeAmount the linked expense transaction is created or updated (amount, currency, date, category, and its value in the reporting currency at the rate for the new date), without feeAmount an existing fee transaction is deleted. Conversion and fee change together or not at all. A fee transaction that the user has split into lines cannot be changed or removed from here and answers transaction.splitNotAllowed; edit that transaction instead. A conversion imported from a broker (isImported) answers resource.readOnly: correct it at the broker and import again.
+ * @summary Update a currency conversion
+ */
+export const updateConversionBodyFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateConversionBodyToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateConversionBodyDescriptionMin = 0;
+export const updateConversionBodyDescriptionMax = 500;
+
+export const updateConversionBodyFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateConversionBody = zod.object({
+  fromAmount: zod
+    .stringFormat("decimal", updateConversionBodyFromAmountRegExp)
+    .describe("Amount sold, as a decimal string greater than zero."),
+  fromCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  toAmount: zod
+    .stringFormat("decimal", updateConversionBodyToAmountRegExp)
+    .describe("Amount bought, as a decimal string greater than zero."),
+  toCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  date: zod.iso.date(),
+  description: zod
+    .string()
+    .min(updateConversionBodyDescriptionMin)
+    .max(updateConversionBodyDescriptionMax)
+    .nullable(),
+  feeAmount: zod
+    .stringFormat("decimal", updateConversionBodyFeeAmountRegExp)
+    .nullish()
+    .describe("The fee after the update. Leave it out to remove the fee."),
+  feeCurrency: zod
+    .union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ])
+    .optional()
+    .describe(
+      "Currency of the fee; one of the two converted currencies. Defaults to the sold currency.",
+    ),
+  feeCategoryId: zod
+    .uuid()
+    .nullish()
+    .describe("Expense category of the fee transaction. Leave it out for none."),
+});
+
+export const updateConversionResponseFromAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateConversionResponseToAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateConversionResponseFeeAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateConversionResponse = zod.object({
+  id: zod.uuid(),
+  accountId: zod.uuid(),
+  fromAmount: zod.stringFormat("decimal", updateConversionResponseFromAmountRegExp),
+  fromCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  toAmount: zod.stringFormat("decimal", updateConversionResponseToAmountRegExp),
+  toCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  rate: zod.string(),
+  date: zod.iso.date(),
+  description: zod.string().nullable(),
+  feeAmount: zod.stringFormat("decimal", updateConversionResponseFeeAmountRegExp).nullable(),
+  feeCurrency: zod.union([
+    zod.null(),
+    zod.enum([
+      "eur",
+      "usd",
+      "gbp",
+      "chf",
+      "pln",
+      "sek",
+      "nok",
+      "dkk",
+      "czk",
+      "huf",
+      "ron",
+      "isk",
+      "try",
+      "jpy",
+      "cny",
+      "hkd",
+      "sgd",
+      "krw",
+      "inr",
+      "idr",
+      "myr",
+      "php",
+      "thb",
+      "aud",
+      "nzd",
+      "cad",
+      "mxn",
+      "brl",
+      "ils",
+      "zar",
+    ]),
+  ]),
+  feeTransactionId: zod.uuid().nullable(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  feeCategoryId: zod.uuid().nullable(),
+  isImported: zod.boolean(),
+});

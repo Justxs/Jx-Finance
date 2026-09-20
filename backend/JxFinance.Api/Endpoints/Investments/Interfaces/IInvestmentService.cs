@@ -5,6 +5,7 @@ using JxFinance.Endpoints.Investments.GetInvestmentTransactions;
 using JxFinance.Endpoints.Investments.GetPortfolio;
 using JxFinance.Endpoints.Investments.GetSecurities;
 using JxFinance.Endpoints.Investments.SaveSecurity;
+using JxFinance.Endpoints.Investments.SetSecurityPrice;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 
@@ -30,5 +31,12 @@ public interface IInvestmentService
 
     Task<IReadOnlyList<SecurityResponse>> GetSecuritiesAsync(GetSecuritiesRequest request, CancellationToken cancellationToken);
 
-    Task<Result<SecurityResponse>> SaveSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken);
+    Task<Result<SecurityResponse>> CreateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken);
+
+    Task<Result<SecurityResponse>> UpdateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken);
+
+    Task<Result<SecurityResponse>> SetSecurityPriceAsync(
+        SetSecurityPriceRequest request,
+        bool isAdministrator,
+        CancellationToken cancellationToken);
 }

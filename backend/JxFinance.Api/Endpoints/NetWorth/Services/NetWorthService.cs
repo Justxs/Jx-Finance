@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.Accounts.Interfaces;
@@ -105,7 +106,8 @@ public sealed class NetWorthService(
         var lockId = BitConverter.ToInt64(currentUser.Id.ToByteArray(), 0);
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
         var (accountsTotal, assetsTotal, debtsTotal, netWorth, isComplete) = await ComputeTotalsAsync(cancellationToken);
-        if (isComplete)
+        var fitsSnapshot = new[] { accountsTotal, assetsTotal, debtsTotal, netWorth }.All(total => DecimalRules.FitsMoney(Money.Round(total)));
+        if (isComplete && fitsSnapshot)
         {
             await UpsertTodaySnapshotAsync(accountsTotal, assetsTotal, debtsTotal, netWorth, cancellationToken);
         }

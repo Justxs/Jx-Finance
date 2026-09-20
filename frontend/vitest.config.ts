@@ -1,8 +1,6 @@
 import { fileURLToPath } from "node:url";
 import babel from "@rolldown/plugin-babel";
-import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
@@ -20,7 +18,7 @@ export default defineConfig({
           name: "unit",
           environment: "node",
           include: ["src/**/*.test.ts"],
-          exclude: ["src/**/*.dom.test.ts"],
+          exclude: ["src/**/*.dom.test.ts", "src/test/stories/**"],
         },
       },
       {
@@ -34,17 +32,14 @@ export default defineConfig({
       },
       {
         extends: true,
-        plugins: [
-          storybookTest({ configDir: fileURLToPath(new URL("./.storybook", import.meta.url)) }),
-        ],
         test: {
-          name: "storybook",
-          browser: {
-            enabled: true,
-            headless: true,
-            provider: playwright(),
-            instances: [{ browser: "chromium" }],
-          },
+          name: "stories",
+          environment: "jsdom",
+          include: ["src/test/stories/shard-*.test.ts"],
+          setupFiles: ["./src/test/setup.ts"],
+          sequence: { groupOrder: 1 },
+          testTimeout: 30_000,
+          hookTimeout: 60_000,
         },
       },
     ],
@@ -65,6 +60,11 @@ export default defineConfig({
         "src/**/*.test.{ts,tsx}",
         "src/**/index.ts",
       ],
+      thresholds: {
+        "src/hooks/**": { statements: 83, branches: 79, functions: 63, lines: 88 },
+        "src/lib/**": { statements: 85, branches: 83, functions: 90, lines: 91 },
+        "src/stores/**": { statements: 95, branches: 92, functions: 95, lines: 96 },
+      },
     },
   },
 });

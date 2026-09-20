@@ -1,20 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Suspense } from "react";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { toggleSidebar } from "@/stores/sidebar-store";
+import { setSidebarCollapsed } from "@/stores/sidebar-store";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton";
 import { AppSidebar } from "./app-sidebar";
-
-const COLLAPSED_KEY = "jx-sidebar-collapsed";
-
-function setSidebarCollapsed(collapsed: boolean) {
-  const current = localStorage.getItem(COLLAPSED_KEY) === "true";
-  if (current !== collapsed) {
-    toggleSidebar();
-  }
-}
 
 function SidebarExample() {
   return (

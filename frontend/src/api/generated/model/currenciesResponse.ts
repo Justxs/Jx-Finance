@@ -10,7 +10,6 @@ import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface CurrenciesResponse {
   reportingCurrency: Currency;
-  /** Currencies offered when entering data. The reporting currency is always included. */
   currencies: Currency[];
   ratesAsOf: null | NullableOfDateOnly;
 }

@@ -13,7 +13,7 @@ public sealed class CreateGoalValidator : Validator<CreateGoalRequest>
             .IsPositiveMoney()
             .WithMessage("Target amount must be a positive decimal with at most 2 decimal places.");
         RuleFor(r => r.CurrentAmount)
-            .IsMoney()
-            .WithMessage("Current amount must be a decimal with at most 2 decimal places.");
+            .IsNonNegativeMoney()
+            .WithMessage("Current amount must be a non-negative decimal with at most 2 decimal places.");
     }
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSecurities, useUpdateSecurity } from "@/api/generated";
+import { useSecurities, useSetSecurityPrice } from "@/api/generated";
 import type {
   AccountResponse,
   Currency,
@@ -8,6 +8,7 @@ import type {
   SecurityResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { PositionsTable } from "./positions-table";
 import { PriceForm } from "./price-form";
 
@@ -44,13 +45,15 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
   const priceSecurity =
     securities.data?.find((security) => security.id === priceTarget?.id) ?? priceTarget;
 
-  const updateMutation = useUpdateSecurity({
+  const priceMutation = useSetSecurityPrice({
     mutation: {
+      meta: { silent: true },
       onSuccess: () => setPriceOpen(false),
     },
   });
 
   function editPrice(security: SecurityResponse) {
+    priceMutation.reset();
     setPriceTarget(security);
     setPriceOpen(true);
   }
@@ -61,8 +64,8 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
   const shared = sharedSecurities(holdings);
 
   return (
-    <section className="section">
-      <h2 className="section-title mb-2">{t("investments.holdings.title")}</h2>
+    <Section>
+      <SectionTitle className="mb-2">{t("investments.holdings.title")}</SectionTitle>
       {open.length === 0 ? (
         <p className="py-6 text-sm text-muted-foreground">{t("investments.holdings.empty")}</p>
       ) : (
@@ -105,26 +108,13 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
           <PriceForm
             key={priceSecurity.id}
             security={priceSecurity}
-            pending={updateMutation.isPending}
-            onSubmit={(values) =>
-              updateMutation.mutateAsync({
-                id: priceSecurity.id,
-                data: {
-                  symbol: priceSecurity.symbol,
-                  name: priceSecurity.name,
-                  type: priceSecurity.type,
-                  currency: priceSecurity.currency,
-                  isin: priceSecurity.isin,
-                  exchange: priceSecurity.exchange,
-                  lastPrice: values.lastPrice,
-                  lastPriceDate: values.lastPriceDate,
-                },
-              })
-            }
+            pending={priceMutation.isPending}
+            error={priceMutation.error}
+            onSubmit={(values) => priceMutation.mutateAsync({ id: priceSecurity.id, data: values })}
             onCancel={() => setPriceOpen(false)}
           />
         ) : null}
       </Modal>
-    </section>
+    </Section>
   );
 }

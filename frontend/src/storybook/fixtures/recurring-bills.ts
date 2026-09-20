@@ -1,4 +1,4 @@
-import type { RecurringBillResponse } from "@/api/generated/model";
+import type { ProblemDetails, RecurringBillResponse } from "@/api/generated/model";
 import { ids } from "./base";
 
 export const dueSoonBill: RecurringBillResponse = {
@@ -83,3 +83,32 @@ export const recurringBills: RecurringBillResponse[] = [
   },
   inactiveBill,
 ];
+
+export const billStaleProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
+  title: "Conflict",
+  status: 409,
+  code: "conflict.stale",
+  detail: "The bill is no longer due on the expected date.",
+};
+
+export const billInactiveProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
+  title: "Conflict",
+  status: 409,
+  code: "recurringBill.inactive",
+  detail: "An inactive bill cannot be confirmed.",
+};
+
+export const billCategoryProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "categoryId",
+      reason: "A bill needs an expense category.",
+      code: "category.wrongType",
+    },
+  ],
+};

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useAccountsSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettings } from "@/hooks/use-settings";
 import { ImportDialog } from "../import-dialog";
@@ -49,10 +50,8 @@ export function ImportDataSection() {
   }
 
   return (
-    <section className="section" aria-labelledby="import-data-title">
-      <h2 id="import-data-title" className="section-title">
-        {t("imports.sectionTitle")}
-      </h2>
+    <Section aria-labelledby="import-data-title">
+      <SectionTitle id="import-data-title">{t("imports.sectionTitle")}</SectionTitle>
       <p className="mt-1 max-w-prose text-sm text-muted-foreground">
         {t("imports.sectionDescription")}
       </p>
@@ -62,6 +61,6 @@ export function ImportDataSection() {
       >
         <ImportActions />
       </QueryBoundary>
-    </section>
+    </Section>
   );
 }

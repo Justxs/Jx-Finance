@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { getCreateUserMockHandler } from "@/api/generated/users/users.msw";
 import { Modal } from "@/components/modal";
+import { Card } from "@/components/ui/card";
 import { validationProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateUserForm } from "./create-user-form";
@@ -11,9 +12,9 @@ const meta = {
   component: CreateUserForm,
   args: { onCreated: fn(), onCancel: fn() },
   render: (args) => (
-    <div className="card w-[36rem] max-w-full p-6">
+    <Card className="w-[36rem] max-w-full p-6">
       <CreateUserForm {...args} />
-    </div>
+    </Card>
   ),
 } satisfies Meta<typeof CreateUserForm>;
 
@@ -24,9 +25,9 @@ export const Default: Story = {};
 
 export const Narrow: Story = {
   render: (args) => (
-    <div className="card w-72 p-4">
+    <Card className="w-72 p-4">
       <CreateUserForm {...args} />
-    </div>
+    </Card>
   ),
 };
 

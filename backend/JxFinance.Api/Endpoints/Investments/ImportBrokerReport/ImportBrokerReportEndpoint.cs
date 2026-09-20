@@ -13,6 +13,7 @@ public sealed class ImportBrokerReportEndpoint(IBrokerImportService importServic
         Post("investments/import/interactive-brokers");
         Group<InvestmentsGroup>();
         AllowFileUploads();
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(ImportBrokerReportRequest req, CancellationToken ct)

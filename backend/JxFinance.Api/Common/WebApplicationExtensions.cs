@@ -19,7 +19,10 @@ public static class WebApplicationExtensions
             logger.LogInformation("Applying {Count} migration(s): {Migrations}", pending.Count, string.Join(", ", pending));
             await db.Database.MigrateAsync();
         }
-        var users = services.GetRequiredService<UserManager<AppUser>>();
-        await DevDataSeeder.SeedAsync(db, users, logger);
+        if (app.Environment.IsDevelopment())
+        {
+            var users = services.GetRequiredService<UserManager<AppUser>>();
+            await DevDataSeeder.SeedAsync(db, users, logger);
+        }
     }
 }

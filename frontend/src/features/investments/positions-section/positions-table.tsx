@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, HoldingResponse, SecurityResponse } from "@/api/generated/model";
 import { ApproximateAmount } from "@/components/approximate-amount";
+import { Rows } from "@/components/ui/rows";
 import {
   Table,
   TableBody,
@@ -220,7 +221,7 @@ export function PositionsTable({
         </Table>
       </div>
 
-      <ul className="rows lg:hidden" aria-label={label}>
+      <Rows className="lg:hidden" aria-label={label}>
         {holdings.map((holding) => {
           const { security } = holding;
           const account = accountName(holding);
@@ -281,7 +282,7 @@ export function PositionsTable({
             </li>
           );
         })}
-      </ul>
+      </Rows>
     </>
   );
 }

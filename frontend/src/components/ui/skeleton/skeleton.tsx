@@ -1,3 +1,6 @@
+import { Rows } from "@/components/ui/rows";
+import { Panel } from "@/components/ui/section";
+import { SplitColumns } from "@/components/ui/split-columns";
 import { cn } from "@/lib/utils";
 
 function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
@@ -19,7 +22,7 @@ interface RowsSkeletonProps {
 
 function RowsSkeleton({ rows = 5, className }: Readonly<RowsSkeletonProps>) {
   return (
-    <ul data-slot="rows-skeleton" aria-hidden="true" className={cn("rows", className)}>
+    <Rows data-slot="rows-skeleton" aria-hidden="true" className={className}>
       {Array.from({ length: rows }, (_, index) => (
         <li key={index} className="flex items-center gap-4 py-2.5">
           <Skeleton className="h-4 w-14 shrink-0 rounded-sm" />
@@ -29,16 +32,17 @@ function RowsSkeleton({ rows = 5, className }: Readonly<RowsSkeletonProps>) {
           <Skeleton className="h-4 w-20 shrink-0 rounded-sm" />
         </li>
       ))}
-    </ul>
+    </Rows>
   );
 }
 
 function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
   return (
-    <div
+    <Panel
+      as={SplitColumns}
       data-slot="stats-skeleton"
       aria-hidden="true"
-      className={cn("panel split-columns gap-y-6 lg:items-end", className)}
+      className={cn("gap-y-6 lg:items-end", className)}
     >
       <div className="min-w-0 space-y-2">
         <Skeleton className="h-4 w-24 rounded-sm" />
@@ -54,7 +58,7 @@ function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
           <Skeleton className="h-6 w-24 rounded-sm" />
         </div>
       </div>
-    </div>
+    </Panel>
   );
 }
 

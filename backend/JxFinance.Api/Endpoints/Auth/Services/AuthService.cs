@@ -60,6 +60,7 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
 
         await EnsureRolesExistAsync();
         await userManager.AddToRoleAsync(user, AppRoles.Admin);
+        await DevDataSeeder.SeedUserCategoriesAsync(db, user.Id, cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         return Result<AppUser>.Success(user);
@@ -70,22 +71,36 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         string password,
         CancellationToken cancellationToken)
     {
+        var rejected = new DomainError(ErrorCodes.CredentialsInvalid, "Invalid email or password.");
         var user = await userManager.FindByEmailAsync(email);
-        if (user?.PasswordHash is null
-            || await userManager.IsLockedOutAsync(user)
-            || !await userManager.CheckPasswordAsync(user, password))
+        if (user?.PasswordHash is null || user.IsDeactivated)
         {
-            return Result<AppUser>.Failure(ErrorCodes.CredentialsInvalid, "Invalid email or password.");
+            return Result<AppUser>.Failure(rejected);
         }
 
-        return Result<AppUser>.Success(user);
+        var failure = await AttemptAsync(
+            user,
+            () => userManager.CheckPasswordAsync(user, password),
+            rejected,
+            completesSignIn: !user.TwoFactorEnabled);
+        return failure is null ? Result<AppUser>.Success(user) : Result<AppUser>.Failure(failure);
+    }
+
+    public async Task<Result<bool>> ConfirmPasswordAsync(AppUser user, string? password, string rejectedCode)
+    {
+        var failure = await AttemptAsync(
+            user,
+            async () => !string.IsNullOrWhiteSpace(password) && await userManager.CheckPasswordAsync(user, password),
+            new DomainError(rejectedCode, "The password could not be confirmed."),
+            completesSignIn: true);
+        return failure is null ? Result<bool>.Success(true) : Result<bool>.Failure(failure);
     }
 
     public async Task<UserProfileResponse> ToProfileAsync(AppUser user)
     {
         var roles = await userManager.GetRolesAsync(user);
         var role = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
-        var isActive = !await userManager.IsLockedOutAsync(user);
+        var isActive = !user.IsDeactivated;
         return new UserProfileResponse(user.Id, user.Email!, user.DisplayName, role, user.TwoFactorEnabled, isActive);
     }
 
@@ -98,19 +113,15 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
     public Task<AppUser?> FindByIdAsync(Guid userId, CancellationToken cancellationToken) =>
         userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
 
-    public async Task<bool> ConsumeTwoFactorCodeAsync(AppUser user, string code)
+    public async Task<Result<bool>> ConsumeTwoFactorCodeAsync(AppUser user, string code)
     {
-        var isValidTotp = await userManager.VerifyTwoFactorTokenAsync(
+        var failure = await AttemptAsync(
             user,
-            TokenOptions.DefaultAuthenticatorProvider,
-            code);
-        if (isValidTotp)
-        {
-            return true;
-        }
-
-        var recoveryResult = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code);
-        return recoveryResult.Succeeded;
+            async () => await userManager.VerifyTwoFactorTokenAsync(user, TokenOptions.DefaultAuthenticatorProvider, code)
+                || (await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code)).Succeeded,
+            new DomainError(ErrorCodes.TwoFactorInvalidCode, "Invalid authenticator code."),
+            completesSignIn: true);
+        return failure is null ? Result<bool>.Success(true) : Result<bool>.Failure(failure);
     }
 
     public async Task<TwoFactorSetupResponse> BeginTwoFactorSetupAsync(AppUser user)
@@ -147,6 +158,34 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
     {
         await userManager.SetTwoFactorEnabledAsync(user, false);
         await userManager.ResetAuthenticatorKeyAsync(user);
+    }
+
+    private async Task<DomainError?> AttemptAsync(
+        AppUser user,
+        Func<Task<bool>> verify,
+        DomainError rejected,
+        bool completesSignIn)
+    {
+        var lockedOut = new DomainError(
+            ErrorCodes.CredentialsLockedOut,
+            "Too many failed attempts. Wait 15 minutes and try again.");
+        if (await userManager.IsLockedOutAsync(user))
+        {
+            return lockedOut;
+        }
+
+        if (await verify())
+        {
+            if (completesSignIn && user.AccessFailedCount > 0)
+            {
+                await userManager.ResetAccessFailedCountAsync(user);
+            }
+
+            return null;
+        }
+
+        await userManager.AccessFailedAsync(user);
+        return await userManager.IsLockedOutAsync(user) ? lockedOut : rejected;
     }
 
     private static string BuildAuthenticatorUri(string email, string sharedKey)

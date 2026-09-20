@@ -71,8 +71,8 @@ new-endpoint tag name verb route:
 new-component feature name:
     node scripts/new-component.mjs {{feature}} {{name}}
 
-# Everything CI checks except story and end-to-end tests (just test-stories, just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, app and Storybook builds.
-check: format-check-backend test gen-check check-frontend
+# Everything CI checks except the end-to-end tests (just e2e): backend format, build and tests, contract drift, frontend types, lint, format, tests, story tests, app and Storybook builds.
+check: format-check-backend test gen-check check-frontend test-stories
     nub run --cwd frontend build
     nub run --cwd frontend build-storybook
 
@@ -100,7 +100,7 @@ test:
     cd backend; dotnet tool restore
     dotnet test --solution backend/JxFinance.slnx -c Release
 
-# Browser tests of the stories (needs the Playwright browser: just e2e-install).
+# Every story's play function and an axe scan, run in jsdom by Vitest (no browser needed).
 test-stories:
     nub run --cwd frontend test:stories
 
@@ -116,7 +116,7 @@ e2e: e2e-down
 e2e-down:
     {{e2e_compose}} down --volumes
 
-# Download the Chromium build Playwright uses for story and end-to-end tests.
+# Download the Chromium build Playwright uses for the end-to-end tests.
 e2e-install:
     nub exec --cwd frontend playwright install chromium
 
@@ -133,3 +133,17 @@ up:
 # Stop the Docker stack.
 down:
     docker compose down
+
+# Bring up the production overlay as a throwaway stack (project jx-verify, https://127.0.0.1:8443, own volumes) and assert: only 443 is published, security headers, Secure cookies, a session that survives recreating the API container, host filtering. CI runs the same script.
+verify-production:
+    node scripts/verify-production.mjs
+
+# Move every pinned Docker base image (compose file and both Dockerfiles) to the newest patch tag and its digest; just update-images --check only reports.
+update-images *flags:
+    node scripts/update-images.mjs {{flags}}
+
+# Fail on a NuGet package or a shipped frontend package with a known vulnerability; development-only frontend packages are listed without failing.
+audit:
+    $report = dotnet list backend/JxFinance.slnx package --vulnerable --include-transitive | Out-String; Write-Host $report; if ($LASTEXITCODE -ne 0 -or $report -match "has the following vulnerable packages") { throw "A NuGet package with a known vulnerability is referenced." }
+    nub audit -C frontend --prod --audit-level moderate
+    -nub audit -C frontend --dev --audit-level moderate

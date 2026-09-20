@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using FastEndpoints.Security;
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Auth;
@@ -29,7 +31,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     }
 
     [Fact]
-    public async Task Refresh_rotates_the_refresh_token_and_rejects_the_old_one()
+    public async Task Refresh_rotates_the_refresh_token()
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
@@ -43,9 +45,71 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
 
         var me = await SendAsync(client, HttpMethod.Get, "/api/auth/me", rotated[AuthCookies.AccessToken]);
         Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+    }
+
+    [Fact]
+    public async Task A_second_tab_refreshing_with_the_previous_token_gets_an_access_token_and_keeps_the_fresh_refresh_cookie()
+    {
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var issued = SetCookies(login);
+        var firstTab = SetCookies(await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]));
+
+        var secondTab = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]);
+
+        Assert.Equal(HttpStatusCode.NoContent, secondTab.StatusCode);
+        var secondTabCookies = SetCookies(secondTab);
+        Assert.DoesNotContain(AuthCookies.RefreshToken, secondTabCookies.Keys);
+        Assert.NotEqual("", secondTabCookies[AuthCookies.AccessToken].Value);
+        var me = await SendAsync(client, HttpMethod.Get, "/api/auth/me", secondTabCookies[AuthCookies.AccessToken]);
+        Assert.Equal(HttpStatusCode.OK, me.StatusCode);
+
+        var next = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", firstTab[AuthCookies.RefreshToken]);
+        Assert.Equal(HttpStatusCode.NoContent, next.StatusCode);
+    }
+
+    [Fact]
+    public async Task Concurrent_refreshes_of_one_session_all_succeed_and_leave_one_valid_refresh_token()
+    {
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var issued = SetCookies(login);
+
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4)
+            .Select(_ => SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken])));
+
+        Assert.All(responses, response => Assert.Equal(HttpStatusCode.NoContent, response.StatusCode));
+        var winner = Assert.Single(responses, response => SetCookies(response).ContainsKey(AuthCookies.RefreshToken));
+        var next = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", SetCookies(winner)[AuthCookies.RefreshToken]);
+        Assert.Equal(HttpStatusCode.NoContent, next.StatusCode);
+    }
+
+    [Fact]
+    public async Task Replaying_the_previous_token_after_the_grace_window_revokes_the_session()
+    {
+        var user = await CreateUserAsync();
+        using var client = CreateClient(handleCookies: false);
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = false });
+        var issued = SetCookies(login);
+        var rotated = SetCookies(await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]));
+
+        using (var scope = Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var rotatedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
+            await db.UserSessions
+                .Where(s => s.UserId == user.Id)
+                .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.RotatedAt, rotatedAt), TestContext.Current.CancellationToken);
+        }
 
         var replay = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]);
         Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
+        Assert.Equal("", SetCookies(replay)[AuthCookies.RefreshToken].Value);
+
+        var legitimate = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", rotated[AuthCookies.RefreshToken]);
+        Assert.Equal(HttpStatusCode.Unauthorized, legitimate.StatusCode);
     }
 
     [Fact]

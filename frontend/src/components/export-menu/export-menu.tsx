@@ -1,8 +1,12 @@
-import { ChevronDown, Download, FileSpreadsheet, FileText } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { ChevronDown, Download, FileSpreadsheet, FileText, type LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { fetchFile } from "@/api/client";
 import { buttonVariants } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { saveFile } from "@/lib/save-file";
 
 interface Props {
   csvUrl: string;
@@ -10,16 +14,32 @@ interface Props {
 }
 
 const itemClass =
-  "flex items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted";
+  "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left transition-colors hover:bg-muted focus-visible:bg-muted";
+
+function FormatLabel({
+  icon: Icon,
+  label,
+  hint,
+}: Readonly<{ icon: LucideIcon; label: string; hint: ReactNode }>) {
+  return (
+    <>
+      <Icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
+      <span className="min-w-0">
+        <span className="block text-sm font-medium">{label}</span>
+        <span className="block text-xs text-muted-foreground">{hint}</span>
+      </span>
+    </>
+  );
+}
 
 export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
-  const formats = [
-    { href: csvUrl, icon: FileSpreadsheet, label: "CSV", hint: t("export.csvHint") },
-    { href: pdfUrl, icon: FileText, label: "PDF", hint: t("export.pdfHint") },
-  ];
+  const pdfMutation = useMutation({
+    mutationFn: () => fetchFile(pdfUrl),
+    onSuccess: (file) => saveFile(file.blob, file.filename ?? "transactions.pdf"),
+  });
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -33,22 +53,31 @@ export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
           {t("export.chooseFormat")}
         </p>
         <ul>
-          {formats.map((format) => (
-            <li key={format.label}>
-              <a
-                href={format.href}
-                aria-label={`${format.label}. ${format.hint}`}
-                className={itemClass}
-                onClick={() => setOpen(false)}
-              >
-                <format.icon aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium">{format.label}</span>
-                  <span className="block text-xs text-muted-foreground">{format.hint}</span>
-                </span>
-              </a>
-            </li>
-          ))}
+          <li>
+            <a
+              href={csvUrl}
+              aria-label={`CSV. ${t("export.csvHint")}`}
+              className={itemClass}
+              onClick={() => setOpen(false)}
+            >
+              <FormatLabel icon={FileSpreadsheet} label="CSV" hint={t("export.csvHint")} />
+            </a>
+          </li>
+          <li>
+            <button
+              type="button"
+              aria-label={`PDF. ${t("export.pdfHint")}`}
+              aria-busy={pdfMutation.isPending || undefined}
+              disabled={pdfMutation.isPending}
+              className={itemClass}
+              onClick={() => {
+                setOpen(false);
+                pdfMutation.mutate();
+              }}
+            >
+              <FormatLabel icon={FileText} label="PDF" hint={t("export.pdfHint")} />
+            </button>
+          </li>
         </ul>
       </PopoverContent>
     </Popover>

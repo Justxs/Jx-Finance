@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
+import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
 async function loadStore() {
   vi.resetModules();
@@ -13,7 +14,7 @@ test("starts expanded", async () => {
 });
 
 test("restores the collapsed state", async () => {
-  localStorage.setItem("jx-sidebar-collapsed", "true");
+  seedPreferences({ sidebarCollapsed: true });
 
   const store = await loadStore();
 
@@ -26,9 +27,20 @@ test("toggling flips the state and stores it", async () => {
 
   act(() => result.current.toggleSidebar());
   expect(result.current.collapsed).toBe(true);
-  expect(localStorage.getItem("jx-sidebar-collapsed")).toBe("true");
+  expect(storedPreferences().sidebarCollapsed).toBe(true);
 
   act(() => store.toggleSidebar());
   expect(result.current.collapsed).toBe(false);
-  expect(localStorage.getItem("jx-sidebar-collapsed")).toBe("false");
+  expect(storedPreferences().sidebarCollapsed).toBe(false);
+});
+
+test("works without storage", async () => {
+  blockStorage();
+  const store = await loadStore();
+  const { result } = renderHook(() => store.useSidebarCollapsed());
+
+  expect(result.current.collapsed).toBe(false);
+
+  act(() => result.current.toggleSidebar());
+  expect(result.current.collapsed).toBe(true);
 });

@@ -6,6 +6,7 @@ import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/gen
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 
@@ -31,9 +32,10 @@ function PasswordPrompt({
   const { t } = useTranslation();
 
   return (
-    <form
+    <Section
+      as="form"
       noValidate
-      className="section space-y-4 *:max-w-md"
+      className="space-y-4 *:max-w-md"
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();
@@ -42,7 +44,7 @@ function PasswordPrompt({
         }
       }}
     >
-      <h2 className="section-title">{t("profile.twoFactorTitle")}</h2>
+      <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
       <p className="text-sm text-muted-foreground">{subtitle}</p>
       <Label htmlFor="two-factor-password">{t("profile.currentPassword")}</Label>
       <Input
@@ -60,7 +62,7 @@ function PasswordPrompt({
       >
         {submitLabel}
       </Button>
-    </form>
+    </Section>
   );
 }
 

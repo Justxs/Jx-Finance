@@ -63,6 +63,72 @@ describe("invalidateAfterMutation", () => {
     expect(isInvalidated(client, goalsKey)).toBe(false);
   });
 
+  const spending = [
+    api.getBudgetsQueryKey,
+    api.getReportSummaryQueryKey,
+    api.getCategoryBreakdownQueryKey,
+    api.getMonthlyTrendQueryKey,
+  ];
+  const balances = [
+    api.getAccountsQueryKey,
+    api.getNetWorthQueryKey,
+    api.getDashboardSummaryQueryKey,
+  ];
+
+  test.each([
+    ["createConversion", api.getCreateConversionMutationKey, [...spending, ...balances]],
+    ["deleteConversion", api.getDeleteConversionMutationKey, [...spending, ...balances]],
+    [
+      "importBrokerReport",
+      api.getImportBrokerReportMutationKey,
+      [...spending, ...balances, api.getPortfolioQueryKey, api.getTransactionsQueryKey],
+    ],
+    [
+      "syncBrokerConnection",
+      api.getSyncBrokerConnectionMutationKey,
+      [...spending, ...balances, api.getPortfolioQueryKey, api.getTransactionsQueryKey],
+    ],
+    [
+      "removeMember",
+      api.getRemoveMemberMutationKey,
+      [
+        api.getHouseholdsQueryKey,
+        api.getAccountsQueryKey,
+        api.getCategoriesQueryKey,
+        api.getTransactionsQueryKey,
+      ],
+    ],
+    [
+      "deleteHousehold",
+      api.getDeleteHouseholdMutationKey,
+      [
+        api.getHouseholdsQueryKey,
+        api.getAccountsQueryKey,
+        api.getCategoriesQueryKey,
+        api.getTransactionsQueryKey,
+      ],
+    ],
+    ["syncExchangeRates", api.getSyncExchangeRatesMutationKey, balances],
+    ["reactivateUser", api.getReactivateUserMutationKey, [api.getUsersQueryKey]],
+    ["resetUserPassword", api.getResetUserPasswordMutationKey, [api.getUsersQueryKey]],
+    [
+      "setSecurityPrice",
+      api.getSetSecurityPriceMutationKey,
+      [...balances, api.getPortfolioQueryKey, api.getSecuritiesQueryKey],
+    ],
+  ])("%s refreshes the derived figures", async (_name, getMutationKey, roots) => {
+    const client = seededClient();
+    const queryKeys = roots.map((getRoot) => [getRoot()[0], { page: 1 }]);
+    for (const queryKey of queryKeys) {
+      client.setQueryData(queryKey, {});
+    }
+
+    await invalidateAfterMutation(client, getMutationKey());
+
+    expect(queryKeys.filter((queryKey) => !isInvalidated(client, queryKey))).toEqual([]);
+    expect(isInvalidated(client, goalsKey)).toBe(false);
+  });
+
   test("invalidates everything after settings change", async () => {
     const client = seededClient();
 

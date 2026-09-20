@@ -14,6 +14,7 @@ import {
 import { CurrencySelect } from "@/components/currency-select";
 import { useAppForm } from "@/components/form";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
@@ -104,14 +105,14 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="name">
           {(field) => (
@@ -234,7 +235,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             {initial ? t("actions.save") : t("actions.add")}
           </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

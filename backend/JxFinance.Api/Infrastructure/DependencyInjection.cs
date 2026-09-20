@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddOptions<AppOptions>()
             .Bind(configuration.GetSection(AppOptions.SectionName))
             .Validate(options => IsValidTimeZone(options.TimeZone), "App:TimeZone is not a valid time zone id.")
+            .Validate(options => options.BackupMaxDecompressedBytes > 0, "App:BackupMaxDecompressedBytes must be positive.")
+            .Validate(options => options.BackupLockTimeoutSeconds > 0, "App:BackupLockTimeoutSeconds must be positive.")
             .ValidateOnStart();
 
         services.AddSingleton<IClock, Time.SystemClock>();
@@ -36,6 +38,9 @@ public static class DependencyInjection
         services.AddIdentityCore<AppUser>(options =>
             {
                 options.User.RequireUniqueEmail = true;
+                options.Lockout.AllowedForNewUsers = true;
+                options.Lockout.MaxFailedAccessAttempts = 5;
+                options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
             })
             .AddRoles<AppRole>()
             .AddEntityFrameworkStores<AppDbContext>()

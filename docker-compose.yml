@@ -1,7 +1,14 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
 services:
   db:
-    image: postgres:16
+    image: postgres:16.15@sha256:a3b7f434b2dc57ce85a67e171163eb8ab1a1ebcb39d27484661f26b1dfbe30d6
     restart: unless-stopped
+    logging: *logging
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -18,6 +25,7 @@ services:
 
   api:
     restart: unless-stopped
+    logging: *logging
     build:
       context: .
       dockerfile: backend/JxFinance.Api/Dockerfile
@@ -44,6 +52,7 @@ services:
 
   frontend:
     restart: unless-stopped
+    logging: *logging
     build:
       context: .
       dockerfile: frontend/Dockerfile
@@ -52,10 +61,17 @@ services:
     depends_on:
       api:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   aspire:
-    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.5.2@sha256:0ef531119b8073aed12b0db2b4e4ab02866c6c69b7a52264269abd00cfb48a34
     restart: unless-stopped
+    logging: *logging
     profiles:
       - telemetry
     environment:

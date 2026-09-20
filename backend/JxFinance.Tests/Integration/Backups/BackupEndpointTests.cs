@@ -3,13 +3,20 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
+using JxFinance.Infrastructure.Backups;
 using JxFinance.Tests.Support;
+using Microsoft.Extensions.DependencyInjection;
+using Npgsql;
 
 namespace JxFinance.Tests.Integration.Backups;
 
 [Collection<IntegrationCollection>]
-public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
+public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture), IDisposable
 {
+    private HttpClient? admin;
+
+    public void Dispose() => admin?.Dispose();
+
     [Fact]
     public async Task Restore_brings_back_the_data_of_the_backup_and_drops_what_came_after()
     {
@@ -22,7 +29,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         try
         {
-            var response = await Client.PostAsync($"/api/backups/{backup.Id}/restore", null);
+            var response = await RestoreAsync(backup.Id, client: Client);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var restored = await response.Content.ReadFromJsonAsync<RestoredDto>();
@@ -46,6 +53,49 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var afterRestore = await CreateUserAsync();
         Assert.NotEqual(Guid.Empty, afterRestore.Id);
     }
+
+    [Fact]
+    public async Task Restore_undoes_edits_and_deletions_made_after_the_backup()
+    {
+        var account = await CreateAccountAsync(startingBalance: "500.00");
+        var category = await CreateCategoryAsync();
+        var edited = await PostAsync<IdDto>(
+            Client,
+            "/api/transactions",
+            new { accountId = account, categoryId = category, type = "expense", amount = "42.10", date = "2026-06-05", description = "Before the backup" });
+        var deleted = await PostAsync<IdDto>(
+            Client,
+            "/api/transactions",
+            new { accountId = account, type = "expense", amount = "7.90", date = "2026-06-06", description = "Deleted later" });
+        var goal = await PostAsync<IdDto>(Client, "/api/goals", new { name = "Restored goal", targetAmount = "900.00", currentAmount = "100.00" });
+        var backup = await CreateBackupAsync();
+
+        (await Client.PutAsJsonAsync(
+            $"/api/transactions/{edited.Id}",
+            new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" })).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/transactions/{deleted.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/categories/{category}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/goals/{goal.Id}")).EnsureSuccessStatusCode();
+        Assert.Equal("400.01", await CurrentBalanceAsync(account));
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var restored = await Client.GetFromJsonAsync<RestoredTransactionDto>($"/api/transactions/{edited.Id}");
+        Assert.Equal(new RestoredTransactionDto(edited.Id, category, "42.10", new DateOnly(2026, 6, 5), "Before the backup"), restored);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{deleted.Id}")).StatusCode);
+        Assert.Contains(category.ToString(), await Client.GetStringAsync("/api/categories"));
+        Assert.Contains(goal.Id.ToString(), await Client.GetStringAsync("/api/goals"));
+        Assert.Equal("450.00", await CurrentBalanceAsync(account));
+    }
+
+    private sealed record RestoredTransactionDto(Guid Id, Guid? CategoryId, string Amount, DateOnly Date, string? Description);
 
     [Fact]
     public async Task Created_backup_is_listed_newest_first_with_its_size_and_note()
@@ -97,7 +147,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(HttpStatusCode.NotFound, again.StatusCode);
         Assert.DoesNotContain(await ListAsync(), b => b.Id == backup.Id);
         Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/backups/{backup.Id}/download")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.PostAsync($"/api/backups/{backup.Id}/restore", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await RestoreAsync(backup.Id)).StatusCode);
     }
 
     [Fact]
@@ -160,7 +210,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         accounts["rows"]![0]![userColumn] = Guid.NewGuid().ToString();
         var damaged = await StoreAsync(document);
 
-        var response = await Client.PostAsync($"/api/backups/{damaged.Id}/restore", null);
+        var response = await RestoreAsync(damaged.Id);
 
         await AssertCodeAsync(response, "backup.invalidFile");
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
@@ -173,7 +223,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         document["migration"] = "20000101000000_Older";
 
         var older = await StoreAsync(document);
-        var response = await Client.PostAsync($"/api/backups/{older.Id}/restore", null);
+        var response = await RestoreAsync(older.Id);
 
         Assert.False(older.Restorable);
         await AssertCodeAsync(response, "backup.schemaMismatch");
@@ -192,15 +242,158 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await UploadAsync([1, 2, 3], member),
             await member.PutAsJsonAsync($"/api/backups/{backup.Id}", new { note = "mine" }),
             await member.GetAsync($"/api/backups/{backup.Id}/download"),
-            await member.PostAsync($"/api/backups/{backup.Id}/restore", null),
+            await RestoreAsync(backup.Id, client: member),
             await member.DeleteAsync($"/api/backups/{backup.Id}"),
         ];
 
         Assert.All(responses, response => Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode));
     }
 
-    private Task<BackupDto> CreateBackupAsync(string? note = null) =>
-        PostAsync<BackupDto>(Client, "/api/backups", new { note });
+    [Fact]
+    public async Task Restore_requires_the_current_password_of_the_administrator()
+    {
+        var accountId = await CreateAccountAsync(startingBalance: "10.00");
+        var backup = await CreateBackupAsync();
+        using var second = await CreateUserClientAsync("Admin");
+
+        var missing = await second.PostAsJsonAsync($"/api/backups/{backup.Id}/restore", new { });
+        var wrong = await RestoreAsync(backup.Id, "Wrong-Password-123!", second);
+
+        await AssertValidationErrorAsync(missing, "password");
+        await AssertCodeAsync(wrong, "password.incorrect");
+        Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
+    }
+
+    [Fact]
+    public async Task Wrong_restore_passwords_lock_the_administrator_out()
+    {
+        var backup = await CreateBackupAsync();
+        var administrator = await CreateUserAsync("Admin");
+        using var client = await LoginAsync(administrator);
+
+        for (var attempt = 1; attempt <= 4; attempt++)
+        {
+            await AssertCodeAsync(await RestoreAsync(backup.Id, "Wrong-Password-123!", client), "password.incorrect");
+        }
+
+        var locked = await RestoreAsync(backup.Id, "Wrong-Password-123!", client);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
+        Assert.Contains("credentials.lockedOut", await locked.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Restore_is_rate_limited_per_client()
+    {
+        using var client = await CreateUserClientAsync("Admin");
+        var password = "Test-User-Password-123!";
+
+        for (var attempt = 1; attempt <= 5; attempt++)
+        {
+            Assert.Equal(HttpStatusCode.NotFound, (await RestoreAsync(Guid.NewGuid(), password, client)).StatusCode);
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await RestoreAsync(Guid.NewGuid(), password, client)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Taking_and_uploading_backups_is_rate_limited_per_client()
+    {
+        using var client = await CreateUserClientAsync("Admin");
+
+        for (var attempt = 1; attempt <= 10; attempt++)
+        {
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/backups", new { note = new string('x', 201) })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await UploadAsync([1, 2, 3], client)).StatusCode);
+        }
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/backups", new { note = "one too many" })).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync([1, 2, 3], client)).StatusCode);
+    }
+
+    [Fact]
+    public async Task Upload_that_decompresses_beyond_the_limit_is_refused_and_not_stored()
+    {
+        var before = (await ListAsync()).Count;
+
+        var response = await UploadAsync(await OversizedBackupAsync("20000101000000_Any"));
+
+        await AssertCodeAsync(response, "backup.tooLarge");
+        Assert.Equal(before, (await ListAsync()).Count);
+    }
+
+    [Fact]
+    public async Task Stored_backup_that_decompresses_beyond_the_limit_is_not_restored()
+    {
+        var accountId = await CreateAccountAsync(startingBalance: "10.00");
+        var migration = Unzip(await DownloadAsync((await CreateBackupAsync()).Id))["migration"]!.GetValue<string>();
+        var file = await OversizedBackupAsync(migration);
+        var id = Guid.NewGuid();
+        await Services.GetRequiredService<BackupStore>().AddAsync(
+            id,
+            async stream =>
+            {
+                await stream.WriteAsync(file, TestContext.Current.CancellationToken);
+                return new StoredBackup(id, DateTimeOffset.UtcNow, null, "", 1, 1, Uploaded: true);
+            },
+            TestContext.Current.CancellationToken);
+
+        var response = await RestoreAsync(id);
+
+        await AssertCodeAsync(response, "backup.tooLarge");
+        Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
+        (await Client.DeleteAsync($"/api/backups/{id}")).EnsureSuccessStatusCode();
+    }
+
+    [Fact]
+    public async Task Restore_answers_a_retryable_conflict_when_the_database_is_locked()
+    {
+        var accountId = await CreateAccountAsync(startingBalance: "10.00");
+        var backup = await CreateBackupAsync();
+        await using var blocker = new NpgsqlConnection(ConnectionString);
+        await blocker.OpenAsync(TestContext.Current.CancellationToken);
+        await using var transaction = await blocker.BeginTransactionAsync(TestContext.Current.CancellationToken);
+        await using (var hold = new NpgsqlCommand("LOCK TABLE \"Accounts\" IN ACCESS EXCLUSIVE MODE", blocker, transaction))
+        {
+            await hold.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+
+        var response = await RestoreAsync(backup.Id);
+        await transaction.RollbackAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.Contains("conflict.busy", await response.Content.ReadAsStringAsync());
+        Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
+    }
+
+    private static async Task<byte[]> OversizedBackupAsync(string migration)
+    {
+        using var file = new MemoryStream();
+        await using (var gzip = new GZipStream(file, CompressionLevel.Fastest, leaveOpen: true))
+        {
+            await gzip.WriteAsync(Encoding.UTF8.GetBytes(
+                $"{{\"format\":\"jx-finance-backup\",\"version\":1,\"createdAt\":\"2026-09-19T00:00:00+00:00\",\"migration\":\"{migration}\",\"tables\":["));
+            var padding = Encoding.UTF8.GetBytes(new string(' ', 1024 * 1024));
+            for (long written = 0; written <= ApiFixture.BackupMaxDecompressedBytes; written += padding.Length)
+            {
+                await gzip.WriteAsync(padding);
+            }
+
+            await gzip.WriteAsync(Encoding.UTF8.GetBytes("]}"));
+        }
+
+        return file.ToArray();
+    }
+
+    private async Task<HttpClient> AdminAsync() =>
+        admin ??= await LoginAsync(new TestUser(Guid.Empty, ApiFixture.TestAdminEmail, ApiFixture.TestAdminPassword));
+
+    private async Task<HttpResponseMessage> RestoreAsync(Guid id, string password = ApiFixture.TestAdminPassword, HttpClient? client = null) =>
+        await (client ?? await AdminAsync()).PostAsJsonAsync($"/api/backups/{id}/restore", new { password });
+
+    private async Task<BackupDto> CreateBackupAsync(string? note = null) =>
+        await PostAsync<BackupDto>(await AdminAsync(), "/api/backups", new { note });
 
     private async Task<List<BackupDto>> ListAsync() =>
         (await Client.GetFromJsonAsync<List<BackupDto>>("/api/backups"))!;
@@ -233,7 +426,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/octet-stream");
         content.Add(fileContent, "File", "backup.json.gz");
         if (note is not null) content.Add(new StringContent(note), "Note");
-        return await (client ?? Client).PostAsync("/api/backups/upload", content);
+        return await (client ?? await AdminAsync()).PostAsync("/api/backups/upload", content);
     }
 
     private async Task SignInAgainAsync()

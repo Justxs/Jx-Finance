@@ -47,7 +47,7 @@ export const SetupTwoFactorResponse = zod.object({
 });
 
 /**
- * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client.
+ * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.
  * @summary Sign in
  */
 

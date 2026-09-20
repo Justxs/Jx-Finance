@@ -4,9 +4,9 @@ import { toast } from "sonner";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Toaster } from "@/components/ui/sonner";
 
 const meta = { title: "Components/Overlays" } satisfies Meta;
 
@@ -26,7 +26,7 @@ function ModalExample({ long }: Readonly<{ long?: boolean }>) {
         title="Add recurring bill"
         description="Bills remind you before they are due."
       >
-        <div className="form-grid">
+        <FormGrid>
           {Array.from({ length: fields }, (_, index) => (
             <div key={index} className="space-y-1.5">
               <Label htmlFor={`modal-field-${index}`}>Field {index + 1}</Label>
@@ -39,7 +39,7 @@ function ModalExample({ long }: Readonly<{ long?: boolean }>) {
             </Button>
             <Button onClick={() => setOpen(false)}>Save</Button>
           </div>
-        </div>
+        </FormGrid>
       </Modal>
     </>
   );
@@ -58,7 +58,6 @@ function ConfirmExample() {
         onCancel={() => setTarget(null)}
         onConfirm={() => toast.success("Deleted")}
       />
-      <Toaster />
     </>
   );
 }
@@ -72,7 +71,6 @@ function ToastExample() {
       <Button variant="outline" onClick={() => toast.error("Could not reach the server")}>
         Error
       </Button>
-      <Toaster />
     </div>
   );
 }

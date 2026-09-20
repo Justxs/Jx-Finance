@@ -51,7 +51,7 @@ export const IncompletePrices: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("note")).toBeInTheDocument();
     await expect(
-      (await canvas.findAllByRole("button", { name: /^Set price: IGN1L$/ }))[0],
+      (await canvas.findAllByRole("button", { name: /^Set price\s*: IGN1L$/ }))[0],
     ).toBeInTheDocument();
   },
 };

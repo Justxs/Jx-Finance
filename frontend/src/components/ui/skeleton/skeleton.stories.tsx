@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Card } from "@/components/ui/card";
 import { RowsSkeleton, Skeleton, StatsSkeleton } from "./skeleton";
 
 const meta = {
@@ -26,7 +27,7 @@ export const TextLines: Story = {
 
 export const CardPlaceholder: Story = {
   render: () => (
-    <div className="card w-80 space-y-4 p-5">
+    <Card className="w-80 space-y-4 p-5">
       <div className="flex items-center gap-3">
         <Skeleton className="size-10 rounded-full" />
         <div className="flex-1 space-y-2">
@@ -35,7 +36,7 @@ export const CardPlaceholder: Story = {
         </div>
       </div>
       <Skeleton className="h-32 w-full" />
-    </div>
+    </Card>
   ),
 };
 

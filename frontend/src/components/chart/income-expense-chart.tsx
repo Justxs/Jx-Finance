@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import { useAxisMoney } from "@/hooks/use-formatters";
 import { ChartLegend } from "./chart-legend";
+import { axisTick, chartCursor } from "./chart-theme";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 
 interface IncomeExpensePoint {
@@ -24,18 +25,6 @@ interface Props {
   data: readonly IncomeExpensePoint[];
   height?: number;
 }
-
-export const axisTick = {
-  fill: "var(--muted-foreground)",
-  fontSize: 12,
-  style: { fontVariantNumeric: "tabular-nums" },
-} as const;
-
-export const chartCursor = {
-  stroke: "var(--muted-foreground)",
-  strokeWidth: 1,
-  strokeDasharray: "3 3",
-} as const;
 
 export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   const { t } = useTranslation();

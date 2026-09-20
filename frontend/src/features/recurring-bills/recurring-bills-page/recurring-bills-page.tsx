@@ -13,6 +13,8 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Panel, Section, SectionTitle } from "@/components/ui/section";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
 import { CreateRecurringBillForm } from "../create-recurring-bill-form";
@@ -43,7 +45,7 @@ export function RecurringBillsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("recurringBills.empty")}</p>;
   } else {
     content = (
-      <ul className="rows panel py-2 sm:py-3">
+      <Panel as={Rows} className="py-2 sm:py-3">
         {billList.map((bill) => (
           <RecurringBillRow
             key={bill.id}
@@ -55,7 +57,7 @@ export function RecurringBillsPage() {
             deleteDisabled={deleteMutation.isPending}
           />
         ))}
-      </ul>
+      </Panel>
     );
   }
 
@@ -78,10 +80,10 @@ export function RecurringBillsPage() {
       </Modal>
 
       {billList.length > 0 ? (
-        <section className="section">
-          <h2 className="section-title mb-4">{t("recurringBills.forecast")}</h2>
+        <Section>
+          <SectionTitle className="mb-4">{t("recurringBills.forecast")}</SectionTitle>
           <BillsForecastChart bills={billList} />
-        </section>
+        </Section>
       ) : null}
       {content}
       <ConfirmDeleteDialog

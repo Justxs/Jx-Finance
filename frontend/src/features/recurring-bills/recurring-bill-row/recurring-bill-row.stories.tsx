@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
+import { Rows } from "@/components/ui/rows";
 import {
   accounts,
   categories,
@@ -9,6 +10,7 @@ import {
   recurringBills,
   variableBill,
 } from "@/storybook/fixtures";
+import { openedDialog } from "@/storybook/interactions";
 import { RecurringBillRow } from "./recurring-bill-row";
 
 const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? dueSoonBill;
@@ -27,9 +29,9 @@ const meta = {
   decorators: [
     function withList(Story) {
       return (
-        <ul className="rows w-[min(56rem,calc(100vw-3rem))]">
+        <Rows className="w-[min(56rem,calc(100vw-3rem))]">
           <Story />
-        </ul>
+        </Rows>
       );
     },
   ],
@@ -64,7 +66,7 @@ export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 
@@ -75,7 +77,7 @@ export const ConfirmDialogOpenVariable: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
     );
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 
@@ -86,6 +88,6 @@ export const ConfirmDialogOpenNoAccount: Story = {
     await userEvent.click(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
     );
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };

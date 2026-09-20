@@ -10,8 +10,8 @@ public sealed class ExportTransactionsSummary : Summary<ExportTransactionsEndpoi
         Summary = "Export transactions as CSV";
         Description = "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, "
             + "with account and category names resolved. It takes the same filters as the list endpoint "
-            + "but ignores paging: every matching row is included, so narrow the date range before "
-            + "exporting a large ledger.";
+            + "but ignores paging: every matching row is included. Rows are streamed from the database "
+            + "into the response, so the size of the ledger does not matter.";
         RequestParam(r => r.AccountId, "Keep only transactions on this account.");
         RequestParam(r => r.CategoryId, "Keep only transactions in this category.");
         RequestParam(r => r.Type, "Income or Expense.");

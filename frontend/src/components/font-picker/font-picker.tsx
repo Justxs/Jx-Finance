@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { fonts, textSizes, useFont, useTextSize } from "@/stores/theme-store";
 
 const optionClass =
@@ -12,10 +13,8 @@ export function FontPicker() {
   const { textSize, setTextSize } = useTextSize();
 
   return (
-    <section className="section" aria-labelledby="font-picker-title">
-      <h2 id="font-picker-title" className="section-title">
-        {t("typography.title")}
-      </h2>
+    <Section aria-labelledby="font-picker-title">
+      <SectionTitle id="font-picker-title">{t("typography.title")}</SectionTitle>
       <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("typography.hint")}</p>
 
       <h3 id="font-picker-typeface" className="mt-4 text-sm font-medium">
@@ -75,6 +74,6 @@ export function FontPicker() {
           </label>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }

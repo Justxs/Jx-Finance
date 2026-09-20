@@ -39,3 +39,17 @@ export const validationProblem: ProblemDetails = {
     },
   ],
 };
+
+export const exportTooManyRowsProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/transactions/export/pdf",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The PDF export holds at most 5000 transactions.",
+      code: "export.tooManyRows",
+    },
+  ],
+};

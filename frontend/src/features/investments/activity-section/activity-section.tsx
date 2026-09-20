@@ -12,6 +12,9 @@ import { Pagination } from "@/components/pagination";
 import { RowTransition } from "@/components/row-transition";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
+import { StaleRegion } from "@/components/ui/stale-region";
 import { Tag } from "@/components/ui/tag";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -109,7 +112,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
     );
   } else {
     content = (
-      <ul className="rows">
+      <Rows>
         {items.map((entry) => {
           const amount = Number(entry.cashAmount);
           const label = `${title(entry)}, ${formatDate(entry.date)}`;
@@ -177,14 +180,14 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
             </RowTransition>
           );
         })}
-      </ul>
+      </Rows>
     );
   }
 
   return (
-    <section className="section">
+    <Section>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title">{t("investments.activity.title")}</h2>
+        <SectionTitle>{t("investments.activity.title")}</SectionTitle>
         <div className="w-full sm:w-52">
           <SelectField
             aria-label={t("investments.activity.typeFilter")}
@@ -203,9 +206,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
           />
         </div>
       </div>
-      <div className={stale ? "is-stale" : undefined} aria-busy={stale}>
-        {content}
-      </div>
+      <StaleRegion stale={stale}>{content}</StaleRegion>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
       <InvestmentEntryModal
         open={editing !== null}
@@ -223,6 +224,6 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />
-    </section>
+    </Section>
   );
 }

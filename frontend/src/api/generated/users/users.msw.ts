@@ -100,6 +100,49 @@ export const getDeactivateUserMockHandler = (
   );
 };
 
+export const getReactivateUserMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/users/:id/reactivate",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getResetUserPasswordMockHandler = (
+  overrideResponse?:
+    | UserProfileResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<UserProfileResponse> | UserProfileResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/users/:id/reset-password",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getUpdateUserRoleMockHandler = (
   overrideResponse?:
     | UserProfileResponse
@@ -128,5 +171,7 @@ export const getUsersMock = () => [
   getUsersMockHandler(),
   getUpdateMyProfileMockHandler(),
   getDeactivateUserMockHandler(),
+  getReactivateUserMockHandler(),
+  getResetUserPasswordMockHandler(),
   getUpdateUserRoleMockHandler(),
 ];

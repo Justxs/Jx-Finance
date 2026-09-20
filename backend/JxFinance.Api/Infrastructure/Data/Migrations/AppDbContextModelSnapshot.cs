@@ -949,9 +949,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AccountId");
-
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("AccountId", "Date");
 
                     b.HasIndex("AccountId", "ImportRef")
                         .IsUnique()
@@ -1205,6 +1205,13 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsPersistent")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("PreviousTokenHash")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTimeOffset?>("RotatedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SecurityStamp")
                         .IsRequired()

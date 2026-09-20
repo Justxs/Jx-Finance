@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using JxFinance.Common.Errors;
@@ -6,8 +7,11 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 
-public static class FlexParser
+public static partial class FlexParser
 {
+    public const string ForwardSplit = "FS";
+    public const string ReverseSplit = "RS";
+
     private static readonly string[] DateFormats = ["yyyyMMdd", "yyyy-MM-dd"];
     private static readonly string[] SummaryTradeRows = ["ORDER", "CLOSED_LOT", "SYMBOL_SUMMARY", "ASSET_SUMMARY", "WASH_SALE"];
     private static readonly string[] SummaryCashRows = ["SUMMARY"];
@@ -64,6 +68,7 @@ public static class FlexParser
             Read("Trades", "Trade", SummaryTradeRows, Trade),
             Read("CashTransactions", "CashTransaction", SummaryCashRows, CashTransaction),
             Read("OpenPositions", "OpenPosition", SummaryPositionRows, OpenPosition),
+            Read("CorporateActions", "CorporateAction", SummaryCashRows, CorporateAction),
             unreadable));
     }
 
@@ -120,8 +125,45 @@ public static class FlexParser
         Instrument(node) is { } instrument
         && Date(node, "reportDate") is { } date
         && Number(node, "markPrice") is { } price
-            ? new FlexOpenPosition(instrument, date, price)
+            ? new FlexOpenPosition(instrument, date, price, Number(node, "position"))
             : null;
+
+    private static FlexCorporateAction? CorporateAction(XElement node)
+    {
+        if ((Text(node, "actionID") ?? Text(node, "transactionID")) is not { } id
+            || Text(node, "type") is not { } type
+            || Instrument(node) is not { } instrument
+            || Date(node, "reportDate", "dateTime") is not { } date)
+        {
+            return null;
+        }
+
+        var actionDescription = Text(node, "actionDescription");
+        var description = Text(node, "description");
+        return new FlexCorporateAction(
+            id,
+            type.ToUpperInvariant(),
+            instrument,
+            date,
+            Number(node, "quantity") ?? 0m,
+            SplitRatio(actionDescription) ?? SplitRatio(description),
+            actionDescription ?? description);
+    }
+
+    private static decimal? SplitRatio(string? description)
+    {
+        var match = description is null ? Match.Empty : SplitTerms().Match(description);
+        return match.Success
+            && decimal.TryParse(match.Groups[1].Value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var newShares)
+            && decimal.TryParse(match.Groups[2].Value, NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var oldShares)
+            && newShares > 0m
+            && oldShares > 0m
+            ? decimal.Round(newShares / oldShares, 8)
+            : null;
+    }
+
+    [GeneratedRegex(@"\bSPLIT\s+(\d+(?:\.\d+)?)\s+FOR\s+(\d+(?:\.\d+)?)\b", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex SplitTerms();
 
     private static FlexInstrument? Instrument(XElement node)
     {

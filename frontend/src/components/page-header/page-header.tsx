@@ -10,7 +10,9 @@ export function PageHeader({ title, description, children }: Readonly<Props>) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-3">
       <div className="min-w-0">
-        <h1 className="page-title">{title}</h1>
+        <h1 className="min-w-0 font-serif text-[1.75rem] leading-9 font-semibold tracking-[-0.012em] text-balance wrap-break-word lining-nums">
+          {title}
+        </h1>
         {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
       </div>
       {children ? (

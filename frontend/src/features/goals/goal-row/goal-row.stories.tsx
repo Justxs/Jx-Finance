@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
+import { Rows } from "@/components/ui/rows";
 import { completedGoal, goalWithTargetDate, openEndedGoal } from "@/storybook/fixtures";
 import { handlers, pending } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { GoalRow } from "./goal-row";
 
 const meta = {
@@ -17,9 +19,9 @@ const meta = {
   decorators: [
     function withList(Story) {
       return (
-        <ul className="rows w-[min(48rem,calc(100vw-3rem))]">
+        <Rows className="w-[min(48rem,calc(100vw-3rem))]">
           <Story />
-        </ul>
+        </Rows>
       );
     },
   ],
@@ -50,7 +52,7 @@ export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 

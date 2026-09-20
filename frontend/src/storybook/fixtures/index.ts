@@ -16,6 +16,10 @@ export {
   longNameUser,
   inactiveUser,
   users,
+  adminPassword,
+  wrongAdminPasswordProblem,
+  weakPasswordProblem,
+  lastAdministratorProblem,
 } from "./users";
 export { householdMembers, familyHousehold, gardenHousehold, households } from "./households";
 export {
@@ -38,8 +42,26 @@ export {
   transactionsBetween,
   transactionsCsv,
 } from "./transactions";
-export { transfers } from "./transfers";
-export { conversions } from "./conversions";
+export {
+  transfers,
+  manualTransfer,
+  crossCurrencyTransfer,
+  importedFromTransfer,
+  importedToCrossCurrencyTransfer,
+  importedBothTransfer,
+  transferLockedProblem,
+  transferAmountMismatchProblem,
+  transferForbiddenProblem,
+} from "./transfers";
+export {
+  conversions,
+  conversionWithFee,
+  conversionWithoutFee,
+  importedConversion,
+  conversionFeeSplitProblem,
+  conversionRateUnavailableProblem,
+  conversionReadOnlyProblem,
+} from "./conversions";
 export { settings } from "./settings";
 export { currencies, ratesPerEuro } from "./currencies";
 export { overLimitBudget, budgets } from "./budgets";
@@ -50,6 +72,9 @@ export {
   overdueBill,
   inactiveBill,
   recurringBills,
+  billStaleProblem,
+  billInactiveProblem,
+  billCategoryProblem,
 } from "./recurring-bills";
 export { notifications } from "./notifications";
 export {
@@ -82,7 +107,18 @@ export {
   importPreviewAllDuplicates,
   importFormatProblem,
 } from "./imports";
-export { backups, backupRestored, backupSchemaProblem, backupInvalidFileProblem } from "./backups";
+export {
+  backups,
+  backupRestored,
+  backupRestorePassword,
+  backupSchemaProblem,
+  backupInvalidFileProblem,
+  backupWrongPasswordProblem,
+  backupPasswordRequiredProblem,
+  backupTooLargeProblem,
+  lockedOutProblem,
+  databaseBusyProblem,
+} from "./backups";
 export {
   twoFactorSetup,
   twoFactorRecoveryCodes,
@@ -95,4 +131,5 @@ export {
   unauthorizedProblem,
   notFoundProblem,
   validationProblem,
+  exportTooManyRowsProblem,
 } from "./problems";

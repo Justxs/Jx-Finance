@@ -1,20 +1,29 @@
 import { toast } from "sonner";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { ApiError } from "@/api/client";
-import { queryClient } from "./query-client";
+import { queryClient, throwWithoutData } from "./query-client";
 
 const generic = "Something went wrong. Please try again.";
 const toastError = vi.fn();
 let queryCount = 0;
 
-async function failingQuery(failure: unknown, meta?: { silent?: boolean }) {
+interface FailingQuery {
+  silent?: boolean;
+  cached?: boolean;
+}
+
+async function failingQuery(failure: unknown, { silent, cached = true }: FailingQuery = {}) {
   queryCount += 1;
+  const queryKey = ["failing", queryCount];
+  if (cached) {
+    queryClient.setQueryData(queryKey, "earlier result");
+  }
   try {
     await queryClient.fetchQuery({
-      queryKey: ["failing", queryCount],
+      queryKey,
       queryFn: () => Promise.reject(failure),
       retry: false,
-      meta,
+      meta: { silent },
     });
   } catch {
     return;
@@ -44,7 +53,13 @@ afterEach(() => {
 });
 
 describe("query errors", () => {
-  test("API errors toast their title and detail", async () => {
+  test("a first load that fails is left to the error boundary", async () => {
+    await failingQuery(new ApiError({ status: 500, title: "Boom" }), { cached: false });
+
+    expect(toastError).not.toHaveBeenCalled();
+  });
+
+  test("a failed refresh of data already on screen toasts its title and detail", async () => {
     const error = new ApiError({ status: 409, title: "Conflict", detail: "Name is taken." });
 
     await failingQuery(error);
@@ -68,6 +83,35 @@ describe("query errors", () => {
 
     expect(toastError).toHaveBeenCalledExactlyOnceWith(generic, {
       description: "Amount is required. Date is invalid.",
+      duration: 12_000,
+    });
+  });
+
+  test("a throttled request without a body names the reason", async () => {
+    await failingQuery(new ApiError({ status: 429, title: "" }));
+
+    expect(toastError).toHaveBeenCalledExactlyOnceWith(
+      "Too many attempts. Wait a moment and try again.",
+      { description: undefined, duration: 12_000 },
+    );
+  });
+
+  test("a lockout keeps its own text", async () => {
+    await failingQuery(
+      new ApiError({ status: 429, title: "Too many requests", code: "credentials.lockedOut" }),
+    );
+
+    expect(toastError).toHaveBeenCalledExactlyOnceWith("Too many requests", {
+      description: "Too many failed attempts. Wait 15 minutes and try again.",
+      duration: 12_000,
+    });
+  });
+
+  test("an empty title falls back to the generic message", async () => {
+    await failingQuery(new ApiError({ status: 500, title: "" }));
+
+    expect(toastError).toHaveBeenCalledExactlyOnceWith(generic, {
+      description: undefined,
       duration: 12_000,
     });
   });
@@ -99,10 +143,12 @@ describe("mutation errors", () => {
   });
 });
 
-test("queries retry once, refetch on focus and throw to boundaries", () => {
+test("queries retry once, refetch on focus and throw to boundaries only without data", () => {
   expect(queryClient.getDefaultOptions().queries).toEqual({
     refetchOnWindowFocus: true,
     retry: 1,
-    throwOnError: true,
+    throwOnError: throwWithoutData,
   });
+  expect(throwWithoutData(undefined, { state: { data: undefined } })).toBe(true);
+  expect(throwWithoutData(undefined, { state: { data: [] } })).toBe(false);
 });

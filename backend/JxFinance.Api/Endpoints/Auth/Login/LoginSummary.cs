@@ -11,12 +11,13 @@ public sealed class LoginSummary : Summary<LoginEndpoint, LoginRequest>
             + "two-factor authentication enabled and no code is supplied, the response is 200 with "
             + "twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. "
             + "The code may be a six-digit authenticator code or an unused recovery code. "
-            + "Rate limited to 10 attempts per five minutes per client.";
+            + "Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock "
+            + "the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.";
         ExampleRequest = new LoginRequest("you@example.com", "correct horse battery staple", false, null);
         RequestParam(r => r.RememberMe, "Keeps the session for 30 days instead of one day.");
         RequestParam(r => r.TwoFactorCode, "Authenticator or recovery code; omit on the first call.");
         Responses[200] = "Signed in, or a second factor is required. Check twoFactorRequired.";
         Responses[401] = "The credentials or the authenticator code were rejected.";
-        Responses[429] = "Too many sign-in attempts; wait and retry.";
+        Responses[429] = "Too many sign-in attempts from this client, or the account is locked after repeated failures; wait and retry.";
     }
 }

@@ -4,6 +4,7 @@ import { useEnableTwoFactor } from "@/api/generated";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Section, SectionTitle } from "@/components/ui/section";
 
 interface Props {
   qrDataUrl: string;
@@ -23,8 +24,8 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
   });
 
   return (
-    <div className="section space-y-4 *:max-w-md">
-      <h2 className="section-title">{t("profile.twoFactorTitle")}</h2>
+    <Section as="div" className="space-y-4 *:max-w-md">
+      <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
       <p className="text-sm text-muted-foreground">{t("profile.scanQrSubtitle")}</p>
       <img
         src={qrDataUrl}
@@ -55,6 +56,6 @@ export function TwoFactorSetup({ qrDataUrl, sharedKey, onEnabled, onCancel }: Re
           {t("actions.cancel")}
         </Button>
       </div>
-    </div>
+    </Section>
   );
 }

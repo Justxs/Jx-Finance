@@ -12,6 +12,7 @@ public sealed class SyncBrokerConnectionEndpoint(IBrokerImportService importServ
     {
         Post("investments/connections/{accountId}/sync");
         Group<InvestmentsGroup>();
+        Description(d => d.ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

@@ -5,6 +5,7 @@ import type { AccountResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ImportSection } from "../import-section";
 
@@ -55,7 +56,7 @@ export function ImportDialog({ open, onOpenChange, accounts }: Readonly<Props>) 
           </QueryBoundary>
         </div>
       ) : (
-        <ul className="rows -my-2">
+        <Rows className="-my-2">
           {providers.map((item) => (
             <li key={item.id}>
               <button
@@ -75,7 +76,7 @@ export function ImportDialog({ open, onOpenChange, accounts }: Readonly<Props>) 
               </button>
             </li>
           ))}
-        </ul>
+        </Rows>
       )}
     </Modal>
   );

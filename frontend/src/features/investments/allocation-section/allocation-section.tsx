@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { HoldingResponse } from "@/api/generated/model";
 import { ShareBars } from "@/components/share-bars";
+import { Section, SectionTitle } from "@/components/ui/section";
 
 const MAX_ROWS = 8;
 
@@ -41,9 +42,9 @@ export function AllocationSection({ holdings, currency }: Readonly<Props>) {
   }
 
   return (
-    <section className="section">
-      <h2 className="section-title mb-4">{t("investments.allocation")}</h2>
+    <Section>
+      <SectionTitle className="mb-4">{t("investments.allocation")}</SectionTitle>
       <ShareBars rows={rows} currency={currency} />
-    </section>
+    </Section>
   );
 }

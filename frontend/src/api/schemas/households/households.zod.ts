@@ -120,8 +120,18 @@ export const UpdateHouseholdResponse = zod.object({
  * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
+export const addMemberBodyEmailMin = 0;
+export const addMemberBodyEmailMax = 256;
+
+export const addMemberBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
+
 export const AddMemberBody = zod.object({
-  email: zod.string().describe("Email address of an existing, active user."),
+  email: zod
+    .email()
+    .min(addMemberBodyEmailMin)
+    .max(addMemberBodyEmailMax)
+    .regex(addMemberBodyEmailRegExp)
+    .describe("Email address of an existing, active user."),
   role: zod
     .enum(["owner", "member"])
     .describe("Owner may manage the household and its members; Member may not."),

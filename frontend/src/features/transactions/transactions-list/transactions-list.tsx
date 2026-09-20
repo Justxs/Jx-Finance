@@ -4,6 +4,8 @@ import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { staleVariants } from "@/components/ui/stale-region";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -47,8 +49,8 @@ export function TransactionsList({
   }
 
   return (
-    <ul
-      className={cn("rows", isPlaceholder && "is-stale")}
+    <Rows
+      className={staleVariants({ stale: isPlaceholder })}
       aria-label={t("transactions.title")}
       aria-busy={isPlaceholder}
     >
@@ -67,7 +69,7 @@ export function TransactionsList({
         return (
           <RowTransition key={row.id}>
             <li
-              className={cn("py-2 text-sm", optimistic && "is-stale")}
+              className={cn("py-2 text-sm", staleVariants({ stale: optimistic }))}
               aria-busy={optimistic || undefined}
             >
               <div className="flex items-baseline gap-3">
@@ -117,6 +119,6 @@ export function TransactionsList({
           </RowTransition>
         );
       })}
-    </ul>
+    </Rows>
   );
 }

@@ -5,6 +5,8 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input";
+import { FormGrid } from "@/components/ui/form-grid";
+import { SectionTitle } from "@/components/ui/section";
 
 interface Props {
   accounts: AccountResponse[];
@@ -46,7 +48,7 @@ export function ImportUploadForm({
         onPreview();
       }}
     >
-      <h2 className="section-title mb-4">{t("imports.fileSection")}</h2>
+      <SectionTitle className="mb-4">{t("imports.fileSection")}</SectionTitle>
       {collapsed ? (
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
           <span className="min-w-0 font-medium wrap-break-word">{fileName}</span>
@@ -61,7 +63,7 @@ export function ImportUploadForm({
           </button>
         </p>
       ) : null}
-      <div className={collapsed ? "hidden" : "form-grid"}>
+      <FormGrid className={collapsed ? "hidden" : undefined}>
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="import-account">
             {t("transactions.account")}
@@ -96,7 +98,7 @@ export function ImportUploadForm({
           </p>
           <FieldError id="import-file-error" message={fileError} />
         </div>
-      </div>
+      </FormGrid>
       <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>
         <Button
           type="submit"

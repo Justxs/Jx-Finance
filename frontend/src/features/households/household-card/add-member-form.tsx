@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useAddMember } from "@/api/generated";
 import type { HouseholdRole } from "@/api/generated/model";
+import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
 import { useAppForm } from "@/components/form";
 import { Button } from "@/components/ui/button";
 import { submitToServer } from "@/lib/form-server-errors";
@@ -22,7 +23,10 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
   const { t } = useTranslation();
 
   const schema = z.object({
-    email: requiredEmail(t),
+    email: requiredEmail(t).max(
+      addMemberBodyEmailMax,
+      t("validation.maxLength", { max: addMemberBodyEmailMax }),
+    ),
     role: z.enum(["owner", "member"]),
   });
 
