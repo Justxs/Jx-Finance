@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthCompositionChart } from "./net-worth-composition-chart";
 

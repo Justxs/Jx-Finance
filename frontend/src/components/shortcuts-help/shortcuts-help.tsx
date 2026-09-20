@@ -1,8 +1,13 @@
 import { Keyboard } from "lucide-react";
 import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover/popover";
 import { useSettings } from "@/hooks/use-settings";
 import { type Shortcut, visibleShortcuts } from "@/lib/shortcuts";
 import { useShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
@@ -55,7 +60,6 @@ export function ShortcutsHelp({ className }: Readonly<Props>) {
             size="icon"
             className={className}
             aria-label={t("shortcuts.title")}
-            tooltip={t("shortcuts.title")}
           >
             <Keyboard />
           </Button>

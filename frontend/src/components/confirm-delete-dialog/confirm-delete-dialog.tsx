@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   AlertDialog,
@@ -9,7 +8,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog/alert-dialog";
+import { useRetained } from "@/hooks/use-retained";
 
 interface Props<T> {
   target: T | null;
@@ -31,11 +31,7 @@ export function ConfirmDeleteDialog<T>({
   onConfirm,
 }: Readonly<Props<T>>) {
   const { t } = useTranslation();
-  const [shownLabel, setShownLabel] = useState(itemLabel);
-
-  if (target !== null && itemLabel !== shownLabel) {
-    setShownLabel(itemLabel);
-  }
+  const shownLabel = useRetained(itemLabel, target === null);
 
   function handleConfirm() {
     if (target === null) {

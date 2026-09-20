@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense } from "@/api/generated";
-import { ShareBars } from "@/components/share-bars";
+import { ShareBars } from "@/components/share-bars/share-bars";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 
 interface Props {
   limit?: number;
@@ -20,7 +21,7 @@ export function AccountBalances({ limit = 6 }: Readonly<Props>) {
     .slice(0, limit);
 
   if (rows.length === 0) {
-    return <p className="py-6 text-sm text-muted-foreground">{t("dashboard.noAccounts")}</p>;
+    return <EmptyText>{t("dashboard.noAccounts")}</EmptyText>;
   }
 
   return <ShareBars rows={rows} />;

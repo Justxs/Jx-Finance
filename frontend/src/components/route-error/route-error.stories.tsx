@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { RouteError } from "./route-error";
 
 const meta = {
@@ -15,11 +16,5 @@ export const Default: Story = {};
 export const WithPageTitle: Story = { args: { title: "Transactions" } };
 
 export const NarrowContainer: Story = {
-  decorators: [
-    (Story) => (
-      <div className="w-56">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-56")],
 };

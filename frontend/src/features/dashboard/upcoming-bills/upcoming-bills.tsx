@@ -1,19 +1,20 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useRecurringBillsSuspense } from "@/api/generated";
-import { Rows } from "@/components/ui/rows";
-import { Tag } from "@/components/ui/tag";
-import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Tag } from "@/components/ui/tag/tag";
+import { TextLink } from "@/components/ui/text-link/text-link";
+import { EMPTY_VALUE, useMoney, useShortDay } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { parseIso, toIso } from "@/lib/calendar";
 
 const MAX_ROWS = 5;
 
 export function UpcomingBills() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const money = useMoney();
   const todayIso = toIso(useTodayDate());
-  const dayFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" });
+  const dayFormat = useShortDay();
   const bills = useRecurringBillsSuspense();
 
   const rows = (bills.data ?? [])
@@ -23,15 +24,10 @@ export function UpcomingBills() {
 
   if (rows.length === 0) {
     return (
-      <p className="py-6 text-sm text-muted-foreground">
+      <EmptyText>
         {t("dashboard.noBills")}{" "}
-        <Link
-          to="/recurring-bills"
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {t("nav.recurringBills")}
-        </Link>
-      </p>
+        <TextLink to="/recurring-bills">{t("nav.recurringBills")}</TextLink>
+      </EmptyText>
     );
   }
 

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, categories, checkingAccount } from "@/storybook/fixtures";
 import { ConversionForm } from "./conversion-form";
 
@@ -14,11 +15,7 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
-  render: (args) => (
-    <div className="w-[min(36rem,90vw)]">
-      <ConversionForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(36rem,90vw)]")],
 } satisfies Meta<typeof ConversionForm>;
 
 export default meta;

@@ -1,6 +1,6 @@
 import type { FocusEventHandler } from "react";
 import { Currency } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
+import { SelectField } from "@/components/select-field/select-field";
 import { useCurrencyName, useUsableCurrencies } from "@/hooks/use-formatters";
 
 interface Props {

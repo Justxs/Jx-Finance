@@ -4,12 +4,13 @@ import { useTranslation } from "react-i18next";
 import { useMeSuspense, useSecuritiesSuspense } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Rows } from "@/components/ui/rows";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tag } from "@/components/ui/tag";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Input } from "@/components/ui/input/input";
+import { Rows } from "@/components/ui/rows/rows";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, usePriceFormat } from "@/hooks/use-formatters";
 import { SecurityModal } from "../security-form";
 
@@ -44,11 +45,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const shown = all.filter((security) => matches(security, search));
 
   if (shown.length === 0) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">
-        {all.length === 0 ? t("investments.securities.empty") : t("filters.noMatches")}
-      </p>
-    );
+    return <EmptyText filtered={all.length > 0}>{t("investments.securities.empty")}</EmptyText>;
   }
 
   return (
@@ -89,11 +86,10 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
             {canEdit ? (
               <Button
                 variant="ghost"
-                size="icon"
-                className="-mr-2 size-8 shrink-0"
+                size="icon-sm"
+                className="-mr-2 shrink-0"
                 onClick={() => onEdit(security)}
                 aria-label={`${t("actions.edit")}: ${security.symbol}`}
-                tooltip={`${t("actions.edit")}: ${security.symbol}`}
               >
                 <Pencil />
               </Button>

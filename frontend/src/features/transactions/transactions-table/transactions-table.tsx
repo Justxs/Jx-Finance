@@ -2,8 +2,8 @@ import { useTable } from "@tanstack/react-table";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
-import { Checkbox } from "@/components/ui/checkbox";
-import { staleVariants } from "@/components/ui/stale-region";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -11,8 +11,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tooltip } from "@/components/ui/tooltip";
+  ScrollRegion,
+  TableEmptyRow,
+} from "@/components/ui/table/table";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { cn } from "@/lib/utils";
 import { isOptimistic } from "../transaction-amount";
 import { transactionTableFeatures } from "./table-features";
@@ -116,11 +118,9 @@ export function TransactionsTable({
   let body: ReactNode;
   if (table.getRowModel().rows.length === 0) {
     body = (
-      <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={columnCount} className="py-6 whitespace-normal text-muted-foreground">
-          {filtered ? t("filters.noMatches") : t("transactions.empty")}
-        </TableCell>
-      </TableRow>
+      <TableEmptyRow colSpan={columnCount} filtered={filtered}>
+        {t("transactions.empty")}
+      </TableEmptyRow>
     );
   } else {
     body = table.getRowModel().rows.map((row) => (
@@ -147,12 +147,7 @@ export function TransactionsTable({
   return (
     <ViewTransition name="transactions-rows" enter="none" exit="none">
       <div className="-mx-3">
-        <div
-          className="overflow-x-auto"
-          role="region"
-          aria-label={t("transactions.title")}
-          tabIndex={0}
-        >
+        <ScrollRegion aria-label={t("transactions.title")}>
           <Table
             className={cn(
               "table-fixed",
@@ -185,7 +180,7 @@ export function TransactionsTable({
             </TableHeader>
             <TableBody>{body}</TableBody>
           </Table>
-        </div>
+        </ScrollRegion>
       </div>
     </ViewTransition>
   );

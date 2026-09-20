@@ -7,18 +7,22 @@ import type {
   InvestmentTransactionResponse,
   InvestmentTransactionType,
 } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { Pagination } from "@/components/pagination";
-import { RowTransition } from "@/components/row-transition";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { StaleRegion } from "@/components/ui/stale-region";
-import { Tag } from "@/components/ui/tag";
-import { Tooltip } from "@/components/ui/tooltip";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { Pagination } from "@/components/pagination/pagination";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { Tag } from "@/components/ui/tag/tag";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
+import { usePageClamp } from "@/hooks/use-paged-list";
+import { nameById } from "@/lib/options";
 import { cn } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
 import { ACTIVITY_PAGE_SIZE, activityParams } from "../investment-queries";
@@ -48,18 +52,13 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const transactions = useInvestmentTransactionsSuspense(
     activityParams(shown.page, accountId, shown.type),
   );
-  const pages = Math.max(1, Math.ceil((transactions.data?.total ?? 0) / ACTIVITY_PAGE_SIZE));
-  if (page > pages) {
-    setPage(pages);
-  }
+  const pages = usePageClamp({ page, setPage }, transactions.data?.total ?? 0, ACTIVITY_PAGE_SIZE);
   const items = transactions.data?.items ?? [];
-  const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
+  const accountNames = nameById(accounts);
   const severalAccounts = new Set(items.map((entry) => entry.accountId)).size > 1;
 
   const [editing, setEditing] = useState<InvestmentTransactionResponse | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteInvestmentTransaction();
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   function title(entry: InvestmentTransactionResponse) {
     return [t(`investments.types.${entry.type}`), entry.symbol].filter(Boolean).join(" · ");
@@ -98,18 +97,15 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
     return money.formatSigned(Number(entry.cashAmount), "auto", entry.currency);
   }
 
-  const deleteItem = items.find((entry) => entry.id === deleteTarget);
-  const deleteLabel = deleteItem
-    ? `${title(deleteItem)} · ${formatDate(deleteItem.date)} · ${cash(deleteItem)}`
-    : undefined;
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    items,
+    (entry) => `${title(entry)} · ${formatDate(entry.date)} · ${cash(entry)}`,
+  );
 
   let content: ReactNode;
   if (items.length === 0) {
-    content = (
-      <p className="py-6 text-sm text-muted-foreground">
-        {type ? t("filters.noMatches") : t("investments.activity.empty")}
-      </p>
-    );
+    content = <EmptyText filtered={type !== ""}>{t("investments.activity.empty")}</EmptyText>;
   } else {
     content = (
       <Rows>
@@ -153,11 +149,10 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                 {entry.source === "manual" ? (
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8 shrink-0"
+                    size="icon-sm"
+                    className="shrink-0"
                     onClick={() => setEditing(entry)}
                     aria-label={`${t("actions.edit")}: ${label}`}
-                    tooltip={`${t("actions.edit")}: ${label}`}
                   >
                     <Pencil />
                   </Button>
@@ -166,13 +161,12 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                 )}
                 <Button
                   variant="ghost"
-                  size="icon"
-                  className="-mr-2 size-8 shrink-0"
-                  pending={deletingId === entry.id}
-                  disabled={deleteMutation.isPending}
-                  onClick={() => setDeleteTarget(entry.id)}
+                  size="icon-sm"
+                  className="-mr-2 shrink-0"
+                  pending={remove.pendingId === entry.id}
+                  disabled={remove.busy}
+                  onClick={() => remove.request(entry.id)}
                   aria-label={`${t("actions.delete")}: ${label}`}
-                  tooltip={`${t("actions.delete")}: ${label}`}
                 >
                   <Trash2 />
                 </Button>
@@ -186,8 +180,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
 
   return (
     <Section>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle>{t("investments.activity.title")}</SectionTitle>
+      <SectionHeader title={t("investments.activity.title")}>
         <div className="w-full sm:w-52">
           <SelectField
             aria-label={t("investments.activity.typeFilter")}
@@ -205,7 +198,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
             ]}
           />
         </div>
-      </div>
+      </SectionHeader>
       <StaleRegion stale={stale}>{content}</StaleRegion>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
       <InvestmentEntryModal
@@ -218,12 +211,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
         accounts={accounts}
         editing={editing ?? undefined}
       />
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={deleteLabel}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );
 }

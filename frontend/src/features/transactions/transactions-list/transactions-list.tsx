@@ -2,10 +2,11 @@ import { Pencil, Trash2 } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { staleVariants } from "@/components/ui/stale-region";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -41,11 +42,7 @@ export function TransactionsList({
   const rows = useDeferredValue(data);
 
   if (rows.length === 0) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">
-        {filtered ? t("filters.noMatches") : t("transactions.empty")}
-      </p>
-    );
+    return <EmptyText filtered={filtered}>{t("transactions.empty")}</EmptyText>;
   }
 
   return (
@@ -92,24 +89,20 @@ export function TransactionsList({
                 <div className="-mr-2 flex shrink-0">
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8"
+                    size="icon-sm"
                     disabled={optimistic}
                     onClick={() => onEdit(row)}
                     aria-label={`${t("actions.edit")}: ${name}`}
-                    tooltip={`${t("actions.edit")}: ${name}`}
                   >
                     <Pencil />
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8"
+                    size="icon-sm"
                     pending={deletingId === row.id}
                     disabled={optimistic || deletingId !== null}
                     onClick={() => onDelete(row.id)}
                     aria-label={`${t("actions.delete")}: ${name}`}
-                    tooltip={`${t("actions.delete")}: ${name}`}
                   >
                     <Trash2 />
                   </Button>

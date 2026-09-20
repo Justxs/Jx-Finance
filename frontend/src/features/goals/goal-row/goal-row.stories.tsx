@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
 import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
-import { Rows } from "@/components/ui/rows";
+import { Rows } from "@/components/ui/rows/rows";
 import { completedGoal, goalWithTargetDate, openEndedGoal } from "@/storybook/fixtures";
 import { handlers, pending } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";

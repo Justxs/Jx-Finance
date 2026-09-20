@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { checkingAccount, sharedAccount } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { AccountForm } from "./account-form";

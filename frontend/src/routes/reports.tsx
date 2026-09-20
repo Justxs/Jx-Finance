@@ -5,7 +5,7 @@ import {
   getReportSummarySuspenseQueryOptions,
 } from "@/api/generated";
 import { reportRange } from "@/features/reports/report-queries";
-import { ReportsPage } from "@/features/reports/reports-page";
+import { ReportsPage } from "@/features/reports/reports-page/reports-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 

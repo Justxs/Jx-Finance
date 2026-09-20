@@ -1,16 +1,15 @@
 import { describe, expect, test } from "vitest";
 import type { ZodType } from "zod";
 import * as schemas from "@/api/schemas/index.zod";
-import * as ledgerFixtures from "./fixtures";
+import * as fixtures from "./fixtures";
 import { paginate } from "./handlers/lists";
-import * as investmentFixtures from "./investment-fixtures";
 
 interface Contract {
   schema: ZodType;
   toResponse?: (fixture: unknown) => unknown;
 }
 
-const exported: Record<string, unknown> = { ...ledgerFixtures, ...investmentFixtures };
+const exported: Record<string, unknown> = fixtures;
 
 function asPage(fixture: unknown) {
   return paginate(Array.isArray(fixture) ? fixture : [], new URLSearchParams("pageSize=100000"));
@@ -21,15 +20,15 @@ function asItems(fixture: unknown) {
 }
 
 function asHousehold(fixture: unknown) {
-  return { ...ledgerFixtures.familyHousehold, members: fixture };
+  return { ...fixtures.familyHousehold, members: fixture };
 }
 
 function asSplitTransaction(fixture: unknown) {
-  return { ...ledgerFixtures.splitTransaction, lines: fixture };
+  return { ...fixtures.splitTransaction, lines: fixture };
 }
 
 function asCategoryBreakdown(fixture: unknown) {
-  return { ...ledgerFixtures.emptyCategoryBreakdown, items: fixture };
+  return { ...fixtures.emptyCategoryBreakdown, items: fixture };
 }
 
 function asImportPreview(fixture: unknown) {
@@ -37,7 +36,7 @@ function asImportPreview(fixture: unknown) {
 }
 
 function asPortfolio(fixture: unknown) {
-  return { ...investmentFixtures.emptyPortfolio, holdings: [fixture] };
+  return { ...fixtures.emptyPortfolio, holdings: [fixture] };
 }
 
 const contracts: Record<string, Contract> = {
@@ -78,6 +77,7 @@ const contracts: Record<string, Contract> = {
   uncategorisedTransaction: { schema: schemas.TransactionResponse },
   foreignCurrencyTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   transactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
+  monthTransactions: { schema: schemas.TransactionsResponse, toResponse: asPage },
   emptyTransactionsSummary: { schema: schemas.TransactionsSummaryResponse },
   transfers: { schema: schemas.TransfersResponse, toResponse: asPage },
   manualTransfer: { schema: schemas.UpdateTransferResponse },
@@ -170,17 +170,15 @@ const contracts: Record<string, Contract> = {
 };
 
 function buildSummary() {
-  return ledgerFixtures.buildTransactionsSummary(ledgerFixtures.transactions);
+  return fixtures.buildTransactionsSummary(fixtures.transactions);
 }
 
 function buildBreakdown() {
-  return asCategoryBreakdown(
-    ledgerFixtures.buildCategoryBreakdownItems(ledgerFixtures.transactions),
-  );
+  return asCategoryBreakdown(fixtures.buildCategoryBreakdownItems(fixtures.transactions));
 }
 
 function buildReport() {
-  return ledgerFixtures.buildReportSummary("2026-08-01", "2026-09-30");
+  return fixtures.buildReportSummary("2026-08-01", "2026-09-30");
 }
 
 const builtResponses: Record<string, { schema: ZodType; build: () => unknown }> = {
@@ -209,6 +207,8 @@ const notApiResponses = [
   "transactionsCsv",
   "backupRestorePassword",
   "adminPassword",
+  "monthIncomeCents",
+  "monthExpenseCents",
 ];
 
 const schemaExclusions: Record<string, string> = {};

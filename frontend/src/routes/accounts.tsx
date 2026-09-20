@@ -13,7 +13,7 @@ import {
   transfersPageParams,
 } from "@/features/accounts/account-queries";
 import { accountTypes } from "@/features/accounts/account-types";
-import { AccountsPage } from "@/features/accounts/accounts-page";
+import { AccountsPage } from "@/features/accounts/accounts-page/accounts-page";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
 
 export const accountsSearchSchema = z.object({

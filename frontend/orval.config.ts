@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { defineConfig } from "orval";
+import { z } from "zod";
 
 const input = "./openapi.json";
 const format = "oxfmt";
@@ -22,8 +23,31 @@ interface SpecDocument {
   components: { schemas: Record<string, SchemaNode> };
 }
 
+const schemaNode: z.ZodType<SchemaNode> = z.lazy(() =>
+  z.object({
+    $ref: z.string().optional(),
+    format: z.string().optional(),
+    properties: z.record(z.string(), schemaNode).optional(),
+    items: schemaNode.optional(),
+    oneOf: z.array(schemaNode).optional(),
+  }),
+);
+
+const operationNode = z.object({
+  requestBody: z
+    .object({
+      content: z.record(z.string(), z.object({ schema: schemaNode.optional() })).optional(),
+    })
+    .optional(),
+});
+
+const specDocument = z.object({
+  paths: z.record(z.string(), z.record(z.string(), operationNode)),
+  components: z.object({ schemas: z.record(z.string(), schemaNode) }),
+});
+
 function writeDecimalFields() {
-  const document = JSON.parse(readFileSync(input, "utf8")) as SpecDocument;
+  const document: SpecDocument = specDocument.parse(JSON.parse(readFileSync(input, "utf8")));
   const names = new Set<string>();
   const visited = new Set<string>();
 
@@ -106,11 +130,12 @@ function describeDecimals(node: unknown) {
   if (typeof node !== "object" || node === null) {
     return;
   }
-  const schema = node as Record<string, unknown>;
-  if (schema.format === "decimal" && schema.pattern === undefined) {
-    schema.pattern = decimalPattern;
+  const isDecimal = "format" in node && node.format === "decimal";
+  const hasPattern = "pattern" in node && node.pattern !== undefined;
+  if (isDecimal && !hasPattern) {
+    Object.assign(node, { pattern: decimalPattern });
   }
-  for (const value of Object.values(schema)) {
+  for (const value of Object.values(node)) {
     describeDecimals(value);
   }
 }

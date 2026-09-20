@@ -1,50 +1,56 @@
 import type { ProblemDetails, TransferResponse } from "@/api/generated/model";
 import { ids } from "./base";
 
+export const manualTransfer: TransferResponse = {
+  id: ids.transfers.toSavings,
+  fromAccountId: ids.accounts.checking,
+  toAccountId: ids.accounts.savings,
+  amount: "400.00",
+  date: "2026-09-11",
+  description: "Mėnesio taupymas",
+  currency: "eur",
+  receivedAmount: "400.00",
+  receivedCurrency: "eur",
+  createdAt: "2026-09-11T07:05:00Z",
+  fromAccountImported: false,
+  toAccountImported: false,
+};
+
+const sharedAccountTransfer: TransferResponse = {
+  id: ids.transfers.toShared,
+  fromAccountId: ids.accounts.checking,
+  toAccountId: ids.accounts.shared,
+  amount: "900.00",
+  date: "2026-09-10",
+  description:
+    "Rugsėjo įnašas į bendrą šeimos sąskaitą (maistas, komunaliniai, paskola, vaikų būreliai)",
+  currency: "eur",
+  receivedAmount: "900.00",
+  receivedCurrency: "eur",
+  createdAt: "2026-09-10T18:22:00Z",
+  fromAccountImported: false,
+  toAccountImported: false,
+};
+
+export const importedFromTransfer: TransferResponse = {
+  id: ids.transfers.cashWithdrawal,
+  fromAccountId: ids.accounts.checking,
+  toAccountId: ids.accounts.cash,
+  amount: "100.00",
+  date: "2026-08-29",
+  description: null,
+  currency: "eur",
+  receivedAmount: "100.00",
+  receivedCurrency: "eur",
+  createdAt: "2026-08-29T12:40:00Z",
+  fromAccountImported: true,
+  toAccountImported: false,
+};
+
 const sameCurrencyTransfers: TransferResponse[] = [
-  {
-    id: ids.transfers.toSavings,
-    fromAccountId: ids.accounts.checking,
-    toAccountId: ids.accounts.savings,
-    amount: "400.00",
-    date: "2026-09-11",
-    description: "Mėnesio taupymas",
-    currency: "eur",
-    receivedAmount: "400.00",
-    receivedCurrency: "eur",
-    createdAt: "2026-09-11T07:05:00Z",
-    fromAccountImported: false,
-    toAccountImported: false,
-  },
-  {
-    id: ids.transfers.toShared,
-    fromAccountId: ids.accounts.checking,
-    toAccountId: ids.accounts.shared,
-    amount: "900.00",
-    date: "2026-09-10",
-    description:
-      "Rugsėjo įnašas į bendrą šeimos sąskaitą (maistas, komunaliniai, paskola, vaikų būreliai)",
-    currency: "eur",
-    receivedAmount: "900.00",
-    receivedCurrency: "eur",
-    createdAt: "2026-09-10T18:22:00Z",
-    fromAccountImported: false,
-    toAccountImported: false,
-  },
-  {
-    id: ids.transfers.cashWithdrawal,
-    fromAccountId: ids.accounts.checking,
-    toAccountId: ids.accounts.cash,
-    amount: "100.00",
-    date: "2026-08-29",
-    description: null,
-    currency: "eur",
-    receivedAmount: "100.00",
-    receivedCurrency: "eur",
-    createdAt: "2026-08-29T12:40:00Z",
-    fromAccountImported: true,
-    toAccountImported: false,
-  },
+  manualTransfer,
+  sharedAccountTransfer,
+  importedFromTransfer,
 ];
 
 export const crossCurrencyTransfer: TransferResponse = {
@@ -61,10 +67,6 @@ export const crossCurrencyTransfer: TransferResponse = {
   fromAccountImported: false,
   toAccountImported: false,
 };
-
-export const manualTransfer = sameCurrencyTransfers[0] as TransferResponse;
-
-export const importedFromTransfer = sameCurrencyTransfers[2] as TransferResponse;
 
 export const importedToCrossCurrencyTransfer: TransferResponse = {
   ...crossCurrencyTransfer,

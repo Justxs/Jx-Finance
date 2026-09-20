@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Label } from "../label";
+import { Label } from "../label/label";
 import { type DateRange, DateRangePicker } from "./date-range-picker";
 
 const emptyRange: DateRange = { from: "", to: "" };

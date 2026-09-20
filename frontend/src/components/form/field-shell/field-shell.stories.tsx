@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Input } from "@/components/ui/input";
+import { Input } from "@/components/ui/input/input";
+import { withWidth } from "@/storybook/decorators";
 import { FieldShell } from "./field-shell";
 
 const meta = {
@@ -10,13 +11,7 @@ const meta = {
     label: "Name",
     children: <Input id="shell-name" defaultValue="Groceries" />,
   },
-  decorators: [
-    (Story) => (
-      <div className="w-72">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("field")],
 } satisfies Meta<typeof FieldShell>;
 
 export default meta;

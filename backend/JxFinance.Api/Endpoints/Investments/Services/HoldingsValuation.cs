@@ -101,11 +101,9 @@ public sealed class HoldingsValuation(AppDbContext db, IExchangeRateService rate
             foreach (var position in Portfolio.Positions(entries).Values.Where(p => p.Quantity != 0m))
             {
                 var security = securities[position.SecurityId];
-                var value = security.LastPrice is { } price
-                    ? latest.Convert(position.Quantity * price, security.Currency, rates.ReportingCurrency)
-                    : null;
-                total += value ?? 0m;
-                isComplete &= value is not null && !position.IsOversold;
+                var value = position.Value(security.LastPrice, security.Currency, latest, rates.ReportingCurrency);
+                total += value.Reporting ?? 0m;
+                isComplete &= value.IsComplete;
             }
 
             valued[account.Key] = (total, isComplete);

@@ -1,7 +1,7 @@
-import { Meter } from "@/components/ui/meter";
+import { Meter } from "@/components/ui/meter/meter";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 
-export interface ShareBarRow {
+interface ShareBarRow {
   id: string;
   name: string;
   amount: number;

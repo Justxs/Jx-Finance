@@ -6,9 +6,9 @@ import type {
   BrokerConnectionResponse,
   SaveBrokerConnectionRequest,
 } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormGrid } from "@/components/ui/form-grid";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { namedOptions } from "@/lib/options";
 
 interface FormValues {
   queryId: string;
@@ -62,35 +62,21 @@ export function ConnectionForm({
     isEnabled: connection?.isEnabled ?? true,
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        onSubmit({
-          queryId: value.queryId,
-          token: value.token === "" ? null : value.token,
-          fundingAccountId: value.fundingAccountId || null,
-          isEnabled: value.isEnabled,
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      onSubmit({
+        queryId: value.queryId,
+        token: value.token === "" ? null : value.token,
+        fundingAccountId: value.fundingAccountId || null,
+        isEnabled: value.isEnabled,
+      }),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        autoComplete="off"
-      >
+      <form.FormShell as={FormGrid} autoComplete="off">
         <form.Field name="queryId">
           {(field) => (
             <field.TextField
@@ -128,12 +114,10 @@ export function ConnectionForm({
               label={t("investments.import.fundingAccount")}
               hint={t("investments.import.fundingHint")}
               className="col-span-full"
-              options={[
-                { value: "", label: t("investments.import.noFundingAccount") },
-                ...accounts
-                  .filter((account) => account.id !== accountId)
-                  .map((account) => ({ value: account.id, label: account.name })),
-              ]}
+              options={namedOptions(
+                accounts.filter((account) => account.id !== accountId),
+                t("investments.import.noFundingAccount"),
+              )}
             />
           )}
         </form.Field>
@@ -155,7 +139,7 @@ export function ConnectionForm({
             {t("actions.save")}
           </form.SubmitButton>
         </div>
-      </FormGrid>
+      </form.FormShell>
     </form.AppForm>
   );
 }

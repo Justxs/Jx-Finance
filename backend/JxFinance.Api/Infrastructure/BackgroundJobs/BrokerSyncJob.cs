@@ -1,4 +1,3 @@
-using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Investments.Services;
@@ -8,34 +7,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Infrastructure.BackgroundJobs;
 
-public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyncJob> logger) : BackgroundService
+public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyncJob> logger) : PeriodicJob(scopes, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromHours(24));
-        do
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { logger.LogError(ex, "Broker sync failed."); }
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
-    }
+    protected override string Name => "Broker sync";
 
-    public async Task RunOnceAsync(CancellationToken ct)
-    {
-        using var scope = scopes.CreateScope();
-        var services = scope.ServiceProvider;
-        if (!services.GetRequiredService<IInstanceSettingsStore>().Current.IsEnabled(Feature.Investments))
-        {
-            return;
-        }
+    protected override TimeSpan Interval => TimeSpan.FromHours(24);
 
+    protected override Feature? RequiredFeature => Feature.Investments;
+
+    protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
+    {
         var source = services.GetRequiredService<AppDbContext>();
+        var activeUsers = source.Users.Where(AppUser.IsActive);
         var connections = await source.BrokerConnections
             .IgnoreQueryFilters()
             .Where(c => !c.IsDeleted && c.IsEnabled
                 && source.Accounts.IgnoreQueryFilters().Any(a => a.Id == c.AccountId && !a.IsDeleted)
-                && source.Users.Any(u => u.Id == c.UserId && u.PasswordHash != null && (u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)))
+                && activeUsers.Any(u => u.Id == c.UserId))
             .Select(c => new { c.UserId, c.AccountId })
             .ToListAsync(ct);
         var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();
@@ -50,12 +38,12 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
                 var result = await importer.SyncAsync(connection.AccountId.Value, ct);
                 if (result.IsFailure)
                 {
-                    logger.LogWarning("Broker sync for account {AccountId} failed: {Error}", connection.AccountId, result.ErrorMessage);
+                    Logger.LogWarning("Broker sync for account {AccountId} failed: {Error}", connection.AccountId, result.ErrorMessage);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
-                logger.LogError(ex, "Broker sync for account {AccountId} failed.", connection.AccountId);
+                Logger.LogError(ex, "Broker sync for account {AccountId} failed.", connection.AccountId);
             }
         }
     }

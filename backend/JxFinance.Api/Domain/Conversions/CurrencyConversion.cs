@@ -4,7 +4,7 @@ using JxFinance.Domain.Transactions;
 
 namespace JxFinance.Domain.Conversions;
 
-public sealed class CurrencyConversion : OwnableEntity
+public sealed class CurrencyConversion : OwnableEntity, IAccountScoped
 {
     public CurrencyConversionId Id { get; set; } = CurrencyConversionId.New();
     public AccountId AccountId { get; set; }

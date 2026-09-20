@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { BrokerImportResponse } from "@/api/generated/model";
+import { ScrollRegion } from "@/components/ui/table/table";
 import { useQuantityFormat } from "@/hooks/use-formatters";
 import type { TranslationKey } from "@/lib/i18n";
 
@@ -91,11 +92,9 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
           {mismatches.length > 0 ? (
             <div>
               <p>{t("investments.import.warning.mismatches")}</p>
-              <div
-                className="mt-1 overflow-x-auto"
-                role="region"
+              <ScrollRegion
+                className="mt-1"
                 aria-label={t("investments.import.warning.mismatchTable")}
-                tabIndex={0}
               >
                 <table className="w-full text-left tabular-nums">
                   <thead className="text-xs text-muted-foreground">
@@ -127,7 +126,7 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
                     ))}
                   </tbody>
                 </table>
-              </div>
+              </ScrollRegion>
               <p className="mt-2 text-muted-foreground">
                 {t("investments.import.warning.mismatchAdvice")}
               </p>

@@ -9,23 +9,25 @@ import {
   useCategoriesSuspense,
 } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { RowTransition } from "@/components/row-transition";
-import { SummaryStats } from "@/components/summary-stats";
-import { Button } from "@/components/ui/button";
-import { Meter } from "@/components/ui/meter";
-import { Rows } from "@/components/ui/rows";
-import { Panel, Section, SectionTitle } from "@/components/ui/section";
-import { Tooltip } from "@/components/ui/tooltip";
+import { PageHeader } from "@/components/page-header/page-header";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { SummaryStats } from "@/components/summary-stats/summary-stats";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Meter } from "@/components/ui/meter/meter";
+import { Rows } from "@/components/ui/rows/rows";
+import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useMoney, useMonthLabel } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BudgetUsageChart } from "../budget-usage-chart";
-import { CreateBudgetForm } from "../create-budget-form";
+import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
 export function BudgetsPage() {
   const { t } = useTranslation();
@@ -43,13 +45,12 @@ export function BudgetsPage() {
     setFormOpen(true);
   }
 
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
   const deleteMutation = useDeleteBudget({
     mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey()),
   });
 
   const budgetList = useDeferredValue(budgets.data);
+  const remove = useConfirmedDelete(deleteMutation, budgetList, (budget) => budget.categoryName);
   const categoryList = categories.data;
 
   const month = monthLabel(today);
@@ -59,11 +60,9 @@ export function BudgetsPage() {
   const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.limitAmount), 0);
   const remainingCents = limitCents - spentCents;
 
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
-
   let content: ReactNode;
   if (budgetList.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{t("budgets.empty")}</p>;
+    content = <EmptyText>{t("budgets.empty")}</EmptyText>;
   } else {
     content = (
       <Panel as={Rows} className="py-2 sm:py-3">
@@ -114,7 +113,6 @@ export function BudgetsPage() {
                       variant="ghost"
                       size="icon"
                       aria-label={`${t("actions.edit")}: ${budget.categoryName}`}
-                      tooltip={`${t("actions.edit")}: ${budget.categoryName}`}
                       onClick={() => openForm(budget)}
                     >
                       <Pencil />
@@ -122,11 +120,10 @@ export function BudgetsPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      pending={deletingId === budget.id}
-                      disabled={deleteMutation.isPending}
-                      onClick={() => setDeleteTarget(budget.id)}
+                      pending={remove.pendingId === budget.id}
+                      disabled={remove.busy}
+                      onClick={() => remove.request(budget.id)}
                       aria-label={`${t("actions.delete")}: ${budget.categoryName}`}
-                      tooltip={`${t("actions.delete")}: ${budget.categoryName}`}
                     >
                       <Trash2 />
                     </Button>
@@ -191,14 +188,7 @@ export function BudgetsPage() {
         </Section>
       ) : null}
       {content}
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={
-          budgetList.find((budget) => budget.id === deleteTarget)?.categoryName ?? undefined
-        }
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
 }

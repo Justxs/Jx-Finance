@@ -1,6 +1,5 @@
-import type { TFunction } from "i18next";
 import { z } from "zod";
-import type { TranslationKey } from "@/lib/i18n";
+import type { Translate, TranslationKey } from "@/lib/i18n";
 
 export function normalizeMoney(value: string): string {
   return value.trim().replace(",", ".");
@@ -39,44 +38,44 @@ export function isIban(value: string): boolean {
   return /^[A-Z]{2}\d{2}[A-Z\d]{11,30}$/.test(compact);
 }
 
-export function requiredValue(t: TFunction) {
+export function requiredValue(t: Translate) {
   return z.string().min(1, t("validation.required"));
 }
 
-export function optionalText(t: TFunction, max: number) {
+export function optionalText(t: Translate, max: number) {
   return z.string().max(max, t("validation.maxLength", { max }));
 }
 
-export function requiredText(t: TFunction, max: number) {
+export function requiredText(t: Translate, max: number) {
   return z
     .string()
     .refine((value) => value.trim().length > 0, t("validation.required"))
     .refine((value) => value.trim().length <= max, t("validation.maxLength", { max }));
 }
 
-export function requiredEmail(t: TFunction) {
+export function requiredEmail(t: Translate) {
   return z
     .string()
     .refine((value) => value.trim().length > 0, t("validation.required"))
     .refine((value) => isEmail(value.trim()), t("validation.email"));
 }
 
-export function password(t: TFunction, min: number, max: number) {
+export function password(t: Translate, min: number, max: number) {
   return z
     .string()
     .min(min, t("validation.minLength", { min }))
     .max(max, t("validation.maxLength", { max }));
 }
 
-export function money(t: TFunction) {
+export function money(t: Translate) {
   return z.string().refine(isMoney, t("validation.money"));
 }
 
-export function positiveMoney(t: TFunction) {
+export function positiveMoney(t: Translate) {
   return z.string().refine(isPositiveMoney, t("validation.positiveMoney"));
 }
 
-export function optionalPositiveMoney(t: TFunction) {
+export function optionalPositiveMoney(t: Translate) {
   return z
     .string()
     .refine(
@@ -85,29 +84,44 @@ export function optionalPositiveMoney(t: TFunction) {
     );
 }
 
-export function nonNegativeMoney(t: TFunction) {
-  return z.string().refine(isNonNegativeMoney, t("validation.money"));
-}
-
-export function optionalNonNegativeMoney(t: TFunction) {
+export function optionalNonNegativeMoney(t: Translate) {
   return z
     .string()
     .refine((value) => value.trim() === "" || isNonNegativeMoney(value), t("validation.money"));
 }
 
-export function quantity(t: TFunction, messageKey: TranslationKey) {
+export function quantity(t: Translate, messageKey: TranslationKey) {
   return z.string().refine(isQuantity, t(messageKey));
 }
 
-export function positiveQuantity(t: TFunction, messageKey: TranslationKey) {
-  return z.string().refine(isPositiveQuantity, t(messageKey));
-}
-
-export function wholeNumberBetween(t: TFunction, min: number, max: number) {
+export function wholeNumberBetween(t: Translate, min: number, max: number) {
   return z
     .string()
     .refine(
       (value) => /^\d+$/.test(value.trim()) && Number(value) >= min && Number(value) <= max,
       t("validation.wholeNumberBetween", { min, max }),
     );
+}
+
+interface SharingValues {
+  scope: "personal" | "shared";
+  householdId: string;
+}
+
+export function sharingShape() {
+  return { scope: z.enum(["personal", "shared"]), householdId: z.string() };
+}
+
+export function refineSharing<TSchema extends z.ZodType<SharingValues>>(
+  schema: TSchema,
+  t: Translate,
+) {
+  return schema.refine((value) => value.scope !== "shared" || value.householdId !== "", {
+    message: t("validation.required"),
+    path: ["householdId"],
+  });
+}
+
+export function sharedHouseholdId(value: SharingValues) {
+  return value.scope === "shared" ? value.householdId : null;
 }

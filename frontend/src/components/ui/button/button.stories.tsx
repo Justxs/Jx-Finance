@@ -9,9 +9,9 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "outline", "secondary", "ghost", "destructive", "link"],
+      options: ["default", "outline", "ghost", "destructive"],
     },
-    size: { control: "select", options: ["default", "xs", "sm", "lg", "icon", "icon-sm"] },
+    size: { control: "select", options: ["default", "sm", "lg", "icon", "icon-sm"] },
   },
 } satisfies Meta<typeof Button>;
 
@@ -29,10 +29,8 @@ export const Variants: Story = {
     <div className="flex flex-wrap items-center gap-3">
       <Button>Default</Button>
       <Button variant="outline">Outline</Button>
-      <Button variant="secondary">Secondary</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="destructive">Destructive</Button>
-      <Button variant="link">Link</Button>
     </div>
   ),
 };
@@ -40,7 +38,6 @@ export const Variants: Story = {
 export const Sizes: Story = {
   render: () => (
     <div className="flex flex-wrap items-center gap-3">
-      <Button size="xs">Extra small</Button>
       <Button size="sm">Small</Button>
       <Button>Default</Button>
       <Button size="lg">Large</Button>

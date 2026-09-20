@@ -1,5 +1,5 @@
 import { composeStories, setProjectAnnotations } from "@storybook/react-vite";
-import { mswLoader } from "msw-storybook-addon/csf3";
+import { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
 import { preferencesCollection } from "@/stores/preferences";
@@ -8,7 +8,6 @@ import preview from "../../../.storybook/preview";
 import { type AccessibilityParameters, expectNoAccessibilityViolations } from "./accessibility";
 
 export type StoryModule = Parameters<typeof composeStories>[0];
-type MockSetup = Parameters<typeof mswLoader>[0];
 
 interface ComposedStory {
   storyName: string;
@@ -27,7 +26,29 @@ export const BROWSER_ONLY_TAG = "browser-only";
 
 const PREFERENCES_ROW = "browser";
 const server = setupServer();
-const mockServerLoader = mswLoader((() => server) as unknown as MockSetup);
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function storyHandlers(parameter: unknown): RequestHandler[] {
+  const source = isRecord(parameter) && !Array.isArray(parameter) ? parameter.handlers : parameter;
+  let lists: unknown[] = [];
+  if (Array.isArray(source)) {
+    lists = source;
+  } else if (isRecord(source)) {
+    lists = Object.values(source);
+  }
+  return lists.flat().filter((handler) => handler instanceof RequestHandler);
+}
+
+function mockServerLoader(context: { parameters: { msw?: unknown } }) {
+  server.resetHandlers();
+  const handlers = storyHandlers(context.parameters.msw);
+  if (handlers.length > 0) {
+    server.use(...handlers);
+  }
+  return Promise.resolve({});
+}
 
 const annotations = setProjectAnnotations([
   {
@@ -38,8 +59,23 @@ const annotations = setProjectAnnotations([
   },
 ]);
 
+function isComposedStory(value: unknown): value is ComposedStory {
+  if (typeof value !== "function" && (typeof value !== "object" || value === null)) {
+    return false;
+  }
+  return "storyName" in value && "run" in value && "load" in value;
+}
+
+function composedStory(value: unknown): ComposedStory {
+  if (!isComposedStory(value)) {
+    throw new TypeError("expected a composed story");
+  }
+  return value;
+}
+
 async function composeFile({ path, load }: StoryFile) {
-  return { path, stories: Object.values(composeStories(await load())) as ComposedStory[] };
+  const composed: unknown[] = Object.values(composeStories(await load()));
+  return { path, stories: composed.map(composedStory) };
 }
 
 function resetPreferences() {

@@ -1,5 +1,6 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Conversions.Shared;
 
 namespace JxFinance.Endpoints.Conversions.CreateConversion;
 
@@ -13,4 +14,4 @@ public sealed record CreateConversionRequest(
     string? Description,
     [property: Money] decimal? FeeAmount = null,
     Currency? FeeCurrency = null,
-    Guid? FeeCategoryId = null);
+    Guid? FeeCategoryId = null) : IConversionInput;

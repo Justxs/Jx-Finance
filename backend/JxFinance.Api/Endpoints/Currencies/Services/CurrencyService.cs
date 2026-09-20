@@ -29,15 +29,15 @@ public sealed class CurrencyService(IExchangeRateService rates, IInstanceSetting
 
         if (table.Rate(request.From, request.To) is not { } rate || table.AsOf is not { } asOf)
         {
-            return Result<ExchangeRateResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.ResourceNotFound,
                 $"No exchange rate is available for {request.From.ToCode()} to {request.To.ToCode()}.");
         }
 
-        return Result<ExchangeRateResponse>.Success(new ExchangeRateResponse(
+        return new ExchangeRateResponse(
             request.From,
             request.To,
             decimal.Round(rate, 6).ToString("0.000000", CultureInfo.InvariantCulture),
-            asOf));
+            asOf);
     }
 }

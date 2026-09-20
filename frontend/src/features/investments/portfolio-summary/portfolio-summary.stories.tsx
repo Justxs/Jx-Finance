@@ -1,16 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { emptyPortfolio, incompletePortfolio, portfolio } from "@/storybook/investment-fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { emptyPortfolio, incompletePortfolio, portfolio } from "@/storybook/fixtures";
 import { PortfolioSummary } from "./portfolio-summary";
 
 const meta = {
   title: "Features/Investments/PortfolioSummary",
   component: PortfolioSummary,
   args: { portfolio },
-  render: (args) => (
-    <div className="w-[min(64rem,calc(100vw-5rem))]">
-      <PortfolioSummary {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(64rem,calc(100vw-5rem))]")],
 } satisfies Meta<typeof PortfolioSummary>;
 
 export default meta;

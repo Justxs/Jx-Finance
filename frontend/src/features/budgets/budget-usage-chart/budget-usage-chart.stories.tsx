@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { budgets, overLimitBudget } from "@/storybook/fixtures";
 import { BudgetUsageChart } from "./budget-usage-chart";
 
 const meta = {
   title: "Features/Budgets/BudgetUsageChart",
   component: BudgetUsageChart,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(40rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("panel")],
   args: { budgets },
 } satisfies Meta<typeof BudgetUsageChart>;
 

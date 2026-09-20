@@ -4,9 +4,8 @@ import {
   getDeleteCategoryMockHandler,
   getCategoriesMockHandler,
 } from "@/api/generated/categories/categories.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { RoutePending } from "@/components/route-pending";
-import { categories, incomeCategories, cycle } from "@/storybook/fixtures";
+import { withPageFrame } from "@/storybook/decorators";
+import { categories, incomeCategories, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -17,26 +16,13 @@ import {
 import { openedDialog } from "@/storybook/interactions";
 import { CategoriesPage } from "./categories-page";
 
-function CategoriesPageStory() {
-  return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <QueryBoundary fallback={<RoutePending />}>
-        <CategoriesPage />
-      </QueryBoundary>
-    </div>
-  );
-}
-
-const manyCategories = Array.from({ length: 40 }, (_, index) => ({
-  ...cycle(categories, index),
-  id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-}));
+const manyCategories = many(categories, 40);
 
 const meta = {
   title: "Features/Categories/CategoriesPage",
   component: CategoriesPage,
   parameters: { layout: "fullscreen", route: "/categories" },
-  render: () => <CategoriesPageStory />,
+  decorators: [withPageFrame],
 } satisfies Meta<typeof CategoriesPage>;
 
 export default meta;

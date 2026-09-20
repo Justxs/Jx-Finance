@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import type { SelectOption } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import type { SelectOption } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
-import { type FieldAliases, submitToServer } from "@/lib/form-server-errors";
+import type { FieldAliases } from "@/lib/form-server-errors";
 import { isRate, money, requiredText, requiredValue } from "@/lib/validation";
 
 export interface HoldingFormValues {
@@ -66,28 +66,16 @@ export function HoldingForm({
     asOf: today,
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(
-        submission,
-        () => onSubmit({ ...submission.value, name: submission.value.name.trim() }),
-        errorAliases,
-      ),
+    schema,
+    aliases: errorAliases,
+    submit: (value) => onSubmit({ ...value, name: value.name.trim() }),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="name">
           {(field) => <field.TextField id={`${idPrefix}-name`} label={t("netWorth.name")} />}
         </form.Field>
@@ -134,7 +122,7 @@ export function HoldingForm({
             {initialValues ? t("actions.save") : t("actions.add")}
           </form.SubmitButton>
         </div>
-      </FormGrid>
+      </form.FormShell>
     </form.AppForm>
   );
 }

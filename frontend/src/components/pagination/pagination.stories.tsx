@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card/card";
 import { Pagination } from "./pagination";
 
 function PaginationExample({ pages }: Readonly<{ pages: number }>) {

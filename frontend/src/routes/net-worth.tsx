@@ -5,7 +5,7 @@ import {
   getNetWorthHistorySuspenseQueryOptions,
   getNetWorthSuspenseQueryOptions,
 } from "@/api/generated";
-import { NetWorthPage } from "@/features/net-worth/net-worth-page";
+import { NetWorthPage } from "@/features/net-worth/net-worth-page/net-worth-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 

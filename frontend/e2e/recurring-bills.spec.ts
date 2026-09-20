@@ -1,4 +1,5 @@
-import { choose, createAccount, expect, test, today, unique } from "./support";
+import { z } from "zod";
+import { choose, createAccount, expect, readJson, test, today, unique } from "./support";
 
 test("a recurring bill is created and its payment confirmed", async ({ page }) => {
   const account = unique("Bills account");
@@ -25,10 +26,10 @@ test("a recurring bill is created and its payment confirmed", async ({ page }) =
   await confirm.getByRole("button", { name: "Confirm" }).click();
   await expect(confirm).toBeHidden();
 
-  const bills = (await (await page.request.get("/api/recurring-bills")).json()) as {
-    name: string;
-    nextDueDate: string;
-  }[];
+  const bills = await readJson(
+    await page.request.get("/api/recurring-bills"),
+    z.array(z.object({ name: z.string(), nextDueDate: z.string() })),
+  );
   expect((bills.find((item) => item.name === bill)?.nextDueDate ?? "") > today()).toBe(true);
 
   await page.goto(`/transactions?search=${encodeURIComponent(bill)}`);

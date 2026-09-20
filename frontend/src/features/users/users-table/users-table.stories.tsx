@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { currentUser, inactiveUser, longNameUser, memberUser, users } from "@/storybook/fixtures";
+import { first } from "@/storybook/interactions";
 import { UsersTable } from "./users-table";
 
 const meta = {
@@ -66,30 +68,32 @@ export const OffersActionsPerRow: Story = {
     const own = new RegExp(`: ${currentUser.displayName}$`, "u");
     await expect(canvas.queryAllByRole("button", { name: own })).toHaveLength(0);
 
-    const [reactivate] = canvas.getAllByRole("button", {
-      name: `Reactivate: ${inactiveUser.displayName}`,
-    });
-    await userEvent.click(reactivate as HTMLElement);
+    const reactivate = first(
+      canvas.getAllByRole("button", {
+        name: `Reactivate: ${inactiveUser.displayName}`,
+      }),
+    );
+    await userEvent.click(reactivate);
     await expect(args.onReactivate).toHaveBeenCalledWith(inactiveUser.id);
 
-    const [deactivate] = canvas.getAllByRole("button", {
-      name: `Deactivate: ${memberUser.displayName}`,
-    });
-    await userEvent.click(deactivate as HTMLElement);
+    const deactivate = first(
+      canvas.getAllByRole("button", {
+        name: `Deactivate: ${memberUser.displayName}`,
+      }),
+    );
+    await userEvent.click(deactivate);
     await expect(args.onDeactivate).toHaveBeenCalledWith(memberUser.id);
 
-    const [reset] = canvas.getAllByRole("button", {
-      name: `Reset password: ${memberUser.displayName}`,
-    });
-    await userEvent.click(reset as HTMLElement);
+    const reset = first(
+      canvas.getAllByRole("button", {
+        name: `Reset password: ${memberUser.displayName}`,
+      }),
+    );
+    await userEvent.click(reset);
     await expect(args.onResetPassword).toHaveBeenCalledWith(memberUser.id);
   },
 };
 
 export const NarrowContainer: Story = {
-  render: (args) => (
-    <div className="w-80">
-      <UsersTable {...args} />
-    </div>
-  ),
+  decorators: [withWidth("card")],
 };

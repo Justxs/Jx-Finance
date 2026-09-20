@@ -3,14 +3,15 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import type { BudgetResponse } from "@/api/generated/model";
-import { axisTick, ChartLegend, type ChartSeries, ChartTooltip } from "@/components/chart";
+import { axisProps, ChartLegend, type ChartSeries, ChartTooltip } from "@/components/chart";
 import { useAxisMoney } from "@/hooks/use-formatters";
 
 const ROW_HEIGHT = 44;
@@ -41,6 +42,12 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
     }))
     .toSorted((a, b) => b.limit - a.limit);
 
+  function spentShape(props: BarShapeProps) {
+    const row = chartData[props.index];
+    const over = row !== undefined && row.spent > row.limit;
+    return <Rectangle {...props} fill={over ? "var(--chart-3)" : "var(--chart-1)"} />;
+  }
+
   return (
     <div className="space-y-3">
       <ChartLegend series={series} />
@@ -58,18 +65,14 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
             <XAxis
               type="number"
               tickFormatter={(value) => axisMoney.format(Number(value))}
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               tickCount={5}
             />
             <YAxis
               type="category"
               dataKey="name"
               tickFormatter={(value) => shorten(String(value))}
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               width={132}
             />
             <Tooltip
@@ -79,14 +82,7 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
               offset={12}
             />
             <Bar isAnimationActive={false} dataKey="limit" fill="var(--input)" maxBarSize={10} />
-            <Bar isAnimationActive={false} dataKey="spent" maxBarSize={10}>
-              {chartData.map((row) => (
-                <Cell
-                  key={row.name}
-                  fill={row.spent > row.limit ? "var(--chart-3)" : "var(--chart-1)"}
-                />
-              ))}
-            </Bar>
+            <Bar isAnimationActive={false} dataKey="spent" maxBarSize={10} shape={spentShape} />
           </BarChart>
         </ResponsiveContainer>
       </div>

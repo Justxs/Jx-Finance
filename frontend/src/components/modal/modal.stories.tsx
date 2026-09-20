@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Button } from "../ui/button/button";
+import { Input } from "../ui/input/input";
+import { Label } from "../ui/label/label";
 import { Modal } from "./modal";
 
 interface ExampleProps {

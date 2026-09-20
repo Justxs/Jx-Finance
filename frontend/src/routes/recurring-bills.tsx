@@ -4,7 +4,7 @@ import {
   getCategoriesSuspenseQueryOptions,
   getRecurringBillsSuspenseQueryOptions,
 } from "@/api/generated";
-import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page";
+import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 

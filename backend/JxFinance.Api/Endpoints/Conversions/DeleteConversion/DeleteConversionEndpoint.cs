@@ -1,10 +1,11 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Conversions.Interfaces;
 
 namespace JxFinance.Endpoints.Conversions.DeleteConversion;
 
-public sealed class DeleteConversionEndpoint(IConversionService conversionService) : EndpointWithoutRequest
+public sealed class DeleteConversionEndpoint(IConversionService conversionService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -13,9 +14,6 @@ public sealed class DeleteConversionEndpoint(IConversionService conversionServic
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        (await conversionService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
-    }
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        conversionService.DeleteAsync(id, ct);
 }

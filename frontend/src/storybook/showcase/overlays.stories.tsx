@@ -1,84 +1,71 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button/button";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
 
 const meta = { title: "Components/Overlays" } satisfies Meta;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function ModalExample({ long }: Readonly<{ long?: boolean }>) {
-  const [open, setOpen] = useState(true);
-  const fields = long ? 14 : 3;
+function OverlaysExample() {
+  const [editing, setEditing] = useState(false);
+  const [target, setTarget] = useState<string | null>(null);
+
+  function handleSave() {
+    setEditing(false);
+    toast.success("Bill saved");
+  }
+
+  function handleDelete() {
+    setTarget(null);
+    toast.success("Deleted");
+  }
 
   return (
-    <>
-      <Button onClick={() => setOpen(true)}>Open dialog</Button>
+    <div className="flex flex-wrap gap-2">
+      <Button onClick={() => setEditing(true)}>Edit bill</Button>
+      <Button variant="destructive" onClick={() => setTarget("row-1")}>
+        Delete bill
+      </Button>
+      <Button variant="outline" onClick={() => toast.error("Could not reach the server")}>
+        Fail a request
+      </Button>
       <Modal
-        open={open}
-        onOpenChange={setOpen}
-        title="Add recurring bill"
+        open={editing}
+        onOpenChange={setEditing}
+        title="Edit recurring bill"
         description="Bills remind you before they are due."
       >
         <FormGrid>
-          {Array.from({ length: fields }, (_, index) => (
-            <div key={index} className="space-y-1.5">
-              <Label htmlFor={`modal-field-${index}`}>Field {index + 1}</Label>
-              <Input id={`modal-field-${index}`} />
-            </div>
-          ))}
+          <div className="space-y-1.5">
+            <Label htmlFor="overlay-name">Name</Label>
+            <Input id="overlay-name" defaultValue="Telia" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="overlay-amount">Amount</Label>
+            <Input id="overlay-amount" inputMode="decimal" defaultValue="24.99" />
+          </div>
           <div className="col-span-full flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button variant="outline" onClick={() => setEditing(false)}>
               Cancel
             </Button>
-            <Button onClick={() => setOpen(false)}>Save</Button>
+            <Button onClick={handleSave}>Save</Button>
           </div>
         </FormGrid>
       </Modal>
-    </>
-  );
-}
-
-function ConfirmExample() {
-  const [target, setTarget] = useState<string | null>("row-1");
-
-  return (
-    <>
-      <Button variant="destructive" onClick={() => setTarget("row-1")}>
-        Delete
-      </Button>
       <ConfirmDeleteDialog
         target={target}
         onCancel={() => setTarget(null)}
-        onConfirm={() => toast.success("Deleted")}
+        onConfirm={handleDelete}
       />
-    </>
-  );
-}
-
-function ToastExample() {
-  return (
-    <div className="flex gap-2">
-      <Button variant="outline" onClick={() => toast.success("Transaction saved")}>
-        Success
-      </Button>
-      <Button variant="outline" onClick={() => toast.error("Could not reach the server")}>
-        Error
-      </Button>
     </div>
   );
 }
 
-export const ModalShort: Story = { render: () => <ModalExample /> };
-
-export const ModalScrolling: Story = { render: () => <ModalExample long /> };
-
-export const ConfirmDelete: Story = { render: () => <ConfirmExample /> };
-
-export const Toasts: Story = { render: () => <ToastExample /> };
+export const Overview: Story = { render: () => <OverlaysExample /> };

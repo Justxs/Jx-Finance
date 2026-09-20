@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, userEvent, within } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { currentUserWithTwoFactor, longNameUser, serverErrorProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending, unauthenticatedHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
@@ -67,7 +67,7 @@ export const Unauthenticated: Story = {
 export const SavesDisplayName: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(await canvas.findByLabelText(/display name|rodomas vardas/i), {
+    await fireEvent.change(await canvas.findByLabelText(/display name|rodomas vardas/i), {
       target: { value: "Rūta K." },
     });
     await userEvent.click(

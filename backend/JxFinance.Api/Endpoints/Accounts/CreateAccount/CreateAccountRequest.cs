@@ -1,6 +1,7 @@
 using JxFinance.Common.Json;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Accounts.Shared;
 
 namespace JxFinance.Endpoints.Accounts.CreateAccount;
 
@@ -12,4 +13,4 @@ public sealed record CreateAccountRequest(
     [property: Money(NotNull = true)] decimal? StartingBalance,
     Scope Scope,
     Guid? HouseholdId,
-    Currency? Currency = null);
+    Currency? Currency = null) : IAccountInput;

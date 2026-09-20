@@ -16,10 +16,20 @@ public static class ResultExtensions
     {
         if (result.IsSuccess) return;
 
-        ValidationContext.Instance.ThrowError(
-            result.ErrorMessage ?? "The request could not be completed.",
-            result.ErrorCode ?? ErrorCodes.RequestInvalid,
-            Severity.Error,
-            ErrorCodes.StatusCodeFor(result.ErrorCode));
+        Throw(result.ErrorCode, result.ErrorMessage);
     }
+
+    public static void EnsureSuccess(this Result result)
+    {
+        if (result.IsSuccess) return;
+
+        Throw(result.ErrorCode, result.ErrorMessage);
+    }
+
+    private static void Throw(string? code, string? message) =>
+        ValidationContext.Instance.ThrowError(
+            message ?? "The request could not be completed.",
+            code ?? ErrorCodes.RequestInvalid,
+            Severity.Error,
+            ErrorCodes.StatusCodeFor(code));
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCreateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   emptyHandlers,
   errorHandlers,

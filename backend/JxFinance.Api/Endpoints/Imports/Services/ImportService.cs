@@ -1,8 +1,10 @@
 using System.Globalization;
 using CsvHelper;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.References;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -19,7 +21,7 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Imports.Services;
 
 [RegisterService<IImportService>(LifeTime.Scoped)]
-public sealed class ImportService(AppDbContext db, IExchangeRateService rates) : IImportService
+public sealed class ImportService(AppDbContext db, IExchangeRateService rates, IReferenceGuard references) : IImportService
 {
     private const string TransactionRowType = "20";
 
@@ -34,10 +36,9 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
         CancellationToken cancellationToken)
     {
         var typedAccountId = new AccountId(accountId);
-        var accountExists = await db.Accounts.AnyAsync(a => a.Id == typedAccountId, cancellationToken);
-        if (!accountExists)
+        if (await references.AccountExistsAsync(typedAccountId, cancellationToken) is { } accountError)
         {
-            return Result<ImportPreviewResponse>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            return accountError;
         }
 
         List<ParsedRow> parsedRows;
@@ -47,14 +48,14 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
         }
         catch (Exception ex) when (ex is CsvHelperException or FormatException or IndexOutOfRangeException or OverflowException)
         {
-            return Result<ImportPreviewResponse>.Failure(
+            return new DomainError(
                 ErrorCodes.ImportInvalidFile,
                 "The file doesn't match the expected Swedbank CSV export shape.");
         }
 
         if (parsedRows.Count == 0)
         {
-            return Result<ImportPreviewResponse>.Success(new ImportPreviewResponse([]));
+            return new ImportPreviewResponse([]);
         }
 
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
@@ -72,7 +73,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 r.Currency))
             .ToList();
 
-        return Result<ImportPreviewResponse>.Success(new ImportPreviewResponse(rows));
+        return new ImportPreviewResponse(rows);
     }
 
     public async Task<Result<ImportConfirmResponse>> ConfirmAsync(
@@ -80,8 +81,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
         CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var lockId = BitConverter.ToInt64(request.AccountId.ToByteArray(), 0);
-        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({lockId})", cancellationToken);
+        await db.Database.LockAsync(request.AccountId, cancellationToken);
         var accountId = new AccountId(request.AccountId);
         var accountCurrency = await db.Accounts
             .Where(a => a.Id == accountId)
@@ -89,7 +89,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
             .FirstOrDefaultAsync(cancellationToken);
         if (accountCurrency is null)
         {
-            return Result<ImportConfirmResponse>.Failure(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
         var existingRefSet = await ExistingRefsAsync(accountId, request.Rows.Select(r => r.ImportRef), cancellationToken);
@@ -115,14 +115,14 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
             if (categoryId is { } chosen && categoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
-                return Result<ImportConfirmResponse>.Failure(ErrorCodes.CategoryWrongType, "Category does not exist or has the wrong type.");
+                return new DomainError(ErrorCodes.CategoryWrongType, "Category does not exist or has the wrong type.");
             }
 
             if (row.TransferAccountId is { } otherId)
             {
                 var otherAccountId = new AccountId(otherId);
-                if (otherAccountId == accountId || !await db.Accounts.AnyAsync(a => a.Id == otherAccountId, cancellationToken))
-                    return Result<ImportConfirmResponse>.Failure(ErrorCodes.ReferenceNotFound, "Choose another accessible account for the transfer.");
+                if (otherAccountId == accountId || await references.AccountExistsAsync(otherAccountId, cancellationToken) is not null)
+                    return new DomainError(ErrorCodes.ReferenceNotFound, "Choose another accessible account for the transfer.");
                 var fromId = row.Type == FlowType.Expense ? accountId : otherAccountId;
                 var toId = row.Type == FlowType.Expense ? otherAccountId : accountId;
                 Transfer transfer;
@@ -131,10 +131,10 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                     var match = await db.Transfers.FirstOrDefaultAsync(t => t.Id == new TransferId(existingId), cancellationToken);
                     if (match is null || match.FromAccountId != fromId || match.ToAccountId != toId
                         || (row.Type == FlowType.Expense ? match.Amount : match.ReceivedAmount) != amount || match.Date != row.Date)
-                        return Result<ImportConfirmResponse>.Failure(ErrorCodes.ImportTransferMismatch, "The selected transfer does not match this bank entry.");
+                        return new DomainError(ErrorCodes.ImportTransferMismatch, "The selected transfer does not match this bank entry.");
                     if (!matchedTransfers.Add(match.Id)
                         || await db.TransferImports.AnyAsync(r => r.AccountId == accountId && r.TransferId == match.Id, cancellationToken))
-                        return Result<ImportConfirmResponse>.Failure(
+                        return new DomainError(
                             ErrorCodes.ImportTransferAlreadyMatched,
                             "The selected transfer is already matched to another bank entry of this account.");
                     transfer = match;
@@ -157,12 +157,12 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 continue;
             }
             if (row.ExistingTransferId is not null)
-                return Result<ImportConfirmResponse>.Failure(ErrorCodes.Required, "Choose the other account before matching a transfer.");
+                return new DomainError(ErrorCodes.Required, "Choose the other account before matching a transfer.");
 
             var reporting = await rates.ToReportingAsync(amount, row.Date, cancellationToken);
             if (reporting.IsFailure)
             {
-                return Result<ImportConfirmResponse>.FailureFrom(reporting);
+                return reporting.Error;
             }
 
             db.Transactions.Add(new Transaction
@@ -173,7 +173,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
                 Amount = amount,
                 ReportingAmount = reporting.Value,
                 Date = row.Date,
-                Description = string.IsNullOrWhiteSpace(row.Description) ? null : row.Description.Trim(),
+                Description = OptionalText.Normalize(row.Description),
                 Source = TransactionSource.Imported,
                 ImportRef = row.ImportRef,
             });
@@ -183,7 +183,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates) :
         await db.SaveChangesAsync(cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
-        return Result<ImportConfirmResponse>.Success(new ImportConfirmResponse(imported, skipped));
+        return new ImportConfirmResponse(imported, skipped);
     }
 
     private static List<ParsedRow> ParseCsv(Stream fileStream)

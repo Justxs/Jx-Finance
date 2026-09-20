@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { SummaryStats } from "@/components/summary-stats";
+import { SummaryStats } from "@/components/summary-stats/summary-stats";
 
 interface Props {
   totalIncome: string;

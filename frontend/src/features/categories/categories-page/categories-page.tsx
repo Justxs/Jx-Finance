@@ -4,15 +4,17 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { getCategoriesQueryKey, useDeleteCategory, useCategoriesSuspense } from "@/api/generated";
 import type { CategoryResponse, FlowType } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
-import { AddCategoryForm } from "../add-category-form";
+import { AddCategoryForm } from "../add-category-form/add-category-form";
 import { CategoryRow } from "../category-row";
 
 export function CategoriesPage() {
@@ -20,8 +22,6 @@ export function CategoriesPage() {
   const [addOpen, setAddOpen] = useState(false);
 
   const categories = useCategoriesSuspense();
-
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteCategory({
     mutation: {
@@ -31,7 +31,7 @@ export function CategoriesPage() {
   });
 
   const categoryList = useDeferredValue(categories.data) ?? [];
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
+  const remove = useConfirmedDelete(deleteMutation, categoryList, (category) => category.name);
   const groups: { type: FlowType; labelKey: TranslationKey }[] = [
     { type: "income", labelKey: "categories.income" },
     { type: "expense", labelKey: "categories.expense" },
@@ -56,9 +56,7 @@ export function CategoriesPage() {
 
           let groupContent: ReactNode;
           if (items.length === 0) {
-            groupContent = (
-              <p className="py-6 text-sm text-muted-foreground">{t("categories.empty")}</p>
-            );
+            groupContent = <EmptyText>{t("categories.empty")}</EmptyText>;
           } else {
             groupContent = (
               <Rows>
@@ -66,9 +64,9 @@ export function CategoriesPage() {
                   <CategoryRow
                     key={category.id}
                     category={category}
-                    onDelete={() => setDeleteTarget(category.id)}
-                    deletePending={deletingId === category.id}
-                    deleteDisabled={deleteMutation.isPending}
+                    onDelete={() => remove.request(category.id)}
+                    deletePending={remove.pendingId === category.id}
+                    deleteDisabled={remove.busy}
                   />
                 ))}
               </Rows>
@@ -86,12 +84,7 @@ export function CategoriesPage() {
           );
         })}
       </div>
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={categoryList.find((category) => category.id === deleteTarget)?.name ?? undefined}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
 }

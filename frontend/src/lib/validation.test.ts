@@ -1,4 +1,3 @@
-import type { TFunction } from "i18next";
 import { describe, expect, test } from "vitest";
 import type { z } from "zod";
 import {
@@ -11,14 +10,12 @@ import {
   isQuantity,
   isRate,
   money,
-  nonNegativeMoney,
   normalizeMoney,
   optionalNonNegativeMoney,
   optionalPositiveMoney,
   optionalText,
   password,
   positiveMoney,
-  positiveQuantity,
   wholeNumberBetween,
   quantity,
   requiredEmail,
@@ -119,10 +116,11 @@ function messages(schema: z.ZodType, value: unknown) {
   return result.success ? [] : result.error.issues.map((issue) => issue.message);
 }
 
-describe("schema builders", () => {
-  const t = ((key: string, options?: Record<string, unknown>) =>
-    options ? `${key}:${JSON.stringify(options)}` : key) as unknown as TFunction;
+function t(key: string, options?: Record<string, unknown>) {
+  return options ? `${key}:${JSON.stringify(options)}` : key;
+}
 
+describe("schema builders", () => {
   test("requiredValue rejects only the empty string", () => {
     expect(messages(requiredValue(t), "")).toEqual(["validation.required"]);
     expect(messages(requiredValue(t), "x")).toEqual([]);
@@ -155,7 +153,6 @@ describe("schema builders", () => {
   test.each([
     ["money", money(t), ["-1,50", "0"], ["", "abc"], "validation.money"],
     ["positiveMoney", positiveMoney(t), ["0.01"], ["0", "-1", ""], "validation.positiveMoney"],
-    ["nonNegativeMoney", nonNegativeMoney(t), ["0", "2.5"], ["-1", ""], "validation.money"],
     [
       "optionalPositiveMoney",
       optionalPositiveMoney(t),
@@ -175,13 +172,6 @@ describe("schema builders", () => {
       quantity(t, "investments.validation.price"),
       ["0", "1.12345678"],
       ["-1", "1.123456789"],
-      "investments.validation.price",
-    ],
-    [
-      "positiveQuantity",
-      positiveQuantity(t, "investments.validation.price"),
-      ["0.5"],
-      ["0", ""],
       "investments.validation.price",
     ],
     [

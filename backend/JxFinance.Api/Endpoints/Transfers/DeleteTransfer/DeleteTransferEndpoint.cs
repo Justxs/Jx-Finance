@@ -1,10 +1,11 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transfers.Interfaces;
 
 namespace JxFinance.Endpoints.Transfers.DeleteTransfer;
 
-public sealed class DeleteTransferEndpoint(ITransferService transferService) : EndpointWithoutRequest
+public sealed class DeleteTransferEndpoint(ITransferService transferService) : DeleteEndpoint
 {
     public override void Configure()
     {
@@ -13,9 +14,6 @@ public sealed class DeleteTransferEndpoint(ITransferService transferService) : E
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        (await transferService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
-    }
+    protected override Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken ct) =>
+        transferService.DeleteAsync(id, ct);
 }

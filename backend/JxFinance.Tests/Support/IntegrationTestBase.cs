@@ -39,12 +39,17 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected async Task<HttpClient> LoginAsync(TestUser user)
     {
         var client = CreateClient();
-        var response = await client.PostAsJsonAsync(
-            "/api/auth/login",
-            new { email = user.Email, password = user.Password, rememberMe = false });
+        var response = await TryLoginAsync(client, user.Email, user.Password);
         response.EnsureSuccessStatusCode();
         return client;
     }
+
+    protected static Task<HttpResponseMessage> TryLoginAsync(
+        HttpClient client,
+        string email,
+        string password,
+        string? twoFactorCode = null) =>
+        client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false, twoFactorCode });
 
     protected async Task<HttpClient> CreateUserClientAsync(string role = "Member") =>
         await LoginAsync(await CreateUserAsync(role));
@@ -89,7 +94,31 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     }
 
     protected async Task<string> CurrentBalanceAsync(Guid accountId, HttpClient? client = null) =>
-        (await (client ?? Client).GetFromJsonAsync<BalanceDto>($"/api/accounts/{accountId}"))!.CurrentBalance;
+        (await (client ?? Client).GetFromJsonAsync<AccountDto>($"/api/accounts/{accountId}"))!.CurrentBalance;
+
+    protected static Task<TransactionDto> RecordTransactionAsync(HttpClient client, object transaction) =>
+        PostAsync<TransactionDto>(client, "/api/transactions", transaction);
+
+    protected static Task<TransactionDto> CreateTransactionAsync(
+        HttpClient client,
+        Guid accountId,
+        Guid? categoryId,
+        string type,
+        string amount,
+        string date,
+        string? description = null) =>
+        RecordTransactionAsync(client, new { accountId, categoryId, type, amount, date, description });
+
+    protected static string NewSymbol() => $"T{Guid.NewGuid():N}"[..10].ToUpperInvariant();
+
+    protected static async Task<Guid> CreateSecurityAsync(HttpClient client, string? symbol = null, string name = "Test fund") =>
+        (await PostAsync<IdDto>(
+            client,
+            "/api/investments/securities",
+            new { symbol = symbol ?? NewSymbol(), name, type = "etf", currency = "eur" })).Id;
+
+    protected static async Task<Guid> RecordInvestmentAsync(HttpClient client, object entry) =>
+        (await PostAsync<IdDto>(client, "/api/investments/transactions", entry)).Id;
 
     protected static async Task<T> PostAsync<T>(HttpClient client, string url, object body)
     {
@@ -114,11 +143,16 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         Assert.Contains(reason, await response.Content.ReadAsStringAsync());
     }
 
+    protected static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)
+    {
+        var body = await response.Content.ReadAsStringAsync();
+        Assert.True(response.StatusCode == status, $"Expected {(int)status}, got {(int)response.StatusCode}: {body}");
+        Assert.Contains($"\"{code}\"", body);
+    }
+
     protected sealed record IdDto(Guid Id);
 
     protected sealed record TestCurrentUser(Guid Id) : ICurrentUser;
-
-    private sealed record BalanceDto(string CurrentBalance);
 }
 
 public sealed record TestUser(Guid Id, string Email, string Password);

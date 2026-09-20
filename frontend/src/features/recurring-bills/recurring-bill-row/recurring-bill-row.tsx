@@ -7,14 +7,14 @@ import type {
   RecurringBillResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Tag } from "@/components/ui/tag";
+import { RowTransition } from "@/components/row-transition/row-transition";
+import { Button } from "@/components/ui/button/button";
+import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
+import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
-import { RecurringBillEditForm } from "./recurring-bill-edit-form";
 
 interface Props {
   bill: RecurringBillResponse;
@@ -104,7 +104,6 @@ export function RecurringBillRow({
               size="icon"
               onClick={() => setMode("edit")}
               aria-label={`${t("actions.edit")}: ${bill.name}`}
-              tooltip={`${t("actions.edit")}: ${bill.name}`}
             >
               <Pencil />
             </Button>
@@ -115,7 +114,6 @@ export function RecurringBillRow({
               disabled={deleteDisabled}
               onClick={onDelete}
               aria-label={`${t("actions.delete")}: ${bill.name}`}
-              tooltip={`${t("actions.delete")}: ${bill.name}`}
             >
               <Trash2 />
             </Button>
@@ -124,29 +122,22 @@ export function RecurringBillRow({
 
         <Modal
           open={mode === "edit"}
-          onOpenChange={(open) => {
-            if (!open) {
-              setMode("view");
-            }
-          }}
+          onClose={() => setMode("view")}
           title={t("recurringBills.editTitle")}
           description={bill.name}
         >
-          <RecurringBillEditForm
+          <RecurringBillForm
             bill={bill}
             accounts={accounts}
             categories={categories}
             onDone={() => setMode("view")}
+            onCancel={() => setMode("view")}
           />
         </Modal>
 
         <Modal
           open={mode === "confirm"}
-          onOpenChange={(open) => {
-            if (!open) {
-              setMode("view");
-            }
-          }}
+          onClose={() => setMode("view")}
           title={t("recurringBills.confirmTitle")}
         >
           <RecurringBillConfirmForm

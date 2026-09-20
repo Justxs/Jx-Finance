@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, handlers, pending } from "@/storybook/handlers";
 import { TransactionsTotals, TransactionsTotalsLine } from "./transactions-totals";
 
@@ -8,11 +9,7 @@ const meta = {
   component: TransactionsTotals,
   args: { params: {}, stale: false },
   parameters: { route: "/transactions" },
-  render: (args) => (
-    <div className="w-[min(48rem,90vw)]">
-      <TransactionsTotals {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(48rem,90vw)]")],
 } satisfies Meta<typeof TransactionsTotals>;
 
 export default meta;

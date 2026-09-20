@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ApiError } from "@/api/client";
+import { withWidth } from "@/storybook/decorators";
 import { FormError } from "./form-error";
 
 const meta = {
   title: "Components/FormError",
   component: FormError,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(90vw,28rem)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(90vw,28rem)]")],
 } satisfies Meta<typeof FormError>;
 
 export default meta;

@@ -1,6 +1,8 @@
+using JxFinance.Common;
+
 namespace JxFinance.Endpoints.Conversions.GetConversions;
 
-public sealed class GetConversionsRequest
+public sealed class GetConversionsRequest : IPagedRequest
 {
     public int Page { get; init; } = 1;
 

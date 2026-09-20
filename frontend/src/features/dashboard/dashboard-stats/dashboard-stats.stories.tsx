@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashboard.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { dashboardSummary } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { DashboardStats } from "./dashboard-stats";

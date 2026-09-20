@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { Checkbox } from "../checkbox";
+import { Checkbox } from "../checkbox/checkbox";
 import { ColumnFilter, TextColumnFilter } from "./column-filter";
 
 const typeNames = ["Income", "Expense", "Transfer"];

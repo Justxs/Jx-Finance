@@ -1,11 +1,13 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { FieldError } from "@/components/ui/field-error";
-import { FileInput } from "@/components/ui/file-input";
-import { Label } from "@/components/ui/label";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { FieldError, Hint } from "@/components/ui/field-error";
+import { FileInput } from "@/components/ui/file-input/file-input";
+import { Label } from "@/components/ui/label/label";
+import { namedOptions } from "@/lib/options";
 import { BrokerImportFailure } from "./import-failure";
 import { BrokerImportResult } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
@@ -63,25 +65,23 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
       }}
       className="space-y-4"
     >
-      <div className="space-y-1.5">
-        <Label htmlFor="broker-upload-funding">{t("investments.import.fundingAccount")}</Label>
+      <FieldShell
+        id="broker-upload-funding"
+        label={t("investments.import.fundingAccount")}
+        hint={t("investments.import.fundingHint")}
+      >
         <SelectField
           id="broker-upload-funding"
           value={funding}
           disabled={mutations.busy}
           aria-describedby="broker-upload-funding-hint"
           onChange={setFundingAccountId}
-          options={[
-            { value: "", label: t("investments.import.noFundingAccount") },
-            ...accounts
-              .filter((account) => account.id !== accountId)
-              .map((account) => ({ value: account.id, label: account.name })),
-          ]}
+          options={namedOptions(
+            accounts.filter((account) => account.id !== accountId),
+            t("investments.import.noFundingAccount"),
+          )}
         />
-        <p id="broker-upload-funding-hint" className="text-xs text-muted-foreground">
-          {t("investments.import.fundingHint")}
-        </p>
-      </div>
+      </FieldShell>
 
       <div className="space-y-1.5">
         <Label htmlFor="broker-upload-file">{t("investments.import.file")}</Label>
@@ -100,9 +100,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
               : "broker-upload-file-hint"
           }
         />
-        <p id="broker-upload-file-hint" className="text-xs text-muted-foreground">
-          {t("investments.import.fileHint")}
-        </p>
+        <Hint id="broker-upload-file-hint">{t("investments.import.fileHint")}</Hint>
         <FieldError id="broker-upload-file-error" message={fileError} />
       </div>
 

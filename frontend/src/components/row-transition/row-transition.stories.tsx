@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { startTransition, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
+import { Button } from "@/components/ui/button/button";
+import { Rows } from "@/components/ui/rows/rows";
 import { RowTransition } from "./row-transition";
 
 const meta = {

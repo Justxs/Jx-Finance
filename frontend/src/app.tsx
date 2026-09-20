@@ -3,10 +3,10 @@ import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { I18nextProvider } from "react-i18next";
 import { getSettingsQueryKey } from "@/api/generated";
 import type { SettingsResponse } from "@/api/generated/model";
-import { RouteError } from "@/components/route-error";
-import { RoutePending } from "@/components/route-pending";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { RouteError } from "@/components/route-error/route-error";
+import { RoutePending } from "@/components/route-pending/route-pending";
+import { Toaster } from "@/components/ui/sonner/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { type FeatureKey, publicSettingsQueryOptions } from "@/hooks/use-settings";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { i18n } from "@/lib/i18n";
@@ -48,7 +48,7 @@ function isFeatureOn(feature: FeatureKey) {
 }
 
 async function loadDefaultLanguage() {
-  const settings = await queryClient.fetchQuery(publicSettingsQueryOptions());
+  const settings = await queryClient.query(publicSettingsQueryOptions());
   return settings.defaultLanguage;
 }
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import { getConfirmRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
+import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   billInactiveProblem,
@@ -19,15 +20,7 @@ const meta = {
   title: "Features/RecurringBills/RecurringBillConfirmForm",
   component: RecurringBillConfirmForm,
   args: { bill: dueSoonBill, accounts, onDone: fn() },
-  decorators: [
-    function withFormWidth(Story) {
-      return (
-        <div className="w-[min(32rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof RecurringBillConfirmForm>;
 
 export default meta;
@@ -76,7 +69,7 @@ export const RequiresAmountAndAccount: Story = {
     await expect(canvas.getByText("This field is required.")).toBeVisible();
     await expect(args.onDone).not.toHaveBeenCalled();
 
-    fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "48,73" } });
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "48,73" } });
     await chooseOption(canvas.getByRole("combobox", { name: "Account" }), checkingAccount.name);
     await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
 
@@ -137,7 +130,7 @@ export const ServerRejectsAmount: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "12" } });
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "12" } });
     await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
 
     await waitFor(() =>

@@ -1,11 +1,12 @@
 import { renderHook } from "@testing-library/react";
-import { enUS, lt } from "date-fns/locale";
+import { enUS, lt } from "react-day-picker/locale";
 import { afterEach, describe, expect, test } from "vitest";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
 import { createQueryWrapper, plain } from "@/test/query";
 import { settingsFixture } from "@/test/settings";
 import {
+  useAxisDateTick,
   useAxisMoney,
   useCalendarLocale,
   useCurrencyName,
@@ -14,11 +15,14 @@ import {
   useIsoDate,
   useMoney,
   useMonthLabel,
+  useNumberFormat,
   usePercent,
   usePriceFormat,
   useQuantityFormat,
   useRatePercent,
   useReportingCurrency,
+  useShortDay,
+  useShortMonth,
   useSignedPercent,
   useUsableCurrencies,
 } from "./use-formatters";
@@ -182,5 +186,29 @@ describe("numbers", () => {
 
   test("usePercent rounds ratios to whole percents", () => {
     expect(hook(() => usePercent()).format(0.456)).toBe("46%");
+  });
+});
+
+describe("short formats", () => {
+  test("useShortMonth abbreviates the month and keeps the year", () => {
+    expect(hook(() => useShortMonth()).format(new Date(2026, 5, 9))).toBe("Jun 2026");
+  });
+
+  test("useShortDay abbreviates the month and keeps the day", () => {
+    expect(hook(() => useShortDay()).format(new Date(2026, 5, 9))).toBe("Jun 9");
+  });
+
+  test("useAxisDateTick shows days over a short span and months otherwise", () => {
+    expect(hook(() => useAxisDateTick(true))("2026-06-09")).toBe("Jun 9");
+    expect(hook(() => useAxisDateTick(false))("2026-06-09")).toBe("Jun 26");
+  });
+
+  test("useAxisDateTick leaves unreadable values alone", () => {
+    expect(hook(() => useAxisDateTick(true))("soon")).toBe("soon");
+  });
+
+  test("useNumberFormat groups digits and caps decimals on request", () => {
+    expect(hook(() => useNumberFormat()).format(12345)).toBe("12,345");
+    expect(hook(() => useNumberFormat(1)).format(1.26)).toBe("1.3");
   });
 });

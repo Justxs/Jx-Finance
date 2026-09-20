@@ -2,7 +2,6 @@ using FastEndpoints;
 using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Households.CreateHousehold;
 using JxFinance.Endpoints.Households.Shared;
-using JxFinance.Endpoints.Households.UpdateHousehold;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Households.Mappers;
@@ -12,8 +11,8 @@ public sealed class HouseholdMapper : Mapper<CreateHouseholdRequest, HouseholdRe
 {
     public override Household ToEntity(CreateHouseholdRequest request) => new() { Name = request.Name.Trim() };
 
-    public void UpdateEntity(UpdateHouseholdRequest request, Household household) =>
-        household.Name = request.Name.Trim();
+    public void Apply(IHouseholdInput input, Household household) =>
+        household.Name = input.Name.Trim();
 
     public HouseholdMemberResponse ToMember(HouseholdMembership membership, AppUser? user) => new(
         membership.UserId,

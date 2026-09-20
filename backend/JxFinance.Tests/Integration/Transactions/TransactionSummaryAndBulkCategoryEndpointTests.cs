@@ -61,7 +61,7 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         foreach (var filter in filters)
         {
-            var page = await member.GetFromJsonAsync<PageDto>($"/api/transactions?pageSize=200&{filter}");
+            var page = await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?pageSize=200&{filter}");
             var summary = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?{filter}");
 
             Assert.Equal(page!.Total, summary!.Count);
@@ -243,26 +243,6 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
     private async Task<TransactionDto> GetTransactionAsync(Guid id) =>
         (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{id}"))!;
-
-    private static async Task<TransactionDto> CreateTransactionAsync(
-        HttpClient client,
-        Guid accountId,
-        Guid? categoryId,
-        string type,
-        string amount,
-        string date,
-        string description)
-    {
-        var response = await client.PostAsJsonAsync(
-            "/api/transactions",
-            new { accountId, categoryId, type, amount, date, description });
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<TransactionDto>())!;
-    }
-
-    private sealed record TransactionDto(Guid Id, Guid? CategoryId, string Type, string Amount, bool IsSplit);
-
-    private sealed record PageDto(List<TransactionDto> Items, int Total);
 
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
 

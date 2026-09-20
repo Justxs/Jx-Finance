@@ -11,7 +11,7 @@ import {
   getReportSummarySuspenseQueryOptions,
   getTransactionsSuspenseQueryOptions,
 } from "@/api/generated";
-import { DashboardPage } from "@/features/dashboard/dashboard-page";
+import { DashboardPage } from "@/features/dashboard/dashboard-page/dashboard-page";
 import {
   monthlyTrendParams,
   recentTransactionsParams,

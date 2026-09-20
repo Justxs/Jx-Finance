@@ -5,22 +5,22 @@ import { z } from "zod";
 import { useCreateBackup } from "@/api/generated";
 import { createBackupBodyNoteMax } from "@/api/schemas/backups/backups.zod";
 import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
+import { FormError } from "@/components/form-error/form-error";
 import { submitToServer } from "@/lib/form-server-errors";
+import { silent } from "@/lib/mutations";
 import { optionalText } from "@/lib/validation";
 
 export function CreateBackupForm() {
   const { t } = useTranslation();
   const schema = z.object({ note: optionalText(t, createBackupBodyNoteMax) });
 
-  const createMutation = useCreateBackup({
-    mutation: {
-      meta: { silent: true },
+  const createMutation = useCreateBackup(
+    silent({
       onSuccess: () => {
         toast.success(t("backup.created"));
       },
-    },
-  });
+    }),
+  );
 
   const form = useAppForm({
     defaultValues: { note: "" },
@@ -35,15 +35,7 @@ export function CreateBackupForm() {
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="flex max-w-xl flex-wrap items-start gap-2"
-      >
+      <form.FormShell className="flex max-w-xl flex-wrap items-start gap-2">
         <form.Field name="note">
           {(field) => (
             <field.TextField
@@ -59,7 +51,7 @@ export function CreateBackupForm() {
           {t("backup.create")}
         </form.SubmitButton>
         <FormError error={createMutation.error} className="w-full" />
-      </form>
+      </form.FormShell>
     </form.AppForm>
   );
 }

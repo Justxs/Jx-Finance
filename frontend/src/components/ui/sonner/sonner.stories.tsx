@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { toast } from "sonner";
-import { Button } from "../button";
+import { Button } from "../button/button";
 import { Toaster } from "./sonner";
 
 function savePromise() {

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import { categoryTargetCount, type PreviewRowState, summarizeSelection } from "./preview-rows";

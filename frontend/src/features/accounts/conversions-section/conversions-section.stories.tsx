@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { first, openedDialog } from "@/storybook/interactions";
 import { ConversionsSection } from "./conversions-section";
 
 const meta = {
@@ -57,12 +57,12 @@ export const EditsConversion: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const body = within(document.body);
-    const [edit] = await canvas.findAllByRole("button", { name: /^Edit: /u });
-    await userEvent.click(edit as HTMLElement);
+    const edit = first(await canvas.findAllByRole("button", { name: /^Edit: /u }));
+    await userEvent.click(edit);
 
     const dialog = within(await openedDialog());
     await expect(dialog.getByLabelText("Sold")).toHaveValue("2500.00");
-    fireEvent.change(dialog.getByLabelText("Bought"), { target: { value: "2712.00" } });
+    await fireEvent.change(dialog.getByLabelText("Bought"), { target: { value: "2712.00" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
 
     await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { RoutePending } from "./route-pending";
 
 const meta = {
@@ -13,11 +14,5 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const NarrowContainer: Story = {
-  decorators: [
-    (Story) => (
-      <div className="w-56">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-56")],
 };

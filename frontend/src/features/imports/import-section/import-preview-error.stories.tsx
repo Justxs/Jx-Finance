@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ApiError } from "@/api/client";
+import { withWidth } from "@/storybook/decorators";
 import { importFormatProblem, serverErrorProblem } from "@/storybook/fixtures";
 import { ImportPreviewError } from "./import-preview-error";
 
@@ -7,11 +8,7 @@ const meta = {
   title: "Features/Imports/ImportPreviewError",
   component: ImportPreviewError,
   args: { error: new ApiError({ status: 400, detail: importFormatProblem.detail ?? undefined }) },
-  render: (args) => (
-    <div className="w-[min(40rem,90vw)]">
-      <ImportPreviewError {...args} />
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof ImportPreviewError>;
 
 export default meta;

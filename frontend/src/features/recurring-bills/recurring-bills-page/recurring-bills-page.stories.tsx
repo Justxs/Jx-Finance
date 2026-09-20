@@ -5,9 +5,8 @@ import {
   getDeleteRecurringBillMockHandler,
   getRecurringBillsMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { RoutePending } from "@/components/route-pending";
-import { inactiveBill, recurringBills, cycle } from "@/storybook/fixtures";
+import { withPageFrame } from "@/storybook/decorators";
+import { inactiveBill, recurringBills, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -18,26 +17,13 @@ import {
 import { openedDialog } from "@/storybook/interactions";
 import { RecurringBillsPage } from "./recurring-bills-page";
 
-function RecurringBillsPageStory() {
-  return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <QueryBoundary fallback={<RoutePending />}>
-        <RecurringBillsPage />
-      </QueryBoundary>
-    </div>
-  );
-}
-
-const manyBills = Array.from({ length: 18 }, (_, index) => ({
-  ...cycle(recurringBills, index),
-  id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-}));
+const manyBills = many(recurringBills, 18);
 
 const meta = {
   title: "Features/RecurringBills/RecurringBillsPage",
   component: RecurringBillsPage,
   parameters: { layout: "fullscreen", route: "/recurring-bills" },
-  render: () => <RecurringBillsPageStory />,
+  decorators: [withPageFrame],
 } satisfies Meta<typeof RecurringBillsPage>;
 
 export default meta;

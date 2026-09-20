@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { ProfileNav, profileSections } from "./profile-nav";
 
 const meta = {
   title: "Features/Profile/ProfileNav",
   component: ProfileNav,
   parameters: { route: "/profile" },
-  decorators: [
-    (Story) => (
-      <div className="w-[min(16rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(16rem,90vw)]")],
   args: { current: "account", sections: profileSections },
 } satisfies Meta<typeof ProfileNav>;
 

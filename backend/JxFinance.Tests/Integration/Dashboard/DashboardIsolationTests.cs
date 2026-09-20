@@ -21,9 +21,9 @@ public sealed class DashboardIsolationTests(ApiFixture fixture) : IntegrationTes
         var shared = await CreateAccountAsync("100.00", householdId: household, client: ownerClient);
         var personal = await CreateAccountAsync("50.00", client: ownerClient);
         var food = await CreateCategoryAsync(client: ownerClient);
-        await RecordAsync(ownerClient, new { accountId = shared, categoryId = food, type = "expense", amount = "12.00", date = firstOfMonth });
-        await RecordAsync(ownerClient, new { accountId = personal, categoryId = food, type = "expense", amount = "30.00", date = firstOfMonth });
-        await RecordAsync(ownerClient, new { accountId = personal, type = "income", amount = "5.00", date = firstOfMonth });
+        await RecordTransactionAsync(ownerClient, new { accountId = shared, categoryId = food, type = "expense", amount = "12.00", date = firstOfMonth });
+        await RecordTransactionAsync(ownerClient, new { accountId = personal, categoryId = food, type = "expense", amount = "30.00", date = firstOfMonth });
+        await RecordTransactionAsync(ownerClient, new { accountId = personal, type = "income", amount = "5.00", date = firstOfMonth });
 
         var ownerSummary = await ownerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
         var partnerSummary = await partnerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
@@ -43,9 +43,6 @@ public sealed class DashboardIsolationTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal(new MonthDto(Today.Year, Today.Month, "0.00", "12.00"), Assert.Single(partnerTrend!.Items));
         Assert.Equal(new MonthDto(Today.Year, Today.Month, "0.00", "0.00"), Assert.Single(strangerTrend!.Items));
     }
-
-    private static Task RecordAsync(HttpClient client, object transaction) =>
-        PostAsync<IdDto>(client, "/api/transactions", transaction);
 
     private sealed record SummaryDto(string TotalBalance, string MonthIncome, string MonthExpense);
 

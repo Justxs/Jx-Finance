@@ -1,7 +1,8 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useBudgetsSuspense } from "@/api/generated";
-import { Meter } from "@/components/ui/meter";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Meter } from "@/components/ui/meter/meter";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { useMoney } from "@/hooks/use-formatters";
 
 const MAX_ROWS = 5;
@@ -22,12 +23,9 @@ export function BudgetSnapshot() {
 
   if (rows.length === 0) {
     return (
-      <p className="py-6 text-sm text-muted-foreground">
-        {t("dashboard.noBudgets")}{" "}
-        <Link to="/budgets" className="font-medium text-primary underline-offset-4 hover:underline">
-          {t("budgets.add")}
-        </Link>
-      </p>
+      <EmptyText>
+        {t("dashboard.noBudgets")} <TextLink to="/budgets">{t("budgets.add")}</TextLink>
+      </EmptyText>
     );
   }
 

@@ -5,7 +5,8 @@ import {
   getUpdateBudgetMockHandler,
 } from "@/api/generated/budgets/budgets.msw";
 import type { BudgetResponse } from "@/api/generated/model";
-import { budgets, toCents } from "@/storybook/fixtures";
+import { toCents } from "@/lib/money";
+import { budgets } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
 import { found, readBody, text } from "./http";
 import type { Body } from "./http";

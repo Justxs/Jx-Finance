@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { ImportDataSection } from "./import-data-section";
 
 const meta = {
   title: "Features/Imports/ImportDataSection",
   component: ImportDataSection,
-  decorators: [
-    (Story) => (
-      <div className="w-[min(40rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof ImportDataSection>;
 
 export default meta;

@@ -17,7 +17,7 @@ public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endp
 
     public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct)
     {
-        var asset = (await netWorthService.UpdateAssetAsync(req.Id, entity => Map.UpdateEntity(req, entity), ct)).ValueOrThrow();
+        var asset = (await netWorthService.UpdateAssetAsync(req.Id, entity => Map.Apply(req, entity), ct)).ValueOrThrow();
         await Send.OkAsync(Map.FromEntity(asset), ct);
     }
 }

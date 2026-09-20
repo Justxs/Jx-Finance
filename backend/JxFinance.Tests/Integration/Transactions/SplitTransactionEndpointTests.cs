@@ -162,8 +162,4 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
         Assert.False(updated!.IsSplit);
         Assert.Null(updated.Lines);
     }
-
-    private sealed record TransactionLineDto(Guid Id, Guid? CategoryId, string Amount, string? Description);
-
-    private sealed record TransactionDto(Guid Id, Guid? CategoryId, bool IsSplit, List<TransactionLineDto>? Lines);
 }

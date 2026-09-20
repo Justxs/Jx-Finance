@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateBudgetMockHandler } from "@/api/generated/budgets/budgets.msw";
+import { withWidth } from "@/storybook/decorators";
 import {
   budgets,
   categories,
@@ -15,15 +16,7 @@ const meta = {
   title: "Features/Budgets/CreateBudgetForm",
   component: CreateBudgetForm,
   args: { categories, onCreated: fn(), onCancel: fn() },
-  decorators: [
-    function withFormWidth(Story) {
-      return (
-        <div className="w-[min(32rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof CreateBudgetForm>;
 
 export default meta;
@@ -54,7 +47,7 @@ export const SubmitPending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(canvas.getByRole("textbox"), { target: { value: "250.00" } });
+    await fireEvent.change(canvas.getByRole("textbox"), { target: { value: "250.00" } });
     await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));
   },
 };
@@ -86,7 +79,7 @@ export const ServerFieldError: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const limit = canvas.getByRole("textbox");
-    fireEvent.change(limit, { target: { value: "250.00" } });
+    await fireEvent.change(limit, { target: { value: "250.00" } });
     await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));
 
     const message = await canvas.findByText("Enter an amount greater than 0, e.g. 12.34.");
@@ -95,7 +88,7 @@ export const ServerFieldError: Story = {
     await expect(limit).toHaveAttribute("aria-describedby", "budget-limit-error");
     await expect(canvas.queryByRole("alert")).toBeNull();
 
-    fireEvent.change(limit, { target: { value: "260.00" } });
+    await fireEvent.change(limit, { target: { value: "260.00" } });
     await expect(limit).toHaveAttribute("aria-invalid", "false");
   },
 };

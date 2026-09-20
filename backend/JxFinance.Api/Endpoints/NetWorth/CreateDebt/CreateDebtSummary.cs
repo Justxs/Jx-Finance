@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.CreateDebt;
@@ -16,6 +17,6 @@ public sealed class CreateDebtSummary : Summary<CreateDebtEndpoint, CreateDebtRe
         RequestParam(r => r.InterestRate, "Optional annual rate as a percentage, for example 2.4.");
         RequestParam(r => r.AsOf, "The date the balance is good for, as YYYY-MM-DD.");
         Responses[201] = "The debt was created. The Location header points at it.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
     }
 }

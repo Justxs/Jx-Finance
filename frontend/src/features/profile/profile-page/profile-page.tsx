@@ -1,13 +1,13 @@
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
-import { FontPicker } from "@/components/font-picker";
-import { PageHeader } from "@/components/page-header";
-import { PalettePicker } from "@/components/palette-picker";
-import { ImportDataSection } from "@/features/imports/import-data-section";
+import { FontPicker } from "@/components/font-picker/font-picker";
+import { PageHeader } from "@/components/page-header/page-header";
+import { PalettePicker } from "@/components/palette-picker/palette-picker";
+import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useSettings } from "@/hooks/use-settings";
-import { ProfileForm } from "../profile-form";
-import { ProfileNav, profileSections } from "../profile-nav";
+import { ProfileForm } from "../profile-form/profile-form";
+import { ProfileNav, profileSections } from "../profile-nav/profile-nav";
 import { TwoFactorSettings } from "../two-factor-settings";
 
 export function ProfilePage() {

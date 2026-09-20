@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { FIXTURE_MONTH_END, FIXTURE_YEAR_START, netWorthHistoryItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthChangeCard } from "./net-worth-change-card";

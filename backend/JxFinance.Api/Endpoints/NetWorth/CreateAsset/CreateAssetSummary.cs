@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.CreateAsset;
@@ -15,6 +16,6 @@ public sealed class CreateAssetSummary : Summary<CreateAssetEndpoint, CreateAsse
         RequestParam(r => r.CurrentValue, "Decimal string with at most two decimal places.");
         RequestParam(r => r.AsOf, "The date the valuation is good for, as YYYY-MM-DD.");
         Responses[201] = "The asset was created. The Location header points at it.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
     }
 }

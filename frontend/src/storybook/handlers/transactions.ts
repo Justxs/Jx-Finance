@@ -11,12 +11,12 @@ import {
   getTransactionsSummaryMockHandler,
   getUpdateTransactionMockHandler,
 } from "@/api/generated/transactions/transactions.msw";
+import { toCents } from "@/lib/money";
 import {
   FIXTURE_TODAY,
   accounts,
   buildTransactionsSummary,
   checkingAccount,
-  toCents,
   transactions,
   transactionsCsv,
 } from "@/storybook/fixtures";

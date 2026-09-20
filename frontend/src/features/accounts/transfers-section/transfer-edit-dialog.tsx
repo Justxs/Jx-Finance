@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUpdateTransfer } from "@/api/generated";
 import type { AccountResponse, TransferResponse } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
+import { silent } from "@/lib/mutations";
 import { TransferForm } from "./transfer-form";
 
 interface FormProps {
@@ -18,9 +18,7 @@ interface Props {
 }
 
 function TransferEditForm({ accounts, transfer, onClose }: Readonly<FormProps>) {
-  const updateMutation = useUpdateTransfer({
-    mutation: { meta: { silent: true }, onSuccess: onClose },
-  });
+  const updateMutation = useUpdateTransfer(silent({ onSuccess: onClose }));
 
   return (
     <TransferForm
@@ -36,25 +34,10 @@ function TransferEditForm({ accounts, transfer, onClose }: Readonly<FormProps>) 
 
 export function TransferEditDialog({ accounts, transfer, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [shown, setShown] = useState(transfer);
-
-  if (transfer !== null && transfer !== shown) {
-    setShown(transfer);
-  }
 
   return (
-    <Modal
-      open={transfer !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
-      title={t("transfers.editTitle")}
-    >
-      {shown ? (
-        <TransferEditForm key={shown.id} accounts={accounts} transfer={shown} onClose={onClose} />
-      ) : null}
-    </Modal>
+    <EditModal item={transfer} title={t("transfers.editTitle")} onClose={onClose}>
+      {(shown) => <TransferEditForm accounts={accounts} transfer={shown} onClose={onClose} />}
+    </EditModal>
   );
 }

@@ -83,6 +83,4 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
     }
 
     private sealed record HouseholdDto(Guid Id, string Name);
-
-    private sealed record AccountDto(Guid Id, string Scope);
 }

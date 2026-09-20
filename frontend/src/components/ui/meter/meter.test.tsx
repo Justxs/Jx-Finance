@@ -3,7 +3,11 @@ import { expect, test } from "vitest";
 import { Meter } from "./meter";
 
 function fill(container: HTMLElement) {
-  return container.firstElementChild?.firstElementChild as HTMLElement;
+  const element = container.firstElementChild?.firstElementChild;
+  if (!(element instanceof HTMLElement)) {
+    throw new TypeError("expected the meter fill");
+  }
+  return element;
 }
 
 test("a labelled meter exposes its value", () => {

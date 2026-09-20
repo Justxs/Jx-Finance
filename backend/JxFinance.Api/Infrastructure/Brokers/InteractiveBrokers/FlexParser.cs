@@ -63,16 +63,16 @@ public static partial class FlexParser
             return items;
         }
 
-        return Result<FlexStatement>.Success(new FlexStatement(
+        return new FlexStatement(
             statements.Select(s => Text(s, "accountId")).OfType<string>().Distinct().ToList(),
             Read("Trades", "Trade", SummaryTradeRows, Trade),
             Read("CashTransactions", "CashTransaction", SummaryCashRows, CashTransaction),
             Read("OpenPositions", "OpenPosition", SummaryPositionRows, OpenPosition),
             Read("CorporateActions", "CorporateAction", SummaryCashRows, CorporateAction),
-            unreadable));
+            unreadable);
     }
 
-    private static Result<FlexStatement> Invalid() => Result<FlexStatement>.Failure(
+    private static Result<FlexStatement> Invalid() => new DomainError(
         ErrorCodes.ImportInvalidFile,
         "The file is not an Interactive Brokers Flex Query report in XML format.");
 

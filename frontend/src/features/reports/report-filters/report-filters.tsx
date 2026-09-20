@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { SelectField } from "@/components/select-field";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/select-field/select-field";
+import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
+import { Label } from "@/components/ui/label/label";
 import { useTodayDate } from "@/hooks/use-settings";
 import { detectPreset, presetRange, type ReportPreset } from "./date-range-presets";
 

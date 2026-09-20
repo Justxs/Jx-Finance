@@ -6,8 +6,6 @@ public interface IClock
 
     TimeZoneInfo TimeZone { get; }
 
-    DateTimeOffset ToAppTime(DateTimeOffset instant);
-
     DateOnly Today { get; }
 
     DateTimeOffset StartOfDay(DateOnly date);

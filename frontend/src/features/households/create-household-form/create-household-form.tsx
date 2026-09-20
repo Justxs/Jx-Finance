@@ -3,10 +3,9 @@ import { z } from "zod";
 import { useCreateHousehold, useUpdateHousehold } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { createHouseholdBodyNameMax } from "@/api/schemas/households/households.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { silent, upsert } from "@/lib/mutations";
 import { requiredText } from "@/lib/validation";
 
 interface FormValues {
@@ -26,39 +25,24 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
     name: requiredText(t, createHouseholdBodyNameMax),
   });
 
-  const createMutation = useCreateHousehold({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
-  const updateMutation = useUpdateHousehold({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
-  const pending = createMutation.isPending || updateMutation.isPending;
+  const { create, update, pending, error } = upsert(
+    useCreateHousehold(silent({ onSuccess: onCreated })),
+    useUpdateHousehold(silent({ onSuccess: onCreated })),
+  );
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: { name: initial?.name ?? "" } satisfies FormValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const data = { name: submission.value.name.trim() };
+    schema,
+    submit: (value) => {
+      const data = { name: value.name.trim() };
 
-      return submitToServer(submission, () =>
-        initial
-          ? updateMutation.mutateAsync({ id: initial.id, data })
-          : createMutation.mutateAsync({ data }),
-      );
+      return initial ? update({ id: initial.id, data }) : create({ data });
     },
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <form.Field name="name">
           {(field) => (
             <field.TextField
@@ -70,17 +54,14 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
           )}
         </form.Field>
 
-        <FormError error={createMutation.error ?? updateMutation.error} />
+        <FormError error={error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={pending}>
-            {initial ? t("actions.save") : t("households.add")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("households.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

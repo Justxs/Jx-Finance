@@ -1,50 +1,56 @@
 import { Plus, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button";
+import type { CategoryResponse, FlowType } from "@/api/generated/model";
+import { defineAppFieldGroup } from "@/components/form";
+import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
-import { FormGrid } from "@/components/ui/form-grid";
-import { emptyLine } from "./line-form-value";
-import type { TransactionFormApi } from "./transaction-form";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { namedOptions } from "@/lib/options";
+import { emptyLine, type LineFormValue } from "./line-form-value";
+
+const splitLinesFieldGroup = defineAppFieldGroup(({ strict }) => ({
+  type: strict<FlowType>(),
+  isSplit: strict<boolean>(),
+  lines: strict<LineFormValue[]>(),
+}));
+
+type SplitLinesFields = typeof splitLinesFieldGroup.fields;
 
 interface Props {
-  form: TransactionFormApi;
+  fields: SplitLinesFields;
   categories: CategoryResponse[];
 }
 
 interface LineRowProps {
-  form: TransactionFormApi;
+  fields: SplitLinesFields;
   categories: CategoryResponse[];
   index: number;
   onRemove: () => void;
 }
 
-function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowProps>) {
+function SplitLineRow({ fields, categories, index, onRemove }: Readonly<LineRowProps>) {
   const { t } = useTranslation();
 
   return (
     <FormGrid>
-      <form.Field name={`lines[${index}].categoryId`}>
+      <fields.Field name={`lines[${index}].categoryId`}>
         {(field) => (
           <field.SelectFieldControl
             id={`tx-line-${index}-category`}
             aria-label={t("transactions.lineCategory")}
-            options={[
-              { value: "", label: t("transactions.uncategorized") },
-              ...categories.map((category) => ({ value: category.id, label: category.name })),
-            ]}
+            options={namedOptions(categories, t("transactions.uncategorized"))}
           />
         )}
-      </form.Field>
-      <form.Field name={`lines[${index}].amount`}>
+      </fields.Field>
+      <fields.Field name={`lines[${index}].amount`}>
         {(field) => (
           <field.MoneyInputField
             id={`tx-line-${index}-amount`}
             aria-label={t("transactions.lineAmount")}
           />
         )}
-      </form.Field>
-      <form.Field name={`lines[${index}].description`}>
+      </fields.Field>
+      <fields.Field name={`lines[${index}].description`}>
         {(field) => (
           <field.TextField
             id={`tx-line-${index}-description`}
@@ -52,13 +58,12 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
             placeholder={t("transactions.lineDescription")}
           />
         )}
-      </form.Field>
+      </fields.Field>
       <Button
         type="button"
         variant="ghost"
         size="icon"
         aria-label={t("transactions.removeLine")}
-        tooltip={t("transactions.removeLine")}
         onClick={onRemove}
       >
         <X />
@@ -67,20 +72,20 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
   );
 }
 
-function SplitLineList({ form, categories }: Readonly<Props>) {
+function SplitLineList({ fields, categories }: Readonly<Props>) {
   const { t } = useTranslation();
 
   return (
-    <form.ArrayField name="lines">
+    <fields.ArrayField name="lines">
       {(linesField) => (
         <div className="col-span-full space-y-3">
-          <form.Field name="lines">
+          <fields.Field name="lines">
             {(errorField) => <FieldError message={errorField.errors[0]?.message} />}
-          </form.Field>
+          </fields.Field>
           {linesField.value.map((line, index) => (
             <SplitLineRow
               key={line.id}
-              form={form}
+              fields={fields}
               categories={categories}
               index={index}
               onRemove={() => linesField.removeValue(index)}
@@ -97,25 +102,27 @@ function SplitLineList({ form, categories }: Readonly<Props>) {
           </Button>
         </div>
       )}
-    </form.ArrayField>
+    </fields.ArrayField>
   );
 }
 
-export function SplitLinesEditor({ form, categories }: Readonly<Props>) {
+function SplitLinesGroup({ fields, categories }: Readonly<Props>) {
   return (
-    <form.Subscribe selector={(state) => state.values.isSplit}>
-      {(isSplit) =>
-        isSplit ? (
-          <form.Field name="type">
+    <fields.Field name="isSplit">
+      {(splitField) =>
+        splitField.value ? (
+          <fields.Field name="type">
             {(typeField) => (
               <SplitLineList
-                form={form}
+                fields={fields}
                 categories={categories.filter((c) => c.type === typeField.value)}
               />
             )}
-          </form.Field>
+          </fields.Field>
         ) : null
       }
-    </form.Subscribe>
+    </fields.Field>
   );
 }
+
+export const SplitLinesEditor = splitLinesFieldGroup.bindComponent(SplitLinesGroup, "fields");

@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { RecurringBillResponse } from "@/api/generated/model";
-import { axisTick, type ChartSeries, ChartTooltip } from "@/components/chart";
-import { useAxisMoney } from "@/hooks/use-formatters";
+import { axisProps, type ChartSeries, ChartTooltip } from "@/components/chart";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { useAxisMoney, useShortMonth } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
 
@@ -32,10 +33,10 @@ function monthIndex(date: Date, start: Date) {
 }
 
 export function BillsForecastChart({ bills }: Readonly<Props>) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const axisMoney = useAxisMoney();
   const today = useTodayDate();
-  const monthFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", year: "numeric" });
+  const monthFormat = useShortMonth();
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
 
   const totals = Array.from({ length: MONTHS_AHEAD }, () => 0);
@@ -61,9 +62,7 @@ export function BillsForecastChart({ bills }: Readonly<Props>) {
   }));
 
   if (chartData.every((point) => point.total === 0)) {
-    return (
-      <p className="py-6 text-sm text-muted-foreground">{t("recurringBills.forecastEmpty")}</p>
-    );
+    return <EmptyText>{t("recurringBills.forecastEmpty")}</EmptyText>;
   }
 
   return (
@@ -76,19 +75,10 @@ export function BillsForecastChart({ bills }: Readonly<Props>) {
           barCategoryGap="40%"
         >
           <CartesianGrid vertical={false} stroke="var(--border)" />
-          <XAxis
-            dataKey="label"
-            tick={axisTick}
-            axisLine={false}
-            tickLine={false}
-            tickMargin={8}
-            minTickGap={16}
-          />
+          <XAxis dataKey="label" {...axisProps} tickMargin={8} minTickGap={16} />
           <YAxis
             tickFormatter={(value) => axisMoney.format(Number(value))}
-            tick={axisTick}
-            axisLine={false}
-            tickLine={false}
+            {...axisProps}
             tickCount={5}
             width={56}
           />

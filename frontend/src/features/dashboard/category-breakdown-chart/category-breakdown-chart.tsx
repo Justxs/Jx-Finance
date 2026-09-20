@@ -1,5 +1,5 @@
 import { useCategoryBreakdownSuspense } from "@/api/generated";
-import { CategoryBreakdown } from "@/components/category-breakdown";
+import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { useTodayDate } from "@/hooks/use-settings";
 import { monthBounds } from "@/lib/calendar";
 

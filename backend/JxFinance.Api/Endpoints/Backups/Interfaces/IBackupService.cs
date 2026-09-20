@@ -14,7 +14,7 @@ public interface IBackupService
 
     Task<Result<BackupResponse>> UpdateAsync(Guid id, string? note, CancellationToken cancellationToken);
 
-    Task<Result<bool>> DeleteAsync(Guid id, CancellationToken cancellationToken);
+    Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Result<BackupDownload>> OpenAsync(Guid id, CancellationToken cancellationToken);
 

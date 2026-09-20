@@ -1,6 +1,11 @@
+using JxFinance.Domain.Common;
+using JxFinance.Domain.ExchangeRates;
+
 namespace JxFinance.Domain.Investments;
 
 public sealed record RealizedSale(DateOnly Date, decimal Gain, decimal ReportingGain);
+
+public readonly record struct PositionValue(decimal? Market, decimal? Reporting, bool IsComplete);
 
 public sealed class Position(SecurityId securityId)
 {
@@ -16,6 +21,13 @@ public sealed class Position(SecurityId securityId)
     public bool IsOversold { get; private set; }
 
     public IReadOnlyList<RealizedSale> Sales => sales;
+
+    public PositionValue Value(decimal? lastPrice, Currency currency, RateTable rates, Currency reportingCurrency)
+    {
+        var market = lastPrice is { } price ? Quantity * price : (decimal?)null;
+        var reporting = market is { } known ? rates.Convert(known, currency, reportingCurrency) : null;
+        return new PositionValue(market, reporting, reporting is not null && !IsOversold);
+    }
 
     public void Buy(decimal quantity, decimal cost, decimal reportingCost)
     {

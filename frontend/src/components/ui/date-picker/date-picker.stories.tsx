@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { FieldError } from "../field-error";
-import { Label } from "../label";
+import { Label } from "../label/label";
 import { DatePicker } from "./date-picker";
 
 interface ExampleProps {

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { toast } from "sonner";
+import { withWidth } from "@/storybook/decorators";
 import { categories, importPreviewRows } from "@/storybook/fixtures";
 import { ImportSummaryBar } from "./import-summary-bar";
 import { toPreviewRows } from "./preview-rows";
@@ -15,11 +16,7 @@ const meta = {
     categories,
     onApplyCategory: (category) => toast.message(`Apply ${category.name}`),
   },
-  render: (args) => (
-    <div className="p-6 lg:p-10">
-      <ImportSummaryBar {...args} />
-    </div>
-  ),
+  decorators: [withWidth("p-6 lg:p-10")],
 } satisfies Meta<typeof ImportSummaryBar>;
 
 export default meta;

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, checkingAccount } from "@/storybook/fixtures";
 import { TransferForm } from "./transfer-form";
 
@@ -7,11 +8,7 @@ const meta = {
   title: "Features/Accounts/TransferForm",
   component: TransferForm,
   args: { accounts, pending: false, onSubmit: fn(), onCancel: fn() },
-  render: (args) => (
-    <div className="w-[min(36rem,90vw)]">
-      <TransferForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(36rem,90vw)]")],
 } satisfies Meta<typeof TransferForm>;
 
 export default meta;

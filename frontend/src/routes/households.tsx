@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getHouseholdsSuspenseQueryOptions } from "@/api/generated";
-import { HouseholdsPage } from "@/features/households/households-page";
+import { HouseholdsPage } from "@/features/households/households-page/households-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 

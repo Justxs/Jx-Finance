@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { namedOptions } from "@/lib/options";
 
 const UNCATEGORIZED = "none";
 
@@ -28,12 +29,11 @@ export function SelectionToolbar({
   const mixed = types.size > 1;
   const type = mixed ? undefined : selected[0]?.type;
 
-  const options = [
-    { value: UNCATEGORIZED, label: t("transactions.uncategorized") },
-    ...categories
-      .filter((category) => category.type === type)
-      .map((category) => ({ value: category.id, label: category.name })),
-  ];
+  const options = namedOptions(
+    categories.filter((category) => category.type === type),
+    t("transactions.uncategorized"),
+    UNCATEGORIZED,
+  );
   const value = !mixed && options.some((option) => option.value === choice) ? choice : "";
 
   return (

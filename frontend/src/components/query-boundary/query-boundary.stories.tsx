@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { useAccountsSuspense } from "@/api/generated";
-import { Card } from "@/components/ui/card";
+import { Card } from "@/components/ui/card/card";
+import { withWidth } from "@/storybook/decorators";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
-import { Skeleton } from "../ui/skeleton";
+import { Skeleton } from "../ui/skeleton/skeleton";
 import { QueryBoundary } from "./query-boundary";
 
 function AccountNames() {
@@ -57,13 +58,7 @@ const meta = {
     fallback: <Skeleton className="m-6 h-24" />,
     children: <AccountNames />,
   },
-  decorators: [
-    (Story) => (
-      <div className="w-[min(90vw,32rem)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(90vw,32rem)]")],
   render: (args) => (
     <Card as="section">
       <QueryBoundary {...args} />

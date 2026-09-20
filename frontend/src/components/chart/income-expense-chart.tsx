@@ -10,9 +10,10 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useAxisMoney } from "@/hooks/use-formatters";
 import { ChartLegend } from "./chart-legend";
-import { axisTick, chartCursor } from "./chart-theme";
+import { axisProps, chartCursor } from "./chart-theme";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 
 interface IncomeExpensePoint {
@@ -52,7 +53,7 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   const showDots = chartData.length <= 16;
 
   if (chartData.every((point) => point.income === 0 && point.expense === 0)) {
-    return <p className="py-6 text-sm text-muted-foreground">{t("charts.empty")}</p>;
+    return <EmptyText>{t("charts.empty")}</EmptyText>;
   }
 
   return (
@@ -70,18 +71,14 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
             <CartesianGrid vertical={false} stroke="var(--border)" />
             <XAxis
               dataKey="label"
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               tickMargin={8}
               minTickGap={16}
               interval="preserveStartEnd"
             />
             <YAxis
               tickFormatter={(value) => axisMoney.format(Number(value))}
-              tick={axisTick}
-              axisLine={false}
-              tickLine={false}
+              {...axisProps}
               tickCount={5}
               width={56}
             />

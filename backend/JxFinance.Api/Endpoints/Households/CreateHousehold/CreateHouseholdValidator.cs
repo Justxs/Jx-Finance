@@ -1,12 +1,5 @@
-using FastEndpoints;
-using JxFinance.Common.Validation;
+using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Households.CreateHousehold;
 
-public sealed class CreateHouseholdValidator : Validator<CreateHouseholdRequest>
-{
-    public CreateHouseholdValidator()
-    {
-        RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
-    }
-}
+public sealed class CreateHouseholdValidator : HouseholdInputValidator<CreateHouseholdRequest>;

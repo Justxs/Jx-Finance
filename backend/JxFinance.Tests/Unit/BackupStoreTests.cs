@@ -1,4 +1,5 @@
 using System.Text;
+using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Backups;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting.Internal;
@@ -15,7 +16,7 @@ public sealed class BackupStoreTests : IDisposable
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?> { ["App:BackupDirectory"] = directory })
             .Build();
-        store = new BackupStore(configuration, new HostingEnvironment { ContentRootPath = directory });
+        store = new BackupStore(configuration, new HostingEnvironment { ContentRootPath = directory }, new UtcClock());
     }
 
     public void Dispose()
@@ -131,5 +132,16 @@ public sealed class BackupStoreTests : IDisposable
         File.WriteAllText(path, "orphan");
         File.SetLastWriteTimeUtc(path, DateTime.UtcNow.AddHours(-hoursOld));
         return path;
+    }
+
+    private sealed class UtcClock : IClock
+    {
+        public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
+
+        public TimeZoneInfo TimeZone => TimeZoneInfo.Utc;
+
+        public DateOnly Today => DateOnly.FromDateTime(UtcNow.UtcDateTime);
+
+        public DateTimeOffset StartOfDay(DateOnly date) => new(date.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
     }
 }

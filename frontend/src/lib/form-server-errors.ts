@@ -1,4 +1,4 @@
-import type { CreateValidationErrorFn, DeepKeys, ValidationErrorMap } from "@tanstack/react-form";
+import type { CreateValidationErrorFn, ValidationErrorMap } from "@tanstack/react-form";
 import { type ApiError, isApiError } from "@/api/client";
 import type { ErrorCode } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
@@ -34,15 +34,19 @@ function pathSegments(name: string): string[] {
     .filter((segment) => segment !== "");
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
 export function hasFormField(values: unknown, name: string): boolean {
   const segments = pathSegments(name);
   let current = values;
 
   for (const segment of segments) {
-    if (typeof current !== "object" || current === null || !(segment in current)) {
+    if (!isRecord(current) || !(segment in current)) {
       return false;
     }
-    current = (current as Record<string, unknown>)[segment];
+    current = current[segment];
   }
 
   return segments.length > 0;
@@ -72,7 +76,7 @@ export function splitServerErrors(values: unknown, error: unknown, aliases: Fiel
   return { fields, placed, unplaced };
 }
 
-export function serverFieldErrors<TFormData>(
+function serverFieldErrors<TFormData>(
   { value, createValidationError }: Submission<TFormData>,
   error: unknown,
   aliases?: FieldAliases,
@@ -86,7 +90,7 @@ export function serverFieldErrors<TFormData>(
   placedNames.set(error, new Set(placed));
 
   const errorMap: ValidationErrorMap<TFormData> = {
-    fields: fields as Partial<Record<DeepKeys<TFormData>, string[]>>,
+    fields,
   };
 
   return createValidationError(errorMap);

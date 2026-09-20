@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateCategoryMockHandler } from "@/api/generated/categories/categories.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   emptyHandlers,
   errorHandlers,
@@ -61,7 +61,7 @@ export const SubmitPending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Pets" } });
+    await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Pets" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
   },
 };

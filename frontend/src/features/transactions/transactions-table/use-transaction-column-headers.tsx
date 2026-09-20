@@ -1,16 +1,15 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
+import { SelectField } from "@/components/select-field/select-field";
+import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import {
   type AriaSort,
   ariaSortFor,
   ColumnHeader,
-  nextSortDirection,
-} from "@/components/ui/column-header";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
+} from "@/components/ui/column-header/column-header";
+import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
+import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
   accounts: AccountResponse[];
@@ -19,39 +18,13 @@ interface Args {
 
 export function useTransactionColumnHeaders({ accounts, categories }: Args) {
   const { t } = useTranslation();
-  const search = useSearch({ from: "/transactions" });
-  const navigate = useNavigate({ from: "/transactions" });
-
-  function setFilter(patch: Partial<typeof search>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
-  }
-
-  function toggleSort(sort: NonNullable<typeof search.sort>) {
-    const direction = nextSortDirection(sort, search.sort, search.direction);
-    navigate({ search: (prev) => ({ ...prev, sort, direction, page: 1 }) });
-  }
-
-  const active =
-    Boolean(search.search) ||
-    Boolean(search.accountId) ||
-    Boolean(search.categoryId) ||
-    Boolean(search.type) ||
-    Boolean(search.dateFrom) ||
-    Boolean(search.dateTo);
+  const filters = useTransactionFilters({ accounts, categories });
+  const { search, setFilter } = filters;
 
   type SortKey = NonNullable<typeof search.sort>;
 
   function header(sortKey: SortKey, label: string, filter: ReactNode) {
-    return (
-      <ColumnHeader
-        label={label}
-        sortKey={sortKey}
-        activeSort={search.sort}
-        direction={search.direction}
-        onSort={toggleSort}
-        filter={filter}
-      />
-    );
+    return <ColumnHeader label={label} {...filters.sortProps(sortKey)} filter={filter} />;
   }
 
   function ariaSort(sortKey: SortKey): AriaSort {
@@ -75,12 +48,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         active={Boolean(search.dateFrom) || Boolean(search.dateTo)}
         onClear={() => setFilter({ dateFrom: undefined, dateTo: undefined })}
       >
-        <DateRangePicker
-          value={{ from: search.dateFrom ?? "", to: search.dateTo ?? "" }}
-          onChange={(range) =>
-            setFilter({ dateFrom: range.from || undefined, dateTo: range.to || undefined })
-          }
-        />
+        <DateRangePicker value={filters.dateRange} onChange={filters.setDateRange} />
       </ColumnFilter>,
     ),
     description: header(
@@ -107,10 +75,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
           aria-label={t("transactions.category")}
           value={search.categoryId ?? ""}
           onChange={(value) => setFilter({ categoryId: value || undefined })}
-          options={[
-            { value: "", label: t("transactions.allCategories") },
-            ...categories.map((category) => ({ value: category.id, label: category.name })),
-          ]}
+          options={filters.categoryOptions}
         />
       </ColumnFilter>,
     ),
@@ -126,10 +91,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
           aria-label={t("transactions.account")}
           value={search.accountId ?? ""}
           onChange={(value) => setFilter({ accountId: value || undefined })}
-          options={[
-            { value: "", label: t("transactions.allAccounts") },
-            ...accounts.map((account) => ({ value: account.id, label: account.name })),
-          ]}
+          options={filters.accountOptions}
         />
       </ColumnFilter>,
     ),
@@ -141,15 +103,11 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
         active={Boolean(search.type)}
         onClear={() => setFilter({ type: undefined })}
       >
-        <SelectField<"" | "income" | "expense">
+        <SelectField<TransactionTypeFilter>
           aria-label={t("transactions.amount")}
           value={search.type ?? ""}
           onChange={(value) => setFilter({ type: value || undefined })}
-          options={[
-            { value: "", label: t("transactions.allTypes") },
-            { value: "expense", label: t("transactions.expense") },
-            { value: "income", label: t("transactions.income") },
-          ]}
+          options={filters.typeOptions}
         />
       </ColumnFilter>,
     ),
@@ -158,7 +116,7 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
   return {
     byColumn,
     ariaSortByColumn,
-    active,
-    clearAll: () => navigate({ search: { page: 1 } }),
+    active: filters.activeCount > 0,
+    clearAll: filters.clearAll,
   };
 }

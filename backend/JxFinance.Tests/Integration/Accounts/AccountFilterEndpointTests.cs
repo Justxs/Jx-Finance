@@ -55,6 +55,4 @@ public sealed class AccountFilterEndpointTests(ApiFixture fixture) : Integration
         var response = await Client.PostAsJsonAsync("/api/accounts", new { name, type, startingBalance });
         response.EnsureSuccessStatusCode();
     }
-
-    private sealed record AccountDto(Guid Id, string Name, string Type, string CurrentBalance);
 }

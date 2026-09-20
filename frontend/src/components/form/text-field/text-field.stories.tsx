@@ -73,7 +73,7 @@ export const Invalid: Story = {
     const input = canvas.getByLabelText("Name");
     await expect(input).toHaveAttribute("aria-invalid", "true");
     await expect(input).toHaveAttribute("aria-describedby", "demo-name-hint demo-name-error");
-    fireEvent.change(input, { target: { value: "Groceries" } });
+    await fireEvent.change(input, { target: { value: "Groceries" } });
     await waitFor(() => expect(input).toHaveAttribute("aria-invalid", "false"));
   },
 };

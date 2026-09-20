@@ -25,10 +25,10 @@ type Story = StoryObj<typeof meta>;
 async function submitReset(currentPassword = adminPassword) {
   const dialog = within(await openedDialog());
   const submit = dialog.getByRole("button", { name: "Reset password" });
-  fireEvent.change(dialog.getByLabelText("Temporary password"), {
+  await fireEvent.change(dialog.getByLabelText("Temporary password"), {
     target: { value: "Temporary-42-horse" },
   });
-  fireEvent.change(dialog.getByLabelText("Your current password"), {
+  await fireEvent.change(dialog.getByLabelText("Your current password"), {
     target: { value: currentPassword },
   });
   await waitFor(() => expect(submit).toBeEnabled());
@@ -50,8 +50,8 @@ export const RejectsShortPassword: Story = {
   play: async () => {
     const dialog = within(await openedDialog());
     const field = dialog.getByLabelText("Temporary password");
-    fireEvent.change(field, { target: { value: "short" } });
-    fireEvent.blur(field);
+    await fireEvent.change(field, { target: { value: "short" } });
+    await fireEvent.blur(field);
 
     await expect(await dialog.findByText(/at least 8/iu)).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Reset password" })).toBeDisabled();

@@ -1,15 +1,15 @@
-import { useDebouncer } from "@tanstack/react-pacer";
-import { useNavigate, useSearch } from "@tanstack/react-router";
 import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
+import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
+import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
 const SORT_FIELDS = ["date", "description", "category", "account", "amount"] as const;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -32,32 +32,18 @@ export function TransactionsFiltersDialog({
   defaultOpen = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const search = useSearch({ from: "/transactions" });
-  const navigate = useNavigate({ from: "/transactions" });
+  const filters = useTransactionFilters({ accounts, categories });
+  const { search, setFilter, activeCount } = filters;
   const [open, setOpen] = useState(defaultOpen);
-  const [draft, setDraft] = useState(search.search ?? "");
-  const [lastSearch, setLastSearch] = useState(search.search ?? "");
-  const searchDebouncer = useDebouncer((next: string) => setFilter({ search: next || undefined }), {
-    wait: SEARCH_DEBOUNCE_MS,
-  });
-
-  if ((search.search ?? "") !== lastSearch) {
-    setLastSearch(search.search ?? "");
-    setDraft(search.search ?? "");
-  }
-
-  function setFilter(patch: Partial<typeof search>) {
-    navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
-  }
-
-  function handleSearchChange(next: string) {
-    setDraft(next);
-    searchDebouncer.maybeExecute(next);
-  }
+  const text = useDebouncedDraft(
+    search.search ?? "",
+    (next) => setFilter({ search: next || undefined }),
+    SEARCH_DEBOUNCE_MS,
+  );
 
   function clearAll() {
-    searchDebouncer.cancel();
-    navigate({ search: (prev) => ({ page: 1, sort: prev.sort, direction: prev.direction }) });
+    text.cancel();
+    filters.clearFilters();
   }
 
   const columnLabels: Record<SortField, string> = {
@@ -70,24 +56,20 @@ export function TransactionsFiltersDialog({
 
   const sortOptions = SORT_FIELDS.flatMap((field) => [
     {
+      sort: field,
+      direction: "desc" as const,
       value: `${field}:desc` as SortValue,
       label: t("transactions.sortDescending", { column: columnLabels[field] }),
     },
     {
+      sort: field,
+      direction: "asc" as const,
       value: `${field}:asc` as SortValue,
       label: t("transactions.sortAscending", { column: columnLabels[field] }),
     },
   ]);
 
   const sortValue: SortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
-
-  const activeCount = [
-    search.search,
-    search.type,
-    search.dateFrom || search.dateTo,
-    search.categoryId,
-    search.accountId,
-  ].filter(Boolean).length;
 
   return (
     <>
@@ -111,22 +93,18 @@ export function TransactionsFiltersDialog({
               id="tx-filter-search"
               type="search"
               placeholder={t("transactions.searchPlaceholder")}
-              value={draft}
-              onChange={(event) => handleSearchChange(event.target.value)}
+              value={text.draft}
+              onChange={(event) => text.change(event.target.value)}
             />
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="tx-filter-type">{t("transactions.type")}</Label>
-            <SelectField<"" | "income" | "expense">
+            <SelectField<TransactionTypeFilter>
               id="tx-filter-type"
               value={search.type ?? ""}
               onChange={(value) => setFilter({ type: value || undefined })}
-              options={[
-                { value: "", label: t("transactions.allTypes") },
-                { value: "expense", label: t("transactions.expense") },
-                { value: "income", label: t("transactions.income") },
-              ]}
+              options={filters.typeOptions}
             />
           </div>
 
@@ -134,10 +112,8 @@ export function TransactionsFiltersDialog({
             <Label htmlFor="tx-filter-date">{t("transactions.date")}</Label>
             <DateRangePicker
               id="tx-filter-date"
-              value={{ from: search.dateFrom ?? "", to: search.dateTo ?? "" }}
-              onChange={(range) =>
-                setFilter({ dateFrom: range.from || undefined, dateTo: range.to || undefined })
-              }
+              value={filters.dateRange}
+              onChange={filters.setDateRange}
             />
           </div>
 
@@ -147,10 +123,7 @@ export function TransactionsFiltersDialog({
               id="tx-filter-category"
               value={search.categoryId ?? ""}
               onChange={(value) => setFilter({ categoryId: value || undefined })}
-              options={[
-                { value: "", label: t("transactions.allCategories") },
-                ...categories.map((category) => ({ value: category.id, label: category.name })),
-              ]}
+              options={filters.categoryOptions}
             />
           </div>
 
@@ -160,10 +133,7 @@ export function TransactionsFiltersDialog({
               id="tx-filter-account"
               value={search.accountId ?? ""}
               onChange={(value) => setFilter({ accountId: value || undefined })}
-              options={[
-                { value: "", label: t("transactions.allAccounts") },
-                ...accounts.map((account) => ({ value: account.id, label: account.name })),
-              ]}
+              options={filters.accountOptions}
             />
           </div>
 
@@ -173,8 +143,10 @@ export function TransactionsFiltersDialog({
               id="tx-filter-sort"
               value={sortValue}
               onChange={(value) => {
-                const [sort, direction] = value.split(":") as [SortField, SortDirection];
-                navigate({ search: (prev) => ({ ...prev, sort, direction, page: 1 }) });
+                const chosen = sortOptions.find((option) => option.value === value);
+                if (chosen) {
+                  filters.setSort(chosen.sort, chosen.direction);
+                }
               }}
               options={sortOptions}
             />

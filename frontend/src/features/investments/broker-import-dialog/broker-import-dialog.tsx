@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
-import { QueryBoundary } from "@/components/query-boundary";
-import { SelectField } from "@/components/select-field";
-import { Label } from "@/components/ui/label";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { SelectField } from "@/components/select-field/select-field";
+import { Hint } from "@/components/ui/field-error";
+import { Label } from "@/components/ui/label/label";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs/tabs";
+import { namedOptions } from "@/lib/options";
 import { defaultInvestmentAccount } from "../investment-types";
 import { ConnectionPanel } from "./connection-panel";
 import { FlexQueryHelp } from "./flex-query-help";
@@ -17,6 +19,10 @@ import {
 } from "./use-broker-import-mutations";
 
 export type BrokerImportTab = "upload" | "sync";
+
+function isBrokerImportTab(value: unknown): value is BrokerImportTab {
+  return value === "upload" || value === "sync";
+}
 
 interface Props {
   open: boolean;
@@ -56,14 +62,20 @@ function BrokerImportContent({
           disabled={mutations.busy}
           aria-describedby="broker-import-account-hint"
           onChange={setSelectedAccountId}
-          options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+          options={namedOptions(accounts)}
         />
-        <p id="broker-import-account-hint" className="text-xs text-muted-foreground">
-          {t("investments.import.accountHint")}
-        </p>
+        <Hint id="broker-import-account-hint">{t("investments.import.accountHint")}</Hint>
       </div>
 
-      <Tabs value={tab} onValueChange={(next) => setTab(next as BrokerImportTab)} className="mt-5">
+      <Tabs
+        value={tab}
+        onValueChange={(next: unknown) => {
+          if (isBrokerImportTab(next)) {
+            setTab(next);
+          }
+        }}
+        className="mt-5"
+      >
         <TabsList>
           <TabsTab value="upload" disabled={mutations.busy}>
             {t("investments.import.tabs.upload")}

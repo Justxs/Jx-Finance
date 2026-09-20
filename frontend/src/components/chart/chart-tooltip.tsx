@@ -54,7 +54,7 @@ export function ChartTooltip({
       .map((entry) => [String(entry.dataKey), Number(entry.value)]),
   );
   const rows = series.filter((item) => values.has(item.key));
-  const text = String(label ?? "");
+  const text = typeof label === "string" || typeof label === "number" ? String(label) : "";
 
   function formatValue(item: ChartSeries) {
     const amount = values.get(item.key) ?? 0;

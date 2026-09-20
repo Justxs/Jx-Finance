@@ -4,9 +4,9 @@ import {
   getDeleteAssetMockHandler,
   getAssetsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { assets, cycle } from "@/storybook/fixtures";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { assets, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -27,10 +27,7 @@ function AssetsSectionStory() {
   );
 }
 
-const many = Array.from({ length: 15 }, (_, index) => ({
-  ...cycle(assets, index),
-  id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-}));
+const manyItems = many(assets, 15);
 
 const meta = {
   title: "Features/NetWorth/AssetsSection",
@@ -53,7 +50,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getAssetsMockHandler(many), ...handlers],
+      handlers: [getAssetsMockHandler(manyItems), ...handlers],
     },
   },
 };

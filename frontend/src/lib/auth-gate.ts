@@ -1,4 +1,9 @@
+import { MeResponse } from "@/api/schemas/auth/auth.zod";
+import { SetupStatusResponse } from "@/api/schemas/setup/setup.zod";
+
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
+
+const roleResponse = MeResponse.pick({ role: true });
 
 let setupNeededCache: boolean | null = null;
 let authenticatedCache: boolean | null = null;
@@ -18,7 +23,7 @@ export async function checkSetupNeeded(): Promise<boolean> {
 
   try {
     const response = await fetch(`${baseUrl}/api/setup/status`, { credentials: "include" });
-    const body = (await response.json()) as { needsSetup: boolean };
+    const body = SetupStatusResponse.parse(await response.json());
     setupNeededCache = body.needsSetup;
     return setupNeededCache;
   } catch {
@@ -47,7 +52,7 @@ export async function checkIsAdmin(): Promise<boolean> {
     if (!response.ok) {
       return false;
     }
-    const body = (await response.json()) as { role: string };
+    const body = roleResponse.parse(await response.json());
     return body.role === "Admin";
   } catch {
     return false;

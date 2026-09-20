@@ -3,29 +3,22 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.BackgroundJobs;
 
-public sealed class ExchangeRateSyncJob(IServiceScopeFactory scopes, ILogger<ExchangeRateSyncJob> logger) : BackgroundService
+public sealed class ExchangeRateSyncJob(IServiceScopeFactory scopes, ILogger<ExchangeRateSyncJob> logger)
+    : PeriodicJob(scopes, logger)
 {
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
-    {
-        using var timer = new PeriodicTimer(TimeSpan.FromHours(6));
-        do
-        {
-            try { await RunOnceAsync(stoppingToken); }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested) { break; }
-            catch (Exception ex) { logger.LogError(ex, "Exchange rate sync failed."); }
-        } while (await timer.WaitForNextTickAsync(stoppingToken));
-    }
+    protected override string Name => "Exchange rate sync";
 
-    public async Task RunOnceAsync(CancellationToken ct)
+    protected override TimeSpan Interval => TimeSpan.FromHours(6);
+
+    protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
-        using var scope = scopes.CreateScope();
-        var rates = scope.ServiceProvider.GetRequiredService<IExchangeRateService>();
-        var clock = scope.ServiceProvider.GetRequiredService<IClock>();
-        scope.ServiceProvider.GetRequiredService<ExchangeRateFetchLog>().Prune(clock.UtcNow);
+        var rates = services.GetRequiredService<IExchangeRateService>();
+        var clock = services.GetRequiredService<IClock>();
+        services.GetRequiredService<ExchangeRateFetchLog>().Prune(clock.UtcNow);
         var added = await rates.SyncAsync(force: false, ct);
         if (added > 0)
         {
-            logger.LogInformation("Stored {Count} exchange rates.", added);
+            Logger.LogInformation("Stored {Count} exchange rates.", added);
         }
     }
 }

@@ -12,4 +12,4 @@ public sealed record CreateTransactionRequest(
     DateOnly Date,
     string? Description,
     IReadOnlyList<TransactionLineRequest>? Lines,
-    Currency? Currency = null);
+    Currency? Currency = null) : ITransactionInput;

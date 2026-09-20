@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { RowsSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton";
+import { RowsSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 
 export function RoutePending() {
   const { t } = useTranslation();

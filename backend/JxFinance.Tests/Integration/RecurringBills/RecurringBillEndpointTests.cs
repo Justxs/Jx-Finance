@@ -233,8 +233,6 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
 
     private sealed record NotificationDto(Guid Id, Guid? RelatedId);
 
-    private sealed record TransactionDto(Guid Id, string Amount, string Type);
-
     private sealed record RecurringBillDto(
         Guid Id,
         string Name,

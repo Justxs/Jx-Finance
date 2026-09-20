@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { TextColumnFilter } from "../column-filter";
+import { withWidth } from "@/storybook/decorators";
+import { TextColumnFilter } from "../column-filter/column-filter";
 import { ColumnHeader, type SortDirection } from "./column-header";
 
 function SortableExample({ withFilter }: Readonly<{ withFilter?: boolean }>) {
@@ -42,13 +43,7 @@ const meta = {
   title: "UI/ColumnHeader",
   component: ColumnHeader,
   args: { label: "Amount", sortKey: "amount", onSort: () => {} },
-  decorators: [
-    (Story) => (
-      <div className="text-sm font-medium text-muted-foreground">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("text-sm font-medium text-muted-foreground")],
 } satisfies Meta<typeof ColumnHeader>;
 
 export default meta;

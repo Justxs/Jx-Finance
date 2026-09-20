@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Endpoints.Households.Shared;
 
 namespace JxFinance.Endpoints.Households.UpdateHousehold;
 
@@ -12,7 +13,7 @@ public sealed class UpdateHouseholdSummary : Summary<UpdateHouseholdEndpoint, Up
         ExampleRequest = new UpdateHouseholdRequest(Guid.Empty, "Home");
         Params["id"] = "The household id. Takes precedence over the id in the body.";
         Responses[200] = "The updated household.";
-        Responses[403] = "The signed-in user is a member but not an owner.";
-        Responses[404] = "No such household, or the signed-in user is not a member.";
+        Responses[403] = HouseholdSummaryText.NotOwner;
+        Responses[404] = HouseholdSummaryText.NotFound;
     }
 }

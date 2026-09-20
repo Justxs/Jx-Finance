@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { fonts, textSizes, useFont, useTextSize } from "@/stores/theme-store";
 
 const optionClass =

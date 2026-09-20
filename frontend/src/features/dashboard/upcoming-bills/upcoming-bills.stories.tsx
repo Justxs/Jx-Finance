@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryBoundary } from "@/components/query-boundary";
-import { RowsSkeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { UpcomingBills } from "./upcoming-bills";
 

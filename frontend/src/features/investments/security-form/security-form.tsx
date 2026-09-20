@@ -6,14 +6,10 @@ import {
   createSecurityBodyNameMax,
   createSecurityBodySymbolMax,
 } from "@/api/schemas/investments/investments.zod";
-import { CurrencySelect } from "@/components/currency-select";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Label } from "@/components/ui/label";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
-import { submitToServer } from "@/lib/form-server-errors";
 import { isQuantity, optionalText } from "@/lib/validation";
 import { securityTypes } from "../investment-types";
 
@@ -97,39 +93,28 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
     lastPriceDate: initial?.lastPriceDate ?? "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
+    schema,
+    submit: (value) => {
       const hasPrice = value.lastPrice.trim() !== "";
 
-      return submitToServer(submission, () =>
-        onSubmit({
-          symbol: value.symbol.trim().toUpperCase(),
-          name: value.name.trim(),
-          type: value.type,
-          currency: value.currency,
-          isin: value.isin.trim().toUpperCase() || null,
-          exchange: value.exchange.trim() || null,
-          lastPrice: hasPrice ? value.lastPrice : null,
-          lastPriceDate: hasPrice && value.lastPriceDate ? value.lastPriceDate : null,
-        }),
-      );
+      return onSubmit({
+        symbol: value.symbol.trim().toUpperCase(),
+        name: value.name.trim(),
+        type: value.type,
+        currency: value.currency,
+        isin: value.isin.trim().toUpperCase() || null,
+        exchange: value.exchange.trim() || null,
+        lastPrice: hasPrice ? value.lastPrice : null,
+        lastPriceDate: hasPrice && value.lastPriceDate ? value.lastPriceDate : null,
+      });
     },
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="symbol">
           {(field) => (
             <field.TextField
@@ -169,20 +154,12 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
 
         <form.Field name="currency">
           {(field) => (
-            <div className="space-y-1.5">
-              <Label htmlFor="security-currency">{t("investments.securities.currency")}</Label>
-              <CurrencySelect
-                id="security-currency"
-                value={field.value}
-                preferred={[reportingCurrency]}
-                aria-describedby="security-currency-hint"
-                onBlur={field.handleBlur}
-                onChange={field.handleChange}
-              />
-              <p id="security-currency-hint" className="text-xs text-muted-foreground">
-                {t("investments.securities.currencyHint")}
-              </p>
-            </div>
+            <field.CurrencyField
+              id="security-currency"
+              label={t("investments.securities.currency")}
+              hint={t("investments.securities.currencyHint")}
+              preferred={[reportingCurrency]}
+            />
           )}
         </form.Field>
 
@@ -234,17 +211,13 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
 
         <FormError error={error} />
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          {onCancel ? (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t("actions.cancel")}
-            </Button>
-          ) : null}
-          <form.SubmitButton pending={pending}>
-            {initial ? t("actions.save") : t("investments.securities.add")}
-          </form.SubmitButton>
-        </div>
-      </FormGrid>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("investments.securities.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

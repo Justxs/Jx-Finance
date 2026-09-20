@@ -64,7 +64,7 @@ test("only the exact key is rewritten while the wider root is cancelled", async 
   queryClient.setQueryData(listKey, rows);
   queryClient.setQueryData(otherKey, rows);
   let cancelled = false;
-  const inFlight = queryClient.fetchQuery({
+  const inFlight = queryClient.query({
     queryKey: ["/api/rows", { page: 3 }],
     queryFn: ({ signal }) =>
       new Promise<Row[]>((_resolve, reject) => {

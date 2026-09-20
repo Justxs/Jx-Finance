@@ -1,9 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { userEvent, within } from "storybook/test";
 import { getDeleteGoalMockHandler, getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { RoutePending } from "@/components/route-pending";
-import { completedGoal, goals, openEndedGoal, cycle } from "@/storybook/fixtures";
+import { withPageFrame } from "@/storybook/decorators";
+import { completedGoal, goals, openEndedGoal, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -14,26 +13,13 @@ import {
 import { openedDialog } from "@/storybook/interactions";
 import { GoalsPage } from "./goals-page";
 
-function GoalsPageStory() {
-  return (
-    <div className="mx-auto max-w-5xl p-4 sm:p-8">
-      <QueryBoundary fallback={<RoutePending />}>
-        <GoalsPage />
-      </QueryBoundary>
-    </div>
-  );
-}
-
-const manyGoals = Array.from({ length: 12 }, (_, index) => ({
-  ...cycle(goals, index),
-  id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-}));
+const manyGoals = many(goals, 12);
 
 const meta = {
   title: "Features/Goals/GoalsPage",
   component: GoalsPage,
   parameters: { layout: "fullscreen", route: "/goals" },
-  render: () => <GoalsPageStory />,
+  decorators: [withPageFrame],
 } satisfies Meta<typeof GoalsPage>;
 
 export default meta;

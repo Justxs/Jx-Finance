@@ -30,17 +30,13 @@ jobs:
           ref: ${{ env.BASE_BRANCH }}
           token: ${{ secrets.PACKAGE_UPDATE_TOKEN }}
 
-      - name: Setup .NET
-        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+      - uses: ./.gitea/actions/setup-dotnet
         with:
-          global-json-file: global.json
+          cache: "false"
 
-      - name: Setup nub and Node
-        uses: nubjs/setup-nub@c7b970ec04655a2f0a111cd436cc182a3b660e7a # v0.6.0
+      - uses: ./.gitea/actions/setup-frontend
         with:
-          nub-version: "0.9.2"
-          node-version: 24
-          working-directory: frontend
+          install: "false"
 
       - name: Update NuGet packages
         run: |
@@ -62,13 +58,7 @@ jobs:
         run: node scripts/update-images.mjs
 
       - name: Regenerate API client
-        env:
-          ConnectionStrings__Default: "Host=localhost;Database=export;Username=export;Password=export"
-        run: |
-          dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
-          cp backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
-          cd frontend
-          nub run orval
+        run: node scripts/gen.mjs
 
       - name: Detect changes
         id: changes

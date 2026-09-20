@@ -57,11 +57,7 @@ export function TransactionFormSection({
 
       <Modal
         open={editing !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            onCancelEdit();
-          }
-        }}
+        onClose={onCancelEdit}
         title={t("transactions.editTitle")}
         className="max-w-2xl"
       >

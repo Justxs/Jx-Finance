@@ -3,7 +3,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLogout } from "@/api/generated";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/button/button";
 import { setAuthenticated } from "@/lib/auth-gate";
 
 export function LogoutButton() {
@@ -16,7 +16,7 @@ export function LogoutButton() {
       onSuccess: () => {
         setAuthenticated(false);
         queryClient.clear();
-        navigate({ to: "/login" });
+        void navigate({ to: "/login" });
       },
     },
   });
@@ -29,7 +29,6 @@ export function LogoutButton() {
       pending={logoutMutation.isPending}
       onClick={() => logoutMutation.mutate()}
       aria-label={t("auth.logout")}
-      tooltip={t("auth.logout")}
     >
       <LogOut />
     </Button>

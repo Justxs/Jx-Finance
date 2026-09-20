@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn, userEvent, within } from "storybook/test";
-import { Rows } from "@/components/ui/rows";
+import { Rows } from "@/components/ui/rows/rows";
 import {
   accounts,
   categories,

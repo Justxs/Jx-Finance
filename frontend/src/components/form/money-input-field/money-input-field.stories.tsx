@@ -46,7 +46,7 @@ export const WithHint: Story = { args: { hint: "Leave empty when there was no fe
 export const Invalid: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "-5x" } });
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "-5x" } });
     await expect(await canvas.findByText("Enter a positive amount.")).toHaveAttribute(
       "id",
       "demo-amount-error",

@@ -3,26 +3,24 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.Shared;
-using JxFinance.Endpoints.NetWorth.UpdateAsset;
 
 namespace JxFinance.Endpoints.NetWorth.Mappers;
 
 public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asset>
 {
-    public override Asset ToEntity(CreateAssetRequest request) => new()
+    public override Asset ToEntity(CreateAssetRequest request)
     {
-        Name = request.Name.Trim(),
-        Type = request.Type,
-        CurrentValue = new Money(request.CurrentValue!.Value),
-        AsOf = request.AsOf,
-    };
+        var asset = new Asset { Name = request.Name };
+        Apply(request, asset);
+        return asset;
+    }
 
-    public void UpdateEntity(UpdateAssetRequest request, Asset asset)
+    public void Apply(IAssetInput input, Asset asset)
     {
-        asset.Name = request.Name.Trim();
-        asset.Type = request.Type;
-        asset.CurrentValue = new Money(request.CurrentValue!.Value);
-        asset.AsOf = request.AsOf;
+        asset.Name = input.Name.Trim();
+        asset.Type = input.Type;
+        asset.CurrentValue = new Money(input.CurrentValue!.Value);
+        asset.AsOf = input.AsOf;
     }
 
     public override AssetResponse FromEntity(Asset asset) => new(

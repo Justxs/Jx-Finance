@@ -1,14 +1,14 @@
-import { Link } from "@tanstack/react-router";
 import { FileUp } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense } from "@/api/generated";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Button } from "@/components/ui/button";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import { useSettings } from "@/hooks/use-settings";
-import { ImportDialog } from "../import-dialog";
+import { ImportDialog } from "../import-dialog/import-dialog";
 
 function ImportActions() {
   const { t } = useTranslation();
@@ -19,13 +19,7 @@ function ImportActions() {
   if (accountList.length === 0) {
     return (
       <p className="mt-3 text-sm text-muted-foreground">
-        {t("imports.noAccounts")}{" "}
-        <Link
-          to="/accounts"
-          className="font-medium text-primary underline-offset-4 hover:underline"
-        >
-          {t("imports.goToAccounts")}
-        </Link>
+        {t("imports.noAccounts")} <TextLink to="/accounts">{t("imports.goToAccounts")}</TextLink>
       </p>
     );
   }

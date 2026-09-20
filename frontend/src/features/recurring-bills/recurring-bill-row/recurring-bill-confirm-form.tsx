@@ -2,11 +2,12 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useConfirmRecurringBill } from "@/api/generated";
 import type { AccountResponse, RecurringBillResponse } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
-import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
+import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { silent } from "@/lib/mutations";
+import { namedOptions } from "@/lib/options";
 import { positiveMoney, requiredValue } from "@/lib/validation";
 
 interface Props {
@@ -28,42 +29,27 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
     accountId: needsAccount ? requiredValue(t) : z.string(),
   });
 
-  const confirmMutation = useConfirmRecurringBill({
-    mutation: { meta: { silent: true }, onSuccess: onDone },
-  });
+  const confirmMutation = useConfirmRecurringBill(silent({ onSuccess: onDone }));
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: { amount: "", accountId: "" },
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        confirmMutation.mutateAsync({
-          id: bill.id,
-          data: {
-            expectedDueDate: bill.nextDueDate,
-            amount: isVariable ? value.amount : null,
-            accountId: needsAccount ? value.accountId : null,
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      confirmMutation.mutateAsync({
+        id: bill.id,
+        data: {
+          expectedDueDate: bill.nextDueDate,
+          amount: isVariable ? value.amount : null,
+          accountId: needsAccount ? value.accountId : null,
+        },
+      }),
   });
 
   const stale = hasServerErrorCode(confirmMutation.error, "conflict.stale");
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="grid items-start gap-4 *:min-w-0"
-      >
+      <form.FormShell className="grid items-start gap-4 *:min-w-0">
         <p className="text-sm text-muted-foreground">
           {bill.amount
             ? t("recurringBills.confirmFixed", {
@@ -99,7 +85,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
                 hint={t("recurringBills.confirmAccountRequired")}
                 placeholder={t("recurringBills.chooseAccount")}
                 touchedOnly
-                options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+                options={namedOptions(accounts)}
               />
             )}
           </form.Field>
@@ -113,15 +99,12 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
           <FormError error={confirmMutation.error} />
         )}
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onDone}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={confirmMutation.isPending}>
-            {t("recurringBills.confirm")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={confirmMutation.isPending}
+          submitLabel={t("recurringBills.confirm")}
+          onCancel={onDone}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

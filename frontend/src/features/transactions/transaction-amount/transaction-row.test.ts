@@ -1,4 +1,3 @@
-import type { TFunction } from "i18next";
 import { describe, expect, test } from "vitest";
 import type { CategoryResponse } from "@/api/generated/model";
 import {
@@ -8,7 +7,9 @@ import {
   transactionName,
 } from "./transaction-row";
 
-const t = ((key: string) => key) as unknown as TFunction;
+function t(key: string) {
+  return key;
+}
 
 const food: CategoryResponse = {
   id: "food",

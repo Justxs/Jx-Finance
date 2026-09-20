@@ -61,7 +61,7 @@ function canRenewSession(url: string): boolean {
   return !["/auth/login", "/auth/refresh", "/auth/2fa/"].some((path) => url.includes(path));
 }
 
-function readBody(response: Response): Promise<unknown> {
+function readBody(response: Response) {
   const isJson = response.headers.get("content-type")?.match(/application\/(?:[\w.-]+\+)?json/i);
   if (!isJson) {
     return response.text();
@@ -69,11 +69,19 @@ function readBody(response: Response): Promise<unknown> {
   return response.ok ? response.json() : response.json().catch(() => undefined);
 }
 
+function plainHeaders(init: HeadersInit | undefined): Record<string, string> {
+  if (init === undefined) {
+    return {};
+  }
+  if (init instanceof Headers || Array.isArray(init)) {
+    return Object.fromEntries(new Headers(init));
+  }
+  return { ...init };
+}
+
 async function request(url: string, options?: RequestInit): Promise<Response> {
   let requestOptions = options;
-  const headers: Record<string, string> = {
-    ...(options?.headers as Record<string, string> | undefined),
-  };
+  const headers = plainHeaders(options?.headers);
   if (options?.body !== undefined && options.body !== null && !(options.body instanceof FormData)) {
     headers["Content-Type"] ??= "application/json";
   }
@@ -109,7 +117,7 @@ async function request(url: string, options?: RequestInit): Promise<Response> {
 }
 
 async function failure(response: Response): Promise<ApiError> {
-  const body = await readBody(response);
+  const body: unknown = await readBody(response);
   const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiProblem>;
   const errors = Array.isArray(problem.errors) ? problem.errors : undefined;
   return new ApiError({
@@ -127,7 +135,7 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
     throw await failure(response);
   }
 
-  return (await readBody(response)) as T;
+  return readBody(response);
 }
 
 export interface DownloadedFile {

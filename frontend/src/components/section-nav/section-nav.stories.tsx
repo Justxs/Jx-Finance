@@ -1,18 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Palette, ShieldCheck, UserRound } from "lucide-react";
+import { withWidth } from "@/storybook/decorators";
 import { SectionNav } from "./section-nav";
 
 const meta = {
   title: "Components/SectionNav",
   component: SectionNav,
   parameters: { route: "/profile" },
-  decorators: [
-    (Story) => (
-      <div className="w-[min(16rem,90vw)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(16rem,90vw)]")],
   args: {
     to: "/profile",
     label: "Profile sections",

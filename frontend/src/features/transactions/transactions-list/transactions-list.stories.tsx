@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
@@ -27,11 +28,7 @@ const meta = {
     deletingId: null,
   },
   parameters: { layout: "fullscreen" },
-  render: (args) => (
-    <div className="mx-auto w-full max-w-[23.4375rem] px-4 py-4">
-      <TransactionsList {...args} />
-    </div>
-  ),
+  decorators: [withWidth("mx-auto w-full max-w-[23.4375rem] px-4 py-4")],
 } satisfies Meta<typeof TransactionsList>;
 
 export default meta;

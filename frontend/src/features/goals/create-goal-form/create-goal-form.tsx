@@ -3,12 +3,11 @@ import { z } from "zod";
 import { useCreateGoal, useUpdateGoal } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { createGoalBodyNameMax } from "@/api/schemas/goals/goals.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { submitToServer } from "@/lib/form-server-errors";
-import { isNonNegativeMoney, positiveMoney, requiredText } from "@/lib/validation";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { silent, upsert } from "@/lib/mutations";
+import { optionalNonNegativeMoney, positiveMoney, requiredText } from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -23,26 +22,20 @@ interface Props {
   onCancel: () => void;
 }
 
-function isCurrentAmount(value: string) {
-  return value === "" || isNonNegativeMoney(value);
-}
-
 export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
     name: requiredText(t, createGoalBodyNameMax),
     targetAmount: positiveMoney(t),
-    currentAmount: z.string().refine(isCurrentAmount, t("validation.money")),
+    currentAmount: optionalNonNegativeMoney(t),
     targetDate: z.string(),
   });
 
-  const createMutation = useCreateGoal({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
-  const updateMutation = useUpdateGoal({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
+  const { create, update, pending, error } = upsert(
+    useCreateGoal(silent({ onSuccess: onCreated })),
+    useUpdateGoal(silent({ onSuccess: onCreated })),
+  );
 
   const defaultValues: FormValues = {
     name: initial?.name ?? "",
@@ -51,48 +44,37 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
     targetDate: initial?.targetDate ?? "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
+    schema,
+    submit: (value) => {
       const name = value.name.trim();
       const targetDate = value.targetDate || null;
 
-      return submitToServer(submission, () =>
-        initial?.id
-          ? updateMutation.mutateAsync({
-              id: initial.id,
-              data: {
-                name,
-                targetAmount: value.targetAmount,
-                currentAmount: value.currentAmount || "0",
-                targetDate,
-              },
-            })
-          : createMutation.mutateAsync({
-              data: {
-                name,
-                targetAmount: value.targetAmount,
-                currentAmount: value.currentAmount || null,
-                targetDate,
-              },
-            }),
-      );
+      return initial?.id
+        ? update({
+            id: initial.id,
+            data: {
+              name,
+              targetAmount: value.targetAmount,
+              currentAmount: value.currentAmount || "0",
+              targetDate,
+            },
+          })
+        : create({
+            data: {
+              name,
+              targetAmount: value.targetAmount,
+              currentAmount: value.currentAmount || null,
+              targetDate,
+            },
+          });
     },
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <FormGrid>
           <form.Field name="name">
             {(field) => (
@@ -119,17 +101,14 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
           </form.Field>
         </FormGrid>
 
-        <FormError error={createMutation.error ?? updateMutation.error} />
+        <FormError error={error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={createMutation.isPending || updateMutation.isPending}>
-            {initial ? t("actions.save") : t("goals.add")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("goals.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

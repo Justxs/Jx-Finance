@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Goals.UpdateGoal;
 
@@ -12,7 +13,7 @@ public sealed class UpdateGoalSummary : Summary<UpdateGoalEndpoint, UpdateGoalRe
         ExampleRequest = new UpdateGoalRequest(Guid.Empty, "Emergency fund", 5000.00m, 1500.00m, new DateOnly(2027, 1, 1));
         Params["id"] = "The goal id. Takes precedence over the id in the body.";
         Responses[200] = "The updated goal.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
         Responses[404] = "No such goal belongs to the signed-in user.";
     }
 }

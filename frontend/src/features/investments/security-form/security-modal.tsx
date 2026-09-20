@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useCreateSecurity, useUpdateSecurity } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
+import { silent, upsert } from "@/lib/mutations";
 import { SecurityForm } from "./security-form";
 
 interface Props {
@@ -19,12 +20,10 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
     onOpenChange(false);
   }
 
-  const createMutation = useCreateSecurity({
-    mutation: { meta: { silent: true }, onSuccess: handleSaved },
-  });
-  const updateMutation = useUpdateSecurity({
-    mutation: { meta: { silent: true }, onSuccess: handleSaved },
-  });
+  const { create, update, pending, error } = upsert(
+    useCreateSecurity(silent({ onSuccess: handleSaved })),
+    useUpdateSecurity(silent({ onSuccess: handleSaved })),
+  );
 
   return (
     <Modal
@@ -37,14 +36,14 @@ export function SecurityModal({ open, security, onOpenChange, onSaved }: Readonl
         <SecurityForm
           key={security?.id ?? "new"}
           initial={security}
-          pending={createMutation.isPending || updateMutation.isPending}
-          error={createMutation.error ?? updateMutation.error}
+          pending={pending}
+          error={error}
           onSubmit={(values) => {
             if (security) {
-              return updateMutation.mutateAsync({ id: security.id, data: values });
+              return update({ id: security.id, data: values });
             }
 
-            return createMutation.mutateAsync({ data: values });
+            return create({ data: values });
           }}
           onCancel={() => onOpenChange(false)}
         />

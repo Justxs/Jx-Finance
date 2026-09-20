@@ -4,9 +4,9 @@ import {
   getDeleteDebtMockHandler,
   getDebtsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { debts, cycle } from "@/storybook/fixtures";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { debts, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -27,10 +27,7 @@ function DebtsSectionStory() {
   );
 }
 
-const many = Array.from({ length: 15 }, (_, index) => ({
-  ...cycle(debts, index),
-  id: `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`,
-}));
+const manyItems = many(debts, 15);
 
 const meta = {
   title: "Features/NetWorth/DebtsSection",
@@ -53,7 +50,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 export const LongList: Story = {
   parameters: {
     msw: {
-      handlers: [getDebtsMockHandler(many), ...handlers],
+      handlers: [getDebtsMockHandler(manyItems), ...handlers],
     },
   },
 };

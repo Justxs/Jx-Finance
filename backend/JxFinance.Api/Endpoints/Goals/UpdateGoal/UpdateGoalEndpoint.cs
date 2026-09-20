@@ -17,7 +17,7 @@ public sealed class UpdateGoalEndpoint(IGoalService goalService) : Endpoint<Upda
 
     public override async Task HandleAsync(UpdateGoalRequest req, CancellationToken ct)
     {
-        var goal = (await goalService.UpdateAsync(req.Id, entity => Map.UpdateEntity(req, entity), ct)).ValueOrThrow();
+        var goal = (await goalService.UpdateAsync(req.Id, entity => Map.Apply(req, entity), ct)).ValueOrThrow();
         await Send.OkAsync(Map.FromEntity(goal), ct);
     }
 }

@@ -9,19 +9,20 @@ import {
   useAccountsSuspense,
   useUpdateAccount,
 } from "@/api/generated";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Button } from "@/components/ui/button";
-import { Panel, Section, SectionTitle } from "@/components/ui/section";
-import { Skeleton } from "@/components/ui/skeleton";
-import { AccountBalances } from "@/features/dashboard/account-balances";
+import { PageHeader } from "@/components/page-header/page-header";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { AccountBalances } from "@/features/dashboard/account-balances/account-balances";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
-import { AccountForm } from "../account-form";
+import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
-import { AccountsTable } from "../accounts-table";
+import { AccountsTable } from "../accounts-table/accounts-table";
 import { ConversionsSection } from "../conversions-section";
 import { TransfersSection } from "../transfers-section";
 
@@ -46,8 +47,6 @@ export function AccountsPage() {
       onSuccess: () => setEditingId(null),
     },
   });
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
-
   const deleteMutation = useDeleteAccount({
     mutation: {
       onSuccess: () => toast.success(t("accounts.archived")),
@@ -55,6 +54,8 @@ export function AccountsPage() {
   });
 
   const accountList = accounts.data;
+  const remove = useConfirmedDelete(deleteMutation, accountList, (account) => account.name);
+  const editingAccount = accountList.find((account) => account.id === editingId);
   const allAccountList = allAccounts.data;
 
   return (
@@ -74,17 +75,30 @@ export function AccountsPage() {
         />
       </Modal>
 
+      <Modal
+        open={Boolean(editingAccount)}
+        onClose={() => setEditingId(null)}
+        title={t("actions.edit")}
+      >
+        {editingAccount ? (
+          <AccountForm
+            initial={editingAccount}
+            pending={updateMutation.isPending}
+            onSubmit={(values) =>
+              updateMutation.mutateAsync({ id: editingAccount.id, data: values })
+            }
+            onCancel={() => setEditingId(null)}
+          />
+        ) : null}
+      </Modal>
+
       <Panel>
         <AccountsTable
           accounts={accountList}
           stale={stale}
-          editingId={editingId}
           onEdit={setEditingId}
-          onCancelEdit={() => setEditingId(null)}
-          updatePending={updateMutation.isPending}
-          onUpdate={(id, values) => updateMutation.mutateAsync({ id, data: values })}
-          deletingId={deleteMutation.isPending ? (deleteMutation.variables?.id ?? null) : null}
-          onDelete={(id) => setDeleteTarget(id)}
+          deletingId={remove.pendingId ?? null}
+          onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
         />
       </Panel>
@@ -112,12 +126,7 @@ export function AccountsPage() {
         </QueryBoundary>
       ) : null}
 
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={accountList.find((account) => account.id === deleteTarget)?.name ?? undefined}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
 }

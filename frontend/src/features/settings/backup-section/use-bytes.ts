@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
+import { useNumberFormat } from "@/hooks/use-formatters";
 import { splitBytes } from "./format-bytes";
 
 export function useBytes() {
-  const { t, i18n } = useTranslation();
-  const number = new Intl.NumberFormat(i18n.language, { maximumFractionDigits: 1 });
+  const { t } = useTranslation();
+  const number = useNumberFormat(1);
 
   return function formatBytes(bytes: number) {
     const { value, unit } = splitBytes(bytes);

@@ -1,16 +1,23 @@
 import { HttpHandler, HttpResponse, delay } from "msw";
 import type { HttpResponseResolver } from "msw";
-import type { ProblemDetails } from "@/api/generated/model";
+import { z } from "zod";
+import { Currency, type ProblemDetails } from "@/api/generated/model";
 import { notFoundProblem } from "@/storybook/fixtures";
 
 export type Body = Record<string, unknown>;
 
 const PROBLEM_HEADERS = { "Content-Type": "application/problem+json" };
 
+export const currencyCode = z.enum(Currency);
+
+function isBody(value: unknown): value is Body {
+  return typeof value === "object" && value !== null;
+}
+
 export async function readBody(request: Request): Promise<Body> {
   try {
     const body: unknown = await request.clone().json();
-    return typeof body === "object" && body !== null ? (body as Body) : {};
+    return isBody(body) ? body : {};
   } catch {
     return {};
   }

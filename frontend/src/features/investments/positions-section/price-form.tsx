@@ -1,15 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import type { SecurityResponse } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
 import { FieldError } from "@/components/ui/field-error";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
 import { useToday } from "@/hooks/use-settings";
-import { submitToServer } from "@/lib/form-server-errors";
 import { quantity, requiredValue } from "@/lib/validation";
 
 export interface PriceFormValues {
@@ -39,23 +37,15 @@ export function PriceForm({ security, pending, error, onSubmit, onCancel }: Read
     lastPriceDate: today,
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => submitToServer(submission, () => onSubmit(submission.value)),
+    schema,
+    submit: (value) => onSubmit(value),
   });
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="lastPrice">
           {(field) => (
             <div className="space-y-1.5">
@@ -89,13 +79,13 @@ export function PriceForm({ security, pending, error, onSubmit, onCancel }: Read
 
         <FormError error={error} />
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={pending}>{t("actions.save")}</form.SubmitButton>
-        </div>
-      </FormGrid>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={t("actions.save")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

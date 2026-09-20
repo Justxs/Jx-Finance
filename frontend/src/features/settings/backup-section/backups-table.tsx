@@ -2,8 +2,8 @@ import { Download, History, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { getDownloadBackupUrl } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { staleVariants } from "@/components/ui/stale-region";
+import { Button, buttonVariants } from "@/components/ui/button/button";
+import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tag } from "@/components/ui/tag";
-import { useDateTime } from "@/hooks/use-formatters";
+} from "@/components/ui/table/table";
+import { Tag } from "@/components/ui/tag/tag";
+import { useDateTime, useNumberFormat } from "@/hooks/use-formatters";
 import { useBytes } from "./use-bytes";
 
 interface Props {
@@ -31,10 +31,10 @@ export function BackupsTable({
   onRestore,
   onDelete,
 }: Readonly<Props>) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const formatDateTime = useDateTime();
   const formatBytes = useBytes();
-  const count = new Intl.NumberFormat(i18n.language);
+  const count = useNumberFormat();
 
   if (backups.length === 0) {
     return <p className="text-sm text-muted-foreground">{t("backup.empty")}</p>;
@@ -86,16 +86,14 @@ export function BackupsTable({
                     title={t("backup.download")}
                     className={buttonVariants({
                       variant: "ghost",
-                      size: "icon",
-                      className: "size-8",
+                      size: "icon-sm",
                     })}
                   >
                     <Download />
                   </a>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8"
+                    size="icon-sm"
                     disabled={busyId !== null}
                     onClick={() => onEditNote(backup)}
                     aria-label={`${t("backup.editNote")}: ${taken}`}
@@ -105,8 +103,7 @@ export function BackupsTable({
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8"
+                    size="icon-sm"
                     disabled={!backup.restorable || busyId !== null}
                     onClick={() => onRestore(backup)}
                     aria-label={`${t("backup.restoreAction")}: ${taken}`}
@@ -118,8 +115,7 @@ export function BackupsTable({
                   </Button>
                   <Button
                     variant="ghost"
-                    size="icon"
-                    className="size-8"
+                    size="icon-sm"
                     disabled={busyId !== null}
                     onClick={() => onDelete(backup)}
                     aria-label={`${t("backup.delete")}: ${taken}`}

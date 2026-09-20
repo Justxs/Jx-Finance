@@ -1,6 +1,8 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Common.Errors;
+using JxFinance.Common.References;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -18,6 +20,7 @@ namespace JxFinance.Endpoints.Budgets.Services;
 public sealed class BudgetService(
     AppDbContext db,
     ICategoryAttributionService attributions,
+    IReferenceGuard references,
     IClock clock,
     BudgetMapper mapper)
     : IBudgetService
@@ -56,7 +59,7 @@ public sealed class BudgetService(
         var categoryError = await ValidateCategoryAsync(request.CategoryId, cancellationToken);
         if (categoryError is not null)
         {
-            return Result<BudgetResponse>.Failure(categoryError);
+            return categoryError;
         }
 
         var budget = mapper.ToEntity(request);
@@ -75,49 +78,33 @@ public sealed class BudgetService(
         var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken);
         if (budget is null)
         {
-            return Result<BudgetResponse>.Failure(ErrorCodes.ResourceNotFound, "Budget not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Budget not found.");
         }
 
         var categoryError = await ValidateCategoryAsync(request.CategoryId, cancellationToken);
         if (categoryError is not null)
         {
-            return Result<BudgetResponse>.Failure(categoryError);
+            return categoryError;
         }
 
-        mapper.UpdateEntity(request, budget);
+        mapper.Apply(request, budget);
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(budget, cancellationToken);
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var budgetId = new BudgetId(id);
-        var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken);
-        if (budget is null)
-        {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "Budget not found.");
-        }
-
-        db.Budgets.Remove(budget);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return Result<Guid>.Success(id);
+        return db.DeleteOrNotFoundAsync<Budget>(id, b => b.Id == budgetId, "Budget not found.", cancellationToken);
     }
 
-    private async Task<DomainError?> ValidateCategoryAsync(Guid categoryId, CancellationToken cancellationToken)
-    {
-        var typedCategoryId = new CategoryId(categoryId);
-        var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == typedCategoryId, cancellationToken);
-        if (category is null)
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
-        }
-
-        return category.Type != FlowType.Expense
-            ? new DomainError(ErrorCodes.CategoryWrongType, "Budgets can only be set on expense categories.")
-            : null;
-    }
+    private Task<DomainError?> ValidateCategoryAsync(Guid categoryId, CancellationToken cancellationToken) =>
+        references.CategoryOfTypeAsync(
+            new CategoryId(categoryId),
+            FlowType.Expense,
+            "Budgets can only be set on expense categories.",
+            cancellationToken);
 
     private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken)
     {
@@ -131,6 +118,6 @@ public sealed class BudgetService(
 
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == budget.CategoryId, cancellationToken);
 
-        return Result<BudgetResponse>.Success(mapper.FromEntity(budget, category?.Name, spent));
+        return mapper.FromEntity(budget, category?.Name, spent);
     }
 }

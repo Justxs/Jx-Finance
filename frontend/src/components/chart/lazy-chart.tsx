@@ -1,5 +1,5 @@
 import { type ComponentType, lazy, Suspense } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 
 export function lazyChart<TProps extends object>(
   load: () => Promise<ComponentType<TProps>>,

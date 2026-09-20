@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
-import { accounts, brokerAccount } from "@/storybook/fixtures";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { accounts, brokerAccount, investmentTransactions, splitEntry } from "@/storybook/fixtures";
 import {
   errorHandlers,
   handlers,
@@ -11,7 +11,6 @@ import {
   loadingHandlers,
 } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
-import { investmentTransactions, splitEntry } from "@/storybook/investment-fixtures";
 import { ActivitySection } from "./activity-section";
 
 const meta = {

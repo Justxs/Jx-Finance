@@ -11,16 +11,16 @@ import {
   type SecurityResponse,
 } from "@/api/generated/model";
 import { createInvestmentTransactionBodyDescriptionMax } from "@/api/schemas/investments/investments.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
+import { MoneyPairField, useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Label } from "@/components/ui/label";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Label } from "@/components/ui/label/label";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { submitToServer } from "@/lib/form-server-errors";
+import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
 import {
   isNonNegativeMoney,
@@ -187,29 +187,26 @@ export function InvestmentEntryForm({
         description: "",
       };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
+    schema,
+    submit: (value) => {
       const trade = isTrade(value.type);
       const cash = usesAmount(value.type);
       const securityId = value.securityId || null;
 
-      return submitToServer(submission, () =>
-        onSubmit({
-          accountId: value.accountId,
-          type: value.type,
-          date: value.date,
-          securityId,
-          quantity: cash ? null : value.quantity,
-          price: trade ? value.price : null,
-          fee: trade && value.fee.trim() !== "" ? value.fee : null,
-          amount: cash ? value.amount : null,
-          currency: cash && securityId === null ? value.currency : null,
-          description: value.description.trim() || null,
-        }),
-      );
+      return onSubmit({
+        accountId: value.accountId,
+        type: value.type,
+        date: value.date,
+        securityId,
+        quantity: cash ? null : value.quantity,
+        price: trade ? value.price : null,
+        fee: trade && value.fee.trim() !== "" ? value.fee : null,
+        amount: cash ? value.amount : null,
+        currency: cash && securityId === null ? value.currency : null,
+        description: value.description.trim() || null,
+      });
     },
   });
 
@@ -219,15 +216,7 @@ export function InvestmentEntryForm({
 
   return (
     <form.AppForm>
-      <FormGrid
-        as="form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-      >
+      <form.FormShell as={FormGrid}>
         <form.Field name="type">
           {(field) => (
             <field.SelectFieldControl
@@ -251,7 +240,7 @@ export function InvestmentEntryForm({
               id="entry-account"
               label={t("transactions.account")}
               className="col-span-full"
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              options={namedOptions(accounts)}
               onValueChange={(value) => {
                 const next = accounts.find((account) => account.id === value);
                 if (next) {
@@ -386,20 +375,13 @@ export function InvestmentEntryForm({
                     }
 
                     return (
-                      <form.Field name="currency">
-                        {(currencyField) => (
-                          <form.Field name="amount">
-                            {(field) => (
-                              <field.MoneyAmountField
-                                id="entry-amount"
-                                label={t("transactions.amount")}
-                                currencyLabel={t("investments.entry.currency")}
-                                currencyField={currencyField}
-                              />
-                            )}
-                          </form.Field>
-                        )}
-                      </form.Field>
+                      <MoneyPairField
+                        form={form}
+                        fields={{ amount: "amount", currency: "currency" }}
+                        id="entry-amount"
+                        label={t("transactions.amount")}
+                        currencyLabel={t("investments.entry.currency")}
+                      />
                     );
                   }}
                 </form.Subscribe>
@@ -436,16 +418,12 @@ export function InvestmentEntryForm({
 
         <FormError error={serverError} />
 
-        <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
-          {onCancel ? (
-            <Button type="button" variant="outline" onClick={onCancel}>
-              {t("actions.cancel")}
-            </Button>
-          ) : null}
-          <form.SubmitButton pending={pending}>
-            {editing ? t("actions.save") : t("investments.entry.submit")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={editing ? t("actions.save") : t("investments.entry.submit")}
+          onCancel={onCancel}
+        />
 
         <SecurityModal
           open={securityOpen}
@@ -455,7 +433,7 @@ export function InvestmentEntryForm({
             form.setFieldValue("securityId", security.id);
           }}
         />
-      </FormGrid>
+      </form.FormShell>
     </form.AppForm>
   );
 }

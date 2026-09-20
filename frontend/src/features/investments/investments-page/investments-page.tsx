@@ -4,23 +4,24 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense, usePortfolioSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
-import { PageHeader } from "@/components/page-header";
-import { QueryBoundary } from "@/components/query-boundary";
-import { SelectField } from "@/components/select-field";
-import { Button } from "@/components/ui/button";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton";
-import { StaleRegion } from "@/components/ui/stale-region";
+import { PageHeader } from "@/components/page-header/page-header";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
+import { Section, SectionTitle } from "@/components/ui/section/section";
+import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { ActivitySection } from "../activity-section";
-import { AllocationSection } from "../allocation-section";
-import { BrokerImportDialog } from "../broker-import-dialog";
-import { IncomeByYear } from "../income-by-year";
+import { namedOptions } from "@/lib/options";
+import { ActivitySection } from "../activity-section/activity-section";
+import { AllocationSection } from "../allocation-section/allocation-section";
+import { BrokerImportDialog } from "../broker-import-dialog/broker-import-dialog";
+import { IncomeByYear } from "../income-by-year/income-by-year";
 import { InvestmentEntryModal } from "../investment-entry-form";
 import { portfolioParams } from "../investment-queries";
-import { PortfolioSummary } from "../portfolio-summary";
+import { PortfolioSummary } from "../portfolio-summary/portfolio-summary";
 import { PositionsSection } from "../positions-section";
-import { SecuritiesDialog } from "../securities-dialog";
+import { SecuritiesDialog } from "../securities-dialog/securities-dialog";
 
 interface OverviewProps {
   accounts: readonly AccountResponse[];
@@ -130,10 +131,7 @@ export function InvestmentsPage() {
             onChange={(value) =>
               void navigate({ search: { accountId: value || undefined }, replace: true })
             }
-            options={[
-              { value: "", label: t("investments.allAccounts") },
-              ...accountList.map((account) => ({ value: account.id, label: account.name })),
-            ]}
+            options={namedOptions(accountList, t("investments.allAccounts"))}
           />
         </div>
       ) : null}

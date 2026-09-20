@@ -1,21 +1,24 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
   useAccountsSuspense,
   useCategoriesSuspense,
   useTransactionsSuspense,
 } from "@/api/generated";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Rows } from "@/components/ui/rows";
-import { RowsSkeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
+import { TextLink } from "@/components/ui/text-link/text-link";
 import {
   TransactionAmount,
   transactionCategoryLabel,
   transactionName,
 } from "@/features/transactions/transaction-amount";
+import { useShortDay } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
+import { nameById } from "@/lib/options";
 import { recentTransactionsParams } from "../dashboard-queries";
-import { DashboardSection } from "../dashboard-section";
+import { DashboardSection } from "../dashboard-section/dashboard-section";
 
 function FirstRunSteps() {
   const { t } = useTranslation();
@@ -39,12 +42,7 @@ function FirstRunSteps() {
       <ol className="mt-2 list-decimal space-y-1 pl-5 marker:text-muted-foreground marker:tabular-nums">
         {steps.map((step) => (
           <li key={step.to}>
-            <Link
-              to={step.to}
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              {t(step.label)}
-            </Link>{" "}
+            <TextLink to={step.to}>{t(step.label)}</TextLink>{" "}
             <span className="text-muted-foreground">{t(step.hint)}</span>
           </li>
         ))}
@@ -54,15 +52,15 @@ function FirstRunSteps() {
 }
 
 function RecentRows() {
-  const { t, i18n } = useTranslation();
-  const dayFormat = new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" });
+  const { t } = useTranslation();
+  const dayFormat = useShortDay();
 
   const recent = useTransactionsSuspense(recentTransactionsParams);
   const categories = useCategoriesSuspense();
   const accounts = useAccountsSuspense();
 
   const categoryById = new Map(categories.data.map((c) => [c.id, c]));
-  const accountNames = new Map(accounts.data.map((a) => [a.id, a.name]));
+  const accountNames = nameById(accounts.data);
   const recentItems = recent.data.items;
 
   function formatDay(value: string) {
@@ -74,7 +72,7 @@ function RecentRows() {
     return accounts.data.length === 0 ? (
       <FirstRunSteps />
     ) : (
-      <p className="py-6 text-sm text-muted-foreground">{t("dashboard.empty")}</p>
+      <EmptyText>{t("dashboard.empty")}</EmptyText>
     );
   }
 

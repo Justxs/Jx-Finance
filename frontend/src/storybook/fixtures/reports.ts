@@ -3,14 +3,8 @@ import type {
   ReportSummaryResponse,
   ReportTrendPoint,
 } from "@/api/generated/model";
-import {
-  FIXTURE_MONTH_END,
-  FIXTURE_MONTH_START,
-  FIXTURE_YEAR_START,
-  fromCents,
-  ids,
-  totalOf,
-} from "./base";
+import { fromCents } from "@/lib/money";
+import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, FIXTURE_YEAR_START, ids, totalOf } from "./base";
 import { categories } from "./categories";
 import { buildCategoryBreakdownItems, monthlyTrendItems } from "./dashboard";
 import { sumByType, transactions, transactionsBetween } from "./transactions";

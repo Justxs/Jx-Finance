@@ -81,12 +81,12 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var identityResult = await userManager.CreateAsync(user, request.Password);
         if (!identityResult.Succeeded)
         {
-            return Result<UserProfileResponse>.Failure(identityResult.ToDomainError());
+            return identityResult.ToDomainError();
         }
 
         await userManager.AddToRoleAsync(user, request.Role);
-        await DevDataSeeder.SeedUserCategoriesAsync(db, user.Id, cancellationToken);
-        return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
+        await StarterCategories.SeedAsync(db, user.Id, cancellationToken);
+        return await authService.ToProfileAsync(user);
     }
 
     public async Task<Result<UserProfileResponse>> ChangeRoleAsync(
@@ -97,19 +97,19 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
     {
         if (id == currentUserId)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.UserSelfChange, "You cannot change your own role.");
+            return new DomainError(ErrorCodes.UserSelfChange, "You cannot change your own role.");
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         if (request.Role != AppRoles.Admin && await IsLastAdministratorAsync(id, cancellationToken))
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.UserLastAdministrator, "The last administrator cannot be demoted.");
+            return new DomainError(ErrorCodes.UserLastAdministrator, "The last administrator cannot be demoted.");
         }
 
         var currentRoles = await userManager.GetRolesAsync(user);
@@ -118,26 +118,26 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
 
         await userManager.UpdateSecurityStampAsync(user);
         await transaction.CommitAsync(cancellationToken);
-        return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
+        return await authService.ToProfileAsync(user);
     }
 
     public async Task<Result<Guid>> DeactivateAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken)
     {
         if (id == currentUserId)
         {
-            return Result<Guid>.Failure(ErrorCodes.UserSelfChange, "You cannot deactivate your own account.");
+            return new DomainError(ErrorCodes.UserSelfChange, "You cannot deactivate your own account.");
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         if (await IsLastAdministratorAsync(id, cancellationToken))
         {
-            return Result<Guid>.Failure(ErrorCodes.UserLastAdministrator, "The last administrator cannot be deactivated.");
+            return new DomainError(ErrorCodes.UserLastAdministrator, "The last administrator cannot be deactivated.");
         }
 
         user.LockoutEnabled = true;
@@ -145,13 +145,13 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         await userManager.UpdateSecurityStampAsync(user);
         await transaction.CommitAsync(cancellationToken);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     private async Task<IDbContextTransaction> BeginAdministratorChangeAsync(CancellationToken cancellationToken)
     {
         var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192437)", cancellationToken);
+        await db.Database.LockAsync(AppLock.AdministratorChange, cancellationToken);
         return transaction;
     }
 
@@ -171,19 +171,19 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<Guid>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         if (!user.IsDeactivated)
         {
-            return Result<Guid>.Success(id);
+            return id;
         }
 
         await userManager.SetLockoutEndDateAsync(user, null);
         await userManager.ResetAccessFailedCountAsync(user);
         await userManager.UpdateSecurityStampAsync(user);
 
-        return Result<Guid>.Success(id);
+        return id;
     }
 
     public async Task<Result<UserProfileResponse>> ResetPasswordAsync(
@@ -194,25 +194,25 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
     {
         if (id == currentUserId)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.UserSelfChange, "Change your own password on your profile.");
+            return new DomainError(ErrorCodes.UserSelfChange, "Change your own password on your profile.");
         }
 
         var administrator = await userManager.Users.FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
         if (administrator is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.AccessForbidden, "Only administrators can reset a password.");
+            return new DomainError(ErrorCodes.AccessForbidden, "Only administrators can reset a password.");
         }
 
         var confirmed = await authService.ConfirmPasswordAsync(administrator, request.CurrentPassword, ErrorCodes.PasswordIncorrect);
         if (confirmed.IsFailure)
         {
-            return Result<UserProfileResponse>.FailureFrom(confirmed);
+            return confirmed.Error;
         }
 
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
         if (user is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -220,7 +220,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var passwordResult = await userManager.ResetPasswordAsync(user, token, request.NewPassword);
         if (!passwordResult.Succeeded)
         {
-            return Result<UserProfileResponse>.Failure(passwordResult.ToDomainError());
+            return passwordResult.ToDomainError();
         }
 
         if (request.ResetTwoFactor)
@@ -239,7 +239,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         await userManager.UpdateSecurityStampAsync(user);
         await transaction.CommitAsync(cancellationToken);
 
-        return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
+        return await authService.ToProfileAsync(user);
     }
 
     public async Task<Result<UserProfileResponse>> UpdateOwnProfileAsync(
@@ -250,7 +250,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user is null)
         {
-            return Result<UserProfileResponse>.Failure(ErrorCodes.ResourceNotFound, "User not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
         }
 
         if (request.NewPassword is not null)
@@ -258,7 +258,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
             var confirmed = await authService.ConfirmPasswordAsync(user, request.CurrentPassword, ErrorCodes.PasswordIncorrect);
             if (confirmed.IsFailure)
             {
-                return Result<UserProfileResponse>.FailureFrom(confirmed);
+                return confirmed.Error;
             }
         }
 
@@ -266,7 +266,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
         user.DisplayName = request.DisplayName;
         var profileResult = await userManager.UpdateAsync(user);
         if (!profileResult.Succeeded)
-            return Result<UserProfileResponse>.Failure(profileResult.ToDomainError());
+            return profileResult.ToDomainError();
 
         if (request.NewPassword is not null)
         {
@@ -276,11 +276,11 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
                 request.NewPassword);
             if (!passwordResult.Succeeded)
             {
-                return Result<UserProfileResponse>.Failure(passwordResult.ToDomainError());
+                return passwordResult.ToDomainError();
             }
         }
 
         await transaction.CommitAsync(cancellationToken);
-        return Result<UserProfileResponse>.Success(await authService.ToProfileAsync(user));
+        return await authService.ToProfileAsync(user);
     }
 }

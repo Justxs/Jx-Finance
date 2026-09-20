@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { lt } from "date-fns/locale";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
+import { lt } from "react-day-picker/locale";
 import { Calendar } from "./calendar";
 
 const TODAY = new Date(2026, 8, 18);

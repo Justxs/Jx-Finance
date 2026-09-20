@@ -13,4 +13,4 @@ public sealed record UpdateTransactionRequest(
     DateOnly Date,
     string? Description,
     IReadOnlyList<TransactionLineRequest>? Lines,
-    Currency? Currency = null);
+    Currency? Currency = null) : ITransactionInput;

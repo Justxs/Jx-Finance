@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { Input } from "../input";
-import { Label } from "../label";
+import { Input } from "../input/input";
+import { Label } from "../label/label";
 import { FormGrid } from "./form-grid";
 
 const meta = {

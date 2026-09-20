@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { HoldingResponse } from "@/api/generated/model";
-import { ShareBars } from "@/components/share-bars";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { ShareBars } from "@/components/share-bars/share-bars";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 
 const MAX_ROWS = 8;
 

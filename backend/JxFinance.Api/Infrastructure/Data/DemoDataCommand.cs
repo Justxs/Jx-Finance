@@ -43,12 +43,12 @@ public static class DemoDataCommand
         if (await db.Accounts.IgnoreQueryFilters().AnyAsync(a => a.UserId == user.Id))
             throw new InvalidOperationException("This user already has accounts. Demo data is only added to an empty user; run 'just db-reset' for a clean database.");
 
-        await DevDataSeeder.SeedUserCategoriesAsync(db, user.Id, CancellationToken.None);
+        await StarterCategories.SeedAsync(db, user.Id, CancellationToken.None);
         var categories = await db.Categories.IgnoreQueryFilters()
             .Where(c => c.UserId == user.Id && !c.IsDeleted)
             .ToDictionaryAsync(c => c.Name, c => c.Id);
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = scope.ServiceProvider.GetRequiredService<IClock>().Today;
         var firstMonth = new DateOnly(today.Year, today.Month, 1).AddMonths(1 - Months);
 
         var checking = NewAccount(user.Id, "Main account", AccountType.Checking, 1250.00m);

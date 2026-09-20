@@ -17,21 +17,21 @@ import {
   navLinkActiveClass,
   navLinkClass,
   visibleNav,
-} from "@/components/app-sidebar";
-import { Brand } from "@/components/brand";
-import { LanguageToggle } from "@/components/language-toggle";
-import { LogoutButton } from "@/components/logout-button";
+} from "@/components/app-sidebar/app-sidebar";
+import { Brand } from "@/components/brand/brand";
+import { LanguageToggle } from "@/components/language-toggle/language-toggle";
+import { LogoutButton } from "@/components/logout-button/logout-button";
 import {
   NotificationBell,
   NotificationBellUnavailable,
   unreadParams,
-} from "@/components/notification-bell";
-import { QueryBoundary } from "@/components/query-boundary";
-import { RouteError } from "@/components/route-error";
-import { RoutePending } from "@/components/route-pending";
-import { Splash } from "@/components/splash";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@/components/notification-bell/notification-bell";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { RouteError } from "@/components/route-error/route-error";
+import { RoutePending } from "@/components/route-pending/route-pending";
+import { Splash } from "@/components/splash/splash";
+import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { type RouterContext, warm } from "@/lib/route-prefetch";

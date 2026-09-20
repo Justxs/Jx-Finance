@@ -3,7 +3,7 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Domain.Investments;
 
-public sealed class InvestmentTransaction : OwnableEntity
+public sealed class InvestmentTransaction : OwnableEntity, IAccountScoped
 {
     public InvestmentTransactionId Id { get; set; } = InvestmentTransactionId.New();
     public AccountId AccountId { get; set; }

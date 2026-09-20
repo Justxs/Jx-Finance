@@ -9,7 +9,11 @@ afterEach(() => {
 });
 
 function radio(value: string) {
-  return screen.getAllByRole("radio").find((item) => item.getAttribute("value") === value);
+  const found = screen.getAllByRole("radio").find((item) => item.getAttribute("value") === value);
+  if (!found) {
+    throw new Error(`no radio with the value ${value}`);
+  }
+  return found;
 }
 
 test("lists every palette with the current one checked", () => {
@@ -24,7 +28,7 @@ test("lists every palette with the current one checked", () => {
 test("choosing a palette applies it to the document", async () => {
   render(<PalettePicker />);
 
-  await userEvent.click(radio("plum") as HTMLElement);
+  await userEvent.click(radio("plum"));
 
   expect(radio("plum")).toBeChecked();
   expect(document.documentElement).toHaveAttribute("data-palette", "plum");

@@ -3,9 +3,10 @@ import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { Modal } from "@/components/modal";
-import { PageHeader } from "@/components/page-header";
-import { Button } from "@/components/ui/button";
-import { CreateHouseholdForm } from "../create-household-form";
+import { PageHeader } from "@/components/page-header/page-header";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { CreateHouseholdForm } from "../create-household-form/create-household-form";
 import { HouseholdCard } from "../household-card";
 
 export function HouseholdsPage() {
@@ -17,7 +18,7 @@ export function HouseholdsPage() {
 
   let content: ReactNode;
   if (householdList.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{t("households.empty")}</p>;
+    content = <EmptyText>{t("households.empty")}</EmptyText>;
   } else {
     content = (
       <div className="space-y-5">

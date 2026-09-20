@@ -51,17 +51,15 @@ migrate-script:
 
 # Export the API contract from the backend build (no running API or database needed) into frontend/openapi.json and regenerate the frontend client, MSW handlers and zod schemas.
 gen:
-    $env:ConnectionStrings__Default = "{{export_connection}}"; dotnet run --project backend/JxFinance.Api -c Release --export-openapi-docs true
-    Copy-Item backend/JxFinance.Api/wwwroot/openapi/v1.json frontend/openapi.json
-    nub run --cwd frontend orval
+    node scripts/gen.mjs
 
 # Regenerate only the frontend code from the contract already in frontend/openapi.json.
 gen-client:
     nub run --cwd frontend orval
 
 # Fail when the committed contract or generated client differs from what the backend produces now.
-gen-check: gen
-    if (git status --porcelain -- frontend/openapi.json frontend/src/api/generated frontend/src/api/schemas) { git status --short -- frontend/openapi.json frontend/src/api/generated frontend/src/api/schemas; throw "API contract or generated client is out of date; commit the result of just gen." }
+gen-check:
+    node scripts/gen.mjs --check
 
 # Scaffold a backend endpoint slice: just new-endpoint Goals ArchiveGoal post "goals/{id}/archive".
 new-endpoint tag name verb route:
@@ -89,7 +87,7 @@ check-frontend:
 
 # Fail when backend code is not formatted or breaks a code style rule.
 format-check-backend:
-    dotnet format backend/JxFinance.slnx --verify-no-changes --exclude backend/JxFinance.Api/Infrastructure/Data/Migrations
+    node scripts/format-backend.mjs --check
 
 # Install the git hooks from lefthook.yml.
 hooks:
@@ -124,7 +122,7 @@ e2e-install:
 fix:
     nub run --cwd frontend lint --fix
     nub run --cwd frontend format
-    dotnet format backend/JxFinance.slnx --exclude backend/JxFinance.Api/Infrastructure/Data/Migrations
+    node scripts/format-backend.mjs
 
 # Build and start the full Docker stack.
 up:
@@ -144,6 +142,4 @@ update-images *flags:
 
 # Fail on a NuGet package or a shipped frontend package with a known vulnerability; development-only frontend packages are listed without failing.
 audit:
-    $report = dotnet list backend/JxFinance.slnx package --vulnerable --include-transitive | Out-String; Write-Host $report; if ($LASTEXITCODE -ne 0 -or $report -match "has the following vulnerable packages") { throw "A NuGet package with a known vulnerability is referenced." }
-    nub audit -C frontend --prod --audit-level moderate
-    -nub audit -C frontend --dev --audit-level moderate
+    node scripts/audit.mjs

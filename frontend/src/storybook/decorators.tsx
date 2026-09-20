@@ -11,8 +11,10 @@ import {
 } from "@tanstack/react-router";
 import { type FunctionComponent, useState } from "react";
 import { toast } from "sonner";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { RoutePending } from "@/components/route-pending/route-pending";
+import { Toaster } from "@/components/ui/sonner/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { pageViewTransition } from "@/lib/page-transition";
 import { createToastingMutationCache } from "@/lib/query-client";
@@ -43,6 +45,41 @@ const STORY_ROUTES = [
   { path: "/login" },
   { path: "/setup" },
 ] as const;
+
+const STORY_WIDTHS = {
+  field: "w-72",
+  card: "w-80",
+  form: "w-[min(32rem,calc(100vw-3rem))]",
+  panel: "w-[min(40rem,90vw)]",
+  wide: "w-[min(48rem,calc(100vw-3rem))]",
+} as const;
+
+type StoryWidth = keyof typeof STORY_WIDTHS;
+
+function isStoryWidth(size: string): size is StoryWidth {
+  return size in STORY_WIDTHS;
+}
+
+export function withWidth(size: StoryWidth | (string & {})): Decorator {
+  const className = isStoryWidth(size) ? STORY_WIDTHS[size] : size;
+  return function withStoryWidth(Story) {
+    return (
+      <div className={className}>
+        <Story />
+      </div>
+    );
+  };
+}
+
+export function withPageFrame(...[Story]: Parameters<Decorator>) {
+  return (
+    <div className="mx-auto max-w-5xl p-4 sm:p-8">
+      <QueryBoundary fallback={<RoutePending />}>
+        <Story />
+      </QueryBoundary>
+    </div>
+  );
+}
 
 const storyQueryClients = new Set<QueryClient>();
 
@@ -87,7 +124,7 @@ function ProviderTree({
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <RouterProvider router={router as never} />
+        <RouterProvider router={router} />
       </TooltipProvider>
       <Toaster />
     </QueryClientProvider>
@@ -104,11 +141,15 @@ function StoryProviders({
   return <ProviderTree queryClient={queryClient} router={router} />;
 }
 
+function storyRoute(route: unknown) {
+  return typeof route === "string" ? route : "/";
+}
+
 export function withAppProviders(...[Story, context]: Parameters<Decorator>) {
   return context.parameters.providers === "none" ? (
     <Story />
   ) : (
-    <StoryProviders Story={Story} initialPath={(context.parameters.route as string) ?? "/"} />
+    <StoryProviders Story={Story} initialPath={storyRoute(context.parameters.route)} />
   );
 }
 

@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 
 async function saveWithAmount(amount: string) {
   const dialog = within(await openedDialog());
-  fireEvent.change(dialog.getByLabelText("Amount"), { target: { value: amount } });
+  await fireEvent.change(dialog.getByLabelText("Amount"), { target: { value: amount } });
   await userEvent.click(dialog.getByRole("button", { name: "Save" }));
   return dialog;
 }

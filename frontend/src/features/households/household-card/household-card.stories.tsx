@@ -3,6 +3,7 @@ import {
   getRemoveMemberMockHandler,
   getUpdateHouseholdMockHandler,
 } from "@/api/generated/households/households.msw";
+import { withWidth } from "@/storybook/decorators";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
 import { handlers, pending } from "@/storybook/handlers";
 import { HouseholdCard } from "./household-card";
@@ -12,11 +13,7 @@ const meta = {
   component: HouseholdCard,
   parameters: { route: "/households" },
   args: { household: familyHousehold },
-  render: (args) => (
-    <div className="w-[40rem] max-w-full">
-      <HouseholdCard {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[40rem] max-w-full")],
 } satisfies Meta<typeof HouseholdCard>;
 
 export default meta;
@@ -52,11 +49,7 @@ export const ManyMembers: Story = {
 
 export const NarrowOwnerView: Story = {
   args: { household: { ...gardenHousehold, myRole: "owner" } },
-  render: (args) => (
-    <div className="w-80">
-      <HouseholdCard {...args} />
-    </div>
-  ),
+  decorators: [withWidth("card")],
 };
 
 export const SlowMutations: Story = {

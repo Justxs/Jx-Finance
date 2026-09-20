@@ -10,7 +10,11 @@ afterEach(() => {
 });
 
 function radio(value: string) {
-  return screen.getAllByRole("radio").find((item) => item.getAttribute("value") === value);
+  const found = screen.getAllByRole("radio").find((item) => item.getAttribute("value") === value);
+  if (!found) {
+    throw new Error(`no radio with the value ${value}`);
+  }
+  return found;
 }
 
 test("lists every typeface and text size with the current ones checked", () => {
@@ -27,8 +31,8 @@ test("lists every typeface and text size with the current ones checked", () => {
 test("choosing a typeface and a size applies them to the document", async () => {
   render(<FontPicker />);
 
-  await userEvent.click(radio("system") as HTMLElement);
-  await userEvent.click(radio("large") as HTMLElement);
+  await userEvent.click(radio("system"));
+  await userEvent.click(radio("large"));
 
   expect(radio("system")).toBeChecked();
   expect(document.documentElement).toHaveAttribute("data-font", "system");

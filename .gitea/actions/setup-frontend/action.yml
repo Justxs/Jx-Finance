@@ -1,0 +1,25 @@
+name: Setup frontend
+description: Install nub and Node and the frontend packages from the lockfile.
+
+inputs:
+  install:
+    description: Run nub ci in frontend.
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup nub and Node
+      uses: nubjs/setup-nub@c7b970ec04655a2f0a111cd436cc182a3b660e7a # v0.6.0
+      with:
+        nub-version: "0.9.2"
+        node-version: 24
+        working-directory: frontend
+        cache: true
+        cache-dependency-path: frontend/nub.lock
+
+    - name: Install frontend packages
+      if: inputs.install == 'true'
+      shell: bash
+      working-directory: frontend
+      run: nub ci

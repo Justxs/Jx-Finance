@@ -3,14 +3,14 @@ import { z } from "zod";
 import { useCreateCategory, useHouseholdsSuspense } from "@/api/generated";
 import type { FlowType, Scope } from "@/api/generated/model";
 import { createCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { FormGrid } from "@/components/ui/form-grid";
-import { Label } from "@/components/ui/label";
-import { submitToServer } from "@/lib/form-server-errors";
-import { requiredText } from "@/lib/validation";
-import { IconPicker } from "../icon-picker";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { SharingFields } from "@/components/sharing-fields/sharing-fields";
+import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Label } from "@/components/ui/label/label";
+import { silent } from "@/lib/mutations";
+import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
+import { IconPicker } from "../icon-picker/icon-picker";
 
 interface FormValues {
   name: string;
@@ -30,22 +30,17 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
 
-  const schema = z
-    .object({
+  const schema = refineSharing(
+    z.object({
       name: requiredText(t, createCategoryBodyNameMax),
       type: z.enum(["income", "expense"]),
       icon: z.string().nullable(),
-      scope: z.enum(["personal", "shared"]),
-      householdId: z.string(),
-    })
-    .refine((value) => value.scope !== "shared" || value.householdId !== "", {
-      message: t("validation.required"),
-      path: ["householdId"],
-    });
+      ...sharingShape(),
+    }),
+    t,
+  );
 
-  const createMutation = useCreateCategory({
-    mutation: { meta: { silent: true }, onSuccess: onCreated },
-  });
+  const createMutation = useCreateCategory(silent({ onSuccess: onCreated }));
 
   const defaultValues: FormValues = {
     name: "",
@@ -55,37 +50,24 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
     householdId: "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        createMutation.mutateAsync({
-          data: {
-            name: value.name.trim(),
-            type: value.type,
-            icon: value.icon,
-            scope: value.scope,
-            householdId: value.scope === "shared" ? value.householdId : null,
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      createMutation.mutateAsync({
+        data: {
+          name: value.name.trim(),
+          type: value.type,
+          icon: value.icon,
+          scope: value.scope,
+          householdId: sharedHouseholdId(value),
+        },
+      }),
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <FormGrid>
           <form.Field name="name">
             {(field) => (
@@ -114,40 +96,12 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
 
         {householdList.length > 0 ? (
           <FormGrid>
-            <form.Field name="scope">
-              {(field) => (
-                <field.SelectFieldControl
-                  id="category-scope"
-                  label={t("sharing.scope")}
-                  options={[
-                    { value: "personal", label: t("sharing.personal") },
-                    { value: "shared", label: t("sharing.shared") },
-                  ]}
-                />
-              )}
-            </form.Field>
-
-            <form.Subscribe selector={(state) => state.values.scope}>
-              {(scope) =>
-                scope === "shared" ? (
-                  <form.Field name="householdId">
-                    {(field) => (
-                      <field.SelectFieldControl
-                        id="category-household"
-                        label={t("sharing.household")}
-                        options={[
-                          { value: "", label: t("sharing.selectHousehold") },
-                          ...householdList.map((household) => ({
-                            value: household.id,
-                            label: household.name,
-                          })),
-                        ]}
-                      />
-                    )}
-                  </form.Field>
-                ) : null
-              }
-            </form.Subscribe>
+            <SharingFields
+              form={form}
+              fields={{ scope: "scope", householdId: "householdId" }}
+              idPrefix="category"
+              households={householdList}
+            />
           </FormGrid>
         ) : null}
 
@@ -162,15 +116,12 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
 
         <FormError error={createMutation.error} />
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={createMutation.isPending}>
-            {t("actions.add")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={createMutation.isPending}
+          submitLabel={t("actions.add")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

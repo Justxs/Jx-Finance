@@ -1,5 +1,5 @@
 using System.Globalization;
-using JxFinance.Common.Settings;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
@@ -10,47 +10,24 @@ namespace JxFinance.Infrastructure.BackgroundJobs;
 
 public sealed class RecurringBillReminderJob(
     IServiceScopeFactory scopeFactory,
-    ILogger<RecurringBillReminderJob> logger) : BackgroundService
+    ILogger<RecurringBillReminderJob> logger) : PeriodicJob(scopeFactory, logger)
 {
     private const string RelatedType = "RecurringBill";
-    private static readonly TimeSpan Interval = TimeSpan.FromMinutes(15);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override string Name => "Recurring bill reminder scan";
+
+    protected override TimeSpan Interval => TimeSpan.FromMinutes(15);
+
+    protected override Feature? RequiredFeature => Feature.RecurringBills;
+
+    public Task ScanAsync(CancellationToken cancellationToken) => RunOnceAsync(cancellationToken);
+
+    protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
-        while (!stoppingToken.IsCancellationRequested)
-        {
-            try
-            {
-                await ScanAsync(stoppingToken);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                logger.LogError(ex, "Recurring bill reminder scan failed.");
-            }
-
-            try
-            {
-                await Task.Delay(Interval, stoppingToken);
-            }
-            catch (OperationCanceledException)
-            {
-                break;
-            }
-        }
-    }
-
-    public async Task ScanAsync(CancellationToken cancellationToken)
-    {
-        using var scope = scopeFactory.CreateScope();
-        if (!scope.ServiceProvider.GetRequiredService<IInstanceSettingsStore>().Current.IsEnabled(Feature.RecurringBills))
-        {
-            return;
-        }
-
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var clock = scope.ServiceProvider.GetRequiredService<IClock>();
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192435)", cancellationToken);
+        var db = services.GetRequiredService<AppDbContext>();
+        var clock = services.GetRequiredService<IClock>();
+        await using var transaction = await db.Database.BeginTransactionAsync(ct);
+        await db.Database.LockAsync(AppLock.RecurringBillReminders, ct);
 
         var today = clock.Today;
         var todayStartUtc = clock.StartOfDay(today);
@@ -58,7 +35,7 @@ public sealed class RecurringBillReminderJob(
         var dueBills = await db.RecurringBills
             .IgnoreQueryFilters()
             .Where(b => !b.IsDeleted && b.IsActive && b.NextDueDate <= today.AddDays(b.RemindDaysBefore))
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
         if (dueBills.Count == 0)
         {
             return;
@@ -72,7 +49,7 @@ public sealed class RecurringBillReminderJob(
                 && billIds.Contains(n.RelatedId)
                 && n.CreatedAt >= todayStartUtc)
             .Select(n => n.RelatedId!.Value)
-            .ToListAsync(cancellationToken);
+            .ToListAsync(ct);
         var remindedSet = remindedToday.ToHashSet();
 
         foreach (var bill in dueBills)
@@ -94,8 +71,7 @@ public sealed class RecurringBillReminderJob(
             });
         }
 
-        await db.SaveChangesAsync(cancellationToken);
-        await transaction.CommitAsync(cancellationToken);
+        await db.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
     }
-
 }

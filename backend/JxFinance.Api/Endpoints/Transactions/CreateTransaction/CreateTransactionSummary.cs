@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Transactions.CreateTransaction;
@@ -21,8 +22,8 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
             null);
         RequestParam(r => r.AccountId, "The account the money moved on; must be visible to you.");
         RequestParam(r => r.CategoryId, "Optional category. Ignored when lines are supplied.");
-        RequestParam(r => r.Type, "Income or Expense.");
-        RequestParam(r => r.Amount, "Decimal string with at most two decimal places, greater than zero.");
+        RequestParam(r => r.Type, SummaryText.FlowType);
+        RequestParam(r => r.Amount, SummaryText.PositiveMoney);
         RequestParam(r => r.Date, "The date the money moved, as YYYY-MM-DD.");
         RequestParam(r => r.Lines, "Optional split lines. Their amounts must sum to the transaction amount.");
         Responses[201] = "The transaction was created. The Location header points at it.";

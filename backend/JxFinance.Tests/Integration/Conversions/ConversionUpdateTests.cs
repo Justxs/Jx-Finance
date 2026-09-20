@@ -313,10 +313,6 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         Guid? FeeCategoryId,
         bool IsImported);
 
-    private sealed record BalanceDto(string Currency, string Amount);
-
-    private sealed record AccountDto(List<BalanceDto> Balances);
-
     private sealed record TransactionDto(
         Guid Id,
         Guid AccountId,
@@ -327,6 +323,4 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         string ReportingAmount,
         DateOnly Date,
         string? Description);
-
-    private sealed record PageDto<T>(List<T> Items, int Total);
 }

@@ -1,7 +1,7 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { Panel, SectionTitle } from "@/components/ui/section";
+import { Panel, SectionTitle } from "@/components/ui/section/section";
 
 interface Props {
   title: string;

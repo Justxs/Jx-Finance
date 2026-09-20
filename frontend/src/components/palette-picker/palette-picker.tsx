@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { palettes, usePalette } from "@/stores/theme-store";
 
 export function PalettePicker() {

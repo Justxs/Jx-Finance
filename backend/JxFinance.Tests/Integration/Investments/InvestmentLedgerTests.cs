@@ -14,10 +14,10 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var account = await CreateAccountAsync("5000.00", "investment", client: member);
         var other = await CreateAccountAsync("5000.00", "investment", client: member);
         var fund = await CreateSecurityAsync(member);
-        var buy = await RecordAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
-        var sell = await RecordAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-03", quantity = "4", price = "110" });
-        var interest = await RecordAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "1.50" });
-        await RecordAsync(member, new { accountId = other, type = "interest", date = "2026-06-02", amount = "9.99" });
+        var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "10", price = "100" });
+        var sell = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-03", quantity = "4", price = "110" });
+        var interest = await RecordInvestmentAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "1.50" });
+        await RecordInvestmentAsync(member, new { accountId = other, type = "interest", date = "2026-06-02", amount = "9.99" });
 
         var all = await ListAsync(member, $"accountId={account}");
         var bySecurity = await ListAsync(member, $"accountId={account}&securityId={fund}");
@@ -35,7 +35,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", "investment", client: member);
-        var buy = await RecordAsync(member, new { accountId = account, securityId = await CreateSecurityAsync(member), type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
+        var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = await CreateSecurityAsync(member), type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
         Assert.Equal("800.00", await CurrentBalanceAsync(account, member));
 
         var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}");
@@ -50,8 +50,8 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", "investment", client: member);
         var fund = await CreateSecurityAsync(member);
-        var buy = await RecordAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
-        await RecordAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-02", quantity = "2", price = "100" });
+        var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
+        await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-02", quantity = "2", price = "100" });
 
         var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}");
 
@@ -80,7 +80,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         using var member = await CreateUserClientAsync();
         var symbol = NewSymbol();
         var fund = (await PostAsync<IdDto>(member, "/api/investments/securities", new { symbol, name = "Fund", type = "etf", currency = "eur" })).Id;
-        await RecordAsync(member, new { accountId = await CreateAccountAsync("1000.00", "investment", client: member), securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+        await RecordInvestmentAsync(member, new { accountId = await CreateAccountAsync("1000.00", "investment", client: member), securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
 
         var response = await Client.PutAsJsonAsync($"/api/investments/securities/{fund}", new { symbol, name = "Fund", type = "etf", currency = "usd" });
 
@@ -103,21 +103,8 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         Assert.DoesNotContain(connections!, c => c.AccountId == broker);
     }
 
-    private static string NewSymbol() => $"T{Guid.NewGuid():N}"[..10].ToUpperInvariant();
-
-    private static async Task<Guid> CreateSecurityAsync(HttpClient member) =>
-        (await PostAsync<IdDto>(
-            member,
-            "/api/investments/securities",
-            new { symbol = NewSymbol(), name = "Test fund", type = "etf", currency = "eur" })).Id;
-
-    private static async Task<Guid> RecordAsync(HttpClient member, object entry) =>
-        (await PostAsync<IdDto>(member, "/api/investments/transactions", entry)).Id;
-
-    private static async Task<PageDto> ListAsync(HttpClient member, string query) =>
-        (await member.GetFromJsonAsync<PageDto>($"/api/investments/transactions?{query}"))!;
-
-    private sealed record PageDto(List<IdDto> Items, int Total);
+    private static async Task<PageDto<IdDto>> ListAsync(HttpClient member, string query) =>
+        (await member.GetFromJsonAsync<PageDto<IdDto>>($"/api/investments/transactions?{query}"))!;
 
     private sealed record ConnectionDto(Guid AccountId);
 }

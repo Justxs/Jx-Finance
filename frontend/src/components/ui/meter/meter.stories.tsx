@@ -1,17 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { Meter } from "./meter";
 
 const meta = {
   title: "UI/Meter",
   component: Meter,
   args: { value: 68.75, max: 120, label: "Transportas" },
-  decorators: [
-    (Story) => (
-      <div className="w-80">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("card")],
 } satisfies Meta<typeof Meter>;
 
 export default meta;

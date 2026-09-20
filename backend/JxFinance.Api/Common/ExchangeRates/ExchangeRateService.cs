@@ -65,13 +65,13 @@ public sealed class ExchangeRateService(
     {
         if (amount.Currency == to)
         {
-            return Result<decimal>.Success(amount.Amount);
+            return amount.Amount;
         }
 
         var table = await GetForDateAsync(date, cancellationToken);
         return !IsStale(table, date) && table.Convert(amount.Amount, amount.Currency, to) is { } converted
-            ? Result<decimal>.Success(converted)
-            : Result<decimal>.Failure(
+            ? converted
+            : new DomainError(
                 ErrorCodes.ExchangeRateUnavailable,
                 $"No exchange rate is available for {amount.Currency.ToCode()} to {to.ToCode()} on {date:yyyy-MM-dd}. Sync exchange rates and try again.");
     }

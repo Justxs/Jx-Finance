@@ -7,12 +7,12 @@ import {
   setupBodyPasswordMax,
   setupBodyPasswordMin,
 } from "@/api/schemas/setup/setup.zod";
-import { Brand } from "@/components/brand";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Card } from "@/components/ui/card";
+import { Brand } from "@/components/brand/brand";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { Card } from "@/components/ui/card/card";
 import { setSetupNeeded } from "@/lib/auth-gate";
-import { submitToServer } from "@/lib/form-server-errors";
+import { silent } from "@/lib/mutations";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
 
 interface FormValues {
@@ -31,34 +31,28 @@ export function SetupPage() {
     displayName: requiredText(t, setupBodyDisplayNameMax),
   });
 
-  const setupMutation = useSetup({
-    mutation: {
-      meta: { silent: true },
+  const setupMutation = useSetup(
+    silent({
       onSuccess: () => {
         setSetupNeeded(false);
-        navigate({ to: "/login" });
+        void navigate({ to: "/login" });
       },
-    },
-  });
+    }),
+  );
 
   const defaultValues: FormValues = { email: "", password: "", displayName: "" };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value } = submission;
-
-      return submitToServer(submission, () =>
-        setupMutation.mutateAsync({
-          data: {
-            email: value.email.trim(),
-            password: value.password,
-            displayName: value.displayName.trim(),
-          },
-        }),
-      );
-    },
+    schema,
+    submit: (value) =>
+      setupMutation.mutateAsync({
+        data: {
+          email: value.email.trim(),
+          password: value.password,
+          displayName: value.displayName.trim(),
+        },
+      }),
   });
 
   return (
@@ -71,15 +65,7 @@ export function SetupPage() {
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.setupSubtitle")}</p>
 
         <form.AppForm>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              void form.handleSubmit();
-            }}
-            noValidate
-            className="mt-6 space-y-4"
-          >
+          <form.FormShell className="mt-6 space-y-4">
             <form.Field name="displayName">
               {(field) => (
                 <field.TextField
@@ -118,7 +104,7 @@ export function SetupPage() {
             <form.SubmitButton pending={setupMutation.isPending} className="w-full">
               {t("auth.createAdmin")}
             </form.SubmitButton>
-          </form>
+          </form.FormShell>
         </form.AppForm>
       </Card>
     </div>

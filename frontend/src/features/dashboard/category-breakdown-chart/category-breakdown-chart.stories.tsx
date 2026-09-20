@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Card } from "@/components/ui/card/card";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { categoryBreakdown } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";

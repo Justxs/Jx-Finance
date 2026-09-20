@@ -4,23 +4,23 @@ using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Budgets.CreateBudget;
 using JxFinance.Endpoints.Budgets.Shared;
-using JxFinance.Endpoints.Budgets.UpdateBudget;
 
 namespace JxFinance.Endpoints.Budgets.Mappers;
 
 [RegisterService<BudgetMapper>(LifeTime.Singleton)]
 public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, Budget>
 {
-    public override Budget ToEntity(CreateBudgetRequest request) => new()
+    public override Budget ToEntity(CreateBudgetRequest request)
     {
-        CategoryId = new CategoryId(request.CategoryId),
-        LimitAmount = new Money(request.LimitAmount),
-    };
+        var budget = new Budget();
+        Apply(request, budget);
+        return budget;
+    }
 
-    public void UpdateEntity(UpdateBudgetRequest request, Budget budget)
+    public void Apply(IBudgetInput input, Budget budget)
     {
-        budget.CategoryId = new CategoryId(request.CategoryId);
-        budget.LimitAmount = new Money(request.LimitAmount);
+        budget.CategoryId = new CategoryId(input.CategoryId);
+        budget.LimitAmount = new Money(input.LimitAmount);
     }
 
     public BudgetResponse FromEntity(Budget budget, string? categoryName, decimal spent)

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 
 namespace JxFinance.Endpoints.Households.CreateHousehold;
 
@@ -12,6 +13,6 @@ public sealed class CreateHouseholdSummary : Summary<CreateHouseholdEndpoint, Cr
             + "other people sight of that data.";
         ExampleRequest = new CreateHouseholdRequest("Home");
         Responses[201] = "The household was created. The Location header points at it.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
     }
 }

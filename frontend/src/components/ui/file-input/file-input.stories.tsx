@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { withWidth } from "@/storybook/decorators";
 import { FileInput } from "./file-input";
 
 function FileInputExample() {
@@ -24,13 +25,7 @@ const meta = {
   title: "UI/FileInput",
   component: FileInput,
   args: { id: "file-input-story", placeholder: "Choose a Swedbank CSV export" },
-  decorators: [
-    (Story) => (
-      <div className="w-[min(90vw,28rem)]">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-[min(90vw,28rem)]")],
 } satisfies Meta<typeof FileInput>;
 
 export default meta;
@@ -50,13 +45,7 @@ export const LongPlaceholder: Story = {
 export const Compact: Story = { args: { className: "h-16" } };
 
 export const NarrowContainer: Story = {
-  decorators: [
-    (Story) => (
-      <div className="w-40">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-40")],
 };
 
 export const ReportsSelectedFile: Story = { render: () => <FileInputExample /> };

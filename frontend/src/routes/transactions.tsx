@@ -11,7 +11,7 @@ import {
   transactionListParams,
   transactionView,
 } from "@/features/transactions/transaction-queries";
-import { TransactionsPage } from "@/features/transactions/transactions-page";
+import { TransactionsPage } from "@/features/transactions/transactions-page/transactions-page";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
 
 export const transactionsSearchSchema = z.object({

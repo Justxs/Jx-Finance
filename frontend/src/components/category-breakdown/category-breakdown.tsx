@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
-import { Meter } from "@/components/ui/meter";
-import { Tooltip } from "@/components/ui/tooltip";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Meter } from "@/components/ui/meter/meter";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 
@@ -35,7 +36,7 @@ export function CategoryBreakdown({ items, dateFrom, dateTo }: Readonly<Props>) 
   ];
 
   if (rows.length === 0) {
-    return <p className="py-6 text-sm text-muted-foreground">{t("dashboard.noSpending")}</p>;
+    return <EmptyText>{t("dashboard.noSpending")}</EmptyText>;
   }
 
   const maximum = Math.max(...rows.map((row) => row.amount));

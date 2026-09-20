@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
 import { getUpdateCategoryMockHandler } from "@/api/generated/categories/categories.msw";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { categories, ids } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -68,7 +68,7 @@ export const SavePending: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    fireEvent.change(await canvas.findByRole("textbox"), {
+    await fireEvent.change(await canvas.findByRole("textbox"), {
       target: { value: "Maistas ir gėrimai" },
     });
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));

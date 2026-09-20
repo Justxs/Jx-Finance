@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,16 +12,21 @@ import type {
   PagedResponseOfTransferResponse,
   TransferResponse,
 } from "@/api/generated/model";
-import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Pagination } from "@/components/pagination";
-import { RowTransition } from "@/components/row-transition";
-import { Button } from "@/components/ui/button";
-import { Rows } from "@/components/ui/rows";
-import { Section, SectionTitle } from "@/components/ui/section";
-import { StaleRegion } from "@/components/ui/stale-region";
+import { Pagination } from "@/components/pagination/pagination";
+import { RecordRow } from "@/components/record-row/record-row";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Rows } from "@/components/ui/rows/rows";
+import { Section, SectionHeader } from "@/components/ui/section/section";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
+import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
+import { nameById } from "@/lib/options";
 import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
 import { TransferEditDialog } from "./transfer-edit-dialog";
 import { TransferForm } from "./transfer-form";
@@ -36,23 +41,14 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   const formatDate = useIsoDate();
   const [addOpen, setAddOpen] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const shownPage = useDeferredValue(page);
-  const stale = shownPage !== page;
+  const paging = usePagedList();
+  const { page, setPage, shownPage, stale } = paging;
   const listParams = transfersPageParams(shownPage);
   const transfers = useTransfersSuspense(listParams);
-  const pages = Math.max(1, Math.ceil((transfers.data?.total ?? 0) / pageSize));
-  if (page > pages) {
-    setPage(pages);
-  }
-  const accountNames = new Map(accounts.map((a) => [a.id, a.name]));
+  const pages = usePageClamp(paging, transfers.data?.total ?? 0, pageSize);
+  const accountNames = nameById(accounts);
 
-  const createMutation = useCreateTransfer({
-    mutation: {
-      onSuccess: () => setAddOpen(false),
-    },
-  });
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const createMutation = useCreateTransfer(silent({ onSuccess: () => setAddOpen(false) }));
   const [editTarget, setEditTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteTransfer({
@@ -63,8 +59,6 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
   });
 
   const items = useDeferredValue(transfers.data?.items) ?? [];
-
-  const deletingId = deleteMutation.isPending ? deleteMutation.variables?.id : undefined;
 
   function transferRoute(transfer: TransferResponse) {
     return `${accountNames.get(transfer.fromAccountId) ?? ""} → ${accountNames.get(transfer.toAccountId) ?? ""}`;
@@ -79,56 +73,30 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     return `${sent} → ${money.format(Number(transfer.receivedAmount), transfer.receivedCurrency)}`;
   }
 
-  const deleteItem = items.find((transfer) => transfer.id === deleteTarget);
-  const deleteLabel = deleteItem
-    ? `${transferRoute(deleteItem)} · ${transferAmount(deleteItem)}`
-    : undefined;
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    items,
+    (transfer) => `${transferRoute(transfer)} · ${transferAmount(transfer)}`,
+  );
 
   let content: ReactNode;
   if (items.length === 0) {
-    content = <p className="py-6 text-sm text-muted-foreground">{t("transfers.empty")}</p>;
+    content = <EmptyText>{t("transfers.empty")}</EmptyText>;
   } else {
     content = (
       <Rows>
         {items.map((transfer) => (
-          <RowTransition key={transfer.id}>
-            <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0 break-words">
-                <p className="text-sm font-medium">{transferRoute(transfer)}</p>
-                <p className="text-xs text-muted-foreground">
-                  {formatDate(transfer.date)}
-                  {transfer.description ? ` · ${transfer.description}` : ""}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-1">
-                <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">
-                  {transferAmount(transfer)}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  onClick={() => setEditTarget(transfer.id)}
-                  aria-label={`${t("actions.edit")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
-                  tooltip={`${t("actions.edit")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
-                >
-                  <Pencil />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8"
-                  pending={deletingId === transfer.id}
-                  disabled={deleteMutation.isPending}
-                  onClick={() => setDeleteTarget(transfer.id)}
-                  aria-label={`${t("actions.delete")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
-                  tooltip={`${t("actions.delete")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
-            </li>
-          </RowTransition>
+          <RecordRow
+            key={transfer.id}
+            title={transferRoute(transfer)}
+            subtitle={`${formatDate(transfer.date)}${transfer.description ? ` · ${transfer.description}` : ""}`}
+            amount={transferAmount(transfer)}
+            label={`${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
+            onEdit={() => setEditTarget(transfer.id)}
+            onDelete={() => remove.request(transfer.id)}
+            deletePending={remove.pendingId === transfer.id}
+            deleteDisabled={remove.busy}
+          />
         ))}
       </Rows>
     );
@@ -136,22 +104,25 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
 
   return (
     <Section>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <SectionTitle>{t("transfers.heading")}</SectionTitle>
+      <SectionHeader title={t("transfers.heading")}>
         <Button
           variant="outline"
           disabled={accounts.length < 2}
           size="sm"
-          onClick={() => setAddOpen(true)}
+          onClick={() => {
+            createMutation.reset();
+            setAddOpen(true);
+          }}
         >
           <Plus />
           {t("transfers.add")}
         </Button>
-      </div>
+      </SectionHeader>
       <Modal open={addOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}
+          error={createMutation.error}
           onSubmit={(values) => createMutation.mutateAsync({ data: values })}
           onCancel={() => setAddOpen(false)}
         />
@@ -163,12 +134,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
         transfer={items.find((transfer) => transfer.id === editTarget) ?? null}
         onClose={() => setEditTarget(null)}
       />
-      <ConfirmDeleteDialog
-        target={deleteTarget}
-        itemLabel={deleteLabel}
-        onCancel={() => setDeleteTarget(null)}
-        onConfirm={(id) => deleteMutation.mutate({ id })}
-      />
+      <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );
 }

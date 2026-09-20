@@ -3,10 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { Button } from "@/components/ui/button/button";
+import { Input } from "@/components/ui/input/input";
+import { Label } from "@/components/ui/label/label";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 

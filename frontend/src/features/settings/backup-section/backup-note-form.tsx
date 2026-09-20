@@ -3,10 +3,9 @@ import { z } from "zod";
 import { useUpdateBackup } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
 import { updateBackupBodyNoteMax } from "@/api/schemas/backups/backups.zod";
-import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
-import { Button } from "@/components/ui/button";
-import { submitToServer } from "@/lib/form-server-errors";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
+import { silent } from "@/lib/mutations";
 import { optionalText } from "@/lib/validation";
 
 interface Props {
@@ -19,33 +18,21 @@ export function BackupNoteForm({ backup, onSaved, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const schema = z.object({ note: optionalText(t, updateBackupBodyNoteMax) });
 
-  const updateMutation = useUpdateBackup({
-    mutation: { meta: { silent: true }, onSuccess: onSaved },
-  });
+  const updateMutation = useUpdateBackup(silent({ onSuccess: onSaved }));
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: { note: backup.note ?? "" },
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, () =>
-        updateMutation.mutateAsync({
-          id: backup.id,
-          data: { note: submission.value.note.trim() || null },
-        }),
-      ),
+    schema,
+    submit: (value) =>
+      updateMutation.mutateAsync({
+        id: backup.id,
+        data: { note: value.note.trim() || null },
+      }),
   });
 
   return (
     <form.AppForm>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        noValidate
-        className="space-y-4"
-      >
+      <form.FormShell className="space-y-4">
         <form.Field name="note">
           {(field) => (
             <field.TextField
@@ -57,15 +44,12 @@ export function BackupNoteForm({ backup, onSaved, onCancel }: Readonly<Props>) {
           )}
         </form.Field>
         <FormError error={updateMutation.error} />
-        <div className="flex justify-end gap-2 pt-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={updateMutation.isPending}>
-            {t("actions.save")}
-          </form.SubmitButton>
-        </div>
-      </form>
+        <form.FormActions
+          pending={updateMutation.isPending}
+          submitLabel={t("actions.save")}
+          onCancel={onCancel}
+        />
+      </form.FormShell>
     </form.AppForm>
   );
 }

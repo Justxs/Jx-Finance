@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useUpdateConversion } from "@/api/generated";
 import type { AccountResponse, CategoryResponse, ConversionResponse } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
+import { silent } from "@/lib/mutations";
 import { ConversionForm } from "./conversion-form";
 
 interface FormProps {
@@ -20,9 +20,7 @@ interface Props {
 }
 
 function ConversionEditForm({ accounts, categories, conversion, onClose }: Readonly<FormProps>) {
-  const updateMutation = useUpdateConversion({
-    mutation: { meta: { silent: true }, onSuccess: onClose },
-  });
+  const updateMutation = useUpdateConversion(silent({ onSuccess: onClose }));
 
   return (
     <ConversionForm
@@ -46,31 +44,17 @@ export function ConversionEditDialog({
   onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const [shown, setShown] = useState(conversion);
-
-  if (conversion !== null && conversion !== shown) {
-    setShown(conversion);
-  }
 
   return (
-    <Modal
-      open={conversion !== null}
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
-      title={t("conversions.editTitle")}
-    >
-      {shown ? (
+    <EditModal item={conversion} title={t("conversions.editTitle")} onClose={onClose}>
+      {(shown) => (
         <ConversionEditForm
-          key={shown.id}
           accounts={accounts}
           categories={categories}
           conversion={shown}
           onClose={onClose}
         />
-      ) : null}
-    </Modal>
+      )}
+    </EditModal>
   );
 }

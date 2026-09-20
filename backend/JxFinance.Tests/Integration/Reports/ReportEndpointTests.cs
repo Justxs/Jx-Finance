@@ -13,10 +13,10 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var account = await CreateAccountAsync("1000.00", client: member);
         var food = await CreateCategoryAsync(client: member);
         var clothes = await CreateCategoryAsync(client: member);
-        await RecordAsync(member, new { accountId = account, type = "income", amount = "1000.00", date = "2026-03-02" });
-        await RecordAsync(member, new { accountId = account, categoryId = food, type = "expense", amount = "10.00", date = "2026-03-02" });
-        await RecordAsync(member, new { accountId = account, type = "expense", amount = "5.00", date = "2026-03-03" });
-        await RecordAsync(
+        await RecordTransactionAsync(member, new { accountId = account, type = "income", amount = "1000.00", date = "2026-03-02" });
+        await RecordTransactionAsync(member, new { accountId = account, categoryId = food, type = "expense", amount = "10.00", date = "2026-03-02" });
+        await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "5.00", date = "2026-03-03" });
+        await RecordTransactionAsync(
             member,
             new
             {
@@ -26,8 +26,8 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
                 date = "2026-03-03",
                 lines = new object[] { new { categoryId = food, amount = "30.00" }, new { categoryId = clothes, amount = "20.00" } },
             });
-        await RecordAsync(member, new { accountId = account, type = "expense", amount = "999.00", date = "2026-04-01" });
-        await RecordAsync(Client, new { accountId = await CreateAccountAsync(), type = "expense", amount = "777.00", date = "2026-03-02" });
+        await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "999.00", date = "2026-04-01" });
+        await RecordTransactionAsync(Client, new { accountId = await CreateAccountAsync(), type = "expense", amount = "777.00", date = "2026-03-02" });
 
         var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-03-01&dateTo=2026-03-03");
 
@@ -48,8 +48,8 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", client: member);
-        await RecordAsync(member, new { accountId = account, type = "expense", amount = "10.00", date = "2026-01-15" });
-        await RecordAsync(member, new { accountId = account, type = "expense", amount = "20.00", date = "2026-03-20" });
+        await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "10.00", date = "2026-01-15" });
+        await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "20.00", date = "2026-03-20" });
 
         var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-01-10&dateTo=2026-03-31");
 
@@ -69,9 +69,6 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(new DateOnly(Today.Year, Today.Month, 1), report!.PeriodStart);
         Assert.Equal(Today, report.PeriodEnd);
     }
-
-    private static Task RecordAsync(HttpClient client, object transaction) =>
-        PostAsync<IdDto>(client, "/api/transactions", transaction);
 
     private sealed record CategoryDto(Guid? CategoryId, string Amount);
 

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateGoalMockHandler } from "@/api/generated/goals/goals.msw";
+import { withWidth } from "@/storybook/decorators";
 import { handlers, pending } from "@/storybook/handlers";
 import { CreateGoalForm } from "./create-goal-form";
 
@@ -8,15 +9,7 @@ const meta = {
   title: "Features/Goals/CreateGoalForm",
   component: CreateGoalForm,
   args: { onCreated: fn(), onCancel: fn() },
-  decorators: [
-    function withFormWidth(Story) {
-      return (
-        <div className="w-[min(32rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof CreateGoalForm>;
 
 export default meta;
@@ -54,8 +47,8 @@ export const SubmitPending: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const [name, target] = canvas.getAllByRole("textbox");
-    fireEvent.change(name!, { target: { value: "New bicycle" } });
-    fireEvent.change(target!, { target: { value: "900" } });
+    await fireEvent.change(name!, { target: { value: "New bicycle" } });
+    await fireEvent.change(target!, { target: { value: "900" } });
     await userEvent.click(canvas.getByRole("button", { name: /add goal|pridėti tikslą/i }));
   },
 };

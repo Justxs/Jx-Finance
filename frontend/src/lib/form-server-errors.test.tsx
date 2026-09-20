@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import { ApiError } from "@/api/client";
 import { useAppForm } from "@/components/form";
-import { FormError } from "@/components/form-error";
+import { FormError } from "@/components/form-error/form-error";
 import {
   hasFormField,
   serverErrorText,

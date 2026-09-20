@@ -5,14 +5,16 @@ import {
   getImportBrokerReportMockHandler,
   getSyncBrokerConnectionMockHandler,
 } from "@/api/generated/investments/investments.msw";
-import { accounts, brokerAccount, databaseBusyProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
 import {
+  accounts,
+  brokerAccount,
+  databaseBusyProblem,
   brokerImportNothingNew,
   brokerImportWithWarnings,
   brokerSyncProblem,
   failedBrokerConnection,
-} from "@/storybook/investment-fixtures";
+} from "@/storybook/fixtures";
+import { failWith, handlers, pending } from "@/storybook/handlers";
 import { BrokerImportDialog } from "./broker-import-dialog";
 
 const sampleReport =

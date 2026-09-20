@@ -1,25 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import {
   brokerImportNothingNew,
   brokerImportResult,
   brokerImportWithWarnings,
-} from "@/storybook/investment-fixtures";
+} from "@/storybook/fixtures";
 import { BrokerImportResult } from "./import-result";
 
 const meta = {
   title: "Features/Investments/BrokerImportResult",
   component: BrokerImportResult,
   args: { result: brokerImportResult },
-  decorators: [
-    function withDialogWidth(Story) {
-      return (
-        <div className="w-[min(32rem,calc(100vw-3rem))]">
-          <Story />
-        </div>
-      );
-    },
-  ],
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof BrokerImportResult>;
 
 export default meta;

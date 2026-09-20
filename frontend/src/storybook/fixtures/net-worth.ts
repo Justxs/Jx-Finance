@@ -5,8 +5,9 @@ import type {
   NetWorthResponse,
   NetWorthSnapshotItem,
 } from "@/api/generated/model";
+import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
-import { fromCents, ids, toCents, totalOf } from "./base";
+import { ids, totalOf } from "./base";
 
 export const assets: AssetResponse[] = [
   {

@@ -2,24 +2,25 @@ import {
   getCurrenciesMockHandler,
   getExchangeRateMockHandler,
 } from "@/api/generated/currencies/currencies.msw";
-import type { Currency } from "@/api/generated/model";
 import { FIXTURE_TODAY, currencies, ratesPerEuro } from "@/storybook/fixtures";
-import { notFound } from "./http";
+import { currencyCode, notFound } from "./http";
 
 export const currencyHandlers = [
   getCurrenciesMockHandler(currencies),
   getExchangeRateMockHandler(({ request }) => {
     const params = new URL(request.url).searchParams;
-    const from = ratesPerEuro[params.get("from") as Currency];
-    const to = ratesPerEuro[params.get("to") as Currency];
-    if (!from || !to) {
+    const from = currencyCode.safeParse(params.get("from"));
+    const to = currencyCode.safeParse(params.get("to"));
+    const fromRate = from.success ? ratesPerEuro[from.data] : undefined;
+    const toRate = to.success ? ratesPerEuro[to.data] : undefined;
+    if (!from.success || !to.success || !fromRate || !toRate) {
       throw notFound();
     }
 
     return {
-      from: params.get("from") as Currency,
-      to: params.get("to") as Currency,
-      rate: (to / from).toFixed(6),
+      from: from.data,
+      to: to.data,
+      rate: (toRate / fromRate).toFixed(6),
       asOf: currencies.ratesAsOf ?? FIXTURE_TODAY,
     };
   }),

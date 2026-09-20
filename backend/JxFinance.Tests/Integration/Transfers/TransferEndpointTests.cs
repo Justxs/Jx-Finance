@@ -54,8 +54,8 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
             "/api/transfers",
             new { fromAccountId = from, toAccountId = to, amount = "20.00", date = "2026-06-12" });
 
-        var page = await Client.GetFromJsonAsync<PagedTransferDto>("/api/transfers?page=1&pageSize=1");
-        var all = await Client.GetFromJsonAsync<PagedTransferDto>("/api/transfers?pageSize=200");
+        var page = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=1");
+        var all = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
 
         Assert.Single(page!.Items);
         Assert.Equal(1, page.PageSize);
@@ -63,8 +63,4 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
         Assert.Contains(all!.Items, t => t.Id == first.Id);
         Assert.Contains(all.Items, t => t.Id == second.Id);
     }
-
-    private sealed record TransferDto(Guid Id);
-
-    private sealed record PagedTransferDto(List<TransferDto> Items, int Page, int PageSize, int Total);
 }

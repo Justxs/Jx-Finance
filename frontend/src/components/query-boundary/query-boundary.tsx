@@ -1,6 +1,6 @@
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Component, type ErrorInfo, type ReactNode, Suspense, ViewTransition } from "react";
-import { ErrorState } from "@/components/error-state";
+import { ErrorState } from "@/components/error-state/error-state";
 
 interface FallbackProps {
   onReset: () => void;

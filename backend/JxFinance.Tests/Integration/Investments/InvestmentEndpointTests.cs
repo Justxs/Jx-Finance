@@ -13,12 +13,12 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     public async Task Manual_trades_move_cash_and_build_a_fifo_holding()
     {
         var account = await CreateBrokerAccountAsync("5000.00");
-        var security = await CreateSecurityAsync("MANUAL1");
+        var security = await CreateSecurityAsync(Client, "MANUAL1");
 
-        await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100", fee = "1.00" });
-        await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-06-02", quantity = "10", price = "120" });
-        await RecordAsync(new { accountId = account, securityId = security, type = "sell", date = "2026-06-03", quantity = "15", price = "130", fee = "1.00" });
-        await RecordAsync(new { accountId = account, securityId = security, type = "dividend", date = "2026-06-04", amount = "12.50" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "10", price = "100", fee = "1.00" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "buy", date = "2026-06-02", quantity = "10", price = "120" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "sell", date = "2026-06-03", quantity = "15", price = "130", fee = "1.00" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "dividend", date = "2026-06-04", amount = "12.50" });
         await Client.PutAsJsonAsync(
             $"/api/investments/securities/{security}",
             new { symbol = "MANUAL1", name = "Manual fund", type = "etf", currency = "eur", lastPrice = "125", lastPriceDate = "2026-06-05" });
@@ -44,11 +44,11 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     public async Task Trade_commissions_reduce_the_gain_once_and_only_standalone_fees_are_reported_as_fees()
     {
         var account = await CreateBrokerAccountAsync("5000.00");
-        var security = await CreateSecurityAsync($"FEE{Guid.NewGuid():N}"[..12].ToUpperInvariant());
+        var security = await CreateSecurityAsync(Client, $"FEE{Guid.NewGuid():N}"[..12].ToUpperInvariant());
 
-        await RecordAsync(new { accountId = account, securityId = security, type = "buy", date = "2026-03-02", quantity = "10", price = "100", fee = "5.00" });
-        await RecordAsync(new { accountId = account, securityId = security, type = "sell", date = "2026-03-10", quantity = "10", price = "110", fee = "4.00" });
-        await RecordAsync(new { accountId = account, type = "fee", date = "2026-03-11", amount = "3.00" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "buy", date = "2026-03-02", quantity = "10", price = "100", fee = "5.00" });
+        await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "sell", date = "2026-03-10", quantity = "10", price = "110", fee = "4.00" });
+        await RecordInvestmentAsync(Client, new { accountId = account, type = "fee", date = "2026-03-11", amount = "3.00" });
 
         var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}");
 
@@ -63,7 +63,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     public async Task Selling_more_than_held_is_rejected()
     {
         var account = await CreateBrokerAccountAsync("100.00");
-        var security = await CreateSecurityAsync("SHORT1");
+        var security = await CreateSecurityAsync(Client, "SHORT1");
 
         var response = await Client.PostAsJsonAsync(
             "/api/investments/transactions",
@@ -155,21 +155,6 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     private Task<Guid> CreateBrokerAccountAsync(string startingBalance = "0.00") =>
         CreateAccountAsync(startingBalance, "investment", "eur");
 
-    private async Task<Guid> CreateSecurityAsync(string symbol)
-    {
-        var response = await Client.PostAsJsonAsync(
-            "/api/investments/securities",
-            new { symbol, name = "Manual fund", type = "etf", currency = "eur" });
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        return (await response.Content.ReadFromJsonAsync<SecurityDto>())!.Id;
-    }
-
-    private async Task RecordAsync(object entry)
-    {
-        var response = await Client.PostAsJsonAsync("/api/investments/transactions", entry);
-        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-    }
-
     private async Task<ImportDto> UploadAsync(Guid accountId, Guid? fundingAccountId, string xml)
     {
         var response = await PostReportAsync(accountId, fundingAccountId, xml);
@@ -193,10 +178,6 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         return Client.PostAsync("/api/investments/import/interactive-brokers", form);
     }
-
-    private sealed record BalanceDto(string Currency, string Amount);
-
-    private sealed record AccountDto(Guid Id, List<BalanceDto> Balances, string ReportingBalance, string HoldingsValue);
 
     private sealed record SecurityDto(Guid Id, string Symbol, string Type);
 

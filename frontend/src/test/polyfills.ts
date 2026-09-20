@@ -2,7 +2,7 @@ import { Blob as NodeBlob, File as NodeFile } from "node:buffer";
 
 async function nodeFormData() {
   const form = await new Response(new URLSearchParams()).formData();
-  return form.constructor as typeof FormData;
+  return form.constructor;
 }
 
 function nodeRequest() {

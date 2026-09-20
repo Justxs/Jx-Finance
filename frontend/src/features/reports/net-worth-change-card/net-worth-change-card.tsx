@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
-import { Section, SectionTitle } from "@/components/ui/section";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useMoney } from "@/hooks/use-formatters";
 
 interface Props {
@@ -21,15 +22,13 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
     return (
       <Section>
         <SectionTitle>{t("reports.netWorthChange")}</SectionTitle>
-        <p className="py-6 text-sm text-muted-foreground">
-          {t("reports.notEnoughNetWorthHistory")}
-        </p>
+        <EmptyText>{t("reports.notEnoughNetWorthHistory")}</EmptyText>
       </Section>
     );
   }
 
-  const start = Number(items[0]!.netWorth ?? 0);
-  const end = Number(items.at(-1)!.netWorth ?? 0);
+  const start = Number(items[0]?.netWorth ?? 0);
+  const end = Number(items.at(-1)?.netWorth ?? 0);
   const change = end - start;
 
   return (

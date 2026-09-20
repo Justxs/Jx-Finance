@@ -294,7 +294,5 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
 
     private sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
 
-    private sealed record TransactionDto(Guid Id, string ReportingAmount);
-
     private sealed record SyncDto(int Added, DateOnly? RatesAsOf);
 }

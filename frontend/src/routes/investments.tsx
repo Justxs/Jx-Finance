@@ -7,7 +7,7 @@ import {
   getPortfolioSuspenseQueryOptions,
 } from "@/api/generated";
 import { activityParams, portfolioParams } from "@/features/investments/investment-queries";
-import { InvestmentsPage } from "@/features/investments/investments-page";
+import { InvestmentsPage } from "@/features/investments/investments-page/investments-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
 
@@ -19,7 +19,10 @@ const requireInvestments = requireFeature("investments");
 
 async function isKnownAccount(queryClient: QueryClient, accountId: string): Promise<boolean> {
   try {
-    const accounts = await queryClient.ensureQueryData(getAccountsSuspenseQueryOptions());
+    const accounts = await queryClient.query({
+      ...getAccountsSuspenseQueryOptions(),
+      staleTime: "static",
+    });
     return accounts.some((account) => account.id === accountId);
   } catch {
     return true;

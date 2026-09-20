@@ -1,7 +1,7 @@
-import { copyFileSync, readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium } from "playwright";
+import { chromium } from "@playwright/test";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const navy = "#253e52";
@@ -115,7 +115,6 @@ writeFileSync(
 writeFileSync(resolve(root, "public/favicon.svg"), favicon);
 writeFileSync(resolve(root, "public/brand/mark.svg"), markSvg(path, box));
 writeFileSync(resolve(root, "public/brand/mark-maskable.svg"), maskable);
-copyFileSync(resolve(root, "public/favicon.svg"), resolve(root, ".storybook/public/favicon.svg"));
 
 writeFileSync(resolve(root, "public/brand/apple-touch-icon.png"), await png(square, 180));
 writeFileSync(resolve(root, "public/brand/icon-192.png"), await png(rounded, 192));

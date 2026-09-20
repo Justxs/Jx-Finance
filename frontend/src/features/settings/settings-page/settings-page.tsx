@@ -9,18 +9,18 @@ import {
   useSyncExchangeRates,
   useUpdateSettings,
 } from "@/api/generated";
-import { FontPicker } from "@/components/font-picker";
-import { PageHeader } from "@/components/page-header";
-import { PalettePicker } from "@/components/palette-picker";
-import { QueryBoundary } from "@/components/query-boundary";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { ImportDataSection } from "@/features/imports/import-data-section";
+import { FontPicker } from "@/components/font-picker/font-picker";
+import { PageHeader } from "@/components/page-header/page-header";
+import { PalettePicker } from "@/components/palette-picker/palette-picker";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettings, useSettingsSuspense } from "@/hooks/use-settings";
-import { BackupSection } from "../backup-section";
-import { SettingsForm } from "../settings-form";
-import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav";
+import { BackupSection } from "../backup-section/backup-section";
+import { SettingsForm } from "../settings-form/settings-form";
+import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav/settings-nav";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   const { t } = useTranslation();

@@ -1,5 +1,5 @@
-import type { TFunction } from "i18next";
 import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
+import type { Translate } from "@/lib/i18n";
 
 const OPTIMISTIC_PREFIX = "optimistic-";
 
@@ -14,7 +14,7 @@ export function isOptimistic(row: Pick<TransactionResponse, "id">) {
 export function transactionCategoryLabel(
   row: Pick<TransactionResponse, "isSplit" | "categoryId">,
   categoryById: ReadonlyMap<string | undefined, CategoryResponse | undefined>,
-  t: TFunction,
+  t: Translate,
 ) {
   if (row.isSplit) {
     return t("transactions.split");
@@ -25,7 +25,7 @@ export function transactionCategoryLabel(
 export function transactionName(
   row: Pick<TransactionResponse, "description" | "isSplit" | "categoryId">,
   categoryById: ReadonlyMap<string | undefined, CategoryResponse | undefined>,
-  t: TFunction,
+  t: Translate,
 ) {
   return row.description || transactionCategoryLabel(row, categoryById, t);
 }

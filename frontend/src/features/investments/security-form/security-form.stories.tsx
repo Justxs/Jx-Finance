@@ -1,18 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { ApiError } from "@/api/client";
-import { duplicateSecurityProblem, unpricedStock, usStock } from "@/storybook/investment-fixtures";
+import { withWidth } from "@/storybook/decorators";
+import { duplicateSecurityProblem, unpricedStock, usStock } from "@/storybook/fixtures";
 import { SecurityForm } from "./security-form";
 
 const meta = {
   title: "Features/Investments/SecurityForm",
   component: SecurityForm,
   args: { pending: false, onSubmit: fn(), onCancel: fn() },
-  render: (args) => (
-    <div className="w-[min(36rem,90vw)]">
-      <SecurityForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("w-[min(36rem,90vw)]")],
 } satisfies Meta<typeof SecurityForm>;
 
 export default meta;

@@ -1,6 +1,6 @@
 import type { MutationFunctionContext, QueryKey } from "@tanstack/react-query";
 
-export interface OptimisticContext<TData> {
+interface OptimisticContext<TData> {
   previous: TData | undefined;
 }
 

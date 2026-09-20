@@ -1,7 +1,7 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ComponentProps, ReactNode } from "react";
-import { Input } from "@/components/ui/input";
-import { FieldShell, fieldAria } from "../field-shell";
+import { Input } from "@/components/ui/input/input";
+import { FieldShell, fieldAria } from "../field-shell/field-shell";
 
 type InputProps = Omit<
   ComponentProps<typeof Input>,
