@@ -13,6 +13,7 @@ foreach ($line in Get-Content ".env") {
     }
 }
 $env:ConnectionStrings__Default = "Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])"
+$env:App__BackupDirectory = Join-Path $root ".local/backups"
 
 docker compose up -d --wait db
 if ($LASTEXITCODE -ne 0) { throw "PostgreSQL did not start." }

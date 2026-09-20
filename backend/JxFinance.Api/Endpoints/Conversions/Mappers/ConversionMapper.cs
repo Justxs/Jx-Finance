@@ -36,5 +36,7 @@ public sealed class ConversionMapper
         fee?.Amount.Amount,
         fee?.Amount.Currency,
         fee?.Id.Value,
-        conversion.CreatedAt);
+        conversion.CreatedAt,
+        fee?.CategoryId?.Value,
+        conversion.ImportRef is not null);
 }

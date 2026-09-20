@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { Pagination } from "./pagination";
 
 function PaginationExample({ pages }: Readonly<{ pages: number }>) {
@@ -14,9 +15,9 @@ const meta = {
   args: { page: 1, pages: 7, onPageChange: () => {} },
   decorators: [
     (Story) => (
-      <section className="card w-[min(90vw,36rem)]">
+      <Card as="section" className="w-[min(90vw,36rem)]">
         <Story />
-      </section>
+      </Card>
     ),
   ],
 } satisfies Meta<typeof Pagination>;

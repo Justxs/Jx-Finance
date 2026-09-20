@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { categoryBreakdown } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -10,11 +11,11 @@ const meta = {
   title: "Features/Dashboard/CategoryBreakdownChart",
   component: CategoryBreakdownChart,
   render: () => (
-    <div className="card w-[min(36rem,90vw)] p-6">
+    <Card className="w-[min(36rem,90vw)] p-6">
       <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
         <CategoryBreakdownChart />
       </QueryBoundary>
-    </div>
+    </Card>
   ),
 } satisfies Meta<typeof CategoryBreakdownChart>;
 

@@ -130,7 +130,7 @@ function Calendar({
           return <ChevronDownIcon className={cn("size-4", className)} {...props} />;
         },
         DayButton: ({ ...props }) => <CalendarDayButton locale={locale} {...props} />,
-        WeekNumber: ({ children, ...props }) => {
+        WeekNumber: ({ children, week: _week, scope: _scope, ...props }) => {
           return (
             <td {...props}>
               <div className="flex size-(--cell-size) items-center justify-center text-center">

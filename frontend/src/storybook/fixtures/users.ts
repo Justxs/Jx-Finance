@@ -1,4 +1,4 @@
-import type { UserProfileResponse } from "@/api/generated/model";
+import type { ProblemDetails, UserProfileResponse } from "@/api/generated/model";
 import { ids } from "./base";
 
 export const currentUser: UserProfileResponse = {
@@ -43,3 +43,39 @@ export const inactiveUser: UserProfileResponse = {
 };
 
 export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUser, inactiveUser];
+
+export const adminPassword = "Correct-horse-42";
+
+export const wrongAdminPasswordProblem: ProblemDetails = {
+  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The current password is wrong.",
+      code: "password.incorrect",
+    },
+  ],
+};
+
+export const weakPasswordProblem: ProblemDetails = {
+  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "newPassword",
+      reason: "Passwords must have at least one digit.",
+      code: "password.tooWeak",
+    },
+  ],
+};
+
+export const lastAdministratorProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
+  title: "Forbidden",
+  status: 403,
+  code: "user.lastAdministrator",
+  detail: "The installation must keep one active administrator.",
+};

@@ -16,4 +16,6 @@ public sealed record ConversionResponse(
     [property: Money] decimal? FeeAmount,
     Currency? FeeCurrency,
     Guid? FeeTransactionId,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    Guid? FeeCategoryId,
+    bool IsImported);

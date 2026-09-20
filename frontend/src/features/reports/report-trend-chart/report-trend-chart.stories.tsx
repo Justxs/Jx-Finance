@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Section } from "@/components/ui/section";
 import { reportSummaryMonth, reportSummaryYear } from "@/storybook/fixtures";
 import { ReportTrendChart } from "./report-trend-chart";
 
@@ -8,10 +9,10 @@ const meta = {
   parameters: { layout: "padded", route: "/reports" },
   args: { items: reportSummaryMonth.trend ?? [], bucket: "day" },
   render: (args) => (
-    <section className="section">
+    <Section>
       <h2 className="mb-4 font-semibold">Income and expense trend</h2>
       <ReportTrendChart {...args} />
-    </section>
+    </Section>
   ),
 } satisfies Meta<typeof ReportTrendChart>;
 
@@ -50,8 +51,8 @@ export const LargeAmounts: Story = {
 export const Narrow: Story = {
   args: { items: reportSummaryYear.trend ?? [], bucket: "month" },
   render: (args) => (
-    <section className="section w-80">
+    <Section className="w-80">
       <ReportTrendChart {...args} />
-    </section>
+    </Section>
   ),
 };

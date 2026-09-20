@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
 import {
   getCreateTransferMockHandler,
   getTransfersMockHandler,
@@ -13,6 +14,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { TransfersSection } from "./transfers-section";
 
 const manyTransfers = Array.from({ length: 34 }, (_, index) => ({
@@ -68,4 +70,20 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const CreatePending: Story = {
   parameters: { msw: { handlers: [getCreateTransferMockHandler(pending), ...handlers] } },
+};
+
+export const EditsTransfer: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    const [edit] = await canvas.findAllByRole("button", { name: /^Edit: .*Taupomoji/u });
+    await userEvent.click(edit as HTMLElement);
+
+    const dialog = within(await openedDialog());
+    await expect(dialog.getByLabelText("Description")).toHaveValue("Mėnesio taupymas");
+    fireEvent.change(dialog.getByLabelText("Description"), { target: { value: "Taupymas" } });
+    await userEvent.click(dialog.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
 };

@@ -8,6 +8,8 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
 import type { TranslationKey } from "@/lib/i18n";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { AddCategoryForm } from "../add-category-form";
@@ -59,7 +61,7 @@ export function CategoriesPage() {
             );
           } else {
             groupContent = (
-              <ul className="rows">
+              <Rows>
                 {items.map((category) => (
                   <CategoryRow
                     key={category.id}
@@ -69,18 +71,18 @@ export function CategoriesPage() {
                     deleteDisabled={deleteMutation.isPending}
                   />
                 ))}
-              </ul>
+              </Rows>
             );
           }
 
           return (
-            <section key={group.type} className="section">
+            <Section key={group.type}>
               <div className="mb-2 flex items-baseline justify-between gap-3">
-                <h2 className="section-title">{t(group.labelKey)}</h2>
+                <SectionTitle>{t(group.labelKey)}</SectionTitle>
                 <span className="text-sm text-muted-foreground tabular-nums">{items.length}</span>
               </div>
               {groupContent}
-            </section>
+            </Section>
           );
         })}
       </div>

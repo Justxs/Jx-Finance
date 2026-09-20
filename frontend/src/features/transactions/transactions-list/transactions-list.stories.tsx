@@ -66,7 +66,9 @@ export const Empty: Story = { args: { data: [] } };
 
 export const FilteredNoMatches: Story = { args: { data: [], filtered: true } };
 
-export const Placeholder: Story = { args: { isPlaceholder: true } };
+export const Placeholder: Story = {
+  args: { isPlaceholder: true },
+};
 
 export const Deleting: Story = { args: { deletingId: transactions[1]?.id ?? null } };
 

@@ -10,10 +10,12 @@ import {
 import type { NotificationResponse, NotificationsParams } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from "@/components/ui/popover";
+import { staleVariants } from "@/components/ui/stale-region";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
+import { cn } from "@/lib/utils";
 
 export function NotificationBellUnavailable() {
   const { t } = useTranslation();
@@ -125,12 +127,14 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
                   <li key={notification.id}>
                     <button
                       type="button"
-                      className={`w-full px-4 py-3 text-left text-sm hover:bg-accent ${
-                        markReadMutation.isPending &&
-                        markReadMutation.variables?.id === notification.id
-                          ? "is-stale"
-                          : ""
-                      }`}
+                      className={cn(
+                        "w-full px-4 py-3 text-left text-sm hover:bg-accent",
+                        staleVariants({
+                          stale:
+                            markReadMutation.isPending &&
+                            markReadMutation.variables?.id === notification.id,
+                        }),
+                      )}
                       disabled={markReadMutation.isPending}
                       onClick={() => markReadMutation.mutate({ id: notification.id })}
                     >

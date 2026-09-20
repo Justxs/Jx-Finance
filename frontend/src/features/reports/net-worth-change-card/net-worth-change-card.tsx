@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { useMoney } from "@/hooks/use-formatters";
 
 interface Props {
@@ -18,12 +19,12 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
 
   if (items.length < 2) {
     return (
-      <section className="section">
-        <h2 className="section-title">{t("reports.netWorthChange")}</h2>
+      <Section>
+        <SectionTitle>{t("reports.netWorthChange")}</SectionTitle>
         <p className="py-6 text-sm text-muted-foreground">
           {t("reports.notEnoughNetWorthHistory")}
         </p>
-      </section>
+      </Section>
     );
   }
 
@@ -32,9 +33,9 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
   const change = end - start;
 
   return (
-    <section className="section">
+    <Section>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-        <h2 className="section-title">{t("reports.netWorthChange")}</h2>
+        <SectionTitle>{t("reports.netWorthChange")}</SectionTitle>
         <p
           className={`text-xl font-semibold whitespace-nowrap tabular-nums ${change >= 0 ? "text-income" : "text-expense"}`}
         >
@@ -44,6 +45,6 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
       <p className="mt-1 text-xs text-muted-foreground tabular-nums sm:text-right">
         {money.format(start)} → {money.format(end)}
       </p>
-    </section>
+    </Section>
   );
 }

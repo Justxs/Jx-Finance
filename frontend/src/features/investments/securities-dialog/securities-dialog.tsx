@@ -1,12 +1,13 @@
 import { Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useSecuritiesSuspense } from "@/api/generated";
+import { useMeSuspense, useSecuritiesSuspense } from "@/api/generated";
 import type { SecurityResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Rows } from "@/components/ui/rows";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tag } from "@/components/ui/tag";
 import { useIsoDate, usePriceFormat } from "@/hooks/use-formatters";
@@ -38,6 +39,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const securities = useSecuritiesSuspense();
+  const canEdit = useMeSuspense().data.role === "Admin";
   const all = securities.data ?? [];
   const shown = all.filter((security) => matches(security, search));
 
@@ -50,7 +52,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   }
 
   return (
-    <ul className="rows" aria-label={t("investments.securities.title")}>
+    <Rows aria-label={t("investments.securities.title")}>
       {shown.map((security) => {
         const meta = [security.name, security.exchange, security.isin].filter(Boolean).join(" · ");
 
@@ -84,20 +86,22 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
                 </>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="-mr-2 size-8 shrink-0"
-              onClick={() => onEdit(security)}
-              aria-label={`${t("actions.edit")}: ${security.symbol}`}
-              tooltip={`${t("actions.edit")}: ${security.symbol}`}
-            >
-              <Pencil />
-            </Button>
+            {canEdit ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="-mr-2 size-8 shrink-0"
+                onClick={() => onEdit(security)}
+                aria-label={`${t("actions.edit")}: ${security.symbol}`}
+                tooltip={`${t("actions.edit")}: ${security.symbol}`}
+              >
+                <Pencil />
+              </Button>
+            ) : null}
           </li>
         );
       })}
-    </ul>
+    </Rows>
   );
 }
 

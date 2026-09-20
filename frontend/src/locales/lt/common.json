@@ -126,7 +126,12 @@
     "received": "Gauta",
     "sameAsSent": "Tiek pat, kiek išsiųsta",
     "sentCurrency": "Išsiųsta valiuta",
-    "receivedCurrency": "Gauta valiuta"
+    "receivedCurrency": "Gauta valiuta",
+    "editTitle": "Redaguoti pervedimą",
+    "lockedHint": "Nustatyta importuojant.",
+    "lockedOne": "Šis pervedimas importuotas į sąskaitą „{{account}}“. Data, ši sąskaita ir jos pusės suma lieka tokios, kokios yra išraše; kitą sąskaitą ir aprašymą galima keisti.",
+    "lockedBoth": "Abi šio pervedimo pusės importuotos, todėl keisti galima tik aprašymą.",
+    "unavailableAccount": "Sąskaita nepasiekiama"
   },
   "conversions": {
     "heading": "Valiutos keitimai",
@@ -146,7 +151,13 @@
     "empty": "Valiutos keitimų dar nėra.",
     "sameCurrencyError": "Pasirinkite dvi skirtingas valiutas.",
     "rateLine": "1 {{from}} = {{rate}} {{to}}",
-    "feeLine": "mokestis {{fee}}"
+    "feeLine": "mokestis {{fee}}",
+    "editTitle": "Redaguoti valiutos keitimą",
+    "accountFixedHint": "Keitimas lieka toje sąskaitoje, kurioje buvo įrašytas.",
+    "feeCategory": "Mokesčio kategorija",
+    "feeEditHint": "Mokestis, koks jis turi būti po pakeitimo. Išvalykite lauką, kad mokesčio išlaida būtų ištrinta.",
+    "feeSplitError": "Mokesčio išlaida buvo rankomis padalyta į kategorijas. Keiskite ją puslapyje „Operacijos“.",
+    "importedHint": "Importuota iš brokerio. Pataisykite pas brokerį ir importuokite iš naujo."
   },
   "categories": {
     "title": "Kategorijos",
@@ -268,6 +279,7 @@
     "confirmLabel": "Patvirtinkite įrašydami {{word}}",
     "confirmWord": "ATKURTI",
     "confirmAction": "Pakeisti visus duomenis",
+    "confirmPasswordHint": "Jūsų pačių slaptažodis – patvirtinimui, kad tai jūs.",
     "restored": "Atkurta {{date}} kopija. Prisijunkite iš naujo.",
     "bytes": {
       "b": "{{value}} B",
@@ -342,7 +354,26 @@
     "roleUpdated": "Rolė atnaujinta",
     "empty": "Kitų naudotojų dar nėra.",
     "allRoles": "Visos rolės",
-    "allStatuses": "Visos būsenos"
+    "allStatuses": "Visos būsenos",
+    "reactivate": "Aktyvuoti vėl",
+    "reactivated_toast": "Naudotojas vėl aktyvus",
+    "deactivateConfirm": {
+      "title": "Deaktyvuoti šį naudotoją?",
+      "description": "Naudotojas bus atjungtas visuose įrenginiuose ir nebegalės prisijungti. Jo duomenys išlieka, o vėliau jį galėsite aktyvuoti vėl."
+    },
+    "resetPassword": {
+      "action": "Atkurti slaptažodį",
+      "title": "Nustatyti laikiną slaptažodį",
+      "consequences": "{{name}} bus atjungtas visuose įrenginiuose, o laikinas užrakinimas panaikinamas. Programa naujo slaptažodžio naudotojui nepraneša: perduokite jį patys ir paprašykite pasikeisti profilio puslapyje.",
+      "newPassword": "Laikinas slaptažodis",
+      "newPasswordHint": "Nuo {{min}} iki {{max}} simbolių.",
+      "resetTwoFactor": "Taip pat išjungti dvigubą tapatybės patvirtinimą",
+      "resetTwoFactorHint": "Reikalinga tik tada, kai naudotojas prarado ir autentifikavimo programėlę, ir atsarginius kodus. Prisijungęs jis galės jį įsijungti iš naujo.",
+      "currentPassword": "Jūsų dabartinis slaptažodis",
+      "currentPasswordHint": "Patvirtina, kad šį pakeitimą atliekate jūs.",
+      "submit": "Atkurti slaptažodį",
+      "done": "Slaptažodis atkurtas. {{name}} atjungtas visuose įrenginiuose."
+    }
   },
   "profile": {
     "qrCodeAlt": "Autentifikavimo programėlės QR kodas",
@@ -735,7 +766,11 @@
         "skipped_one": "Praleista {{count}} eilutė.",
         "skipped_few": "Praleistos {{count}} eilutės.",
         "skipped_many": "Praleista {{count}} eilutės.",
-        "skipped_other": "Praleista {{count}} eilučių."
+        "skipped_other": "Praleista {{count}} eilučių.",
+        "splits_one": "Įrašytas {{count}} akcijų skaidymas.",
+        "splits_few": "Įrašyti {{count}} akcijų skaidymai.",
+        "splits_many": "Įrašyta {{count}} akcijų skaidymo.",
+        "splits_other": "Įrašyta {{count}} akcijų skaidymų."
       },
       "help": {
         "title": "Kaip sukurti „Flex Query“",
@@ -745,6 +780,34 @@
         "period": "Pasirinkite laikotarpį, pavyzdžiui, „Last 365 days“, išsaugokite užklausą ir paleiskite ją, kad atsisiųstumėte failą.",
         "token": "Automatiniam sinchronizavimui tame pačiame puslapyje atverkite „Flex Web Service“, įjunkite jį ir nusikopijuokite prieigos raktą.",
         "queryId": "„Query ID“ yra skaičius, rodomas šalia išsaugotos užklausos."
+      },
+      "corporateActions": {
+        "FS": "Akcijų skaidymas",
+        "RS": "Atvirkštinis akcijų skaidymas",
+        "TC": "Susijungimas arba perėmimas",
+        "SO": "Atskyrimas (spin-off)",
+        "SD": "Dividendai akcijomis",
+        "IC": "Simbolio arba ISIN pakeitimas",
+        "RI": "Pirmumo teisių išleidimas",
+        "SR": "Pirmumo teisių pasirašymas",
+        "TO": "Oficialus siūlymas supirkti akcijas",
+        "DW": "Išbraukimas iš prekybos kaip beverčio",
+        "HI": "Pasirenkami dividendai (išleidimas)",
+        "HD": "Pasirenkami dividendai (pristatymas)",
+        "CD": "Dividendai pinigais",
+        "BM": "Obligacijos išpirkimas",
+        "BC": "Obligacijos konvertavimas",
+        "other": "Kitas korporatyvinis veiksmas ({{type}})"
+      },
+      "warning": {
+        "title": "Patikrinkite turimas pozicijas",
+        "skippedActions": "Šie korporatyviniai veiksmai yra ataskaitoje, bet nebuvo įrašyti. Jų poveikį įveskite rankomis:",
+        "mismatches": "Šių vertybinių popierių kiekis, apskaičiuotas iš jūsų įrašų, skiriasi nuo brokerio nurodyto:",
+        "mismatchTable": "Pozicijos, kurios skiriasi nuo brokerio duomenų",
+        "symbol": "Simbolis",
+        "brokerQuantity": "Pas brokerį",
+        "replayedQuantity": "Pagal jūsų įrašus",
+        "mismatchAdvice": "Gali trūkti korporatyvinio veiksmo arba istorija prasideda anksčiau nei pirmasis importuotas laikotarpis. Akcijų skaidymą galima įvesti rankomis: „Pridėti įrašą“, tipas „Akcijų skaidymas“."
       }
     },
     "connection": {
@@ -811,7 +874,13 @@
     "forecast": "Mokėtina per artimiausius šešis mėnesius",
     "forecastSeries": "Mokėtinos sąskaitos",
     "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos mokėjimų nėra.",
-    "forecastLabel": "Fiksuotų mokėjimų suma kiekvieną iš artimiausių šešių mėnesių"
+    "forecastLabel": "Fiksuotų mokėjimų suma kiekvieną iš artimiausių šešių mėnesių",
+    "editTitle": "Redaguoti periodinę sąskaitą",
+    "activeHint": "Neaktyvi sąskaita nesiunčia priminimų ir jos negalima patvirtinti.",
+    "chooseAccount": "Pasirinkite sąskaitą",
+    "confirmFixed": "„{{name}}“ mokėjimas ({{amount}}) bus įrašytas kaip {{date}} išlaida, o sąskaitos terminas perkeltas į kitą datą.",
+    "confirmVariable": "Jūsų įvesta „{{name}}“ suma bus įrašyta kaip {{date}} išlaida, o sąskaitos terminas perkeltas į kitą datą.",
+    "confirmStale": "Šis mokėjimas jau patvirtintas arba sąskaita pakeista kitur. Sąskaitos duomenys atnaujinti: patikrinkite viršuje nurodytą terminą ir, jei vis dar reikia, patvirtinkite dar kartą."
   },
   "notifications": {
     "title": "Pranešimai",
@@ -943,6 +1012,7 @@
   },
   "errors": {
     "generic": "Kažkas nepavyko. Bandykite dar kartą.",
+    "tooManyRequests": "Per daug bandymų. Palaukite ir bandykite dar kartą.",
     "loadFailed": "Nepavyko įkelti.",
     "loadFailedNamed": "Nepavyko įkelti: {{subject}}.",
     "retry": "Bandyti dar kartą",
@@ -960,7 +1030,8 @@
     "iban": "Įveskite teisingą IBAN, pvz. LT12 1000 0111 0100 1000.",
     "maxLength": "Turi būti ne daugiau nei {{max}} simbolių.",
     "email": "Įveskite teisingą el. pašto adresą.",
-    "minLength": "Turi būti ne mažiau nei {{min}} simbolių."
+    "minLength": "Turi būti ne mažiau nei {{min}} simbolių.",
+    "wholeNumberBetween": "Įveskite sveikąjį skaičių nuo {{min}} iki {{max}}."
   },
   "pagination": {
     "pageOf": "{{page}} puslapis iš {{pages}}"
@@ -987,7 +1058,8 @@
     },
     "backup": {
       "invalidFile": "Failas nėra tinkama atsarginė kopija. Niekas nepakeista.",
-      "schemaMismatch": "Kopija sukurta kitos programos versijos. Atkurkite ją ta versija, kuri ją sukūrė, tada atnaujinkite."
+      "schemaMismatch": "Kopija sukurta kitos programos versijos. Atkurkite ją ta versija, kuri ją sukūrė, tada atnaujinkite.",
+      "tooLarge": "Kopijoje daugiau duomenų, nei ši sistema priima. Niekas nepakeista."
     },
     "broker": {
       "rejected": "Interactive Brokers atmetė užklausą: {{reason}}",
@@ -1001,11 +1073,13 @@
       "invalidSize": "Per mažai arba per daug elementų."
     },
     "conflict": {
+      "busy": "Duomenų bazė buvo užimta kitais darbais. Niekas nepakeista, po akimirkos bandykite dar kartą.",
       "duplicate": "Toks įrašas jau yra.",
       "stale": "Duomenys pasikeitė. Atnaujinkite ir bandykite dar kartą."
     },
     "credentials": {
-      "invalid": "Neteisingas el. paštas arba slaptažodis."
+      "invalid": "Neteisingas el. paštas arba slaptažodis.",
+      "lockedOut": "Per daug nesėkmingų bandymų. Palaukite 15 minučių ir bandykite dar kartą."
     },
     "currency": {
       "disabled": "Ši valiuta neįjungta."
@@ -1022,6 +1096,9 @@
     },
     "exchangeRate": {
       "unavailable": "Šiai datai nėra valiutos kurso. Pirmiau sinchronizuokite kursus nustatymuose."
+    },
+    "export": {
+      "tooManyRows": "Per daug operacijų PDF failui. Susiaurinkite filtrus arba eksportuokite CSV."
     },
     "feature": {
       "disabled": "Ši funkcija išjungta."
@@ -1040,6 +1117,7 @@
     },
     "import": {
       "invalidFile": "Failas tuščias, per didelis arba netinkamo formato.",
+      "transferAlreadyMatched": "Pasirinktas pervedimas jau susietas su kitu šios sąskaitos banko įrašu.",
       "transferMismatch": "Pasirinktas pervedimas neatitinka šios eilutės."
     },
     "money": {
@@ -1073,6 +1151,9 @@
       "notFound": "Šis įrašas nebeegzistuoja.",
       "readOnly": "Importuotų įrašų redaguoti negalima."
     },
+    "security": {
+      "notHeld": "Kainą gali nustatyti tik šį vertybinį popierių turintis naudotojas arba administratorius."
+    },
     "setup": {
       "alreadyCompleted": "Pradinis nustatymas jau atliktas."
     },
@@ -1094,6 +1175,7 @@
       "invalidCode": "Kodas neteisingas."
     },
     "user": {
+      "lastAdministrator": "Turi likti bent vienas aktyvus administratorius.",
       "selfChange": "Negalite keisti savo vaidmens ar išjungti savo paskyros."
     },
     "value": {

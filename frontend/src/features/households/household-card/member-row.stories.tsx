@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { getUpdateMemberRoleMockHandler } from "@/api/generated/households/households.msw";
+import { Rows } from "@/components/ui/rows";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
 import { handlers, pending } from "@/storybook/handlers";
 import { MemberRow } from "./member-row";
@@ -18,9 +19,9 @@ const meta = {
     removeDisabled: false,
   },
   render: (args) => (
-    <ul className="rows w-[36rem] max-w-full">
+    <Rows className="w-[36rem] max-w-full">
       <MemberRow {...args} />
-    </ul>
+    </Rows>
   ),
 } satisfies Meta<typeof MemberRow>;
 
@@ -42,9 +43,9 @@ export const LongNameAndEmail: Story = { args: { member: gardenHousehold.members
 export const LongNameMemberViewNarrow: Story = {
   args: { isOwnerView: false, member: gardenHousehold.members![0]! },
   render: (args) => (
-    <ul className="rows w-72">
+    <Rows className="w-72">
       <MemberRow {...args} />
-    </ul>
+    </Rows>
   ),
 };
 

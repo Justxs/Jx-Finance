@@ -75,8 +75,33 @@ export const getDeleteTransferMockHandler = (
     options,
   );
 };
+
+export const getUpdateTransferMockHandler = (
+  overrideResponse?:
+    | TransferResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<TransferResponse> | TransferResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/transfers/:id",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getTransfersMock = () => [
   getCreateTransferMockHandler(),
   getTransfersMockHandler(),
   getDeleteTransferMockHandler(),
+  getUpdateTransferMockHandler(),
 ];

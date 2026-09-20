@@ -1,8 +1,18 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import { getUpdateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
-import { dueSoonBill, inactiveBill, recurringBills, variableBill } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import {
+  accounts,
+  billCategoryProblem,
+  categories,
+  dueSoonBill,
+  inactiveBill,
+  notFoundProblem,
+  recurringBills,
+  variableBill,
+} from "@/storybook/fixtures";
+import { failWith, handlers, pending } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { RecurringBillEditForm } from "./recurring-bill-edit-form";
 
 const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? dueSoonBill;
@@ -10,7 +20,7 @@ const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? d
 const meta = {
   title: "Features/RecurringBills/RecurringBillEditForm",
   component: RecurringBillEditForm,
-  args: { bill: dueSoonBill, onDone: fn() },
+  args: { bill: dueSoonBill, accounts, categories, onDone: fn() },
   decorators: [
     function withFormWidth(Story) {
       return (
@@ -25,9 +35,18 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByLabelText("Name")).toHaveValue(dueSoonBill.name);
+    await expect(canvas.getByLabelText("Amount")).toHaveValue(dueSoonBill.amount);
+    await expect(canvas.getByRole("checkbox", { name: "Active" })).toBeChecked();
+  },
+};
 
-export const Fixed: Story = { args: { bill: dueSoonBill } };
+export const Dark: Story = { globals: { theme: "dark" } };
+
+export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const Variable: Story = { args: { bill: variableBill } };
 
@@ -35,23 +54,85 @@ export const Inactive: Story = { args: { bill: inactiveBill } };
 
 export const LongName: Story = { args: { bill: longNameBill } };
 
-export const InvalidAmount: Story = {
-  play: async ({ canvasElement }) => {
+export const NoAccountsOrCategories: Story = { args: { accounts: [], categories: [] } };
+
+export const InvalidValues: Story = {
+  play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
-    const amount = canvas.getAllByRole("textbox")[1]!;
-    await userEvent.clear(amount);
-    await userEvent.type(amount, "0");
+    fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "0" } });
+    fireEvent.change(canvas.getByLabelText("Remind days before"), { target: { value: "400" } });
+    fireEvent.change(canvas.getByLabelText("Name"), { target: { value: " " } });
+
+    await expect(await canvas.findByText(/Enter an amount greater than 0/u)).toBeVisible();
+    await expect(canvas.getByText("Enter a whole number from 0 to 365.")).toBeVisible();
+    await expect(canvas.getByText("This field is required.")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Save" })).toBeDisabled();
+    await expect(args.onDone).not.toHaveBeenCalled();
+  },
+};
+
+export const ChangesEverything: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    fireEvent.change(canvas.getByLabelText("Name"), { target: { value: "Telia internetas" } });
+    await chooseOption(canvas.getByRole("combobox", { name: "Kind" }), "Variable amount");
+    await expect(canvas.queryByLabelText("Amount")).toBeNull();
+    await chooseOption(canvas.getByRole("combobox", { name: "Repeats" }), "Quarterly");
+    await chooseOption(canvas.getByRole("combobox", { name: "Category" }), "No category");
+    await chooseOption(canvas.getByRole("combobox", { name: "Account" }), "No default account");
+    fireEvent.change(canvas.getByLabelText("Remind days before"), { target: { value: "7" } });
+    await userEvent.click(canvas.getByRole("checkbox", { name: "Active" }));
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
   },
 };
 
 export const SavePending: Story = {
   parameters: {
+    msw: { handlers: [getUpdateRecurringBillMockHandler(pending), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const save = canvas.getByRole("button", { name: "Save" });
+    await userEvent.click(save);
+
+    await waitFor(() => expect(save).toHaveAttribute("aria-busy", "true"));
+  },
+};
+
+export const ServerFieldError: Story = {
+  parameters: {
     msw: {
-      handlers: [getUpdateRecurringBillMockHandler(pending), ...handlers],
+      handlers: [
+        getUpdateRecurringBillMockHandler(failWith(billCategoryProblem, 400)),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+
+    await expect(await canvas.findByText("Choose a category of the matching type.")).toBeVisible();
+    await expect(canvas.getByRole("combobox", { name: "Category" })).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
+    await expect(args.onDone).not.toHaveBeenCalled();
+  },
+};
+
+export const BillNoLongerExists: Story = {
+  parameters: {
+    msw: {
+      handlers: [getUpdateRecurringBillMockHandler(failWith(notFoundProblem, 404)), ...handlers],
     },
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+
+    await expect(await canvas.findByRole("alert")).toBeVisible();
   },
 };

@@ -1,10 +1,17 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useExchangeRate } from "@/api/generated";
-import { type AccountResponse, Currency } from "@/api/generated/model";
+import {
+  type AccountResponse,
+  type CategoryResponse,
+  type ConversionResponse,
+  Currency,
+} from "@/api/generated/model";
 import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/conversions.zod";
 import { useAppForm } from "@/components/form";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import {
   EMPTY_VALUE,
   useIsoDate,
@@ -12,7 +19,7 @@ import {
   useUsableCurrencies,
 } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { submitToServer } from "@/lib/form-server-errors";
+import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
 import {
   isPositiveMoney,
   normalizeMoney,
@@ -23,7 +30,7 @@ import {
 } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
-interface ConversionFormValues {
+export interface ConversionFormValues {
   accountId: string;
   fromAmount: string;
   fromCurrency: Currency;
@@ -33,6 +40,7 @@ interface ConversionFormValues {
   description: string | null;
   feeAmount: string | null;
   feeCurrency: Currency | null;
+  feeCategoryId: string | null;
 }
 
 interface FormValues {
@@ -45,11 +53,15 @@ interface FormValues {
   description: string;
   feeAmount: string;
   feeCurrency: Currency;
+  feeCategoryId: string;
 }
 
 interface Props {
   accounts: AccountResponse[];
+  categories: CategoryResponse[];
   accountId?: string;
+  conversion?: ConversionResponse;
+  error?: unknown;
   pending: boolean;
   onSubmit: (values: ConversionFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
@@ -86,6 +98,22 @@ function buildValues(value: FormValues): ConversionFormValues {
     description: value.description.trim() || null,
     feeAmount: hasFee ? value.feeAmount : null,
     feeCurrency: hasFee ? value.feeCurrency : null,
+    feeCategoryId: hasFee && value.feeCategoryId !== "" ? value.feeCategoryId : null,
+  };
+}
+
+function valuesOf(conversion: ConversionResponse): FormValues {
+  return {
+    accountId: conversion.accountId,
+    fromAmount: conversion.fromAmount,
+    fromCurrency: conversion.fromCurrency,
+    toAmount: conversion.toAmount,
+    toCurrency: conversion.toCurrency,
+    date: conversion.date,
+    description: conversion.description ?? "",
+    feeAmount: conversion.feeAmount ?? "",
+    feeCurrency: conversion.feeCurrency ?? conversion.fromCurrency,
+    feeCategoryId: conversion.feeCategoryId ?? "",
   };
 }
 
@@ -140,7 +168,10 @@ function ConversionRate({
 
 export function ConversionForm({
   accounts,
+  categories,
   accountId,
+  conversion,
+  error,
   pending,
   onSubmit,
   onCancel,
@@ -160,6 +191,7 @@ export function ConversionForm({
       description: optionalText(t, createConversionBodyDescriptionMax),
       feeAmount: optionalPositiveMoney(t),
       feeCurrency: z.enum(Currency),
+      feeCategoryId: z.string(),
     })
     .refine((value) => value.fromCurrency !== value.toCurrency, {
       message: t("conversions.sameCurrencyError"),
@@ -169,17 +201,31 @@ export function ConversionForm({
   const initialAccount = accounts.find((account) => account.id === accountId) ?? accounts[0];
   const initialSold = initialAccount?.currency ?? "eur";
 
-  const defaultValues: FormValues = {
-    accountId: initialAccount?.id ?? "",
-    fromAmount: "",
-    fromCurrency: initialSold,
-    toAmount: "",
-    toCurrency: otherCurrency(initialAccount, initialSold, usable),
-    date: today,
-    description: "",
-    feeAmount: "",
-    feeCurrency: initialSold,
-  };
+  const defaultValues: FormValues = conversion
+    ? valuesOf(conversion)
+    : {
+        accountId: initialAccount?.id ?? "",
+        fromAmount: "",
+        fromCurrency: initialSold,
+        toAmount: "",
+        toCurrency: otherCurrency(initialAccount, initialSold, usable),
+        date: today,
+        description: "",
+        feeAmount: "",
+        feeCurrency: initialSold,
+        feeCategoryId: "",
+      };
+
+  const accountOptions = accounts.map((account) => ({ value: account.id, label: account.name }));
+  if (conversion && !accounts.some((account) => account.id === conversion.accountId)) {
+    accountOptions.push({ value: conversion.accountId, label: t("transfers.unavailableAccount") });
+  }
+  const feeCategoryOptions = [
+    { value: "", label: t("recurringBills.noCategory") },
+    ...categories
+      .filter((category) => category.type === "expense")
+      .map((category) => ({ value: category.id, label: category.name })),
+  ];
 
   const form = useAppForm({
     defaultValues,
@@ -190,21 +236,23 @@ export function ConversionForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="accountId">
           {(field) => (
             <field.SelectFieldControl
               id="conversion-account"
               label={t("transactions.account")}
-              options={accounts.map((account) => ({ value: account.id, label: account.name }))}
+              hint={conversion ? t("conversions.accountFixedHint") : undefined}
+              disabled={conversion !== undefined}
+              options={accountOptions}
               onValueChange={(value) => {
                 const next = accounts.find((account) => account.id === value);
                 const sold = next?.currency ?? form.getFieldValue("fromCurrency");
@@ -305,7 +353,7 @@ export function ConversionForm({
                       label={t("conversions.fee")}
                       currencyLabel={t("conversions.feeCurrency")}
                       currencyField={currencyField}
-                      hint={t("conversions.feeHint")}
+                      hint={conversion ? t("conversions.feeEditHint") : t("conversions.feeHint")}
                       only={tradedCurrencies}
                     />
                   )}
@@ -315,11 +363,41 @@ export function ConversionForm({
           )}
         </form.Subscribe>
 
+        <form.Subscribe selector={(state) => state.values.feeAmount.trim() === ""}>
+          {(noFee) => (
+            <form.Field name="feeCategoryId">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="conversion-fee-category"
+                  label={t("conversions.feeCategory")}
+                  disabled={noFee}
+                  options={feeCategoryOptions}
+                />
+              )}
+            </form.Field>
+          )}
+        </form.Subscribe>
+
         <form.Field name="description">
           {(field) => (
-            <field.TextField id="conversion-description" label={t("transactions.description")} />
+            <field.TextField
+              id="conversion-description"
+              label={t("transactions.description")}
+              className="col-span-full"
+            />
           )}
         </form.Field>
+
+        {hasServerErrorCode(error, "transaction.splitNotAllowed") ? (
+          <p
+            role="alert"
+            className="col-span-full border-t border-expense pt-2 text-sm text-expense"
+          >
+            {t("conversions.feeSplitError")}
+          </p>
+        ) : (
+          <FormError error={error} />
+        )}
 
         <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
           {onCancel ? (
@@ -327,9 +405,11 @@ export function ConversionForm({
               {t("actions.cancel")}
             </Button>
           ) : null}
-          <form.SubmitButton pending={pending}>{t("conversions.submit")}</form.SubmitButton>
+          <form.SubmitButton pending={pending}>
+            {conversion ? t("actions.save") : t("conversions.submit")}
+          </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

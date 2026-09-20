@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
@@ -35,14 +36,14 @@ public sealed class AccountService(
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var search = request.Search.Trim();
-            query = query.Where(a => EF.Functions.ILike(a.Name, $"%{search}%"));
+            var search = LikePattern.Contains(request.Search);
+            query = query.Where(a => EF.Functions.ILike(a.Name, search, LikePattern.Escape));
         }
 
         if (!string.IsNullOrWhiteSpace(request.Iban))
         {
-            var iban = request.Iban.Trim();
-            query = query.Where(a => a.Iban != null && EF.Functions.ILike(a.Iban, $"%{iban}%"));
+            var iban = LikePattern.Contains(request.Iban);
+            query = query.Where(a => a.Iban != null && EF.Functions.ILike(a.Iban, iban, LikePattern.Escape));
         }
 
         if (request.Type is { } type)

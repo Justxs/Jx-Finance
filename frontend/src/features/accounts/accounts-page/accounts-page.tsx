@@ -14,6 +14,7 @@ import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Button } from "@/components/ui/button";
+import { Panel, Section, SectionTitle } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AccountBalances } from "@/features/dashboard/account-balances";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -73,7 +74,7 @@ export function AccountsPage() {
         />
       </Modal>
 
-      <div className="panel">
+      <Panel>
         <AccountsTable
           accounts={accountList}
           stale={stale}
@@ -86,15 +87,15 @@ export function AccountsPage() {
           onDelete={(id) => setDeleteTarget(id)}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
         />
-      </div>
+      </Panel>
 
       {accountList.length > 1 ? (
-        <section className="section">
-          <h2 className="section-title mb-4">{t("accounts.share")}</h2>
+        <Section>
+          <SectionTitle className="mb-4">{t("accounts.share")}</SectionTitle>
           <div className="max-w-2xl">
             <AccountBalances limit={12} />
           </div>
-        </section>
+        </Section>
       ) : null}
 
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>

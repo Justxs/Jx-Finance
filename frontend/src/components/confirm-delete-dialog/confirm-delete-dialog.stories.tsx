@@ -34,6 +34,22 @@ function ConfirmDeleteExample({ initiallyOpen, itemLabel }: Readonly<ExampleProp
   );
 }
 
+function OwnCopyExample() {
+  const [target, setTarget] = useState<Row | null>(row);
+
+  return (
+    <ConfirmDeleteDialog
+      target={target}
+      itemLabel="Šarūnas Kazlauskas"
+      title="Deactivate this user?"
+      description="They are signed out everywhere and can be reactivated later."
+      confirmLabel="Deactivate"
+      onCancel={() => setTarget(null)}
+      onConfirm={(confirmed) => toast.success(`Deactivated ${confirmed.name}`)}
+    />
+  );
+}
+
 const meta = {
   title: "Components/ConfirmDeleteDialog",
   component: ConfirmDeleteDialog,
@@ -58,5 +74,7 @@ export const WithLongItemLabel: Story = {
     />
   ),
 };
+
+export const WithOwnCopy: Story = { render: () => <OwnCopyExample /> };
 
 export const Closed: Story = { render: () => <ConfirmDeleteExample initiallyOpen={false} /> };

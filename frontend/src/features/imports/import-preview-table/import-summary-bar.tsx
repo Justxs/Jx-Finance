@@ -59,7 +59,7 @@ export function ImportSummaryBar({
             <span
               key={net.currency ?? ""}
               className={cn(
-                "total-rule pb-0.5 text-base font-semibold whitespace-nowrap tabular-nums",
+                "border-b-3 border-double border-rule pb-0.5 text-base font-semibold whitespace-nowrap tabular-nums",
                 net.cents > 0 && "text-income",
                 net.cents < 0 && "text-expense",
               )}

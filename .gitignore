@@ -31,6 +31,7 @@ node_modules/
 # Playwright
 **/playwright-report/
 **/test-results/
+frontend/e2e/.auth/
 # Exported OpenAPI documents (regenerated on demand / in CI)
 backend/**/wwwroot/openapi/
 backend/JxFinance.Api/backups/

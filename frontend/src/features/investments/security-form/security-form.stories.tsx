@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import { unpricedStock, usStock } from "@/storybook/investment-fixtures";
+import { ApiError } from "@/api/client";
+import { duplicateSecurityProblem, unpricedStock, usStock } from "@/storybook/investment-fixtures";
 import { SecurityForm } from "./security-form";
 
 const meta = {
@@ -55,5 +56,20 @@ export const InvalidIsin: Story = {
     await userEvent.type(await canvas.findByLabelText("ISIN (optional)"), "NOT-AN-ISIN");
     await userEvent.tab();
     await expect(await canvas.findByText(/Enter a valid ISIN/)).toBeInTheDocument();
+  },
+};
+
+export const SymbolAlreadyExists: Story = {
+  args: {
+    error: new ApiError({
+      status: 409,
+      title: duplicateSecurityProblem.title ?? undefined,
+      code: duplicateSecurityProblem.code,
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole("alert")).toHaveTextContent(
+      "This already exists.",
+    );
   },
 };

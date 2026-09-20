@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { accounts } from "@/storybook/fixtures";
 import {
   Table,
@@ -73,9 +74,9 @@ const meta = {
   parameters: { layout: "padded" },
   decorators: [
     (Story) => (
-      <section className="card overflow-hidden">
+      <Card as="section" className="overflow-hidden">
         <Story />
-      </section>
+      </Card>
     ),
   ],
 } satisfies Meta<typeof Table>;

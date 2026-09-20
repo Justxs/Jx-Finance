@@ -5,7 +5,7 @@ using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser)
+public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, ISessionService sessions)
     : Endpoint<EnableTwoFactorRequest, EnableTwoFactorResponse>
 {
     public override void Configure()
@@ -25,6 +25,7 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
         }
 
         var recoveryCodes = (await authService.EnableTwoFactorAsync(user, req.Code)).ValueOrThrow();
+        await sessions.RenewAsync(user, ct);
         await Send.OkAsync(new EnableTwoFactorResponse(recoveryCodes), ct);
     }
 }

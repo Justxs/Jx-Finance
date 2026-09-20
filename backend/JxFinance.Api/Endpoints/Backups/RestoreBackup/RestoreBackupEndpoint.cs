@@ -7,19 +7,20 @@ using JxFinance.Infrastructure.Auth;
 namespace JxFinance.Endpoints.Backups.RestoreBackup;
 
 public sealed class RestoreBackupEndpoint(IBackupService backupService, ISessionService sessionService)
-    : EndpointWithoutRequest<RestoreBackupResponse>
+    : Endpoint<RestoreBackupRequest, RestoreBackupResponse>
 {
     public override void Configure()
     {
         Post("backups/{id}/restore");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
+        Throttle(hitLimit: 5, durationSeconds: 300);
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409).Produces(429));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
+    public override async Task HandleAsync(RestoreBackupRequest req, CancellationToken ct)
     {
-        var restored = (await backupService.RestoreAsync(Route<Guid>("id"), ct)).ValueOrThrow();
+        var restored = (await backupService.RestoreAsync(req.Id, req.Password, ct)).ValueOrThrow();
         await sessionService.SignOutAsync(ct);
         await Send.OkAsync(restored, ct);
     }

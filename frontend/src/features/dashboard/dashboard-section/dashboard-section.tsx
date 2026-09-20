@@ -1,7 +1,7 @@
 import { Link, type LinkProps } from "@tanstack/react-router";
 import { ArrowRight } from "lucide-react";
 import type { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import { Panel, SectionTitle } from "@/components/ui/section";
 
 interface Props {
   title: string;
@@ -13,9 +13,9 @@ interface Props {
 
 export function DashboardSection({ title, to, linkLabel, className, children }: Readonly<Props>) {
   return (
-    <section className={cn("panel", className)}>
+    <Panel as="section" className={className}>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="section-title">{title}</h2>
+        <SectionTitle>{title}</SectionTitle>
         {to && linkLabel ? (
           <Link
             to={to}
@@ -27,6 +27,6 @@ export function DashboardSection({ title, to, linkLabel, className, children }: 
         ) : null}
       </div>
       {children}
-    </section>
+    </Panel>
   );
 }

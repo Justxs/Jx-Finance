@@ -9,6 +9,7 @@ import {
 } from "@/api/schemas/users/users.zod";
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { submitToServer } from "@/lib/form-server-errors";
 import { requiredText } from "@/lib/validation";
 
@@ -81,16 +82,17 @@ export function ProfileForm({ profile }: Readonly<Props>) {
 
   return (
     <form.AppForm>
-      <form
+      <Section
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="section space-y-4 *:max-w-md"
+        className="space-y-4 *:max-w-md"
       >
-        <h2 className="section-title">{t("profile.detailsTitle")}</h2>
+        <SectionTitle>{t("profile.detailsTitle")}</SectionTitle>
         <form.Field name="displayName">
           {(field) => <field.TextField id="profile-display-name" label={t("users.displayName")} />}
         </form.Field>
@@ -122,7 +124,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
             {t("profile.save")}
           </form.SubmitButton>
         </div>
-      </form>
+      </Section>
     </form.AppForm>
   );
 }

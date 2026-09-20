@@ -129,9 +129,15 @@ export function RecurringBillRow({
               setMode("view");
             }
           }}
-          title={t("actions.edit")}
+          title={t("recurringBills.editTitle")}
+          description={bill.name}
         >
-          <RecurringBillEditForm bill={bill} onDone={() => setMode("view")} />
+          <RecurringBillEditForm
+            bill={bill}
+            accounts={accounts}
+            categories={categories}
+            onDone={() => setMode("view")}
+          />
         </Modal>
 
         <Modal
@@ -141,7 +147,7 @@ export function RecurringBillRow({
               setMode("view");
             }
           }}
-          title={t("recurringBills.confirm")}
+          title={t("recurringBills.confirmTitle")}
         >
           <RecurringBillConfirmForm
             bill={bill}

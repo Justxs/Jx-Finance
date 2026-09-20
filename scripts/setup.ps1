@@ -27,6 +27,7 @@ New-Item -ItemType Directory -Force (Join-Path $root ".local") | Out-Null
 $debugEnv = @(
     "ConnectionStrings__Default=Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])",
     "OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317",
+    "App__BackupDirectory=$(Join-Path $root '.local/backups')",
     ""
 ) -join "`n"
 [System.IO.File]::WriteAllText((Join-Path $root ".local/api-debug.env"), $debugEnv, $utf8)

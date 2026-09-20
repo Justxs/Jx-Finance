@@ -9,6 +9,8 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
+import { Rows } from "@/components/ui/rows";
+import { StaleRegion, staleVariants } from "@/components/ui/stale-region";
 import {
   Table,
   TableBody,
@@ -196,13 +198,13 @@ export function AccountsTable({
 
   return (
     <>
-      <div className={cn("md:hidden", stale && "is-stale")} aria-busy={stale}>
+      <StaleRegion stale={stale} className="md:hidden">
         {accounts.length === 0 ? (
           <p className="py-6 text-sm text-muted-foreground">
             {filtered ? t("filters.noMatches") : t("accounts.empty")}
           </p>
         ) : (
-          <ul className="rows" aria-label={t("accounts.title")}>
+          <Rows aria-label={t("accounts.title")}>
             {accounts.map((account) => {
               const secondary = [
                 t(`accounts.types.${account.type}`),
@@ -233,9 +235,9 @@ export function AccountsTable({
                 </li>
               );
             })}
-          </ul>
+          </Rows>
         )}
-      </div>
+      </StaleRegion>
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
           <div
@@ -244,7 +246,7 @@ export function AccountsTable({
             aria-label={t("accounts.title")}
             tabIndex={0}
           >
-            <Table className={`min-w-160 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+            <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead

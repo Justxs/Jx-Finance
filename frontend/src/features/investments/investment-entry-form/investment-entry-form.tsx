@@ -16,6 +16,7 @@ import { FormError } from "@/components/form-error";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
@@ -218,14 +219,14 @@ export function InvestmentEntryForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="type">
           {(field) => (
@@ -454,7 +455,7 @@ export function InvestmentEntryForm({
             form.setFieldValue("securityId", security.id);
           }}
         />
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

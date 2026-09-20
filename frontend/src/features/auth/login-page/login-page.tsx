@@ -6,6 +6,7 @@ import { useLogin } from "@/api/generated";
 import { Brand } from "@/components/brand";
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
+import { Card } from "@/components/ui/card";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { submitToServer } from "@/lib/form-server-errors";
 import { requiredEmail, requiredValue } from "@/lib/validation";
@@ -74,7 +75,7 @@ export function LoginPage() {
       <div className="mb-6 flex justify-center">
         <Brand size="lg" stacked />
       </div>
-      <div className="card p-6 sm:p-8">
+      <Card className="p-6 sm:p-8">
         <h1 className="text-lg font-semibold">{t("auth.signIn")}</h1>
         <p className="mt-1 text-sm text-muted-foreground">{t("auth.signInSubtitle")}</p>
 
@@ -145,7 +146,7 @@ export function LoginPage() {
             </form.SubmitButton>
           </form>
         </form.AppForm>
-      </div>
+      </Card>
     </div>
   );
 }

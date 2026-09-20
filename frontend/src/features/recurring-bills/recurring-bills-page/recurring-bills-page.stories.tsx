@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { userEvent, within } from "storybook/test";
 import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import {
   getDeleteRecurringBillMockHandler,
@@ -15,6 +15,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { RecurringBillsPage } from "./recurring-bills-page";
 
 function RecurringBillsPageStory() {
@@ -72,7 +73,7 @@ export const AddDialogOpen: Story = {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add recurring bill|pridėti periodinę/i }),
     );
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 
@@ -87,7 +88,7 @@ export const AddDialogWithoutAccounts: Story = {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add recurring bill|pridėti periodinę/i }),
     );
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { getAddMemberMockHandler } from "@/api/generated/households/households.msw";
 import { Modal } from "@/components/modal";
+import { Card } from "@/components/ui/card";
 import { familyHousehold, notFoundProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { AddMemberForm } from "./add-member-form";
@@ -12,9 +13,9 @@ const meta = {
   parameters: { route: "/households" },
   args: { householdId: familyHousehold.id ?? "", onAdded: fn(), onCancel: fn() },
   render: (args) => (
-    <div className="card w-[36rem] max-w-full p-6">
+    <Card className="w-[36rem] max-w-full p-6">
       <AddMemberForm {...args} />
-    </div>
+    </Card>
   ),
 } satisfies Meta<typeof AddMemberForm>;
 
@@ -27,9 +28,9 @@ export const WithoutCancel: Story = { args: { onCancel: undefined } };
 
 export const Narrow: Story = {
   render: (args) => (
-    <div className="card w-72 p-4">
+    <Card className="w-72 p-4">
       <AddMemberForm {...args} />
-    </div>
+    </Card>
   ),
 };
 

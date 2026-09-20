@@ -15,7 +15,7 @@ public sealed class UpdateGoalValidator : Validator<UpdateGoalRequest>
         RuleFor(r => r.CurrentAmount)
             .IsPresent()
             .WithMessage("Current amount is required.")
-            .IsMoney()
-            .WithMessage("Current amount must be a decimal with at most 2 decimal places.");
+            .IsNonNegativeMoney()
+            .WithMessage("Current amount must be a non-negative decimal with at most 2 decimal places.");
     }
 }

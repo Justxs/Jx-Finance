@@ -15,7 +15,10 @@ import { useAppForm } from "@/components/form";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { useCurrencyName } from "@/hooks/use-formatters";
 import type { FeatureKey } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
@@ -160,15 +163,9 @@ export function SettingsForm({
         noValidate
         className="space-y-5"
       >
-        <section
-          className="section"
-          aria-labelledby="settings-general"
-          hidden={section !== "general"}
-        >
-          <h2 id="settings-general" className="section-title">
-            {t("settings.general.title")}
-          </h2>
-          <div className="form-grid mt-4 max-w-3xl">
+        <Section aria-labelledby="settings-general" hidden={section !== "general"}>
+          <SectionTitle id="settings-general">{t("settings.general.title")}</SectionTitle>
+          <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="instanceName">
               {(field) => (
                 <field.TextField
@@ -179,17 +176,11 @@ export function SettingsForm({
                 />
               )}
             </form.Field>
-          </div>
-        </section>
+          </FormGrid>
+        </Section>
 
-        <section
-          className="section"
-          aria-labelledby="settings-features"
-          hidden={section !== "features"}
-        >
-          <h2 id="settings-features" className="section-title">
-            {t("settings.features.title")}
-          </h2>
+        <Section aria-labelledby="settings-features" hidden={section !== "features"}>
+          <SectionTitle id="settings-features">{t("settings.features.title")}</SectionTitle>
           <p className="mt-1 max-w-prose text-sm text-muted-foreground">
             {t("settings.features.description")}
           </p>
@@ -197,7 +188,7 @@ export function SettingsForm({
             {featureGroups.map((group) => (
               <fieldset key={group.titleKey} className="min-w-0">
                 <legend className="text-sm font-semibold">{t(group.titleKey)}</legend>
-                <ul className="rows mt-1">
+                <Rows className="mt-1">
                   {group.features.map((feature) => (
                     <form.Field key={feature} name={`features.${feature}`}>
                       {(field) => (
@@ -211,21 +202,15 @@ export function SettingsForm({
                       )}
                     </form.Field>
                   ))}
-                </ul>
+                </Rows>
               </fieldset>
             ))}
           </div>
-        </section>
+        </Section>
 
-        <section
-          className="section"
-          aria-labelledby="settings-currencies"
-          hidden={section !== "currencies"}
-        >
-          <h2 id="settings-currencies" className="section-title">
-            {t("settings.currencies.title")}
-          </h2>
-          <div className="form-grid mt-4 max-w-3xl">
+        <Section aria-labelledby="settings-currencies" hidden={section !== "currencies"}>
+          <SectionTitle id="settings-currencies">{t("settings.currencies.title")}</SectionTitle>
+          <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="reportingCurrency">
               {(field) => (
                 <div className="space-y-1.5">
@@ -253,7 +238,7 @@ export function SettingsForm({
                 </div>
               )}
             </form.Field>
-          </div>
+          </FormGrid>
 
           <form.Subscribe
             selector={(state) =>
@@ -325,16 +310,10 @@ export function SettingsForm({
               </form.Field>
             )}
           </form.Subscribe>
-        </section>
+        </Section>
 
-        <section
-          className="section"
-          aria-labelledby="settings-rates"
-          hidden={section !== "currencies"}
-        >
-          <h2 id="settings-rates" className="section-title">
-            {t("settings.rates.title")}
-          </h2>
+        <Section aria-labelledby="settings-rates" hidden={section !== "currencies"}>
+          <SectionTitle id="settings-rates">{t("settings.rates.title")}</SectionTitle>
           <form.Field name="exchangeRateSyncEnabled">
             {(field) => (
               <field.CheckboxField
@@ -346,17 +325,11 @@ export function SettingsForm({
             )}
           </form.Field>
           {exchangeRates}
-        </section>
+        </Section>
 
-        <section
-          className="section"
-          aria-labelledby="settings-regional"
-          hidden={section !== "regional"}
-        >
-          <h2 id="settings-regional" className="section-title">
-            {t("settings.regional.title")}
-          </h2>
-          <div className="form-grid mt-4 max-w-3xl">
+        <Section aria-labelledby="settings-regional" hidden={section !== "regional"}>
+          <SectionTitle id="settings-regional">{t("settings.regional.title")}</SectionTitle>
+          <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="defaultLanguage">
               {(field) => (
                 <field.SelectFieldControl
@@ -426,18 +399,12 @@ export function SettingsForm({
                 />
               )}
             </form.Field>
-          </div>
-        </section>
+          </FormGrid>
+        </Section>
 
-        <section
-          className="section"
-          aria-labelledby="settings-defaults"
-          hidden={section !== "defaults"}
-        >
-          <h2 id="settings-defaults" className="section-title">
-            {t("settings.defaults.title")}
-          </h2>
-          <div className="form-grid mt-4 max-w-3xl">
+        <Section aria-labelledby="settings-defaults" hidden={section !== "defaults"}>
+          <SectionTitle id="settings-defaults">{t("settings.defaults.title")}</SectionTitle>
+          <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="defaultAccountId">
               {(field) => (
                 <field.SelectFieldControl
@@ -462,8 +429,8 @@ export function SettingsForm({
                 />
               )}
             </form.Field>
-          </div>
-        </section>
+          </FormGrid>
+        </Section>
 
         <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit] as const}>
           {([isDirty, canSubmit]) =>

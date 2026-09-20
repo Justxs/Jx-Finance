@@ -92,26 +92,11 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
             return Result<Guid>.Failure(ErrorCodes.AccessForbidden, "Only a household owner can do this.");
         }
 
-        await db.Accounts
-            .Where(a => a.HouseholdId == household.Id)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(a => a.Scope, Scope.Personal)
-                    .SetProperty(a => a.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(a => a.UpdatedAt, DateTimeOffset.UtcNow),
-                cancellationToken);
-
-        await db.Categories
-            .Where(c => c.HouseholdId == household.Id)
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(c => c.Scope, Scope.Personal)
-                    .SetProperty(c => c.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(c => c.UpdatedAt, DateTimeOffset.UtcNow),
-                cancellationToken);
-
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await MakePersonalAsync(household.Id, null, cancellationToken);
         db.Households.Remove(household);
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result<Guid>.Success(id);
     }
@@ -224,10 +209,34 @@ public sealed class HouseholdService(AppDbContext db, ICurrentUser currentUser, 
                 "A household needs at least one owner.");
         }
 
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await MakePersonalAsync(household.Id, membership.UserId, cancellationToken);
         db.HouseholdMemberships.Remove(membership);
         await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
 
         return Result<HouseholdResponse>.Success(await ToResponseAsync(household, cancellationToken));
+    }
+
+    private async Task MakePersonalAsync(HouseholdId householdId, Guid? ownerId, CancellationToken cancellationToken)
+    {
+        await db.Accounts
+            .Where(a => a.HouseholdId == householdId && (ownerId == null || a.UserId == ownerId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(a => a.Scope, Scope.Personal)
+                    .SetProperty(a => a.HouseholdId, (HouseholdId?)null)
+                    .SetProperty(a => a.UpdatedAt, DateTimeOffset.UtcNow),
+                cancellationToken);
+
+        await db.Categories
+            .Where(c => c.HouseholdId == householdId && (ownerId == null || c.UserId == ownerId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(c => c.Scope, Scope.Personal)
+                    .SetProperty(c => c.HouseholdId, (HouseholdId?)null)
+                    .SetProperty(c => c.UpdatedAt, DateTimeOffset.UtcNow),
+                cancellationToken);
     }
 
     private Task<Household?> FindAsync(Guid id, CancellationToken cancellationToken)

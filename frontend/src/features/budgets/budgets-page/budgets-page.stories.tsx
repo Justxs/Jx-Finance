@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import {
   getDeleteBudgetMockHandler,
   getBudgetsMockHandler,
@@ -14,6 +14,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { BudgetsPage } from "./budgets-page";
 
 function BudgetsPageStory() {
@@ -122,8 +123,7 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add budget|pridėti/i }));
-    const dialog = await within(document.body).findByRole("dialog");
-    await waitFor(() => expect(dialog).toBeVisible());
+    await openedDialog();
   },
 };
 
@@ -132,8 +132,7 @@ export const EditDialogOpen: Story = {
     const canvas = within(canvasElement);
     const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i });
     await userEvent.click(editButtons[0]!);
-    const dialog = await within(document.body).findByRole("dialog");
-    await waitFor(() => expect(dialog).toBeVisible());
+    await openedDialog();
   },
 };
 

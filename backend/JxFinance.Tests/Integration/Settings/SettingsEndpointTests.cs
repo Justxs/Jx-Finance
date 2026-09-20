@@ -148,6 +148,66 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     }
 
     [Fact]
+    public async Task Revaluation_covers_every_row_when_history_spans_several_batches()
+    {
+        var original = await ReadAsync();
+        var dollars = (await (await CreateAccountInAsync("Batch dollars", "usd")).Content.ReadFromJsonAsync<IdDto>())!.Id;
+        var euros = (await (await CreateAccountInAsync("Batch euros", "eur")).Content.ReadFromJsonAsync<IdDto>())!.Id;
+        var inDollars = new List<Guid>();
+        for (var i = 1; i <= 8; i++)
+        {
+            inDollars.Add((await PostAsync<IdDto>(
+                Client,
+                "/api/transactions",
+                new { accountId = dollars, type = "expense", amount = $"{i * 11}.00", date = $"2026-06-{i:00}" })).Id);
+        }
+
+        var inEuros = (await PostAsync<IdDto>(
+            Client,
+            "/api/transactions",
+            new { accountId = euros, type = "expense", amount = "10.00", date = "2026-06-10" })).Id;
+        var deleted = inDollars[0];
+        (await Client.DeleteAsync($"/api/transactions/{deleted}")).EnsureSuccessStatusCode();
+
+        try
+        {
+            await SaveAsync(original with { ReportingCurrency = "usd" });
+
+            for (var i = 2; i <= 8; i++)
+            {
+                Assert.Equal($"{i * 11}.00", await ReportingAmountAsync(inDollars[i - 1]));
+            }
+
+            Assert.Equal("11.00", await ReportingAmountAsync(inEuros));
+            Assert.Equal(11.00m, await StoredReportingAmountAsync(deleted));
+        }
+        finally
+        {
+            await SaveAsync(original);
+        }
+
+        for (var i = 2; i <= 8; i++)
+        {
+            Assert.Equal($"{i * 10}.00", await ReportingAmountAsync(inDollars[i - 1]));
+        }
+
+        Assert.Equal("10.00", await ReportingAmountAsync(inEuros));
+        Assert.Equal(10.00m, await StoredReportingAmountAsync(deleted));
+    }
+
+    private async Task<string> ReportingAmountAsync(Guid id) =>
+        (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{id}"))!.ReportingAmount;
+
+    private async Task<decimal> StoredReportingAmountAsync(Guid id)
+    {
+        await using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
+        await connection.OpenAsync();
+        await using var command = new Npgsql.NpgsqlCommand("SELECT \"ReportingAmount\" FROM \"Transactions\" WHERE \"Id\" = $1", connection);
+        command.Parameters.AddWithValue(id);
+        return (decimal)(await command.ExecuteScalarAsync())!;
+    }
+
+    [Fact]
     public async Task Invalid_values_are_rejected()
     {
         var original = await ReadAsync();

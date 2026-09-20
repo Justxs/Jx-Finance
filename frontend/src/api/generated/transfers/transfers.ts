@@ -30,6 +30,7 @@ import type {
   ProblemDetails,
   TransferResponse,
   TransfersParams,
+  UpdateTransferRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -452,4 +453,109 @@ export const useDeleteTransfer = <TError = ErrorType<ProblemDetails>, TContext =
   TContext
 > => {
   return useMutation(getDeleteTransferMutationOptions(options), queryClient);
+};
+export const getUpdateTransferUrl = (id: string) => {
+  return `/api/transfers/${id}`;
+};
+
+/**
+ * Replaces the date, amounts, description and both accounts of a transfer. The amount rules are those of creating one: between two currencies the received amount is required, within one currency it may be left out and must equal the sent amount when given. Send currency and receivedCurrency as the transfer has them; without them they default to the main currency of the chosen accounts. You need access to both accounts the transfer has now and to both accounts it should have afterwards. A transfer that was created or matched by a bank or broker import holds a receipt per imported account, flagged by fromAccountImported and toAccountImported: its date, that account's side of the transfer and the amount on that side are fixed and a change answers value.locked, while the description, the other account and, between currencies, the other amount stay editable.
+ * @summary Update a transfer
+ */
+export const updateTransfer = async (
+  id: string,
+  updateTransferRequest: UpdateTransferRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TransferResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<TransferResponse>(getUpdateTransferUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateTransferRequest),
+  });
+};
+
+export const getUpdateTransferMutationKey = () => ["updateTransfer"] as const;
+
+export const getUpdateTransferMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateTransfer>>,
+    TError,
+    UpdateTransferMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateTransfer>>,
+  TError,
+  UpdateTransferMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateTransferMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateTransfer>>,
+    UpdateTransferMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return updateTransfer(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateTransferMutationResult = NonNullable<Awaited<ReturnType<typeof updateTransfer>>>;
+export type UpdateTransferMutationBody = UpdateTransferRequest;
+export type UpdateTransferMutationError = ErrorType<ProblemDetails>;
+export type UpdateTransferMutationVariables = { id: string; data: UpdateTransferRequest };
+
+/**
+ * @summary Update a transfer
+ */
+export const useUpdateTransfer = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateTransfer>>,
+      TError,
+      UpdateTransferMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateTransfer>>,
+  TError,
+  UpdateTransferMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateTransferMutationOptions(options), queryClient);
 };

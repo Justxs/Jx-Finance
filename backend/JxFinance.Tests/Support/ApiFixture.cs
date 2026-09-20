@@ -13,12 +13,15 @@ public sealed class ApiFixture : AppFixture<Program>
 {
     public const string TestAdminEmail = "test-admin@localhost";
     public const string TestAdminPassword = "Test-Password-123!";
+    public const long BackupMaxDecompressedBytes = 32L * 1024 * 1024;
+    public const int PdfExportMaxRows = 5;
 
     private PostgreSqlContainer? _db;
-    private string _connectionString = default!;
     private readonly string _keyDirectory = Path.Combine(Path.GetTempPath(), "jx-test-keys", Guid.NewGuid().ToString("N"));
 
     public HttpClient Api { get; private set; } = default!;
+
+    public string ConnectionString { get; private set; } = default!;
 
     protected override async ValueTask PreSetupAsync()
     {
@@ -31,15 +34,20 @@ public sealed class ApiFixture : AppFixture<Program>
         else if (!new Npgsql.NpgsqlConnectionStringBuilder(externalConnection).Database!.StartsWith("jx_test_", StringComparison.Ordinal))
             throw new InvalidOperationException("External integration databases must use the disposable jx_test_ prefix.");
 
-        _connectionString = _db?.GetConnectionString() ?? externalConnection!;
+        ConnectionString = _db?.GetConnectionString() ?? externalConnection!;
     }
 
     protected override void ConfigureApp(IWebHostBuilder builder)
     {
-        builder.UseSetting("ConnectionStrings:Default", _connectionString);
+        builder.UseSetting("ConnectionStrings:Default", ConnectionString);
         builder.UseSetting("App:BackgroundJobs", "false");
         builder.UseSetting("App:DataProtectionDirectory", _keyDirectory);
         builder.UseSetting("App:BackupDirectory", Path.Combine(_keyDirectory, "backups"));
+        builder.UseSetting("App:BackupMaxDecompressedBytes", BackupMaxDecompressedBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        builder.UseSetting("App:BackupLockTimeoutSeconds", "2");
+        builder.UseSetting("App:RevalueBatchSize", "3");
+        builder.UseSetting("App:PdfExportMaxRows", PdfExportMaxRows.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        builder.UseSetting("App:ApiDocs", "true");
     }
 
     protected override void ConfigureServices(IServiceCollection services)

@@ -10,6 +10,7 @@ import {
   createRouter,
 } from "@tanstack/react-router";
 import { type FunctionComponent, useState } from "react";
+import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
@@ -43,11 +44,23 @@ const STORY_ROUTES = [
   { path: "/setup" },
 ] as const;
 
+const storyQueryClients = new Set<QueryClient>();
+
 function createStoryQueryClient() {
-  return new QueryClient({
+  const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
     mutationCache: createToastingMutationCache(),
   });
+  storyQueryClients.add(client);
+  return client;
+}
+
+export function disposeStoryState() {
+  for (const client of storyQueryClients) {
+    client.clear();
+  }
+  storyQueryClients.clear();
+  toast.dismiss();
 }
 
 function createStoryRouter(Story: FunctionComponent, initialPath: string) {

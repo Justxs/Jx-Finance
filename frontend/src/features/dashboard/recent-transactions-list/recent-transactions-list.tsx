@@ -6,6 +6,7 @@ import {
   useTransactionsSuspense,
 } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Rows } from "@/components/ui/rows";
 import { RowsSkeleton } from "@/components/ui/skeleton";
 import {
   TransactionAmount,
@@ -78,7 +79,7 @@ function RecentRows() {
   }
 
   return (
-    <ul className="rows">
+    <Rows>
       {recentItems.map((transaction) => {
         const name = transactionName(transaction, categoryById, t);
         const meta = [
@@ -102,7 +103,7 @@ function RecentRows() {
           </li>
         );
       })}
-    </ul>
+    </Rows>
   );
 }
 

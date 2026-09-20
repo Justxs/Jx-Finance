@@ -18,6 +18,7 @@ foreach ($line in Get-Content ".env") {
 $env:ConnectionStrings__Default = "Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])"
 $env:ASPNETCORE_URLS = "http://localhost:8091"
 $env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4317"
+$env:App__BackupDirectory = Join-Path $root ".local/backups"
 
 docker compose up -d --wait db aspire
 if ($LASTEXITCODE -ne 0) { throw "PostgreSQL or the Aspire dashboard did not start." }

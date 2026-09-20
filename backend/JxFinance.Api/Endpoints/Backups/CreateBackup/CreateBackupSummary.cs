@@ -16,5 +16,6 @@ public sealed class CreateBackupSummary : Summary<CreateBackupEndpoint, CreateBa
         RequestParam(r => r.Note, "Optional reminder of why the backup was taken, at most 200 characters.");
         Responses[201] = "The stored backup.";
         Responses[403] = "Only administrators can take a backup.";
+        Responses[429] = "More than 10 backups in five minutes; wait and retry.";
     }
 }

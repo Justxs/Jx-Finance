@@ -82,7 +82,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var fund = (await PostAsync<IdDto>(member, "/api/investments/securities", new { symbol, name = "Fund", type = "etf", currency = "eur" })).Id;
         await RecordAsync(member, new { accountId = await CreateAccountAsync("1000.00", "investment", client: member), securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
 
-        var response = await member.PutAsJsonAsync($"/api/investments/securities/{fund}", new { symbol, name = "Fund", type = "etf", currency = "usd" });
+        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{fund}", new { symbol, name = "Fund", type = "etf", currency = "usd" });
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

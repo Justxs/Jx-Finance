@@ -18,5 +18,5 @@ public interface IBackupService
 
     Task<Result<BackupDownload>> OpenAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<Result<RestoreBackupResponse>> RestoreAsync(Guid id, CancellationToken cancellationToken);
+    Task<Result<RestoreBackupResponse>> RestoreAsync(Guid id, string password, CancellationToken cancellationToken);
 }

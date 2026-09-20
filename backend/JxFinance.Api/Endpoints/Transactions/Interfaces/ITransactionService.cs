@@ -35,7 +35,9 @@ public interface ITransactionService
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<TransactionResponse>> ExportAsync(
+    IAsyncEnumerable<TransactionResponse> StreamExportAsync(GetTransactionsRequest request);
+
+    Task<Result<IReadOnlyList<TransactionResponse>>> ExportForPdfAsync(
         GetTransactionsRequest request,
         CancellationToken cancellationToken);
 }

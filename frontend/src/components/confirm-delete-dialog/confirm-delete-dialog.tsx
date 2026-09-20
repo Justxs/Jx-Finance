@@ -14,6 +14,9 @@ import {
 interface Props<T> {
   target: T | null;
   itemLabel?: string;
+  title?: string;
+  description?: string;
+  confirmLabel?: string;
   onCancel: () => void;
   onConfirm: (target: T) => void;
 }
@@ -21,6 +24,9 @@ interface Props<T> {
 export function ConfirmDeleteDialog<T>({
   target,
   itemLabel,
+  title,
+  description,
+  confirmLabel,
   onCancel,
   onConfirm,
 }: Readonly<Props<T>>) {
@@ -50,20 +56,20 @@ export function ConfirmDeleteDialog<T>({
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{t("confirmDelete.title")}</AlertDialogTitle>
+          <AlertDialogTitle>{title ?? t("confirmDelete.title")}</AlertDialogTitle>
           <AlertDialogDescription>
             {shownLabel ? (
               <span className="mb-1 block font-medium wrap-break-word text-foreground">
                 {shownLabel}
               </span>
             ) : null}
-            {t("confirmDelete.description")}
+            {description ?? t("confirmDelete.description")}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={handleConfirm}>
-            {t("actions.delete")}
+            {confirmLabel ?? t("actions.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
+import { Card } from "@/components/ui/card";
 import { categoryBreakdownItems } from "@/storybook/fixtures";
 import { CategoryBreakdown } from "./category-breakdown";
 
@@ -27,9 +28,9 @@ const meta = {
   args: { items: categoryBreakdownItems },
   decorators: [
     (Story) => (
-      <div className="card w-[min(90vw,28rem)] p-6">
+      <Card className="w-[min(90vw,28rem)] p-6">
         <Story />
-      </div>
+      </Card>
     ),
   ],
 } satisfies Meta<typeof CategoryBreakdown>;

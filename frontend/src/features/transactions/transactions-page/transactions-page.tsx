@@ -22,6 +22,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import { Button } from "@/components/ui/button";
+import { Panel } from "@/components/ui/section";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
@@ -273,7 +274,7 @@ export function TransactionsPage() {
         onUpdate={handleUpdate}
       />
 
-      <section className="panel space-y-2">
+      <Panel as="section" className="space-y-2">
         {selectedItems.length > 0 ? (
           <SelectionToolbar
             selected={selectedItems}
@@ -336,7 +337,7 @@ export function TransactionsPage() {
           pages={pageCount}
           onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}
         />
-      </section>
+      </Panel>
 
       <ConfirmDeleteDialog
         target={deleteTarget}

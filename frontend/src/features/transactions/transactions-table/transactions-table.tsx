@@ -3,6 +3,7 @@ import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { Checkbox } from "@/components/ui/checkbox";
+import { staleVariants } from "@/components/ui/stale-region";
 import {
   Table,
   TableBody,
@@ -12,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { isOptimistic } from "../transaction-amount";
 import { transactionTableFeatures } from "./table-features";
 import {
@@ -124,7 +126,7 @@ export function TransactionsTable({
     body = table.getRowModel().rows.map((row) => (
       <TableRow
         key={row.id}
-        className={isOptimistic(row.original) ? "is-stale" : undefined}
+        className={staleVariants({ stale: isOptimistic(row.original) })}
         aria-busy={isOptimistic(row.original) || undefined}
         data-state={selection?.selectedIds.has(row.original.id) ? "selected" : undefined}
       >
@@ -152,9 +154,11 @@ export function TransactionsTable({
           tabIndex={0}
         >
           <Table
-            className={`table-fixed ${selection ? "min-w-184" : "min-w-176"} ${
-              isPlaceholder ? "is-stale" : ""
-            }`}
+            className={cn(
+              "table-fixed",
+              selection ? "min-w-184" : "min-w-176",
+              staleVariants({ stale: isPlaceholder }),
+            )}
             aria-busy={isPlaceholder}
           >
             <TableHeader>

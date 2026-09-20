@@ -3,6 +3,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { settings } from "@/storybook/fixtures";
 import { errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { SettingsPage } from "./settings-page";
 
 const meta = {
@@ -69,8 +70,7 @@ export const UnsavedChanges: Story = {
 export const ReportingCurrencyWarning: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByLabelText("Reporting currency"));
-    await userEvent.click(await within(document.body).findByRole("option", { name: /^USD/ }));
+    await chooseOption(await canvas.findByLabelText("Reporting currency"), /^USD/);
     await expect(canvas.getByText(/revalues every transaction/)).toBeInTheDocument();
   },
 };

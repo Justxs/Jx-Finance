@@ -2,6 +2,7 @@ using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Investments.Services;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,12 +31,11 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
         }
 
         var source = services.GetRequiredService<AppDbContext>();
-        var now = services.GetRequiredService<IClock>().UtcNow;
         var connections = await source.BrokerConnections
             .IgnoreQueryFilters()
             .Where(c => !c.IsDeleted && c.IsEnabled
                 && source.Accounts.IgnoreQueryFilters().Any(a => a.Id == c.AccountId && !a.IsDeleted)
-                && source.Users.Any(u => u.Id == c.UserId && u.PasswordHash != null && (u.LockoutEnd == null || u.LockoutEnd < now)))
+                && source.Users.Any(u => u.Id == c.UserId && u.PasswordHash != null && (u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)))
             .Select(c => new { c.UserId, c.AccountId })
             .ToListAsync(ct);
         var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();

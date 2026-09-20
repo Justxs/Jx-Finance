@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { useTransfers } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field";
+import { staleVariants } from "@/components/ui/stale-region";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import type { PreviewRowState } from "./preview-rows";
 
@@ -58,7 +59,7 @@ export function ImportTransferPicker({
           <SelectField
             aria-label={t("imports.matchTransfer")}
             value={row.existingTransferId}
-            className={transfers.isLoading ? "is-stale" : undefined}
+            className={staleVariants({ stale: transfers.isLoading })}
             disabled={transfers.isLoading}
             onChange={(existingTransferId) => onChange({ existingTransferId })}
             options={[

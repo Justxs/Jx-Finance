@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { Card } from "@/components/ui/card";
 import { ErrorState } from "./error-state";
 
 function RetryExample() {
@@ -19,9 +20,9 @@ const meta = {
   args: { onRetry: () => {} },
   decorators: [
     (Story) => (
-      <section className="card w-[min(90vw,32rem)]">
+      <Card as="section" className="w-[min(90vw,32rem)]">
         <Story />
-      </section>
+      </Card>
     ),
   ],
 } satisfies Meta<typeof ErrorState>;

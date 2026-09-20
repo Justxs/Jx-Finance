@@ -30,14 +30,17 @@ public static class ErrorCodes
     public const string ResourceReadOnly = "resource.readOnly";
     public const string ConflictDuplicate = "conflict.duplicate";
     public const string ConflictStale = "conflict.stale";
+    public const string ConflictBusy = "conflict.busy";
     public const string AccessForbidden = "access.forbidden";
     public const string CredentialsInvalid = "credentials.invalid";
+    public const string CredentialsLockedOut = "credentials.lockedOut";
     public const string PasswordIncorrect = "password.incorrect";
     public const string PasswordTooWeak = "password.tooWeak";
     public const string TwoFactorInvalidCode = "twoFactor.invalidCode";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";
+    public const string UserLastAdministrator = "user.lastAdministrator";
     public const string HouseholdRequired = "household.required";
     public const string HouseholdNotMember = "household.notMember";
     public const string HouseholdLastOwner = "household.lastOwner";
@@ -52,10 +55,14 @@ public static class ErrorCodes
     public const string RecurringBillInactive = "recurringBill.inactive";
     public const string HoldingOversold = "holding.oversold";
     public const string HoldingDependentSales = "holding.dependentSales";
+    public const string SecurityNotHeld = "security.notHeld";
     public const string ImportInvalidFile = "import.invalidFile";
     public const string ImportTransferMismatch = "import.transferMismatch";
+    public const string ImportTransferAlreadyMatched = "import.transferAlreadyMatched";
+    public const string ExportTooManyRows = "export.tooManyRows";
     public const string BackupInvalidFile = "backup.invalidFile";
     public const string BackupSchemaMismatch = "backup.schemaMismatch";
+    public const string BackupTooLarge = "backup.tooLarge";
     public const string BrokerUnavailable = "broker.unavailable";
     public const string BrokerRejected = "broker.rejected";
     public const string BrokerTokenRequired = "broker.tokenRequired";
@@ -72,9 +79,10 @@ public static class ErrorCodes
     public static int StatusCodeFor(string? errorCode) => errorCode switch
     {
         ResourceNotFound => StatusCodes.Status404NotFound,
-        ConflictDuplicate or ConflictStale or SetupAlreadyCompleted => StatusCodes.Status409Conflict,
-        AccessForbidden or UserSelfChange => StatusCodes.Status403Forbidden,
+        ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted => StatusCodes.Status409Conflict,
+        AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
+        CredentialsLockedOut => StatusCodes.Status429TooManyRequests,
         _ => StatusCodes.Status400BadRequest,
     };
 }

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
 import { serverErrorProblem } from "@/storybook/fixtures";
 import {
@@ -37,5 +38,40 @@ export const PartialFailure: Story = {
     msw: {
       handlers: [getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
     },
+  },
+};
+
+export const AllSectionsLoad: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = await canvas.findByRole("heading", {
+      name: /recent transactions|paskutinės operacijos/i,
+    });
+    const recent = within(heading.closest("section")!);
+
+    await expect((await recent.findAllByRole("listitem")).length).toBeGreaterThan(0);
+    await expect(canvas.queryAllByRole("alert")).toHaveLength(0);
+  },
+};
+
+export const RetryRecoversFailedSection: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500), { once: true }),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const failed = await canvas.findByRole("alert");
+    await expect(failed).toHaveTextContent(/income vs\. expenses|pajamos ir išlaidos/i);
+
+    await userEvent.click(
+      within(failed).getByRole("button", { name: /try again|bandyti dar kartą/i }),
+    );
+
+    await waitFor(() => expect(canvas.queryAllByRole("alert")).toHaveLength(0));
   },
 };

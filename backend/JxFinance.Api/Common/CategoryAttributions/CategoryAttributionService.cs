@@ -14,10 +14,13 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
         FlowType type,
         CancellationToken cancellationToken)
     {
-        var nonSplit = await db.Transactions
+        var nonSplit = (await db.Transactions
             .Where(t => !t.IsSplit && t.Type == type && t.Date >= start && t.Date < end)
-            .Select(t => new CategoryAttribution(t.CategoryId, t.ReportingAmount))
-            .ToListAsync(cancellationToken);
+            .GroupBy(t => t.CategoryId)
+            .Select(g => new { CategoryId = g.Key, Amount = g.Sum(t => t.ReportingAmount) })
+            .ToListAsync(cancellationToken))
+            .Select(g => new CategoryAttribution(g.CategoryId, g.Amount))
+            .ToList();
 
         var splits = await db.Transactions
             .Where(t => t.IsSplit && t.Type == type && t.Date >= start && t.Date < end)

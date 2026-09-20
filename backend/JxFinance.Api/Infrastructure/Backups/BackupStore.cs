@@ -6,6 +6,9 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
 {
     private const string DataSuffix = ".json.gz";
     private const string InfoSuffix = ".info.json";
+    private const string TemporarySuffix = ".tmp";
+
+    private static readonly TimeSpan OrphanAge = TimeSpan.FromHours(1);
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
@@ -17,6 +20,7 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
     {
         if (!Directory.Exists(directory)) return [];
 
+        RemoveOrphans();
         var backups = new List<StoredBackup>();
         foreach (var infoPath in Directory.EnumerateFiles(directory, $"*{InfoSuffix}"))
         {
@@ -53,7 +57,7 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
         CancellationToken cancellationToken)
     {
         Directory.CreateDirectory(directory);
-        var temporary = Path.Combine(directory, $"{id:N}.tmp");
+        var temporary = Path.Combine(directory, $"{id:N}{TemporarySuffix}");
 
         try
         {
@@ -64,7 +68,17 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
             }
 
             File.Move(temporary, DataPath(id));
-            await SaveAsync(backup, cancellationToken);
+            try
+            {
+                await SaveAsync(backup, cancellationToken);
+            }
+            catch
+            {
+                File.Delete(DataPath(id));
+                File.Delete(InfoPath(id));
+                throw;
+            }
+
             return backup with { SizeBytes = new FileInfo(DataPath(id)).Length };
         }
         finally
@@ -85,6 +99,25 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
     {
         File.Delete(InfoPath(id));
         File.Delete(DataPath(id));
+    }
+
+    public int RemoveOrphans()
+    {
+        if (!Directory.Exists(directory)) return 0;
+
+        var cutoff = DateTime.UtcNow - OrphanAge;
+        var orphans = Directory.EnumerateFiles(directory, $"*{TemporarySuffix}")
+            .Concat(Directory.EnumerateFiles(directory, $"*{DataSuffix}")
+                .Where(data => !File.Exists(string.Concat(data.AsSpan(0, data.Length - DataSuffix.Length), InfoSuffix))))
+            .Where(path => File.GetLastWriteTimeUtc(path) < cutoff)
+            .ToList();
+
+        foreach (var orphan in orphans)
+        {
+            File.Delete(orphan);
+        }
+
+        return orphans.Count;
     }
 
     private string DataPath(Guid id) => Path.Combine(directory, $"{id:N}{DataSuffix}");

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { CategoryResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button";
 import { FieldError } from "@/components/ui/field-error";
+import { FormGrid } from "@/components/ui/form-grid";
 import { emptyLine } from "./line-form-value";
 import type { TransactionFormApi } from "./transaction-form";
 
@@ -22,7 +23,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
   const { t } = useTranslation();
 
   return (
-    <div className="form-grid">
+    <FormGrid>
       <form.Field name={`lines[${index}].categoryId`}>
         {(field) => (
           <field.SelectFieldControl
@@ -62,7 +63,7 @@ function SplitLineRow({ form, categories, index, onRemove }: Readonly<LineRowPro
       >
         <X />
       </Button>
-    </div>
+    </FormGrid>
   );
 }
 

@@ -58,6 +58,7 @@ public static class OpenApiExtensions
                 openApi.AddDocumentTransformer((document, _, _) =>
                 {
                     document.Info.Description = DocumentDescription;
+                    document.Servers?.Clear();
                     SchemaVariants.Collapse(document);
                     ArrayWrappers.Inline(document);
                     ErrorContract.Describe(document);

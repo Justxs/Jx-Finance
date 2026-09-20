@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AssetsSection } from "../assets-section";
 import { DebtsSection } from "../debts-section";
@@ -20,24 +21,24 @@ export function NetWorthPage() {
       </QueryBoundary>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="section">
-          <h2 className="section-title mb-4">{t("netWorth.trend")}</h2>
+        <Section>
+          <SectionTitle className="mb-4">{t("netWorth.trend")}</SectionTitle>
           <QueryBoundary
             fallback={<Skeleton className="h-56 w-full" />}
             errorSubject={t("netWorth.trend")}
           >
             <NetWorthHistoryChart />
           </QueryBoundary>
-        </section>
-        <section className="section">
-          <h2 className="section-title mb-4">{t("netWorth.composition")}</h2>
+        </Section>
+        <Section>
+          <SectionTitle className="mb-4">{t("netWorth.composition")}</SectionTitle>
           <QueryBoundary
             fallback={<Skeleton className="h-56 w-full" />}
             errorSubject={t("netWorth.composition")}
           >
             <NetWorthCompositionChart />
           </QueryBoundary>
-        </section>
+        </Section>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">

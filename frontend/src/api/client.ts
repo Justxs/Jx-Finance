@@ -61,7 +61,15 @@ function canRenewSession(url: string): boolean {
   return !["/auth/login", "/auth/refresh", "/auth/2fa/"].some((path) => url.includes(path));
 }
 
-export async function customFetch<T>(url: string, options?: RequestInit): Promise<T> {
+function readBody(response: Response): Promise<unknown> {
+  const isJson = response.headers.get("content-type")?.match(/application\/(?:[\w.-]+\+)?json/i);
+  if (!isJson) {
+    return response.text();
+  }
+  return response.ok ? response.json() : response.json().catch(() => undefined);
+}
+
+async function request(url: string, options?: RequestInit): Promise<Response> {
   let requestOptions = options;
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string> | undefined),
@@ -87,30 +95,53 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
     });
   }
 
-  let response = await send();
-  if (response.status === 401 && canRenewSession(url)) {
-    await refreshSession();
-    response = await send();
+  const response = await send();
+  if (response.status !== 401 || !canRenewSession(url)) {
+    return response;
   }
 
-  const isJson =
-    response.headers.get("content-type")?.match(/application\/(?:[\w.-]+\+)?json/i) ?? false;
-  const body: unknown = isJson ? await response.json() : await response.text();
+  await refreshSession();
+  const retried = await send();
+  if (retried.status === 401) {
+    window.dispatchEvent(new Event("jx:session-expired"));
+  }
+  return retried;
+}
 
+async function failure(response: Response): Promise<ApiError> {
+  const body = await readBody(response);
+  const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiProblem>;
+  const errors = Array.isArray(problem.errors) ? problem.errors : undefined;
+  return new ApiError({
+    status: response.status,
+    title: problem.title ?? response.statusText,
+    detail: problem.detail ?? errors?.map((error) => error.reason).join(" "),
+    code: problem.code,
+    errors,
+  });
+}
+
+export async function customFetch<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await request(url, options);
   if (!response.ok) {
-    if (response.status === 401 && canRenewSession(url)) {
-      window.dispatchEvent(new Event("jx:session-expired"));
-    }
-    const problem = (typeof body === "object" && body !== null ? body : {}) as Partial<ApiProblem>;
-    const errors = Array.isArray(problem.errors) ? problem.errors : undefined;
-    throw new ApiError({
-      status: response.status,
-      title: problem.title ?? response.statusText,
-      detail: problem.detail ?? errors?.map((error) => error.reason).join(" "),
-      code: problem.code,
-      errors,
-    });
+    throw await failure(response);
   }
 
-  return body as T;
+  return (await readBody(response)) as T;
+}
+
+export interface DownloadedFile {
+  blob: Blob;
+  filename: string | undefined;
+}
+
+export async function fetchFile(url: string): Promise<DownloadedFile> {
+  const response = await request(url);
+  if (!response.ok) {
+    throw await failure(response);
+  }
+
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const filename = /filename="?([^";]+)"?/i.exec(disposition)?.[1];
+  return { blob: await response.blob(), filename };
 }

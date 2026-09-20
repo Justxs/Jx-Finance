@@ -52,10 +52,8 @@ public sealed class RecurringBillReminderJob(
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.ExecuteSqlRawAsync("SELECT pg_advisory_xact_lock(738192435)", cancellationToken);
 
-        var appNow = clock.ToAppTime(clock.UtcNow);
-        var todayLocal = new DateTime(appNow.Year, appNow.Month, appNow.Day, 0, 0, 0, DateTimeKind.Unspecified);
-        var today = DateOnly.FromDateTime(todayLocal);
-        var todayStartUtc = new DateTimeOffset(TimeZoneInfo.ConvertTimeToUtc(todayLocal, clock.TimeZone), TimeSpan.Zero);
+        var today = clock.Today;
+        var todayStartUtc = clock.StartOfDay(today);
 
         var dueBills = await db.RecurringBills
             .IgnoreQueryFilters()

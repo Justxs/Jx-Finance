@@ -21,7 +21,9 @@ public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferRespo
         Description = OptionalText.Normalize(request.Description),
     };
 
-    public override TransferResponse FromEntity(Transfer transfer) => new(
+    public override TransferResponse FromEntity(Transfer transfer) => FromEntity(transfer, []);
+
+    public TransferResponse FromEntity(Transfer transfer, IReadOnlyCollection<AccountId> importedAccounts) => new(
         transfer.Id.Value,
         transfer.FromAccountId.Value,
         transfer.ToAccountId.Value,
@@ -31,5 +33,7 @@ public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferRespo
         transfer.CreatedAt,
         transfer.Amount.Currency,
         transfer.ReceivedAmount.Amount,
-        transfer.ReceivedAmount.Currency);
+        transfer.ReceivedAmount.Currency,
+        importedAccounts.Contains(transfer.FromAccountId),
+        importedAccounts.Contains(transfer.ToAccountId));
 }

@@ -1,4 +1,4 @@
-import type { TransferResponse } from "@/api/generated/model";
+import type { ProblemDetails, TransferResponse } from "@/api/generated/model";
 import { ids } from "./base";
 
 const sameCurrencyTransfers: TransferResponse[] = [
@@ -13,6 +13,8 @@ const sameCurrencyTransfers: TransferResponse[] = [
     receivedAmount: "400.00",
     receivedCurrency: "eur",
     createdAt: "2026-09-11T07:05:00Z",
+    fromAccountImported: false,
+    toAccountImported: false,
   },
   {
     id: ids.transfers.toShared,
@@ -26,6 +28,8 @@ const sameCurrencyTransfers: TransferResponse[] = [
     receivedAmount: "900.00",
     receivedCurrency: "eur",
     createdAt: "2026-09-10T18:22:00Z",
+    fromAccountImported: false,
+    toAccountImported: false,
   },
   {
     id: ids.transfers.cashWithdrawal,
@@ -38,10 +42,12 @@ const sameCurrencyTransfers: TransferResponse[] = [
     receivedAmount: "100.00",
     receivedCurrency: "eur",
     createdAt: "2026-08-29T12:40:00Z",
+    fromAccountImported: true,
+    toAccountImported: false,
   },
 ];
 
-const crossCurrencyTransfer: TransferResponse = {
+export const crossCurrencyTransfer: TransferResponse = {
   id: ids.transfers.toBroker,
   fromAccountId: ids.accounts.checking,
   toAccountId: ids.accounts.broker,
@@ -52,6 +58,57 @@ const crossCurrencyTransfer: TransferResponse = {
   date: "2026-09-12",
   description: "Papildymas doleriais",
   createdAt: "2026-09-12T09:10:00Z",
+  fromAccountImported: false,
+  toAccountImported: false,
+};
+
+export const manualTransfer = sameCurrencyTransfers[0] as TransferResponse;
+
+export const importedFromTransfer = sameCurrencyTransfers[2] as TransferResponse;
+
+export const importedToCrossCurrencyTransfer: TransferResponse = {
+  ...crossCurrencyTransfer,
+  toAccountImported: true,
+};
+
+export const importedBothTransfer: TransferResponse = {
+  ...manualTransfer,
+  fromAccountImported: true,
+  toAccountImported: true,
+};
+
+export const transferLockedProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "amount",
+      reason: "The amount of an imported bank entry cannot change.",
+      code: "value.locked",
+    },
+  ],
+};
+
+export const transferAmountMismatchProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "receivedAmount",
+      reason: "Sent and received amounts must match in the same currency.",
+      code: "transfer.amountMismatch",
+    },
+  ],
+};
+
+export const transferForbiddenProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
+  title: "Forbidden",
+  status: 403,
+  code: "access.forbidden",
+  detail: "You need access to both accounts of a transfer.",
 };
 
 export const transfers: TransferResponse[] = [crossCurrencyTransfer, ...sameCurrencyTransfers];

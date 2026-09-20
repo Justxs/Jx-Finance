@@ -379,6 +379,23 @@ export const brokerImportResult: BrokerImportResponse = {
   skipped: 1,
   securitiesCreated: 1,
   pricesUpdated: 3,
+  splits: 0,
+  skippedCorporateActions: [],
+  positionMismatches: null,
+};
+
+export const brokerImportWithWarnings: BrokerImportResponse = {
+  ...brokerImportResult,
+  splits: 2,
+  skippedCorporateActions: [
+    { type: "TC", count: 1 },
+    { type: "SO", count: 2 },
+    { type: "XX", count: 1 },
+  ],
+  positionMismatches: [
+    { symbol: "NVDA", brokerQuantity: "40", replayedQuantity: "4" },
+    { symbol: "VWCE", brokerQuantity: "12.5", replayedQuantity: "12" },
+  ],
 };
 
 export const brokerImportNothingNew: BrokerImportResponse = {
@@ -390,6 +407,9 @@ export const brokerImportNothingNew: BrokerImportResponse = {
   skipped: 0,
   securitiesCreated: 0,
   pricesUpdated: 0,
+  splits: 0,
+  skippedCorporateActions: [],
+  positionMismatches: null,
 };
 
 export const oversellProblem: ProblemDetails = {
@@ -405,7 +425,17 @@ export const duplicateSecurityProblem: ProblemDetails = {
   title: "Conflict",
   status: 409,
   instance: "/api/investments/securities",
+  code: "conflict.duplicate",
   detail: "A security with this symbol and currency already exists.",
+};
+
+export const securityNotHeldProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
+  title: "Forbidden",
+  status: 403,
+  instance: "/api/investments/securities/price",
+  code: "security.notHeld",
+  detail: "Only a holder of the security or an administrator can set its price.",
 };
 
 export const brokerSyncProblem: ProblemDetails = {

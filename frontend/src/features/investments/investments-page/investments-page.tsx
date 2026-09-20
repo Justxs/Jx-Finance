@@ -8,7 +8,9 @@ import { PageHeader } from "@/components/page-header";
 import { QueryBoundary } from "@/components/query-boundary";
 import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton";
+import { StaleRegion } from "@/components/ui/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { ActivitySection } from "../activity-section";
 import { AllocationSection } from "../allocation-section";
@@ -44,8 +46,8 @@ function InvestmentsOverview({
 
   if (firstRun) {
     return (
-      <section className="section">
-        <h2 className="section-title">{t("investments.empty.title")}</h2>
+      <Section>
+        <SectionTitle>{t("investments.empty.title")}</SectionTitle>
         <p className="mt-1 max-w-prose text-sm text-muted-foreground">
           {t("investments.empty.description")}
         </p>
@@ -62,12 +64,12 @@ function InvestmentsOverview({
         {accounts.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">{t("investments.import.noAccounts")}</p>
         ) : null}
-      </section>
+      </Section>
     );
   }
 
   return (
-    <div className={stale ? "is-stale space-y-5" : "space-y-5"} aria-busy={stale}>
+    <StaleRegion stale={stale} className="space-y-5">
       <PortfolioSummary portfolio={portfolio.data} />
       <AllocationSection
         holdings={portfolio.data.holdings}
@@ -82,7 +84,7 @@ function InvestmentsOverview({
       <QueryBoundary fallback={<RowsSkeleton rows={5} />}>
         <ActivitySection accounts={accounts} accountId={shownAccountId} />
       </QueryBoundary>
-    </div>
+    </StaleRegion>
   );
 }
 

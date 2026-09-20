@@ -5,6 +5,7 @@ import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { submitToServer } from "@/lib/form-server-errors";
 import { positiveMoney, requiredValue } from "@/lib/validation";
 
@@ -72,7 +73,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
         noValidate
         className="space-y-4"
       >
-        <div className="form-grid">
+        <FormGrid>
           <form.Field name="categoryId">
             {(field) => (
               <field.SelectFieldControl
@@ -89,7 +90,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
           <form.Field name="limitAmount">
             {(field) => <field.MoneyInputField id="budget-limit" label={t("budgets.limit")} />}
           </form.Field>
-        </div>
+        </FormGrid>
 
         <FormError error={createMutation.error ?? updateMutation.error} />
 

@@ -6,12 +6,12 @@ import {
 } from "@/api/generated";
 
 export function useBrokerImportMutations() {
-  const importReport = useImportBrokerReport();
+  const importReport = useImportBrokerReport({ mutation: { meta: { silent: true } } });
   const saveConnection = useSaveBrokerConnection({
     mutation: { gcTime: 0 },
   });
   const deleteConnection = useDeleteBrokerConnection();
-  const syncConnection = useSyncBrokerConnection();
+  const syncConnection = useSyncBrokerConnection({ mutation: { meta: { silent: true } } });
 
   const busy =
     importReport.isPending ||

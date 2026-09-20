@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { startTransition, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
 import { RowTransition } from "./row-transition";
 
 const meta = {
@@ -35,7 +36,7 @@ function Demo() {
       <Button variant="outline" size="sm" onClick={add} disabled={rows.length === names.length}>
         Add row
       </Button>
-      <ul className="rows">
+      <Rows>
         {rows.map((name) => (
           <RowTransition key={name}>
             <li className="flex items-center justify-between py-2 text-sm">
@@ -46,7 +47,7 @@ function Demo() {
             </li>
           </RowTransition>
         ))}
-      </ul>
+      </Rows>
     </div>
   );
 }

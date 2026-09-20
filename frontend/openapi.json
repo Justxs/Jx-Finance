@@ -975,7 +975,7 @@
           "Auth"
         ],
         "summary": "Sign in",
-        "description": "Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client.",
+        "description": "Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.",
         "operationId": "Login",
         "requestBody": {
           "content": {
@@ -1025,7 +1025,7 @@
             }
           },
           "429": {
-            "description": "Too many sign-in attempts; wait and retry."
+            "description": "Too many sign-in attempts from this client, or the account is locked after repeated failures; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -1264,6 +1264,9 @@
               }
             }
           },
+          "429": {
+            "description": "More than 10 backups in five minutes; wait and retry."
+          },
           "500": {
             "description": "Server Error",
             "content": {
@@ -1384,7 +1387,7 @@
             }
           },
           "400": {
-            "description": "No file, a file over 100 MB or a file that is not a backup.",
+            "description": "No file, a file over 100 MB, a file that is not a backup, or one that holds more data once decompressed than the installation accepts (backup.tooLarge).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1412,6 +1415,9 @@
                 }
               }
             }
+          },
+          "429": {
+            "description": "More than 10 uploads in five minutes; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -1709,18 +1715,34 @@
           "Backups"
         ],
         "summary": "Replace all data with a stored backup",
-        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in once their short-lived access token runs out. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch.",
+        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in once their short-lived access token runs out. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.",
         "operationId": "RestoreBackup",
         "parameters": [
           {
             "name": "id",
             "in": "path",
+            "description": "The backup id.",
             "required": true,
             "schema": {
-              "type": "string"
-            }
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreBackupRequest"
+              },
+              "example": {
+                "password": "correct horse battery staple"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "When the restored backup was taken and how many tables and rows were loaded.",
@@ -1733,7 +1755,7 @@
             }
           },
           "400": {
-            "description": "The file is damaged, or the backup comes from another database version.",
+            "description": "The password is wrong, the file is damaged or too large, or the backup comes from another database version.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1771,6 +1793,19 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "The database was busy (lock timeout, deadlock or serialization failure). Nothing was changed; retry.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many restore attempts or too many wrong passwords; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -2581,6 +2616,105 @@
           },
           "400": {
             "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No conversion with that id is visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Conversions"
+        ],
+        "summary": "Update a currency conversion",
+        "description": "Replaces the date, the sold and bought amounts and currencies, the description and the fee of a conversion; the account stays the same. The fee fields describe the fee as it should be afterwards: with feeAmount the linked expense transaction is created or updated (amount, currency, date, category, and its value in the reporting currency at the rate for the new date), without feeAmount an existing fee transaction is deleted. Conversion and fee change together or not at all. A fee transaction that the user has split into lines cannot be changed or removed from here and answers transaction.splitNotAllowed; edit that transaction instead. A conversion imported from a broker (isImported) answers resource.readOnly: correct it at the broker and import again.",
+        "operationId": "UpdateConversion",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The conversion id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateConversionRequest"
+              },
+              "example": {
+                "fromAmount": "1000.00",
+                "fromCurrency": "eur",
+                "toAmount": "1084.20",
+                "toCurrency": "usd",
+                "date": "2026-09-12",
+                "description": "Fund the USD sleeve",
+                "feeAmount": "2.00",
+                "feeCurrency": "eur",
+                "feeCategoryId": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated conversion.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, a currency is not enabled, no exchange rate exists for the fee, the fee transaction is split, or the conversion was imported from a broker.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4659,6 +4793,16 @@
               }
             }
           },
+          "409": {
+            "description": "A security in the report kept colliding with one created at the same time. Nothing was imported; retry.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
           "500": {
             "description": "Server Error",
             "content": {
@@ -4683,7 +4827,7 @@
           "Investments"
         ],
         "summary": "Import an Interactive Brokers Flex Query report",
-        "description": "Reads the Trades, Cash Transactions and Open Positions sections of a Flex Query XML report. Stock, ETF, fund and bond trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing.",
+        "description": "Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, symbol changes) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.",
         "operationId": "ImportBrokerReport",
         "requestBody": {
           "content": {
@@ -4697,7 +4841,7 @@
         },
         "responses": {
           "200": {
-            "description": "Counts of what was imported, already present, and skipped.",
+            "description": "Counts of what was imported, already present, and skipped, and the positions that do not reconcile.",
             "content": {
               "application/json": {
                 "schema": {
@@ -4718,6 +4862,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "A security in the report kept colliding with one created at the same time. Nothing was imported; retry.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4892,7 +5046,7 @@
           "Investments"
         ],
         "summary": "Add a security",
-        "description": "Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.",
+        "description": "Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.",
         "operationId": "CreateSecurity",
         "requestBody": {
           "content": {
@@ -4958,8 +5112,8 @@
         "tags": [
           "Investments"
         ],
-        "summary": "Update a security or its price",
-        "description": "Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.",
+        "summary": "Update the details of a security",
+        "description": "Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.",
         "operationId": "UpdateSecurity",
         "parameters": [
           {
@@ -5005,6 +5159,136 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller is not an administrator.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another security already has this symbol and currency.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/investments/securities/{id}/price": {
+      "put": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Set the last known price of a security",
+        "description": "Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.",
+        "operationId": "SetSecurityPrice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetSecurityPriceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The security with its new price.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SecurityResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller holds no open position in this security and is not an administrator.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6986,7 +7270,7 @@
           "Transactions"
         ],
         "summary": "Export transactions as CSV",
-        "description": "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.",
+        "description": "Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.",
         "operationId": "ExportTransactions",
         "parameters": [
           {
@@ -7145,7 +7429,7 @@
           "Transactions"
         ],
         "summary": "Export transactions as PDF",
-        "description": "Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.",
+        "description": "Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.",
         "operationId": "ExportTransactionsPdf",
         "parameters": [
           {
@@ -7261,7 +7545,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "More rows match than a PDF may hold.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7904,6 +8188,114 @@
             "Cookie": [ ]
           }
         ]
+      },
+      "put": {
+        "tags": [
+          "Transfers"
+        ],
+        "summary": "Update a transfer",
+        "description": "Replaces the date, amounts, description and both accounts of a transfer. The amount rules are those of creating one: between two currencies the received amount is required, within one currency it may be left out and must equal the sent amount when given. Send currency and receivedCurrency as the transfer has them; without them they default to the main currency of the chosen accounts. You need access to both accounts the transfer has now and to both accounts it should have afterwards. A transfer that was created or matched by a bank or broker import holds a receipt per imported account, flagged by fromAccountImported and toAccountImported: its date, that account's side of the transfer and the amount on that side are fixed and a change answers value.locked, while the description, the other account and, between currencies, the other amount stay editable.",
+        "operationId": "UpdateTransfer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transfer id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTransferRequest"
+              },
+              "example": {
+                "fromAccountId": "00000000-0000-0000-0000-000000000000",
+                "toAccountId": "00000000-0000-0000-0000-000000000000",
+                "amount": "250.00",
+                "date": "2026-09-12",
+                "description": "To savings",
+                "currency": null,
+                "receivedAmount": null,
+                "receivedCurrency": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated transfer.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransferResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, an account is not visible to you, a currency is not enabled, or the change touches a value fixed by an import receipt.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "One of the transfer's current accounts is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transfer is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
       }
     },
     "/api/users": {
@@ -8190,7 +8582,7 @@
           "Users"
         ],
         "summary": "Deactivate a user",
-        "description": "Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself. Administrators only.",
+        "description": "Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.",
         "operationId": "DeactivateUser",
         "parameters": [
           {
@@ -8228,7 +8620,7 @@
             }
           },
           "403": {
-            "description": "The signed-in user is not an administrator, or is the target.",
+            "description": "The signed-in user is not an administrator or is the target, or the change would leave no active administrator.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8267,13 +8659,206 @@
         ]
       }
     },
+    "/api/users/{id}/reactivate": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Reactivate a deactivated user",
+        "description": "Lifts the deactivation set by the deactivate operation and clears the failed sign-in counter, so the user can sign in again with the password they had. Sessions from before the deactivation stay revoked. Calling it for a user who is already active changes nothing and still answers 204, so it is safe to repeat. Administrators only.",
+        "operationId": "ReactivateUser",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The user id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The account is active."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The signed-in user is not an administrator.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/users/{id}/reset-password": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Set a new password for another user",
+        "description": "Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off and the recovery codes are invalidated as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "ResetUserPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The user id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetUserPasswordRequest"
+              },
+              "example": {
+                "newPassword": "Temporary-Password-123!",
+                "currentPassword": "correct horse battery staple",
+                "resetTwoFactor": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The profile of the user after the reset.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The administrator's password is wrong, or the new password is missing or too weak.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The signed-in user is not an administrator, or is the target.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts or too many wrong passwords; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
     "/api/users/{id}/role": {
       "put": {
         "tags": [
           "Users"
         ],
         "summary": "Change a user role",
-        "description": "Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last administrator cannot be demoted, so an instance is never left without one. Administrators only.",
+        "description": "Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last active administrator cannot be demoted, so an instance is never left without one. Role changes and deactivations are applied one at a time, so two administrators demoting each other at the same moment cannot both succeed. Administrators only.",
         "operationId": "UpdateUserRole",
         "parameters": [
           {
@@ -8333,7 +8918,7 @@
             }
           },
           "403": {
-            "description": "The signed-in user is not an administrator, or the change would leave no administrator.",
+            "description": "The signed-in user is not an administrator, is the target, or the change would leave no active administrator.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8487,8 +9072,12 @@
         "type": "object",
         "properties": {
           "email": {
+            "maxLength": 256,
+            "minLength": 0,
+            "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "description": "Email address of an existing, active user.",
+            "format": "email",
             "example": "partner@example.com"
           },
           "role": {
@@ -8639,7 +9228,10 @@
           "duplicates",
           "skipped",
           "securitiesCreated",
-          "pricesUpdated"
+          "pricesUpdated",
+          "splits",
+          "skippedCorporateActions",
+          "positionMismatches"
         ],
         "type": "object",
         "properties": {
@@ -8674,6 +9266,25 @@
           "pricesUpdated": {
             "type": "integer",
             "format": "int32"
+          },
+          "splits": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "skippedCorporateActions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkippedCorporateActionResponse"
+            }
+          },
+          "positionMismatches": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/PositionMismatchResponse"
+            }
           }
         }
       },
@@ -8926,7 +9537,9 @@
           "feeAmount",
           "feeCurrency",
           "feeTransactionId",
-          "createdAt"
+          "createdAt",
+          "feeCategoryId",
+          "isImported"
         ],
         "type": "object",
         "properties": {
@@ -8991,6 +9604,16 @@
           "createdAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "feeCategoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isImported": {
+            "type": "boolean"
           }
         }
       },
@@ -9366,7 +9989,7 @@
               "null",
               "string"
             ],
-            "description": "Amount already saved. Defaults to zero when omitted.",
+            "description": "Amount already saved, zero or more. Defaults to zero when omitted.",
             "format": "decimal",
             "example": "1200.00"
           },
@@ -9790,8 +10413,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Currency"
-            },
-            "description": "Currencies offered when entering data. The reporting currency is always included."
+            }
           },
           "ratesAsOf": {
             "oneOf": [
@@ -9972,20 +10594,24 @@
           "access.forbidden",
           "backup.invalidFile",
           "backup.schemaMismatch",
+          "backup.tooLarge",
           "broker.rejected",
           "broker.tokenRequired",
           "broker.unavailable",
           "category.wrongType",
           "collection.invalidSize",
+          "conflict.busy",
           "conflict.duplicate",
           "conflict.stale",
           "credentials.invalid",
+          "credentials.lockedOut",
           "currency.disabled",
           "decimal.malformed",
           "email.invalid",
           "email.taken",
           "enum.invalid",
           "exchangeRate.unavailable",
+          "export.tooManyRows",
           "feature.disabled",
           "holding.dependentSales",
           "holding.oversold",
@@ -9994,6 +10620,7 @@
           "household.required",
           "iban.invalid",
           "import.invalidFile",
+          "import.transferAlreadyMatched",
           "import.transferMismatch",
           "money.invalid",
           "money.nonNegative",
@@ -10010,6 +10637,7 @@
           "required",
           "resource.notFound",
           "resource.readOnly",
+          "security.notHeld",
           "setup.alreadyCompleted",
           "text.invalidFormat",
           "text.tooLong",
@@ -10020,6 +10648,7 @@
           "transfer.receivedAmountRequired",
           "transfer.sameAccount",
           "twoFactor.invalidCode",
+          "user.lastAdministrator",
           "user.selfChange",
           "value.locked",
           "value.mustBeEmpty",
@@ -11079,6 +11708,27 @@
           }
         }
       },
+      "PositionMismatchResponse": {
+        "required": [
+          "symbol",
+          "brokerQuantity",
+          "replayedQuantity"
+        ],
+        "type": "object",
+        "properties": {
+          "symbol": {
+            "type": "string"
+          },
+          "brokerQuantity": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "replayedQuantity": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -11334,6 +11984,58 @@
           }
         }
       },
+      "ResetUserPasswordRequest": {
+        "required": [
+          "newPassword",
+          "currentPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 8,
+            "type": "string",
+            "description": "The temporary password for the user, 8 to 100 characters.",
+            "example": "Temporary-Password-123!"
+          },
+          "currentPassword": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The current password of the signed-in administrator.",
+            "example": "correct horse battery staple"
+          },
+          "resetTwoFactor": {
+            "type": "boolean",
+            "description": "Also switch off two-factor authentication and invalidate the recovery codes. Default false.",
+            "default": false,
+            "example": false
+          }
+        },
+        "example": {
+          "newPassword": "Temporary-Password-123!",
+          "currentPassword": "correct horse battery staple",
+          "resetTwoFactor": false
+        }
+      },
+      "RestoreBackupRequest": {
+        "required": [
+          "password"
+        ],
+        "type": "object",
+        "properties": {
+          "password": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": "string",
+            "description": "The current password of the signed-in administrator.",
+            "example": "correct horse battery staple"
+          }
+        },
+        "example": {
+          "password": "correct horse battery staple"
+        }
+      },
       "RestoreBackupResponse": {
         "required": [
           "createdAt",
@@ -11527,6 +12229,29 @@
         ],
         "type": "string"
       },
+      "SetSecurityPriceRequest": {
+        "required": [
+          "lastPrice"
+        ],
+        "type": "object",
+        "properties": {
+          "lastPrice": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "lastPriceDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ],
+            "description": "Defaults to today."
+          }
+        }
+      },
       "SettingsResponse": {
         "required": [
           "instanceName",
@@ -11559,8 +12284,7 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/Currency"
-            },
-            "description": "Currencies offered when entering data. The reporting currency is always included."
+            }
           },
           "exchangeRateSyncEnabled": {
             "type": "boolean"
@@ -11640,6 +12364,22 @@
         "properties": {
           "needsSetup": {
             "type": "boolean"
+          }
+        }
+      },
+      "SkippedCorporateActionResponse": {
+        "required": [
+          "type",
+          "count"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -11836,7 +12576,9 @@
           "createdAt",
           "currency",
           "receivedAmount",
-          "receivedCurrency"
+          "receivedCurrency",
+          "fromAccountImported",
+          "toAccountImported"
         ],
         "type": "object",
         "properties": {
@@ -11878,6 +12620,12 @@
           },
           "receivedCurrency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "fromAccountImported": {
+            "type": "boolean"
+          },
+          "toAccountImported": {
+            "type": "boolean"
           }
         }
       },
@@ -12085,6 +12833,89 @@
           "icon": "shopping-cart",
           "scope": "personal",
           "householdId": null
+        }
+      },
+      "UpdateConversionRequest": {
+        "required": [
+          "fromAmount",
+          "fromCurrency",
+          "toAmount",
+          "toCurrency",
+          "date",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "fromAmount": {
+            "type": "string",
+            "description": "Amount sold, as a decimal string greater than zero.",
+            "format": "decimal",
+            "example": "1000.00"
+          },
+          "fromCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "toAmount": {
+            "type": "string",
+            "description": "Amount bought, as a decimal string greater than zero.",
+            "format": "decimal",
+            "example": "1084.20"
+          },
+          "toCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "Fund the USD sleeve"
+          },
+          "feeAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The fee after the update. Leave it out to remove the fee.",
+            "format": "decimal",
+            "example": "2.00"
+          },
+          "feeCurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ],
+            "description": "Currency of the fee; one of the two converted currencies. Defaults to the sold currency.",
+            "example": "eur"
+          },
+          "feeCategoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Expense category of the fee transaction. Leave it out for none.",
+            "format": "uuid"
+          }
+        },
+        "example": {
+          "fromAmount": "1000.00",
+          "fromCurrency": "eur",
+          "toAmount": "1084.20",
+          "toCurrency": "usd",
+          "date": "2026-09-12",
+          "description": "Fund the USD sleeve",
+          "feeAmount": "2.00",
+          "feeCurrency": "eur",
+          "feeCategoryId": null
         }
       },
       "UpdateDebtRequest": {
@@ -12553,6 +13384,86 @@
           "description": "Weekly shop",
           "lines": null,
           "currency": null
+        }
+      },
+      "UpdateTransferRequest": {
+        "required": [
+          "fromAccountId",
+          "toAccountId",
+          "amount",
+          "date",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "fromAccountId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "toAccountId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "amount": {
+            "type": "string",
+            "description": "Decimal string with at most two decimal places, greater than zero.",
+            "format": "decimal",
+            "example": "250.00"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "To savings"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "receivedAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The amount that arrived. Required when the two currencies differ.",
+            "format": "decimal"
+          },
+          "receivedCurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          }
+        },
+        "example": {
+          "fromAccountId": "00000000-0000-0000-0000-000000000000",
+          "toAccountId": "00000000-0000-0000-0000-000000000000",
+          "amount": "250.00",
+          "date": "2026-09-12",
+          "description": "To savings",
+          "currency": null,
+          "receivedAmount": null,
+          "receivedCurrency": null
         }
       },
       "UpdateUserRoleRequest": {

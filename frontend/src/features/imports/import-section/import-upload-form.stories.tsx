@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import type { AccountResponse } from "@/api/generated/model";
+import { Section } from "@/components/ui/section";
 import { accounts, checkingAccount } from "@/storybook/fixtures";
 import { ImportUploadForm } from "./import-upload-form";
 
@@ -24,7 +25,7 @@ function UploadFormHarness({
   const [accountId, setAccountId] = useState(accountList[0]?.id ?? "");
 
   return (
-    <section className="section w-[min(48rem,90vw)]">
+    <Section className="w-[min(48rem,90vw)]">
       <ImportUploadForm
         accounts={accountList}
         accountId={accountId}
@@ -39,7 +40,7 @@ function UploadFormHarness({
         secondary={secondary}
         disabled={disabled}
       />
-    </section>
+    </Section>
   );
 }
 

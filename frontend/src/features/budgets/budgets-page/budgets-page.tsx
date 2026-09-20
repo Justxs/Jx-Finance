@@ -16,6 +16,8 @@ import { RowTransition } from "@/components/row-transition";
 import { SummaryStats } from "@/components/summary-stats";
 import { Button } from "@/components/ui/button";
 import { Meter } from "@/components/ui/meter";
+import { Rows } from "@/components/ui/rows";
+import { Panel, Section, SectionTitle } from "@/components/ui/section";
 import { Tooltip } from "@/components/ui/tooltip";
 import { useMoney, useMonthLabel } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
@@ -64,7 +66,7 @@ export function BudgetsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("budgets.empty")}</p>;
   } else {
     content = (
-      <ul className="rows panel py-2 sm:py-3">
+      <Panel as={Rows} className="py-2 sm:py-3">
         {budgetList.map((budget) => {
           const limit = Number(budget.limitAmount);
           const spent = Number(budget.spent);
@@ -141,7 +143,7 @@ export function BudgetsPage() {
             </RowTransition>
           );
         })}
-      </ul>
+      </Panel>
     );
   }
 
@@ -183,10 +185,10 @@ export function BudgetsPage() {
         />
       ) : null}
       {budgetList.length > 1 ? (
-        <section className="section">
-          <h2 className="section-title mb-4">{t("budgets.usage")}</h2>
+        <Section>
+          <SectionTitle className="mb-4">{t("budgets.usage")}</SectionTitle>
           <BudgetUsageChart budgets={budgetList} />
-        </section>
+        </Section>
       ) : null}
       {content}
       <ConfirmDeleteDialog

@@ -14,8 +14,10 @@ using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Endpoints.Transactions.UpdateTransaction;
+using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace JxFinance.Endpoints.Transactions.Services;
 
@@ -24,7 +26,8 @@ public sealed class TransactionService(
     AppDbContext db,
     ICurrentUser currentUser,
     TransactionMapper mapper,
-    IExchangeRateService rates) : ITransactionService
+    IExchangeRateService rates,
+    IOptions<AppOptions> options) : ITransactionService
 {
     public async Task<PagedResponse<TransactionResponse>> GetPageAsync(
         GetTransactionsRequest request,
@@ -50,15 +53,29 @@ public sealed class TransactionService(
             total);
     }
 
-    public async Task<IReadOnlyList<TransactionResponse>> ExportAsync(
+    public IAsyncEnumerable<TransactionResponse> StreamExportAsync(GetTransactionsRequest request) =>
+        Sorted(Filtered(request), request)
+            .AsNoTracking()
+            .AsAsyncEnumerable()
+            .Select(t => mapper.FromEntity(t, null));
+
+    public async Task<Result<IReadOnlyList<TransactionResponse>>> ExportForPdfAsync(
         GetTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var items = await Sorted(Filtered(request), request).ToListAsync(cancellationToken);
+        var limit = options.Value.PdfExportMaxRows;
+        var items = await Sorted(Filtered(request), request)
+            .AsNoTracking()
+            .Take(limit + 1)
+            .ToListAsync(cancellationToken);
+        if (items.Count > limit)
+        {
+            return Result<IReadOnlyList<TransactionResponse>>.Failure(
+                ErrorCodes.ExportTooManyRows,
+                $"A PDF holds at most {limit} transactions. Narrow the filters, or export CSV instead.");
+        }
 
-        var linesByTransaction = await LoadLinesAsync(items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
-
-        return items.Select(t => mapper.FromEntity(t, linesByTransaction.GetValueOrDefault(t.Id))).ToList();
+        return Result<IReadOnlyList<TransactionResponse>>.Success(items.Select(t => mapper.FromEntity(t, null)).ToList());
     }
 
     public async Task<TransactionsSummaryResponse> GetSummaryAsync(
@@ -134,8 +151,8 @@ public sealed class TransactionService(
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var search = request.Search.Trim();
-            query = query.Where(t => t.Description != null && t.Description.Contains(search));
+            var pattern = LikePattern.Contains(request.Search);
+            query = query.Where(t => t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape));
         }
 
         if (request.DateFrom is { } dateFrom)
@@ -258,8 +275,6 @@ public sealed class TransactionService(
 
         var (currency, reportingAmount) = valuation.Value;
 
-        // Editing a split hard-deletes the previous line set and inserts the new one (D55) —
-        // lines are part of the transaction aggregate, the one soft-delete exception.
         var existingLines = await db.TransactionLines
             .Where(l => l.TransactionId == transactionId)
             .ToListAsync(cancellationToken);

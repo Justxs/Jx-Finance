@@ -38,6 +38,21 @@ public static class ApiPipelineExtensions
             });
             c.Errors.ResponseBuilder = ProblemResponses.Build;
         });
+        if (ServesApiDocs(app.Configuration, app.Environment))
+        {
+            app.MapApiDocs();
+        }
+
+        app.MapHealthChecks("/health");
+
+        return app;
+    }
+
+    public static bool ServesApiDocs(IConfiguration configuration, IHostEnvironment environment) =>
+        configuration.GetValue("App:ApiDocs", environment.IsDevelopment());
+
+    private static void MapApiDocs(this WebApplication app)
+    {
         app.MapOpenApi();
 
         app.MapScalarApiReference(options =>
@@ -46,11 +61,7 @@ public static class ApiPipelineExtensions
                 .WithOpenApiRoutePattern("/openapi/{documentName}.json");
         });
 
-        app.MapHealthChecks("/health");
-
         app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
-
-        return app;
     }
 
     private static LogEventLevel RequestLogLevel(HttpContext context, double elapsedMs, Exception? exception)

@@ -102,6 +102,58 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(0, transactions!.Total);
     }
 
+    [Fact]
+    public async Task Two_identical_bank_entries_in_one_file_cannot_match_the_same_transfer()
+    {
+        var source = await CreateAccountAsync("100.00");
+        var destination = await CreateAccountAsync("100.00");
+        var transfer = await CreateTransferAsync(source, destination);
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/swedbank/confirm",
+            new
+            {
+                accountId = source,
+                rows = new[]
+                {
+                    Row("same-file-1", transferAccountId: destination, existingTransferId: transfer),
+                    Row("same-file-2", transferAccountId: destination, existingTransferId: transfer),
+                },
+            });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync());
+        var retry = await ConfirmAsync(source, Row("same-file-1", transferAccountId: destination, existingTransferId: transfer));
+        Assert.Equal(1, retry.Imported);
+    }
+
+    [Fact]
+    public async Task An_identical_bank_entry_in_a_later_import_cannot_match_an_already_matched_transfer()
+    {
+        var source = await CreateAccountAsync("100.00");
+        var destination = await CreateAccountAsync("100.00");
+        var transfer = await CreateTransferAsync(source, destination);
+        await ConfirmAsync(source, Row("first-import", transferAccountId: destination, existingTransferId: transfer));
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/swedbank/confirm",
+            new { accountId = source, rows = new[] { Row("second-import", transferAccountId: destination, existingTransferId: transfer) } });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync());
+        var other = await ConfirmAsync(
+            destination,
+            Row("other-side", type: "income", transferAccountId: source, existingTransferId: transfer));
+        Assert.Equal(1, other.Imported);
+        Assert.Equal("90.00", await CurrentBalanceAsync(source));
+    }
+
+    private async Task<Guid> CreateTransferAsync(Guid source, Guid destination) =>
+        (await PostAsync<IdDto>(
+            Client,
+            "/api/transfers",
+            new { fromAccountId = source, toAccountId = destination, amount = "10.00", date = "2026-09-01" })).Id;
+
     private async Task<(HttpResponseMessage response, PreviewDto? body)> PreviewAsync(Guid accountId, string csv)
     {
         using var content = new MultipartFormDataContent();

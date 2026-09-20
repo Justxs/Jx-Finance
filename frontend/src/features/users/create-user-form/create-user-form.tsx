@@ -9,6 +9,7 @@ import {
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { submitToServer } from "@/lib/form-server-errors";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
 
@@ -77,7 +78,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
         noValidate
         className="space-y-4"
       >
-        <div className="form-grid">
+        <FormGrid>
           <form.Field name="displayName">
             {(field) => (
               <field.TextField id="user-display-name" label={t("users.displayName")} autoFocus />
@@ -87,9 +88,9 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
           <form.Field name="email">
             {(field) => <field.TextField id="user-email" label={t("users.email")} type="email" />}
           </form.Field>
-        </div>
+        </FormGrid>
 
-        <div className="form-grid">
+        <FormGrid>
           <form.Field name="role">
             {(field) => (
               <field.SelectFieldControl
@@ -105,7 +106,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <field.TextField id="user-password" label={t("users.password")} type="password" />
             )}
           </form.Field>
-        </div>
+        </FormGrid>
 
         <FormError error={createMutation.error} />
 

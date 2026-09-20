@@ -6,6 +6,8 @@ import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { CreateHouseholdForm } from "../create-household-form";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
@@ -28,9 +30,9 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   const removeMutation = useRemoveMember();
 
   return (
-    <section className="section">
+    <Section>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title min-w-0 wrap-break-word">{household.name}</h2>
+        <SectionTitle className="min-w-0 wrap-break-word">{household.name}</SectionTitle>
 
         {isOwner ? (
           <div className="flex gap-1">
@@ -67,7 +69,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
         />
       </Modal>
 
-      <ul className="rows">
+      <Rows>
         {members?.map((member) => (
           <MemberRow
             key={member.userId}
@@ -81,7 +83,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
             onRemove={() => removeMutation.mutate({ id: household.id, userId: member.userId })}
           />
         ))}
-      </ul>
+      </Rows>
 
       {isOwner ? (
         <div className="flex justify-end pt-3">
@@ -105,6 +107,6 @@ export function HouseholdCard({ household }: Readonly<Props>) {
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />
-    </section>
+    </Section>
   );
 }

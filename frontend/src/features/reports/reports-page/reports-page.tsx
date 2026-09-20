@@ -5,6 +5,9 @@ import { useReportSummarySuspense } from "@/api/generated";
 import { CategoryBreakdown } from "@/components/category-breakdown";
 import { ExportMenu } from "@/components/export-menu";
 import { PageHeader } from "@/components/page-header";
+import { Section, SectionTitle } from "@/components/ui/section";
+import { SplitColumns } from "@/components/ui/split-columns";
+import { StaleRegion } from "@/components/ui/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
 import { buildExportUrl } from "@/lib/export-url";
@@ -43,7 +46,7 @@ export function ReportsPage() {
       <ReportFilters dateFrom={dateFrom} dateTo={dateTo} onChange={handleRangeChange} />
 
       <ViewTransition name="report-results" enter="none" exit="none">
-        <div className={`space-y-5 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+        <StaleRegion stale={stale} className="space-y-5">
           <ReportStats
             totalIncome={summary.data.totalIncome}
             totalExpense={summary.data.totalExpense}
@@ -54,21 +57,21 @@ export function ReportsPage() {
             <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
           )}
 
-          <div className="split-columns gap-y-5">
-            <section className="section">
-              <h2 className="section-title mb-4">{t("reports.expenseByCategory")}</h2>
+          <SplitColumns className="gap-y-5">
+            <Section>
+              <SectionTitle className="mb-4">{t("reports.expenseByCategory")}</SectionTitle>
               <CategoryBreakdown
                 items={summary.data.expenseByCategory}
                 dateFrom={shown.dateFrom}
                 dateTo={shown.dateTo}
               />
-            </section>
-            <section className="section">
-              <h2 className="section-title mb-4">{t("reports.trend")}</h2>
+            </Section>
+            <Section>
+              <SectionTitle className="mb-4">{t("reports.trend")}</SectionTitle>
               <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />
-            </section>
-          </div>
-        </div>
+            </Section>
+          </SplitColumns>
+        </StaleRegion>
       </ViewTransition>
     </div>
   );

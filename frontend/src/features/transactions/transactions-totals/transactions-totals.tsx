@@ -3,6 +3,7 @@ import { useTransactionsSummarySuspense } from "@/api/generated";
 import type { TransactionsSummaryParams } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
+import { staleVariants } from "@/components/ui/stale-region";
 import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +29,7 @@ export function TransactionsTotalsLine({
       aria-busy={stale}
       className={cn(
         "flex min-h-9 flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground tabular-nums sm:gap-x-2",
-        stale && "is-stale",
+        staleVariants({ stale }),
       )}
     >
       <span className="whitespace-nowrap">{t("transactions.count", { count })}</span>

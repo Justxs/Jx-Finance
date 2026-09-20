@@ -1,4 +1,4 @@
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -17,9 +17,13 @@ import { Modal } from "@/components/modal";
 import { Pagination } from "@/components/pagination";
 import { RowTransition } from "@/components/row-transition";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
+import { StaleRegion } from "@/components/ui/stale-region";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
+import { TransferEditDialog } from "./transfer-edit-dialog";
 import { TransferForm } from "./transfer-form";
 
 interface Props {
@@ -49,6 +53,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     },
   });
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [editTarget, setEditTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteTransfer({
     mutation: optimisticPagedRemoval<PagedResponseOfTransferResponse>(
@@ -84,7 +89,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     content = <p className="py-6 text-sm text-muted-foreground">{t("transfers.empty")}</p>;
   } else {
     content = (
-      <ul className="rows">
+      <Rows>
         {items.map((transfer) => (
           <RowTransition key={transfer.id}>
             <li className="flex flex-col gap-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
@@ -95,10 +100,20 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
                   {transfer.description ? ` · ${transfer.description}` : ""}
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="font-semibold whitespace-nowrap tabular-nums">
+              <div className="flex flex-wrap items-center gap-1">
+                <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">
                   {transferAmount(transfer)}
                 </span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-8"
+                  onClick={() => setEditTarget(transfer.id)}
+                  aria-label={`${t("actions.edit")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
+                  tooltip={`${t("actions.edit")}: ${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
+                >
+                  <Pencil />
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -115,14 +130,14 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
             </li>
           </RowTransition>
         ))}
-      </ul>
+      </Rows>
     );
   }
 
   return (
-    <section className="section">
+    <Section>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-3">
-        <h2 className="section-title">{t("transfers.heading")}</h2>
+        <SectionTitle>{t("transfers.heading")}</SectionTitle>
         <Button
           variant="outline"
           disabled={accounts.length < 2}
@@ -141,16 +156,19 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
           onCancel={() => setAddOpen(false)}
         />
       </Modal>
-      <div className={stale ? "is-stale" : undefined} aria-busy={stale}>
-        {content}
-      </div>
+      <StaleRegion stale={stale}>{content}</StaleRegion>
       <Pagination page={page} pages={pages} onPageChange={setPage} />
+      <TransferEditDialog
+        accounts={accounts}
+        transfer={items.find((transfer) => transfer.id === editTarget) ?? null}
+        onClose={() => setEditTarget(null)}
+      />
       <ConfirmDeleteDialog
         target={deleteTarget}
         itemLabel={deleteLabel}
         onCancel={() => setDeleteTarget(null)}
         onConfirm={(id) => deleteMutation.mutate({ id })}
       />
-    </section>
+    </Section>
   );
 }

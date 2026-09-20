@@ -1,8 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { z } from "zod";
+import { isApiError } from "@/api/client";
+import { restoreBackupBodyPasswordMax } from "@/api/schemas/backups/backups.zod";
+import { useAppForm } from "@/components/form";
+import { FormError } from "@/components/form-error";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -10,35 +14,133 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { submitToServer } from "@/lib/form-server-errors";
+import { requiredValue } from "@/lib/validation";
 
-interface Props {
-  label: string | null;
-  onCancel: () => void;
-  onConfirm: () => void;
+interface FormProps {
+  error: unknown;
+  pending: boolean;
+  onRestore: (password: string) => Promise<unknown>;
 }
 
-export function RestoreBackupDialog({ label, onCancel, onConfirm }: Readonly<Props>) {
+interface Props extends FormProps {
+  backupId: string | null;
+  label: string | null;
+  onCancel: () => void;
+}
+
+function isWrongPassword(error: unknown) {
+  return (
+    isApiError(error) &&
+    (error.code === "password.incorrect" ||
+      (error.errors ?? []).some((detail) => detail.code === "password.incorrect"))
+  );
+}
+
+function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
   const { t } = useTranslation();
-  const [typed, setTyped] = useState("");
-  const [shownLabel, setShownLabel] = useState(label);
   const confirmWord = t("backup.confirmWord");
+
+  const schema = z.object({
+    confirmation: z.string(),
+    password: requiredValue(t).max(
+      restoreBackupBodyPasswordMax,
+      t("validation.maxLength", { max: restoreBackupBodyPasswordMax }),
+    ),
+  });
+
+  const form = useAppForm({
+    defaultValues: { confirmation: "", password: "" },
+    validators: [{ run: schema, triggers: ["change"] }],
+    onSubmit: (submission) =>
+      submitToServer(submission, async () => {
+        try {
+          await onRestore(submission.value.password);
+        } catch (failure) {
+          if (isWrongPassword(failure)) {
+            submission.formApi.setFieldValue("password", "");
+          }
+          throw failure;
+        }
+      }),
+  });
+
+  return (
+    <form.AppForm>
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          void form.handleSubmit();
+        }}
+        noValidate
+        className="space-y-4"
+      >
+        <form.Field name="confirmation">
+          {(field) => (
+            <field.TextField
+              id="backup-confirm"
+              label={t("backup.confirmLabel", { word: confirmWord })}
+              autoComplete="off"
+            />
+          )}
+        </form.Field>
+        <form.Field name="password">
+          {(field) => (
+            <field.TextField
+              id="backup-confirm-password"
+              label={t("profile.currentPassword")}
+              hint={t("backup.confirmPasswordHint")}
+              type="password"
+              autoComplete="current-password"
+              touchedOnly
+            />
+          )}
+        </form.Field>
+
+        <FormError error={error} />
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>{t("actions.cancel")}</AlertDialogCancel>
+          <form.Subscribe
+            selector={(state) =>
+              state.values.confirmation.trim() === confirmWord && state.values.password !== ""
+            }
+          >
+            {(ready) => (
+              <Button type="submit" variant="destructive" pending={pending} disabled={!ready}>
+                {t("backup.confirmAction")}
+              </Button>
+            )}
+          </form.Subscribe>
+        </AlertDialogFooter>
+      </form>
+    </form.AppForm>
+  );
+}
+
+export function RestoreBackupDialog({
+  backupId,
+  label,
+  error,
+  pending,
+  onCancel,
+  onRestore,
+}: Readonly<Props>) {
+  const { t } = useTranslation();
+  const [shownLabel, setShownLabel] = useState(label);
 
   if (label !== null && label !== shownLabel) {
     setShownLabel(label);
-  }
-
-  function close() {
-    setTyped("");
-    onCancel();
   }
 
   return (
     <AlertDialog
       open={label !== null}
       onOpenChange={(open) => {
-        if (!open) {
-          close();
+        if (!open && !pending) {
+          onCancel();
         }
       }}
     >
@@ -52,30 +154,9 @@ export function RestoreBackupDialog({ label, onCancel, onConfirm }: Readonly<Pro
             {t("backup.confirmDescription")}
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-1.5">
-          <label className="text-sm font-medium" htmlFor="backup-confirm">
-            {t("backup.confirmLabel", { word: confirmWord })}
-          </label>
-          <Input
-            id="backup-confirm"
-            autoComplete="off"
-            value={typed}
-            onChange={(event) => setTyped(event.target.value)}
-          />
-        </div>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
-          <AlertDialogAction
-            variant="destructive"
-            disabled={typed.trim() !== confirmWord}
-            onClick={() => {
-              onConfirm();
-              close();
-            }}
-          >
-            {t("backup.confirmAction")}
-          </AlertDialogAction>
-        </AlertDialogFooter>
+        {backupId === null ? null : (
+          <RestoreBackupForm key={backupId} error={error} pending={pending} onRestore={onRestore} />
+        )}
       </AlertDialogContent>
     </AlertDialog>
   );

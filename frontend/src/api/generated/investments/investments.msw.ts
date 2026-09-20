@@ -227,6 +227,30 @@ export const getUpdateSecurityMockHandler = (
   );
 };
 
+export const getSetSecurityPriceMockHandler = (
+  overrideResponse?:
+    | SecurityResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<SecurityResponse> | SecurityResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/investments/securities/:id/price",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateInvestmentTransactionMockHandler = (
   overrideResponse?:
     | InvestmentTransactionResponse
@@ -329,6 +353,7 @@ export const getInvestmentsMock = () => [
   getSecuritiesMockHandler(),
   getCreateSecurityMockHandler(),
   getUpdateSecurityMockHandler(),
+  getSetSecurityPriceMockHandler(),
   getCreateInvestmentTransactionMockHandler(),
   getInvestmentTransactionsMockHandler(),
   getDeleteInvestmentTransactionMockHandler(),

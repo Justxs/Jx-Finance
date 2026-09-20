@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, PortfolioYear } from "@/api/generated/model";
+import { Rows } from "@/components/ui/rows";
+import { Section, SectionTitle } from "@/components/ui/section";
 import {
   Table,
   TableBody,
@@ -28,8 +30,8 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
   }
 
   return (
-    <section className="section">
-      <h2 className="section-title mb-2">{t("investments.years.title")}</h2>
+    <Section>
+      <SectionTitle className="mb-2">{t("investments.years.title")}</SectionTitle>
       {rows.length === 0 ? (
         <p className="py-6 text-sm text-muted-foreground">{t("investments.years.empty")}</p>
       ) : (
@@ -77,7 +79,7 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
               </TableBody>
             </Table>
           </div>
-          <ul className="rows sm:hidden">
+          <Rows className="sm:hidden">
             {rows.map((row) => (
               <li key={row.year} className="py-2.5 text-sm">
                 <div className="flex items-baseline justify-between gap-3">
@@ -109,9 +111,9 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
                 </dl>
               </li>
             ))}
-          </ul>
+          </Rows>
         </>
       )}
-    </section>
+    </Section>
   );
 }

@@ -114,3 +114,10 @@ export function unplacedServerErrors(error: unknown) {
     unplaced: placed ? details.filter((detail) => !placed.has(detail.name)) : details,
   };
 }
+
+export function hasServerErrorCode(error: unknown, code: ErrorCode): boolean {
+  return (
+    isApiError(error) &&
+    (error.code === code || (error.errors ?? []).some((detail) => detail.code === code))
+  );
+}

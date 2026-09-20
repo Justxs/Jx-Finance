@@ -367,66 +367,6 @@
   }
 }
 
-@layer components {
-  .card {
-    @apply min-w-0 rounded-md border bg-card text-card-foreground;
-  }
-
-  .page-title {
-    @apply min-w-0 font-serif text-[1.75rem] leading-9 font-semibold wrap-break-word lining-nums;
-    letter-spacing: -0.012em;
-    text-wrap: balance;
-  }
-
-  .panel,
-  .section {
-    @apply min-w-0 rounded-lg bg-muted/50 p-5 sm:p-6 dark:bg-card;
-  }
-
-  .panel .panel,
-  .panel .section,
-  .section .panel,
-  .section .section,
-  [role="dialog"] .section,
-  [role="dialog"] .panel {
-    @apply rounded-none bg-transparent p-0 dark:bg-transparent;
-  }
-
-  .section-title {
-    @apply text-lg leading-6 font-semibold;
-  }
-
-  .figure {
-    @apply font-serif font-semibold lining-nums tabular-nums;
-    letter-spacing: -0.015em;
-  }
-
-  .total-rule {
-    border-bottom: 3px double var(--rule);
-  }
-
-  .rows {
-    @apply divide-y divide-border;
-  }
-
-  .form-grid {
-    @apply grid items-start gap-4;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
-  }
-
-  .form-grid > * {
-    min-width: 0;
-  }
-
-  .is-stale {
-    @apply opacity-70 transition-opacity duration-150;
-  }
-
-  .split-columns {
-    @apply grid gap-x-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)];
-  }
-}
-
 @keyframes page-in {
   from {
     opacity: 0;

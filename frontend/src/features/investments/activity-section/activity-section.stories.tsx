@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,6 +10,7 @@ import {
   investmentsEmptyHandlers,
   loadingHandlers,
 } from "@/storybook/handlers";
+import { chooseOption } from "@/storybook/interactions";
 import { investmentTransactions, splitEntry } from "@/storybook/investment-fixtures";
 import { ActivitySection } from "./activity-section";
 
@@ -62,8 +63,7 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 export const FilteredByType: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(await canvas.findByLabelText("Entry type"));
-    await userEvent.click(await within(document.body).findByRole("option", { name: "Sell" }));
+    await chooseOption(await canvas.findByLabelText("Entry type"), "Sell");
     await waitFor(() => expect(canvas.queryByText("Interest")).not.toBeInTheDocument());
     await expect(canvas.getByText("+$1,405.70")).toBeInTheDocument();
   },

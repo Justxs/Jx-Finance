@@ -126,7 +126,12 @@
     "received": "Received",
     "sameAsSent": "Same as sent",
     "sentCurrency": "Sent currency",
-    "receivedCurrency": "Received currency"
+    "receivedCurrency": "Received currency",
+    "editTitle": "Edit transfer",
+    "lockedHint": "Fixed by the import.",
+    "lockedOne": "This transfer was imported into {{account}}. Its date, that account and the amount on that side stay as the statement has them; the other account and the description can change.",
+    "lockedBoth": "Both sides of this transfer were imported, so only the description can change.",
+    "unavailableAccount": "Account not available"
   },
   "conversions": {
     "heading": "Currency conversions",
@@ -146,7 +151,13 @@
     "empty": "No conversions yet.",
     "sameCurrencyError": "Choose two different currencies.",
     "rateLine": "1 {{from}} = {{rate}} {{to}}",
-    "feeLine": "fee {{fee}}"
+    "feeLine": "fee {{fee}}",
+    "editTitle": "Edit conversion",
+    "accountFixedHint": "A conversion stays on the account it was recorded on.",
+    "feeCategory": "Fee category",
+    "feeEditHint": "The fee as it should be afterwards. Clear it to delete the fee expense.",
+    "feeSplitError": "The fee expense was split into categories by hand. Change it under Transactions instead.",
+    "importedHint": "Imported from the broker. Correct it at the broker and import again."
   },
   "categories": {
     "title": "Categories",
@@ -260,6 +271,7 @@
     "confirmLabel": "Type {{word}} to confirm",
     "confirmWord": "RESTORE",
     "confirmAction": "Replace all data",
+    "confirmPasswordHint": "Your own password, to confirm it is you.",
     "restored": "Backup from {{date}} restored. Sign in again.",
     "bytes": {
       "b": "{{value}} B",
@@ -334,7 +346,26 @@
     "roleUpdated": "Role updated",
     "empty": "No other users yet.",
     "allRoles": "All roles",
-    "allStatuses": "All statuses"
+    "allStatuses": "All statuses",
+    "reactivate": "Reactivate",
+    "reactivated_toast": "User reactivated",
+    "deactivateConfirm": {
+      "title": "Deactivate this user?",
+      "description": "They are signed out everywhere and cannot sign in. Their data is kept, and you can reactivate them later."
+    },
+    "resetPassword": {
+      "action": "Reset password",
+      "title": "Set a temporary password",
+      "consequences": "{{name}} is signed out on every device and a temporary lockout is lifted. The application does not tell them the new password: pass it on yourself and ask them to change it on Profile.",
+      "newPassword": "Temporary password",
+      "newPasswordHint": "{{min}} to {{max}} characters.",
+      "resetTwoFactor": "Also reset two-factor authentication",
+      "resetTwoFactorHint": "Only needed when they also lost the authenticator and the recovery codes. They enrol again after signing in.",
+      "currentPassword": "Your current password",
+      "currentPasswordHint": "Confirms that you are the one making this change.",
+      "submit": "Reset password",
+      "done": "Password reset. {{name}} has been signed out everywhere."
+    }
   },
   "profile": {
     "qrCodeAlt": "Authenticator QR code",
@@ -707,7 +738,9 @@
         "duplicates_one": "{{count}} entry was already imported and left alone.",
         "duplicates_other": "{{count}} entries were already imported and left alone.",
         "skipped_one": "{{count}} row skipped.",
-        "skipped_other": "{{count}} rows skipped."
+        "skipped_other": "{{count}} rows skipped.",
+        "splits_one": "{{count}} stock split booked.",
+        "splits_other": "{{count}} stock splits booked."
       },
       "help": {
         "title": "How to create the Flex Query",
@@ -717,6 +750,34 @@
         "period": "Choose a period, for example Last 365 days, then save the query and run it to download the file.",
         "token": "For automatic sync, open Flex Web Service on the same page, enable it and copy the token.",
         "queryId": "The Query ID is the number shown next to the saved query."
+      },
+      "corporateActions": {
+        "FS": "Forward split",
+        "RS": "Reverse split",
+        "TC": "Merger or takeover",
+        "SO": "Spin-off",
+        "SD": "Stock dividend",
+        "IC": "Symbol or ISIN change",
+        "RI": "Rights issue",
+        "SR": "Rights subscription",
+        "TO": "Tender offer",
+        "DW": "Delisting as worthless",
+        "HI": "Dividend with a choice (issue)",
+        "HD": "Dividend with a choice (delivery)",
+        "CD": "Cash dividend",
+        "BM": "Bond maturity",
+        "BC": "Bond conversion",
+        "other": "Other corporate action ({{type}})"
+      },
+      "warning": {
+        "title": "Check your holdings",
+        "skippedActions": "These corporate actions are in the report but were not booked. Enter their effect by hand:",
+        "mismatches": "For these securities the quantity calculated from your entries differs from what the broker reports:",
+        "mismatchTable": "Holdings that differ from the broker",
+        "symbol": "Symbol",
+        "brokerQuantity": "At the broker",
+        "replayedQuantity": "From your entries",
+        "mismatchAdvice": "A corporate action may be missing, or the history starts before the first imported period. A split can be entered by hand with Add entry, type Split."
       }
     },
     "connection": {
@@ -783,7 +844,13 @@
     "forecast": "Due in the next six months",
     "forecastSeries": "Bills due",
     "forecastEmpty": "No fixed-amount bills are due in the next six months.",
-    "forecastLabel": "Total of fixed bills due in each of the next six months"
+    "forecastLabel": "Total of fixed bills due in each of the next six months",
+    "editTitle": "Edit recurring bill",
+    "activeHint": "An inactive bill sends no reminders and cannot be confirmed.",
+    "chooseAccount": "Choose an account",
+    "confirmFixed": "Records {{amount}} for {{name}} as an expense dated {{date}} and moves the bill to its next due date.",
+    "confirmVariable": "Records the amount you enter for {{name}} as an expense dated {{date}} and moves the bill to its next due date.",
+    "confirmStale": "This payment was already confirmed, or the bill changed somewhere else. The bill has been refreshed: check the due date above and confirm again if it is still owed."
   },
   "notifications": {
     "title": "Notifications",
@@ -903,6 +970,7 @@
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
+    "tooManyRequests": "Too many attempts. Wait a moment and try again.",
     "loadFailed": "Could not load this.",
     "loadFailedNamed": "{{subject}} could not be loaded.",
     "retry": "Try again",
@@ -920,7 +988,8 @@
     "iban": "Enter a valid IBAN, e.g. LT12 1000 0111 0100 1000.",
     "maxLength": "Must be {{max}} characters or fewer.",
     "email": "Enter a valid email address.",
-    "minLength": "Must be at least {{min}} characters."
+    "minLength": "Must be at least {{min}} characters.",
+    "wholeNumberBetween": "Enter a whole number from {{min}} to {{max}}."
   },
   "pagination": {
     "pageOf": "Page {{page}} of {{pages}}"
@@ -947,7 +1016,8 @@
     },
     "backup": {
       "invalidFile": "The file is not a usable backup. Nothing was changed.",
-      "schemaMismatch": "The backup comes from another version of the application. Restore it with the version that created it, then upgrade."
+      "schemaMismatch": "The backup comes from another version of the application. Restore it with the version that created it, then upgrade.",
+      "tooLarge": "The backup holds more data than this installation accepts. Nothing was changed."
     },
     "broker": {
       "rejected": "Interactive Brokers rejected the request: {{reason}}",
@@ -961,11 +1031,13 @@
       "invalidSize": "Too few or too many items."
     },
     "conflict": {
+      "busy": "The database was busy with other work. Nothing was changed; try again in a moment.",
       "duplicate": "This already exists.",
       "stale": "This changed in the meantime. Refresh and try again."
     },
     "credentials": {
-      "invalid": "Wrong email or password."
+      "invalid": "Wrong email or password.",
+      "lockedOut": "Too many failed attempts. Wait 15 minutes and try again."
     },
     "currency": {
       "disabled": "This currency is not enabled."
@@ -982,6 +1054,9 @@
     },
     "exchangeRate": {
       "unavailable": "No exchange rate for that date. Sync rates in settings first."
+    },
+    "export": {
+      "tooManyRows": "Too many transactions for a PDF. Narrow the filters or export CSV instead."
     },
     "feature": {
       "disabled": "This feature is turned off."
@@ -1000,6 +1075,7 @@
     },
     "import": {
       "invalidFile": "The file is empty, too large or not in the expected format.",
+      "transferAlreadyMatched": "The chosen transfer is already matched to another bank entry of this account.",
       "transferMismatch": "The chosen transfer does not match this row."
     },
     "money": {
@@ -1033,6 +1109,9 @@
       "notFound": "This no longer exists.",
       "readOnly": "Imported entries cannot be edited."
     },
+    "security": {
+      "notHeld": "Only someone who holds this security, or an administrator, can set its price."
+    },
     "setup": {
       "alreadyCompleted": "Setup was already completed."
     },
@@ -1054,6 +1133,7 @@
       "invalidCode": "The code is not valid."
     },
     "user": {
+      "lastAdministrator": "At least one active administrator must remain.",
       "selfChange": "You cannot change your own role or deactivate yourself."
     },
     "value": {

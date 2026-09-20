@@ -7,8 +7,14 @@ import {
   getUploadBackupMockHandler,
 } from "@/api/generated/backups/backups.msw";
 import type { BackupResponse } from "@/api/generated/model";
-import { backupRestored, backups } from "@/storybook/fixtures";
-import { found, readBody, text } from "./http";
+import {
+  backupPasswordRequiredProblem,
+  backupRestored,
+  backupRestorePassword,
+  backups,
+  backupWrongPasswordProblem,
+} from "@/storybook/fixtures";
+import { found, problem, readBody, text } from "./http";
 
 function freshBackup(note: string | null, uploaded: boolean): BackupResponse {
   return {
@@ -34,5 +40,14 @@ export const backupHandlers = [
     note: text((await readBody(request)).note),
   })),
   getDeleteBackupMockHandler(),
-  getRestoreBackupMockHandler(backupRestored),
+  getRestoreBackupMockHandler(async ({ request }) => {
+    const password = text((await readBody(request)).password) ?? "";
+    if (password === "") {
+      throw problem(backupPasswordRequiredProblem, 400);
+    }
+    if (password !== backupRestorePassword) {
+      throw problem(backupWrongPasswordProblem, 400);
+    }
+    return backupRestored;
+  }),
 ];

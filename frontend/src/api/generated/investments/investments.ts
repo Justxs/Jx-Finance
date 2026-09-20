@@ -39,6 +39,7 @@ import type {
   SaveSecurityRequest,
   SecuritiesParams,
   SecurityResponse,
+  SetSecurityPriceRequest,
   UpdateInvestmentTransactionRequest,
 } from "../model";
 
@@ -455,7 +456,7 @@ export const getImportBrokerReportUrl = () => {
 };
 
 /**
- * Reads the Trades, Cash Transactions and Open Positions sections of a Flex Query XML report. Stock, ETF, fund and bond trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing.
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, symbol changes) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const importBrokerReport = async (
@@ -893,7 +894,7 @@ export const getCreateSecurityUrl = () => {
 };
 
 /**
- * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.
  * @summary Add a security
  */
 export const createSecurity = async (
@@ -997,8 +998,8 @@ export const getUpdateSecurityUrl = (id: string) => {
 };
 
 /**
- * Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.
- * @summary Update a security or its price
+ * Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.
+ * @summary Update the details of a security
  */
 export const updateSecurity = async (
   id: string,
@@ -1076,7 +1077,7 @@ export type UpdateSecurityMutationError = ErrorType<ProblemDetails>;
 export type UpdateSecurityMutationVariables = { id: string; data: SaveSecurityRequest };
 
 /**
- * @summary Update a security or its price
+ * @summary Update the details of a security
  */
 export const useUpdateSecurity = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -1096,6 +1097,113 @@ export const useUpdateSecurity = <TError = ErrorType<ProblemDetails>, TContext =
   TContext
 > => {
   return useMutation(getUpdateSecurityMutationOptions(options), queryClient);
+};
+export const getSetSecurityPriceUrl = (id: string) => {
+  return `/api/investments/securities/${id}/price`;
+};
+
+/**
+ * Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.
+ * @summary Set the last known price of a security
+ */
+export const setSecurityPrice = async (
+  id: string,
+  setSecurityPriceRequest: SetSecurityPriceRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SecurityResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SecurityResponse>(getSetSecurityPriceUrl(id), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setSecurityPriceRequest),
+  });
+};
+
+export const getSetSecurityPriceMutationKey = () => ["setSecurityPrice"] as const;
+
+export const getSetSecurityPriceMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setSecurityPrice>>,
+    TError,
+    SetSecurityPriceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setSecurityPrice>>,
+  TError,
+  SetSecurityPriceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetSecurityPriceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setSecurityPrice>>,
+    SetSecurityPriceMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return setSecurityPrice(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetSecurityPriceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setSecurityPrice>>
+>;
+export type SetSecurityPriceMutationBody = SetSecurityPriceRequest;
+export type SetSecurityPriceMutationError = ErrorType<ProblemDetails>;
+export type SetSecurityPriceMutationVariables = { id: string; data: SetSecurityPriceRequest };
+
+/**
+ * @summary Set the last known price of a security
+ */
+export const useSetSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setSecurityPrice>>,
+      TError,
+      SetSecurityPriceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setSecurityPrice>>,
+  TError,
+  SetSecurityPriceMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetSecurityPriceMutationOptions(options), queryClient);
 };
 export const getCreateInvestmentTransactionUrl = () => {
   return `/api/investments/transactions`;

@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/page-header";
 import { Pagination } from "@/components/pagination";
 import { SummaryStats } from "@/components/summary-stats";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { TextColumnFilter } from "@/components/ui/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -50,7 +51,7 @@ function TableExample() {
   const [page, setPage] = useState(1);
 
   return (
-    <section className="card overflow-hidden">
+    <Card as="section" className="overflow-hidden">
       <div className="overflow-x-auto" role="region" aria-label="Transactions" tabIndex={0}>
         <Table className="min-w-[40rem]">
           <TableHeader>
@@ -93,7 +94,7 @@ function TableExample() {
         </Table>
       </div>
       <Pagination page={page} pages={7} onPageChange={setPage} />
-    </section>
+    </Card>
   );
 }
 
@@ -126,9 +127,9 @@ export const LoadingAndError: Story = {
     <div className="space-y-4">
       <Skeleton className="h-24 w-full" />
       <Skeleton className="h-40 w-full" />
-      <section className="card">
+      <Card as="section">
         <ErrorState onRetry={() => {}} />
-      </section>
+      </Card>
     </div>
   ),
 };

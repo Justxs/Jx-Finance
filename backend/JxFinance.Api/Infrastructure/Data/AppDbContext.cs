@@ -80,6 +80,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         builder.Entity<UserSession>(session =>
         {
             session.Property(s => s.TokenHash).HasMaxLength(64);
+            session.Property(s => s.PreviousTokenHash).HasMaxLength(64);
             session.Property(s => s.SecurityStamp).HasMaxLength(256);
             session.HasIndex(s => s.UserId);
             session.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
@@ -128,7 +129,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
             transaction.Property(t => t.Description).HasMaxLength(500);
             transaction.Property(t => t.ImportRef).HasMaxLength(64);
             transaction.HasIndex(t => new { t.UserId, t.Date });
-            transaction.HasIndex(t => t.AccountId);
+            transaction.HasIndex(t => new { t.AccountId, t.Date });
             transaction.HasIndex(t => t.CategoryId);
             transaction.HasIndex(t => new { t.AccountId, t.ImportRef })
                 .IsUnique()

@@ -15,6 +15,9 @@ public sealed class ExportTransactionsEndpoint(
     IAccountService accountService,
     ICategoryService categoryService) : Endpoint<GetTransactionsRequest>
 {
+    private const string FormulaTriggers = "=+-@\t\r";
+    private const int BufferSize = 16 * 1024;
+
     public override void Configure()
     {
         Get("transactions/export");
@@ -24,57 +27,58 @@ public sealed class ExportTransactionsEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var (transactions, accountNames, categoryNames) =
-            await LoadAsync(transactionService, accountService, categoryService, req, ct);
+        var (accountNames, categoryNames) = await LoadNamesAsync(accountService, categoryService, ct);
 
-        var csv = BuildCsv(transactions, accountNames, categoryNames);
-        await Send.BytesAsync(Encoding.UTF8.GetBytes(csv), "transactions.csv", "text/csv", cancellation: ct);
+        HttpContext.MarkResponseStart();
+        HttpContext.Response.StatusCode = StatusCodes.Status200OK;
+        HttpContext.Response.ContentType = "text/csv";
+        HttpContext.Response.Headers.ContentDisposition = "attachment; filename=transactions.csv";
+
+        await using var writer = new StreamWriter(HttpContext.Response.Body, new UTF8Encoding(false), BufferSize, leaveOpen: true);
+        await writer.WriteLineAsync("Date,Description,Account,Category,Type,Amount,Currency");
+        await foreach (var transaction in transactionService.StreamExportAsync(req).WithCancellation(ct))
+        {
+            await writer.WriteLineAsync(Row(transaction, accountNames, categoryNames));
+        }
+
+        await writer.FlushAsync(ct);
     }
 
-    public static async Task<(IReadOnlyList<TransactionResponse>, Dictionary<Guid, string>, Dictionary<Guid, string>)> LoadAsync(
-        ITransactionService transactionService,
+    public static async Task<(Dictionary<Guid, string> AccountNames, Dictionary<Guid, string> CategoryNames)> LoadNamesAsync(
         IAccountService accountService,
         ICategoryService categoryService,
-        GetTransactionsRequest req,
         CancellationToken ct)
     {
-        var transactions = await transactionService.ExportAsync(req, ct);
         var accounts = await accountService.GetAllAsync(ct);
         var categories = await categoryService.GetAllAsync(ct);
 
         return (
-            transactions,
             accounts.ToDictionary(a => a.Id, a => a.Name),
             categories.ToDictionary(c => c.Id.Value, c => c.Name));
     }
 
-    private static string BuildCsv(
-        IReadOnlyList<TransactionResponse> transactions,
+    private static string Row(
+        TransactionResponse transaction,
         Dictionary<Guid, string> accountNames,
         Dictionary<Guid, string> categoryNames)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("Date,Description,Account,Category,Type,Amount,Currency");
-
-        foreach (var transaction in transactions)
-        {
-            var category = transaction.CategoryId is { } categoryId ? categoryNames.GetValueOrDefault(categoryId) : null;
-            builder.AppendLine(string.Join(
-                ',',
-                Escape(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
-                Escape(transaction.Description ?? ""),
-                Escape(accountNames.GetValueOrDefault(transaction.AccountId) ?? ""),
-                Escape(category ?? ""),
-                Escape(transaction.Type.ToString()),
-                Escape(transaction.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
-                Escape(transaction.Currency.ToCode())));
-        }
-
-        return builder.ToString();
+        var category = transaction.CategoryId is { } categoryId ? categoryNames.GetValueOrDefault(categoryId) : null;
+        return string.Join(
+            ',',
+            Escape(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+            Escape(Neutralize(transaction.Description ?? "")),
+            Escape(Neutralize(accountNames.GetValueOrDefault(transaction.AccountId) ?? "")),
+            Escape(Neutralize(category ?? "")),
+            Escape(transaction.Type.ToString()),
+            Escape(transaction.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
+            Escape(transaction.Currency.ToCode()));
     }
 
+    private static string Neutralize(string value) =>
+        value.Length > 0 && FormulaTriggers.Contains(value[0]) ? $"'{value}" : value;
+
     private static string Escape(string value) =>
-        value.Contains(',') || value.Contains('"') || value.Contains('\n')
+        value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r')
             ? $"\"{value.Replace("\"", "\"\"")}\""
             : value;
 }

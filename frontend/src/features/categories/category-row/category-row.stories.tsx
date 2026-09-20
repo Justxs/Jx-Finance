@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { fn, userEvent, within } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Rows } from "@/components/ui/rows";
 import { Skeleton } from "@/components/ui/skeleton";
 import { categories, ids } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { CategoryRow } from "./category-row";
 
 const personalCategory = categories.find((item) => item.id === ids.categories.food)!;
@@ -22,9 +24,9 @@ const meta = {
   render: (args) => (
     <div className="w-[min(32rem,calc(100vw-3rem))]">
       <QueryBoundary fallback={<Skeleton className="my-2.5 h-8 w-full" />}>
-        <ul className="rows">
+        <Rows>
           <CategoryRow {...args} />
-        </ul>
+        </Rows>
       </QueryBoundary>
     </div>
   ),
@@ -63,6 +65,6 @@ export const EditDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };

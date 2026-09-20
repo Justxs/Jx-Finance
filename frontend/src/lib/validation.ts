@@ -102,3 +102,12 @@ export function quantity(t: TFunction, messageKey: TranslationKey) {
 export function positiveQuantity(t: TFunction, messageKey: TranslationKey) {
   return z.string().refine(isPositiveQuantity, t(messageKey));
 }
+
+export function wholeNumberBetween(t: TFunction, min: number, max: number) {
+  return z
+    .string()
+    .refine(
+      (value) => /^\d+$/.test(value.trim()) && Number(value) >= min && Number(value) <= max,
+      t("validation.wholeNumberBetween", { min, max }),
+    );
+}

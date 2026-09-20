@@ -110,7 +110,9 @@ export const AllSelected: Story = {
   args: { initialSelectedIds: transactions.slice(0, 10).map((item) => item.id) },
 };
 
-export const Placeholder: Story = { args: { isPlaceholder: true } };
+export const Placeholder: Story = {
+  args: { isPlaceholder: true },
+};
 
 export const Deleting: Story = { args: { deletingId: transactions[1]?.id ?? null } };
 

@@ -9,14 +9,15 @@ public sealed class UpdateUserRoleSummary : Summary<UpdateUserRoleEndpoint, Upda
     {
         Summary = "Change a user role";
         Description = "Promotes a user to administrator or demotes them to member. You cannot demote "
-            + "yourself, and the last administrator cannot be demoted, so an instance is never left "
-            + "without one. Administrators only.";
+            + "yourself, and the last active administrator cannot be demoted, so an instance is never left "
+            + "without one. Role changes and deactivations are applied one at a time, so two administrators "
+            + "demoting each other at the same moment cannot both succeed. Administrators only.";
         ExampleRequest = new UpdateUserRoleRequest(Guid.Empty, AppRoles.Admin);
         Params["id"] = "The user id. Takes precedence over the id in the body.";
         RequestParam(r => r.Role, "Admin or Member.");
         Responses[200] = "The updated profile.";
         Responses[400] = "Unknown role.";
-        Responses[403] = "The signed-in user is not an administrator, or the change would leave no administrator.";
+        Responses[403] = "The signed-in user is not an administrator, is the target, or the change would leave no active administrator.";
         Responses[404] = "No such user.";
     }
 }

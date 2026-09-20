@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
+  getCategoriesSuspenseQueryOptions,
   getConversionsSuspenseQueryOptions,
   getHouseholdsSuspenseQueryOptions,
   getTransfersSuspenseQueryOptions,
@@ -37,6 +38,7 @@ export const Route = createFileRoute("/accounts")({
     warmWithSettings(queryClient, (settings) => {
       if (settings.features.multiCurrency) {
         warm(queryClient, getConversionsSuspenseQueryOptions(conversionsPageParams(1)));
+        warm(queryClient, getCategoriesSuspenseQueryOptions());
       }
     });
   },

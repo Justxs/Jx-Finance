@@ -12,6 +12,7 @@ using JxFinance.Endpoints.Conversions.GetConversions;
 using JxFinance.Endpoints.Conversions.Interfaces;
 using JxFinance.Endpoints.Conversions.Mappers;
 using JxFinance.Endpoints.Conversions.Shared;
+using JxFinance.Endpoints.Conversions.UpdateConversion;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -73,37 +74,104 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
         Transaction? fee = null;
         if (request.FeeAmount is { } requestedFee)
         {
-            CategoryId? feeCategoryId = request.FeeCategoryId is { } id ? new CategoryId(id) : null;
-            if (feeCategoryId is not null && !await db.Categories.AnyAsync(
-                    c => c.Id == feeCategoryId && c.Type == FlowType.Expense,
-                    cancellationToken))
+            var terms = await ResolveFeeAsync(
+                new Money(requestedFee, request.FeeCurrency ?? request.FromCurrency),
+                request.FeeCategoryId,
+                request.Date,
+                cancellationToken);
+            if (terms.IsFailure)
             {
-                return Result<ConversionResponse>.Failure(ErrorCodes.CategoryWrongType, "The fee category must be an expense category.");
+                return Result<ConversionResponse>.FailureFrom(terms);
             }
 
-            var feeAmount = new Money(requestedFee, request.FeeCurrency ?? request.FromCurrency);
-            var reporting = await rates.ToReportingAsync(feeAmount, request.Date, cancellationToken);
-            if (reporting.IsFailure)
-            {
-                return Result<ConversionResponse>.FailureFrom(reporting);
-            }
-
-            fee = new Transaction
-            {
-                AccountId = accountId,
-                CategoryId = feeCategoryId,
-                Type = FlowType.Expense,
-                Amount = feeAmount,
-                ReportingAmount = reporting.Value,
-                Date = request.Date,
-                Description = $"Conversion fee {request.FromCurrency.ToCode()} to {request.ToCurrency.ToCode()}",
-                Source = TransactionSource.Manual,
-            };
+            fee = NewFee(accountId, terms.Value!, request.Date, FeeDescription(request.FromCurrency, request.ToCurrency));
             db.Transactions.Add(fee);
         }
 
         var conversion = mapper.ToEntity(request, fee);
         db.CurrencyConversions.Add(conversion);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<ConversionResponse>.Success(mapper.FromEntity(conversion, fee));
+    }
+
+    public async Task<Result<ConversionResponse>> UpdateAsync(
+        UpdateConversionRequest request,
+        CancellationToken cancellationToken)
+    {
+        var conversionId = new CurrencyConversionId(request.Id);
+        var conversion = await db.CurrencyConversions.FirstOrDefaultAsync(c => c.Id == conversionId, cancellationToken);
+        if (conversion is null)
+        {
+            return Result<ConversionResponse>.Failure(ErrorCodes.ResourceNotFound, "Conversion not found.");
+        }
+
+        if (conversion.ImportRef is not null)
+        {
+            return Result<ConversionResponse>.Failure(
+                ErrorCodes.ResourceReadOnly,
+                "This conversion was imported from a broker. Correct it there and import again.");
+        }
+
+        var newCurrencies = new[] { request.FromCurrency, request.ToCurrency }
+            .Except([conversion.FromAmount.Currency, conversion.ToAmount.Currency])
+            .ToArray();
+        if (rates.UnusableReason(newCurrencies) is { } currencyError)
+        {
+            return Result<ConversionResponse>.Failure(ErrorCodes.CurrencyDisabled, currencyError);
+        }
+
+        var fee = conversion.FeeTransactionId is { } feeId
+            ? await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken)
+            : null;
+        Money? requestedFee = request.FeeAmount is { } amount
+            ? new Money(amount, request.FeeCurrency ?? request.FromCurrency)
+            : null;
+        if (fee is { IsSplit: true } && (requestedFee != fee.Amount || request.Date != fee.Date))
+        {
+            return Result<ConversionResponse>.Failure(
+                ErrorCodes.TransactionSplitNotAllowed,
+                "The fee transaction is split into lines. Edit that transaction instead.");
+        }
+
+        var previousDescription = FeeDescription(conversion.FromAmount.Currency, conversion.ToAmount.Currency);
+        var description = FeeDescription(request.FromCurrency, request.ToCurrency);
+        if (requestedFee is { } feeAmount)
+        {
+            var terms = await ResolveFeeAsync(feeAmount, request.FeeCategoryId, request.Date, cancellationToken);
+            if (terms.IsFailure)
+            {
+                return Result<ConversionResponse>.FailureFrom(terms);
+            }
+
+            if (fee is null)
+            {
+                fee = NewFee(conversion.AccountId, terms.Value!, request.Date, description);
+                db.Transactions.Add(fee);
+            }
+            else if (!fee.IsSplit)
+            {
+                fee.Amount = terms.Value!.Amount;
+                fee.ReportingAmount = terms.Value.ReportingAmount;
+                fee.CategoryId = terms.Value.CategoryId;
+                fee.Date = request.Date;
+                if (fee.Description == previousDescription)
+                {
+                    fee.Description = description;
+                }
+            }
+        }
+        else if (fee is not null)
+        {
+            db.Transactions.Remove(fee);
+            fee = null;
+        }
+
+        conversion.FromAmount = new Money(request.FromAmount, request.FromCurrency);
+        conversion.ToAmount = new Money(request.ToAmount, request.ToCurrency);
+        conversion.Date = request.Date;
+        conversion.Description = OptionalText.Normalize(request.Description);
+        conversion.FeeTransactionId = fee?.Id;
         await db.SaveChangesAsync(cancellationToken);
 
         return Result<ConversionResponse>.Success(mapper.FromEntity(conversion, fee));
@@ -123,6 +191,8 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
             var fee = await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken);
             if (fee is not null)
             {
+                db.TransactionLines.RemoveRange(
+                    await db.TransactionLines.Where(l => l.TransactionId == feeId).ToListAsync(cancellationToken));
                 db.Transactions.Remove(fee);
             }
         }
@@ -135,4 +205,40 @@ public sealed class ConversionService(AppDbContext db, ConversionMapper mapper, 
 
     private static Transaction? FeeFor(CurrencyConversion conversion, Dictionary<TransactionId, Transaction> fees) =>
         conversion.FeeTransactionId is { } feeId ? fees.GetValueOrDefault(feeId) : null;
+
+    private static string FeeDescription(Currency from, Currency to) => $"Conversion fee {from.ToCode()} to {to.ToCode()}";
+
+    private static Transaction NewFee(AccountId accountId, FeeTerms terms, DateOnly date, string description) => new()
+    {
+        AccountId = accountId,
+        CategoryId = terms.CategoryId,
+        Type = FlowType.Expense,
+        Amount = terms.Amount,
+        ReportingAmount = terms.ReportingAmount,
+        Date = date,
+        Description = description,
+        Source = TransactionSource.Manual,
+    };
+
+    private async Task<Result<FeeTerms>> ResolveFeeAsync(
+        Money amount,
+        Guid? categoryId,
+        DateOnly date,
+        CancellationToken cancellationToken)
+    {
+        CategoryId? feeCategoryId = categoryId is { } id ? new CategoryId(id) : null;
+        if (feeCategoryId is not null && !await db.Categories.AnyAsync(
+                c => c.Id == feeCategoryId && c.Type == FlowType.Expense,
+                cancellationToken))
+        {
+            return Result<FeeTerms>.Failure(ErrorCodes.CategoryWrongType, "The fee category must be an expense category.");
+        }
+
+        var reporting = await rates.ToReportingAsync(amount, date, cancellationToken);
+        return reporting.IsFailure
+            ? Result<FeeTerms>.FailureFrom(reporting)
+            : Result<FeeTerms>.Success(new FeeTerms(amount, feeCategoryId, reporting.Value));
+    }
+
+    private sealed record FeeTerms(Money Amount, CategoryId? CategoryId, decimal ReportingAmount);
 }

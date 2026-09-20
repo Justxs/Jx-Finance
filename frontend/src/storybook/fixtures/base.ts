@@ -74,6 +74,7 @@ export const ids = {
   conversions: {
     eurToUsd: uid("67676767", 1),
     usdToGbp: uid("67676767", 2),
+    imported: uid("67676767", 3),
   },
   budgets: {
     food: uid("77777777", 1),

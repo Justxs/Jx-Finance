@@ -1,9 +1,25 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import {
+  getCreateHouseholdMockHandler,
+  getHouseholdsMockHandler,
+} from "@/api/generated/households/households.msw";
+import type { HouseholdResponse } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton";
-import { familyHousehold, gardenHousehold } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  familyHousehold,
+  gardenHousehold,
+  households,
+  serverErrorProblem,
+} from "@/storybook/fixtures";
+import {
+  emptyHandlers,
+  errorHandlers,
+  failWith,
+  handlers,
+  loadingHandlers,
+} from "@/storybook/handlers";
 import { HouseholdsPage } from "./households-page";
 
 const meta = {
@@ -45,3 +61,65 @@ export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } }
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
+
+function createdHouseholdHandlers() {
+  const created: HouseholdResponse[] = [];
+  return [
+    getHouseholdsMockHandler(() => [...households, ...created]),
+    getCreateHouseholdMockHandler(async ({ request }) => {
+      const body: unknown = await request.json();
+      const name =
+        typeof body === "object" && body !== null && "name" in body ? String(body.name) : "";
+      const household: HouseholdResponse = {
+        id: "00000000-0000-4000-8000-0000000000aa",
+        name,
+        myRole: "owner",
+        members: familyHousehold.members.slice(0, 1),
+      };
+      created.push(household);
+      return household;
+    }),
+    ...handlers,
+  ];
+}
+
+export const CreatesHousehold: Story = {
+  parameters: { msw: { handlers: createdHouseholdHandlers() } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const body = within(document.body);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
+    );
+    const dialog = await body.findByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Summer house" } });
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /create household|sukurti namų ūkį/i }),
+    );
+
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await expect(await canvas.findByText("Summer house")).toBeVisible();
+  },
+};
+
+export const CreateFails: Story = {
+  parameters: {
+    msw: {
+      handlers: [getCreateHouseholdMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
+    );
+    const dialog = await within(document.body).findByRole("dialog");
+    fireEvent.change(within(dialog).getByRole("textbox"), { target: { value: "Kazlauskų šeima" } });
+    await userEvent.click(
+      within(dialog).getByRole("button", { name: /create household|sukurti namų ūkį/i }),
+    );
+
+    await expect(await within(dialog).findByRole("alert")).toBeVisible();
+    await expect(dialog).toBeVisible();
+  },
+};

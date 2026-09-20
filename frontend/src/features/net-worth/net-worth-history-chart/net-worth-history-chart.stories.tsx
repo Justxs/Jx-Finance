@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Section } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { netWorthHistoryItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -8,12 +9,12 @@ import { NetWorthHistoryChart } from "./net-worth-history-chart";
 
 function NetWorthHistoryChartStory() {
   return (
-    <section className="section w-[min(48rem,calc(100vw-3rem))]">
+    <Section className="w-[min(48rem,calc(100vw-3rem))]">
       <h2 className="mb-4 font-semibold">Net worth trend</h2>
       <QueryBoundary fallback={<Skeleton className="h-56 w-full" />}>
         <NetWorthHistoryChart />
       </QueryBoundary>
-    </section>
+    </Section>
   );
 }
 

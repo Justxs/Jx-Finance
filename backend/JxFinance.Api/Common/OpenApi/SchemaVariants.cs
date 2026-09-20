@@ -14,7 +14,7 @@ public static partial class SchemaVariants
         var canonical = new Dictionary<string, string>(StringComparer.Ordinal);
         var variants = schemas.Keys
             .Select(name => (Name: name, Match: VariantSuffix().Match(name)))
-            .Where(variant => variant.Match.Success)
+            .Where(variant => variant.Match.Success && schemas[variant.Name] is not OpenApiSchema { Type: JsonSchemaType.Array, Items: not null })
             .GroupBy(variant => variant.Match.Groups["name"].Value, variant => variant.Name, StringComparer.Ordinal);
 
         foreach (var group in variants)

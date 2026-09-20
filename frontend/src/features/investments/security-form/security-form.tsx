@@ -8,7 +8,9 @@ import {
 } from "@/api/schemas/investments/investments.zod";
 import { CurrencySelect } from "@/components/currency-select";
 import { useAppForm } from "@/components/form";
+import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { Label } from "@/components/ui/label";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { submitToServer } from "@/lib/form-server-errors";
@@ -40,13 +42,14 @@ interface FormValues {
 interface Props {
   initial?: SecurityResponse;
   pending: boolean;
+  error?: unknown;
   onSubmit: (values: SecurityFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
 }
 
 const ISIN_PATTERN = /^[A-Za-z]{2}[A-Za-z0-9]{9}\d$/;
 
-export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<Props>) {
+export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const reportingCurrency = useReportingCurrency();
 
@@ -118,14 +121,14 @@ export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="symbol">
           {(field) => (
@@ -229,6 +232,8 @@ export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<
           )}
         </form.Field>
 
+        <FormError error={error} />
+
         <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
           {onCancel ? (
             <Button type="button" variant="outline" onClick={onCancel}>
@@ -239,7 +244,7 @@ export function SecurityForm({ initial, pending, onSubmit, onCancel }: Readonly<
             {initial ? t("actions.save") : t("investments.securities.add")}
           </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useRecurringBillsSuspense } from "@/api/generated";
+import { Rows } from "@/components/ui/rows";
 import { Tag } from "@/components/ui/tag";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
@@ -40,7 +41,7 @@ export function UpcomingBills() {
   }
 
   return (
-    <ul className="rows">
+    <Rows>
       {rows.map((bill) => {
         const overdue = bill.nextDueDate < todayIso;
         return (
@@ -58,6 +59,6 @@ export function UpcomingBills() {
           </li>
         );
       })}
-    </ul>
+    </Rows>
   );
 }

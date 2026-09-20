@@ -11,6 +11,7 @@ import { createRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/re
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
 import { isPositiveMoney, requiredText, requiredValue } from "@/lib/validation";
@@ -104,14 +105,14 @@ export function CreateRecurringBillForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="name">
           {(field) => (
@@ -223,7 +224,7 @@ export function CreateRecurringBillForm({
             {t("recurringBills.add")}
           </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

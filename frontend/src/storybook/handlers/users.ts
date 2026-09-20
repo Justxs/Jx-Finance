@@ -2,12 +2,14 @@ import type { UserProfileResponse } from "@/api/generated/model";
 import {
   getCreateUserMockHandler,
   getDeactivateUserMockHandler,
+  getReactivateUserMockHandler,
+  getResetUserPasswordMockHandler,
   getUsersMockHandler,
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
 } from "@/api/generated/users/users.msw";
-import { currentUser, users } from "@/storybook/fixtures";
-import { found, readBody, text } from "./http";
+import { adminPassword, currentUser, users, wrongAdminPasswordProblem } from "@/storybook/fixtures";
+import { found, problem, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_USER_ID } from "./ids";
 import { applyDirection, byId, compareText, includesText } from "./lists";
@@ -68,6 +70,18 @@ export const userHandlers = [
     return mergeProfile(currentUser, { displayName: body.displayName });
   }),
   getDeactivateUserMockHandler(),
+  getReactivateUserMockHandler(),
+  getResetUserPasswordMockHandler(async ({ params, request }) => {
+    const user = found(byId(users, params.id));
+    const body = await readBody(request);
+    if (text(body.currentPassword) !== adminPassword) {
+      throw problem(wrongAdminPasswordProblem, 400);
+    }
+    return {
+      ...user,
+      twoFactorEnabled: body.resetTwoFactor === true ? false : user.twoFactorEnabled,
+    };
+  }),
   getUpdateUserRoleMockHandler(async ({ params, request }) => {
     const user = found(byId(users, params.id));
     const body = await readBody(request);

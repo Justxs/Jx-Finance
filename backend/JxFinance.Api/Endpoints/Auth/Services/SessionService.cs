@@ -25,6 +25,7 @@ public sealed class SessionService(
     private static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromMinutes(10);
     private static readonly TimeSpan DefaultSessionLifetime = TimeSpan.FromDays(1);
     private static readonly TimeSpan RememberMeSessionLifetime = TimeSpan.FromDays(30);
+    private static readonly TimeSpan RotationGrace = TimeSpan.FromSeconds(30);
 
     private HttpContext Http => httpContextAccessor.HttpContext
         ?? throw new InvalidOperationException("Sessions can only be managed during an HTTP request.");
@@ -56,26 +57,58 @@ public sealed class SessionService(
             return false;
         }
 
-        var session = await db.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
-        if (session is null || !HashMatches(session.TokenHash, secret))
+        var session = await db.UserSessions.AsNoTracking().FirstOrDefaultAsync(s => s.Id == sessionId, cancellationToken);
+        var isCurrent = session is not null && HashMatches(session.TokenHash, secret);
+        var isPrevious = session?.PreviousTokenHash is { } previousHash && !isCurrent && HashMatches(previousHash, secret);
+        if (session is null || (!isCurrent && !isPrevious))
         {
             ClearCookies();
             return false;
         }
 
+        var now = clock.UtcNow;
         var user = await userManager.FindByIdAsync(session.UserId.ToString());
-        if (session.ExpiresAt <= clock.UtcNow
+        if (session.ExpiresAt <= now
             || user is null
             || user.SecurityStamp != session.SecurityStamp
-            || await userManager.IsLockedOutAsync(user))
+            || user.IsDeactivated
+            || (isPrevious && (session.RotatedAt is not { } rotatedAt || now - rotatedAt > RotationGrace)))
         {
-            db.Remove(session);
-            await db.SaveChangesAsync(cancellationToken);
+            await db.UserSessions.Where(s => s.Id == session.Id).ExecuteDeleteAsync(cancellationToken);
             ClearCookies();
             return false;
         }
 
-        await IssueAsync(session, user, cancellationToken);
+        if (isPrevious)
+        {
+            await AppendAccessCookieAsync(session, user);
+            return true;
+        }
+
+        var currentHash = session.TokenHash;
+        var newSecret = NewSecret();
+        var newHash = Hash(newSecret);
+        var rotated = await db.UserSessions
+            .Where(s => s.Id == session.Id && s.TokenHash == currentHash)
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(s => s.TokenHash, newHash)
+                    .SetProperty(s => s.PreviousTokenHash, currentHash)
+                    .SetProperty(s => s.RotatedAt, now),
+                cancellationToken);
+
+        if (rotated == 0 && !await db.UserSessions.AnyAsync(s => s.Id == session.Id, cancellationToken))
+        {
+            ClearCookies();
+            return false;
+        }
+
+        await AppendAccessCookieAsync(session, user);
+        if (rotated == 1)
+        {
+            AppendRefreshCookie(session, newSecret);
+        }
+
         return true;
     }
 
@@ -103,11 +136,19 @@ public sealed class SessionService(
 
     private async Task IssueAsync(UserSession session, AppUser user, CancellationToken cancellationToken)
     {
-        var secret = WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
+        var secret = NewSecret();
         session.TokenHash = Hash(secret);
+        session.PreviousTokenHash = null;
+        session.RotatedAt = null;
         session.SecurityStamp = user.SecurityStamp ?? string.Empty;
         await db.SaveChangesAsync(cancellationToken);
 
+        await AppendAccessCookieAsync(session, user);
+        AppendRefreshCookie(session, secret);
+    }
+
+    private async Task AppendAccessCookieAsync(UserSession session, AppUser user)
+    {
         var roles = await userManager.GetRolesAsync(user);
         var accessToken = JwtBearer.CreateToken(o =>
         {
@@ -119,13 +160,18 @@ public sealed class SessionService(
             o.User.Claims.Add(new Claim(AuthClaims.SecurityStamp, session.SecurityStamp));
         });
 
-        DateTimeOffset? cookieExpiry = session.IsPersistent ? session.ExpiresAt : null;
-        Http.Response.Cookies.Append(AuthCookies.AccessToken, accessToken, CookieOptions(AuthCookies.AccessTokenPath, cookieExpiry));
+        Http.Response.Cookies.Append(AuthCookies.AccessToken, accessToken, CookieOptions(AuthCookies.AccessTokenPath, CookieExpiry(session)));
+    }
+
+    private void AppendRefreshCookie(UserSession session, string secret) =>
         Http.Response.Cookies.Append(
             AuthCookies.RefreshToken,
             $"{session.Id:N}.{secret}",
-            CookieOptions(AuthCookies.RefreshTokenPath, cookieExpiry));
-    }
+            CookieOptions(AuthCookies.RefreshTokenPath, CookieExpiry(session)));
+
+    private static DateTimeOffset? CookieExpiry(UserSession session) => session.IsPersistent ? session.ExpiresAt : null;
+
+    private static string NewSecret() => WebEncoders.Base64UrlEncode(RandomNumberGenerator.GetBytes(32));
 
     private void ClearCookies()
     {

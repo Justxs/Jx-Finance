@@ -12,10 +12,12 @@ using JxFinance.Endpoints.Investments.GetSecurities;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Mappers;
 using JxFinance.Endpoints.Investments.SaveSecurity;
+using JxFinance.Endpoints.Investments.SetSecurityPrice;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace JxFinance.Endpoints.Investments.Services;
 
@@ -63,9 +65,6 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                     break;
                 case InvestmentTransactionType.Fee:
                     totals.Fees -= transaction.ReportingAmount;
-                    break;
-                case InvestmentTransactionType.Buy or InvestmentTransactionType.Sell when transaction.CashAmount.Amount != 0m:
-                    totals.Fees += transaction.Fee * Math.Abs(transaction.ReportingAmount / transaction.CashAmount.Amount);
                     break;
                 default:
                     break;
@@ -340,49 +339,61 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         var query = db.Securities.AsQueryable();
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
-            var pattern = $"%{request.Search.Trim()}%";
+            var pattern = LikePattern.Contains(request.Search);
             query = query.Where(s =>
-                EF.Functions.ILike(s.Symbol, pattern)
-                || EF.Functions.ILike(s.Name, pattern)
-                || (s.Isin != null && EF.Functions.ILike(s.Isin, pattern)));
+                EF.Functions.ILike(s.Symbol, pattern, LikePattern.Escape)
+                || EF.Functions.ILike(s.Name, pattern, LikePattern.Escape)
+                || (s.Isin != null && EF.Functions.ILike(s.Isin, pattern, LikePattern.Escape)));
         }
 
         var securities = await query.OrderBy(s => s.Symbol).ThenBy(s => s.Currency).ToListAsync(cancellationToken);
         return securities.Select(mapper.FromEntity).ToList();
     }
 
-    public async Task<Result<SecurityResponse>> SaveSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
+    public async Task<Result<SecurityResponse>> CreateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
+    {
+        var symbol = request.Symbol.Trim().ToUpperInvariant();
+        if (await db.Securities.AnyAsync(s => s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))
+        {
+            return Duplicate(symbol, request.Currency);
+        }
+
+        var security = new Security();
+        db.Securities.Add(security);
+        mapper.Apply(request, symbol, security, clock.Today);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return Duplicate(symbol, request.Currency);
+        }
+
+        return Result<SecurityResponse>.Success(mapper.FromEntity(security));
+    }
+
+    public async Task<Result<SecurityResponse>> UpdateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
     {
         var id = new SecurityId(request.Id);
         var symbol = request.Symbol.Trim().ToUpperInvariant();
+        var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        if (security is null)
+        {
+            return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
+        }
+
         if (await db.Securities.AnyAsync(s => s.Id != id && s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))
         {
+            return Duplicate(symbol, request.Currency);
+        }
+
+        if (security.Currency != request.Currency
+            && await db.InvestmentTransactions.IgnoreQueryFilters().AnyAsync(t => t.SecurityId == id && !t.IsDeleted, cancellationToken))
+        {
             return Result<SecurityResponse>.Failure(
-                ErrorCodes.ConflictDuplicate,
-                $"{symbol} in {request.Currency.ToCode()} already exists.");
-        }
-
-        Security? security;
-        if (request.Id == Guid.Empty)
-        {
-            security = new Security();
-            db.Securities.Add(security);
-        }
-        else
-        {
-            security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-            if (security is null)
-            {
-                return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
-            }
-
-            if (security.Currency != request.Currency
-                && await db.InvestmentTransactions.IgnoreQueryFilters().AnyAsync(t => t.SecurityId == id && !t.IsDeleted, cancellationToken))
-            {
-                return Result<SecurityResponse>.Failure(
-                    ErrorCodes.ValueLocked,
-                    "The currency cannot change once the security has transactions.");
-            }
+                ErrorCodes.ValueLocked,
+                "The currency cannot change once the security has transactions.");
         }
 
         mapper.Apply(request, symbol, security, clock.Today);
@@ -390,6 +401,47 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
 
         return Result<SecurityResponse>.Success(mapper.FromEntity(security));
     }
+
+    public async Task<Result<SecurityResponse>> SetSecurityPriceAsync(
+        SetSecurityPriceRequest request,
+        bool isAdministrator,
+        CancellationToken cancellationToken)
+    {
+        var id = new SecurityId(request.Id);
+        var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
+        if (security is null)
+        {
+            return Result<SecurityResponse>.Failure(ErrorCodes.ResourceNotFound, "Security not found.");
+        }
+
+        if (!isAdministrator && !await HoldsAsync(id, cancellationToken))
+        {
+            return Result<SecurityResponse>.Failure(
+                ErrorCodes.SecurityNotHeld,
+                "Only someone who holds this security, or an administrator, can set its price.");
+        }
+
+        security.LastPrice = request.LastPrice;
+        security.LastPriceDate = request.LastPriceDate ?? clock.Today;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return Result<SecurityResponse>.Success(mapper.FromEntity(security));
+    }
+
+    private async Task<bool> HoldsAsync(SecurityId securityId, CancellationToken cancellationToken)
+    {
+        var history = await db.InvestmentTransactions
+            .AsNoTracking()
+            .Where(t => t.SecurityId == securityId)
+            .ToListAsync(cancellationToken);
+
+        return history
+            .GroupBy(t => t.AccountId)
+            .Any(account => Portfolio.Positions(account).GetValueOrDefault(securityId)?.Quantity > 0m);
+    }
+
+    private static Result<SecurityResponse> Duplicate(string symbol, Currency currency) =>
+        Result<SecurityResponse>.Failure(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");
 
     private async Task<bool> IsOversoldAsync(
         AccountId accountId,

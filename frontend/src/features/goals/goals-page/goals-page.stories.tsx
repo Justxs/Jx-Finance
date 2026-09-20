@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { userEvent, within } from "storybook/test";
 import { getDeleteGoalMockHandler, getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
 import { QueryBoundary } from "@/components/query-boundary";
 import { RoutePending } from "@/components/route-pending";
@@ -11,6 +11,7 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { GoalsPage } from "./goals-page";
 
 function GoalsPageStory() {
@@ -66,7 +67,7 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add goal|pridėti tikslą/i }));
-    await expect(await within(document.body).findByRole("dialog")).toBeVisible();
+    await openedDialog();
   },
 };
 

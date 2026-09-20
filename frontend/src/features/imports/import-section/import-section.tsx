@@ -8,6 +8,7 @@ import {
   useImportPreview,
 } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
+import { Section, SectionTitle } from "@/components/ui/section";
 import {
   importDateRange,
   ImportPreviewTable,
@@ -126,7 +127,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
 
   return (
     <div className="space-y-5">
-      <section className="section space-y-4">
+      <Section className="space-y-4">
         <ImportUploadForm
           key={uploadKey}
           accounts={accounts}
@@ -145,13 +146,11 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
         />
         {previewMutation.isError ? <ImportPreviewError error={previewMutation.error} /> : null}
         {result ? <ImportResultLine result={result} /> : null}
-      </section>
+      </Section>
 
       {rows ? (
-        <section className="section space-y-4" aria-labelledby="import-review-title">
-          <h2 id="import-review-title" className="section-title">
-            {t("imports.reviewSection")}
-          </h2>
+        <Section className="space-y-4" aria-labelledby="import-review-title">
+          <SectionTitle id="import-review-title">{t("imports.reviewSection")}</SectionTitle>
           <ImportPreviewTable
             rows={rows}
             accountId={accountId}
@@ -166,7 +165,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
             }}
             confirmPending={confirmMutation.isPending}
           />
-        </section>
+        </Section>
       ) : null}
     </div>
   );

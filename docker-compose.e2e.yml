@@ -15,6 +15,8 @@ services:
   frontend:
     ports: !override
       - "127.0.0.1:8089:80"
+    environment:
+      TRUSTED_PROXIES: private_ranges
 
 volumes:
   e2e_db_data:

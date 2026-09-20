@@ -35,11 +35,24 @@ public sealed record FlexCashTransaction(
     Currency Currency,
     string? Description);
 
-public sealed record FlexOpenPosition(FlexInstrument Instrument, DateOnly Date, decimal MarkPrice);
+public sealed record FlexOpenPosition(FlexInstrument Instrument, DateOnly Date, decimal MarkPrice, decimal? Quantity);
+
+public sealed record FlexCorporateAction(
+    string Id,
+    string Type,
+    FlexInstrument Instrument,
+    DateOnly Date,
+    decimal Quantity,
+    decimal? Ratio,
+    string? Description)
+{
+    public bool IsSplit => Type is FlexParser.ForwardSplit or FlexParser.ReverseSplit;
+}
 
 public sealed record FlexStatement(
     IReadOnlyList<string> BrokerAccounts,
     IReadOnlyList<FlexTrade> Trades,
     IReadOnlyList<FlexCashTransaction> CashTransactions,
     IReadOnlyList<FlexOpenPosition> OpenPositions,
+    IReadOnlyList<FlexCorporateAction> CorporateActions,
     int Unreadable);

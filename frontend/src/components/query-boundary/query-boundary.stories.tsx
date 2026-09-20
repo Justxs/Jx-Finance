@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { useAccountsSuspense } from "@/api/generated";
+import { Card } from "@/components/ui/card";
 import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton";
 import { QueryBoundary } from "./query-boundary";
@@ -40,11 +41,11 @@ function RenderErrorExample() {
         />
         Child throws while rendering (untick, then retry)
       </label>
-      <section className="card">
+      <Card as="section">
         <QueryBoundary fallback={<Skeleton className="m-6 h-24" />}>
           <ThrowsWhileBroken broken={broken} />
         </QueryBoundary>
-      </section>
+      </Card>
     </div>
   );
 }
@@ -64,9 +65,9 @@ const meta = {
     ),
   ],
   render: (args) => (
-    <section className="card">
+    <Card as="section">
       <QueryBoundary {...args} />
-    </section>
+    </Card>
   ),
 } satisfies Meta<typeof QueryBoundary>;
 

@@ -32,4 +32,9 @@ export const WithHintAndError: Story = {
   args: { hint: "Shown on every report.", error: "This field is required." },
 };
 
-export const WithoutLabel: Story = { args: { label: undefined } };
+export const WithoutLabel: Story = {
+  args: {
+    label: undefined,
+    children: <Input id="shell-name" aria-label="Name" defaultValue="Groceries" />,
+  },
+};

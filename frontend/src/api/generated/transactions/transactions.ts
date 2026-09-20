@@ -415,7 +415,7 @@ export const getExportTransactionsUrl = (params: ExportTransactionsParams) => {
 };
 
 /**
- * Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.
+ * Returns the filtered ledger as a UTF-8 CSV attachment named transactions.csv, with account and category names resolved. It takes the same filters as the list endpoint but ignores paging: every matching row is included. Rows are streamed from the database into the response, so the size of the ledger does not matter.
  * @summary Export transactions as CSV
  */
 export const exportTransactions = async (
@@ -546,7 +546,7 @@ export const getExportTransactionsPdfUrl = (params: ExportTransactionsPdfParams)
 };
 
 /**
- * Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging: every matching row is included, so narrow the date range before exporting a large ledger.
+ * Renders the filtered ledger as a printable PDF, attached as transactions.pdf. It takes the same filters as the list endpoint but ignores paging. A PDF is built in memory, so it holds at most 5000 rows (App:PdfExportMaxRows); a larger result is refused with export.tooManyRows. Narrow the filters or use the CSV export, which has no limit.
  * @summary Export transactions as PDF
  */
 export const exportTransactionsPdf = async (

@@ -22,6 +22,7 @@ import type { ErrorType } from "../../client";
 import type {
   CreateUserRequest,
   ProblemDetails,
+  ResetUserPasswordRequest,
   UpdateMyProfileRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
@@ -377,7 +378,7 @@ export const getDeactivateUserUrl = (id: string) => {
 };
 
 /**
- * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself. Administrators only.
+ * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
  * @summary Deactivate a user
  */
 export const deactivateUser = async (
@@ -455,12 +456,202 @@ export const useDeactivateUser = <TError = ErrorType<ProblemDetails>, TContext =
 > => {
   return useMutation(getDeactivateUserMutationOptions(options), queryClient);
 };
+export const getReactivateUserUrl = (id: string) => {
+  return `/api/users/${id}/reactivate`;
+};
+
+/**
+ * Lifts the deactivation set by the deactivate operation and clears the failed sign-in counter, so the user can sign in again with the password they had. Sessions from before the deactivation stay revoked. Calling it for a user who is already active changes nothing and still answers 204, so it is safe to repeat. Administrators only.
+ * @summary Reactivate a deactivated user
+ */
+export const reactivateUser = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getReactivateUserUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getReactivateUserMutationKey = () => ["reactivateUser"] as const;
+
+export const getReactivateUserMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reactivateUser>>,
+    TError,
+    ReactivateUserMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reactivateUser>>,
+  TError,
+  ReactivateUserMutationVariables,
+  TContext
+> => {
+  const mutationKey = getReactivateUserMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reactivateUser>>,
+    ReactivateUserMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return reactivateUser(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReactivateUserMutationResult = NonNullable<Awaited<ReturnType<typeof reactivateUser>>>;
+
+export type ReactivateUserMutationError = ErrorType<ProblemDetails>;
+export type ReactivateUserMutationVariables = { id: string };
+
+/**
+ * @summary Reactivate a deactivated user
+ */
+export const useReactivateUser = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof reactivateUser>>,
+      TError,
+      ReactivateUserMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof reactivateUser>>,
+  TError,
+  ReactivateUserMutationVariables,
+  TContext
+> => {
+  return useMutation(getReactivateUserMutationOptions(options), queryClient);
+};
+export const getResetUserPasswordUrl = (id: string) => {
+  return `/api/users/${id}/reset-password`;
+};
+
+/**
+ * Administrators only. For a user who forgot their password: the administrator chooses a temporary password and hands it over outside the application, and the user changes it on their profile after signing in. The administrator confirms the action with their own current password; a wrong one answers password.incorrect, counts toward the administrator's sign-in lockout, and a locked-out administrator answers credentials.lockedOut. The new password must satisfy the same rules as any other password, otherwise password.tooWeak. Every session of the target user is revoked and their failed sign-in counter and temporary lockout are cleared; a deactivated user stays deactivated. With resetTwoFactor the authenticator is switched off and the recovery codes are invalidated as well, for a user who also lost their device. The target may be a member or another administrator, never the caller: change your own password on the profile. Rate limited to 10 calls per five minutes per client.
+ * @summary Set a new password for another user
+ */
+export const resetUserPassword = async (
+  id: string,
+  resetUserPasswordRequest: ResetUserPasswordRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<UserProfileResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<UserProfileResponse>(getResetUserPasswordUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(resetUserPasswordRequest),
+  });
+};
+
+export const getResetUserPasswordMutationKey = () => ["resetUserPassword"] as const;
+
+export const getResetUserPasswordMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetUserPassword>>,
+    TError,
+    ResetUserPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetUserPassword>>,
+  TError,
+  ResetUserPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResetUserPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetUserPassword>>,
+    ResetUserPasswordMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return resetUserPassword(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetUserPasswordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetUserPassword>>
+>;
+export type ResetUserPasswordMutationBody = ResetUserPasswordRequest;
+export type ResetUserPasswordMutationError = ErrorType<ProblemDetails | void>;
+export type ResetUserPasswordMutationVariables = { id: string; data: ResetUserPasswordRequest };
+
+/**
+ * @summary Set a new password for another user
+ */
+export const useResetUserPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetUserPassword>>,
+      TError,
+      ResetUserPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resetUserPassword>>,
+  TError,
+  ResetUserPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getResetUserPasswordMutationOptions(options), queryClient);
+};
 export const getUpdateUserRoleUrl = (id: string) => {
   return `/api/users/${id}/role`;
 };
 
 /**
- * Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last administrator cannot be demoted, so an instance is never left without one. Administrators only.
+ * Promotes a user to administrator or demotes them to member. You cannot demote yourself, and the last active administrator cannot be demoted, so an instance is never left without one. Role changes and deactivations are applied one at a time, so two administrators demoting each other at the same moment cannot both succeed. Administrators only.
  * @summary Change a user role
  */
 export const updateUserRole = async (

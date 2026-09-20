@@ -14,5 +14,5 @@ public sealed class CreateSecurityEndpoint(IInvestmentService investmentService)
     }
 
     public override async Task HandleAsync(SaveSecurityRequest req, CancellationToken ct) =>
-        await Send.OkAsync((await investmentService.SaveSecurityAsync(req, ct)).ValueOrThrow(), ct);
+        await Send.OkAsync((await investmentService.CreateSecurityAsync(req, ct)).ValueOrThrow(), ct);
 }

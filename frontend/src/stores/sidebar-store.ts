@@ -1,25 +1,14 @@
-import { useSelector } from "@tanstack/react-store";
-import { Store } from "@tanstack/store";
-
-const STORAGE_KEY = "jx-sidebar-collapsed";
-
-function resolveInitialCollapsed(): boolean {
-  return localStorage.getItem(STORAGE_KEY) === "true";
-}
-
-const sidebarStore = new Store<{ collapsed: boolean }>({
-  collapsed: resolveInitialCollapsed(),
-});
+import { readPreferences, savePreferences, usePreferences } from "./preferences";
 
 export function toggleSidebar() {
-  sidebarStore.setState((state) => {
-    const collapsed = !state.collapsed;
-    localStorage.setItem(STORAGE_KEY, String(collapsed));
-    return { ...state, collapsed };
-  });
+  savePreferences({ sidebarCollapsed: !readPreferences().sidebarCollapsed });
+}
+
+export function setSidebarCollapsed(sidebarCollapsed: boolean) {
+  savePreferences({ sidebarCollapsed });
 }
 
 export function useSidebarCollapsed() {
-  const collapsed = useSelector(sidebarStore, (state) => state.collapsed);
+  const collapsed = usePreferences().sidebarCollapsed;
   return { collapsed, toggleSidebar };
 }

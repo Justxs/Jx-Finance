@@ -6,6 +6,7 @@ import { createGoalBodyNameMax } from "@/api/schemas/goals/goals.zod";
 import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { submitToServer } from "@/lib/form-server-errors";
 import { isNonNegativeMoney, positiveMoney, requiredText } from "@/lib/validation";
 
@@ -92,7 +93,7 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
         noValidate
         className="space-y-4"
       >
-        <div className="form-grid">
+        <FormGrid>
           <form.Field name="name">
             {(field) => (
               <field.TextField
@@ -116,7 +117,7 @@ export function CreateGoalForm({ initial, onCreated, onCancel }: Readonly<Props>
           <form.Field name="targetDate">
             {(field) => <field.DateField id="goal-date" label={t("goals.targetDate")} />}
           </form.Field>
-        </div>
+        </FormGrid>
 
         <FormError error={createMutation.error ?? updateMutation.error} />
 

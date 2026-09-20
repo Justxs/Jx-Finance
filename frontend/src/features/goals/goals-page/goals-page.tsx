@@ -7,6 +7,8 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
+import { Rows } from "@/components/ui/rows";
+import { Panel } from "@/components/ui/section";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { CreateGoalForm } from "../create-goal-form";
 import { GoalRow } from "../goal-row";
@@ -32,7 +34,7 @@ export function GoalsPage() {
     content = <p className="py-6 text-sm text-muted-foreground">{t("goals.empty")}</p>;
   } else {
     content = (
-      <ul className="rows panel py-2 sm:py-3">
+      <Panel as={Rows} className="py-2 sm:py-3">
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}
@@ -42,7 +44,7 @@ export function GoalsPage() {
             deleteDisabled={deleteMutation.isPending}
           />
         ))}
-      </ul>
+      </Panel>
     );
   }
 

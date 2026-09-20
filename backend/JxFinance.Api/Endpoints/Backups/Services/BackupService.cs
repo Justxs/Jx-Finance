@@ -5,14 +5,17 @@ using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.RestoreBackup;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Backups;
+using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Options;
 using Npgsql;
 using NpgsqlTypes;
 
@@ -24,6 +27,9 @@ public sealed class BackupService(
     BackupStore backups,
     IInstanceSettingsStore store,
     IClock clock,
+    IAuthService authService,
+    ICurrentUser currentUser,
+    IOptions<AppOptions> options,
     ILogger<BackupService> logger) : IBackupService
 {
     public const string Format = "jx-finance-backup";
@@ -31,8 +37,6 @@ public sealed class BackupService(
 
     private const int InsertBatchSize = 500;
     private const int FlushEveryRows = 1000;
-
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     public async Task<IReadOnlyList<BackupResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -61,11 +65,11 @@ public sealed class BackupService(
 
     public async Task<Result<BackupResponse>> UploadAsync(Stream input, string? note, CancellationToken cancellationToken)
     {
-        var (document, compressed) = await ReadDocumentAsync(input, cancellationToken);
-        if (document?.Tables is null || document.Format != Format || document.Version != Version
-            || document.Tables.Any(t => t.Rows is null))
+        var compressed = await IsCompressedAsync(input, cancellationToken);
+        var inspector = new Inspector();
+        if (await ReadAsync(input, compressed, inspector, cancellationToken) is { } failure)
         {
-            return Result<BackupResponse>.Failure(ErrorCodes.BackupInvalidFile, "The file is not a Jx Finance backup.");
+            return Result<BackupResponse>.Failure(failure);
         }
 
         var id = Guid.NewGuid();
@@ -86,11 +90,11 @@ public sealed class BackupService(
 
                 return new StoredBackup(
                     id,
-                    document.CreatedAt,
+                    inspector.Header!.CreatedAt,
                     Clean(note),
-                    document.Migration ?? "",
-                    document.Tables.Count,
-                    document.Tables.Sum(t => (long)t.Rows!.Count),
+                    inspector.Header.Migration ?? "",
+                    inspector.Tables,
+                    inspector.Rows,
                     Uploaded: true);
             },
             cancellationToken);
@@ -135,8 +139,19 @@ public sealed class BackupService(
             stored.SizeBytes));
     }
 
-    public async Task<Result<RestoreBackupResponse>> RestoreAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<RestoreBackupResponse>> RestoreAsync(Guid id, string password, CancellationToken cancellationToken)
     {
+        if (await authService.FindByIdAsync(currentUser.Id, cancellationToken) is not { } administrator)
+        {
+            return Result<RestoreBackupResponse>.Failure(ErrorCodes.AccessForbidden, "Only administrators can restore a backup.");
+        }
+
+        var confirmed = await authService.ConfirmPasswordAsync(administrator, password, ErrorCodes.PasswordIncorrect);
+        if (confirmed.IsFailure)
+        {
+            return Result<RestoreBackupResponse>.FailureFrom(confirmed);
+        }
+
         if (await backups.FindAsync(id, cancellationToken) is null)
         {
             return NotFound<RestoreBackupResponse>();
@@ -205,113 +220,95 @@ public sealed class BackupService(
 
     private async Task<Result<RestoreBackupResponse>> RestoreAsync(Stream input, CancellationToken cancellationToken)
     {
-        var (document, _) = await ReadDocumentAsync(input, cancellationToken);
-        if (document is null || document.Format != Format || document.Version != Version || document.Tables is null)
-        {
-            return Invalid("The file is not a Jx Finance backup.");
-        }
-
+        var compressed = await IsCompressedAsync(input, cancellationToken);
         var migration = await CurrentMigrationAsync(cancellationToken);
-        if (!string.Equals(document.Migration, migration, StringComparison.Ordinal))
-        {
-            return Result<RestoreBackupResponse>.Failure(
-                ErrorCodes.BackupSchemaMismatch,
-                $"The backup was taken at database version '{document.Migration}', but this application runs '{migration}'. "
-                + "Restore it with the application version that created it, then upgrade.");
-        }
-
-        var shapes = ReadShapes();
-        var exported = shapes.Where(t => t.Exported).ToDictionary(t => t.Name, StringComparer.Ordinal);
-        if (!Matches(document.Tables, exported))
-        {
-            return Invalid("The tables in the backup do not match this application.");
-        }
-
-        long rows = 0;
-        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
-        var connection = (NpgsqlConnection)db.Database.GetDbConnection();
-        var npgsqlTransaction = (NpgsqlTransaction)transaction.GetDbTransaction();
+        await using var restorer = new Restorer(db, ReadShapes(), migration, options.Value.BackupLockTimeoutSeconds);
 
         try
         {
-            await SetForeignKeysAsync(connection, shapes, "DEFERRABLE INITIALLY DEFERRED", cancellationToken);
-            await ExecuteAsync(
-                connection,
-                $"TRUNCATE TABLE {string.Join(", ", shapes.Select(t => t.QuotedName))}",
-                cancellationToken);
-
-            foreach (var table in document.Tables)
+            if (await ReadAsync(input, compressed, restorer, cancellationToken) is { } failure)
             {
-                rows += await InsertRowsAsync(connection, npgsqlTransaction, exported[table.Name!], table, cancellationToken);
+                return Result<RestoreBackupResponse>.Failure(failure);
             }
 
-            await ExecuteAsync(connection, "SET CONSTRAINTS ALL IMMEDIATE", cancellationToken);
-            await SetForeignKeysAsync(connection, shapes, "NOT DEFERRABLE", cancellationToken);
-            await ResetSequencesAsync(connection, shapes, cancellationToken);
-            await transaction.CommitAsync(cancellationToken);
+            await restorer.CompleteAsync(cancellationToken);
+        }
+        catch (BackupFileException ex)
+        {
+            return Result<RestoreBackupResponse>.Failure(ex.Code, ex.Message);
         }
         catch (PostgresException ex) when (ex.SqlState.StartsWith("22", StringComparison.Ordinal)
             || ex.SqlState.StartsWith("23", StringComparison.Ordinal))
         {
-            await transaction.RollbackAsync(cancellationToken);
             logger.LogWarning(ex, "Backup restore was rolled back because the file holds data the database rejects.");
             return Invalid("The backup holds data the database rejects. Nothing was changed.");
         }
+        catch (PostgresException ex) when (ex.SqlState is PostgresErrorCodes.LockNotAvailable
+            or PostgresErrorCodes.DeadlockDetected
+            or PostgresErrorCodes.SerializationFailure)
+        {
+            logger.LogWarning(ex, "Backup restore was rolled back because the database was busy.");
+            return Result<RestoreBackupResponse>.Failure(
+                ErrorCodes.ConflictBusy,
+                "The database was busy with other work. Nothing was changed; try again in a moment.");
+        }
 
+        var header = restorer.Header!;
         db.ChangeTracker.Clear();
         store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken) ?? store.Defaults());
         logger.LogWarning(
             "Installation restored from a backup taken at {CreatedAt}: {Tables} tables, {Rows} rows.",
-            document.CreatedAt,
-            document.Tables.Count,
-            rows);
+            header.CreatedAt,
+            restorer.Tables,
+            restorer.Rows);
 
-        return Result<RestoreBackupResponse>.Success(new RestoreBackupResponse(document.CreatedAt, document.Tables.Count, rows));
+        return Result<RestoreBackupResponse>.Success(new RestoreBackupResponse(header.CreatedAt, restorer.Tables, restorer.Rows));
     }
 
     private static Result<RestoreBackupResponse> Invalid(string message) =>
         Result<RestoreBackupResponse>.Failure(ErrorCodes.BackupInvalidFile, message);
 
-    private static async Task<(BackupDocument? Document, bool Compressed)> ReadDocumentAsync(Stream input, CancellationToken cancellationToken)
+    private static async Task<bool> IsCompressedAsync(Stream input, CancellationToken cancellationToken)
     {
         var magic = new byte[2];
         var read = await input.ReadAtLeastAsync(magic, 2, throwOnEndOfStream: false, cancellationToken);
         input.Position = 0;
-        var compressed = read == 2 && magic[0] == 0x1f && magic[1] == 0x8b;
+        return read == 2 && magic[0] == 0x1f && magic[1] == 0x8b;
+    }
 
+    private static void EnsureSupported(BackupHeader header)
+    {
+        if (header.Format != Format || header.Version != Version) throw new BackupFileException();
+    }
+
+    private async Task<DomainError?> ReadAsync(
+        Stream input,
+        bool compressed,
+        IBackupVisitor visitor,
+        CancellationToken cancellationToken)
+    {
+        var maximumBytes = options.Value.BackupMaxDecompressedBytes;
         try
         {
-            if (!compressed)
-            {
-                return (await JsonSerializer.DeserializeAsync<BackupDocument>(input, JsonOptions, cancellationToken), false);
-            }
-
-            await using var gzip = new GZipStream(input, CompressionMode.Decompress, leaveOpen: true);
-            return (await JsonSerializer.DeserializeAsync<BackupDocument>(gzip, JsonOptions, cancellationToken), true);
+            await using var gzip = compressed ? new GZipStream(input, CompressionMode.Decompress, leaveOpen: true) : null;
+            await using var limited = new LimitedReadStream(gzip ?? input, maximumBytes);
+            await new BackupReader(visitor).ReadAsync(limited, cancellationToken);
+            return null;
+        }
+        catch (BackupTooLargeException)
+        {
+            return new DomainError(
+                ErrorCodes.BackupTooLarge,
+                $"The backup holds more than {maximumBytes / (1024 * 1024)} MB of data once decompressed.");
+        }
+        catch (BackupFileException ex)
+        {
+            return new DomainError(ex.Code, ex.Message);
         }
         catch (Exception ex) when (ex is JsonException or InvalidDataException)
         {
-            return (null, compressed);
+            return new DomainError(ErrorCodes.BackupInvalidFile, "The file is not a Jx Finance backup.");
         }
-    }
-
-    private static bool Matches(IReadOnlyList<BackupTable> tables, Dictionary<string, TableShape> exported)
-    {
-        var names = new HashSet<string>(StringComparer.Ordinal);
-        foreach (var table in tables)
-        {
-            if (table.Name is null || table.Columns is null || table.Rows is null) return false;
-            if (!exported.TryGetValue(table.Name, out var shape) || !names.Add(table.Name)) return false;
-            if (!table.Columns.Order(StringComparer.Ordinal).SequenceEqual(
-                shape.Columns.Select(c => c.Name).Order(StringComparer.Ordinal), StringComparer.Ordinal))
-            {
-                return false;
-            }
-
-            if (table.Rows.Any(row => row is null || row.Count != table.Columns.Count)) return false;
-        }
-
-        return names.Count == exported.Count;
     }
 
     private static async Task<long> WriteRowsAsync(
@@ -346,38 +343,6 @@ public sealed class BackupService(
         }
 
         return written;
-    }
-
-    private static async Task<long> InsertRowsAsync(
-        NpgsqlConnection connection,
-        NpgsqlTransaction transaction,
-        TableShape shape,
-        BackupTable table,
-        CancellationToken cancellationToken)
-    {
-        var storeTypes = shape.Columns.ToDictionary(c => c.Name, c => c.StoreType, StringComparer.Ordinal);
-        var names = string.Join(", ", table.Columns!.Select(Quote));
-        var values = string.Join(", ", table.Columns!.Select((column, i) => $"CAST(${i + 1} AS {storeTypes[column]})"));
-        var sql = $"INSERT INTO {shape.QuotedName} ({names}) VALUES ({values})";
-
-        foreach (var chunk in table.Rows!.Chunk(InsertBatchSize))
-        {
-            await using var batch = new NpgsqlBatch(connection, transaction);
-            foreach (var row in chunk)
-            {
-                var command = new NpgsqlBatchCommand(sql);
-                foreach (var value in row)
-                {
-                    command.Parameters.Add(new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = (object?)value ?? DBNull.Value });
-                }
-
-                batch.BatchCommands.Add(command);
-            }
-
-            await batch.ExecuteNonQueryAsync(cancellationToken);
-        }
-
-        return table.Rows!.Count;
     }
 
     private static async Task SetForeignKeysAsync(
@@ -456,6 +421,147 @@ public sealed class BackupService(
     }
 
     private static string Quote(string identifier) => $"\"{identifier.Replace("\"", "\"\"")}\"";
+
+    private sealed class Inspector : IBackupVisitor
+    {
+        public BackupHeader? Header { get; private set; }
+
+        public int Tables { get; private set; }
+
+        public long Rows { get; private set; }
+
+        public Task BeginAsync(BackupHeader header, CancellationToken cancellationToken)
+        {
+            EnsureSupported(header);
+            Header = header;
+            return Task.CompletedTask;
+        }
+
+        public Task BeginTableAsync(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken)
+        {
+            Tables++;
+            return Task.CompletedTask;
+        }
+
+        public Task RowAsync(IReadOnlyList<string?> row, CancellationToken cancellationToken)
+        {
+            Rows++;
+            return Task.CompletedTask;
+        }
+
+        public Task EndTableAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    }
+
+    private sealed class Restorer(
+        AppDbContext db,
+        List<TableShape> shapes,
+        string migration,
+        int lockTimeoutSeconds) : IBackupVisitor, IAsyncDisposable
+    {
+        private readonly Dictionary<string, TableShape> exported =
+            shapes.Where(t => t.Exported).ToDictionary(t => t.Name, StringComparer.Ordinal);
+
+        private readonly HashSet<string> restored = new(StringComparer.Ordinal);
+        private readonly List<IReadOnlyList<string?>> pending = new(InsertBatchSize);
+        private IDbContextTransaction? transaction;
+        private string insertSql = "";
+        private int columnCount;
+
+        public BackupHeader? Header { get; private set; }
+
+        public int Tables => restored.Count;
+
+        public long Rows { get; private set; }
+
+        private NpgsqlConnection Connection => (NpgsqlConnection)db.Database.GetDbConnection();
+
+        public async Task BeginAsync(BackupHeader header, CancellationToken cancellationToken)
+        {
+            EnsureSupported(header);
+            if (!string.Equals(header.Migration, migration, StringComparison.Ordinal))
+            {
+                throw new BackupFileException(
+                    ErrorCodes.BackupSchemaMismatch,
+                    $"The backup was taken at database version '{header.Migration}', but this application runs '{migration}'. "
+                    + "Restore it with the application version that created it, then upgrade.");
+            }
+
+            Header = header;
+            transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+            await ExecuteAsync(Connection, $"SET LOCAL lock_timeout = '{lockTimeoutSeconds}s'", cancellationToken);
+            await SetForeignKeysAsync(Connection, shapes, "DEFERRABLE INITIALLY DEFERRED", cancellationToken);
+            await ExecuteAsync(
+                Connection,
+                $"TRUNCATE TABLE {string.Join(", ", shapes.Select(t => t.QuotedName))}",
+                cancellationToken);
+        }
+
+        public Task BeginTableAsync(string name, IReadOnlyList<string> columns, CancellationToken cancellationToken)
+        {
+            if (!exported.TryGetValue(name, out var shape)
+                || !restored.Add(name)
+                || !columns.Order(StringComparer.Ordinal).SequenceEqual(
+                    shape.Columns.Select(c => c.Name).Order(StringComparer.Ordinal), StringComparer.Ordinal))
+            {
+                throw Mismatch();
+            }
+
+            var storeTypes = shape.Columns.ToDictionary(c => c.Name, c => c.StoreType, StringComparer.Ordinal);
+            var names = string.Join(", ", columns.Select(Quote));
+            var values = string.Join(", ", columns.Select((column, i) => $"CAST(${i + 1} AS {storeTypes[column]})"));
+            insertSql = $"INSERT INTO {shape.QuotedName} ({names}) VALUES ({values})";
+            columnCount = columns.Count;
+            return Task.CompletedTask;
+        }
+
+        public Task RowAsync(IReadOnlyList<string?> row, CancellationToken cancellationToken)
+        {
+            if (row.Count != columnCount) throw Mismatch();
+
+            pending.Add(row);
+            Rows++;
+            return pending.Count == InsertBatchSize ? FlushAsync(cancellationToken) : Task.CompletedTask;
+        }
+
+        public Task EndTableAsync(CancellationToken cancellationToken) => FlushAsync(cancellationToken);
+
+        public async Task CompleteAsync(CancellationToken cancellationToken)
+        {
+            if (transaction is null || restored.Count != exported.Count) throw Mismatch();
+
+            await ExecuteAsync(Connection, "SET CONSTRAINTS ALL IMMEDIATE", cancellationToken);
+            await SetForeignKeysAsync(Connection, shapes, "NOT DEFERRABLE", cancellationToken);
+            await ResetSequencesAsync(Connection, shapes, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (transaction is not null) await transaction.DisposeAsync();
+        }
+
+        private static BackupFileException Mismatch() => new("The tables in the backup do not match this application.");
+
+        private async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            if (pending.Count == 0) return;
+
+            await using var batch = new NpgsqlBatch(Connection, (NpgsqlTransaction)transaction!.GetDbTransaction());
+            foreach (var row in pending)
+            {
+                var command = new NpgsqlBatchCommand(insertSql);
+                foreach (var value in row)
+                {
+                    command.Parameters.Add(new NpgsqlParameter { NpgsqlDbType = NpgsqlDbType.Text, Value = (object?)value ?? DBNull.Value });
+                }
+
+                batch.BatchCommands.Add(command);
+            }
+
+            await batch.ExecuteNonQueryAsync(cancellationToken);
+            pending.Clear();
+        }
+    }
 
     private sealed record TableShape(
         string Name,

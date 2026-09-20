@@ -25,4 +25,7 @@ export interface ConversionResponse {
   /** @nullable */
   feeTransactionId: string | null;
   createdAt: string;
+  /** @nullable */
+  feeCategoryId: string | null;
+  isImported: boolean;
 }

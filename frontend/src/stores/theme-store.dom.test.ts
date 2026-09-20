@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
+import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
 async function loadStore() {
   vi.resetModules();
@@ -19,7 +20,7 @@ function root() {
 describe("initial theme", () => {
   test("a stored theme wins over the system preference", async () => {
     preferDark();
-    localStorage.setItem("jx-theme", "light");
+    seedPreferences({ theme: "light" });
 
     const store = await loadStore();
 
@@ -37,7 +38,7 @@ describe("initial theme", () => {
   });
 
   test("ignores a corrupt stored theme", async () => {
-    localStorage.setItem("jx-theme", "neon");
+    seedPreferences({ theme: "neon" });
 
     const store = await loadStore();
 
@@ -54,7 +55,7 @@ describe("theme changes", () => {
 
     expect(result.current.theme).toBe("dark");
     expect(root()).toHaveClass("dark");
-    expect(localStorage.getItem("jx-theme")).toBe("dark");
+    expect(storedPreferences().theme).toBe("dark");
   });
 
   test("toggleTheme flips back and forth", async () => {
@@ -67,13 +68,13 @@ describe("theme changes", () => {
     act(() => result.current.toggleTheme());
     expect(result.current.theme).toBe("light");
     expect(root()).not.toHaveClass("dark");
-    expect(localStorage.getItem("jx-theme")).toBe("light");
+    expect(storedPreferences().theme).toBe("light");
   });
 });
 
 describe("palette", () => {
   test("defaults to ledger, which sets no attribute", async () => {
-    localStorage.setItem("jx-palette", "neon");
+    seedPreferences({ palette: "neon" });
 
     const store = await loadStore();
 
@@ -82,7 +83,7 @@ describe("palette", () => {
   });
 
   test("restores a stored palette", async () => {
-    localStorage.setItem("jx-palette", "plum");
+    seedPreferences({ palette: "plum" });
 
     const store = await loadStore();
 
@@ -97,18 +98,18 @@ describe("palette", () => {
     act(() => store.setPalette("sepia"));
     expect(result.current.palette).toBe("sepia");
     expect(root()).toHaveAttribute("data-palette", "sepia");
-    expect(localStorage.getItem("jx-palette")).toBe("sepia");
+    expect(storedPreferences().palette).toBe("sepia");
 
     act(() => store.setPalette("ledger"));
     expect(root()).not.toHaveAttribute("data-palette");
-    expect(localStorage.getItem("jx-palette")).toBe("ledger");
+    expect(storedPreferences().palette).toBe("ledger");
   });
 });
 
 describe("font and text size", () => {
   test("default to ledger and default, which set no attributes", async () => {
-    localStorage.setItem("jx-font", "comic");
-    localStorage.setItem("jx-text-size", "huge");
+    seedPreferences({ font: "comic" });
+    seedPreferences({ textSize: "huge" });
 
     const store = await loadStore();
 
@@ -119,8 +120,8 @@ describe("font and text size", () => {
   });
 
   test("restore stored values", async () => {
-    localStorage.setItem("jx-font", "system");
-    localStorage.setItem("jx-text-size", "large");
+    seedPreferences({ font: "system" });
+    seedPreferences({ textSize: "large" });
 
     const store = await loadStore();
 
@@ -138,12 +139,43 @@ describe("font and text size", () => {
     expect(result.current.textSize).toBe("small");
     expect(root()).toHaveAttribute("data-font", "serif");
     expect(root()).toHaveAttribute("data-text-size", "small");
-    expect(localStorage.getItem("jx-font")).toBe("serif");
-    expect(localStorage.getItem("jx-text-size")).toBe("small");
+    expect(storedPreferences().font).toBe("serif");
+    expect(storedPreferences().textSize).toBe("small");
 
     act(() => store.setFont("ledger"));
     act(() => store.setTextSize("default"));
     expect(root()).not.toHaveAttribute("data-font");
     expect(root()).not.toHaveAttribute("data-text-size");
+  });
+});
+
+describe("blocked storage", () => {
+  test("loads with the system preference and the defaults", async () => {
+    preferDark();
+    blockStorage();
+
+    const store = await loadStore();
+
+    expect(renderHook(() => store.useTheme()).result.current.theme).toBe("dark");
+    expect(renderHook(() => store.usePalette()).result.current.palette).toBe("ledger");
+    expect(renderHook(() => store.useFont()).result.current.font).toBe("ledger");
+    expect(renderHook(() => store.useTextSize()).result.current.textSize).toBe("default");
+  });
+
+  test("changes still apply for the session", async () => {
+    blockStorage();
+    const store = await loadStore();
+
+    act(() => {
+      store.setTheme("dark");
+      store.setPalette("plum");
+      store.setFont("inter");
+      store.setTextSize("large");
+    });
+
+    expect(root()).toHaveClass("dark");
+    expect(root().dataset.palette).toBe("plum");
+    expect(root().dataset.font).toBe("inter");
+    expect(root().dataset.textSize).toBe("large");
   });
 });

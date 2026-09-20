@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
+import { getExportTransactionsPdfMockHandler } from "@/api/generated/transactions/transactions.msw";
+import { exportTooManyRowsProblem } from "@/storybook/fixtures";
+import { handlers, onRouteOf, problem } from "@/storybook/handlers";
 import { ExportMenu } from "./export-menu";
 
 const meta = {
@@ -21,9 +24,27 @@ export const Open: Story = {
       "href",
       "/api/transactions/export",
     );
-    await expect(body.getByRole("link", { name: /pdf/i })).toHaveAttribute(
-      "href",
-      "/api/transactions/export/pdf",
-    );
+    await expect(body.getByRole("button", { name: /pdf/i })).toBeEnabled();
+  },
+};
+
+export const PdfTooManyRows: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
+          problem(exportTooManyRowsProblem, 400),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole("button"));
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.click(await body.findByRole("button", { name: /pdf/i }));
+
+    await expect(await body.findByText(/Too many transactions for a PDF/u)).toBeInTheDocument();
+    await waitFor(() => expect(body.queryByRole("link", { name: /csv/i })).toBeNull());
   },
 };

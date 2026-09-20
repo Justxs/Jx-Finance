@@ -5,10 +5,11 @@ import {
   getImportBrokerReportMockHandler,
   getSyncBrokerConnectionMockHandler,
 } from "@/api/generated/investments/investments.msw";
-import { accounts, brokerAccount } from "@/storybook/fixtures";
+import { accounts, brokerAccount, databaseBusyProblem } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import {
   brokerImportNothingNew,
+  brokerImportWithWarnings,
   brokerSyncProblem,
   failedBrokerConnection,
 } from "@/storybook/investment-fixtures";
@@ -57,6 +58,59 @@ export const UploadResult: Story = {
       result.getByText("21 entries were already imported and left alone."),
     ).toBeInTheDocument();
     await expect(result.getByText("1 row skipped.")).toBeInTheDocument();
+  },
+};
+
+export const UploadResultWithWarnings: Story = {
+  parameters: {
+    msw: {
+      handlers: [getImportBrokerReportMockHandler(brokerImportWithWarnings), ...handlers],
+    },
+  },
+  play: async () => {
+    await uploadReport();
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    const result = within(await dialog.findByRole("status"));
+    await expect(await result.findByText("2 stock splits booked.")).toBeVisible();
+    await expect(result.getByText("Check your holdings")).toBeVisible();
+    await expect(result.getByText("Merger or takeover: 1")).toBeVisible();
+    await expect(result.getByRole("rowheader", { name: "NVDA" })).toBeVisible();
+  },
+};
+
+export const UploadWhileDatabaseBusy: Story = {
+  parameters: {
+    msw: {
+      handlers: [getImportBrokerReportMockHandler(failWith(databaseBusyProblem, 409)), ...handlers],
+    },
+  },
+  play: async () => {
+    await uploadReport();
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await expect(
+      await dialog.findByText(/The database was busy with other work\. Nothing was changed/u),
+    ).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Import" })).toBeEnabled();
+  },
+};
+
+export const SyncWhileDatabaseBusy: Story = {
+  args: { initialTab: "sync" },
+  parameters: {
+    msw: {
+      handlers: [
+        getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem, 409)),
+        ...handlers,
+      ],
+    },
+  },
+  play: async () => {
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await userEvent.click(await dialog.findByRole("button", { name: "Sync now" }));
+    await expect(
+      await dialog.findByText(/The database was busy with other work\. Nothing was changed/u),
+    ).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Sync now" })).toBeEnabled();
   },
 };
 

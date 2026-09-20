@@ -7,15 +7,23 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Endpoints.Settings.UpdateSettings;
+using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace JxFinance.Endpoints.Settings.Services;
 
 [RegisterService<ISettingsService>(LifeTime.Scoped)]
-public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore store, IExchangeRateService rates)
-    : ISettingsService
+public sealed class SettingsService(
+    AppDbContext db,
+    IInstanceSettingsStore store,
+    IExchangeRateService rates,
+    IOptions<AppOptions> options) : ISettingsService
 {
+    private const string LockRevaluedTables =
+        "LOCK TABLE \"Transactions\", \"InvestmentTransactions\" IN SHARE ROW EXCLUSIVE MODE";
+
     public async Task<SettingsResponse> GetAsync(CancellationToken cancellationToken)
     {
         var latest = await rates.GetLatestAsync(cancellationToken);
@@ -90,50 +98,91 @@ public sealed class SettingsService(AppDbContext db, IInstanceSettingsStore stor
 
     private async Task<string?> RevalueAsync(Currency reportingCurrency, CancellationToken cancellationToken)
     {
-        var foreign = await db.Transactions
+        await db.Database.ExecuteSqlRawAsync(LockRevaluedTables, cancellationToken);
+
+        var foreign = db.Transactions
             .IgnoreQueryFilters()
-            .Where(t => t.Amount.Currency != reportingCurrency)
-            .ToListAsync(cancellationToken);
-        var entries = await db.InvestmentTransactions
+            .Where(t => t.Amount.Currency != reportingCurrency);
+        var foreignEntries = db.InvestmentTransactions
             .IgnoreQueryFilters()
-            .Where(t => !t.IsDeleted)
-            .ToListAsync(cancellationToken);
-        var dates = foreign.Select(t => t.Date)
-            .Concat(entries.Where(e => e.CashAmount.Currency != reportingCurrency).Select(e => e.Date))
-            .ToList();
+            .Where(t => !t.IsDeleted && t.CashAmount.Currency != reportingCurrency);
+
+        var dates = new[]
+        {
+            await foreign.MinAsync(t => (DateOnly?)t.Date, cancellationToken),
+            await foreign.MaxAsync(t => (DateOnly?)t.Date, cancellationToken),
+            await foreignEntries.MinAsync(t => (DateOnly?)t.Date, cancellationToken),
+            await foreignEntries.MaxAsync(t => (DateOnly?)t.Date, cancellationToken),
+        }.OfType<DateOnly>().ToList();
         if (dates.Count > 0)
         {
             await rates.EnsureRangeAsync(dates.Min(), dates.Max(), cancellationToken);
         }
 
-        foreach (var transaction in foreign)
+        var error = await RevalueInBatchesAsync(
+            foreign.OrderBy(t => t.Id),
+            t => (t.Amount, t.Date),
+            (t, value) => t.ReportingAmount = value,
+            reportingCurrency,
+            cancellationToken);
+        error ??= await RevalueInBatchesAsync(
+            foreignEntries.OrderBy(t => t.Id),
+            t => (t.CashAmount, t.Date),
+            (t, value) => t.ReportingAmount = value,
+            reportingCurrency,
+            cancellationToken);
+        if (error is not null)
         {
-            var value = await rates.ConvertAsync(transaction.Amount, reportingCurrency, transaction.Date, cancellationToken);
-            if (value.IsFailure)
-            {
-                return value.ErrorMessage;
-            }
-
-            transaction.ReportingAmount = value.Value;
+            return error;
         }
 
         await db.Transactions
             .IgnoreQueryFilters()
             .Where(t => t.Amount.Currency == reportingCurrency)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.Amount.Amount), cancellationToken);
-
-        foreach (var entry in entries)
-        {
-            var value = await rates.ConvertAsync(entry.CashAmount, reportingCurrency, entry.Date, cancellationToken);
-            if (value.IsFailure)
-            {
-                return value.ErrorMessage;
-            }
-
-            entry.ReportingAmount = value.Value;
-        }
+        await db.InvestmentTransactions
+            .IgnoreQueryFilters()
+            .Where(t => !t.IsDeleted && t.CashAmount.Currency == reportingCurrency)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.CashAmount.Amount), cancellationToken);
 
         return null;
+    }
+
+    private async Task<string?> RevalueInBatchesAsync<T>(
+        IOrderedQueryable<T> rows,
+        Func<T, (Money Amount, DateOnly Date)> read,
+        Action<T, decimal> write,
+        Currency reportingCurrency,
+        CancellationToken cancellationToken)
+        where T : class
+    {
+        var batchSize = Math.Max(options.Value.RevalueBatchSize, 1);
+        for (var skip = 0; ; skip += batchSize)
+        {
+            var batch = await rows.Skip(skip).Take(batchSize).ToListAsync(cancellationToken);
+            if (batch.Count == 0)
+            {
+                return null;
+            }
+
+            foreach (var row in batch)
+            {
+                var (amount, date) = read(row);
+                var value = await rates.ConvertAsync(amount, reportingCurrency, date, cancellationToken);
+                if (value.IsFailure)
+                {
+                    return value.ErrorMessage;
+                }
+
+                write(row, value.Value);
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+            foreach (var row in batch)
+            {
+                db.Entry(row).State = EntityState.Detached;
+            }
+        }
     }
 
     private static SettingsResponse ToResponse(InstanceSettingsSnapshot settings, DateOnly? ratesAsOf) => new(

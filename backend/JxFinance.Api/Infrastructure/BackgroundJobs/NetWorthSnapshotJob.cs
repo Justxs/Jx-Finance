@@ -1,17 +1,16 @@
-using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
-using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
-using JxFinance.Endpoints.Accounts.Mappers;
-using JxFinance.Endpoints.Accounts.Services;
-using JxFinance.Endpoints.Investments.Services;
-using JxFinance.Endpoints.NetWorth.Services;
+using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Infrastructure.BackgroundJobs;
 
-public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<NetWorthSnapshotJob> logger) : BackgroundService
+public sealed class NetWorthSnapshotJob(
+    IServiceScopeFactory scopes,
+    INetWorthSnapshotter snapshotter,
+    ILogger<NetWorthSnapshotJob> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -34,24 +33,18 @@ public sealed class NetWorthSnapshotJob(IServiceScopeFactory scopes, ILogger<Net
         }
 
         var source = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var clock = scope.ServiceProvider.GetRequiredService<IClock>();
-        var options = scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>();
-        var accountMapper = scope.ServiceProvider.GetRequiredService<AccountMapper>();
-        var rates = scope.ServiceProvider.GetRequiredService<IExchangeRateService>();
         var ids = await source.Users.Where(u => u.PasswordHash != null &&
-            (u.LockoutEnd == null || u.LockoutEnd < clock.UtcNow)).Select(u => u.Id).ToListAsync(ct);
+            (u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)).OrderBy(u => u.Id).Select(u => u.Id).ToListAsync(ct);
         foreach (var id in ids)
         {
-            var user = new SnapshotUser(id);
-            await using var db = new AppDbContext(options, user);
-            var service = new NetWorthService(
-                db,
-                new AccountService(db, user, accountMapper, rates, new HoldingsValuation(db, rates, settings)),
-                clock,
-                user);
-            await service.GetCurrentAsync(ct);
+            try
+            {
+                await snapshotter.SnapshotAsync(id, ct);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(ex, "Net worth snapshot for user {UserId} failed.", id);
+            }
         }
     }
-
-    private sealed record SnapshotUser(Guid Id) : ICurrentUser;
 }

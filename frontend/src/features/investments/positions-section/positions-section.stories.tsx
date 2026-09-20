@@ -1,11 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { getSetSecurityPriceMockHandler } from "@/api/generated/investments/investments.msw";
 import { accounts } from "@/storybook/fixtures";
+import { failWith, handlers } from "@/storybook/handlers";
 import {
   closedHolding,
   incompletePortfolio,
   losingHolding,
   portfolio,
+  securityNotHeldProblem,
 } from "@/storybook/investment-fixtures";
 import { PositionsSection } from "./positions-section";
 
@@ -40,6 +43,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const ClosedPositionsOpen: Story = {
+  tags: ["browser-only"],
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByText("Closed positions (1)"));
@@ -59,5 +63,48 @@ export const UpdatePrice: Story = {
     await userEvent.click(visible);
     const dialog = within(await within(document.body).findByRole("dialog"));
     await expect(await dialog.findByLabelText("Last price (EUR)")).toHaveValue("128.46");
+  },
+};
+
+async function openPriceDialog(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  const buttons = await canvas.findAllByRole("button", { name: /Update price: VWCE/ });
+  const visible = buttons.find((button) => button.offsetParent !== null) ?? buttons[0];
+  if (!visible) {
+    throw new Error("The price button is missing.");
+  }
+  await userEvent.click(visible);
+  return within(await within(document.body).findByRole("dialog"));
+}
+
+export const SavesPrice: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await openPriceDialog(canvasElement);
+    fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
+      target: { value: "131.20" },
+    });
+    await userEvent.click(dialog.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const PriceRefusedForSomeoneElsesSecurity: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403)),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = await openPriceDialog(canvasElement);
+    fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
+      target: { value: "131.20" },
+    });
+    await userEvent.click(dialog.getByRole("button", { name: "Save" }));
+
+    await expect(await dialog.findByText(/Only someone who holds this security/u)).toBeVisible();
   },
 };

@@ -5,6 +5,7 @@ import { useAppForm } from "@/components/form";
 import { FormError } from "@/components/form-error";
 import type { SelectOption } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
+import { FormGrid } from "@/components/ui/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { type FieldAliases, submitToServer } from "@/lib/form-server-errors";
 import { isRate, money, requiredText, requiredValue } from "@/lib/validation";
@@ -78,14 +79,14 @@ export function HoldingForm({
 
   return (
     <form.AppForm>
-      <form
+      <FormGrid
+        as="form"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
         noValidate
-        className="form-grid"
       >
         <form.Field name="name">
           {(field) => <field.TextField id={`${idPrefix}-name`} label={t("netWorth.name")} />}
@@ -133,7 +134,7 @@ export function HoldingForm({
             {initialValues ? t("actions.save") : t("actions.add")}
           </form.SubmitButton>
         </div>
-      </form>
+      </FormGrid>
     </form.AppForm>
   );
 }

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { palettes, usePalette } from "@/stores/theme-store";
 
 export function PalettePicker() {
@@ -6,10 +7,8 @@ export function PalettePicker() {
   const { palette, setPalette } = usePalette();
 
   return (
-    <section className="section" aria-labelledby="palette-picker-title">
-      <h2 id="palette-picker-title" className="section-title">
-        {t("appearance.title")}
-      </h2>
+    <Section aria-labelledby="palette-picker-title">
+      <SectionTitle id="palette-picker-title">{t("appearance.title")}</SectionTitle>
       <p id="palette-picker-hint" className="mt-1 max-w-prose text-sm text-muted-foreground">
         {t("appearance.paletteHint")}
       </p>
@@ -45,6 +44,6 @@ export function PalettePicker() {
           </label>
         ))}
       </div>
-    </section>
+    </Section>
   );
 }

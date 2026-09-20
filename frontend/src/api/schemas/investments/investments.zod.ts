@@ -60,6 +60,13 @@ export const SaveBrokerConnectionResponse = zod.object({
  * Asks Interactive Brokers to run the stored Flex Query, waits for it, and imports it the same way as an uploaded file. Can take up to a minute.
  * @summary Download and import the Flex Query report now
  */
+export const syncBrokerConnectionResponsePositionMismatchesItemBrokerQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const syncBrokerConnectionResponsePositionMismatchesItemReplayedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const SyncBrokerConnectionResponse = zod.object({
   trades: zod.int(),
   cashEntries: zod.int(),
@@ -69,10 +76,32 @@ export const SyncBrokerConnectionResponse = zod.object({
   skipped: zod.int(),
   securitiesCreated: zod.int(),
   pricesUpdated: zod.int(),
+  splits: zod.int(),
+  skippedCorporateActions: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.int(),
+    }),
+  ),
+  positionMismatches: zod
+    .array(
+      zod.object({
+        symbol: zod.string(),
+        brokerQuantity: zod.stringFormat(
+          "decimal",
+          syncBrokerConnectionResponsePositionMismatchesItemBrokerQuantityRegExp,
+        ),
+        replayedQuantity: zod.stringFormat(
+          "decimal",
+          syncBrokerConnectionResponsePositionMismatchesItemReplayedQuantityRegExp,
+        ),
+      }),
+    )
+    .nullable(),
 });
 
 /**
- * Reads the Trades, Cash Transactions and Open Positions sections of a Flex Query XML report. Stock, ETF, fund and bond trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing.
+ * Reads the Trades, Cash Transactions, Corporate Actions and Open Positions sections of a Flex Query XML report. Stock, ETF and fund trades become buys and sells; currency trades become in-account conversions; dividends, withholding tax, interest and fees become cash entries; forward and reverse splits become split entries with the ratio as new shares per old share; open positions update last prices. Deposits and withdrawals become transfers when a funding account is given and are skipped otherwise. Every entry is matched by its broker id, so importing overlapping periods never duplicates. The import is all or nothing. Other corporate actions (mergers, spin-offs, stock dividends, symbol changes) are not booked: they are counted in skipped and listed per type in skippedCorporateActions. When the report has an Open Positions section, positionMismatches lists every security whose quantity replayed from the entries differs from the quantity the broker reports, which is how an action that was not booked becomes visible; it is null when the report has no Open Positions section.
  * @summary Import an Interactive Brokers Flex Query report
  */
 export const ImportBrokerReportBody = zod.object({
@@ -84,6 +113,13 @@ export const ImportBrokerReportBody = zod.object({
     .describe("Optional bank account that deposits come from and withdrawals go to."),
 });
 
+export const importBrokerReportResponsePositionMismatchesItemBrokerQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importBrokerReportResponsePositionMismatchesItemReplayedQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
 export const ImportBrokerReportResponse = zod.object({
   trades: zod.int(),
   cashEntries: zod.int(),
@@ -93,6 +129,28 @@ export const ImportBrokerReportResponse = zod.object({
   skipped: zod.int(),
   securitiesCreated: zod.int(),
   pricesUpdated: zod.int(),
+  splits: zod.int(),
+  skippedCorporateActions: zod.array(
+    zod.object({
+      type: zod.string(),
+      count: zod.int(),
+    }),
+  ),
+  positionMismatches: zod
+    .array(
+      zod.object({
+        symbol: zod.string(),
+        brokerQuantity: zod.stringFormat(
+          "decimal",
+          importBrokerReportResponsePositionMismatchesItemBrokerQuantityRegExp,
+        ),
+        replayedQuantity: zod.stringFormat(
+          "decimal",
+          importBrokerReportResponsePositionMismatchesItemReplayedQuantityRegExp,
+        ),
+      }),
+    )
+    .nullable(),
 });
 
 /**
@@ -300,7 +358,7 @@ export const SecuritiesResponseItem = zod.object({
 export const SecuritiesResponse = zod.array(SecuritiesResponseItem);
 
 /**
- * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Symbol and currency together must be unique.
+ * Adds a stock, ETF, fund, bond or other instrument that trades can refer to. Open to every signed-in user, because recording a first trade needs it. Symbol and currency together must be unique; the operation only ever adds, it never changes an existing security.
  * @summary Add a security
  */
 export const createSecurityBodySymbolMin = 0;
@@ -410,8 +468,8 @@ export const CreateSecurityResponse = zod.object({
 });
 
 /**
- * Changes the details or sets the last known price by hand. A broker import overwrites the price when its report date is the same or newer.
- * @summary Update a security or its price
+ * Changes symbol, name, ISIN, exchange, type or currency, and optionally the price. Securities are shared by every user of the installation, so only an administrator may change them; anyone who holds the security sets its price through the price operation instead. The currency cannot change once the security has transactions.
+ * @summary Update the details of a security
  */
 export const updateSecurityBodySymbolMin = 0;
 export const updateSecurityBodySymbolMax = 32;
@@ -516,6 +574,62 @@ export const UpdateSecurityResponse = zod.object({
     "zar",
   ]),
   lastPrice: zod.stringFormat("decimal", updateSecurityResponseLastPriceRegExp).nullable(),
+  lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
+});
+
+/**
+ * Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.
+ * @summary Set the last known price of a security
+ */
+export const setSecurityPriceBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SetSecurityPriceBody = zod.object({
+  lastPrice: zod.stringFormat("decimal", setSecurityPriceBodyLastPriceRegExp),
+  lastPriceDate: zod.union([zod.null(), zod.iso.date()]).optional().describe("Defaults to today."),
+});
+
+export const setSecurityPriceResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SetSecurityPriceResponse = zod.object({
+  id: zod.uuid(),
+  symbol: zod.string(),
+  name: zod.string(),
+  isin: zod.string().nullable(),
+  exchange: zod.string().nullable(),
+  type: zod.enum(["stock", "etf", "fund", "bond", "crypto", "other"]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  lastPrice: zod.stringFormat("decimal", setSecurityPriceResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
 

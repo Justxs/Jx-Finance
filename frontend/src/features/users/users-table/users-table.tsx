@@ -1,5 +1,5 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { UserX } from "lucide-react";
+import { KeyRound, UserCheck, UserX } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
@@ -7,6 +7,8 @@ import { SelectField } from "@/components/select-field";
 import { Button } from "@/components/ui/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter";
 import { nextSortDirection, SortableTableHead } from "@/components/ui/column-header";
+import { Rows } from "@/components/ui/rows";
+import { StaleRegion, staleVariants } from "@/components/ui/stale-region";
 import {
   Table,
   TableBody,
@@ -28,6 +30,9 @@ interface Props {
   rolePendingId: string | null;
   onDeactivate: (id: string) => void;
   deactivatePendingId: string | null;
+  onReactivate: (id: string) => void;
+  reactivatePendingId: string | null;
+  onResetPassword: (id: string) => void;
 }
 
 export function UsersTable({
@@ -38,6 +43,9 @@ export function UsersTable({
   rolePendingId,
   onDeactivate,
   deactivatePendingId,
+  onReactivate,
+  reactivatePendingId,
+  onResetPassword,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const search = useSearch({ from: "/users" });
@@ -61,7 +69,7 @@ export function UsersTable({
       <SelectField
         aria-label={`${t("users.role")}: ${user.displayName || user.email}`}
         value={user.role}
-        className={rolePendingId === user.id ? "is-stale" : undefined}
+        className={staleVariants({ stale: rolePendingId === user.id })}
         aria-busy={rolePendingId === user.id}
         disabled={isSelf || rolePendingId !== null}
         onChange={(role) => onRoleChange(user.id, role)}
@@ -78,21 +86,39 @@ export function UsersTable({
     );
   }
 
-  function deactivateButton(user: UserProfileResponse) {
-    const isSelf = user.id === currentUserId;
+  function rowActions(user: UserProfileResponse) {
+    if (user.id === currentUserId) {
+      return null;
+    }
+    const name = user.displayName || user.email;
+    const busy = deactivatePendingId !== null || reactivatePendingId !== null;
+    const resetLabel = `${t("users.resetPassword.action")}: ${name}`;
+    const statusLabel = `${t(user.isActive ? "users.deactivate" : "users.reactivate")}: ${name}`;
     return (
-      <Button
-        variant="ghost"
-        size="icon"
-        className="size-8"
-        pending={deactivatePendingId === user.id}
-        disabled={isSelf || !user.isActive || deactivatePendingId !== null}
-        onClick={() => onDeactivate(user.id)}
-        aria-label={`${t("users.deactivate")}: ${user.displayName || user.email}`}
-        tooltip={`${t("users.deactivate")}: ${user.displayName || user.email}`}
-      >
-        <UserX />
-      </Button>
+      <>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          onClick={() => onResetPassword(user.id)}
+          aria-label={resetLabel}
+          tooltip={resetLabel}
+        >
+          <KeyRound />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
+          pending={(user.isActive ? deactivatePendingId : reactivatePendingId) === user.id}
+          disabled={busy}
+          onClick={() => (user.isActive ? onDeactivate(user.id) : onReactivate(user.id))}
+          aria-label={statusLabel}
+          tooltip={statusLabel}
+        >
+          {user.isActive ? <UserX /> : <UserCheck />}
+        </Button>
+      </>
     );
   }
 
@@ -116,7 +142,7 @@ export function UsersTable({
           <TableCell>{roleSelect(user)}</TableCell>
           <TableCell>{statusTag(user)}</TableCell>
           <TableCell>
-            <div className="flex justify-end">{deactivateButton(user)}</div>
+            <div className="flex justify-end gap-1">{rowActions(user)}</div>
           </TableCell>
         </TableRow>
       );
@@ -125,13 +151,13 @@ export function UsersTable({
 
   return (
     <>
-      <div className={cn("md:hidden", stale && "is-stale")} aria-busy={stale}>
+      <StaleRegion stale={stale} className="md:hidden">
         {users.length === 0 ? (
           <p className="py-6 text-sm text-muted-foreground">
             {filtered ? t("filters.noMatches") : t("users.empty")}
           </p>
         ) : (
-          <ul className="rows" aria-label={t("users.title")}>
+          <Rows aria-label={t("users.title")}>
             {users.map((user) => (
               <li key={user.id} className="space-y-2 py-2.5 text-sm">
                 <div className="flex items-start gap-3">
@@ -143,17 +169,17 @@ export function UsersTable({
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="min-w-0 flex-1">{roleSelect(user)}</div>
-                  <div className="-mr-2 shrink-0">{deactivateButton(user)}</div>
+                  <div className="-mr-2 flex shrink-0 gap-1">{rowActions(user)}</div>
                 </div>
               </li>
             ))}
-          </ul>
+          </Rows>
         )}
-      </div>
+      </StaleRegion>
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="users-rows" enter="none" exit="none">
           <div className="overflow-x-auto" role="region" aria-label={t("users.title")} tabIndex={0}>
-            <Table className={`min-w-160 ${stale ? "is-stale" : ""}`} aria-busy={stale}>
+            <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead

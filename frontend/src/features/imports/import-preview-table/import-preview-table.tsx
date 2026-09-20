@@ -4,6 +4,7 @@ import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { Pagination } from "@/components/pagination";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Rows } from "@/components/ui/rows";
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip } from "@/components/ui/tooltip";
 import { ImportRow } from "./import-row";
@@ -82,7 +83,7 @@ export function ImportPreviewTable({
           {selectAll}
           {t("imports.selectAll")}
         </label>
-        <ul className="rows" aria-label={t("imports.preview")}>
+        <Rows aria-label={t("imports.preview")}>
           {pageRows.map((row, index) => (
             <ImportRow
               key={`${row.importRef}-${offset + index}`}
@@ -95,7 +96,7 @@ export function ImportPreviewTable({
               onRowChange={onRowChange}
             />
           ))}
-        </ul>
+        </Rows>
       </div>
 
       <div className="-mx-3 hidden md:block">
@@ -105,7 +106,7 @@ export function ImportPreviewTable({
           aria-label={t("imports.preview")}
           tabIndex={0}
         >
-          <Table className="min-w-[44rem]">
+          <Table className="min-w-176">
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="w-10">{selectAll}</TableHead>

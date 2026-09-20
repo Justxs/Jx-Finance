@@ -6,9 +6,9 @@ import { toast } from "sonner";
 import { useBackupsSuspense, useDeleteBackup, useRestoreBackup } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog";
-import { FormError } from "@/components/form-error";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary";
+import { Section, SectionTitle } from "@/components/ui/section";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDateTime } from "@/hooks/use-formatters";
 import { setAuthenticated } from "@/lib/auth-gate";
@@ -74,7 +74,6 @@ function BackupList() {
         }}
         onDelete={setDeleting}
       />
-      <FormError error={restoreMutation.error} />
 
       <Modal
         open={editing !== null}
@@ -100,11 +99,15 @@ function BackupList() {
       </Modal>
 
       <RestoreBackupDialog
+        backupId={restoring?.id ?? null}
         label={restoring ? formatDateTime(restoring.createdAt) : null}
+        error={restoreMutation.error}
+        pending={restoreMutation.isPending}
         onCancel={() => setRestoring(null)}
-        onConfirm={() => {
+        onRestore={async (password) => {
           if (restoring) {
-            restoreMutation.mutate({ id: restoring.id });
+            await restoreMutation.mutateAsync({ id: restoring.id, data: { password } });
+            setRestoring(null);
           }
         }}
       />
@@ -123,10 +126,8 @@ export function BackupSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="section" aria-labelledby="backup-title">
-      <h2 id="backup-title" className="section-title">
-        {t("backup.title")}
-      </h2>
+    <Section aria-labelledby="backup-title">
+      <SectionTitle id="backup-title">{t("backup.title")}</SectionTitle>
       <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("backup.description")}</p>
       <div className="mt-4 space-y-4">
         <CreateBackupForm />
@@ -137,6 +138,6 @@ export function BackupSection() {
       <div className="mt-8">
         <BackupUploadForm />
       </div>
-    </section>
+    </Section>
   );
 }

@@ -13,4 +13,6 @@ public sealed record TransferResponse(
     DateTimeOffset CreatedAt,
     Currency Currency,
     [property: Money] decimal ReceivedAmount,
-    Currency ReceivedCurrency);
+    Currency ReceivedCurrency,
+    bool FromAccountImported,
+    bool ToAccountImported);
