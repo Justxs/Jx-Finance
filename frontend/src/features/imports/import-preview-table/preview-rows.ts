@@ -12,6 +12,8 @@ export interface PreviewRowState extends ImportPreviewRow {
   selected: boolean;
   categoryId: string;
   categorySuggested: boolean;
+  ruleName: string | null;
+  tagIds: string[];
 }
 
 interface CurrencyNet {
@@ -71,6 +73,8 @@ export function toPreviewRows(
       existingTransferId: "",
       categoryId,
       categorySuggested: Boolean(categoryId),
+      ruleName,
+      tagIds: ruleName ? [...row.suggestedTagIds] : [],
     };
   });
 }

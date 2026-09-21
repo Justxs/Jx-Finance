@@ -5,10 +5,13 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.Imports.Confirm;
@@ -61,7 +64,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
 
         var rows = parsedRows
-            .Select(r => new ImportPreviewRow(
+            .Select((r, index) => new ImportPreviewRow(
                 r.ImportRef,
                 r.Date,
                 r.Payee,
@@ -70,7 +73,10 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
                 r.Type,
                 !existingRefSet.Add(r.ImportRef),
                 LooksLikeTransfer(r.Payee, r.Description),
-                r.Currency))
+                r.Currency,
+                suggestions[index]?.CategoryId,
+                suggestions[index]?.TagIds ?? [],
+                suggestions[index]?.RuleName))
             .ToList();
 
         return new ImportPreviewResponse(rows);
@@ -93,6 +99,17 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
         }
 
         var existingRefSet = await ExistingRefsAsync(accountId, request.Rows.Select(r => r.ImportRef), cancellationToken);
+
+        var wantedTagIds = request.Rows
+            .SelectMany(r => r.TagIds ?? [])
+            .Distinct()
+            .Select(id => new TagId(id))
+            .ToList();
+        if (wantedTagIds.Count > 0
+            && await db.Tags.CountAsync(t => wantedTagIds.Contains(t.Id), cancellationToken) != wantedTagIds.Count)
+        {
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
+        }
 
         var categoryIds = request.Rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
         var categoryTypes = await db.Categories
@@ -165,7 +182,7 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
                 return reporting.Error;
             }
 
-            db.Transactions.Add(new Transaction
+            var created = new Transaction
             {
                 AccountId = accountId,
                 CategoryId = categoryId,
@@ -176,7 +193,11 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
                 Description = OptionalText.Normalize(row.Description),
                 Source = TransactionSource.Imported,
                 ImportRef = row.ImportRef,
-            });
+            };
+            db.Transactions.Add(created);
+            db.TransactionTags.AddRange((row.TagIds ?? [])
+                .Distinct()
+                .Select(tagId => new TransactionTag { TransactionId = created.Id, TagId = new TagId(tagId) }));
             imported++;
         }
 

@@ -3,6 +3,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
+using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
@@ -12,6 +13,7 @@ public sealed class ExportTransactionsPdfEndpoint(
     ITransactionService transactionService,
     IAccountService accountService,
     ICategoryService categoryService,
+    ITagService tagService,
     IInstanceSettingsStore settings) : Endpoint<GetTransactionsRequest>
 {
     public override void Configure()
@@ -24,12 +26,11 @@ public sealed class ExportTransactionsPdfEndpoint(
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
         var transactions = (await transactionService.ExportForPdfAsync(req, ct)).ValueOrThrow();
-        var (accountNames, categoryNames) = await ExportTransactionsEndpoint.LoadNamesAsync(accountService, categoryService, ct);
+        var names = await ExportTransactionsEndpoint.LoadNamesAsync(accountService, categoryService, tagService, ct);
 
         var pdf = new TransactionsPdfDocument(
             transactions,
-            accountNames,
-            categoryNames,
+            names,
             req.DateFrom,
             req.DateTo,
             settings.Current.ReportingCurrency).GeneratePdf();

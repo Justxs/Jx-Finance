@@ -18,6 +18,7 @@ export * from "./recurring-bills/recurring-bills.zod";
 export * from "./reports/reports.zod";
 export * from "./settings/settings.zod";
 export * from "./setup/setup.zod";
+export * from "./tags/tags.zod";
 export * from "./transactions/transactions.zod";
 export * from "./transfers/transfers.zod";
 export * from "./users/users.zod";

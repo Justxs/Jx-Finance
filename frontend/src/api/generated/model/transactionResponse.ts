@@ -28,4 +28,5 @@ export interface TransactionResponse {
   lines: TransactionLineResponse[] | null;
   currency: Currency;
   reportingAmount: string;
+  tagIds: string[];
 }

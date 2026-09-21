@@ -19,6 +19,25 @@ export const reportSummaryResponseExpenseByCategoryItemAmountRegExp = new RegExp
 );
 export const reportSummaryResponseTrendItemIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const reportSummaryResponseTrendItemExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const reportSummaryResponseTrendItemComparisonIncomeRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseTrendItemComparisonExpenseRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseExpenseByTagItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseExpenseByTagItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseComparisonTwoTotalIncomeRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseComparisonTwoTotalExpenseRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseComparisonTwoNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const ReportSummaryResponse = zod.object({
   periodStart: zod.iso.date(),

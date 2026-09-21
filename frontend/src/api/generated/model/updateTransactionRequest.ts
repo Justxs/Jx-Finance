@@ -26,5 +26,7 @@ export interface UpdateTransactionRequest {
   description: string | null;
   /** @nullable */
   lines: TransactionLineRequest[] | null;
+  /** @nullable */
+  tagIds: string[] | null;
   currency?: null | Currency;
 }

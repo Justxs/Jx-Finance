@@ -1,7 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
-import { accounts, categories, ids, importPreviewRows, transactions } from "@/storybook/fixtures";
+import {
+  accounts,
+  categories,
+  ids,
+  importPreviewRows,
+  tags,
+  transactions,
+} from "@/storybook/fixtures";
 import { ImportPreviewTable } from "./import-preview-table";
 import { type PreviewRowState, toPreviewRows } from "./preview-rows";
 
@@ -52,6 +59,7 @@ function PreviewTableHarness({
         accountId={ids.accounts.checking}
         accounts={accounts}
         categories={withCategories ? categories : []}
+        tags={tags}
         onRowChange={handleRowChange}
         onRowsChange={setRows}
         onCancel={() => toast.message("Cancelled")}

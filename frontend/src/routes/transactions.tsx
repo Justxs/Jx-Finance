@@ -19,6 +19,11 @@ export const transactionsSearchSchema = z.object({
   search: z.string().optional().catch(undefined),
   accountId: z.uuid().optional().catch(undefined),
   categoryId: z.uuid().optional().catch(undefined),
+  tagIds: z
+    .string()
+    .refine((value) => value.split(",").every((id) => z.uuid().safeParse(id).success))
+    .optional()
+    .catch(undefined),
   type: z.enum(["income", "expense"]).optional().catch(undefined),
   dateFrom: z.string().optional().catch(undefined),
   dateTo: z.string().optional().catch(undefined),

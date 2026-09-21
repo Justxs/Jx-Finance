@@ -19,6 +19,11 @@ export type TransactionsSummaryParams = {
    */
   categoryId?: string | null;
   /**
+   * Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.
+   * @nullable
+   */
+  tagIds?: string | null;
+  /**
    * Income or Expense.
    */
   type?: FlowType;

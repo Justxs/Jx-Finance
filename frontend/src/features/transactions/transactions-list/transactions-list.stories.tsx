@@ -6,6 +6,7 @@ import {
   categories,
   longDescriptionTransaction,
   splitTransaction,
+  tags,
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
@@ -13,6 +14,7 @@ import { TransactionsList } from "./transactions-list";
 
 const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
 const categoryById = new Map(categories.map((category) => [category.id, category]));
+const tagById = new Map(tags.map((tag) => [tag.id, tag]));
 
 const meta = {
   title: "Features/Transactions/TransactionsList",
@@ -21,6 +23,7 @@ const meta = {
     data: transactions.slice(0, 8),
     accountNames,
     categoryById,
+    tagById,
     isPlaceholder: false,
     filtered: false,
     onEdit: fn(),

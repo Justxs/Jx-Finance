@@ -1,6 +1,7 @@
 using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
+using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
@@ -33,9 +34,15 @@ public interface ITransactionService
         BulkCategorizeTransactionsRequest request,
         CancellationToken cancellationToken);
 
+    Task<Result<int>> BulkTagAsync(
+        BulkTagTransactionsRequest request,
+        CancellationToken cancellationToken);
+
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
-    IAsyncEnumerable<TransactionResponse> StreamExportAsync(GetTransactionsRequest request);
+    IAsyncEnumerable<TransactionResponse> StreamExportAsync(
+        GetTransactionsRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<Result<IReadOnlyList<TransactionResponse>>> ExportForPdfAsync(
         GetTransactionsRequest request,

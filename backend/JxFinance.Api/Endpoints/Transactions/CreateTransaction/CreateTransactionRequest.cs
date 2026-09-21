@@ -12,4 +12,5 @@ public sealed record CreateTransactionRequest(
     DateOnly Date,
     string? Description,
     IReadOnlyList<TransactionLineRequest>? Lines,
+    IReadOnlyList<Guid>? TagIds = null,
     Currency? Currency = null) : ITransactionInput;

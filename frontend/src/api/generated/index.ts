@@ -17,6 +17,7 @@ export * from "./recurring-bills/recurring-bills";
 export * from "./reports/reports";
 export * from "./settings/settings";
 export * from "./setup/setup";
+export * from "./tags/tags";
 export * from "./transactions/transactions";
 export * from "./transfers/transfers";
 export * from "./users/users";

@@ -9,8 +9,7 @@ namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 
 public sealed class TransactionsPdfDocument(
     IReadOnlyList<TransactionResponse> transactions,
-    Dictionary<Guid, string> accountNames,
-    Dictionary<Guid, string> categoryNames,
+    ExportNames names,
     DateOnly? dateFrom,
     DateOnly? dateTo,
     Currency reportingCurrency)
@@ -105,7 +104,7 @@ public sealed class TransactionsPdfDocument(
 
     private void ComposeTable(Section section, double contentWidth)
     {
-        var relativeUnit = (contentWidth - DateColumnWidth - TypeColumnWidth - AmountColumnWidth) / 7;
+        var relativeUnit = (contentWidth - DateColumnWidth - TypeColumnWidth - AmountColumnWidth) / 9;
 
         var table = section.AddTable();
         table.Borders.Visible = false;
@@ -113,6 +112,7 @@ public sealed class TransactionsPdfDocument(
         table.RightPadding = Unit.FromPoint(4);
         table.AddColumn(Unit.FromPoint(DateColumnWidth));
         table.AddColumn(Unit.FromPoint(relativeUnit * 3));
+        table.AddColumn(Unit.FromPoint(relativeUnit * 2));
         table.AddColumn(Unit.FromPoint(relativeUnit * 2));
         table.AddColumn(Unit.FromPoint(relativeUnit * 2));
         table.AddColumn(Unit.FromPoint(TypeColumnWidth));
@@ -126,17 +126,17 @@ public sealed class TransactionsPdfDocument(
         header.Borders.Bottom.Width = Unit.FromPoint(1);
         header.Borders.Bottom.Color = MutedColor;
 
-        var titles = new[] { "Date", "Description", "Account", "Category", "Type", "Amount" };
+        var titles = new[] { "Date", "Description", "Account", "Category", "Tags", "Type", "Amount" };
         for (var i = 0; i < titles.Length; i++)
         {
             header.Cells[i].AddParagraph(titles[i]);
         }
 
-        header.Cells[5].Format.Alignment = ParagraphAlignment.Right;
+        header.Cells[6].Format.Alignment = ParagraphAlignment.Right;
 
         foreach (var transaction in transactions.OrderByDescending(t => t.Date))
         {
-            var category = transaction.CategoryId is { } categoryId ? categoryNames.GetValueOrDefault(categoryId) : null;
+            var category = transaction.CategoryId is { } categoryId ? names.Categories.GetValueOrDefault(categoryId) : null;
             var amount = transaction.Amount;
 
             var row = table.AddRow();
@@ -147,11 +147,15 @@ public sealed class TransactionsPdfDocument(
 
             row.Cells[0].AddParagraph(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
             row.Cells[1].AddParagraph(transaction.Description ?? "");
-            row.Cells[2].AddParagraph(accountNames.GetValueOrDefault(transaction.AccountId) ?? "");
+            row.Cells[2].AddParagraph(names.Accounts.GetValueOrDefault(transaction.AccountId) ?? "");
             row.Cells[3].AddParagraph(category ?? "");
-            row.Cells[4].AddParagraph(transaction.Type.ToString());
 
-            var amountParagraph = row.Cells[5].AddParagraph(FormatAmount(amount, transaction.Currency));
+            var tagsParagraph = row.Cells[4].AddParagraph(names.TagLabel(transaction.TagIds));
+            tagsParagraph.Format.Font.Color = MutedColor;
+
+            row.Cells[5].AddParagraph(transaction.Type.ToString());
+
+            var amountParagraph = row.Cells[6].AddParagraph(FormatAmount(amount, transaction.Currency));
             amountParagraph.Format.Alignment = ParagraphAlignment.Right;
             amountParagraph.Format.Font.Color = transaction.Type == FlowType.Income ? IncomeColor : ExpenseColor;
         }

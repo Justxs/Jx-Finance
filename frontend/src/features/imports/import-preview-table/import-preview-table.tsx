@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
@@ -31,6 +31,7 @@ interface Props {
   accountId: string;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
   onRowChange: (index: number, patch: Partial<PreviewRowState>) => void;
   onRowsChange: (rows: PreviewRowState[]) => void;
   onConfirm: () => void;
@@ -43,6 +44,7 @@ export function ImportPreviewTable({
   accounts,
   accountId,
   categories,
+  tags,
   onRowChange,
   onRowsChange,
   onConfirm,
@@ -101,6 +103,7 @@ export function ImportPreviewTable({
               accountId={accountId}
               accounts={accounts}
               categories={categories}
+              tags={tags}
               onRowChange={onRowChange}
             />
           ))}
@@ -117,6 +120,7 @@ export function ImportPreviewTable({
                 <TableHead>{t("transactions.description")}</TableHead>
                 <TableHead className="text-right">{t("transactions.amount")}</TableHead>
                 <TableHead>{t("transactions.category")}</TableHead>
+                <TableHead>{t("tags.field")}</TableHead>
                 <TableHead>{t("imports.recordAs")}</TableHead>
                 <TableHead>{t("imports.flags")}</TableHead>
               </TableRow>
@@ -131,6 +135,7 @@ export function ImportPreviewTable({
                   accountId={accountId}
                   accounts={accounts}
                   categories={categories}
+                  tags={tags}
                   onRowChange={onRowChange}
                 />
               ))}

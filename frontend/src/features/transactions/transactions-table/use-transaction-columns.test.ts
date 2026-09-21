@@ -18,6 +18,7 @@ function transaction(overrides: Partial<TransactionResponse>): TransactionRespon
     lines: null,
     currency: "eur",
     reportingAmount: "1.00",
+    tagIds: [],
     ...overrides,
   };
 }

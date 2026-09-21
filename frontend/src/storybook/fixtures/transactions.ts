@@ -1,4 +1,5 @@
 import type {
+  TagBreakdownItem,
   TransactionLineResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
@@ -7,6 +8,7 @@ import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
 import { FIXTURE_MONTH_END, FIXTURE_MONTH_START, ids, uid } from "./base";
 import { categories } from "./categories";
+import { tags } from "./tags";
 
 function transaction(
   n: number,
@@ -17,6 +19,7 @@ function transaction(
   amount: string,
   description: string | null,
   source: TransactionResponse["source"],
+  tagIds: string[] = [],
 ): TransactionResponse {
   return {
     id: uid("55555555", n),
@@ -32,6 +35,7 @@ function transaction(
     isSplit: false,
     createdAt: `${date}T${String(8 + (n % 12)).padStart(2, "0")}:30:00Z`,
     lines: null,
+    tagIds,
   };
 }
 
@@ -66,6 +70,7 @@ export const splitTransaction: TransactionResponse = {
     "128.40",
     "Maxima XXX Akropolis – didysis savaitgalio apsipirkimas",
     "manual",
+    [ids.tags.renovation],
   ),
   isSplit: true,
   lines: splitTransactionLines,
@@ -80,6 +85,7 @@ export const longDescriptionTransaction: TransactionResponse = transaction(
   "249.00",
   "Senukai, Ukmergės g. 369, Vilnius – sodo baldų komplektas su pagalvėlėmis, pristatymas į namus, surinkimo paslauga ir pratęsta dvejų metų garantija (užsakymo Nr. LT-2026-0905-778812)",
   "imported",
+  [ids.tags.renovation, ids.tags.reimbursable],
 );
 
 export const uncategorisedTransaction: TransactionResponse = transaction(
@@ -156,6 +162,7 @@ export const transactions: TransactionResponse[] = [
     "7.40",
     "Bolt pavėžėjimas",
     "imported",
+    [ids.tags.car],
   ),
   transaction(
     3,
@@ -207,6 +214,7 @@ export const transactions: TransactionResponse[] = [
     "18.00",
     "Forum Cinemas Vingis",
     "imported",
+    [ids.tags.holiday, ids.tags.children],
   ),
   transaction(
     9,
@@ -237,6 +245,7 @@ export const transactions: TransactionResponse[] = [
     "61.35",
     "Circle K – degalai",
     "imported",
+    [ids.tags.car],
   ),
   transaction(
     12,
@@ -247,6 +256,7 @@ export const transactions: TransactionResponse[] = [
     "23.47",
     "Eurovaistinė",
     "imported",
+    [ids.tags.reimbursable],
   ),
   transaction(
     13,
@@ -349,6 +359,7 @@ export const transactions: TransactionResponse[] = [
     "89.95",
     "Zara, Akropolis",
     "imported",
+    [ids.tags.children],
   ),
   transaction(
     25,
@@ -402,8 +413,15 @@ export interface CategorisedAmount {
 }
 
 export function expenseParts(items: TransactionResponse[]): CategorisedAmount[] {
+  return categorisedParts(items, "expense");
+}
+
+export function categorisedParts(
+  items: TransactionResponse[],
+  type: TransactionResponse["type"],
+): CategorisedAmount[] {
   return items
-    .filter((item) => item.type === "expense")
+    .filter((item) => item.type === type)
     .flatMap((item) =>
       item.isSplit && item.lines
         ? item.lines.map((line) => ({
@@ -429,15 +447,47 @@ export const monthIncomeCents = sumByType(monthTransactions, "income");
 export const monthExpenseCents = sumByType(monthTransactions, "expense");
 
 export const transactionsCsv = [
-  "Date,Account,Category,Type,Amount,Description",
+  "Date,Description,Account,Category,Tags,Type,Amount,Currency",
   ...transactions.map((item) =>
     [
       item.date,
+      `"${(item.description ?? "").replaceAll('"', '""')}"`,
       accounts.find((account) => account.id === item.accountId)?.name ?? "",
       categories.find((entry) => entry.id === item.categoryId)?.name ?? "",
+      item.tagIds
+        .map((id) => tags.find((entry) => entry.id === id)?.name ?? "")
+        .filter(Boolean)
+        .join("; "),
       item.type,
       item.amount,
-      `"${(item.description ?? "").replaceAll('"', '""')}"`,
+      item.currency.toUpperCase(),
     ].join(","),
   ),
 ].join("\n");
+
+export function buildTagBreakdownItems(items: TransactionResponse[]): TagBreakdownItem[] {
+  const expenses = items.filter((item) => item.type === "expense");
+  const byTag = new Map<string, number>();
+  let untagged = 0;
+
+  for (const item of expenses) {
+    if (item.tagIds.length === 0) {
+      untagged += toCents(item.amount);
+      continue;
+    }
+    for (const tagId of item.tagIds) {
+      byTag.set(tagId, (byTag.get(tagId) ?? 0) + toCents(item.amount));
+    }
+  }
+
+  return [
+    ...[...byTag]
+      .map(([tagId, cents]) => ({
+        tagId,
+        tagName: tags.find((tag) => tag.id === tagId)?.name ?? "",
+        amount: fromCents(cents),
+      }))
+      .toSorted((a, b) => Number(b.amount) - Number(a.amount)),
+    { tagId: null, tagName: "Untagged", amount: fromCents(untagged) },
+  ];
+}

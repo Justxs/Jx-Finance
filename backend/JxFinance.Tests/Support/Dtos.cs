@@ -47,7 +47,8 @@ public sealed record TransactionDto(
     bool IsSplit,
     List<TransactionLineDto>? Lines,
     string Currency,
-    string ReportingAmount);
+    string ReportingAmount,
+    List<Guid> TagIds);
 
 public sealed record TransferDto(
     Guid Id,

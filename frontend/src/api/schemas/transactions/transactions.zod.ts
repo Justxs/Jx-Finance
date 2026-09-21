@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored.
+ * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not.
  * @summary Record a transaction
  */
 
@@ -41,6 +41,7 @@ export const CreateTransactionBody = zod.object({
     )
     .nullable()
     .describe("Optional split lines. Their amounts must sum to the transaction amount."),
+  tagIds: zod.array(zod.uuid()).nullable(),
   currency: zod
     .union([
       zod.null(),
@@ -138,6 +139,7 @@ export const CreateTransactionResponse = zod.object({
     "zar",
   ]),
   reportingAmount: zod.stringFormat("decimal", createTransactionResponseReportingAmountRegExp),
+  tagIds: zod.array(zod.uuid()),
 });
 
 /**
@@ -211,6 +213,7 @@ export const TransactionsResponse = zod.object({
         "decimal",
         transactionsResponseItemsItemReportingAmountRegExp,
       ),
+      tagIds: zod.array(zod.uuid()),
     }),
   ),
   page: zod.int(),
@@ -232,6 +235,25 @@ export const BulkCategorizeTransactionsBody = zod.object({
 });
 
 export const BulkCategorizeTransactionsResponse = zod.object({
+  updated: zod.int(),
+});
+
+/**
+ * Replaces the whole set of tags on every listed transaction with the tags sent, so an empty list clears them. Unlike the category operation this accepts split transactions, because a tag belongs to the payment and not to a split line. The request is all-or-nothing: if any id is not visible to you or any tag is not visible to you, nothing changes. Repeated ids count once, and the amounts, categories and split lines of the transactions are untouched.
+ * @summary Set the tags of several transactions
+ */
+
+export const BulkTagTransactionsBody = zod.object({
+  transactionIds: zod.array(zod.uuid()).min(1).describe("Between 1 and 200 transaction ids."),
+  tagIds: zod
+    .array(zod.uuid())
+    .min(1)
+    .describe(
+      "The tags the listed transactions should carry, at most ten; an empty list clears them.",
+    ),
+});
+
+export const BulkTagTransactionsResponse = zod.object({
   updated: zod.int(),
 });
 
@@ -267,7 +289,7 @@ export const TransactionsSummaryResponse = zod.object({
 export const DeleteTransactionResponse = zod.void();
 
 /**
- * Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries. A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
 export const transactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -328,10 +350,11 @@ export const TransactionResponse = zod.object({
     "zar",
   ]),
   reportingAmount: zod.stringFormat("decimal", transactionResponseReportingAmountRegExp),
+  tagIds: zod.array(zod.uuid()),
 });
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Moving it to another account adjusts both balances.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances.
  * @summary Update a transaction
  */
 
@@ -361,6 +384,7 @@ export const UpdateTransactionBody = zod.object({
       }),
     )
     .nullable(),
+  tagIds: zod.array(zod.uuid()).nullable(),
   currency: zod
     .union([
       zod.null(),
@@ -458,4 +482,5 @@ export const UpdateTransactionResponse = zod.object({
     "zar",
   ]),
   reportingAmount: zod.stringFormat("decimal", updateTransactionResponseReportingAmountRegExp),
+  tagIds: zod.array(zod.uuid()),
 });

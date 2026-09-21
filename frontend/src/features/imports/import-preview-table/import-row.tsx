@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
@@ -9,6 +9,7 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
+import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
 import type { PreviewRowState } from "./preview-rows";
 
@@ -19,6 +20,7 @@ interface Props {
   accountId: string;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
   onRowChange: (index: number, patch: Partial<PreviewRowState>) => void;
 }
 
@@ -29,6 +31,7 @@ export function ImportRow({
   accountId,
   accounts,
   categories,
+  tags,
   onRowChange,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -73,6 +76,16 @@ export function ImportRow({
     />
   );
 
+  const tagPicker = (
+    <ImportTagPicker
+      tags={tags}
+      value={row.tagIds}
+      label={t("imports.tagsFor", { row: rowName })}
+      disabled={Boolean(row.transferAccountId)}
+      onChange={(tagIds) => onRowChange(index, { tagIds })}
+    />
+  );
+
   const transfer = showTransfer ? (
     <ImportTransferPicker
       row={row}
@@ -94,7 +107,19 @@ export function ImportRow({
   const flags = hasFlags ? (
     <div className="flex flex-wrap gap-1">
       {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
-      {row.categorySuggested && !row.transferAccountId ? (
+      {filledByRule ? (
+        <Tooltip content={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
+          <span className="inline-flex">
+            <Tag tone="accent">
+              {t("imports.ruleFilled")}
+              <span className="sr-only">
+                . {t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}
+              </span>
+            </Tag>
+          </span>
+        </Tooltip>
+      ) : null}
+      {recalled ? (
         <Tooltip content={t("imports.suggestedHint")}>
           <span className="inline-flex">
             <Tag>
@@ -121,6 +146,7 @@ export function ImportRow({
         </div>
         {flags}
         {category}
+        {tagPicker}
         {transfer}
       </li>
     );
@@ -140,6 +166,7 @@ export function ImportRow({
       </TableCell>
       <TableCell className="text-right">{amount}</TableCell>
       <TableCell>{category}</TableCell>
+      <TableCell>{tagPicker}</TableCell>
       <TableCell>{transfer}</TableCell>
       <TableCell>{flags}</TableCell>
     </TableRow>
