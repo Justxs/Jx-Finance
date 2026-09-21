@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import {
   getAccountsSuspenseQueryOptions,
+  getArchivedAccountsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
   getConversionsSuspenseQueryOptions,
   getHouseholdsSuspenseQueryOptions,
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/accounts")({
   loader: ({ context: { queryClient }, deps }) => {
     warm(queryClient, getAccountsSuspenseQueryOptions(deps));
     warm(queryClient, getAccountsSuspenseQueryOptions());
+    warm(queryClient, getArchivedAccountsSuspenseQueryOptions());
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
     warm(queryClient, getTransfersSuspenseQueryOptions(transfersPageParams(1)));
     warmWithSettings(queryClient, (settings) => {

@@ -11,6 +11,7 @@ export * from "./accountSortField";
 export * from "./accountsParams";
 export * from "./accountType";
 export * from "./addMemberRequest";
+export * from "./archivedAccountResponse";
 export * from "./assetResponse";
 export * from "./assetType";
 export * from "./backupResponse";

@@ -55,7 +55,7 @@ const rules: readonly Rule[] = [
     refresh: [...ledger, api.getTrashQueryKey],
   },
   {
-    after: [api.getRestoreDeletedMutationKey],
+    after: [api.getRestoreDeletedMutationKey, api.getRestoreAccountMutationKey],
     refresh: "everything",
   },
   {
@@ -101,6 +101,7 @@ const rules: readonly Rule[] = [
     ],
     refresh: [
       api.getAccountsQueryKey,
+      api.getArchivedAccountsQueryKey,
       api.getTransactionsQueryKey,
       api.getDashboardSummaryQueryKey,
       api.getNetWorthQueryKey,

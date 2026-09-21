@@ -189,6 +189,66 @@
         ]
       }
     },
+    "/api/accounts/archived": {
+      "get": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "List archived accounts",
+        "description": "Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.",
+        "operationId": "GetArchivedAccounts",
+        "responses": {
+          "200": {
+            "description": "The archived accounts you can see.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ArchivedAccountResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/accounts/{id}": {
       "delete": {
         "tags": [
@@ -408,6 +468,94 @@
           },
           "404": {
             "description": "No such account is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/accounts/{id}/restore": {
+      "post": {
+        "tags": [
+          "Accounts"
+        ],
+        "summary": "Restore an archived account",
+        "description": "Brings an archived account back into listings, pickers and totals. Archiving only hid the account, so everything posted to it (transactions, transfers, conversions, investment entries, recurring entries, goals funded from it) reappears with it unchanged. An account that is still shared into a household its owner no longer belongs to comes back personal. Only the owner can restore. Restoring an account that is already active changes nothing and still answers 200, so it is safe to repeat.",
+        "operationId": "RestoreAccount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The account id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The account, active, with its current balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The account is shared with you but you do not own it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such account, archived or active, is visible to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -11630,6 +11778,70 @@
         "example": {
           "email": "partner@example.com",
           "role": "member"
+        }
+      },
+      "ArchivedAccountResponse": {
+        "required": [
+          "id",
+          "name",
+          "description",
+          "iban",
+          "type",
+          "startingBalance",
+          "currency",
+          "scope",
+          "householdId",
+          "archivedAt",
+          "canRestore"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "iban": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "type": {
+            "$ref": "#/components/schemas/AccountType"
+          },
+          "startingBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "archivedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canRestore": {
+            "type": "boolean"
+          }
         }
       },
       "AssetResponse": {

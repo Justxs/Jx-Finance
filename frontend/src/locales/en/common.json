@@ -117,7 +117,17 @@
     "currency": "Main currency",
     "currencyHint": "The starting balance and the account total use this currency. The account can still hold others.",
     "holdings": "Holdings ≈ {{value}}",
-    "share": "Balance by account"
+    "share": "Balance by account",
+    "archiveTitle": "Archive this account?",
+    "archiveDescription": "It leaves listings, pickers and totals, and its transactions are hidden with it. You can restore it later from Archived accounts on this page.",
+    "restored": "Account restored",
+    "archivedList": {
+      "summary": "Archived accounts ({{count}})",
+      "label": "Archived accounts",
+      "archivedOn": "Archived {{date}}",
+      "restore": "Restore",
+      "ownerOnly": "Only its owner can restore it"
+    }
   },
   "transfers": {
     "title": "Transfer money",

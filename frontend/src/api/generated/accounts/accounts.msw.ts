@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { AccountResponse } from "../model";
+import type { AccountResponse, ArchivedAccountResponse } from "../model";
 
 export const getCreateAccountMockHandler = (
   overrideResponse?:
@@ -43,6 +43,30 @@ export const getAccountsMockHandler = (
 ) => {
   return http.get(
     "*/api/accounts",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getArchivedAccountsMockHandler = (
+  overrideResponse?:
+    | ArchivedAccountResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ArchivedAccountResponse[]> | ArchivedAccountResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/accounts/archived",
     async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -123,10 +147,36 @@ export const getUpdateAccountMockHandler = (
     options,
   );
 };
+
+export const getRestoreAccountMockHandler = (
+  overrideResponse?:
+    | AccountResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<AccountResponse> | AccountResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/accounts/:id/restore",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getAccountsMock = () => [
   getCreateAccountMockHandler(),
   getAccountsMockHandler(),
+  getArchivedAccountsMockHandler(),
   getDeleteAccountMockHandler(),
   getAccountMockHandler(),
   getUpdateAccountMockHandler(),
+  getRestoreAccountMockHandler(),
 ];

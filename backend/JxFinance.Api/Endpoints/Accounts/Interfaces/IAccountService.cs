@@ -28,4 +28,8 @@ public interface IAccountService
     Task<Result<AccountResponse>> UpdateAsync(UpdateAccountRequest request, CancellationToken cancellationToken);
 
     Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ArchivedAccountResponse>> GetArchivedAsync(CancellationToken cancellationToken);
+
+    Task<Result<AccountResponse>> RestoreAsync(Guid id, CancellationToken cancellationToken);
 }

@@ -22,6 +22,7 @@ import type { ErrorType } from "../../client";
 import type {
   AccountResponse,
   AccountsParams,
+  ArchivedAccountResponse,
   CreateAccountRequest,
   ProblemDetails,
   UpdateAccountRequest,
@@ -256,6 +257,117 @@ export function useAccountsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
   const queryOptions = getAccountsSuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getArchivedAccountsUrl = () => {
+  return `/api/accounts/archived`;
+};
+
+/**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
+ * @summary List archived accounts
+ */
+export const archivedAccounts = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ArchivedAccountResponse[]> => {
+  return customFetch<ArchivedAccountResponse[]>(getArchivedAccountsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getArchivedAccountsQueryKey = () => {
+  return [`/api/accounts/archived`] as const;
+};
+
+export const getArchivedAccountsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getArchivedAccountsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof archivedAccounts>>> = ({ signal }) =>
+    archivedAccounts({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof archivedAccounts>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ArchivedAccountsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof archivedAccounts>>
+>;
+export type ArchivedAccountsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useArchivedAccountsSuspense<
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useArchivedAccountsSuspense<
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useArchivedAccountsSuspense<
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List archived accounts
+ */
+
+export function useArchivedAccountsSuspense<
+  TData = Awaited<ReturnType<typeof archivedAccounts>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof archivedAccounts>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getArchivedAccountsSuspenseQueryOptions(options);
 
   const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
     TData,
@@ -559,4 +671,87 @@ export const useUpdateAccount = <TError = ErrorType<ProblemDetails>, TContext = 
   TContext
 > => {
   return useMutation(getUpdateAccountMutationOptions(options), queryClient);
+};
+export const getRestoreAccountUrl = (id: string) => {
+  return `/api/accounts/${id}/restore`;
+};
+
+/**
+ * Brings an archived account back into listings, pickers and totals. Archiving only hid the account, so everything posted to it (transactions, transfers, conversions, investment entries, recurring entries, goals funded from it) reappears with it unchanged. An account that is still shared into a household its owner no longer belongs to comes back personal. Only the owner can restore. Restoring an account that is already active changes nothing and still answers 200, so it is safe to repeat.
+ * @summary Restore an archived account
+ */
+export const restoreAccount = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AccountResponse> => {
+  return customFetch<AccountResponse>(getRestoreAccountUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRestoreAccountMutationKey = () => ["restoreAccount"] as const;
+
+export const getRestoreAccountMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreAccount>>,
+    TError,
+    RestoreAccountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreAccount>>,
+  TError,
+  RestoreAccountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreAccountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreAccount>>,
+    RestoreAccountMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return restoreAccount(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreAccountMutationResult = NonNullable<Awaited<ReturnType<typeof restoreAccount>>>;
+
+export type RestoreAccountMutationError = ErrorType<ProblemDetails>;
+export type RestoreAccountMutationVariables = { id: string };
+
+/**
+ * @summary Restore an archived account
+ */
+export const useRestoreAccount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreAccount>>,
+      TError,
+      RestoreAccountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreAccount>>,
+  TError,
+  RestoreAccountMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreAccountMutationOptions(options), queryClient);
 };

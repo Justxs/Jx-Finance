@@ -275,6 +275,60 @@ export const AccountsResponseItem = zod.object({
 export const AccountsResponse = zod.array(AccountsResponseItem);
 
 /**
+ * Returns the archived accounts you would see if they were active: your own plus the shared accounts of your households, narrowed by the active household exactly as the account list is. Sorted by name. canRestore is true only on the accounts you own, because only the owner archives or restores an account.
+ * @summary List archived accounts
+ */
+export const archivedAccountsResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const ArchivedAccountsResponseItem = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  description: zod.string().nullable(),
+  iban: zod.string().nullable(),
+  type: zod
+    .enum(["checking", "savings", "cash", "other", "investment"])
+    .describe("Checking, Savings, Cash, or Other."),
+  startingBalance: zod.stringFormat("decimal", archivedAccountsResponseStartingBalanceRegExp),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
+  archivedAt: zod.iso.datetime({ offset: true }),
+  canRestore: zod.boolean(),
+});
+export const ArchivedAccountsResponse = zod.array(ArchivedAccountsResponseItem);
+
+/**
  * Archives the account instead of deleting it: the transactions posted to it stay in the ledger and in reports, but the account no longer appears in listings or pickers.
  * @summary Archive an account
  */
@@ -531,4 +585,100 @@ export const UpdateAccountResponse = zod.object({
   ),
   reportingBalance: zod.stringFormat("decimal", updateAccountResponseReportingBalanceRegExp),
   holdingsValue: zod.stringFormat("decimal", updateAccountResponseHoldingsValueRegExp),
+});
+
+/**
+ * Brings an archived account back into listings, pickers and totals. Archiving only hid the account, so everything posted to it (transactions, transfers, conversions, investment entries, recurring entries, goals funded from it) reappears with it unchanged. An account that is still shared into a household its owner no longer belongs to comes back personal. Only the owner can restore. Restoring an account that is already active changes nothing and still answers 200, so it is safe to repeat.
+ * @summary Restore an archived account
+ */
+export const restoreAccountResponseStartingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const restoreAccountResponseCurrentBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const restoreAccountResponseBalancesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const restoreAccountResponseReportingBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const restoreAccountResponseHoldingsValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const RestoreAccountResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  description: zod.string().nullable(),
+  iban: zod.string().nullable(),
+  type: zod
+    .enum(["checking", "savings", "cash", "other", "investment"])
+    .describe("Checking, Savings, Cash, or Other."),
+  startingBalance: zod.stringFormat("decimal", restoreAccountResponseStartingBalanceRegExp),
+  currentBalance: zod.stringFormat("decimal", restoreAccountResponseCurrentBalanceRegExp),
+  createdAt: zod.iso.datetime({ offset: true }),
+  scope: zod.enum(["personal", "shared"]),
+  householdId: zod.uuid().nullable(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  balances: zod.array(
+    zod.object({
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      amount: zod.stringFormat("decimal", restoreAccountResponseBalancesItemAmountRegExp),
+    }),
+  ),
+  reportingBalance: zod.stringFormat("decimal", restoreAccountResponseReportingBalanceRegExp),
+  holdingsValue: zod.stringFormat("decimal", restoreAccountResponseHoldingsValueRegExp),
 });

@@ -206,6 +206,79 @@ public sealed class AccountService(
         return id;
     }
 
+    public async Task<IReadOnlyList<ArchivedAccountResponse>> GetArchivedAsync(CancellationToken cancellationToken)
+    {
+        var accounts = await ArchivedAccounts()
+            .OrderBy(a => a.Name)
+            .ThenBy(a => a.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return accounts.Select(a => new ArchivedAccountResponse(
+            a.Id.Value,
+            a.Name,
+            a.Description,
+            a.Iban,
+            a.Type,
+            a.StartingBalance.Amount,
+            a.Currency,
+            a.Scope,
+            a.HouseholdId?.Value,
+            a.UpdatedAt,
+            a.UserId == currentUser.Id)).ToList();
+    }
+
+    public async Task<Result<AccountResponse>> RestoreAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var accountId = new AccountId(id);
+        var active = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+        if (active is not null)
+        {
+            return mapper.FromEntity(active, await BalanceAsync(active, cancellationToken));
+        }
+
+        var account = await ArchivedAccounts().FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
+        if (account is null)
+        {
+            return new DomainError(ErrorCodes.ResourceNotFound, "Account not found.");
+        }
+
+        if (account.UserId != currentUser.Id)
+        {
+            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can restore an account.");
+        }
+
+        if (account.Scope == Scope.Shared &&
+            (account.HouseholdId is not { } householdId ||
+                !await db.Households.AnyAsync(h => h.Id == householdId, cancellationToken)))
+        {
+            account.Scope = Scope.Personal;
+            account.HouseholdId = null;
+        }
+
+        account.IsDeleted = false;
+        await db.SaveChangesAsync(cancellationToken);
+
+        return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
+    }
+
+    private IQueryable<Account> ArchivedAccounts()
+    {
+        var userId = currentUser.Id;
+        var activeHouseholdId = currentUser.ActiveHouseholdId;
+
+        return db.Accounts
+            .IgnoreQueryFilters()
+            .Where(a => a.IsDeleted)
+            .Where(a => a.UserId == userId ||
+                (a.Scope == Scope.Shared && a.HouseholdId != null &&
+                    db.HouseholdMemberships.Any(m =>
+                        !m.IsDeleted && m.HouseholdId == a.HouseholdId && m.UserId == userId) &&
+                    db.HouseholdMemberships.Any(m =>
+                        !m.IsDeleted && m.HouseholdId == a.HouseholdId && m.UserId == a.UserId) &&
+                    db.Households.Any(h => !h.IsDeleted && h.Id == a.HouseholdId)))
+            .Where(a => activeHouseholdId == null || a.Scope == Scope.Personal || a.HouseholdId == activeHouseholdId);
+    }
+
     private async Task<AccountBalance> BalanceAsync(Account account, CancellationToken cancellationToken) =>
         (await BalancesAsync([account], cancellationToken))[account.Id];
 

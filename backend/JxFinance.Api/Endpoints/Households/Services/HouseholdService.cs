@@ -203,12 +203,13 @@ public sealed class HouseholdService(
         var now = clock.UtcNow;
 
         await db.Accounts
+            .IgnoreQueryFilters()
             .Where(a => a.HouseholdId == householdId && (ownerId == null || a.UserId == ownerId))
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(a => a.Scope, Scope.Personal)
                     .SetProperty(a => a.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(a => a.UpdatedAt, now),
+                    .SetProperty(a => a.UpdatedAt, a => a.IsDeleted ? a.UpdatedAt : now),
                 cancellationToken);
 
         await db.Categories
