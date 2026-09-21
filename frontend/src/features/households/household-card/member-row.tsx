@@ -5,7 +5,6 @@ import type { HouseholdMemberResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
-import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { Tag } from "@/components/ui/tag/tag";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +42,7 @@ export function MemberRow({
               aria-label={`${t("users.role")}: ${member.displayName || member.email}`}
               aria-busy={roleMutation.isPending}
               value={member.role}
-              className={cn("w-auto", staleVariants({ stale: roleMutation.isPending }))}
+              className={cn("w-auto", roleMutation.isPending && "stale")}
               disabled={roleMutation.isPending}
               onChange={(role) =>
                 roleMutation.mutate({

@@ -58,7 +58,7 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
     <Panel className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end">
       <dl className="min-w-0">
         <dt className="text-sm text-muted-foreground">{t("netWorth.schedule.payoffDate")}</dt>
-        <dd className="mt-1 font-serif text-[2.5rem] leading-[1.1] font-semibold tracking-[-0.015em] lining-nums tabular-nums">
+        <dd className="mt-1 font-serif text-stat font-semibold lining-nums tabular-nums">
           {formatDate(schedule.plan.payoffDate)}
         </dd>
         <dd className="mt-1.5 text-sm text-muted-foreground">

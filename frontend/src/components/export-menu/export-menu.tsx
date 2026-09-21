@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { fetchFile } from "@/api/client";
-import { buttonVariants } from "@/components/ui/button/button";
+import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { saveFile } from "@/lib/save-file";
 
@@ -43,7 +43,7 @@ export function ExportMenu({ csvUrl, pdfUrl }: Readonly<Props>) {
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className={buttonVariants({ variant: "ghost", size: "sm" })}>
+      <PopoverTrigger render={<Button type="button" variant="ghost" size="sm" />}>
         <Download />
         {t("export.button")}
         <ChevronDown aria-hidden="true" className="text-muted-foreground" />

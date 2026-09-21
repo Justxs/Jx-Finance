@@ -14,7 +14,7 @@ export interface TextFieldProps extends InputProps {
   label?: ReactNode;
   hint?: ReactNode;
   className?: string;
-  inputClassName?: string;
+  monospace?: boolean;
   touchedOnly?: boolean;
   parse?: (value: string) => string;
 }
@@ -25,7 +25,7 @@ export function TextField({
   label,
   hint,
   className,
-  inputClassName,
+  monospace,
   touchedOnly,
   parse,
   ...inputProps
@@ -38,7 +38,7 @@ export function TextField({
         {...inputProps}
         {...aria}
         id={id}
-        className={inputClassName}
+        className={monospace ? "font-mono" : undefined}
         value={field.value}
         onBlur={field.handleBlur}
         onChange={(event) =>

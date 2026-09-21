@@ -10,7 +10,12 @@ export function lazyChart<TProps extends object>(
   function LazyChart(props: TProps) {
     return (
       <Suspense
-        fallback={<Skeleton className="w-full rounded-sm" style={{ height: fallbackHeight }} />}
+        fallback={
+          <Skeleton
+            className="h-(--chart-height) w-full rounded-sm"
+            style={{ "--chart-height": `${fallbackHeight}px` }}
+          />
+        }
       >
         <Chart {...props} />
       </Suspense>

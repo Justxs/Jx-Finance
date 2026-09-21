@@ -1,7 +1,7 @@
 import { Check, type LucideIcon, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, buttonVariants } from "@/components/ui/button/button";
+import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import {
   Popover,
@@ -86,7 +86,9 @@ export function SavedListMenu({
         setRenamingId(null);
       }}
     >
-      <PopoverTrigger className={buttonVariants({ variant: "ghost", size: "sm", className })}>
+      <PopoverTrigger
+        render={<Button type="button" variant="ghost" size="sm" className={className} />}
+      >
         <Icon />
         {label}
         {items.length > 0 ? <span className="tabular-nums">· {items.length}</span> : null}

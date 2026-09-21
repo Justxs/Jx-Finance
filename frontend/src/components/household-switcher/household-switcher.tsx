@@ -46,9 +46,9 @@ export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Pro
     <Select items={options} value={value} onValueChange={choose}>
       <Tooltip content={collapsed ? scopeLabel : undefined} side="right">
         <SelectTrigger
-          size="sm"
+          size={collapsed ? "icon" : "sm"}
           aria-label={scopeLabel}
-          className={cn("w-full min-w-0", collapsed && "justify-center gap-0 px-1", className)}
+          className={cn("w-full min-w-0", className)}
         >
           <House aria-hidden="true" className="text-muted-foreground" />
           {collapsed ? null : <span className="min-w-0 truncate text-sm">{label}</span>}

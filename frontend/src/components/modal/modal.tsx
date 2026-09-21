@@ -39,10 +39,12 @@ export function Modal({
       <DialogContent
         className={cn("flex max-h-[calc(100dvh-2rem)] flex-col gap-0 p-0 sm:max-w-lg", className)}
       >
-        <DialogHeader className="shrink-0 border-b px-4 py-4 pr-12 sm:px-6">
-          <DialogTitle>{title}</DialogTitle>
-          {description ? <DialogDescription>{description}</DialogDescription> : null}
-        </DialogHeader>
+        <div className="shrink-0 border-b px-4 py-4 pr-12 sm:px-6">
+          <DialogHeader>
+            <DialogTitle>{title}</DialogTitle>
+            {description ? <DialogDescription>{description}</DialogDescription> : null}
+          </DialogHeader>
+        </div>
         <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6">
           {children}
         </div>

@@ -12,7 +12,7 @@ interface Props {
   placeholder?: string;
   disabled?: boolean;
   className?: string;
-  selectClassName?: string;
+  fitContent?: boolean;
   "aria-label"?: string;
   touchedOnly?: boolean;
   onValueChange?: (value: string, previous: string) => void;
@@ -27,7 +27,7 @@ export function SelectFieldControl({
   placeholder,
   disabled,
   className,
-  selectClassName,
+  fitContent,
   "aria-label": ariaLabel,
   touchedOnly,
   onValueChange,
@@ -43,7 +43,7 @@ export function SelectFieldControl({
         value={field.value}
         placeholder={placeholder}
         disabled={disabled}
-        className={selectClassName}
+        className={fitContent ? "sm:w-auto" : undefined}
         options={options}
         onBlur={field.handleBlur}
         onChange={(next) => {

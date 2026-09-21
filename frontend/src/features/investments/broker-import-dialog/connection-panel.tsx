@@ -88,8 +88,8 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
             <>
               <Button
                 type="button"
-                variant="ghost"
-                className="mr-auto text-expense hover:text-expense"
+                variant="ghost-destructive"
+                className="mr-auto"
                 disabled={busy}
                 pending={deleteMutation.isPending}
                 onClick={() => setRemoveTarget(accountId)}

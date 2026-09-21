@@ -2,7 +2,9 @@ import { expect, test } from "vitest";
 import { cn } from "./utils";
 
 test("joins truthy class values", () => {
-  expect(cn("a", false, null, undefined, ["b", { c: true, d: false }])).toBe("a b c");
+  expect(cn("flex", false, null, undefined, ["p-2", { "text-sm": true, "font-bold": false }])).toBe(
+    "flex p-2 text-sm",
+  );
 });
 
 test("later tailwind utilities win over conflicting earlier ones", () => {

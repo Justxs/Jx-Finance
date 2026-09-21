@@ -130,11 +130,12 @@ Cool, slightly blue-tinted neutrals with a navy ink accent. Tokens live in `fron
 **Character:** A bookkeeping pair. The serif gives titles and totals the weight of a printed statement; the sans keeps dense rows, labels and controls calm and legible. Both cover Lithuanian diacritics. This pair is the default; a reader may switch their own browser to sans only, serif only, system fonts, Inter, Atkinson Hyperlegible, IBM Plex or Newsreader with Inter, and to a smaller or larger text size. Always use `font-sans` and `font-serif`, never a family name, so those choices apply.
 
 ### Hierarchy
-- **Page title** (serif 600, 1.75rem/2.25rem): one per page, rendered by `PageHeader`.
-- **Lead figure** (serif 600, 2.5rem, lining tabular): the single most important number on a summary (`SummaryStats`, `DashboardStats`); a net total carries a double rule (`border-b-3 border-double border-rule`).
+- **Page title** (serif 600, 1.75rem/2.25rem): one per page, rendered by `PageHeader`. Tailwind `text-page-title`, which carries the size, line height and tightened tracking.
+- **Lead figure** (serif 600, 2.5rem, lining tabular): the single most important number on a summary (`SummaryStats`, `DashboardStats`); a net total carries a double rule (`border-b-3 border-double border-rule`). Tailwind `text-stat`, or `text-stat-lg` (2.75rem) for a card that shows one figure alone; both carry the 1.1 line height and tightened tracking.
 - **Section title** (sans 600, 1.0625rem): class `section-title`, sits under a section rule.
 - **Body** (sans 400, 0.9375rem): rows, forms, table cells. Tailwind `text-sm`.
 - **Label / metadata** (sans 400–500, 0.8125rem): table headers, tags, secondary lines. Tailwind `text-xs`.
+- **Counter** (sans 600, 0.625rem): the unread count on a bell badge and nothing else. Tailwind `text-2xs`.
 
 ### Named Rules
 **The Serif Budget Rule.** Serif appears in page titles, the wordmark and lead figures only. Buttons, labels, table cells and section titles are always sans.

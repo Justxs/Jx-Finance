@@ -3,7 +3,6 @@ import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
-import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -24,13 +23,12 @@ import {
   type useTransactionColumns,
 } from "./use-transaction-columns";
 
-const columnClass: Record<string, string> = {
-  select: "w-10 pr-0",
+const columnWidth: Record<string, string> = {
   date: "w-27",
   categoryId: "w-36",
   tagIds: "w-36",
   accountId: "w-36",
-  amount: "w-30 text-right",
+  amount: "w-30",
   actions: "w-24",
 };
 
@@ -127,7 +125,7 @@ export function TransactionsTable({
     body = table.getRowModel().rows.map((row) => (
       <TableRow
         key={row.id}
-        className={staleVariants({ stale: isOptimistic(row.original) })}
+        className={isOptimistic(row.original) ? "stale" : undefined}
         aria-busy={isOptimistic(row.original) || undefined}
         data-state={selection?.selectedIds.has(row.original.id) ? "selected" : undefined}
       >
@@ -153,22 +151,28 @@ export function TransactionsTable({
             className={cn(
               "table-fixed",
               selection ? "min-w-220" : "min-w-212",
-              staleVariants({ stale: isPlaceholder }),
+              isPlaceholder && "stale",
             )}
             aria-busy={isPlaceholder}
           >
+            <colgroup>
+              {selection ? <col className="w-10" /> : null}
+              {table.getAllColumns().map((column) => (
+                <col key={column.id} className={columnWidth[column.id]} />
+              ))}
+            </colgroup>
             <TableHeader>
               {table.getHeaderGroups().map((headerGroup) => (
                 <TableRow key={headerGroup.id}>
                   {selection ? (
-                    <TableHead className={columnClass.select}>
+                    <TableHead className="pr-0">
                       <SelectPageCheckbox selection={selection} />
                     </TableHead>
                   ) : null}
                   {headerGroup.headers.map((header) => (
                     <TableHead
                       key={header.id}
-                      className={columnClass[header.column.id]}
+                      className={header.column.id === "amount" ? "text-right" : undefined}
                       aria-sort={columnAriaSort?.[header.column.id]}
                     >
                       {header.isPlaceholder

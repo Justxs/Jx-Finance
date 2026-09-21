@@ -70,7 +70,8 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
                     <TableCell
                       className={cn(
                         "text-right font-semibold tabular-nums",
-                        gainTone(Number(row.realizedGain)),
+                        Number(row.realizedGain) > 0 && "text-income",
+                        Number(row.realizedGain) < 0 && "text-expense",
                       )}
                     >
                       {money.formatSigned(Number(row.realizedGain), "auto", currency)}

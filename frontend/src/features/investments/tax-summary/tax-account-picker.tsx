@@ -1,7 +1,7 @@
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
-import { buttonVariants } from "@/components/ui/button/button";
+import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 
@@ -27,7 +27,7 @@ export function TaxAccountPicker({ accounts, value, onChange }: Readonly<Props>)
     <Popover>
       <PopoverTrigger
         aria-label={t("investments.tax.accounts")}
-        className={buttonVariants({ variant: "outline", size: "sm" })}
+        render={<Button type="button" variant="outline" size="sm" />}
       >
         {label}
         <ChevronDown aria-hidden="true" className="text-muted-foreground" />

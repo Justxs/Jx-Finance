@@ -62,7 +62,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
               id={`member-role-${householdId}`}
               aria-label={t("users.role")}
               className="min-w-0"
-              selectClassName="sm:w-auto"
+              fitContent
               options={[
                 { value: "member", label: t("households.roles.member") },
                 { value: "owner", label: t("households.roles.owner") },
