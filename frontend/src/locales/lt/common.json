@@ -90,7 +90,23 @@
     "noSpending": "Šį mėnesį išlaidų nėra.",
     "showTransactions": "Rodyti kategorijos „{{category}}“ operacijas",
     "keptShare": "Liko {{percent}} šio mėnesio pajamų",
-    "overspent": "Šį mėnesį išleista daugiau nei gauta"
+    "overspent": "Šį mėnesį išleista daugiau nei gauta",
+    "layout": {
+      "customise": "Pritaikyti",
+      "title": "Pritaikyti suvestinę",
+      "intro": "Pasirinkite, kurias korteles rodyti ir kokia tvarka. Išdėstymas saugomas jūsų paskyroje, todėl jis toks pat kiekvienoje naršyklėje ir įrenginyje.",
+      "cards": "Suvestinės kortelės",
+      "moveUp": "Pakelti: {{card}}",
+      "moveDown": "Nuleisti: {{card}}",
+      "moved": "Kortelė „{{card}}“ perkelta į {{position}} vietą iš {{total}}.",
+      "switchedOff": "Funkcijų, kurias administratorius išjungė, kortelės nerodomos. Jos išlaiko savo vietą, kol funkcija vėl bus įjungta.",
+      "reset": "Atkurti numatytąjį",
+      "saved": "Suvestinės išdėstymas išsaugotas.",
+      "resetDone": "Atkurtas numatytasis suvestinės išdėstymas.",
+      "allHidden": "Visos kortelės paslėptos.",
+      "chooseCards": "Pasirinkti korteles",
+      "subject": "Suvestinės išdėstymas"
+    }
   },
   "accounts": {
     "title": "Sąskaitos",
@@ -1677,6 +1693,10 @@
     },
     "currency": {
       "disabled": "Ši valiuta neįjungta."
+    },
+    "dashboard": {
+      "cardDuplicate": "Suvestinės kortelė nurodyta daugiau nei kartą.",
+      "cardUnknown": "Ši versija nežino vienos iš suvestinės kortelių. Įkelkite puslapį iš naujo ir bandykite dar kartą."
     },
     "debt": {
       "paymentTooSmall": "Tokia mėnesio įmoka skolos negrąžina per 50 metų. Ji turi būti didesnė už pirmojo mėnesio palūkanas.",

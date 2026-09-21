@@ -76,6 +76,8 @@ public static class ErrorCodes
     public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";
     public const string AttachmentContentMismatch = "attachment.contentMismatch";
     public const string AttachmentLimitReached = "attachment.limitReached";
+    public const string DashboardCardUnknown = "dashboard.cardUnknown";
+    public const string DashboardCardDuplicate = "dashboard.cardDuplicate";
     public const string BackupInvalidFile = "backup.invalidFile";
     public const string BackupSchemaMismatch = "backup.schemaMismatch";
     public const string BackupTooLarge = "backup.tooLarge";

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using JxFinance.Domain.Dashboard;
 using Microsoft.AspNetCore.Identity;
 
 namespace JxFinance.Infrastructure.Auth;
@@ -13,6 +14,8 @@ public sealed class AppUser : IdentityUser<Guid>
     public string DisplayName { get; set; } = string.Empty;
 
     public bool BillReminderEmails { get; set; }
+
+    public DashboardLayout? DashboardLayout { get; set; }
 
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;
 }

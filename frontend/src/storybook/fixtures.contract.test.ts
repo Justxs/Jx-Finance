@@ -164,6 +164,7 @@ const contracts: Record<string, Contract> = {
   zeroRateSchedule: { schema: schemas.DebtScheduleResponse },
   linearSchedule: { schema: schemas.DebtScheduleResponse },
   debtPaymentTooSmallProblem: { schema: schemas.ProblemDetailsResponse },
+  dashboardCardUnknownProblem: { schema: schemas.ProblemDetailsResponse },
   scheduleIncompleteProblem: { schema: schemas.ProblemDetailsResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },
@@ -171,6 +172,10 @@ const contracts: Record<string, Contract> = {
   netWorthHistory: { schema: schemas.NetWorthHistoryResponse },
   dashboardSummary: { schema: schemas.DashboardSummaryResponse },
   emptyDashboardSummary: { schema: schemas.DashboardSummaryResponse },
+  defaultDashboardLayout: { schema: schemas.DashboardLayoutResponse },
+  customDashboardLayout: { schema: schemas.DashboardLayoutResponse },
+  hiddenCardsDashboardLayout: { schema: schemas.DashboardLayoutResponse },
+  allHiddenDashboardLayout: { schema: schemas.DashboardLayoutResponse },
   monthlyTrendItems: { schema: schemas.MonthlyTrendResponse, toResponse: asItems },
   monthlyTrend: { schema: schemas.MonthlyTrendResponse },
   categoryBreakdownItems: {

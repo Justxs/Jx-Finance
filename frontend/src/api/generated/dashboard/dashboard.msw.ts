@@ -9,6 +9,7 @@ import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
   CategoryBreakdownResponse,
+  DashboardLayoutResponse,
   DashboardSummaryResponse,
   MonthlyTrendResponse,
 } from "../model";
@@ -84,8 +85,83 @@ export const getDashboardSummaryMockHandler = (
     options,
   );
 };
+
+export const getDashboardLayoutMockHandler = (
+  overrideResponse?:
+    | DashboardLayoutResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/users/me/dashboard-layout",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getResetDashboardLayoutMockHandler = (
+  overrideResponse?:
+    | DashboardLayoutResponse
+    | ((
+        info: Parameters<Parameters<typeof http.delete>[1]>[0],
+      ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/users/me/dashboard-layout",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSaveDashboardLayoutMockHandler = (
+  overrideResponse?:
+    | DashboardLayoutResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<DashboardLayoutResponse> | DashboardLayoutResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/users/me/dashboard-layout",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getDashboardMock = () => [
   getCategoryBreakdownMockHandler(),
   getMonthlyTrendMockHandler(),
   getDashboardSummaryMockHandler(),
+  getDashboardLayoutMockHandler(),
+  getResetDashboardLayoutMockHandler(),
+  getSaveDashboardLayoutMockHandler(),
 ];

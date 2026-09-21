@@ -314,6 +314,35 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule")).StatusCode);
     }
 
+    [Fact]
+    public async Task Restore_brings_back_the_dashboard_layout_of_each_user()
+    {
+        const string layoutUrl = "/api/users/me/dashboard-layout";
+        var member = await CreateUserAsync();
+        using var memberClient = await LoginAsync(member);
+        (await memberClient.PutAsJsonAsync(layoutUrl, new RestoredLayoutDto(["upcomingBills", "summary"], ["netWorth"], false)))
+            .EnsureSuccessStatusCode();
+        var backup = await CreateBackupAsync();
+        (await memberClient.DeleteAsync(layoutUrl)).EnsureSuccessStatusCode();
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        using var restoredClient = await LoginAsync(member);
+        var layout = await restoredClient.GetFromJsonAsync<RestoredLayoutDto>(layoutUrl);
+        Assert.False(layout!.IsDefault);
+        Assert.Equal(["upcomingBills", "summary"], layout.Order.Take(2));
+        Assert.Equal(["netWorth"], layout.Hidden);
+    }
+
+    private sealed record RestoredLayoutDto(List<string> Order, List<string> Hidden, bool IsDefault);
+
     private sealed record RestoredDebtDto(
         Guid Id,
         string LoanAmount,

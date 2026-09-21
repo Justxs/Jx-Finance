@@ -32,6 +32,8 @@ export const ErrorCode = {
   credentialsinvalid: "credentials.invalid",
   credentialslockedOut: "credentials.lockedOut",
   currencydisabled: "currency.disabled",
+  dashboardcardDuplicate: "dashboard.cardDuplicate",
+  dashboardcardUnknown: "dashboard.cardUnknown",
   debtpaymentTooSmall: "debt.paymentTooSmall",
   debtscheduleIncomplete: "debt.scheduleIncomplete",
   decimalmalformed: "decimal.malformed",

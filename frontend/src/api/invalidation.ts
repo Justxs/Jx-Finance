@@ -355,6 +355,8 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getResetPasswordMutationKey,
   api.getSendVerificationEmailMutationKey,
   api.getSendTestEmailMutationKey,
+  api.getSaveDashboardLayoutMutationKey,
+  api.getResetDashboardLayoutMutationKey,
 ];
 
 const refreshByMutation = new Map(
