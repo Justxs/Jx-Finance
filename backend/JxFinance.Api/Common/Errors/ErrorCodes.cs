@@ -45,6 +45,7 @@ public static class ErrorCodes
     public const string HouseholdRequired = "household.required";
     public const string HouseholdNotMember = "household.notMember";
     public const string HouseholdLastOwner = "household.lastOwner";
+    public const string HouseholdScopeMismatch = "household.scopeMismatch";
     public const string CategoryWrongType = "category.wrongType";
     public const string CurrencyDisabled = "currency.disabled";
     public const string ExchangeRateUnavailable = "exchangeRate.unavailable";

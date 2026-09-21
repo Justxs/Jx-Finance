@@ -1529,7 +1529,8 @@
     "household": {
       "lastOwner": "Namų ūkis turi turėti bent vieną savininką.",
       "notMember": "Nesate šio namų ūkio narys.",
-      "required": "Bendram įrašui pasirinkite namų ūkį."
+      "required": "Bendram įrašui pasirinkite namų ūkį.",
+      "scopeMismatch": "Užklausoje nurodyti du skirtingi namų ūkiai. Perkraukite puslapį ir bandykite dar kartą."
     },
     "iban": {
       "invalid": "Įveskite galiojantį IBAN, pvz., LT12 1000 0111 0100 1000."
