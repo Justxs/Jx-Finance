@@ -1,11 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
-async function loadPreferences() {
-  vi.resetModules();
-  return import("./preferences");
-}
+const loadPreferences = await freshModuleLoader(() => import("./preferences"));
 
 const defaults = {
   id: "browser",

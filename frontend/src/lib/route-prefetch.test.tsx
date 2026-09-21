@@ -1,6 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, screen, waitFor } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
 import type {
   CurrenciesResponse,
@@ -8,10 +6,11 @@ import type {
   TransactionsSummaryResponse,
   UserProfileResponse,
 } from "@/api/generated/model";
-import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
-import { routeTree } from "@/route-tree.gen";
+import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
+
+vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
 
 const me: UserProfileResponse = {
   id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
@@ -87,27 +86,6 @@ function requestsTo(pathname: string) {
   return requested.filter((entry) => entry.split("?")[0] === pathname);
 }
 
-function mountAt(path: string) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createRouter({
-    routeTree,
-    context: { queryClient },
-    history: createMemoryHistory({ initialEntries: [path] }),
-  });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </QueryClientProvider>,
-  );
-  return { queryClient, router };
-}
-
-async function settled(queryClient: QueryClient) {
-  await waitFor(() => expect(queryClient.isFetching()).toBe(0));
-}
-
 beforeEach(() => {
   requested = [];
   failing = new Set();
@@ -117,9 +95,9 @@ beforeEach(() => {
 });
 
 test("the transactions route asks for each primary endpoint once", async () => {
-  const { queryClient } = mountAt("/transactions?type=expense");
+  const { queryClient } = mountApp("/transactions?type=expense");
 
-  await screen.findByRole("heading", { level: 1, name: "Transactions" });
+  await screen.findByRole("heading", { level: 1, name: "Transactions" }, appWait);
   await settled(queryClient);
 
   expect(requestsTo("/api/transactions")).toEqual([
@@ -135,8 +113,8 @@ test("the transactions route asks for each primary endpoint once", async () => {
 });
 
 test("changing the page asks only for the new page", async () => {
-  const { queryClient, router } = mountAt("/transactions");
-  await screen.findByRole("heading", { level: 1, name: "Transactions" });
+  const { queryClient, router } = mountApp("/transactions");
+  await screen.findByRole("heading", { level: 1, name: "Transactions" }, appWait);
   await settled(queryClient);
   requested = [];
 
@@ -150,10 +128,10 @@ test("changing the page asks only for the new page", async () => {
 
 test("a failing endpoint leaves the route loaded and the failure to the page", async () => {
   failing = new Set(["/api/transactions"]);
-  const { queryClient, router } = mountAt("/transactions");
+  const { queryClient, router } = mountApp("/transactions");
 
   await settled(queryClient);
-  await waitFor(() => expect(router.state.status).toBe("idle"));
+  await waitFor(() => expect(router.state.status).toBe("idle"), appWait);
 
   expect(router.state.matches.map((match) => match.status)).toEqual(["success", "success"]);
   expect(requestsTo("/api/transactions")).toHaveLength(1);

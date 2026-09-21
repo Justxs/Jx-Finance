@@ -1,11 +1,9 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 
 const fetchMock = vi.fn<typeof fetch>();
 
-async function loadGate() {
-  vi.resetModules();
-  return import("./auth-gate");
-}
+const loadGate = await freshModuleLoader(() => import("./auth-gate"));
 
 function json(body: unknown, init?: ResponseInit) {
   return new Response(JSON.stringify(body), init);

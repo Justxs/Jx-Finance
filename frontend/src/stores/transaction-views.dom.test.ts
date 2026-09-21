@@ -1,13 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage } from "@/test/preferences";
 
-vi.setConfig({ testTimeout: 30_000 });
-
-async function loadStore() {
-  vi.resetModules();
-  return import("./transaction-views");
-}
+const loadStore = await freshModuleLoader(() => import("./transaction-views"));
 
 function seedRows(storageKey: string, rows: Record<string, unknown>[]) {
   const stored = Object.fromEntries(
