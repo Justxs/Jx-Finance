@@ -120,6 +120,32 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(category, back!.CategoryId);
     }
 
+    [Fact]
+    public async Task Restore_brings_back_the_audit_log_as_it_was_when_the_backup_was_taken()
+    {
+        var household = await CreateHouseholdAsync();
+        var account = await CreateAccountAsync(startingBalance: "10.00", householdId: household);
+        var backup = await CreateBackupAsync();
+        await CreateTransactionAsync(Client, account, null, "expense", "1.00", "2026-06-08", "After the backup");
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var log = await Client.GetFromJsonAsync<PageDto<AuditRowDto>>($"/api/households/{household}/audit");
+
+        Assert.Equal(["account", "household"], log!.Items.Select(e => e.EntityKind));
+        Assert.All(log.Items, e => Assert.Equal("created", e.Action));
+        Assert.Equal(account, log.Items[0].EntityId);
+    }
+
+    private sealed record AuditRowDto(string Action, string EntityKind, Guid? EntityId);
+
     private sealed record RestoredTransactionDto(Guid Id, Guid? CategoryId, string Amount, DateOnly Date, string? Description);
 
     [Fact]
@@ -225,6 +251,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("AspNetUsers", tables);
         Assert.Contains("DeletionEntries", tables);
         Assert.Contains("DeletionChanges", tables);
+        Assert.Contains("AuditEvents", tables);
         Assert.DoesNotContain("UserSessions", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }

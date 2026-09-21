@@ -6,8 +6,10 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
@@ -97,11 +99,12 @@ public sealed class ImportService(
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(request.AccountId, cancellationToken);
         var accountId = new AccountId(request.AccountId);
-        var accountCurrency = await db.Accounts
+        var target = await db.Accounts
             .Where(a => a.Id == accountId)
-            .Select(a => (Currency?)a.StartingBalance.Currency)
+            .Select(a => new { Currency = (Currency?)a.StartingBalance.Currency, a.Name })
             .FirstOrDefaultAsync(cancellationToken);
-        if (accountCurrency is null)
+        var accountCurrency = target?.Currency;
+        if (target is null || accountCurrency is null)
         {
             return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
@@ -207,6 +210,20 @@ public sealed class ImportService(
                 .Distinct()
                 .Select(tagId => new TransactionTag { TransactionId = created.Id, TagId = new TagId(tagId) }));
             imported++;
+        }
+
+        if (imported > 0)
+        {
+            db.Audit.Summarise(
+                AuditAction.Imported,
+                AuditEntityKind.Transaction,
+                TrashLabel.Counted(
+                    $"Swedbank CSV into {target.Name}",
+                    (imported, "entry", "entries"),
+                    (skipped, "duplicate skipped", "duplicates skipped")),
+                imported,
+                accountId.Value,
+                [accountId]);
         }
 
         await db.SaveChangesAsync(cancellationToken);

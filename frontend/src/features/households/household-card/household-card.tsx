@@ -1,4 +1,4 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { History, Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { useActiveHouseholdId } from "@/stores/active-household-store";
 import { CreateHouseholdForm } from "../create-household-form/create-household-form";
+import { HouseholdActivity } from "../household-activity/household-activity";
 import { AddMemberForm } from "./add-member-form";
 import { MemberRow } from "./member-row";
 
@@ -22,6 +24,9 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   const { t } = useTranslation();
   const [renaming, setRenaming] = useState(false);
   const [addMemberOpen, setAddMemberOpen] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
+  const activeHouseholdId = useActiveHouseholdId();
+  const activityVisible = !activeHouseholdId || activeHouseholdId === household.id;
 
   const isOwner = household.myRole === "owner";
 
@@ -79,12 +84,29 @@ export function HouseholdCard({ household }: Readonly<Props>) {
         ))}
       </Rows>
 
-      {isOwner ? (
-        <div className="flex justify-end pt-3">
+      <div className="flex flex-wrap justify-end gap-2 pt-3">
+        {activityVisible ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-expanded={activityOpen}
+            onClick={() => setActivityOpen(!activityOpen)}
+          >
+            <History />
+            {activityOpen ? t("audit.hide") : t("audit.show")}
+          </Button>
+        ) : null}
+        {isOwner ? (
           <Button variant="outline" size="sm" onClick={() => setAddMemberOpen(true)}>
             <Plus />
             {t("households.addMember")}
           </Button>
+        ) : null}
+      </div>
+
+      {activityVisible && activityOpen ? (
+        <div className="pt-4">
+          <HouseholdActivity householdId={household.id} members={household.members} />
         </div>
       ) : null}
 

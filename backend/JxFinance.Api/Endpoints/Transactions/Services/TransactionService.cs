@@ -6,6 +6,7 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
@@ -377,6 +378,17 @@ public sealed class TransactionService(
             transaction.CategoryId = categoryId;
         }
 
+        var categoryName = categoryId is { } chosen
+            ? await db.Categories.Where(c => c.Id == chosen).Select(c => c.Name).FirstOrDefaultAsync(cancellationToken)
+            : null;
+        db.Audit.Summarise(
+            AuditAction.Updated,
+            AuditEntityKind.Transaction,
+            TrashLabel.Counted(
+                categoryName is null ? "Category cleared" : $"Category set to {categoryName}",
+                (transactions.Count, "transaction", "transactions")),
+            transactions.Count,
+            accounts: transactions.Select(t => t.AccountId));
         await db.SaveChangesAsync(cancellationToken);
 
         return transactions.Count;
@@ -404,6 +416,16 @@ public sealed class TransactionService(
 
         await db.TransactionTags.Where(x => ids.Contains(x.TransactionId)).ExecuteDeleteAsync(cancellationToken);
         db.TransactionTags.AddRange(ids.SelectMany(id => mapper.ToTags(id, request.TagIds)));
+        var wanted = (request.TagIds ?? []).Distinct().Select(id => new TagId(id)).ToList();
+        var tagNames = await db.Tags.Where(t => wanted.Contains(t.Id)).Select(t => t.Name).OrderBy(n => n).ToListAsync(cancellationToken);
+        db.Audit.Summarise(
+            AuditAction.Updated,
+            AuditEntityKind.Transaction,
+            TrashLabel.Counted(
+                tagNames.Count == 0 ? "Tags cleared" : $"Tags set to {string.Join(", ", tagNames)}",
+                (transactions.Count, "transaction", "transactions")),
+            transactions.Count,
+            accounts: transactions.Select(t => t.AccountId));
         await db.SaveChangesAsync(cancellationToken);
         await dbTransaction.CommitAsync(cancellationToken);
 

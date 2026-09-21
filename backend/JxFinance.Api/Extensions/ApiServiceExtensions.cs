@@ -64,6 +64,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<ExchangeRateSyncJob>();
             builder.Services.AddHostedService<BrokerSyncJob>();
             builder.Services.AddHostedService<EmailOutboxJob>();
+            builder.Services.AddHostedService<AuditRetentionJob>();
         }
 
         return builder;

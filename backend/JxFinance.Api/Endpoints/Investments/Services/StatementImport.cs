@@ -1,7 +1,9 @@
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Investments;
@@ -70,6 +72,7 @@ public sealed class StatementImport(
 
         await UpdatePricesAsync(cancellationToken);
 
+        await SummariseAsync(cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         var mismatches = await ComparePositionsAsync(cancellationToken);
@@ -90,6 +93,33 @@ public sealed class StatementImport(
                 .Select(a => new SkippedCorporateActionResponse(a.Key, a.Value))
                 .ToList(),
             mismatches);
+    }
+
+    private async Task SummariseAsync(CancellationToken cancellationToken)
+    {
+        var entries = counts.Trades + counts.CashEntries + counts.Conversions + counts.Transfers + counts.Splits;
+        if (entries == 0)
+        {
+            return;
+        }
+
+        var name = await db.Accounts.IgnoreQueryFilters()
+            .Where(a => a.Id == account)
+            .Select(a => a.Name)
+            .FirstAsync(cancellationToken);
+        db.Audit.Summarise(
+            AuditAction.Imported,
+            AuditEntityKind.InvestmentTransaction,
+            TrashLabel.Counted(
+                $"Interactive Brokers statement into {name}",
+                (counts.Trades, "trade", "trades"),
+                (counts.CashEntries, "cash entry", "cash entries"),
+                (counts.Conversions, "conversion", "conversions"),
+                (counts.Transfers, "transfer", "transfers"),
+                (counts.Splits, "split", "splits")),
+            entries,
+            account.Value,
+            [account]);
     }
 
     private async Task LoadAsync(CancellationToken cancellationToken)
