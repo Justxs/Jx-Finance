@@ -5,6 +5,7 @@ import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/g
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
+import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
@@ -63,12 +64,16 @@ export function useTransactionColumns({
       header: t("transactions.description"),
       cell: (info) => {
         const description = info.getValue();
-        if (!description) {
-          return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
-        }
         return (
-          <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
-            {description}
+          <span className="flex items-start gap-2">
+            {description ? (
+              <span className="line-clamp-2 font-medium wrap-break-word" title={description}>
+                {description}
+              </span>
+            ) : (
+              <span className="text-muted-foreground">{EMPTY_VALUE}</span>
+            )}
+            <AttachmentCount count={info.row.original.attachmentCount} className="mt-0.5" />
           </span>
         );
       },

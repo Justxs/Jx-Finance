@@ -25,4 +25,5 @@ export const TrashKind = {
   tag: "tag",
   categorizationRule: "categorizationRule",
   household: "household",
+  attachment: "attachment",
 } as const;

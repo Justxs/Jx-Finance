@@ -52,6 +52,7 @@ import {
   unauthorizedProblem,
 } from "@/storybook/fixtures";
 import { accountHandlers } from "./accounts";
+import { attachmentHandlers } from "./attachments";
 import { authHandlers } from "./auth";
 import { backupHandlers } from "./backups";
 import { budgetHandlers } from "./budgets";
@@ -83,6 +84,7 @@ export { failWith, failWithStatus, onRouteOf, pending, problem } from "./http";
 export const handlers: RequestHandler[] = [
   ...accountHandlers,
   ...assetHandlers,
+  ...attachmentHandlers,
   ...authHandlers,
   ...backupHandlers,
   ...budgetHandlers,

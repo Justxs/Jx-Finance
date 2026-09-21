@@ -14,6 +14,7 @@ export interface BackupResponse {
   sizeBytes: number;
   tables: number;
   rows: number;
+  attachments: number;
   uploaded: boolean;
   restorable: boolean;
 }

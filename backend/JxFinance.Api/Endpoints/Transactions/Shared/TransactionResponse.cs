@@ -18,4 +18,5 @@ public sealed record TransactionResponse(
     IReadOnlyList<TransactionLineResponse>? Lines,
     Currency Currency,
     [property: Money] decimal ReportingAmount,
-    IReadOnlyList<Guid> TagIds);
+    IReadOnlyList<Guid> TagIds,
+    int AttachmentCount);

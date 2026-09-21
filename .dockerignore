@@ -34,6 +34,7 @@ docker-compose*.yml
 **/test-results
 **/playwright-report
 backend/JxFinance.Api/backups
+backend/JxFinance.Api/attachments
 **/*.json.gz
 **/*.info.json
 backend/**/wwwroot/openapi

@@ -11,10 +11,10 @@ public sealed class UploadBackupSummary : Summary<UploadBackupEndpoint, UploadBa
             + "another installation, so it appears in the list and can be restored. Nothing is restored by "
             + "this call. The listed date is the moment the backup was taken, not the upload. Send the file "
             + "as multipart/form-data.";
-        Params["file"] = "A backup file, gzip-compressed or plain JSON, at most 100 MB.";
+        Params["file"] = "A backup file: a zip archive as downloaded, or a gzip-compressed or plain JSON backup from before attachments existed, at most 2 GB.";
         Params["note"] = "Optional reminder, at most 200 characters.";
         Responses[201] = "The stored backup.";
-        Responses[400] = "No file, a file over 100 MB, a file that is not a backup, or one that holds more data once decompressed than the installation accepts (backup.tooLarge).";
+        Responses[400] = "No file, a file over 2 GB, a file that is not a backup, or one that holds more data once decompressed than the installation accepts (backup.tooLarge).";
         Responses[403] = "Only administrators can upload a backup.";
         Responses[429] = "More than 10 uploads in five minutes; wait and retry.";
     }

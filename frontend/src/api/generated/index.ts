@@ -1,4 +1,5 @@
 export * from "./accounts/accounts";
+export * from "./attachments/attachments";
 export * from "./auth/auth";
 export * from "./backups/backups";
 export * from "./budgets/budgets";

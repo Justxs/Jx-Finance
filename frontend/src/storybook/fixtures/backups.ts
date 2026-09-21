@@ -8,6 +8,7 @@ export const backups: BackupResponse[] = [
     sizeBytes: 412_876,
     tables: 27,
     rows: 4812,
+    attachments: 38,
     uploaded: false,
     restorable: true,
   },
@@ -18,6 +19,7 @@ export const backups: BackupResponse[] = [
     sizeBytes: 398_112,
     tables: 27,
     rows: 4630,
+    attachments: 35,
     uploaded: false,
     restorable: true,
   },
@@ -28,6 +30,7 @@ export const backups: BackupResponse[] = [
     sizeBytes: 5_873_220,
     tables: 25,
     rows: 61_204,
+    attachments: 0,
     uploaded: true,
     restorable: false,
   },
@@ -37,6 +40,7 @@ export const backupRestored: RestoreBackupResponse = {
   createdAt: "2026-09-18T19:30:00Z",
   tables: 27,
   rows: 4812,
+  attachments: 38,
 };
 
 export const backupSchemaProblem: ProblemDetails = {

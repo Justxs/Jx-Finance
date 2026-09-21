@@ -6,6 +6,7 @@ import type {
   TransactionResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
+import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
 import {
   TransactionForm,
   type TransactionDraft,
@@ -81,17 +82,24 @@ export function TransactionFormSection({
         className="max-w-2xl"
       >
         {editing ? (
-          <TransactionForm
-            key={editing.id}
-            accounts={accounts}
-            categories={categories}
-            tags={tags}
-            initial={editing}
-            pending={updatePending}
-            error={updateError}
-            onSubmit={onUpdate}
-            onCancel={onCancelEdit}
-          />
+          <>
+            <TransactionForm
+              key={editing.id}
+              accounts={accounts}
+              categories={categories}
+              tags={tags}
+              initial={editing}
+              pending={updatePending}
+              error={updateError}
+              onSubmit={onUpdate}
+              onCancel={onCancelEdit}
+            />
+            <TransactionAttachments
+              key={`attachments-${editing.id}`}
+              transactionId={editing.id}
+              className="mt-6 border-t border-border pt-4"
+            />
+          </>
         ) : null}
       </Modal>
     </>

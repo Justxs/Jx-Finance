@@ -46,11 +46,13 @@ public sealed class TransactionService(
 
         var linesByTransaction = await LoadLinesAsync(page.Items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
+        var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
 
         return page.Map(t => mapper.FromEntity(
             t,
             linesByTransaction.GetValueOrDefault(t.Id),
-            tagsByTransaction.GetValueOrDefault(t.Id)));
+            tagsByTransaction.GetValueOrDefault(t.Id),
+            attachmentCounts.GetValueOrDefault(t.Id)));
     }
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
@@ -200,8 +202,9 @@ public sealed class TransactionService(
             ? await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken)
             : [];
         var tagIds = await TagIdsOfAsync(transactionId, cancellationToken);
+        var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return mapper.FromEntity(transaction, lines, tagIds);
+        return mapper.FromEntity(transaction, lines, tagIds, attachmentCount);
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(
@@ -344,8 +347,9 @@ public sealed class TransactionService(
         }
 
         await db.SaveChangesAsync(cancellationToken);
+        var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList());
+        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList(), attachmentCount);
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
@@ -577,6 +581,23 @@ public sealed class TransactionService(
             .ToListAsync(cancellationToken);
 
         return Group(pairs.Select(pair => (pair.TransactionId, pair.TagId)));
+    }
+
+    private async Task<Dictionary<TransactionId, int>> CountAttachmentsAsync(
+        IEnumerable<TransactionId> transactionIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = transactionIds.ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        return await db.TransactionAttachments
+            .Where(a => ids.Contains(a.TransactionId))
+            .GroupBy(a => a.TransactionId)
+            .Select(g => new { g.Key, Count = g.Count() })
+            .ToDictionaryAsync(g => g.Key, g => g.Count, cancellationToken);
     }
 
     private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsOfFilteredAsync(

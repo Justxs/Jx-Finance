@@ -11,6 +11,7 @@ services:
     volumes: !override
       - e2e_auth_keys:/keys
       - e2e_backups:/backups
+      - e2e_attachments:/attachments
 
   frontend:
     ports: !override
@@ -22,3 +23,4 @@ volumes:
   e2e_db_data:
   e2e_auth_keys:
   e2e_backups:
+  e2e_attachments:

@@ -29,6 +29,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IClock, Time.SystemClock>();
         services.AddSingleton<Backups.BackupStore>();
+        services.AddSingleton<Attachments.AttachmentStore>();
         services.AddSingleton<Common.Email.IEmailTransport, Email.MailKitEmailTransport>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();

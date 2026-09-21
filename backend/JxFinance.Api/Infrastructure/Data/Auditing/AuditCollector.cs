@@ -60,6 +60,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private readonly Dictionary<Guid, string> users = [];
     private readonly Dictionary<TransactionId, List<TagId>> storedTags = [];
     private readonly Dictionary<TransactionId, List<LineInfo>> storedLines = [];
+    private readonly Dictionary<TransactionId, AttachedTo> attachedTo = [];
     private readonly List<Draft> drafts = [];
 
     private ILookup<TransactionId, EntityEntry> tagChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
@@ -79,6 +80,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         lineChanges = entries.Where(e => e.Entity is TransactionLine).ToLookup(e => ((TransactionLine)e.Entity).TransactionId);
 
         var scoped = ScopedEntries(entries);
+        var attachments = entries.Where(e => e.Entity is TransactionAttachment).ToList();
+        await LoadAttachedToAsync(attachments, cancellationToken);
         await LoadAccountsAsync(scoped, summary, cancellationToken);
 
         foreach (var entry in entries)
@@ -106,6 +109,11 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         foreach (var entry in scoped)
         {
             AddScoped(entry);
+        }
+
+        foreach (var entry in attachments)
+        {
+            AddAttachment(entry);
         }
 
         return summary is null
@@ -142,6 +150,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         var ids = scoped
             .SelectMany(e => AccountIds(e, true).Concat(AccountIds(e, false)))
             .Concat(summary?.Accounts ?? [])
+            .Concat(attachedTo.Values.Select(t => t.AccountId))
             .Distinct()
             .ToList();
         if (ids.Count > 0)
@@ -197,6 +206,41 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         {
             drafts.Add(new Draft(household, action, KindOf(entry), IdOf(entry), entry));
         }
+    }
+
+    private async Task LoadAttachedToAsync(List<EntityEntry> attachments, CancellationToken cancellationToken)
+    {
+        var ids = attachments.Select(e => ((TransactionAttachment)e.Entity).TransactionId).Distinct().ToList();
+        if (ids.Count == 0)
+        {
+            return;
+        }
+
+        var stored = await db.Transactions
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(t => ids.Contains(t.Id))
+            .Select(t => new { t.Id, t.AccountId, t.Description, t.Date, t.Amount })
+            .ToListAsync(cancellationToken);
+        foreach (var transaction in stored)
+        {
+            attachedTo[transaction.Id] = new AttachedTo(
+                transaction.AccountId,
+                TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount));
+        }
+    }
+
+    private void AddAttachment(EntityEntry entry)
+    {
+        var attachment = (TransactionAttachment)entry.Entity;
+        if (Lifecycle(entry) is not ({ } action and not AuditAction.Updated)
+            || !attachedTo.TryGetValue(attachment.TransactionId, out var transaction)
+            || HouseholdOf(transaction.AccountId) is not { } household)
+        {
+            return;
+        }
+
+        drafts.Add(new Draft(household, action, AuditEntityKind.Attachment, attachment.Id.Value, entry));
     }
 
     private void AddShareable(EntityEntry entry, AuditEntityKind kind)
@@ -491,6 +535,9 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         Category c => c.Name,
         Tag t => t.Name,
         Household h => h.Name,
+        TransactionAttachment a => attachedTo.TryGetValue(a.TransactionId, out var transaction)
+            ? $"{a.FileName}, {transaction.Description}"
+            : a.FileName,
         HouseholdMembership m => users.GetValueOrDefault(m.UserId) ?? "",
         _ => "",
     };
@@ -700,6 +747,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private sealed record Draft(HouseholdId Household, AuditAction Action, AuditEntityKind Kind, Guid EntityId, EntityEntry Entry);
 
     private sealed record AccountInfo(Scope Scope, HouseholdId? HouseholdId, string Name);
+
+    private sealed record AttachedTo(AccountId AccountId, string Description);
 
     private sealed record LineInfo(Guid Id, CategoryId? CategoryId, decimal Amount);
 }

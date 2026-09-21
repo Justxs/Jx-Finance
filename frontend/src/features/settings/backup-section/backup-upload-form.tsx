@@ -8,7 +8,7 @@ import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { silent } from "@/lib/mutations";
 
-const MAX_FILE_BYTES = 100 * 1024 * 1024;
+const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
 
 export function BackupUploadForm() {
   const { t } = useTranslation();
@@ -64,7 +64,7 @@ export function BackupUploadForm() {
           key={uploadKey}
           id="backup-file"
           ref={fileInputRef}
-          accept=".gz,.json,application/gzip,application/json"
+          accept=".zip,.gz,.json,application/zip,application/gzip,application/json"
           disabled={uploadMutation.isPending}
           onChange={() => {
             setFileError(undefined);

@@ -150,6 +150,7 @@ export const transactionHandlers = [
       createdAt: CREATED_AT,
       lines: null,
       tagIds: [],
+      attachmentCount: 0,
     };
     return mergeTransaction(base, await readBody(request));
   }),

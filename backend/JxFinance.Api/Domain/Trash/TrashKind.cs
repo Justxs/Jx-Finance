@@ -15,4 +15,5 @@ public enum TrashKind
     Tag,
     CategorizationRule,
     Household,
+    Attachment,
 }

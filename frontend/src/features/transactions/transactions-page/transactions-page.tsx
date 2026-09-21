@@ -145,6 +145,7 @@ export function TransactionsPage() {
         })) ?? null,
       tagIds: data.tagIds ?? [],
       createdAt: new Date().toISOString(),
+      attachmentCount: 0,
     };
     return optimistic;
   }

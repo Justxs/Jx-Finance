@@ -30,6 +30,7 @@ export const TrashResponse = zod.object({
           "tag",
           "categorizationRule",
           "household",
+          "attachment",
         ])
         .describe("Which kind of record to bring back, as listed by GET /api/trash."),
       entityId: zod.uuid(),
@@ -63,6 +64,7 @@ export const RestoreDeletedBody = zod.object({
       "tag",
       "categorizationRule",
       "household",
+      "attachment",
     ])
     .describe("Which kind of record to bring back, as listed by GET /api/trash."),
   entityId: zod.uuid().min(1).describe("The id the record had before it was deleted."),

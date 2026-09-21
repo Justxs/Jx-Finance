@@ -35,6 +35,7 @@ frontend/e2e/.auth/
 # Exported OpenAPI documents (regenerated on demand / in CI)
 backend/**/wwwroot/openapi/
 backend/JxFinance.Api/backups/
+backend/JxFinance.Api/attachments/
 
 # ---- Logs ----
 *.log
