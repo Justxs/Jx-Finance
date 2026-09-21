@@ -926,6 +926,12 @@
     "net": "Balansas",
     "trend": "Tendencija",
     "expenseByCategory": "Išlaidos pagal kategoriją",
+    "incomeByCategory": "Pajamos pagal kategoriją",
+    "noIncome": "Šiuo laikotarpiu pajamų nėra.",
+    "syntheticGroups": {
+      "investmentIncome": "Investicijų pajamos",
+      "investmentTaxesAndFees": "Investicijų mokesčiai ir rinkliavos"
+    },
     "netWorthChange": "Grynosios vertės pokytis",
     "notEnoughNetWorthHistory": "Šiam laikotarpiui grynosios vertės istorijos kol kas nepakanka.",
     "customRange": "Pasirinktas laikotarpis"

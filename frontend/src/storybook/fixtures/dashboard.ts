@@ -11,15 +11,18 @@ import { FIXTURE_MONTH_END, FIXTURE_MONTH_START } from "./base";
 import { categories } from "./categories";
 import { netWorth } from "./net-worth";
 import {
-  expenseParts,
+  categorisedParts,
   monthExpenseCents,
   monthIncomeCents,
   monthTransactions,
 } from "./transactions";
 
-export function buildCategoryBreakdownItems(items: TransactionResponse[]): CategoryBreakdownItem[] {
+export function buildCategoryBreakdownItems(
+  items: TransactionResponse[],
+  type: TransactionResponse["type"] = "expense",
+): CategoryBreakdownItem[] {
   const totals = new Map<string | null, number>();
-  for (const part of expenseParts(items)) {
+  for (const part of categorisedParts(items, type)) {
     totals.set(part.categoryId, (totals.get(part.categoryId) ?? 0) + part.cents);
   }
   return [...totals.entries()]
