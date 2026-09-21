@@ -26,6 +26,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 {
     private Guid CurrentUserId => currentUser.Id;
 
+    private HouseholdId? ActiveHouseholdId => currentUser.ActiveHouseholdId;
+
+    private bool HasActiveHousehold => currentUser.ActiveHouseholdId is not null;
+
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
@@ -191,7 +195,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         entity => !entity.IsDeleted &&
             (entity.UserId == CurrentUserId ||
                 (entity.Scope == Scope.Shared && entity.HouseholdId != null &&
-                    HouseholdMemberships.Any(m => m.HouseholdId == entity.HouseholdId && m.UserId == CurrentUserId)));
+                    HouseholdMemberships.Any(m => m.HouseholdId == entity.HouseholdId && m.UserId == CurrentUserId))) &&
+            (!HasActiveHousehold || entity.Scope == Scope.Personal || entity.HouseholdId == ActiveHouseholdId);
 
     private Expression<Func<T, bool>> AccountScopedFilter<T>() where T : EntityBase, IAccountScoped =>
         entity => !entity.IsDeleted &&

@@ -21,6 +21,8 @@ export const fonts = [
 export const textSizes = ["small", "default", "large"] as const;
 export const locales = ["en", "lt"] as const;
 
+export const COMMAND_RECENTS_MAX = 8;
+
 const preferencesSchema = z.object({
   id: z.literal(ROW_ID),
   theme: z.enum(themes).optional().catch(undefined),
@@ -29,6 +31,8 @@ const preferencesSchema = z.object({
   textSize: z.enum(textSizes).catch("default"),
   sidebarCollapsed: z.boolean().catch(false),
   locale: z.enum(locales).optional().catch(undefined),
+  activeHouseholdId: z.uuid().optional().catch(undefined),
+  commandRecents: z.array(z.string()).max(COMMAND_RECENTS_MAX).optional().catch(undefined),
 });
 
 export type Preferences = z.output<typeof preferencesSchema>;

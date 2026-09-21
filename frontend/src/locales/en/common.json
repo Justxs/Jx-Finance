@@ -1005,6 +1005,10 @@
     "roles": {
       "owner": "Owner",
       "member": "Member"
+    },
+    "scope": {
+      "label": "Active household",
+      "everything": "Everything"
     }
   },
   "sharing": {

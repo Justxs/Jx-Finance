@@ -1,6 +1,9 @@
 import { decimalFields } from "@/api/generated/decimal-fields";
 import type { ErrorCode } from "@/api/generated/model";
 import { normalizeMoney } from "@/lib/validation";
+import { readActiveHouseholdId } from "@/stores/active-household-store";
+
+const ACTIVE_HOUSEHOLD_HEADER = "X-Active-Household";
 
 interface ApiErrorDetail {
   name: string;
@@ -84,6 +87,11 @@ async function request(url: string, options?: RequestInit): Promise<Response> {
   const headers = plainHeaders(options?.headers);
   if (options?.body !== undefined && options.body !== null && !(options.body instanceof FormData)) {
     headers["Content-Type"] ??= "application/json";
+  }
+
+  const activeHouseholdId = readActiveHouseholdId();
+  if (activeHouseholdId) {
+    headers[ACTIVE_HOUSEHOLD_HEADER] = activeHouseholdId;
   }
 
   if (typeof options?.body === "string" && headers["Content-Type"] === "application/json") {

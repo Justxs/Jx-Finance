@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Households;
 
 namespace JxFinance.Infrastructure.Auth;
 
@@ -16,6 +17,17 @@ public sealed class HttpCurrentUser(IHttpContextAccessor httpContextAccessor) : 
             return Guid.TryParse(principal.FindFirstValue(ClaimTypes.NameIdentifier), out var id) && id != Guid.Empty
                 ? id
                 : throw new InvalidOperationException("The authenticated principal carries no valid user id.");
+        }
+    }
+
+    public HouseholdId? ActiveHouseholdId
+    {
+        get
+        {
+            var items = httpContextAccessor.HttpContext?.Items;
+            return items is not null && items.TryGetValue(ActiveHousehold.ItemKey, out var value)
+                ? value as HouseholdId?
+                : null;
         }
     }
 }

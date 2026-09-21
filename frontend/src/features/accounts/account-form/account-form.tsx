@@ -25,6 +25,7 @@ import {
   sharedHouseholdId,
   sharingShape,
 } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 import { accountTypes } from "../account-types";
 
 export interface AccountFormValues {
@@ -75,6 +76,7 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
   const householdList = households.data ?? [];
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
+  const sharing = useSharingDefaults(householdList);
 
   const schema = refineSharing(
     z.object({
@@ -97,8 +99,8 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
       type: initial?.type ?? "checking",
       startingBalance: initial?.startingBalance ?? "0.00",
       currency: initial?.currency ?? reportingCurrency,
-      scope: initial?.scope ?? "personal",
-      householdId: initial?.householdId ?? "",
+      scope: initial?.scope ?? sharing.scope,
+      householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
     } satisfies FormValues,
     schema,
     submit: (value) => onSubmit(buildValues(value)),
