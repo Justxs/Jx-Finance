@@ -28,10 +28,19 @@ public static class Portfolio
             switch (transaction.Type)
             {
                 case InvestmentTransactionType.Buy:
-                    position.Buy(transaction.Quantity, -transaction.CashAmount.Amount, -transaction.ReportingAmount);
+                    position.Buy(
+                        transaction.Date,
+                        transaction.Quantity,
+                        -transaction.CashAmount.Amount,
+                        -transaction.ReportingAmount);
                     break;
                 case InvestmentTransactionType.Sell:
-                    position.Sell(transaction.Date, transaction.Quantity, transaction.CashAmount.Amount, transaction.ReportingAmount);
+                    position.Sell(
+                        transaction.Id,
+                        transaction.Date,
+                        transaction.Quantity,
+                        transaction.CashAmount.Amount,
+                        transaction.ReportingAmount);
                     break;
                 case InvestmentTransactionType.Split:
                     position.Split(transaction.Quantity);
