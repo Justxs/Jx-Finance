@@ -21,4 +21,9 @@ export interface ImportPreviewRow {
   isDuplicate: boolean;
   looksLikeTransfer: boolean;
   currency: Currency;
+  /** @nullable */
+  suggestedCategoryId: string | null;
+  suggestedTagIds: string[];
+  /** @nullable */
+  matchedRuleName: string | null;
 }

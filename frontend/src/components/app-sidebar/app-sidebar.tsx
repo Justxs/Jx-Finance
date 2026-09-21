@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
+  Bookmark,
   CalendarClock,
   ChartCandlestick,
   FileBarChart,
   House,
   LayoutDashboard,
+  ListChecks,
   PanelLeftClose,
   PanelLeftOpen,
   PiggyBank,
@@ -55,6 +57,14 @@ const navItems = [
   { to: "/transactions", key: "nav.transactions", icon: ArrowLeftRight, group: "ledger" },
   { to: "/accounts", key: "nav.accounts", icon: WalletCards, group: "ledger" },
   { to: "/categories", key: "nav.categories", icon: Tags, group: "ledger" },
+  { to: "/tags", key: "nav.tags", icon: Bookmark, group: "ledger" },
+  {
+    to: "/categorization-rules",
+    key: "nav.categorizationRules",
+    icon: ListChecks,
+    group: "ledger",
+    feature: "categorizationRules",
+  },
   { to: "/budgets", key: "nav.budgets", icon: PiggyBank, group: "plan", feature: "budgets" },
   { to: "/goals", key: "nav.goals", icon: Target, group: "plan", feature: "goals" },
   {

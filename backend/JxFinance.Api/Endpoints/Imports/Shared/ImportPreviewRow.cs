@@ -12,4 +12,7 @@ public sealed record ImportPreviewRow(
     FlowType Type,
     bool IsDuplicate,
     bool LooksLikeTransfer,
-    Currency Currency);
+    Currency Currency,
+    Guid? SuggestedCategoryId,
+    IReadOnlyList<Guid> SuggestedTagIds,
+    string? MatchedRuleName);

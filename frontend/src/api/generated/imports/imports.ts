@@ -29,7 +29,7 @@ export const getImportConfirmUrl = () => {
 };
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.
  * @summary Commit previewed statement rows
  */
 export const importConfirm = async (
@@ -133,7 +133,7 @@ export const getImportPreviewUrl = () => {
 };
 
 /**
- * Parses an exported Swedbank statement and returns the rows it found, each with a suggested category and a flag saying whether a matching transaction already exists in the account. Nothing is written: this call only reads the file, and the client decides which rows to keep before calling confirm. Send the file as multipart/form-data.
+ * Parses an exported Swedbank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
  * @summary Preview a Swedbank CSV statement
  */
 export const importPreview = async (

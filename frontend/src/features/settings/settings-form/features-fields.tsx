@@ -18,7 +18,7 @@ const featureGroups: { titleKey: TranslationKey; features: FeatureKey[] }[] = [
   { titleKey: "settings.featureGroups.review", features: ["netWorth", "investments", "reports"] },
   {
     titleKey: "settings.featureGroups.ledger",
-    features: ["import", "households", "multiCurrency"],
+    features: ["import", "categorizationRules", "households", "multiCurrency"],
   },
 ];
 

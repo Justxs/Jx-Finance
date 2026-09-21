@@ -84,6 +84,7 @@ export const shortcuts: readonly Shortcut[] = [
   goTo("t", "/transactions", "nav.transactions"),
   goTo("a", "/accounts", "nav.accounts"),
   goTo("c", "/categories", "nav.categories"),
+  goTo("u", "/categorization-rules", "nav.categorizationRules", "categorizationRules"),
   goTo("b", "/budgets", "nav.budgets", "budgets"),
   goTo("o", "/goals", "nav.goals", "goals"),
   goTo("l", "/recurring-bills", "nav.recurringBills", "recurringBills"),

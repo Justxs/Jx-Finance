@@ -65,7 +65,9 @@ export function toPreviewRows(
   categories: CategoryResponse[],
 ): PreviewRowState[] {
   return rows.map((row) => {
-    const categoryId = recallCategoryId(row, transactions, categories);
+    const ruleName = row.isDuplicate ? null : row.matchedRuleName;
+    const ruleCategoryId = ruleName ? (row.suggestedCategoryId ?? "") : "";
+    const categoryId = ruleCategoryId || recallCategoryId(row, transactions, categories);
     return {
       ...row,
       selected: !row.isDuplicate && !row.looksLikeTransfer,

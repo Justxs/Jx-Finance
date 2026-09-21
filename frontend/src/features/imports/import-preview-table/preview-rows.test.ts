@@ -43,6 +43,9 @@ function row(
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    suggestedCategoryId: null,
+    suggestedTagIds: [],
+    matchedRuleName: null,
     ...flags,
   };
 }

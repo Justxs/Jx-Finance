@@ -3,6 +3,7 @@ using System.Reflection;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
+using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Email;
@@ -34,6 +35,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Tag> Tags => Set<Tag>();
+    public DbSet<CategorizationRule> CategorizationRules => Set<CategorizationRule>();
+    public DbSet<CategorizationRuleTag> CategorizationRuleTags => Set<CategorizationRuleTag>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();

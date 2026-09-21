@@ -23,6 +23,7 @@ export const SettingsResponse = zod.object({
     households: zod.boolean(),
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
+    categorizationRules: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -123,6 +124,7 @@ export const UpdateSettingsBody = zod.object({
     households: zod.boolean(),
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
+    categorizationRules: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -215,6 +217,7 @@ export const UpdateSettingsResponse = zod.object({
     households: zod.boolean(),
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
+    categorizationRules: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",

@@ -9,9 +9,10 @@ public sealed record FeatureFlags(
     bool Import,
     bool Households,
     bool MultiCurrency,
-    bool Investments)
+    bool Investments,
+    bool CategorizationRules)
 {
-    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true);
+    public static FeatureFlags All { get; } = new(true, true, true, true, true, true, true, true, true, true);
 
     public bool IsEnabled(Feature feature) => feature switch
     {
@@ -24,6 +25,7 @@ public sealed record FeatureFlags(
         Feature.Households => Households,
         Feature.MultiCurrency => MultiCurrency,
         Feature.Investments => Investments,
+        Feature.CategorizationRules => CategorizationRules,
         _ => true,
     };
 }

@@ -67,6 +67,7 @@ export function SettingsForm({
       households: z.boolean(),
       multiCurrency: z.boolean(),
       investments: z.boolean(),
+      categorizationRules: z.boolean(),
     }),
     reportingCurrency: z.enum(Currency),
     enabledCurrencies: z.array(z.enum(Currency)),
