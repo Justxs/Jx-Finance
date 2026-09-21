@@ -42,6 +42,8 @@ function TransactionsTableHarness({
     categoryById,
     tagById,
     onEdit: (transaction) => toast.message(`Edit ${transaction.description ?? transaction.id}`),
+    onDuplicate: (transaction) =>
+      toast.message(`Duplicate ${transaction.description ?? transaction.id}`),
     onDelete: (id) => toast.message(`Delete ${id}`),
     deletingId,
   });

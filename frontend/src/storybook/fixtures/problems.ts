@@ -53,3 +53,12 @@ export const exportTooManyRowsProblem: ProblemDetails = {
     },
   ],
 };
+
+export const duplicateTagProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
+  title: "Conflict",
+  status: 409,
+  instance: "/api/tags",
+  detail: 'You already have a tag named "Atostogos 2026".',
+  code: "conflict.duplicate",
+};

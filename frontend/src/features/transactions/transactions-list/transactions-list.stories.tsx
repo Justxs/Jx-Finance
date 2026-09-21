@@ -27,6 +27,7 @@ const meta = {
     isPlaceholder: false,
     filtered: false,
     onEdit: fn(),
+    onDuplicate: fn(),
     onDelete: fn(),
     deletingId: null,
   },

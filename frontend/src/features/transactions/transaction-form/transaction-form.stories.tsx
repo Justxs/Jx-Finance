@@ -13,6 +13,7 @@ import {
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
+import { duplicateDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
 
 const splitLineProblem = new ApiError({
@@ -98,6 +99,50 @@ export const NoTags: Story = { args: { tags: [] } };
 
 export const WithAddAnother: Story = {
   args: { onSubmitAndAddAnother: fn(async () => true) },
+};
+
+export const PrefilledFromADuplicate: Story = {
+  args: { prefill: duplicateDraft(splitTransaction) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const amounts = await canvas.findAllByLabelText("Amount");
+
+    await expect(amounts[0]).toHaveValue("128.40");
+    await expect(amounts).toHaveLength(4);
+    await expect(canvas.getByRole("checkbox", { name: "Split into categories" })).toBeChecked();
+    await expect(canvas.getByRole("checkbox", { name: "Buto remontas" })).toBeChecked();
+  },
+};
+
+export const SaveAsTemplate: Story = {
+  args: { onSaveAsTemplate: fn() },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+
+    await fireEvent.change(await canvas.findByLabelText("Amount"), { target: { value: "12,50" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Save as template" }));
+    await userEvent.type(await canvas.findByLabelText("Template name"), "Weekly shop");
+    await userEvent.click(canvas.getByRole("button", { name: "Save template" }));
+
+    await waitFor(() => expect(args.onSaveAsTemplate).toHaveBeenCalledTimes(1));
+    await expect(args.onSaveAsTemplate).toHaveBeenCalledWith(
+      "Weekly shop",
+      expect.objectContaining({ amount: "12,50" }),
+    );
+    await expect(args.onSubmit).not.toHaveBeenCalled();
+  },
+};
+
+export const SaveAsTemplateHiddenWhenEditing: Story = {
+  args: { initial: transactions[0], onSaveAsTemplate: fn() },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByLabelText("Amount");
+    await expect(
+      canvas.queryByRole("button", { name: "Save as template" }),
+    ).not.toBeInTheDocument();
+  },
 };
 
 export const SaveAndAddAnother: Story = {

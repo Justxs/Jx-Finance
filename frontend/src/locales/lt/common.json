@@ -34,14 +34,16 @@
     "archive": "Archyvuoti",
     "previous": "Ankstesnis",
     "next": "Kitas",
-    "close": "Uždaryti"
+    "close": "Uždaryti",
+    "rename": "Pervadinti"
   },
   "common": {
     "actions": "Veiksmai"
   },
   "confirmDelete": {
     "title": "Ištrinti šį įrašą?",
-    "description": "Šio veiksmo atšaukti nepavyks."
+    "description": "Šio veiksmo atšaukti nepavyks.",
+    "undoable": "Veiksmą galėsite atšaukti iš karto arba dar 30 dienų iš šiukšlinės savo profilyje."
   },
   "datePicker": {
     "placeholder": "Pasirinkite datą",
@@ -327,7 +329,6 @@
     "saveAndAddAnother": "Išsaugoti ir pridėti kitą",
     "created": "Operacija pridėta",
     "updated": "Operacija atnaujinta",
-    "deleted": "Operacija ištrinta",
     "selectRow": "Pasirinkti: {{row}}",
     "selectPage": "Pasirinkti visas šio puslapio operacijas",
     "splitNotSelectable": "Skaidytų operacijų kategorijos saugomos eilutėse, todėl jų negalima keisti grupėje",
@@ -350,7 +351,45 @@
     "sortAscending": "{{column}}, didėjančiai",
     "sortDescending": "{{column}}, mažėjančiai",
     "done": "Baigti",
-    "currency": "Valiuta"
+    "currency": "Valiuta",
+    "savedName": "Pavadinimas",
+    "savedFilters": "Išsaugoti filtrai",
+    "savedFiltersEmpty": "Išsaugotų filtrų kol kas nėra. Atrinkite sąrašą ir pavadinkite jį čia.",
+    "savedFilterNamePlaceholder": "pvz. Maistas šį mėnesį",
+    "saveFilter": "Išsaugoti filtrą",
+    "saveFilterNeedsFilter": "Pirma atrinkite sąrašą; rikiavimas ir puslapio numeris nesaugomi.",
+    "applySavedFilter": "Pritaikyti išsaugotą filtrą",
+    "savedFilterSaved": "Filtras išsaugotas",
+    "savedFilterStale": "Nurodo tai, ko nebėra",
+    "duplicate": "Dubliuoti",
+    "templates": "Šablonai",
+    "templatesEmpty": "Šablonų kol kas nėra. Atverkite pridėjimo formą ir išsaugokite jos formą kaip šabloną.",
+    "useTemplate": "Nauja operacija pagal šabloną",
+    "saveAsTemplate": "Išsaugoti kaip šabloną",
+    "saveTemplate": "Išsaugoti šabloną",
+    "templateName": "Šablono pavadinimas",
+    "templateNamePlaceholder": "pvz. Savaitės maisto produktai",
+    "templateSaved": "Šablonas išsaugotas"
+  },
+  "trash": {
+    "title": "Šiukšlinė",
+    "description": "Tai, ką ištrynėte per pastarąsias {{days}} dienas ir dar galite susigrąžinti. Įrašas iš šio sąrašo dingsta jį atkūrus arba kai jam sueina {{days}} dienos; daugiau niekas iš jo nešalinama.",
+    "empty": "Per pastarąsias 30 dienų nieko neištrynėte.",
+    "restore": "Atkurti",
+    "restored": "Įrašas grąžintas",
+    "deleted": "Ištrinta",
+    "deletedNamed": "Ištrinta: {{name}}",
+    "undo": "Atšaukti",
+    "kinds": {
+      "transaction": "Operacija",
+      "transfer": "Pervedimas",
+      "conversion": "Valiutos keitimas",
+      "budget": "Biudžetas",
+      "goal": "Tikslas",
+      "asset": "Turtas",
+      "debt": "Skola",
+      "recurringBill": "Periodinis įrašas"
+    }
   },
   "theme": {
     "toggle": "Perjungti temą"
@@ -578,7 +617,7 @@
       "items": {
         "budgets": {
           "name": "Biudžetai",
-          "hint": "Mėnesio limitai pagal kategoriją."
+          "hint": "Savaitės, mėnesio, ketvirčio ar metų limitai pagal kategoriją."
         },
         "goals": {
           "name": "Tikslai",
@@ -704,6 +743,7 @@
   },
   "budgets": {
     "title": "Biudžetai",
+    "subtitle": "Viena riba kategorijai ir laikotarpiui, skaičiuojama jo paties lange.",
     "add": "Pridėti biudžetą",
     "category": "Kategorija",
     "limit": "Riba",
@@ -723,14 +763,14 @@
     "over": "Viršyta {{amount}}",
     "empty": "Biudžetų dar nėra.",
     "needCategory": "Pirmiausia sukurkite išlaidų kategoriją, kad galėtumėte nustatyti biudžetą.",
-    "spentThisMonth": "Išleista šį mėnesį",
+    "spentInWindow": "Išleista lange",
     "budgeted": "Suplanuota",
     "remaining": "Liko",
     "overBy": "Viršyta",
     "spent": "Išleista",
     "limitSeries": "Limitas",
     "usage": "Biudžetas ir išlaidos",
-    "usageLabel": "Kiekvienos kategorijos šio mėnesio biudžetas ir išleista suma"
+    "usageLabel": "Kiekvienos kategorijos dabartinio lango biudžetas ir išleista suma"
   },
   "shortcuts": {
     "title": "Spartieji klavišai",
@@ -965,6 +1005,7 @@
     },
     "validation": {
       "price": "Įveskite 0 ar didesnę kainą, iki 8 skaitmenų po kablelio, pvz., 98,4125.",
+      "priceDateFuture": "Pasirinkite šiandieną arba ankstesnę datą.",
       "quantity": "Įveskite už 0 didesnį kiekį, iki 8 skaitmenų po kablelio, pvz., 2,5.",
       "ratio": "Įveskite santykį – kiek naujų akcijų tenka vienai senai, pvz., 2.",
       "security": "Pasirinkite vertybinį popierių.",
@@ -1135,11 +1176,15 @@
       "variable": "Kintama suma"
     },
     "amount": "Suma",
-    "variableAmountHint": "Kintamos sumos sąskaitoms suma iš anksto nereikalinga — įvesite ją patvirtindami.",
+    "variableAmountHint": "Kintamos sumos įrašams suma iš anksto nereikalinga — įvesite ją patvirtindami.",
     "category": "Kategorija",
     "noCategory": "Be kategorijos",
+    "transferNoCategory": "Pervedimas kategorijos neturi: pinigai lieka tarp jūsų pačių sąskaitų.",
     "account": "Sąskaita",
+    "fromAccount": "Iš sąskaitos",
+    "toAccount": "Į sąskaitą",
     "noAccount": "Nėra numatytosios sąskaitos",
+    "chooseAccount": "Pasirinkite sąskaitą",
     "cadence": "Pasikartoja",
     "cadences": {
       "weekly": "Kas savaitę",
@@ -1147,19 +1192,23 @@
       "quarterly": "Kas ketvirtį",
       "yearly": "Kas metus"
     },
-    "nextDueDate": "Kitas mokėjimo terminas",
+    "nextDueDate": "Kitas terminas",
     "remindDaysBefore": "Priminti dienų iš anksto",
-    "active": "Aktyvi",
-    "inactive": "Neaktyvi",
+    "active": "Aktyvus",
+    "inactive": "Neaktyvus",
     "confirm": "Patvirtinti",
-    "confirmTitle": "Patvirtinti mokėjimą",
+    "confirmTitle": "Patvirtinti periodinį įrašą",
     "confirmAccountRequired": "Pasirinkite sąskaitą, iš kurios buvo sumokėta.",
     "receivedAmount": "Gauta suma",
     "receivedAmountHint": "Sąskaitų valiutos skiriasi, todėl įveskite, kiek buvo gauta.",
     "empty": "Periodinių įrašų dar nėra.",
     "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte kurti periodinius įrašus.",
     "overdue": "Vėluoja",
-    "recordPayment": "Registruoti mokėjimą",
+    "record": {
+      "expense": "Registruoti mokėjimą",
+      "income": "Registruoti pajamas",
+      "transfer": "Registruoti pervedimą"
+    },
     "forecast": "Mokėtina per artimiausius šešis mėnesius",
     "forecastSeries": "Mokėtinos sąskaitos",
     "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos mokėjimų nėra.",
@@ -1196,6 +1245,10 @@
     "roles": {
       "owner": "Savininkas",
       "member": "Narys"
+    },
+    "scope": {
+      "label": "Aktyvus namų ūkis",
+      "everything": "Viskas"
     }
   },
   "sharing": {
@@ -1355,7 +1408,9 @@
     "empty": "Šiuo laikotarpiu įrašų nėra.",
     "netWorthLabel": "Grynosios vertės kitimas",
     "net": "Balansas",
-    "netWorth": "Grynoji vertė"
+    "netWorth": "Grynoji vertė",
+    "earlierIncome": "Pajamos, ankstesnis laikotarpis",
+    "earlierExpense": "Išlaidos, ankstesnis laikotarpis"
   },
   "serverErrors": {
     "access": {
@@ -1393,8 +1448,13 @@
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
     },
     "email": {
+      "alreadyVerified": "Šis adresas jau patvirtintas.",
       "invalid": "Įveskite galiojantį el. pašto adresą.",
-      "taken": "Šis el. paštas jau naudojamas."
+      "notConfigured": "Ši įdiegtis dar negali siųsti laiškų. Nustatykite pašto serverį nustatymuose.",
+      "passwordUnreadable": "Išsaugoto pašto serverio slaptažodžio nebepavyksta perskaityti. Įveskite jį iš naujo.",
+      "sendFailed": "Pašto serveris atmetė laišką: {{reason}}",
+      "taken": "Šis el. paštas jau naudojamas.",
+      "tokenInvalid": "Ši nuoroda nebegalioja. Paprašykite naujos."
     },
     "enum": {
       "invalid": "Pasirinkite vieną iš galimų reikšmių."
@@ -1445,7 +1505,7 @@
       "invalid": "Reikšmė nepatenka į leistiną intervalą."
     },
     "recurringBill": {
-      "inactive": "Ši sąskaita neaktyvi."
+      "inactive": "Šis periodinis įrašas neaktyvus."
     },
     "reference": {
       "notFound": "Pasirinktas įrašas nebeegzistuoja."
@@ -1461,6 +1521,9 @@
     },
     "security": {
       "notHeld": "Kainą gali nustatyti tik šį vertybinį popierių turintis naudotojas arba administratorius."
+    },
+    "session": {
+      "current": "Tai naršyklė, kuria dabar naudojatės. Atsijunkite įprastu būdu."
     },
     "setup": {
       "alreadyCompleted": "Pradinis nustatymas jau atliktas."

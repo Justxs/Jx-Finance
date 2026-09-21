@@ -15,6 +15,7 @@ const meta = {
     exportPdfUrl: "/api/transactions/export/pdf",
     filtered: false,
     onClearFilters: fn(),
+    onUseTemplate: fn(),
   },
   parameters: { route: "/transactions" },
   decorators: [withWidth("w-[min(48rem,90vw)]")],

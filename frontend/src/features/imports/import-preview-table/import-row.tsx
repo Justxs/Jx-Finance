@@ -43,8 +43,9 @@ export function ImportRow({
   const name = row.payee || row.description || EMPTY_VALUE;
   const rowName = [formatDate(row.date), row.payee || row.description].filter(Boolean).join(" · ");
   const showTransfer = transferOpen || row.looksLikeTransfer || Boolean(row.transferAccountId);
-  const hasFlags =
-    row.isDuplicate || row.looksLikeTransfer || (row.categorySuggested && !row.transferAccountId);
+  const filledByRule = Boolean(row.ruleName) && !row.transferAccountId;
+  const recalled = row.categorySuggested && !row.ruleName && !row.transferAccountId;
+  const hasFlags = row.isDuplicate || row.looksLikeTransfer || filledByRule || recalled;
 
   const checkbox = (
     <Checkbox

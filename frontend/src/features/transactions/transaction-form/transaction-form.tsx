@@ -6,6 +6,7 @@ import {
   type CategoryResponse,
   Currency,
   type FlowType,
+  type TagResponse,
   type TransactionResponse,
 } from "@/api/generated/model";
 import { MoneyPairField, useAppForm } from "@/components/form";
@@ -14,6 +15,7 @@ import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
+import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
 import { submitToServer } from "@/lib/form-server-errors";
@@ -21,7 +23,9 @@ import { toCents } from "@/lib/money";
 import { namedOptions } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { emptyLine, type LineFormValue } from "./line-form-value";
+import { SaveTemplateControl } from "./save-template-control";
 import { SplitLinesEditor } from "./split-lines-editor";
+import { type TransactionDraft, draftFromTransaction } from "./transaction-draft";
 
 interface TransactionLineFormValues {
   categoryId: string | null;
@@ -38,6 +42,7 @@ export interface TransactionFormValues {
   date: string;
   description: string | null;
   lines: TransactionLineFormValues[] | null;
+  tagIds: string[];
 }
 
 interface FormValues {
@@ -50,6 +55,7 @@ interface FormValues {
   description: string;
   isSplit: boolean;
   lines: LineFormValue[];
+  tagIds: string[];
 }
 
 interface CategoryFieldProps {
@@ -60,11 +66,14 @@ interface CategoryFieldProps {
 interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
   initial?: TransactionResponse;
+  prefill?: TransactionDraft;
   pending: boolean;
   error?: unknown;
   onSubmit: (values: TransactionFormValues) => Promise<unknown> | void;
   onSubmitAndAddAnother?: (values: TransactionFormValues) => Promise<boolean>;
+  onSaveAsTemplate?: (name: string, values: TransactionFormValues) => void;
   onCancel?: () => void;
 }
 
@@ -72,16 +81,37 @@ type SubmitIntent = "save" | "another";
 
 interface FormSource extends Pick<
   Props,
-  "accounts" | "initial" | "onSubmit" | "onSubmitAndAddAnother"
+  "accounts" | "initial" | "prefill" | "onSubmit" | "onSubmitAndAddAnother"
 > {
   intent: RefObject<SubmitIntent>;
   amountInput: RefObject<HTMLInputElement | null>;
   onAnotherSettled: () => void;
 }
 
+function toSubmittedValues(value: FormValues): TransactionFormValues {
+  return {
+    accountId: value.accountId,
+    categoryId: value.isSplit ? null : value.categoryId || null,
+    type: value.type,
+    amount: value.amount,
+    currency: value.currency,
+    date: value.date,
+    description: value.description.trim() || null,
+    tagIds: value.tagIds,
+    lines: value.isSplit
+      ? value.lines.map((line) => ({
+          categoryId: line.categoryId || null,
+          amount: line.amount,
+          description: line.description.trim() || null,
+        }))
+      : null,
+  };
+}
+
 function useTransactionForm({
   accounts,
   initial,
+  prefill,
   onSubmit,
   onSubmitAndAddAnother,
   intent,
@@ -102,6 +132,7 @@ function useTransactionForm({
       date: requiredValue(t),
       description: z.string(),
       isSplit: z.boolean(),
+      tagIds: z.array(z.string()),
       lines: z.array(
         z.object({
           id: z.string(),
@@ -139,19 +170,21 @@ function useTransactionForm({
 
   const { defaultAccountId } = useSettingsSuspense();
   const defaultAccount = accounts.find((account) => account.id === defaultAccountId) ?? accounts[0];
+  const source: TransactionDraft = initial ? draftFromTransaction(initial) : (prefill ?? {});
 
   const defaultValues: FormValues = {
-    type: initial?.type ?? "expense",
-    accountId: initial?.accountId ?? defaultAccount?.id ?? "",
-    categoryId: initial?.categoryId ?? "",
-    amount: initial?.amount ?? "",
-    currency: initial?.currency ?? defaultAccount?.currency ?? "eur",
-    date: initial?.date ?? today,
-    description: initial?.description ?? "",
-    isSplit: initial?.isSplit ?? false,
-    lines: initial?.lines?.length
-      ? initial.lines.map((line) => ({
-          id: line.id,
+    type: source.type ?? "expense",
+    accountId: source.accountId ?? defaultAccount?.id ?? "",
+    categoryId: source.categoryId ?? "",
+    amount: source.amount ?? "",
+    currency: source.currency ?? defaultAccount?.currency ?? "eur",
+    date: source.date ?? today,
+    description: source.description ?? "",
+    isSplit: source.isSplit ?? false,
+    tagIds: source.tagIds ?? [],
+    lines: source.lines?.length
+      ? source.lines.map((line, index) => ({
+          id: `line-${index}`,
           categoryId: line.categoryId ?? "",
           amount: line.amount ?? "",
           description: line.description ?? "",
@@ -164,22 +197,7 @@ function useTransactionForm({
     validators: [{ run: schema, triggers: ["change"] }],
     onSubmit: async (submission) => {
       const { value, formApi } = submission;
-      const values: TransactionFormValues = {
-        accountId: value.accountId,
-        categoryId: value.isSplit ? null : value.categoryId || null,
-        type: value.type,
-        amount: value.amount,
-        currency: value.currency,
-        date: value.date,
-        description: value.description.trim() || null,
-        lines: value.isSplit
-          ? value.lines.map((line) => ({
-              categoryId: line.categoryId || null,
-              amount: line.amount,
-              description: line.description.trim() || null,
-            }))
-          : null,
-      };
+      const values = toSubmittedValues(value);
 
       if (intent.current !== "another" || !onSubmitAndAddAnother) {
         return submitToServer(submission, () => onSubmit(values));
@@ -236,11 +254,14 @@ function CategoryField({ form, categories }: Readonly<CategoryFieldProps>) {
 export function TransactionForm({
   accounts,
   categories,
+  tags,
   initial,
+  prefill,
   pending,
   error,
   onSubmit,
   onSubmitAndAddAnother,
+  onSaveAsTemplate,
   onCancel,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -250,6 +271,7 @@ export function TransactionForm({
   const form = useTransactionForm({
     accounts,
     initial,
+    prefill,
     onSubmit,
     onSubmitAndAddAnother,
     intent,
@@ -349,6 +371,22 @@ export function TransactionForm({
           )}
         </form.Field>
 
+        {tags.length > 0 ? (
+          <form.Field name="tagIds">
+            {(field) => (
+              <div className="col-span-full space-y-1.5">
+                <Label>{t("tags.field")}</Label>
+                <TagPicker
+                  tags={tags}
+                  value={field.value}
+                  onChange={field.handleChange}
+                  aria-label={t("tags.field")}
+                />
+              </div>
+            )}
+          </form.Field>
+        ) : null}
+
         <form.Field name="isSplit">
           {(field) => (
             <field.CheckboxField
@@ -372,6 +410,16 @@ export function TransactionForm({
         />
 
         <FormError error={error} />
+
+        {onSaveAsTemplate && !initial ? (
+          <form.Subscribe selector={(state) => state.values}>
+            {(values) => (
+              <SaveTemplateControl
+                onSave={(name) => onSaveAsTemplate(name, toSubmittedValues(values))}
+              />
+            )}
+          </form.Subscribe>
+        ) : null}
 
         <div className="col-span-full flex flex-wrap justify-end gap-2 pt-2">
           {onCancel ? (
