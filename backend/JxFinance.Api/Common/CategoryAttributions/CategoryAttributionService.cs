@@ -1,5 +1,7 @@
+using System.Linq.Expressions;
 using FastEndpoints;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,22 +11,24 @@ namespace JxFinance.Common.CategoryAttributions;
 public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttributionService
 {
     public async Task<IReadOnlyList<CategoryAttribution>> GetAttributionsAsync(
-        DateOnly start,
-        DateOnly end,
+        DateWindow window,
+        DateWindow? comparison,
         FlowType type,
         CancellationToken cancellationToken)
     {
-        var nonSplit = (await db.Transactions
-            .Where(t => !t.IsSplit && t.Type == type && t.Date >= start && t.Date < end)
-            .GroupBy(t => t.CategoryId)
-            .Select(g => new { CategoryId = g.Key, Amount = g.Sum(t => t.ReportingAmount) })
+        var dated = db.Transactions.Where(Within(window, comparison));
+
+        var nonSplit = (await dated
+            .Where(t => !t.IsSplit && t.Type == type)
+            .GroupBy(t => new { t.Date, t.CategoryId })
+            .Select(g => new { g.Key.Date, g.Key.CategoryId, Amount = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken))
-            .Select(g => new CategoryAttribution(g.CategoryId, g.Amount))
+            .Select(g => new CategoryAttribution(g.Date, g.CategoryId, g.Amount))
             .ToList();
 
-        var splits = await db.Transactions
-            .Where(t => t.IsSplit && t.Type == type && t.Date >= start && t.Date < end)
-            .Select(t => new { t.Id, Total = t.Amount.Amount, t.ReportingAmount })
+        var splits = await dated
+            .Where(t => t.IsSplit && t.Type == type)
+            .Select(t => new { t.Id, t.Date, Total = t.Amount.Amount, t.ReportingAmount })
             .ToDictionaryAsync(t => t.Id, cancellationToken);
 
         if (splits.Count == 0)
@@ -50,10 +54,16 @@ public sealed class CategoryAttributionService(AppDbContext db) : ICategoryAttri
                     ? remaining
                     : Money.Round(line.Amount * parent.ReportingAmount / parent.Total);
                 remaining -= share;
-                return new CategoryAttribution(line.CategoryId, share);
+                return new CategoryAttribution(parent.Date, line.CategoryId, share);
             }).ToList();
         });
 
         return [.. nonSplit, .. lineAmounts];
     }
+
+    private static Expression<Func<Transaction, bool>> Within(DateWindow window, DateWindow? comparison) =>
+        comparison is { } other
+            ? t => (t.Date >= window.Start && t.Date < window.ExclusiveEnd)
+                || (t.Date >= other.Start && t.Date < other.ExclusiveEnd)
+            : t => t.Date >= window.Start && t.Date < window.ExclusiveEnd;
 }

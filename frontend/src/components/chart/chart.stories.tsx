@@ -53,6 +53,16 @@ export const DailyBuckets: Story = {
   },
 };
 
+export const ComparedWithAnEarlierPeriod: Story = {
+  args: {
+    data: months.map((point, index) => ({
+      ...point,
+      comparisonIncome: point.income * (index % 2 === 0 ? 0.88 : 1.07),
+      comparisonExpense: point.expense * (index % 3 === 0 ? 1.24 : 0.81),
+    })),
+  },
+};
+
 export const SinglePoint: Story = { args: { data: months.slice(0, 1) } };
 
 export const Empty: Story = { args: { data: [] } };

@@ -9,8 +9,9 @@ import { ReportsPage } from "./reports-page";
 
 const today = new Date();
 
-function routeFor(range: { dateFrom: string; dateTo: string }) {
-  return `/reports?dateFrom=${range.dateFrom}&dateTo=${range.dateTo}`;
+function routeFor(range: { dateFrom: string; dateTo: string }, comparison?: string) {
+  const base = `/reports?dateFrom=${range.dateFrom}&dateTo=${range.dateTo}`;
+  return comparison ? `${base}&comparison=${comparison}` : base;
 }
 
 const meta = {
@@ -43,6 +44,41 @@ export const LastYear: Story = { parameters: { route: routeFor(presetRange("last
 
 export const CustomRange: Story = {
   parameters: { route: routeFor({ dateFrom: "2026-08-10", dateTo: "2026-09-12" }) },
+};
+
+export const ComparedWithThePreviousPeriod: Story = {
+  parameters: {
+    route: routeFor({ dateFrom: "2026-09-01", dateTo: "2026-09-30" }, "previousPeriod"),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText(/compared with|palyginta su/i)).toBeVisible();
+    await expect(
+      canvas.getByRole("combobox", { name: /compare with|palyginti su/i }),
+    ).toHaveTextContent(/previous period|ankstesniu laikotarpiu/i);
+    await expect((await canvas.findAllByText(/^(was|buvo) /i)).length).toBeGreaterThan(0);
+  },
+};
+
+export const ComparedWithTheSamePeriodLastYear: Story = {
+  parameters: {
+    route: routeFor(presetRange("thisYear", today), "previousYear"),
+  },
+};
+
+export const ChoosesAComparison: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const select = await canvas.findByRole("combobox", { name: /compare with|palyginti su/i });
+
+    await chooseOption(select, /same period last year|tuo pačiu laikotarpiu pernai/i);
+
+    await waitFor(() =>
+      expect(select).toHaveTextContent(/same period last year|tuo pačiu laikotarpiu pernai/i),
+    );
+    await expect(await canvas.findByText(/compared with|palyginta su/i)).toBeVisible();
+  },
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };

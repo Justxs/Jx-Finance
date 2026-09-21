@@ -32,6 +32,12 @@ public sealed class GetReportSummarySummary : Summary<GetReportSummaryEndpoint, 
             + "percentage to show.";
         RequestParam(r => r.DateFrom, "Inclusive start date as YYYY-MM-DD. Defaults to the start of the current month.");
         RequestParam(r => r.DateTo, "Inclusive end date as YYYY-MM-DD. Defaults to today.");
+        RequestParam(
+            r => r.Comparison,
+            "Which earlier period to answer beside this one: previousPeriod for the same number of days "
+                + "immediately before the range, previousYear for the same range a year earlier, where a "
+                + "range that ends on the last day of a month again ends on the last day of that month, so "
+                + "February meets the whole of February. Omit it, or send none, for no comparison.");
         Responses[200] = "Totals and the per-category split for the range.";
     }
 }

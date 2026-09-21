@@ -1,6 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, within } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
-import { emptyReportSummary, reportSummaryMonth, reportSummaryYear } from "@/storybook/fixtures";
+import {
+  emptyReportSummary,
+  reportSummaryMonth,
+  reportSummaryMonthCompared,
+  reportSummaryYear,
+} from "@/storybook/fixtures";
 import { ReportStats } from "./report-stats";
 
 const meta = {
@@ -41,6 +47,33 @@ export const NegativeNet: Story = {
 
 export const LargeAmounts: Story = {
   args: { totalIncome: "98765432.10", totalExpense: "87654321.09", net: "11111111.01" },
+};
+
+export const ComparedWithThePreviousPeriod: Story = {
+  args: { comparison: reportSummaryMonthCompared.comparison },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getAllByText(/the earlier period|ankstesni/i)).toHaveLength(3);
+  },
+};
+
+export const ComparedWithNothing: Story = {
+  args: {
+    comparison: {
+      mode: "previousPeriod",
+      periodStart: "2026-08-02",
+      periodEnd: "2026-08-31",
+      totalIncome: "0.00",
+      totalExpense: "0.00",
+      net: "0.00",
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getAllByText(/up from nothing|anksčiau nebuvo nieko/i)).toHaveLength(3);
+  },
 };
 
 export const Narrow: Story = {

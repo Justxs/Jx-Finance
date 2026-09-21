@@ -4,5 +4,9 @@ namespace JxFinance.Endpoints.Reports.Interfaces;
 
 public interface IReportService
 {
-    Task<ReportSummaryResponse> GetSummaryAsync(DateOnly? dateFrom, DateOnly? dateTo, CancellationToken cancellationToken);
+    Task<ReportSummaryResponse> GetSummaryAsync(
+        DateOnly? dateFrom,
+        DateOnly? dateTo,
+        ReportComparisonMode comparison,
+        CancellationToken cancellationToken);
 }

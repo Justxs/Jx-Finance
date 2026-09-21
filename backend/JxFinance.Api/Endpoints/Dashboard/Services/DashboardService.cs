@@ -35,8 +35,15 @@ public sealed class DashboardService(
             .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
-        var monthIncome = monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m;
-        var monthExpense = monthTotals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m;
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(
+            new DateWindow(monthStart, monthEnd),
+            null,
+            cancellationToken);
+
+        var monthIncome = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m)
+            + investmentFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
+        var monthExpense = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m)
+            + investmentFlows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount);
 
         return new DashboardSummaryResponse(
             totalBalance,
@@ -52,6 +59,8 @@ public sealed class DashboardService(
     {
         var nowLocal = clock.Today;
         var (periodStart, periodEnd) = ResolveMonth(month, nowLocal);
+
+        var period = new DateWindow(periodStart, periodEnd);
 
         var categoryAttributions = await attributions.GetAttributionsAsync(
             period,
@@ -79,6 +88,11 @@ public sealed class DashboardService(
             .GroupBy(t => new { t.Date.Year, t.Date.Month, t.Type })
             .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
+
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(
+            new DateWindow(earliestStart, currentMonthStart.AddMonths(1)),
+            null,
+            cancellationToken);
 
         var items = new List<MonthlyTrendItem>();
         for (var i = 0; i < clamped; i++)

@@ -1,3 +1,4 @@
+using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Data;
@@ -53,7 +54,8 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
             scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
             new TestCurrentUser(user.Id));
 
-        var grouped = Totals(await new CategoryAttributionService(db).GetAttributionsAsync(Start, End, FlowType.Expense, default));
+        var grouped = Totals(await new CategoryAttributionService(db)
+            .GetAttributionsAsync(new DateWindow(Start, End), null, FlowType.Expense, default));
         var rowByRow = Totals(await RowByRowAsync(db));
 
         Assert.Equal(rowByRow, grouped);
@@ -69,7 +71,7 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
             .ToListAsync();
         var attributions = transactions
             .Where(t => !t.IsSplit)
-            .Select(t => new CategoryAttribution(t.CategoryId, t.ReportingAmount))
+            .Select(t => new CategoryAttribution(t.Date, t.CategoryId, t.ReportingAmount))
             .ToList();
 
         foreach (var split in transactions.Where(t => t.IsSplit))
@@ -82,7 +84,7 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
                     ? remaining
                     : Money.Round(lines[i].Amount.Amount * split.ReportingAmount / split.Amount.Amount);
                 remaining -= share;
-                attributions.Add(new CategoryAttribution(lines[i].CategoryId, share));
+                attributions.Add(new CategoryAttribution(split.Date, lines[i].CategoryId, share));
             }
         }
 

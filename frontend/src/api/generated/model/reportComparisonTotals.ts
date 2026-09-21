@@ -6,15 +6,13 @@
  * OpenAPI spec version: v1
  */
 import type { DateOnly } from "./dateOnly";
-import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { ReportComparisonMode } from "./reportComparisonMode";
 
-export interface ReportTrendPoint {
-  bucketStart: DateOnly;
-  income: string;
-  expense: string;
-  comparisonBucketStart?: null | NullableOfDateOnly;
-  /** @nullable */
-  comparisonIncome?: string | null;
-  /** @nullable */
-  comparisonExpense?: string | null;
+export interface ReportComparisonTotals {
+  mode: ReportComparisonMode;
+  periodStart: DateOnly;
+  periodEnd: DateOnly;
+  totalIncome: string;
+  totalExpense: string;
+  net: string;
 }

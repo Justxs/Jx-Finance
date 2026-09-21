@@ -1302,7 +1302,23 @@
     },
     "netWorthChange": "Grynosios vertės pokytis",
     "notEnoughNetWorthHistory": "Šiam laikotarpiui grynosios vertės istorijos kol kas nepakanka.",
-    "customRange": "Pasirinktas laikotarpis"
+    "customRange": "Pasirinktas laikotarpis",
+    "comparison": {
+      "label": "Palyginti su",
+      "modes": {
+        "none": "Be palyginimo",
+        "previousPeriod": "Ankstesniu laikotarpiu",
+        "previousYear": "Tuo pačiu laikotarpiu pernai"
+      },
+      "against": "Palyginta su {{from}} – {{to}}",
+      "was": "buvo {{amount}}",
+      "noBase": "anksčiau nebuvo nieko",
+      "verdict": {
+        "better": "geriau nei ankstesniu laikotarpiu",
+        "worse": "prasčiau nei ankstesniu laikotarpiu",
+        "same": "nepakito nuo ankstesnio laikotarpio"
+      }
+    }
   },
   "imports": {
     "file": "CSV failas",

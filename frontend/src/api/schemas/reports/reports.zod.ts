@@ -17,6 +17,15 @@ export const reportSummaryResponseNetRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$
 export const reportSummaryResponseExpenseByCategoryItemAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
+export const reportSummaryResponseExpenseByCategoryItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseIncomeByCategoryItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const reportSummaryResponseIncomeByCategoryItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 export const reportSummaryResponseTrendItemIncomeRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const reportSummaryResponseTrendItemExpenseRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const reportSummaryResponseTrendItemComparisonIncomeRegExp = new RegExp(
@@ -78,7 +87,43 @@ export const ReportSummaryResponse = zod.object({
       bucketStart: zod.iso.date(),
       income: zod.stringFormat("decimal", reportSummaryResponseTrendItemIncomeRegExp),
       expense: zod.stringFormat("decimal", reportSummaryResponseTrendItemExpenseRegExp),
+      comparisonBucketStart: zod.union([zod.null(), zod.iso.date()]).optional(),
+      comparisonIncome: zod
+        .stringFormat("decimal", reportSummaryResponseTrendItemComparisonIncomeRegExp)
+        .nullish(),
+      comparisonExpense: zod
+        .stringFormat("decimal", reportSummaryResponseTrendItemComparisonExpenseRegExp)
+        .nullish(),
     }),
   ),
   trendBucket: zod.string(),
+  expenseByTag: zod.array(
+    zod.object({
+      tagId: zod.uuid().nullable(),
+      tagName: zod.string(),
+      amount: zod.stringFormat("decimal", reportSummaryResponseExpenseByTagItemAmountRegExp),
+      comparisonAmount: zod
+        .stringFormat("decimal", reportSummaryResponseExpenseByTagItemComparisonAmountRegExp)
+        .nullish(),
+    }),
+  ),
+  comparison: zod
+    .union([
+      zod.null(),
+      zod.object({
+        mode: zod.enum(["none", "previousPeriod", "previousYear"]),
+        periodStart: zod.iso.date(),
+        periodEnd: zod.iso.date(),
+        totalIncome: zod.stringFormat(
+          "decimal",
+          reportSummaryResponseComparisonTwoTotalIncomeRegExp,
+        ),
+        totalExpense: zod.stringFormat(
+          "decimal",
+          reportSummaryResponseComparisonTwoTotalExpenseRegExp,
+        ),
+        net: zod.stringFormat("decimal", reportSummaryResponseComparisonTwoNetRegExp),
+      }),
+    ])
+    .optional(),
 });

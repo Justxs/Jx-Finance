@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Panel } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
@@ -9,6 +10,7 @@ interface SummaryStat {
   tone?: string;
   lead?: boolean;
   sign?: MoneySign;
+  note?: ReactNode;
 }
 
 interface Props {
@@ -45,6 +47,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           >
             {formatValue(lead)}
           </dd>
+          {lead.note ? <dd className="mt-1.5">{lead.note}</dd> : null}
         </dl>
       ) : null}
       <dl
@@ -63,6 +66,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
             >
               {formatValue(item)}
             </dd>
+            {item.note ? <dd className="mt-1">{item.note}</dd> : null}
           </div>
         ))}
       </dl>
