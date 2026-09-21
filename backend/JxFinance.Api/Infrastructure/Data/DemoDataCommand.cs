@@ -89,7 +89,16 @@ public static class DemoDataCommand
             new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m) });
         db.Goals.AddRange(
             new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m), CurrentAmount = new Money(4300.00m) },
-            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m), CurrentAmount = new Money(450.00m), TargetDate = today.AddMonths(8) });
+            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m), CurrentAmount = new Money(450.00m), TargetDate = today.AddMonths(8) },
+            new Goal
+            {
+                UserId = user.Id,
+                Name = "House deposit",
+                TargetAmount = new Money(15000.00m),
+                Funding = GoalFunding.Account,
+                FundingAccountId = savings.Id,
+                FundingSharePercent = 100,
+            });
         db.Assets.Add(new Asset { UserId = user.Id, Name = "Car", Type = AssetType.Vehicle, CurrentValue = new Money(8500.00m), AsOf = today });
         db.Debts.Add(new Debt { UserId = user.Id, Name = "Car loan", Type = DebtType.Loan, OutstandingAmount = new Money(3200.00m), InterestRate = 5.4m, AsOf = today });
 

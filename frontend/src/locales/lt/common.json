@@ -549,7 +549,22 @@
     "targetDate": "Tikslinė data",
     "ofTarget": "iš {{amount}}",
     "reached": "Pasiekta",
-    "empty": "Tikslų dar nėra."
+    "empty": "Tikslų dar nėra.",
+    "funding": "Pažanga skaičiuojama iš",
+    "fundingModes": {
+      "manual": "Mano įvedamos sumos",
+      "account": "Sąskaitos likučio"
+    },
+    "fundingAccount": "Finansuojanti sąskaita",
+    "chooseAccount": "Pasirinkite sąskaitą",
+    "fundingSharePercent": "Likučio dalis (%)",
+    "needAccount": "Pirma sukurkite sąskaitą arba sekite šį tikslą ranka.",
+    "manualHint": "Taupydami dabartinę sumą didinkite patys.",
+    "fundedFrom": "Iš sąskaitos {{account}}",
+    "fundedShareFrom": "Iš {{percent}}% sąskaitos {{account}}",
+    "unavailableAccount": "Nepasiekiama sąskaita",
+    "progressUnavailable": "Pažanga nepasiekiama",
+    "progressUnavailableHint": "Finansuojanti sąskaita suarchyvuota arba nebebendrinama su jumis."
   },
   "netWorth": {
     "title": "Grynoji vertė",

@@ -1,5 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
+import { createQueryWrapper } from "@/test/query";
 import { useConfirmedDelete } from "./use-confirmed-delete";
 
 const goals = [
@@ -9,8 +10,21 @@ const goals = [
 
 function setup(mutation: Partial<Parameters<typeof useConfirmedDelete>[0]> = {}) {
   const mutate = vi.fn();
-  const hook = renderHook(() =>
-    useConfirmedDelete({ mutate, isPending: false, ...mutation }, goals, (goal) => goal.name),
+  const { Wrapper } = createQueryWrapper();
+  const hook = renderHook(
+    () => useConfirmedDelete({ mutate, isPending: false, ...mutation }, goals, (goal) => goal.name),
+    { wrapper: Wrapper },
+  );
+  return { mutate, ...hook };
+}
+
+function setupWithUndo() {
+  const mutate = vi.fn();
+  const { Wrapper } = createQueryWrapper();
+  const hook = renderHook(
+    () =>
+      useConfirmedDelete({ mutate, isPending: false }, goals, (goal) => goal.name, "transaction"),
+    { wrapper: Wrapper },
   );
   return { mutate, ...hook };
 }
@@ -47,4 +61,13 @@ test("reports which row is being deleted", () => {
   const busy = setup({ isPending: true, variables: { id: "g1" } });
   expect(busy.result.current.pendingId).toBe("g1");
   expect(busy.result.current.busy).toBe(true);
+});
+
+test("a restorable kind offers an undo toast once the delete succeeded", () => {
+  const { result, mutate } = setupWithUndo();
+
+  act(() => result.current.request("g1"));
+  act(() => result.current.dialogProps.onConfirm("g1"));
+
+  expect(mutate).toHaveBeenCalledWith({ id: "g1" }, { onSuccess: expect.any(Function) });
 });

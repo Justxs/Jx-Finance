@@ -1,11 +1,11 @@
 using FastEndpoints;
+using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Goals.Interfaces;
-using JxFinance.Endpoints.Goals.Mappers;
 using JxFinance.Endpoints.Goals.Shared;
 
 namespace JxFinance.Endpoints.Goals.CreateGoal;
 
-public sealed class CreateGoalEndpoint(IGoalService goalService) : Endpoint<CreateGoalRequest, GoalResponse, GoalMapper>
+public sealed class CreateGoalEndpoint(IGoalService goalService) : Endpoint<CreateGoalRequest, GoalResponse>
 {
     public override void Configure()
     {
@@ -16,7 +16,7 @@ public sealed class CreateGoalEndpoint(IGoalService goalService) : Endpoint<Crea
 
     public override async Task HandleAsync(CreateGoalRequest req, CancellationToken ct)
     {
-        var goal = Map.FromEntity(await goalService.CreateAsync(Map.ToEntity(req), ct));
+        var goal = (await goalService.CreateAsync(req, ct)).ValueOrThrow();
         await Send.ResultAsync(TypedResults.Created($"/api/goals/{goal.Id}", goal));
     }
 }

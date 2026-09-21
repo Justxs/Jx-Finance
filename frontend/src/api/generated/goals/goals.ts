@@ -43,7 +43,7 @@ export const getCreateGoalUrl = () => {
 };
 
 /**
- * Starts tracking progress towards a target amount, optionally by a target date. The goal is a standalone tracker: it is not tied to an account, and moving money does not update it by itself.
+ * Starts tracking progress towards a target amount, optionally by a target date. A manual goal keeps the amount you type in currentAmount; moving money does not update it by itself. A goal funded from an account follows that account's reporting balance instead, taking the share given by fundingSharePercent, and ignores currentAmount.
  * @summary Create a savings goal
  */
 export const createGoal = async (
@@ -147,7 +147,7 @@ export const getGoalsUrl = () => {
 };
 
 /**
- * Returns your savings goals with the amount saved so far against each target.
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
  * @summary List savings goals
  */
 export const goals = async (
@@ -329,7 +329,7 @@ export const getUpdateGoalUrl = (id: string) => {
 };
 
 /**
- * Changes the name, the target, the target date, or how much has been put aside. This is how progress is recorded: raise currentAmount as money is saved.
+ * Changes the name, the target, the target date, how much has been put aside, and where progress comes from. For a manual goal this is how progress is recorded: raise currentAmount as money is saved. Switching to account funding leaves the stored currentAmount alone and stops using it; switching back to manual brings that stored amount into use again.
  * @summary Update a savings goal
  */
 export const updateGoal = async (

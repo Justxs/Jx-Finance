@@ -5,6 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { GoalFunding } from "./goalFunding";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface CreateGoalRequest {
@@ -16,10 +17,23 @@ export interface CreateGoalRequest {
   /** Decimal string with at most two decimal places, greater than zero. */
   targetAmount: string;
   /**
-   * Amount already saved, zero or more. Defaults to zero when omitted.
+   * Amount already saved, zero or more. Defaults to zero when omitted, and is ignored for a goal funded from an account.
    * @nullable
    */
   currentAmount: string | null;
   /** Optional date to reach the target by, as YYYY-MM-DD. */
   targetDate: null | NullableOfDateOnly;
+  funding: GoalFunding;
+  /**
+   * The account that funds the goal. Required when funding is account, and must be empty otherwise.
+   * @nullable
+   */
+  fundingAccountId: string | null;
+  /**
+   * The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.
+   * @minimum 1
+   * @maximum 100
+   * @nullable
+   */
+  fundingSharePercent: number | null;
 }

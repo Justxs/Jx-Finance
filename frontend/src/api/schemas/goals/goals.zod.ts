@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Starts tracking progress towards a target amount, optionally by a target date. The goal is a standalone tracker: it is not tied to an account, and moving money does not update it by itself.
+ * Starts tracking progress towards a target amount, optionally by a target date. A manual goal keeps the amount you type in currentAmount; moving money does not update it by itself. A goal funded from an account follows that account's reporting balance instead, taking the share given by fundingSharePercent, and ignores currentAmount.
  * @summary Create a savings goal
  */
 export const createGoalBodyNameMin = 0;
@@ -16,6 +16,7 @@ export const createGoalBodyNameMax = 100;
 
 export const createGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createGoalBodyFundingSharePercentMax = 100;
 
 export const CreateGoalBody = zod.object({
   name: zod.string().min(createGoalBodyNameMin).max(createGoalBodyNameMax),
@@ -25,14 +26,32 @@ export const CreateGoalBody = zod.object({
   currentAmount: zod
     .stringFormat("decimal", createGoalBodyCurrentAmountRegExp)
     .nullable()
-    .describe("Amount already saved, zero or more. Defaults to zero when omitted."),
+    .describe(
+      "Amount already saved, zero or more. Defaults to zero when omitted, and is ignored for a goal funded from an account.",
+    ),
   targetDate: zod
     .union([zod.null(), zod.iso.date()])
     .describe("Optional date to reach the target by, as YYYY-MM-DD."),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod
+    .uuid()
+    .nullable()
+    .describe(
+      "The account that funds the goal. Required when funding is account, and must be empty otherwise.",
+    ),
+  fundingSharePercent: zod
+    .int()
+    .min(1)
+    .max(createGoalBodyFundingSharePercentMax)
+    .nullable()
+    .describe(
+      "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
+    ),
 });
 
 export const createGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createGoalResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createGoalResponseProgressAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateGoalResponse = zod.object({
   id: zod.uuid(),
@@ -40,14 +59,19 @@ export const CreateGoalResponse = zod.object({
   targetAmount: zod.stringFormat("decimal", createGoalResponseTargetAmountRegExp),
   currentAmount: zod.stringFormat("decimal", createGoalResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod.uuid().nullable(),
+  fundingSharePercent: zod.int(),
+  progressAmount: zod.stringFormat("decimal", createGoalResponseProgressAmountRegExp).nullable(),
 });
 
 /**
- * Returns your savings goals with the amount saved so far against each target.
+ * Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.
  * @summary List savings goals
  */
 export const goalsResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const goalsResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const goalsResponseProgressAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const GoalsResponseItem = zod.object({
   id: zod.uuid(),
@@ -55,6 +79,10 @@ export const GoalsResponseItem = zod.object({
   targetAmount: zod.stringFormat("decimal", goalsResponseTargetAmountRegExp),
   currentAmount: zod.stringFormat("decimal", goalsResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod.uuid().nullable(),
+  fundingSharePercent: zod.int(),
+  progressAmount: zod.stringFormat("decimal", goalsResponseProgressAmountRegExp).nullable(),
 });
 export const GoalsResponse = zod.array(GoalsResponseItem);
 
@@ -65,7 +93,7 @@ export const GoalsResponse = zod.array(GoalsResponseItem);
 export const DeleteGoalResponse = zod.void();
 
 /**
- * Changes the name, the target, the target date, or how much has been put aside. This is how progress is recorded: raise currentAmount as money is saved.
+ * Changes the name, the target, the target date, how much has been put aside, and where progress comes from. For a manual goal this is how progress is recorded: raise currentAmount as money is saved. Switching to account funding leaves the stored currentAmount alone and stops using it; switching back to manual brings that stored amount into use again.
  * @summary Update a savings goal
  */
 export const updateGoalBodyNameMin = 0;
@@ -73,16 +101,38 @@ export const updateGoalBodyNameMax = 100;
 
 export const updateGoalBodyTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateGoalBodyCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalBodyFundingSharePercentMax = 100;
 
 export const UpdateGoalBody = zod.object({
   name: zod.string().min(updateGoalBodyNameMin).max(updateGoalBodyNameMax),
   targetAmount: zod.stringFormat("decimal", updateGoalBodyTargetAmountRegExp),
-  currentAmount: zod.stringFormat("decimal", updateGoalBodyCurrentAmountRegExp),
+  currentAmount: zod
+    .stringFormat("decimal", updateGoalBodyCurrentAmountRegExp)
+    .nullable()
+    .describe(
+      "Amount saved so far, zero or more. Required for a manual goal, ignored for a goal funded from an account.",
+    ),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod
+    .uuid()
+    .nullable()
+    .describe(
+      "The account that funds the goal. Required when funding is account, and must be empty otherwise.",
+    ),
+  fundingSharePercent: zod
+    .int()
+    .min(1)
+    .max(updateGoalBodyFundingSharePercentMax)
+    .nullable()
+    .describe(
+      "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
+    ),
 });
 
 export const updateGoalResponseTargetAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateGoalResponseCurrentAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateGoalResponseProgressAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateGoalResponse = zod.object({
   id: zod.uuid(),
@@ -90,4 +140,8 @@ export const UpdateGoalResponse = zod.object({
   targetAmount: zod.stringFormat("decimal", updateGoalResponseTargetAmountRegExp),
   currentAmount: zod.stringFormat("decimal", updateGoalResponseCurrentAmountRegExp),
   targetDate: zod.union([zod.null(), zod.iso.date()]),
+  funding: zod.enum(["manual", "account"]),
+  fundingAccountId: zod.uuid().nullable(),
+  fundingSharePercent: zod.int(),
+  progressAmount: zod.stringFormat("decimal", updateGoalResponseProgressAmountRegExp).nullable(),
 });

@@ -17,6 +17,10 @@ export const goalHandlers = [
     targetAmount: "0.00",
     currentAmount: "0.00",
     targetDate: null,
+    funding: "manual" as const,
+    fundingAccountId: null,
+    fundingSharePercent: 100,
+    progressAmount: "0.00",
     ...(await readBody(request)),
   })),
   getUpdateGoalMockHandler(async ({ params, request }) => ({
