@@ -10,6 +10,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { silent } from "@/lib/mutations";
 import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
+import { useSharingDefaults } from "@/stores/active-household-store";
 import { IconPicker } from "../icon-picker/icon-picker";
 
 interface FormValues {
@@ -29,6 +30,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
+  const sharing = useSharingDefaults(householdList);
 
   const schema = refineSharing(
     z.object({
@@ -46,8 +48,8 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
     name: "",
     type: "expense",
     icon: null,
-    scope: "personal",
-    householdId: "",
+    scope: sharing.scope,
+    householdId: sharing.householdId,
   };
 
   const form = useServerForm({

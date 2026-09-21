@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
+import { setActiveHousehold } from "@/stores/active-household-store";
 import { ApiError, customFetch } from "./client";
 
 const fetchMock = vi.fn<typeof fetch>();
@@ -58,6 +59,19 @@ describe("requests", () => {
     await expect(customFetch("/api/accounts")).resolves.toEqual({ id: "1" });
     expect(calledUrls()).toEqual(["/api/accounts"]);
     expect(sentInit()).toMatchObject({ credentials: "include", headers: {} });
+  });
+
+  test("an active household travels with every request", async () => {
+    const household = "22222222-0000-4000-8000-000000000001";
+    fetchMock.mockImplementation(() => Promise.resolve(json({})));
+
+    setActiveHousehold(household);
+    await customFetch("/api/accounts");
+    setActiveHousehold(undefined);
+    await customFetch("/api/accounts");
+
+    expect(sentInit().headers).toEqual({ "X-Active-Household": household });
+    expect(sentInit(1).headers).toEqual({});
   });
 
   test("reads vendor JSON content types", async () => {

@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
 import { Brand } from "@/components/brand/brand";
+import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { LogoutButton } from "@/components/logout-button/logout-button";
 import {
@@ -113,6 +114,15 @@ export function AppSidebar() {
       >
         <Brand compact={collapsed} />
       </Link>
+
+      <div className={cn("px-3 pb-3", collapsed && "px-2")}>
+        <QueryBoundary
+          fallback={<Skeleton className="h-8 w-full rounded-lg" />}
+          errorFallback={null}
+        >
+          <HouseholdSwitcher collapsed={collapsed} />
+        </QueryBoundary>
+      </div>
 
       <nav
         aria-label={t("nav.main")}
