@@ -1,13 +1,17 @@
 import type {
+  AmortizationType,
   AssetResponse,
   DebtResponse,
+  DebtSchedulePlan,
+  DebtScheduleResponse,
+  DebtScheduleRow,
   NetWorthHistoryResponse,
   NetWorthResponse,
   NetWorthSnapshotItem,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
-import { ids, totalOf } from "./base";
+import { FIXTURE_TODAY, ids, totalOf } from "./base";
 
 export const assets: AssetResponse[] = [
   {
@@ -33,24 +37,208 @@ export const assets: AssetResponse[] = [
   },
 ];
 
+export interface ScheduleExtra {
+  extraMonthly?: string | null;
+  lumpSum?: string | null;
+  lumpSumDate?: string | null;
+}
+
+type ScheduleTerms = Pick<
+  DebtResponse,
+  "loanAmount" | "interestRate" | "firstPaymentDate" | "termMonths" | "monthlyPayment"
+> & { amortizationType: AmortizationType };
+
+const MAX_TERM_MONTHS = 600;
+
+function addMonths(iso: string, months: number) {
+  const year = Number(iso.slice(0, 4));
+  const month = Number(iso.slice(5, 7));
+  const day = Number(iso.slice(8, 10));
+  const target = new Date(Date.UTC(year, month - 1 + months, 1));
+  const lastDay = new Date(
+    Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+  ).getUTCDate();
+  target.setUTCDate(Math.min(day, lastDay));
+  return target.toISOString().slice(0, 10);
+}
+
+function regularCents(principal: number, rate: number, terms: ScheduleTerms) {
+  const term = terms.termMonths;
+  if (term === null) {
+    return toCents(terms.monthlyPayment ?? "0");
+  }
+  if (terms.amortizationType === "linear" || rate === 0) {
+    return Math.round(principal / term);
+  }
+  const growth = (1 + rate) ** term;
+  return Math.round((principal * rate * growth) / (growth - 1));
+}
+
+function schedulePlan(terms: ScheduleTerms, extra: ScheduleExtra = {}): DebtSchedulePlan | null {
+  if (terms.loanAmount === null || terms.interestRate === null || !terms.firstPaymentDate) {
+    return null;
+  }
+  const principal = toCents(terms.loanAmount);
+  const rate = terms.interestRate / 1200;
+  const regular = regularCents(principal, rate, terms);
+  const monthlyExtra = toCents(extra.extraMonthly ?? "0");
+  let lumpSum = toCents(extra.lumpSum ?? "0");
+  const rows: DebtScheduleRow[] = [];
+  let balance = principal;
+  for (let number = 1; balance > 0 && number <= MAX_TERM_MONTHS; number++) {
+    const date = addMonths(terms.firstPaymentDate, number - 1);
+    const interest = Math.round(balance * rate);
+    let principalPart = Math.max(
+      0,
+      terms.amortizationType === "linear" ? regular : regular - interest,
+    );
+    if (principalPart >= balance || number === terms.termMonths) {
+      principalPart = balance;
+    }
+    let extraPart = monthlyExtra;
+    if (lumpSum > 0 && extra.lumpSumDate && date >= extra.lumpSumDate) {
+      extraPart += lumpSum;
+      lumpSum = 0;
+    }
+    extraPart = Math.min(extraPart, balance - principalPart);
+    balance -= principalPart + extraPart;
+    rows.push({
+      number,
+      date,
+      payment: fromCents(interest + principalPart),
+      interest: fromCents(interest),
+      principal: fromCents(principalPart),
+      extra: fromCents(extraPart),
+      balance: fromCents(balance),
+    });
+  }
+  function sum(pick: (row: DebtScheduleRow) => string) {
+    return fromCents(rows.reduce((total, row) => total + toCents(pick(row)), 0));
+  }
+
+  return {
+    payoffDate: rows.at(-1)?.date ?? terms.firstPaymentDate,
+    payments: rows.length,
+    totalPaid: fromCents(
+      rows.reduce((total, row) => total + toCents(row.payment) + toCents(row.extra), 0),
+    ),
+    totalInterest: sum((row) => row.interest),
+    totalExtra: sum((row) => row.extra),
+    rows,
+  };
+}
+
+function withPayoff(debt: Omit<DebtResponse, "payoffDate">): DebtResponse {
+  return { ...debt, payoffDate: schedulePlan(debt)?.payoffDate ?? null };
+}
+
+const noSchedule = {
+  loanAmount: null,
+  firstPaymentDate: null,
+  termMonths: null,
+  monthlyPayment: null,
+  amortizationType: "annuity",
+} as const;
+
 export const debts: DebtResponse[] = [
-  {
+  withPayoff({
     id: ids.debts.mortgage,
     name: "Būsto paskola (Swedbank)",
     type: "mortgage",
     outstandingAmount: "98450.32",
     interestRate: 3.85,
     asOf: "2026-09-05",
-  },
-  {
+    loanAmount: "120000.00",
+    firstPaymentDate: "2021-03-15",
+    termMonths: 300,
+    monthlyPayment: null,
+    amortizationType: "annuity",
+  }),
+  withPayoff({
     id: ids.debts.carLease,
     name: "Automobilio lizingas",
     type: "loan",
     outstandingAmount: "6200.00",
     interestRate: null,
     asOf: "2026-09-01",
-  },
+    ...noSchedule,
+  }),
 ];
+
+export const zeroRateDebt: DebtResponse = withPayoff({
+  id: ids.debts.familyLoan,
+  name: "Paskola iš tėvų",
+  type: "other",
+  outstandingAmount: "4000.00",
+  interestRate: 0,
+  asOf: "2026-09-01",
+  loanAmount: "6000.00",
+  firstPaymentDate: "2026-01-10",
+  termMonths: null,
+  monthlyPayment: "250.00",
+  amortizationType: "annuity",
+});
+
+export const linearDebt: DebtResponse = withPayoff({
+  id: ids.debts.studentLoan,
+  name: "Studijų paskola",
+  type: "loan",
+  outstandingAmount: "7200.00",
+  interestRate: 2.1,
+  asOf: "2026-09-01",
+  loanAmount: "9000.00",
+  firstPaymentDate: "2025-01-20",
+  termMonths: 60,
+  monthlyPayment: null,
+  amortizationType: "linear",
+});
+
+function found(debt: DebtResponse | undefined): DebtResponse {
+  if (!debt) {
+    throw new Error("the debts fixture is empty");
+  }
+  return debt;
+}
+
+export function buildDebtSchedule(
+  debt: DebtResponse,
+  extra: ScheduleExtra = {},
+  asOf: string = FIXTURE_TODAY,
+): DebtScheduleResponse {
+  const plan = schedulePlan(debt);
+  if (!plan || debt.loanAmount === null || debt.interestRate === null) {
+    throw new Error(`${debt.name} has no repayment schedule`);
+  }
+  const hasExtra = Boolean(Number(extra.extraMonthly ?? 0) || Number(extra.lumpSum ?? 0));
+  const faster = hasExtra ? schedulePlan(debt, extra) : null;
+  const made = plan.rows.filter((row) => row.date <= asOf);
+  return {
+    debtId: debt.id,
+    asOf,
+    loanAmount: debt.loanAmount,
+    interestRate: debt.interestRate,
+    amortizationType: debt.amortizationType,
+    regularPayment: plan.rows[0]?.payment ?? "0.00",
+    scheduledBalance: made.at(-1)?.balance ?? debt.loanAmount,
+    paymentsMade: made.length,
+    plan,
+    withExtra: faster,
+    interestSaved: faster
+      ? fromCents(toCents(plan.totalInterest) - toCents(faster.totalInterest))
+      : null,
+    paymentsSaved: faster ? plan.payments - faster.payments : null,
+  };
+}
+
+const mortgage = found(debts[0]);
+
+export const mortgageSchedule = buildDebtSchedule(mortgage);
+
+export const mortgageScheduleWithExtra = buildDebtSchedule(mortgage, { extraMonthly: "150.00" });
+
+export const zeroRateSchedule = buildDebtSchedule(zeroRateDebt);
+
+export const linearSchedule = buildDebtSchedule(linearDebt);
 
 const accountsCents = totalOf(accounts.map((item) => item.currentBalance));
 const assetsCents = totalOf(assets.map((item) => item.currentValue));

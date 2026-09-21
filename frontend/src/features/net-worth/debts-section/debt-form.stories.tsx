@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { handlers, pending } from "@/storybook/handlers";
-import { DebtForm } from "./debt-form";
+import { debtPaymentTooSmallProblem, debts, ids, zeroRateDebt } from "@/storybook/fixtures";
+import { failWith, handlers, pending } from "@/storybook/handlers";
+import { DebtForm, debtFormValues } from "./debt-form";
+
+const [mortgage] = debts;
 
 const meta = {
   title: "Features/NetWorth/DebtForm",
@@ -50,5 +53,50 @@ export const SubmitPending: Story = {
     await fireEvent.change(fields[1]!, { target: { value: "98450.32" } });
     await fireEvent.change(fields[2]!, { target: { value: "3.85" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
+  },
+};
+
+export const EditingWithSchedule: Story = {
+  args: {
+    editing: { id: ids.debts.mortgage, values: debtFormValues(mortgage ?? zeroRateDebt) },
+  },
+};
+
+export const EditingZeroRate: Story = {
+  args: { editing: { id: zeroRateDebt.id, values: debtFormValues(zeroRateDebt) } },
+};
+
+export const TermAndPaymentTogether: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.type(canvas.getByLabelText(/term, months|terminas/i), "360");
+    await userEvent.type(canvas.getByLabelText(/^(monthly payment|mėnesio įmoka)$/i), "500");
+    await expect(
+      await canvas.findByText(/give a term or a monthly payment|nurodykite terminą/i),
+    ).toBeInTheDocument();
+  },
+};
+
+export const PaymentTooSmall: Story = {
+  parameters: {
+    msw: {
+      handlers: [getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem, 400)), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.change(canvas.getByLabelText(/^(name|pavadinimas)$/i), {
+      target: { value: "Mortgage" },
+    });
+    await fireEvent.change(canvas.getByLabelText(/^(outstanding amount|likusi suma)$/i), {
+      target: { value: "100000" },
+    });
+    await fireEvent.change(canvas.getByLabelText(/^(monthly payment|mėnesio įmoka)$/i), {
+      target: { value: "400" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
+    await expect(
+      await canvas.findByText(/does not repay the debt within 50 years|negrąžina per 50 metų/i),
+    ).toBeInTheDocument();
   },
 };

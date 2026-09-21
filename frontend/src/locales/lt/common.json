@@ -898,7 +898,63 @@
       "other": "Kita"
     },
     "composition": "Iš ko jis susideda",
-    "compositionLabel": "Sąskaitos, turtas ir skolos laikui bėgant"
+    "compositionLabel": "Sąskaitos, turtas ir skolos laikui bėgant",
+    "repayment": {
+      "title": "Grąžinimo sąlygos",
+      "hint": "Neprivaloma. Įvedus paskolos sumą, palūkanas, pirmąją įmoką ir terminą arba mėnesio įmoką, skolai sudaromas grąžinimo grafikas.",
+      "loanAmount": "Paskolos suma",
+      "firstPaymentDate": "Pirmoji įmoka",
+      "termMonths": "Terminas, mėn.",
+      "monthlyPayment": "Mėnesio įmoka",
+      "termOrPayment": "Nurodykite terminą arba mėnesio įmoką, ne abu.",
+      "linearNeedsTerm": "Linijinį grafiką nustato terminas; mėnesio įmokos lauką palikite tuščią.",
+      "amortizationType": "Grąžinimo būdas",
+      "amortizationTypes": {
+        "annuity": "Anuitetas, vienodos įmokos",
+        "linear": "Linijinis, vienoda paskolos dalis"
+      },
+      "paidOff": "grąžinta {{date}}"
+    },
+    "schedule": {
+      "open": "Grąžinimo grafikas: {{name}}",
+      "back": "Grynoji vertė",
+      "notFound": "Šios skolos nebėra.",
+      "incomplete": "Kad matytumėte grafiką, šiai skolai įveskite paskolos sumą, palūkanas, pirmąją įmoką ir terminą arba mėnesio įmoką.",
+      "summary": "Suvestinė",
+      "payoffDate": "Grąžinta",
+      "regularPayment": "Mėnesio įmoka",
+      "totalInterest": "Iš viso palūkanų",
+      "totalPaid": "Iš viso sumokėta",
+      "scheduledBalance": "Likutis pagal grafiką šiandien",
+      "paymentsMade": "Sumokėta {{made}} iš {{count}} įmokų",
+      "recorded": "Įrašyta: {{amount}}, {{date}}",
+      "useScheduled": "Naudoti likutį pagal grafiką",
+      "balanceUpdated": "Likusi suma pakeista į {{amount}}",
+      "balanceChart": "Likutis laikui bėgant",
+      "balanceChartLabel": "Likęs skolos likutis pagal įmokų datas",
+      "balance": "Likutis",
+      "balanceWithExtra": "Su permokomis",
+      "splitChart": "Palūkanos ir paskolos dalis pagal metus",
+      "splitChartLabel": "Kasmet sumokėtos palūkanos, paskolos dalis ir permokos",
+      "interest": "Palūkanos",
+      "principal": "Paskolos dalis",
+      "extra": "Permoka",
+      "table": "Įmokos",
+      "number": "Nr.",
+      "date": "Data",
+      "payment": "Įmoka",
+      "extraTitle": "O jei mokėčiau daugiau?",
+      "extraHint": "Permokos sutrumpina terminą; mėnesio įmoka nesikeičia.",
+      "extraMonthly": "Papildomai kas mėnesį",
+      "lumpSum": "Vienkartinė įmoka",
+      "lumpSumDate": "Mokama",
+      "lumpSumDateNeeded": "Pasirinkite vienkartinės įmokos datą.",
+      "savings_one": "Grąžinta {{date}}, {{count}} įmoka anksčiau, sutaupoma {{amount}} palūkanų.",
+      "savings_few": "Grąžinta {{date}}, {{count}} įmokomis anksčiau, sutaupoma {{amount}} palūkanų.",
+      "savings_many": "Grąžinta {{date}}, {{count}} įmokų anksčiau, sutaupoma {{amount}} palūkanų.",
+      "savings_other": "Grąžinta {{date}}, {{count}} įmokų anksčiau, sutaupoma {{amount}} palūkanų.",
+      "noSavings": "Įveskite sumą ir pamatysite, kiek anksčiau skola bus grąžinta."
+    }
   },
   "investments": {
     "title": "Investicijos",
@@ -1621,6 +1677,10 @@
     },
     "currency": {
       "disabled": "Ši valiuta neįjungta."
+    },
+    "debt": {
+      "paymentTooSmall": "Tokia mėnesio įmoka skolos negrąžina per 50 metų. Ji turi būti didesnė už pirmojo mėnesio palūkanas.",
+      "scheduleIncomplete": "Šiai skolai reikia paskolos sumos, palūkanų normos, pirmosios įmokos datos ir termino arba mėnesio įmokos."
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."

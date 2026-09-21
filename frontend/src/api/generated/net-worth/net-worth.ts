@@ -24,6 +24,8 @@ import type {
   CreateAssetRequest,
   CreateDebtRequest,
   DebtResponse,
+  DebtScheduleParams,
+  DebtScheduleResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
   ProblemDetails,
@@ -444,7 +446,7 @@ export const getCreateDebtUrl = () => {
 };
 
 /**
- * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards.
+ * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.
  * @summary Add a debt
  */
 export const createDebt = async (
@@ -548,7 +550,7 @@ export const getDebtsUrl = () => {
 };
 
 /**
- * Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
  * @summary List debts
  */
 export const debts = async (
@@ -730,7 +732,7 @@ export const getUpdateDebtUrl = (id: string) => {
 };
 
 /**
- * Records a new outstanding balance, rate, or name. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down.
+ * Records a new outstanding balance, rate, name or repayment terms. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down. The request replaces the debt, so repayment terms left out are cleared.
  * @summary Update a debt
  */
 export const updateDebt = async (
@@ -830,6 +832,141 @@ export const useUpdateDebt = <TError = ErrorType<ProblemDetails>, TContext = unk
 > => {
   return useMutation(getUpdateDebtMutationOptions(options), queryClient);
 };
+export const getDebtScheduleUrl = (id: string, params?: DebtScheduleParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/debts/${id}/schedule?${stringifiedParams}`
+    : `/api/debts/${id}/schedule`;
+};
+
+/**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments, and what they save.
+ * @summary Get the repayment schedule of a debt
+ */
+export const debtSchedule = async (
+  id: string,
+  params?: DebtScheduleParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtScheduleResponse> => {
+  return customFetch<DebtScheduleResponse>(getDebtScheduleUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDebtScheduleQueryKey = (id: string, params?: DebtScheduleParams) => {
+  return [`/api/debts/${id}/schedule`, ...(params ? [params] : [])] as const;
+};
+
+export const getDebtScheduleSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtScheduleParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDebtScheduleQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof debtSchedule>>> = ({ signal }) =>
+    debtSchedule(id, params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof debtSchedule>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DebtScheduleSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtSchedule>>>;
+export type DebtScheduleSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDebtScheduleSuspense<
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: undefined | DebtScheduleParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtScheduleSuspense<
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtScheduleParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtScheduleSuspense<
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtScheduleParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the repayment schedule of a debt
+ */
+
+export function useDebtScheduleSuspense<
+  TData = Awaited<ReturnType<typeof debtSchedule>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtScheduleParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtSchedule>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDebtScheduleSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getNetWorthUrl = () => {
   return `/api/networth`;
 };

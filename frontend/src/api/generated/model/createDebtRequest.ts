@@ -5,8 +5,10 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
+import type { AmortizationType } from "./amortizationType";
 import type { DateOnly } from "./dateOnly";
 import type { DebtType } from "./debtType";
+import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface CreateDebtRequest {
   /**
@@ -25,4 +27,25 @@ export interface CreateDebtRequest {
    */
   interestRate: number | null;
   asOf: DateOnly;
+  /**
+   * Optional principal borrowed at the start, a positive decimal string.
+   * @nullable
+   */
+  loanAmount?: string | null;
+  /** Optional date of the first monthly payment; later payments fall on the same day of the month. */
+  firstPaymentDate?: null | NullableOfDateOnly;
+  /**
+   * Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.
+   * @minimum 1
+   * @maximum 600
+   * @nullable
+   */
+  termMonths?: number | null;
+  /**
+   * Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).
+   * @nullable
+   */
+  monthlyPayment?: string | null;
+  /** annuity (level payment, the default) or linear (equal principal, needs termMonths). */
+  amortizationType?: null | AmortizationType;
 }

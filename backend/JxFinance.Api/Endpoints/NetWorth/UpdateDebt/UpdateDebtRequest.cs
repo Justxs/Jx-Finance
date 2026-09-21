@@ -10,4 +10,9 @@ public sealed record UpdateDebtRequest(
     DebtType Type,
     [property: Money(NotNull = true)] decimal? OutstandingAmount,
     decimal? InterestRate,
-    DateOnly AsOf) : IDebtInput;
+    DateOnly AsOf,
+    [property: Money] decimal? LoanAmount = null,
+    DateOnly? FirstPaymentDate = null,
+    int? TermMonths = null,
+    [property: Money] decimal? MonthlyPayment = null,
+    AmortizationType? AmortizationType = null) : IDebtInput;

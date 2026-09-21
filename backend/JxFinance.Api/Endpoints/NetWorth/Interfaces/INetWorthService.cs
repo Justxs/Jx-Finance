@@ -1,3 +1,4 @@
+using JxFinance.Common.Amortization;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -21,6 +22,8 @@ public interface INetWorthService
     Task<Result<Debt>> UpdateDebtAsync(Guid id, Action<Debt> apply, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<DebtScheduleResponse>> GetDebtScheduleAsync(Guid id, ExtraPayments extra, CancellationToken cancellationToken);
 
     Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken);
 

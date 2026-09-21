@@ -14,34 +14,35 @@ import { useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import type { HoldingFormValues } from "./holding-form";
 
-export interface HoldingItem {
+export interface HoldingItem<TValues = HoldingFormValues> {
   id: string;
   name: string;
   details: string;
   amount: number;
-  values: HoldingFormValues;
+  values: TValues;
+  action?: ReactNode;
 }
 
-export interface HoldingFormProps {
-  editing?: { id: string; values: HoldingFormValues };
+export interface HoldingFormProps<TValues = HoldingFormValues> {
+  editing?: { id: string; values: TValues };
   onCreated: () => void;
   onCancel: () => void;
 }
 
-interface Props {
+interface Props<TValues> {
   title: string;
   addLabel: string;
   emptyLabel: string;
   tone?: "neutral" | "expense";
-  items: readonly HoldingItem[];
+  items: readonly HoldingItem<TValues>[];
   deletingId?: string;
   deleteDisabled: boolean;
   onDelete: (id: string, options?: { onSuccess?: () => void }) => void;
   undoKind: TrashKind;
-  form: ComponentType<HoldingFormProps>;
+  form: ComponentType<HoldingFormProps<TValues>>;
 }
 
-export function HoldingsSection({
+export function HoldingsSection<TValues = HoldingFormValues>({
   title,
   addLabel,
   emptyLabel,
@@ -52,7 +53,7 @@ export function HoldingsSection({
   onDelete,
   undoKind,
   form: Form,
-}: Readonly<Props>) {
+}: Readonly<Props<TValues>>) {
   const { t } = useTranslation();
   const money = useMoney();
   const [addOpen, setAddOpen] = useState(false);
@@ -90,6 +91,7 @@ export function HoldingsSection({
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 <span className={cn("text-right", amountClass)}>{money.format(item.amount)}</span>
+                {item.action}
                 <Button
                   variant="ghost"
                   size="icon"

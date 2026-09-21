@@ -100,7 +100,18 @@ public static class DemoDataCommand
                 FundingSharePercent = 100,
             });
         db.Assets.Add(new Asset { UserId = user.Id, Name = "Car", Type = AssetType.Vehicle, CurrentValue = new Money(8500.00m), AsOf = today });
-        db.Debts.Add(new Debt { UserId = user.Id, Name = "Car loan", Type = DebtType.Loan, OutstandingAmount = new Money(3200.00m), InterestRate = 5.4m, AsOf = today });
+        db.Debts.Add(new Debt
+        {
+            UserId = user.Id,
+            Name = "Car loan",
+            Type = DebtType.Loan,
+            OutstandingAmount = new Money(3200.00m),
+            InterestRate = 5.4m,
+            AsOf = today,
+            LoanAmount = new Money(6000.00m),
+            FirstPaymentDate = new DateOnly(today.Year, today.Month, 1).AddMonths(-23),
+            TermMonths = 48,
+        });
 
         var rent = new RecurringBill
         {

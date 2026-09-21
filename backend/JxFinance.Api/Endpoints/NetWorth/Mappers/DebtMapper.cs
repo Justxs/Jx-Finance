@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Amortization;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
@@ -22,6 +23,11 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
         debt.OutstandingAmount = new Money(input.OutstandingAmount!.Value);
         debt.InterestRate = input.InterestRate;
         debt.AsOf = input.AsOf;
+        debt.LoanAmount = input.LoanAmount is { } loanAmount ? new Money(loanAmount) : null;
+        debt.FirstPaymentDate = input.FirstPaymentDate;
+        debt.TermMonths = input.TermMonths;
+        debt.MonthlyPayment = input.MonthlyPayment is { } payment ? new Money(payment) : null;
+        debt.AmortizationType = input.AmortizationType ?? AmortizationType.Annuity;
     }
 
     public override DebtResponse FromEntity(Debt debt) => new(
@@ -30,5 +36,16 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
         debt.Type,
         debt.OutstandingAmount.Amount,
         debt.InterestRate,
-        debt.AsOf);
+        debt.AsOf,
+        debt.LoanAmount?.Amount,
+        debt.FirstPaymentDate,
+        debt.TermMonths,
+        debt.MonthlyPayment?.Amount,
+        debt.AmortizationType,
+        PayoffDate(debt));
+
+    private static DateOnly? PayoffDate(Debt debt) =>
+        AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var schedule)
+            ? schedule.PayoffDate
+            : null;
 }

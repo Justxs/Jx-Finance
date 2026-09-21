@@ -830,11 +830,17 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("AmortizationType")
+                        .HasColumnType("integer");
+
                     b.Property<DateOnly>("AsOf")
                         .HasColumnType("date");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateOnly?>("FirstPaymentDate")
+                        .HasColumnType("date");
 
                     b.Property<decimal?>("InterestRate")
                         .HasPrecision(5, 2)
@@ -842,6 +848,14 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
+
+                    b.Property<decimal?>("LoanAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<decimal?>("MonthlyPayment")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -851,6 +865,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<decimal>("OutstandingAmount")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<int?>("TermMonths")
+                        .HasColumnType("integer");
 
                     b.Property<int>("Type")
                         .HasColumnType("integer");

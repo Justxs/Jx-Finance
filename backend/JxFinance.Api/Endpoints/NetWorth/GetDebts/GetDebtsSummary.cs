@@ -8,7 +8,8 @@ public sealed class GetDebtsSummary : Summary<GetDebtsEndpoint>
     {
         Summary = "List debts";
         Description = "Returns the debts you track, each with its outstanding amount, optional interest "
-            + "rate, and the date those figures are as of.";
+            + "rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last "
+            + "scheduled payment when the terms are complete.";
         Responses[200] = "The debts belonging to the signed-in user.";
     }
 }

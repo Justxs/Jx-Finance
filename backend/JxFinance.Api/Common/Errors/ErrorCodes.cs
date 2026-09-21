@@ -69,6 +69,8 @@ public static class ErrorCodes
     public const string RestoreSecurityChanged = "restore.securityChanged";
     public const string RestoreNameTaken = "restore.nameTaken";
     public const string ExportTooManyRows = "export.tooManyRows";
+    public const string DebtPaymentTooSmall = "debt.paymentTooSmall";
+    public const string DebtScheduleIncomplete = "debt.scheduleIncomplete";
     public const string AttachmentEmpty = "attachment.empty";
     public const string AttachmentTooLarge = "attachment.tooLarge";
     public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";

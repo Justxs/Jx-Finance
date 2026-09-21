@@ -1,3 +1,4 @@
+using System.Globalization;
 using FluentValidation;
 using JxFinance.Common.Errors;
 
@@ -31,6 +32,12 @@ public static class DecimalRules
 
     public static IRuleBuilderOptions<T, decimal?> IsNonNegativeQuantity<T>(this IRuleBuilder<T, decimal?> rule) =>
         rule.Must(value => value is null || (value >= 0 && FitsQuantity(value.Value))).WithErrorCode(ErrorCodes.QuantityNonNegative);
+
+    public static decimal? ParseMoneyText(string? text) =>
+        decimal.TryParse(text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value)
+        && FitsMoney(value)
+            ? value
+            : null;
 
     public static bool FitsMoney(decimal value) => decimal.Round(value, 2) == value && Math.Abs(value) <= MoneyLimit;
 

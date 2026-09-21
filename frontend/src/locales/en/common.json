@@ -876,7 +876,61 @@
       "other": "Other"
     },
     "composition": "What it is made of",
-    "compositionLabel": "Accounts, assets and debts over time"
+    "compositionLabel": "Accounts, assets and debts over time",
+    "repayment": {
+      "title": "Repayment terms",
+      "hint": "Optional. With the loan amount, rate, first payment and a term or a monthly payment the debt gets a repayment schedule.",
+      "loanAmount": "Loan amount",
+      "firstPaymentDate": "First payment",
+      "termMonths": "Term, months",
+      "monthlyPayment": "Monthly payment",
+      "termOrPayment": "Give a term or a monthly payment, not both.",
+      "linearNeedsTerm": "A linear schedule is set by its term; leave the monthly payment empty.",
+      "amortizationType": "Repayment type",
+      "amortizationTypes": {
+        "annuity": "Annuity, equal payments",
+        "linear": "Linear, equal principal"
+      },
+      "paidOff": "paid off {{date}}"
+    },
+    "schedule": {
+      "open": "Repayment schedule: {{name}}",
+      "back": "Net worth",
+      "notFound": "This debt no longer exists.",
+      "incomplete": "Add the loan amount, interest rate, first payment and a term or a monthly payment to this debt to see its schedule.",
+      "summary": "Summary",
+      "payoffDate": "Paid off",
+      "regularPayment": "Monthly payment",
+      "totalInterest": "Total interest",
+      "totalPaid": "Total paid",
+      "scheduledBalance": "Scheduled balance today",
+      "paymentsMade": "{{made}} of {{count}} payments made",
+      "recorded": "Recorded: {{amount}} as of {{date}}",
+      "useScheduled": "Use scheduled balance",
+      "balanceUpdated": "Outstanding amount set to {{amount}}",
+      "balanceChart": "Balance over time",
+      "balanceChartLabel": "Remaining balance by payment date",
+      "balance": "Balance",
+      "balanceWithExtra": "With overpayments",
+      "splitChart": "Interest and principal by year",
+      "splitChartLabel": "Interest, principal and overpayments paid each year",
+      "interest": "Interest",
+      "principal": "Principal",
+      "extra": "Overpayment",
+      "table": "Payments",
+      "number": "No.",
+      "date": "Date",
+      "payment": "Payment",
+      "extraTitle": "What if I pay more?",
+      "extraHint": "Overpayments shorten the term; the monthly payment stays the same.",
+      "extraMonthly": "Extra each month",
+      "lumpSum": "One-off payment",
+      "lumpSumDate": "Paid on",
+      "lumpSumDateNeeded": "Pick the date of the one-off payment.",
+      "savings_one": "Paid off {{date}}, {{count}} payment sooner, saving {{amount}} in interest.",
+      "savings_other": "Paid off {{date}}, {{count}} payments sooner, saving {{amount}} in interest.",
+      "noSavings": "Enter an amount to see how much sooner the debt is repaid."
+    }
   },
   "investments": {
     "title": "Investments",
@@ -1569,6 +1623,10 @@
     },
     "currency": {
       "disabled": "This currency is not enabled."
+    },
+    "debt": {
+      "paymentTooSmall": "The monthly payment does not repay the debt within 50 years. It has to be more than the first month's interest.",
+      "scheduleIncomplete": "This debt needs a loan amount, an interest rate, a first payment date and a term or a monthly payment."
     },
     "decimal": {
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."

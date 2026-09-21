@@ -140,6 +140,8 @@ export const ids = {
   debts: {
     mortgage: uid("cccccccc", 1),
     carLease: uid("cccccccc", 2),
+    studentLoan: uid("cccccccc", 3),
+    familyLoan: uid("cccccccc", 4),
   },
 } as const;
 

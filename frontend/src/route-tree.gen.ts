@@ -28,6 +28,7 @@ import { Route as TagsRouteImport } from './routes/tags'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as UsersRouteImport } from './routes/users'
 import { Route as VerifyEmailRouteImport } from './routes/verify-email'
+import { Route as NetWorthDebtsDebtIdRouteImport } from './routes/net-worth_.debts.$debtId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -134,6 +135,11 @@ const VerifyEmailRoute = VerifyEmailRouteImport.update({
   path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NetWorthDebtsDebtIdRoute = NetWorthDebtsDebtIdRouteImport.update({
+  id: '/net-worth_/debts/$debtId',
+  path: '/net-worth/debts/$debtId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/net-worth/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -180,6 +187,7 @@ export interface FileRoutesByTo {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/net-worth/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -204,6 +212,7 @@ export interface FileRoutesById {
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
   '/verify-email': typeof VerifyEmailRoute
+  '/net-worth_/debts/$debtId': typeof NetWorthDebtsDebtIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,6 +238,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
+    | '/net-worth/debts/$debtId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -252,6 +262,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
+    | '/net-worth/debts/$debtId'
   id:
     | '__root__'
     | '/'
@@ -275,6 +286,7 @@ export interface FileRouteTypes {
     | '/transactions'
     | '/users'
     | '/verify-email'
+    | '/net-worth_/debts/$debtId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   TransactionsRoute: typeof TransactionsRoute
   UsersRoute: typeof UsersRoute
   VerifyEmailRoute: typeof VerifyEmailRoute
+  NetWorthDebtsDebtIdRoute: typeof NetWorthDebtsDebtIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -450,6 +463,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/net-worth_/debts/$debtId': {
+      id: '/net-worth_/debts/$debtId'
+      path: '/net-worth/debts/$debtId'
+      fullPath: '/net-worth/debts/$debtId'
+      preLoaderRoute: typeof NetWorthDebtsDebtIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -475,6 +495,7 @@ const rootRouteChildren: RootRouteChildren = {
   TransactionsRoute: TransactionsRoute,
   UsersRoute: UsersRoute,
   VerifyEmailRoute: VerifyEmailRoute,
+  NetWorthDebtsDebtIdRoute: NetWorthDebtsDebtIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
