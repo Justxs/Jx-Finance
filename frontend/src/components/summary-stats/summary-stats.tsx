@@ -41,7 +41,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
           <dd
             className={cn(
-              "mt-1 max-w-full font-serif text-[2.5rem] leading-[1.1] font-semibold tracking-[-0.015em] wrap-break-word lining-nums tabular-nums",
+              "mt-1 max-w-full font-serif text-stat font-semibold wrap-break-word lining-nums tabular-nums",
               lead.tone,
             )}
           >

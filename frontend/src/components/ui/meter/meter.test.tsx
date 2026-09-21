@@ -17,7 +17,7 @@ test("a labelled meter exposes its value", () => {
   expect(meter).toHaveAttribute("aria-valuemin", "0");
   expect(meter).toHaveAttribute("aria-valuemax", "120");
   expect(meter).toHaveAttribute("aria-valuenow", "30");
-  expect(fill(container).style.width).toBe("25%");
+  expect(fill(container).style.getPropertyValue("--meter-fill")).toBe("25%");
 });
 
 test("an unlabelled meter is decorative", () => {
@@ -31,7 +31,7 @@ test("overspending caps at full", () => {
   const { container } = render(<Meter value={150} max={100} label="Budget" />);
 
   expect(screen.getByRole("meter")).toHaveAttribute("aria-valuenow", "100");
-  expect(fill(container).style.width).toBe("100%");
+  expect(fill(container).style.getPropertyValue("--meter-fill")).toBe("100%");
 });
 
 test.each([
@@ -41,7 +41,7 @@ test.each([
 ])("value %i of %i draws empty", (value, max) => {
   const { container } = render(<Meter value={value} max={max} />);
 
-  expect(fill(container).style.width).toBe("0%");
+  expect(fill(container).style.getPropertyValue("--meter-fill")).toBe("0%");
 });
 
 test("tone picks the fill colour", () => {

@@ -55,7 +55,7 @@ function TableExample() {
       <div className="overflow-x-auto" role="region" aria-label="Transactions" tabIndex={0}>
         <Table className="min-w-[40rem]">
           <TableHeader>
-            <TableRow className="bg-muted/50 hover:bg-muted/50">
+            <TableRow>
               <TableHead className="h-auto px-6 py-3">
                 <ColumnHeader
                   label="Date"

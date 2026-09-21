@@ -278,8 +278,37 @@
   --text-sm--line-height: 1.375rem;
   --text-base: 1.0625rem;
   --text-base--line-height: 1.5rem;
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 1rem;
+  --text-page-title: 1.75rem;
+  --text-page-title--line-height: 2.25rem;
+  --text-page-title--letter-spacing: -0.012em;
+  --text-stat: 2.5rem;
+  --text-stat--line-height: 1.1;
+  --text-stat--letter-spacing: -0.015em;
+  --text-stat-lg: 2.75rem;
+  --text-stat-lg--line-height: 1.1;
+  --text-stat-lg--letter-spacing: -0.015em;
 
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@utility transition-width {
+  transition-property: width;
+  transition-timing-function: var(--default-transition-timing-function);
+  transition-duration: var(--default-transition-duration);
+}
+
+@utility stale {
+  @apply relative cursor-progress after:pointer-events-none after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-rule motion-safe:after:animate-pulse;
+}
+
+@utility bg-dashed-swatch {
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--swatch-color) 0 3px,
+    transparent 3px 6px
+  );
 }
 
 @layer base {

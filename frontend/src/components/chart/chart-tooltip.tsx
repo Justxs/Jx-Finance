@@ -30,14 +30,12 @@ export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
   return (
     <span
       aria-hidden="true"
-      className={cn("inline-block shrink-0", flat ? "h-0.5 w-3" : "size-2")}
-      style={
-        series.shape === "dashed"
-          ? {
-              backgroundImage: `repeating-linear-gradient(to right, ${series.color} 0 3px, transparent 3px 6px)`,
-            }
-          : { backgroundColor: series.color }
-      }
+      className={cn(
+        "inline-block shrink-0",
+        flat ? "h-0.5 w-3" : "size-2",
+        series.shape === "dashed" ? "bg-dashed-swatch" : "bg-(--swatch-color)",
+      )}
+      style={{ "--swatch-color": series.color }}
     />
   );
 }

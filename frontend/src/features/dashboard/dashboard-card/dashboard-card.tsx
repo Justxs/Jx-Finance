@@ -7,6 +7,7 @@ import { Panel } from "@/components/ui/section/section";
 import { RowsSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 import type { Translate, TranslationKey } from "@/lib/i18n";
+import { cn } from "@/lib/utils";
 import { AccountBalances } from "../account-balances/account-balances";
 import { BudgetSnapshot } from "../budget-snapshot/budget-snapshot";
 import { CategoryBreakdownChart } from "../category-breakdown-chart/category-breakdown-chart";
@@ -35,7 +36,7 @@ const titleKeys = {
 } as const satisfies Record<DashboardCardId, TranslationKey>;
 
 interface SectionCard {
-  className: string;
+  span: "third" | "wide" | "narrow";
   link?: { to: LinkProps["to"]; label: TranslationKey };
   fallback: ReactNode;
   content: ReactNode;
@@ -46,37 +47,37 @@ const sectionCards: Record<
   SectionCard
 > = {
   monthlyTrend: {
-    className: wide,
+    span: "wide",
     link: { to: "/reports", label: "nav.reports" },
     fallback: chartFallback,
     content: <MonthlyTrendChart />,
   },
   spendingByCategory: {
-    className: third,
+    span: "third",
     fallback: <RowsSkeleton rows={6} />,
     content: <CategoryBreakdownChart />,
   },
-  spendingPace: { className: third, fallback: chartFallback, content: <SpendingPaceChart /> },
+  spendingPace: { span: "third", fallback: chartFallback, content: <SpendingPaceChart /> },
   budgets: {
-    className: narrow,
+    span: "narrow",
     link: { to: "/budgets", label: "nav.budgets" },
     fallback: <RowsSkeleton rows={5} />,
     content: <BudgetSnapshot />,
   },
   netWorth: {
-    className: wide,
+    span: "wide",
     link: { to: "/net-worth", label: "nav.netWorth" },
     fallback: chartFallback,
     content: <NetWorthHistoryChart />,
   },
   accounts: {
-    className: narrow,
+    span: "narrow",
     link: { to: "/accounts", label: "nav.accounts" },
     fallback: <RowsSkeleton rows={5} />,
     content: <AccountBalances />,
   },
   upcomingBills: {
-    className: narrow,
+    span: "narrow",
     link: { to: "/recurring-bills", label: "nav.recurringBills" },
     fallback: <RowsSkeleton rows={5} />,
     content: <UpcomingBills />,
@@ -112,7 +113,11 @@ export function DashboardCard({ card }: Readonly<Props>) {
   const section = sectionCards[card];
   return (
     <DashboardSection
-      className={section.className}
+      className={cn(
+        section.span === "third" && third,
+        section.span === "wide" && wide,
+        section.span === "narrow" && narrow,
+      )}
       title={title}
       to={section.link?.to}
       linkLabel={section.link ? t(section.link.label) : undefined}

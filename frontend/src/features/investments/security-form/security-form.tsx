@@ -180,7 +180,7 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
               id="security-isin"
               label={t("investments.securities.isin")}
               className="col-span-full"
-              inputClassName="font-mono"
+              monospace
               autoCapitalize="characters"
               autoComplete="off"
               spellCheck={false}

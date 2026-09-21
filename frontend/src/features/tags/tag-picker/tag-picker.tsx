@@ -44,7 +44,7 @@ export function TagPicker({
   }
 
   if (tags.length === 0) {
-    return <EmptyText className="py-2">{t("tags.empty")}</EmptyText>;
+    return <EmptyText size="sm">{t("tags.empty")}</EmptyText>;
   }
 
   return (
@@ -67,7 +67,7 @@ export function TagPicker({
         className="max-h-44 space-y-1.5 overflow-y-auto"
       >
         {shown.length === 0 ? (
-          <EmptyText className="py-2">{t("tags.noMatches")}</EmptyText>
+          <EmptyText size="sm">{t("tags.noMatches")}</EmptyText>
         ) : (
           shown.map((tag) => (
             <label key={tag.id} className="flex items-center gap-2.5 text-sm">

@@ -114,7 +114,7 @@ export function ImportPreviewTable({
         <ScrollRegion aria-label={t("imports.preview")}>
           <Table className="min-w-176">
             <TableHeader>
-              <TableRow className="hover:bg-transparent">
+              <TableRow>
                 <TableHead className="w-10">{selectAll}</TableHead>
                 <TableHead>{t("transactions.date")}</TableHead>
                 <TableHead>{t("transactions.description")}</TableHead>

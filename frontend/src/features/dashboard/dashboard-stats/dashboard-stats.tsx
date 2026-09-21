@@ -41,7 +41,7 @@ export function DashboardStats() {
     <div className="flex h-full flex-col justify-between gap-8">
       <dl>
         <dt className="text-sm text-muted-foreground">{t("dashboard.totalBalance")}</dt>
-        <dd className="mt-1 max-w-full font-serif text-[2.75rem] leading-[1.1] font-semibold tracking-[-0.015em] wrap-break-word lining-nums tabular-nums">
+        <dd className="mt-1 max-w-full font-serif text-stat-lg font-semibold wrap-break-word lining-nums tabular-nums">
           {money.format(Number(summary.data?.totalBalance ?? 0))}
         </dd>
       </dl>
@@ -60,7 +60,10 @@ export function DashboardStats() {
         {income > 0 ? (
           <div className="mt-5">
             <div aria-hidden="true" className="flex h-1.5 gap-0.5">
-              <div className="bg-destructive" style={{ width: `${spentShare * 100}%` }} />
+              <div
+                className="w-(--spent-share) bg-destructive"
+                style={{ "--spent-share": `${spentShare * 100}%` }}
+              />
               <div className="flex-1 bg-secondary" />
             </div>
             <p className="mt-2 text-xs text-muted-foreground tabular-nums">

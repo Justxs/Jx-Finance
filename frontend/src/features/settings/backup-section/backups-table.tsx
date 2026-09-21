@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { getDownloadBackupUrl } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
 import { Button, buttonVariants } from "@/components/ui/button/button";
-import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -59,7 +58,7 @@ export function BackupsTable({
           const taken = formatDateTime(backup.createdAt);
           const busy = busyId === backup.id;
           return (
-            <TableRow key={backup.id} className={staleVariants({ stale: busy })} aria-busy={busy}>
+            <TableRow key={backup.id} className={busy ? "stale" : undefined} aria-busy={busy}>
               <TableCell>
                 <span className="font-medium tabular-nums">{taken}</span>
                 <span className="ml-2 inline-flex gap-1 align-middle">

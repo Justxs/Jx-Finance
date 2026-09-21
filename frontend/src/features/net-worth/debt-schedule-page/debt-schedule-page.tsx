@@ -53,10 +53,12 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
 
   return (
     <div className="space-y-5">
-      <TextLink to="/net-worth" className="inline-flex items-center gap-1 text-sm">
-        <ArrowLeft className="size-4" aria-hidden="true" />
-        {t("netWorth.schedule.back")}
-      </TextLink>
+      <p className="text-sm">
+        <TextLink to="/net-worth" className="inline-flex items-center">
+          <ArrowLeft className="mr-1 size-4" aria-hidden="true" />
+          {t("netWorth.schedule.back")}
+        </TextLink>
+      </p>
       <PageHeader title={debt?.name ?? t("netWorth.debts")} />
       {content}
     </div>

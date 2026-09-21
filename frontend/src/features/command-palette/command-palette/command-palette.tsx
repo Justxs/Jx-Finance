@@ -19,7 +19,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog/dialog";
-import { Input } from "@/components/ui/input/input";
 import { useSettings } from "@/hooks/use-settings";
 import { setAuthenticated } from "@/lib/auth-gate";
 import type { ShortcutRouter } from "@/lib/shortcuts";
@@ -208,7 +207,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
 
       <div className="flex shrink-0 items-center gap-2 border-b px-3">
         <Search aria-hidden="true" className="size-4 shrink-0 text-muted-foreground" />
-        <Input
+        <input
           autoFocus
           type="text"
           role="combobox"
@@ -223,7 +222,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
           value={query}
           onChange={(event) => changeQuery(event.target.value)}
           onKeyDown={handleKeyDown}
-          className="h-12 rounded-none border-0 bg-transparent px-0 focus-visible:bg-transparent focus-visible:ring-0"
+          className="h-12 w-full min-w-0 bg-transparent py-1 text-base outline-none placeholder:text-muted-foreground md:text-sm"
         />
       </div>
 

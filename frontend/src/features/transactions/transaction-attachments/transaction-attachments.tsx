@@ -184,7 +184,7 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
   return (
     <div className="space-y-3">
       {attachments.length === 0 ? (
-        <EmptyText className="py-2">{t("transactions.attachments.empty")}</EmptyText>
+        <EmptyText size="sm">{t("transactions.attachments.empty")}</EmptyText>
       ) : (
         <Rows aria-label={t("transactions.attachments.title")}>
           {attachments.map((attachment) => (

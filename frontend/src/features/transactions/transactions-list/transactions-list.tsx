@@ -6,7 +6,6 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { useIsoDate } from "@/hooks/use-formatters";
@@ -53,7 +52,7 @@ export function TransactionsList({
 
   return (
     <Rows
-      className={staleVariants({ stale: isPlaceholder })}
+      className={isPlaceholder ? "stale" : undefined}
       aria-label={t("transactions.title")}
       aria-busy={isPlaceholder}
     >
@@ -72,7 +71,7 @@ export function TransactionsList({
         return (
           <RowTransition key={row.id}>
             <li
-              className={cn("py-2 text-sm", staleVariants({ stale: optimistic }))}
+              className={cn("py-2 text-sm", optimistic && "stale")}
               aria-busy={optimistic || undefined}
             >
               <div className="flex items-baseline gap-3">

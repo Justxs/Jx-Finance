@@ -28,8 +28,11 @@ export function Meter({ value, max, tone = "primary", label, className }: Readon
       className={cn("h-1.5 bg-border", className)}
     >
       <div
-        className={cn("h-full transition-[width] duration-300 ease-out-expo", tones[tone])}
-        style={{ width: `${ratio * 100}%` }}
+        className={cn(
+          "h-full w-(--meter-fill) transition-width duration-300 ease-out-expo",
+          tones[tone],
+        )}
+        style={{ "--meter-fill": `${ratio * 100}%` }}
       />
     </div>
   );

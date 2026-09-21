@@ -9,7 +9,7 @@ import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/co
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { StaleRegion, staleVariants } from "@/components/ui/stale-region/stale-region";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -69,7 +69,7 @@ export function UsersTable({
       <SelectField
         aria-label={`${t("users.role")}: ${user.displayName || user.email}`}
         value={user.role}
-        className={staleVariants({ stale: rolePendingId === user.id })}
+        className={rolePendingId === user.id ? "stale" : undefined}
         aria-busy={rolePendingId === user.id}
         disabled={isSelf || rolePendingId !== null}
         onChange={(role) => onRoleChange(user.id, role)}
@@ -171,7 +171,7 @@ export function UsersTable({
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="users-rows" enter="none" exit="none">
           <ScrollRegion aria-label={t("users.title")}>
-            <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
+            <Table className={cn("min-w-160", stale && "stale")} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead

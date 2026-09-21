@@ -20,7 +20,6 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
-import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { type FeatureKey, useSettings } from "@/hooks/use-settings";
@@ -119,9 +118,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   function entryState(notification: NotificationResponse) {
     return cn(
       entryClassName,
-      staleVariants({
-        stale: markReadMutation.isPending && markReadMutation.variables?.id === notification.id,
-      }),
+      markReadMutation.isPending && markReadMutation.variables?.id === notification.id && "stale",
     );
   }
 
@@ -214,7 +211,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       {unreadList.length > 0 ? (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-[10px] font-semibold text-destructive-foreground"
+          className="pointer-events-none absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-destructive text-2xs font-semibold text-destructive-foreground"
         >
           {unreadList.length > 9 ? "9+" : unreadList.length}
         </span>

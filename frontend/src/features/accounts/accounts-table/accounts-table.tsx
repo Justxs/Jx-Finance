@@ -10,7 +10,7 @@ import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/co
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { StaleRegion, staleVariants } from "@/components/ui/stale-region/stale-region";
+import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import {
   Table,
   TableBody,
@@ -171,7 +171,14 @@ export function AccountsTable({
         <TableCell className="hidden text-right text-muted-foreground tabular-nums xl:table-cell">
           {money.format(Number(account.startingBalance), account.currency)}
         </TableCell>
-        <TableCell className={balanceClass(account)}>{balanceLines(account)}</TableCell>
+        <TableCell
+          className={cn(
+            "text-right font-semibold tabular-nums",
+            Number(account.currentBalance) < 0 && "text-expense",
+          )}
+        >
+          {balanceLines(account)}
+        </TableCell>
         <TableCell>{actions(account)}</TableCell>
       </TableRow>
     ));
@@ -220,7 +227,7 @@ export function AccountsTable({
       <section className="-mx-3 hidden md:block">
         <ViewTransition name="accounts-rows" enter="none" exit="none">
           <ScrollRegion aria-label={t("accounts.title")}>
-            <Table className={cn("min-w-160", staleVariants({ stale }))} aria-busy={stale}>
+            <Table className={cn("min-w-160", stale && "stale")} aria-busy={stale}>
               <TableHeader>
                 <TableRow>
                   <SortableTableHead
