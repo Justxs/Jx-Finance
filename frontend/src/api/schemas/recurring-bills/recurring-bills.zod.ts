@@ -84,8 +84,47 @@ export const RecurringBillsResponseItem = zod.object({
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
 /**
- * Removes the schedule and its reminders. Transactions already posted from it stay in the ledger.
- * @summary Delete a recurring bill
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
+ * @summary Suggest subscriptions found in the ledger
+ */
+export const subscriptionCandidatesResponseTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const SubscriptionCandidatesResponseItem = zod.object({
+  description: zod.string(),
+  accountId: zod.uuid(),
+  categoryId: zod.uuid().nullable(),
+  cadence: zod
+    .enum(["weekly", "monthly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly."),
+  typicalAmount: zod.stringFormat("decimal", subscriptionCandidatesResponseTypicalAmountRegExp),
+  occurrenceDates: zod.array(zod.iso.date()),
+  nextExpectedDate: zod.iso.date(),
+});
+export const SubscriptionCandidatesResponse = zod.array(SubscriptionCandidatesResponseItem);
+
+/**
+ * Hides one suggested subscription for the signed-in user. The dismissal is stored against the account and the normalized description the suggestion was grouped by, not against the transactions behind it, so a new payment arriving in the same group does not bring the suggestion back. Dismissing the same group twice changes nothing. It is a personal choice: another member of the same household still sees the suggestion.
+ * @summary Dismiss a subscription suggestion
+ */
+
+export const dismissSubscriptionCandidateBodyDescriptionMin = 0;
+export const dismissSubscriptionCandidateBodyDescriptionMax = 200;
+
+export const DismissSubscriptionCandidateBody = zod.object({
+  accountId: zod.uuid().min(1),
+  description: zod
+    .string()
+    .min(dismissSubscriptionCandidateBodyDescriptionMin)
+    .max(dismissSubscriptionCandidateBodyDescriptionMax),
+});
+
+export const DismissSubscriptionCandidateResponse = zod.void();
+
+/**
+ * Removes the schedule and its reminders. Transactions and transfers already posted from it stay in the ledger.
+ * @summary Delete a recurring entry
  */
 export const DeleteRecurringBillResponse = zod.void();
 

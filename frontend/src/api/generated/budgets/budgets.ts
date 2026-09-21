@@ -48,7 +48,7 @@ export const getCreateBudgetUrl = () => {
 };
 
 /**
- * Sets a spending limit for one category. A category can carry a single budget, so creating a second one for the same category is rejected.
+ * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.
  * @summary Create a budget
  */
 export const createBudget = async (
@@ -152,7 +152,7 @@ export const getBudgetsUrl = () => {
 };
 
 /**
- * Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.
  * @summary List budgets
  */
 export const budgets = async (
@@ -334,7 +334,7 @@ export const getUpdateBudgetUrl = (id: string) => {
 };
 
 /**
- * Changes the limit, or moves the budget to a different category. Spending already recorded is re-evaluated against the new limit the next time the budget is read.
+ * Changes the limit, the period or the rollover switch, or moves the budget to a different category. Spending already recorded is re-evaluated against the new window the next time the budget is read.
  * @summary Update a budget
  */
 export const updateBudget = async (

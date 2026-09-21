@@ -19,6 +19,20 @@ public sealed record AccountDto(
     string ReportingBalance,
     string HoldingsValue);
 
+public sealed record BudgetDto(
+    Guid Id,
+    Guid CategoryId,
+    string CategoryName,
+    string LimitAmount,
+    string CarriedAmount,
+    string EffectiveLimit,
+    string Spent,
+    string Remaining,
+    string Period,
+    bool RolloverEnabled,
+    DateOnly WindowStart,
+    DateOnly WindowEnd);
+
 public sealed record TransactionLineDto(Guid Id, Guid? CategoryId, string Amount, string? Description);
 
 public sealed record TransactionDto(

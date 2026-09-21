@@ -5,13 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import type { BudgetPeriod } from "./budgetPeriod";
 
-export interface UpdateBudgetRequest {
-  /** @minLength 1 */
-  categoryId: string;
-  limitAmount: string;
-  period: BudgetPeriod;
-  /** Whether the previous window's remainder adjusts this window's limit. */
-  rolloverEnabled: boolean;
-}
+/**
+ * Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly.
+ */
+export type BudgetPeriod = (typeof BudgetPeriod)[keyof typeof BudgetPeriod];
+
+export const BudgetPeriod = {
+  monthly: "monthly",
+  weekly: "weekly",
+  quarterly: "quarterly",
+  yearly: "yearly",
+} as const;

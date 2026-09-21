@@ -18,7 +18,7 @@ export function BudgetSnapshot() {
   const budgets = useBudgetsSuspense();
 
   const rows = budgets.data
-    .toSorted((a, b) => usage(b.spent, b.limitAmount) - usage(a.spent, a.limitAmount))
+    .toSorted((a, b) => usage(b.spent, b.effectiveLimit) - usage(a.spent, a.effectiveLimit))
     .slice(0, MAX_ROWS);
 
   if (rows.length === 0) {
@@ -33,7 +33,7 @@ export function BudgetSnapshot() {
     <ul className="space-y-3.5">
       {rows.map((budget) => {
         const spent = Number(budget.spent);
-        const limit = Number(budget.limitAmount);
+        const limit = Number(budget.effectiveLimit);
         const overBudget = spent > limit;
         return (
           <li key={budget.id}>

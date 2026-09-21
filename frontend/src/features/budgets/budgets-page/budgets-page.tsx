@@ -8,7 +8,7 @@ import {
   useBudgetsSuspense,
   useCategoriesSuspense,
 } from "@/api/generated";
-import type { BudgetResponse } from "@/api/generated/model";
+import type { BudgetPeriod, BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
@@ -21,9 +21,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
-import { useMoney, useMonthLabel } from "@/hooks/use-formatters";
-import { useTodayDate } from "@/hooks/use-settings";
-import { monthBounds } from "@/lib/calendar";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BudgetUsageChart } from "../budget-usage-chart";
@@ -32,13 +30,19 @@ import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 export function BudgetsPage() {
   const { t } = useTranslation();
   const money = useMoney();
-  const monthLabel = useMonthLabel();
-  const today = useTodayDate();
+  const isoDate = useIsoDate();
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
   const [formOpen, setFormOpen] = useState(false);
 
   const categories = useCategoriesSuspense();
   const budgets = useBudgetsSuspense();
+
+  const periodLabels: Record<BudgetPeriod, string> = {
+    weekly: t("budgets.periods.weekly"),
+    monthly: t("budgets.periods.monthly"),
+    quarterly: t("budgets.periods.quarterly"),
+    yearly: t("budgets.periods.yearly"),
+  };
 
   function openForm(budget: BudgetResponse | null) {
     setEditing(budget);
@@ -50,14 +54,16 @@ export function BudgetsPage() {
   });
 
   const budgetList = useDeferredValue(budgets.data);
-  const remove = useConfirmedDelete(deleteMutation, budgetList, (budget) => budget.categoryName);
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    budgetList,
+    (budget) => budget.categoryName,
+    "budget",
+  );
   const categoryList = categories.data;
 
-  const month = monthLabel(today);
-  const { dateFrom, dateTo } = monthBounds(today);
-
   const spentCents = budgetList.reduce((sum, budget) => sum + toCents(budget.spent), 0);
-  const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.limitAmount), 0);
+  const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.effectiveLimit), 0);
   const remainingCents = limitCents - spentCents;
 
   let content: ReactNode;
@@ -67,32 +73,41 @@ export function BudgetsPage() {
     content = (
       <Panel as={Rows} className="py-2 sm:py-3">
         {budgetList.map((budget) => {
-          const limit = Number(budget.limitAmount);
+          const limit = Number(budget.effectiveLimit);
           const spent = Number(budget.spent);
           const overBudget = spent > limit;
           return (
             <RowTransition key={budget.id}>
               <li className="py-3">
                 <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-                  <p className="min-w-0 font-medium wrap-break-word">
-                    <Tooltip
-                      content={t("dashboard.showTransactions", { category: budget.categoryName })}
-                    >
-                      <Link
-                        to="/transactions"
-                        search={{
-                          page: 1,
-                          categoryId: budget.categoryId,
-                          type: "expense",
-                          dateFrom,
-                          dateTo,
-                        }}
-                        className="underline-offset-4 hover:underline"
+                  <div className="min-w-0">
+                    <p className="min-w-0 font-medium wrap-break-word">
+                      <Tooltip
+                        content={t("dashboard.showTransactions", { category: budget.categoryName })}
                       >
-                        {budget.categoryName}
-                      </Link>
-                    </Tooltip>
-                  </p>
+                        <Link
+                          to="/transactions"
+                          search={{
+                            page: 1,
+                            categoryId: budget.categoryId,
+                            type: "expense",
+                            dateFrom: budget.windowStart,
+                            dateTo: budget.windowEnd,
+                          }}
+                          className="underline-offset-4 hover:underline"
+                        >
+                          {budget.categoryName}
+                        </Link>
+                      </Tooltip>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("budgets.windowLabel", {
+                        period: periodLabels[budget.period],
+                        from: isoDate(budget.windowStart),
+                        to: isoDate(budget.windowEnd),
+                      })}
+                    </p>
+                  </div>
                   <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:text-right">
                     <p className="whitespace-nowrap tabular-nums">
                       <span className="font-semibold">{money.format(spent)}</span>{" "}
@@ -107,6 +122,15 @@ export function BudgetsPage() {
                         ? t("budgets.over", { amount: money.format(spent - limit) })
                         : t("budgets.left", { amount: money.format(limit - spent) })}
                     </p>
+                    {budget.rolloverEnabled ? (
+                      <p className="text-xs text-muted-foreground tabular-nums">
+                        {t("budgets.carryLabel", {
+                          base: money.format(Number(budget.limitAmount)),
+                          carried: money.formatSigned(Number(budget.carriedAmount)),
+                          effective: money.format(limit),
+                        })}
+                      </p>
+                    ) : null}
                   </div>
                   <div className="col-start-2 row-start-1 flex items-center sm:col-start-3">
                     <Button
@@ -146,7 +170,7 @@ export function BudgetsPage() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t("budgets.title")} description={month}>
+      <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
         <Button onClick={() => openForm(null)}>
           <Plus />
           {t("budgets.add")}
@@ -169,7 +193,7 @@ export function BudgetsPage() {
       {budgetList.length > 0 ? (
         <SummaryStats
           items={[
-            { label: t("budgets.spentThisMonth"), value: fromCents(spentCents), lead: true },
+            { label: t("budgets.spentInWindow"), value: fromCents(spentCents), lead: true },
             { label: t("budgets.budgeted"), value: fromCents(limitCents) },
             remainingCents < 0
               ? {

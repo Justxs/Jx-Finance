@@ -11,7 +11,10 @@ public sealed class CreateBudgetEndpoint(IBudgetService budgetService) : Endpoin
     {
         Post("budgets");
         Group<BudgetsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<BudgetResponse>(201, "application/json"));
+        Description(d => d
+            .ClearDefaultProduces(200)
+            .Produces<BudgetResponse>(201, "application/json")
+            .ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(CreateBudgetRequest req, CancellationToken ct)

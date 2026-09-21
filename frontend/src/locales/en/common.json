@@ -32,7 +32,8 @@
     "archive": "Archive",
     "previous": "Previous",
     "next": "Next",
-    "close": "Close"
+    "close": "Close",
+    "rename": "Rename"
   },
   "common": {
     "actions": "Actions"
@@ -55,7 +56,7 @@
     "monthIncome": "Income this month",
     "monthExpense": "Expenses this month",
     "monthNet": "Net this month",
-    "budgets": "Budgets this month",
+    "budgets": "Budgets in their window",
     "noBudgets": "No budgets set.",
     "accounts": "Balance by account",
     "noAccounts": "No accounts yet.",
@@ -211,7 +212,6 @@
     "saveAndAddAnother": "Save and add another",
     "created": "Transaction added",
     "updated": "Transaction updated",
-    "deleted": "Transaction deleted",
     "selectRow": "Select: {{row}}",
     "selectPage": "Select all transactions on this page",
     "splitNotSelectable": "Split transactions keep their categories on the lines, so they cannot be recategorized in bulk",
@@ -411,7 +411,7 @@
       "items": {
         "budgets": {
           "name": "Budgets",
-          "hint": "Monthly limits per category."
+          "hint": "Weekly, monthly, quarterly or yearly limits per category."
         },
         "goals": {
           "name": "Goals",
@@ -501,22 +501,34 @@
   },
   "budgets": {
     "title": "Budgets",
+    "subtitle": "One limit per category and period, each counted inside its own window.",
     "add": "Add budget",
     "category": "Category",
-    "limit": "Monthly limit",
+    "limit": "Limit",
+    "period": "Period",
+    "periods": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "quarterly": "Quarterly",
+      "yearly": "Yearly"
+    },
+    "rollover": "Carry what is left into the next window",
+    "rolloverHint": "An unspent remainder raises the next window's limit; an overspend lowers it. The carry looks back at most twelve windows.",
+    "windowLabel": "{{period}} · {{from}} – {{to}}",
+    "carryLabel": "{{base}} base {{carried}} carried = {{effective}}",
     "ofLimit": "of {{amount}}",
     "left": "{{amount}} left",
     "over": "{{amount}} over",
     "empty": "No budgets yet.",
     "needCategory": "Create an expense category first to set a budget.",
-    "spentThisMonth": "Spent this month",
+    "spentInWindow": "Spent in window",
     "budgeted": "Budgeted",
     "remaining": "Remaining",
     "overBy": "Over by",
     "spent": "Spent",
     "limitSeries": "Limit",
     "usage": "Budgeted against spent",
-    "usageLabel": "Budgeted and spent amount for each category this month"
+    "usageLabel": "Budgeted and spent amount for each category in its current window"
   },
   "shortcuts": {
     "title": "Keyboard shortcuts",
@@ -751,6 +763,7 @@
     },
     "validation": {
       "price": "Enter a price of 0 or more with up to 8 decimals, e.g. 98.4125.",
+      "priceDateFuture": "Choose today or an earlier date.",
       "quantity": "Enter a quantity greater than 0 with up to 8 decimals, e.g. 2.5.",
       "ratio": "Enter the ratio as new shares per old share, e.g. 2.",
       "security": "Choose a security.",
@@ -900,8 +913,12 @@
     "variableAmountHint": "Variable bills don't need an amount upfront — you'll enter it when you confirm.",
     "category": "Category",
     "noCategory": "No category",
+    "transferNoCategory": "A transfer has no category: the money stays between your own accounts.",
     "account": "Account",
+    "fromAccount": "From account",
+    "toAccount": "To account",
     "noAccount": "No default account",
+    "chooseAccount": "Choose an account",
     "cadence": "Repeats",
     "cadences": {
       "weekly": "Weekly",
@@ -919,7 +936,11 @@
     "empty": "No recurring bills yet.",
     "needAccount": "Create an account first to set up recurring bills.",
     "overdue": "Overdue",
-    "recordPayment": "Record payment",
+    "record": {
+      "expense": "Record payment",
+      "income": "Record income",
+      "transfer": "Record transfer"
+    },
     "forecast": "Due in the next six months",
     "forecastSeries": "Bills due",
     "forecastEmpty": "No fixed-amount bills are due in the next six months.",
@@ -1093,7 +1114,9 @@
     "empty": "Nothing recorded in this period.",
     "netWorthLabel": "Net worth over time",
     "net": "Net",
-    "netWorth": "Net worth"
+    "netWorth": "Net worth",
+    "earlierIncome": "Income, earlier period",
+    "earlierExpense": "Expenses, earlier period"
   },
   "serverErrors": {
     "access": {
@@ -1131,6 +1154,7 @@
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
     },
     "email": {
+      "alreadyVerified": "This address is already confirmed.",
       "invalid": "Enter a valid email address.",
       "taken": "This email is already in use."
     },
@@ -1196,6 +1220,9 @@
     },
     "security": {
       "notHeld": "Only someone who holds this security, or an administrator, can set its price."
+    },
+    "session": {
+      "current": "This is the browser you are using. Use the regular sign out instead."
     },
     "setup": {
       "alreadyCompleted": "Setup was already completed."
