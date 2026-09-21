@@ -338,7 +338,45 @@
     "sortAscending": "{{column}}, ascending",
     "sortDescending": "{{column}}, descending",
     "done": "Done",
-    "currency": "Currency"
+    "currency": "Currency",
+    "savedName": "Name",
+    "savedFilters": "Saved filters",
+    "savedFiltersEmpty": "No saved filters yet. Filter the list, then name it here.",
+    "savedFilterNamePlaceholder": "e.g. Groceries this month",
+    "saveFilter": "Save filter",
+    "saveFilterNeedsFilter": "Filter the list first; sorting and the page number are not saved.",
+    "applySavedFilter": "Apply saved filter",
+    "savedFilterSaved": "Filter saved",
+    "savedFilterStale": "Names something that no longer exists",
+    "duplicate": "Duplicate",
+    "templates": "Templates",
+    "templatesEmpty": "No templates yet. Open the add form and save its shape as a template.",
+    "useTemplate": "New transaction from template",
+    "saveAsTemplate": "Save as template",
+    "saveTemplate": "Save template",
+    "templateName": "Template name",
+    "templateNamePlaceholder": "e.g. Weekly groceries",
+    "templateSaved": "Template saved"
+  },
+  "trash": {
+    "title": "Trash",
+    "description": "What you deleted in the last {{days}} days and can still bring back. A row leaves this list once you restore it or once it is older than {{days}} days; nothing else is removed from it.",
+    "empty": "You have not deleted anything in the last 30 days.",
+    "restore": "Restore",
+    "restored": "Brought back",
+    "deleted": "Deleted",
+    "deletedNamed": "Deleted {{name}}",
+    "undo": "Undo",
+    "kinds": {
+      "transaction": "Transaction",
+      "transfer": "Transfer",
+      "conversion": "Currency conversion",
+      "budget": "Budget",
+      "goal": "Goal",
+      "asset": "Asset",
+      "debt": "Debt",
+      "recurringBill": "Recurring entry"
+    }
   },
   "theme": {
     "toggle": "Toggle theme"

@@ -1,17 +1,24 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { namedOptions } from "@/lib/options";
+import {
+  type TransactionFilter,
+  formatTagIds,
+  parseTagIds,
+  transactionFilterParams,
+} from "./transaction-queries";
 
 interface Args {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags?: TagResponse[];
 }
 
 export type TransactionTypeFilter = "" | "income" | "expense";
 
-export function useTransactionFilters({ accounts, categories }: Args) {
+export function useTransactionFilters({ accounts, categories, tags = [] }: Args) {
   const { t } = useTranslation();
   const search = useSearch({ from: "/transactions" });
   const navigate = useNavigate({ from: "/transactions" });
@@ -31,10 +38,17 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     search.dateFrom || search.dateTo,
     search.categoryId,
     search.accountId,
+    search.tagIds,
   ].filter(Boolean).length;
+
+  const selectedTagIds = parseTagIds(search.tagIds);
 
   function setDateRange(range: { from: string; to: string }) {
     table.setFilter({ dateFrom: range.from || undefined, dateTo: range.to || undefined });
+  }
+
+  function setTagIds(next: string[]) {
+    table.setFilter({ tagIds: formatTagIds(next) });
   }
 
   function clearFilters() {
@@ -45,11 +59,27 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     void navigate({ search: { page: 1 } });
   }
 
+  function applyFilter(filter: TransactionFilter) {
+    void navigate({
+      search: (prev) => ({
+        ...filter,
+        page: 1,
+        sort: prev.sort,
+        direction: prev.direction,
+      }),
+    });
+  }
+
   return {
     ...table,
+    currentFilter: transactionFilterParams(search),
+    applyFilter,
     typeOptions,
     categoryOptions: namedOptions(categories, t("transactions.allCategories")),
     accountOptions: namedOptions(accounts, t("transactions.allAccounts")),
+    tags,
+    selectedTagIds,
+    setTagIds,
     dateRange: { from: search.dateFrom ?? "", to: search.dateTo ?? "" },
     setDateRange,
     activeCount,
