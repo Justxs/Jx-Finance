@@ -3,11 +3,13 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -22,7 +24,9 @@ namespace JxFinance.Endpoints.RecurringBills.Services;
 public sealed class RecurringBillService(
     AppDbContext db,
     IExchangeRateService rates,
-    IReferenceGuard references) : IRecurringBillService
+    IReferenceGuard references,
+    IDeletionRecorder deletions,
+    ITransferService transfers) : IRecurringBillService
 {
     private static readonly DomainError CategoryGone =
         new(ErrorCodes.ReferenceNotFound, "The category of this recurring entry is no longer available.");
@@ -76,7 +80,12 @@ public sealed class RecurringBillService(
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        return db.DeleteOrNotFoundAsync<RecurringBill>(id, b => b.Id == billId, "Recurring bill not found.", cancellationToken);
+        return db.DeleteOrNotFoundAsync<RecurringBill>(
+            id,
+            b => b.Id == billId,
+            "Recurring entry not found.",
+            bill => deletions.Record(TrashKind.RecurringBill, id, bill.Name),
+            cancellationToken);
     }
 
     public async Task<Result<RecurringBillConfirmation>> ConfirmAsync(

@@ -4,11 +4,13 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
 using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
@@ -32,6 +34,7 @@ public sealed class TransactionService(
     TransactionMapper mapper,
     IExchangeRateService rates,
     IReferenceGuard references,
+    IDeletionRecorder deletions,
     IOptions<AppOptions> options) : ITransactionService
 {
     public async Task<PagedResponse<TransactionResponse>> GetPageAsync(
@@ -416,11 +419,7 @@ public sealed class TransactionService(
             return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
         }
 
-        var lines = await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken);
-        if (lines.Count > 0)
-        {
-            db.TransactionLines.RemoveRange(lines);
-        }
+        deletions.Record(TrashKind.Transaction, id, TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount));
 
         db.Transactions.Remove(transaction);
         await db.SaveChangesAsync(cancellationToken);

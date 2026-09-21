@@ -129,6 +129,34 @@ describe("invalidateAfterMutation", () => {
     expect(isInvalidated(client, goalsKey)).toBe(false);
   });
 
+  test.each([
+    ["deleteTransaction", api.getDeleteTransactionMutationKey],
+    ["deleteTransfer", api.getDeleteTransferMutationKey],
+    ["deleteConversion", api.getDeleteConversionMutationKey],
+    ["deleteBudget", api.getDeleteBudgetMutationKey],
+    ["deleteGoal", api.getDeleteGoalMutationKey],
+    ["deleteAsset", api.getDeleteAssetMutationKey],
+    ["deleteDebt", api.getDeleteDebtMutationKey],
+    ["deleteRecurringBill", api.getDeleteRecurringBillMutationKey],
+  ])("%s refreshes the trash", async (_name, getMutationKey) => {
+    const client = seededClient();
+    const trashKey = [api.getTrashQueryKey()[0], { page: 1 }];
+    client.setQueryData(trashKey, {});
+
+    await invalidateAfterMutation(client, getMutationKey());
+
+    expect(isInvalidated(client, trashKey)).toBe(true);
+  });
+
+  test("invalidates everything after a restore, because any kind can come back", async () => {
+    const client = seededClient();
+
+    await invalidateAfterMutation(client, ["restoreDeleted"]);
+
+    expect(isInvalidated(client, accountsKey)).toBe(true);
+    expect(isInvalidated(client, goalsKey)).toBe(true);
+  });
+
   test("invalidates everything after settings change", async () => {
     const client = seededClient();
 

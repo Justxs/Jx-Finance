@@ -22,3 +22,11 @@ export async function installNodeFormData() {
 export function installScrollStub() {
   Object.assign(globalThis, { scrollTo() {} });
 }
+
+export function installPointerCaptureStub() {
+  Object.assign(Element.prototype, {
+    hasPointerCapture: () => false,
+    setPointerCapture() {},
+    releasePointerCapture() {},
+  });
+}

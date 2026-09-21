@@ -1,9 +1,10 @@
 import { createColumnHelper } from "@tanstack/react-table";
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
+import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
@@ -26,7 +27,9 @@ export function isSelectableTransaction(row: TransactionResponse) {
 interface UseTransactionColumnsArgs {
   accountNames: Map<string | undefined, string | undefined>;
   categoryById: Map<string | undefined, CategoryResponse | undefined>;
+  tagById: ReadonlyMap<string, TagResponse>;
   onEdit: (transaction: TransactionResponse) => void;
+  onDuplicate: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
   deletingId: string | null;
 }
@@ -34,7 +37,9 @@ interface UseTransactionColumnsArgs {
 export function useTransactionColumns({
   accountNames,
   categoryById,
+  tagById,
   onEdit,
+  onDuplicate,
   onDelete,
   deletingId,
 }: UseTransactionColumnsArgs) {
@@ -98,6 +103,16 @@ export function useTransactionColumns({
         );
       },
     }),
+    columnHelper.accessor("tagIds", {
+      header: t("tags.field"),
+      cell: (info) => {
+        const ids = info.getValue();
+        if (ids.length === 0) {
+          return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
+        }
+        return <TagChips tagIds={ids} tagById={tagById} />;
+      },
+    }),
     columnHelper.accessor("accountId", {
       header: t("transactions.account"),
       cell: (info) => {
@@ -127,6 +142,15 @@ export function useTransactionColumns({
         const optimistic = isOptimistic(row);
         return (
           <div className="flex justify-end gap-1">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              disabled={optimistic}
+              onClick={() => onDuplicate(row)}
+              aria-label={`${t("transactions.duplicate")}: ${rowName(row)}`}
+            >
+              <Copy />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"

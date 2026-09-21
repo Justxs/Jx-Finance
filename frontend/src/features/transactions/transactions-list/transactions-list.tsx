@@ -1,12 +1,13 @@
-import { Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2 } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
+import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { staleVariants } from "@/components/ui/stale-region/stale-region";
+import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -20,9 +21,11 @@ interface Props {
   data: TransactionResponse[];
   accountNames: Map<string | undefined, string | undefined>;
   categoryById: Map<string | undefined, CategoryResponse | undefined>;
+  tagById: ReadonlyMap<string, TagResponse>;
   isPlaceholder: boolean;
   filtered: boolean;
   onEdit: (transaction: TransactionResponse) => void;
+  onDuplicate: (transaction: TransactionResponse) => void;
   onDelete: (id: string) => void;
   deletingId: string | null;
 }
@@ -31,9 +34,11 @@ export function TransactionsList({
   data,
   accountNames,
   categoryById,
+  tagById,
   isPlaceholder,
   filtered,
   onEdit,
+  onDuplicate,
   onDelete,
   deletingId,
 }: Readonly<Props>) {
@@ -79,6 +84,7 @@ export function TransactionsList({
                   className="shrink-0 text-right"
                 />
               </div>
+              <TagChips tagIds={row.tagIds} tagById={tagById} className="mt-1" />
               <div className="flex items-center gap-2">
                 <p
                   className="min-w-0 flex-1 truncate text-xs text-muted-foreground tabular-nums"
@@ -87,6 +93,15 @@ export function TransactionsList({
                   {meta}
                 </p>
                 <div className="-mr-2 flex shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    disabled={optimistic}
+                    onClick={() => onDuplicate(row)}
+                    aria-label={`${t("transactions.duplicate")}: ${name}`}
+                  >
+                    <Copy />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon-sm"

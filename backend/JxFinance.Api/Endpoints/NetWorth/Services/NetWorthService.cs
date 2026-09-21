@@ -1,8 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -16,6 +18,7 @@ public sealed class NetWorthService(
     AppDbContext db,
     IAccountService accountService,
     IClock clock,
+    IDeletionRecorder deletions,
     ICurrentUser currentUser) : INetWorthService
 {
     private const string AssetNotFound = "Asset not found.";
@@ -41,7 +44,12 @@ public sealed class NetWorthService(
     public Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
     {
         var assetId = new AssetId(id);
-        return db.DeleteOrNotFoundAsync<Asset>(id, a => a.Id == assetId, AssetNotFound, cancellationToken);
+        return db.DeleteOrNotFoundAsync<Asset>(
+            id,
+            a => a.Id == assetId,
+            AssetNotFound,
+            asset => deletions.Record(TrashKind.Asset, id, asset.Name),
+            cancellationToken);
     }
 
     public async Task<IReadOnlyList<Debt>> GetDebtsAsync(CancellationToken cancellationToken) =>
@@ -64,7 +72,12 @@ public sealed class NetWorthService(
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
     {
         var debtId = new DebtId(id);
-        return db.DeleteOrNotFoundAsync<Debt>(id, d => d.Id == debtId, DebtNotFound, cancellationToken);
+        return db.DeleteOrNotFoundAsync<Debt>(
+            id,
+            d => d.Id == debtId,
+            DebtNotFound,
+            debt => deletions.Record(TrashKind.Debt, id, debt.Name),
+            cancellationToken);
     }
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)

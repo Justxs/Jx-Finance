@@ -3,11 +3,13 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Transactions;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Conversions.CreateConversion;
 using JxFinance.Endpoints.Conversions.GetConversions;
 using JxFinance.Endpoints.Conversions.Interfaces;
@@ -24,7 +26,8 @@ public sealed class ConversionService(
     AppDbContext db,
     ConversionMapper mapper,
     IExchangeRateService rates,
-    IReferenceGuard references) : IConversionService
+    IReferenceGuard references,
+    IDeletionRecorder deletions) : IConversionService
 {
     private static readonly DomainError FeeCategoryNotExpense =
         new(ErrorCodes.CategoryWrongType, "The fee category must be an expense category.");
@@ -183,16 +186,22 @@ public sealed class ConversionService(
             return new DomainError(ErrorCodes.ResourceNotFound, "Conversion not found.");
         }
 
+        Transaction? fee = null;
         if (conversion.FeeTransactionId is { } feeId)
         {
-            var fee = await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken);
+            fee = await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken);
             if (fee is not null)
             {
-                db.TransactionLines.RemoveRange(
-                    await db.TransactionLines.Where(l => l.TransactionId == feeId).ToListAsync(cancellationToken));
                 db.Transactions.Remove(fee);
+                conversion.FeeTransactionId = feeId;
             }
         }
+
+        deletions.Record(
+            TrashKind.Conversion,
+            id,
+            TrashLabel.Exchanged(conversion.FromAmount, conversion.ToAmount, conversion.Date),
+            fee?.Id.Value);
 
         db.CurrencyConversions.Remove(conversion);
         await db.SaveChangesAsync(cancellationToken);

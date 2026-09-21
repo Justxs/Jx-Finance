@@ -2,9 +2,11 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Transfers;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Transfers.CreateTransfer;
 using JxFinance.Endpoints.Transfers.GetTransfers;
 using JxFinance.Endpoints.Transfers.Interfaces;
@@ -17,7 +19,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Transfers.Services;
 
 [RegisterService<ITransferService>(LifeTime.Scoped)]
-public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExchangeRateService rates) : ITransferService
+public sealed class TransferService(
+    AppDbContext db,
+    TransferMapper mapper,
+    IExchangeRateService rates,
+    IDeletionRecorder deletions) : ITransferService
 {
     public async Task<PagedResponse<TransferResponse>> GetPageAsync(
         GetTransfersRequest request,
@@ -131,6 +137,11 @@ public sealed class TransferService(AppDbContext db, TransferMapper mapper, IExc
         {
             return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
         }
+
+        deletions.Record(
+            TrashKind.Transfer,
+            id,
+            TrashLabel.Dated(transfer.Description, transfer.Date, transfer.Amount));
 
         db.Transfers.Remove(transfer);
         await db.SaveChangesAsync(cancellationToken);

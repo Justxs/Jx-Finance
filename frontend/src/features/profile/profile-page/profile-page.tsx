@@ -8,6 +8,8 @@ import { ImportDataSection } from "@/features/imports/import-data-section/import
 import { useSettings } from "@/hooks/use-settings";
 import { ProfileForm } from "../profile-form/profile-form";
 import { ProfileNav, profileSections } from "../profile-nav/profile-nav";
+import { SessionsSection } from "../sessions-section/sessions-section";
+import { TrashSection } from "../trash-section/trash-section";
 import { TwoFactorSettings } from "../two-factor-settings";
 
 export function ProfilePage() {
@@ -26,6 +28,8 @@ export function ProfilePage() {
         <div className="min-w-0 space-y-5">
           {section === "account" ? <ProfileForm profile={me.data} /> : null}
           {section === "security" ? <TwoFactorSettings /> : null}
+          {section === "sessions" ? <SessionsSection /> : null}
+          {section === "trash" ? <TrashSection /> : null}
           {section === "import" ? <ImportDataSection /> : null}
           {section === "appearance" ? (
             <>

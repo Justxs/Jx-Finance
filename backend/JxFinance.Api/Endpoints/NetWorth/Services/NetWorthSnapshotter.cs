@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Services;
@@ -21,11 +22,13 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
         var settings = services.GetRequiredService<IInstanceSettingsStore>();
         var rates = services.GetRequiredService<IExchangeRateService>();
         var user = new SnapshotUser(userId);
+        var clock = services.GetRequiredService<IClock>();
         await using var db = new AppDbContext(services.GetRequiredService<DbContextOptions<AppDbContext>>(), user);
         var service = new NetWorthService(
             db,
             new AccountService(db, user, services.GetRequiredService<AccountMapper>(), rates, new HoldingsValuation(db, rates, settings)),
-            services.GetRequiredService<IClock>(),
+            clock,
+            new DeletionRecorder(db, clock),
             user);
         await service.GetCurrentAsync(cancellationToken);
     }

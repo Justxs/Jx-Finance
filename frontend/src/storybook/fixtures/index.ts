@@ -24,3 +24,4 @@ export * from "./email";
 export * from "./setup";
 export * from "./problems";
 export * from "./investments";
+export * from "./trash";

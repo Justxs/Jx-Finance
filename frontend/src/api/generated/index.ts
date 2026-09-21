@@ -21,4 +21,5 @@ export * from "./setup/setup";
 export * from "./tags/tags";
 export * from "./transactions/transactions";
 export * from "./transfers/transfers";
+export * from "./trash/trash";
 export * from "./users/users";
