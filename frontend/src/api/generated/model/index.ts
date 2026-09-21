@@ -60,6 +60,7 @@ export * from "./featureFlags";
 export * from "./firstDayOfWeek";
 export * from "./flowType";
 export * from "./getPingResponse";
+export * from "./goalFunding";
 export * from "./goalResponse";
 export * from "./holdingResponse";
 export * from "./householdMemberResponse";

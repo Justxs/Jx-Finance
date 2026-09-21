@@ -1,8 +1,14 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { getDeleteGoalMockHandler, getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { completedGoal, goals, openEndedGoal, many } from "@/storybook/fixtures";
+import {
+  completedGoal,
+  goals,
+  openEndedGoal,
+  many,
+  unavailableFundedGoal,
+} from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -41,6 +47,20 @@ export const SingleCompletedGoal: Story = {
   },
 };
 
+export const WithUnavailableFunding: Story = {
+  parameters: {
+    msw: {
+      handlers: [getGoalsMockHandler([...goals, unavailableFundedGoal]), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText(/progress unavailable|pažanga nepasiekiama/i),
+    ).toBeVisible();
+  },
+};
+
 export const LongList: Story = {
   parameters: {
     msw: {
@@ -54,6 +74,26 @@ export const AddDialogOpen: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add goal|pridėti tikslą/i }));
     await openedDialog();
+  },
+};
+
+export const DeleteOffersUndo: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(document.body);
+    await userEvent.click(
+      (await canvas.findAllByRole("button", { name: /^(delete|ištrinti)(:|$)/i }))[0]!,
+    );
+    const dialog = await page.findByRole("alertdialog");
+    await expect(
+      within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
+    ).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
+
+    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    await userEvent.click(undo);
+
+    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
 

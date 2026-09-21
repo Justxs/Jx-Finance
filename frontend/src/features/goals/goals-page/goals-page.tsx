@@ -1,7 +1,12 @@
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { getGoalsQueryKey, useDeleteGoal, useGoalsSuspense } from "@/api/generated";
+import {
+  getGoalsQueryKey,
+  useAccountsSuspense,
+  useDeleteGoal,
+  useGoalsSuspense,
+} from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
@@ -19,14 +24,16 @@ export function GoalsPage() {
   const { t } = useTranslation();
   const [addOpen, setAddOpen] = useState(false);
 
+  const accounts = useAccountsSuspense();
   const goals = useGoalsSuspense();
 
   const deleteMutation = useDeleteGoal({
     mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()),
   });
 
+  const accountList = accounts.data ?? [];
   const goalList = useDeferredValue(goals.data) ?? [];
-  const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name);
+  const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name, "goal");
 
   let content: ReactNode;
   if (goalList.length === 0) {
@@ -38,6 +45,7 @@ export function GoalsPage() {
           <GoalRow
             key={goal.id}
             goal={goal}
+            accounts={accountList}
             onDelete={() => remove.request(goal.id)}
             deletePending={remove.pendingId === goal.id}
             deleteDisabled={remove.busy}
@@ -57,7 +65,11 @@ export function GoalsPage() {
       </PageHeader>
 
       <Modal open={addOpen} onOpenChange={setAddOpen} title={t("goals.add")}>
-        <CreateGoalForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
+        <CreateGoalForm
+          accounts={accountList}
+          onCreated={() => setAddOpen(false)}
+          onCancel={() => setAddOpen(false)}
+        />
       </Modal>
 
       {content}

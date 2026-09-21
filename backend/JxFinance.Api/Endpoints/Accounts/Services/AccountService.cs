@@ -67,6 +67,22 @@ public sealed class AccountService(
         return (balances.Sum(b => b.Reporting.Amount), balances.All(b => b.IsComplete));
     }
 
+    public async Task<IReadOnlyDictionary<AccountId, decimal>> GetReportingBalancesAsync(
+        IReadOnlyCollection<AccountId> accountIds,
+        CancellationToken cancellationToken)
+    {
+        var wanted = accountIds.Distinct().ToList();
+        if (wanted.Count == 0)
+        {
+            return new Dictionary<AccountId, decimal>();
+        }
+
+        var accounts = await db.Accounts.Where(a => wanted.Contains(a.Id)).ToListAsync(cancellationToken);
+        var balances = await BalancesAsync(accounts, cancellationToken);
+
+        return balances.ToDictionary(entry => entry.Key, entry => entry.Value.Reporting.Amount);
+    }
+
     private static IEnumerable<Account> Sort(
         List<Account> accounts,
         Dictionary<AccountId, AccountBalance> balances,

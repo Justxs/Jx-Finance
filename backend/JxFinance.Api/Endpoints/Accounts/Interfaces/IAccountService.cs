@@ -1,3 +1,4 @@
+using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.CreateAccount;
 using JxFinance.Endpoints.Accounts.GetAccounts;
@@ -11,6 +12,10 @@ public interface IAccountService
     Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken);
 
     Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken);
+
+    Task<IReadOnlyDictionary<AccountId, decimal>> GetReportingBalancesAsync(
+        IReadOnlyCollection<AccountId> accountIds,
+        CancellationToken cancellationToken);
 
     Task<IReadOnlyList<AccountResponse>> GetAllAsync(
         GetAccountsRequest request,

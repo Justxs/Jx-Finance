@@ -1,8 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { Rows } from "@/components/ui/rows/rows";
-import { completedGoal, goalWithTargetDate, openEndedGoal } from "@/storybook/fixtures";
+import {
+  accountFundedGoal,
+  accounts,
+  completedGoal,
+  goalWithTargetDate,
+  openEndedGoal,
+  sharedFundedGoal,
+  unavailableFundedGoal,
+} from "@/storybook/fixtures";
 import { handlers, pending } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { GoalRow } from "./goal-row";
@@ -12,6 +20,7 @@ const meta = {
   component: GoalRow,
   args: {
     goal: goalWithTargetDate,
+    accounts,
     onDelete: fn(),
     deletePending: false,
     deleteDisabled: false,
@@ -37,11 +46,36 @@ export const OpenEndedLongName: Story = { args: { goal: openEndedGoal } };
 export const Completed: Story = { args: { goal: completedGoal } };
 
 export const OverAchieved: Story = {
-  args: { goal: { ...completedGoal, currentAmount: "1250.00" } },
+  args: { goal: { ...completedGoal, currentAmount: "1250.00", progressAmount: "1250.00" } },
 };
 
 export const NotStarted: Story = {
-  args: { goal: { ...goalWithTargetDate, currentAmount: "0.00" } },
+  args: { goal: { ...goalWithTargetDate, currentAmount: "0.00", progressAmount: "0.00" } },
+};
+
+export const FundedFromAccount: Story = {
+  args: { goal: accountFundedGoal },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/from taupomoji sąskaita/i)).toBeVisible();
+  },
+};
+
+export const FundedFromAShareOfAnAccount: Story = {
+  args: { goal: sharedFundedGoal },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/40%/u)).toBeVisible();
+  },
+};
+
+export const ProgressUnavailable: Story = {
+  args: { goal: unavailableFundedGoal },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText(/progress unavailable|pažanga nepasiekiama/i)).toBeVisible();
+    await expect(canvas.queryByRole("meter")).toBeNull();
+  },
 };
 
 export const DeletePending: Story = { args: { deletePending: true, deleteDisabled: true } };

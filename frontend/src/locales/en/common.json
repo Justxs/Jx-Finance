@@ -537,7 +537,22 @@
     "targetDate": "Target date",
     "ofTarget": "of {{amount}}",
     "reached": "Reached",
-    "empty": "No goals yet."
+    "empty": "No goals yet.",
+    "funding": "Progress comes from",
+    "fundingModes": {
+      "manual": "An amount I type",
+      "account": "An account balance"
+    },
+    "fundingAccount": "Funding account",
+    "chooseAccount": "Choose an account",
+    "fundingSharePercent": "Share of the balance (%)",
+    "needAccount": "Add an account first, or track this goal by hand.",
+    "manualHint": "Raise the current amount yourself as you save.",
+    "fundedFrom": "From {{account}}",
+    "fundedShareFrom": "From {{percent}}% of {{account}}",
+    "unavailableAccount": "Unavailable account",
+    "progressUnavailable": "Progress unavailable",
+    "progressUnavailableHint": "The funding account is archived or no longer shared with you."
   },
   "netWorth": {
     "title": "Net worth",
