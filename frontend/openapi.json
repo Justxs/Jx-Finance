@@ -5326,6 +5326,149 @@
         ]
       }
     },
+    "/api/households/{id}/audit": {
+      "get": {
+        "tags": [
+          "Households"
+        ],
+        "summary": "List what members changed in a household",
+        "description": "Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.",
+        "operationId": "GetHouseholdAudit",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The household id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "memberId",
+            "in": "query",
+            "description": "Only rows by this member.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "kind",
+            "in": "query",
+            "description": "Only rows about this kind of record.",
+            "schema": {
+              "$ref": "#/components/schemas/AuditEntityKind"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "description": "Only rows from the start of this day, in the installation's time zone.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "description": "Only rows up to the end of this day, in the installation's time zone.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of activity rows with the total row count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfAuditEventResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such household, or the signed-in user is not a member.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/households/{id}/members": {
       "post": {
         "tags": [
@@ -11894,6 +12037,122 @@
         "type": "string",
         "description": "Property, Vehicle, Investment, Valuable, or Other."
       },
+      "AuditAction": {
+        "enum": [
+          "created",
+          "updated",
+          "deleted",
+          "restored",
+          "imported",
+          "shared",
+          "unshared",
+          "memberAdded",
+          "memberRemoved",
+          "memberRoleChanged",
+          "renamed"
+        ],
+        "type": "string"
+      },
+      "AuditChangeResponse": {
+        "required": [
+          "field",
+          "from",
+          "to"
+        ],
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "from": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "to": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AuditEntityKind": {
+        "enum": [
+          "account",
+          "transaction",
+          "transfer",
+          "conversion",
+          "investmentTransaction",
+          "category",
+          "tag",
+          "household",
+          "member"
+        ],
+        "type": "string"
+      },
+      "AuditEventResponse": {
+        "required": [
+          "id",
+          "occurredAt",
+          "actorUserId",
+          "actorName",
+          "action",
+          "entityKind",
+          "entityId",
+          "description",
+          "count",
+          "changes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actorUserId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "action": {
+            "$ref": "#/components/schemas/AuditAction"
+          },
+          "entityKind": {
+            "$ref": "#/components/schemas/AuditEntityKind"
+          },
+          "entityId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "count": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditChangeResponse"
+            }
+          }
+        }
+      },
       "BackupResponse": {
         "required": [
           "id",
@@ -14829,6 +15088,35 @@
       "NullableOfDateOnly": {
         "type": "string",
         "format": "date"
+      },
+      "PagedResponseOfAuditEventResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "PagedResponseOfConversionResponse": {
         "required": [

@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using System.Reflection;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
@@ -20,6 +21,7 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Data.Auditing;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -65,19 +67,40 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
     public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();
+    public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();
+
+    public AuditTrail Audit { get; } = new();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
-        ApplyEntityRules();
+        var now = ApplyEntityRules();
+        RecordAuditAsync(now, CancellationToken.None).GetAwaiter().GetResult();
         return base.SaveChanges(acceptAllChangesOnSuccess);
     }
 
-    public override Task<int> SaveChangesAsync(
+    public override async Task<int> SaveChangesAsync(
         bool acceptAllChangesOnSuccess,
         CancellationToken cancellationToken = default)
     {
-        ApplyEntityRules();
-        return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+        var now = ApplyEntityRules();
+        await RecordAuditAsync(now, cancellationToken);
+        return await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
+    }
+
+    private async Task RecordAuditAsync(DateTimeOffset now, CancellationToken cancellationToken)
+    {
+        var summary = Audit.Take();
+        var actorId = CurrentUserId;
+        if (actorId == Guid.Empty)
+        {
+            return;
+        }
+
+        var events = await new AuditCollector(this, actorId, now).CollectAsync(summary, cancellationToken);
+        if (events.Count > 0)
+        {
+            AuditEvents.AddRange(events);
+        }
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
@@ -122,7 +145,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         }
     }
 
-    private void ApplyEntityRules()
+    private DateTimeOffset ApplyEntityRules()
     {
         var now = DateTimeOffset.UtcNow;
         foreach (var entry in ChangeTracker.Entries<EntityBase>())
@@ -152,6 +175,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     throw new InvalidOperationException($"Unhandled entity state: {entry.State}.");
             }
         }
+
+        return now;
     }
 
     private void ApplyQueryFilters(ModelBuilder builder)

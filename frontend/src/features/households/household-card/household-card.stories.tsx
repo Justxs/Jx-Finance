@@ -84,3 +84,20 @@ export const DeleteOffersUndo: Story = {
     await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
+
+export const OpensActivity: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const toggle = canvas.getByRole("button", { name: "Show activity" });
+    await expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await userEvent.click(toggle);
+
+    await expect(canvas.getByRole("button", { name: "Hide activity" })).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
+    await expect(await canvas.findByText(/changed Maxima, 42.18 EUR/u)).toBeVisible();
+    await expect(canvas.getByRole("heading", { name: "Activity" })).toBeVisible();
+  },
+};

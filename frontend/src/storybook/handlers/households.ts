@@ -2,18 +2,33 @@ import {
   getAddMemberMockHandler,
   getCreateHouseholdMockHandler,
   getDeleteHouseholdMockHandler,
+  getHouseholdAuditMockHandler,
   getHouseholdMockHandler,
   getHouseholdsMockHandler,
   getRemoveMemberMockHandler,
   getUpdateHouseholdMockHandler,
   getUpdateMemberRoleMockHandler,
 } from "@/api/generated/households/households.msw";
-import type { HouseholdResponse } from "@/api/generated/model";
-import { familyHousehold, households, users } from "@/storybook/fixtures";
+import type { AuditEventResponse, HouseholdResponse } from "@/api/generated/model";
+import { familyHousehold, householdAuditEvents, households, users } from "@/storybook/fixtures";
 import { found, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_ID, NEW_USER_ID } from "./ids";
-import { byId } from "./lists";
+import { byId, paginate } from "./lists";
+
+export function filterAudit(events: AuditEventResponse[], params: URLSearchParams) {
+  const memberId = params.get("memberId");
+  const kind = params.get("kind");
+  const dateFrom = params.get("dateFrom");
+  const dateTo = params.get("dateTo");
+  return events.filter(
+    (item) =>
+      (!memberId || item.actorUserId === memberId) &&
+      (!kind || item.entityKind === kind) &&
+      (!dateFrom || item.occurredAt.slice(0, 10) >= dateFrom) &&
+      (!dateTo || item.occurredAt.slice(0, 10) <= dateTo),
+  );
+}
 
 function withAddedMember(household: HouseholdResponse, body: Body): HouseholdResponse {
   const email = text(body.email) ?? "naujas.narys@example.lt";
@@ -50,6 +65,10 @@ export const householdHandlers = [
     return { ...household, name: text(body.name) ?? household.name };
   }),
   getDeleteHouseholdMockHandler(),
+  getHouseholdAuditMockHandler(({ request }) => {
+    const params = new URL(request.url).searchParams;
+    return paginate(filterAudit(householdAuditEvents, params), params);
+  }),
   getAddMemberMockHandler(async ({ params, request }) =>
     withAddedMember(found(byId(households, params.id)), await readBody(request)),
   ),

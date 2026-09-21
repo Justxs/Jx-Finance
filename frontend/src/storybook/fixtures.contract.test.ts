@@ -221,6 +221,8 @@ const contracts: Record<string, Contract> = {
   trashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
   recordedTrashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
   trashPage: { schema: schemas.TrashResponse },
+  householdAuditEvents: { schema: schemas.HouseholdAuditResponse, toResponse: asPage },
+  householdAuditPage: { schema: schemas.HouseholdAuditResponse },
 };
 
 function buildSummary() {

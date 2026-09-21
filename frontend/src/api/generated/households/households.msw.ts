@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { HouseholdResponse } from "../model";
+import type { HouseholdResponse, PagedResponseOfAuditEventResponse } from "../model";
 
 export const getCreateHouseholdMockHandler = (
   overrideResponse?:
@@ -124,6 +124,30 @@ export const getUpdateHouseholdMockHandler = (
   );
 };
 
+export const getHouseholdAuditMockHandler = (
+  overrideResponse?:
+    | PagedResponseOfAuditEventResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<PagedResponseOfAuditEventResponse> | PagedResponseOfAuditEventResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/households/:id/audit",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getAddMemberMockHandler = (
   overrideResponse?:
     | HouseholdResponse
@@ -201,6 +225,7 @@ export const getHouseholdsMock = () => [
   getDeleteHouseholdMockHandler(),
   getHouseholdMockHandler(),
   getUpdateHouseholdMockHandler(),
+  getHouseholdAuditMockHandler(),
   getAddMemberMockHandler(),
   getRemoveMemberMockHandler(),
   getUpdateMemberRoleMockHandler(),

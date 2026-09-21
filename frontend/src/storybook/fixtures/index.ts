@@ -1,6 +1,7 @@
 export * from "./base";
 export * from "./users";
 export * from "./households";
+export * from "./audit";
 export * from "./accounts";
 export * from "./categories";
 export * from "./tags";

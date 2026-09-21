@@ -5,6 +5,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
@@ -202,6 +203,23 @@ public sealed class CategorizationRuleService(
             }
 
             await AddTagsAsync(match.Ids, match.Item.TagIds, cancellationToken);
+        }
+
+        var touched = matched.Value!.SelectMany(m => m.Ids).Distinct().ToList();
+        if (touched.Count > 0)
+        {
+            var touchedAccounts = await db.Transactions
+                .IgnoreQueryFilters()
+                .Where(t => touched.Contains(t.Id))
+                .Select(t => t.AccountId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+            db.Audit.Summarise(
+                AuditAction.Updated,
+                AuditEntityKind.Transaction,
+                TrashLabel.Counted("Categorization rules run", (touched.Count, "transaction", "transactions")),
+                touched.Count,
+                accounts: touchedAccounts);
         }
 
         await db.SaveChangesAsync(cancellationToken);

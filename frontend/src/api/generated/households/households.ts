@@ -22,7 +22,9 @@ import type { ErrorType } from "../../client";
 import type {
   AddMemberRequest,
   CreateHouseholdRequest,
+  HouseholdAuditParams,
   HouseholdResponse,
+  PagedResponseOfAuditEventResponse,
   ProblemDetails,
   UpdateHouseholdRequest,
   UpdateMemberRoleRequest,
@@ -549,6 +551,143 @@ export const useUpdateHousehold = <TError = ErrorType<ProblemDetails>, TContext 
 > => {
   return useMutation(getUpdateHouseholdMutationOptions(options), queryClient);
 };
+export const getHouseholdAuditUrl = (id: string, params: HouseholdAuditParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/households/${id}/audit?${stringifiedParams}`
+    : `/api/households/${id}/audit`;
+};
+
+/**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
+ * @summary List what members changed in a household
+ */
+export const householdAudit = async (
+  id: string,
+  params: HouseholdAuditParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<PagedResponseOfAuditEventResponse> => {
+  return customFetch<PagedResponseOfAuditEventResponse>(getHouseholdAuditUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getHouseholdAuditQueryKey = (id: string, params?: HouseholdAuditParams) => {
+  return [`/api/households/${id}/audit`, ...(params ? [params] : [])] as const;
+};
+
+export const getHouseholdAuditSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getHouseholdAuditQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof householdAudit>>> = ({ signal }) =>
+    householdAudit(id, params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof householdAudit>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type HouseholdAuditSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof householdAudit>>
+>;
+export type HouseholdAuditSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useHouseholdAuditSuspense<
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHouseholdAuditSuspense<
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useHouseholdAuditSuspense<
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List what members changed in a household
+ */
+
+export function useHouseholdAuditSuspense<
+  TData = Awaited<ReturnType<typeof householdAudit>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: HouseholdAuditParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof householdAudit>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getHouseholdAuditSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getAddMemberUrl = (id: string) => {
   return `/api/households/${id}/members`;
 };

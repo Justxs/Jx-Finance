@@ -117,6 +117,58 @@ export const UpdateHouseholdResponse = zod.object({
 });
 
 /**
+ * Returns a page of the household's activity, newest first: who created, changed, deleted or restored a record shared into the household, who shared or unshared an account, category or tag, and who added, removed or re-roled a member or renamed the household. Each row carries the words the record was known by at the time and, for an edit, the fields that changed with their old and new values as they read then. An import or a bulk edit is one row that counts what it touched. Personal records are never listed. Only members of the household can read it; while another household is active in the X-Active-Household header, this one is reported as missing. Rows older than 400 days are pruned.
+ * @summary List what members changed in a household
+ */
+export const HouseholdAuditResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      occurredAt: zod.iso.datetime({ offset: true }),
+      actorUserId: zod.uuid(),
+      actorName: zod.string(),
+      action: zod.enum([
+        "created",
+        "updated",
+        "deleted",
+        "restored",
+        "imported",
+        "shared",
+        "unshared",
+        "memberAdded",
+        "memberRemoved",
+        "memberRoleChanged",
+        "renamed",
+      ]),
+      entityKind: zod.enum([
+        "account",
+        "transaction",
+        "transfer",
+        "conversion",
+        "investmentTransaction",
+        "category",
+        "tag",
+        "household",
+        "member",
+      ]),
+      entityId: zod.uuid().nullable(),
+      description: zod.string(),
+      count: zod.int().nullable(),
+      changes: zod.array(
+        zod.object({
+          field: zod.string(),
+          from: zod.string().nullable(),
+          to: zod.string().nullable(),
+        }),
+      ),
+    }),
+  ),
+  page: zod.int(),
+  pageSize: zod.int(),
+  total: zod.int(),
+});
+
+/**
  * Adds an existing user to the household by email address. From that moment they can see every shared account, category, and transaction of the household, so treat this as granting access to financial data rather than sending an invitation.
  * @summary Add a member
  */
