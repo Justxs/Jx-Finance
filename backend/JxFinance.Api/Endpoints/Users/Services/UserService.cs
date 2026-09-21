@@ -19,7 +19,11 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace JxFinance.Endpoints.Users.Services;
 
 [RegisterService<IUserService>(LifeTime.Scoped)]
-public sealed class UserService(UserManager<AppUser> userManager, IAuthService authService, AppDbContext db) : IUserService
+public sealed class UserService(
+    UserManager<AppUser> userManager,
+    IAuthService authService,
+    IAccountEmailService accountEmails,
+    AppDbContext db) : IUserService
 {
     public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(
         GetUsersRequest request,
@@ -75,7 +79,6 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
             Email = request.Email,
             UserName = request.Email,
             DisplayName = request.DisplayName,
-            EmailConfirmed = true,
         };
 
         var identityResult = await userManager.CreateAsync(user, request.Password);
@@ -86,6 +89,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
 
         await userManager.AddToRoleAsync(user, request.Role);
         await StarterCategories.SeedAsync(db, user.Id, cancellationToken);
+        await accountEmails.SendVerificationAsync(user.Id, cancellationToken);
         return await authService.ToProfileAsync(user);
     }
 
@@ -264,6 +268,7 @@ public sealed class UserService(UserManager<AppUser> userManager, IAuthService a
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         user.DisplayName = request.DisplayName;
+        user.BillReminderEmails = request.BillReminderEmails;
         var profileResult = await userManager.UpdateAsync(user);
         if (!profileResult.Succeeded)
             return profileResult.ToDomainError();

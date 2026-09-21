@@ -10,4 +10,5 @@ export interface PublicSettingsResponse {
   /** @nullable */
   instanceName: string | null;
   defaultLanguage: string;
+  emailEnabled: boolean;
 }

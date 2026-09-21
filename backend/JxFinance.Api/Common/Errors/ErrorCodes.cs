@@ -67,6 +67,12 @@ public static class ErrorCodes
     public const string BrokerUnavailable = "broker.unavailable";
     public const string BrokerRejected = "broker.rejected";
     public const string BrokerTokenRequired = "broker.tokenRequired";
+    public const string EmailNotConfigured = "email.notConfigured";
+    public const string EmailPasswordUnreadable = "email.passwordUnreadable";
+    public const string EmailSendFailed = "email.sendFailed";
+    public const string EmailAlreadyVerified = "email.alreadyVerified";
+    public const string EmailTokenInvalid = "email.tokenInvalid";
+    public const string PasswordResetTokenInvalid = "passwordReset.tokenInvalid";
 
     public static IReadOnlyList<string> All { get; } = typeof(ErrorCodes)
         .GetFields(BindingFlags.Public | BindingFlags.Static)

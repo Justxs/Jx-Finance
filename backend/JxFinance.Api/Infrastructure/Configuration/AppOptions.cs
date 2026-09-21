@@ -24,6 +24,23 @@ public sealed class AppOptions
     public int RevalueBatchSize { get; set; } = 500;
 
     public int PdfExportMaxRows { get; set; } = 5000;
+
+    public string SiteUrl { get; set; } = string.Empty;
+
+    public EmailOptions Email { get; set; } = new();
+}
+
+public sealed class EmailOptions
+{
+    public int SendTimeoutSeconds { get; set; } = 20;
+
+    public int OutboxBatchSize { get; set; } = 20;
+
+    public int OutboxIntervalSeconds { get; set; } = 60;
+
+    public int PasswordResetMinutes { get; set; } = 60;
+
+    public int KeepSentDays { get; set; } = 7;
 }
 
 public sealed class ExchangeRateOptions

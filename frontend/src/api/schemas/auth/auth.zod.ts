@@ -47,6 +47,25 @@ export const SetupTwoFactorResponse = zod.object({
 });
 
 /**
+ * Queues an email with a single-use reset link when the address belongs to an active user of this installation and the mail server is configured. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
+ * @summary Ask for a password reset link
+ */
+export const forgotPasswordBodyEmailMin = 0;
+export const forgotPasswordBodyEmailMax = 320;
+
+export const forgotPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
+
+export const ForgotPasswordBody = zod.object({
+  email: zod
+    .email()
+    .min(forgotPasswordBodyEmailMin)
+    .max(forgotPasswordBodyEmailMax)
+    .regex(forgotPasswordBodyEmailRegExp),
+});
+
+export const ForgotPasswordResponse = zod.void();
+
+/**
  * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.
  * @summary Sign in
  */
@@ -74,6 +93,8 @@ export const LoginResponse = zod.object({
       role: zod.string(),
       twoFactorEnabled: zod.boolean(),
       isActive: zod.boolean(),
+      emailConfirmed: zod.boolean(),
+      billReminderEmails: zod.boolean(),
     }),
   ]),
 });
@@ -95,6 +116,8 @@ export const MeResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 
 /**
@@ -102,3 +125,95 @@ export const MeResponse = zod.object({
  * @summary Renew the access token
  */
 export const RefreshResponse = zod.void();
+
+/**
+ * Consumes the token from the emailed link and stores the new password. The token is ASP.NET Identity's own password-reset token: it carries the user's security stamp, so the completed reset invalidates it and a second attempt with the same link answers 400 passwordReset.tokenInvalid. An unknown address, a deactivated user, an expired token and a tampered token all answer with that same code, so nothing is learned from the difference. A password the validators refuse answers password.tooWeak. A successful reset clears the failed-attempt counter and a temporary lockout, changes the security stamp and therefore ends every open session of that user; a deactivation stays in place. A rejected token does not count toward the lockout. Rate limited to 10 calls per five minutes per client.
+ * @summary Set a new password from a reset link
+ */
+export const resetPasswordBodyEmailMin = 0;
+export const resetPasswordBodyEmailMax = 320;
+
+export const resetPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
+export const resetPasswordBodyTokenMin = 0;
+export const resetPasswordBodyTokenMax = 1000;
+
+export const resetPasswordBodyNewPasswordMin = 8;
+export const resetPasswordBodyNewPasswordMax = 100;
+
+export const ResetPasswordBody = zod.object({
+  email: zod
+    .email()
+    .min(resetPasswordBodyEmailMin)
+    .max(resetPasswordBodyEmailMax)
+    .regex(resetPasswordBodyEmailRegExp),
+  token: zod
+    .string()
+    .min(resetPasswordBodyTokenMin)
+    .max(resetPasswordBodyTokenMax)
+    .describe("The token from the emailed link, sent back unchanged."),
+  newPassword: zod
+    .string()
+    .min(resetPasswordBodyNewPasswordMin)
+    .max(resetPasswordBodyNewPasswordMax),
+});
+
+export const ResetPasswordResponse = zod.void();
+
+/**
+ * Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.
+ * @summary Send the confirmation email again
+ */
+export const SendVerificationEmailResponse = zod.void();
+
+/**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
+ * @summary List signed-in browsers
+ */
+export const SessionsResponseItem = zod.object({
+  id: zod.uuid(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  lastSeenAt: zod.iso.datetime({ offset: true }),
+  expiresAt: zod.iso.datetime({ offset: true }),
+  isPersistent: zod.boolean(),
+  userAgent: zod.string().nullable(),
+  isCurrent: zod.boolean(),
+});
+export const SessionsResponse = zod.array(SessionsResponseItem);
+
+/**
+ * Deletes every session of the caller except the one that makes the request, including expired and stale rows. Safe to call when no other session exists.
+ * @summary Sign out everywhere else
+ */
+export const RevokeOtherSessionsResponse = zod.void();
+
+/**
+ * Deletes one of the caller's other sessions. That browser is refused on its next request, because every request checks that its session still exists, and it cannot refresh. The session that makes the request is refused with session.current; it ends through sign out.
+ * @summary Sign another browser out
+ */
+export const RevokeSessionResponse = zod.void();
+
+/**
+ * Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.
+ * @summary Confirm an email address
+ */
+export const verifyEmailBodyEmailMin = 0;
+export const verifyEmailBodyEmailMax = 320;
+
+export const verifyEmailBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
+export const verifyEmailBodyTokenMin = 0;
+export const verifyEmailBodyTokenMax = 1000;
+
+export const VerifyEmailBody = zod.object({
+  email: zod
+    .email()
+    .min(verifyEmailBodyEmailMin)
+    .max(verifyEmailBodyEmailMax)
+    .regex(verifyEmailBodyEmailRegExp),
+  token: zod
+    .string()
+    .min(verifyEmailBodyTokenMin)
+    .max(verifyEmailBodyTokenMax)
+    .describe("The token from the emailed link, sent back unchanged."),
+});
+
+export const VerifyEmailResponse = zod.void();

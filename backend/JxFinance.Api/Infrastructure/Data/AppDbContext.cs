@@ -5,6 +5,7 @@ using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
+using JxFinance.Domain.Email;
 using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;

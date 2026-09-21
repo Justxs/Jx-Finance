@@ -15,5 +15,11 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
         builder.Property(s => s.DefaultLanguage).HasMaxLength(5);
         builder.Property(s => s.TimeZone).HasMaxLength(64);
         builder.Property(s => s.FirstDayOfWeek).HasConversion<string>().HasMaxLength(10);
+        builder.Property(s => s.SmtpHost).HasMaxLength(255);
+        builder.Property(s => s.SmtpEncryption).HasConversion<string>().HasMaxLength(20);
+        builder.Property(s => s.SmtpUserName).HasMaxLength(255);
+        builder.Property(s => s.SmtpProtectedPassword).HasMaxLength(1000);
+        builder.Property(s => s.SmtpFromAddress).HasMaxLength(320);
+        builder.Property(s => s.SmtpFromName).HasMaxLength(100);
     }
 }

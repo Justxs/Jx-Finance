@@ -6,4 +6,6 @@ public sealed record UserProfileResponse(
     string DisplayName,
     string Role,
     bool TwoFactorEnabled,
-    bool IsActive);
+    bool IsActive,
+    bool EmailConfirmed,
+    bool BillReminderEmails);

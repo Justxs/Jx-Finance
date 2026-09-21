@@ -20,6 +20,8 @@ const me: UserProfileResponse = {
   role: "Admin",
   twoFactorEnabled: false,
   isActive: true,
+  emailConfirmed: true,
+  billReminderEmails: false,
 };
 
 const currencies: CurrenciesResponse = {

@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
@@ -7,6 +7,7 @@ import { Brand } from "@/components/brand/brand";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Card } from "@/components/ui/card/card";
+import { usePublicSettings } from "@/hooks/use-settings";
 import { setAuthenticated } from "@/lib/auth-gate";
 import { requiredEmail, requiredValue } from "@/lib/validation";
 
@@ -20,6 +21,7 @@ interface FormValues {
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const emailEnabled = usePublicSettings()?.emailEnabled ?? false;
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
 
   const schema = z.object({
@@ -130,6 +132,15 @@ export function LoginPage() {
             <form.SubmitButton pending={loginMutation.isPending} className="w-full">
               {twoFactorRequired ? t("auth.verifyCode") : t("auth.signIn")}
             </form.SubmitButton>
+
+            {emailEnabled && !twoFactorRequired ? (
+              <Link
+                to="/forgot-password"
+                className="inline-block text-sm font-medium text-muted-foreground underline"
+              >
+                {t("auth.forgotPassword")}
+              </Link>
+            ) : null}
           </form.FormShell>
         </form.AppForm>
       </Card>

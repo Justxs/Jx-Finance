@@ -10,6 +10,7 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { usePublicSettings } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
 import { requiredText } from "@/lib/validation";
 
@@ -17,6 +18,7 @@ interface FormValues {
   displayName: string;
   currentPassword: string;
   newPassword: string;
+  billReminderEmails: boolean;
 }
 
 interface Props {
@@ -25,12 +27,21 @@ interface Props {
 
 export function ProfileForm({ profile }: Readonly<Props>) {
   const { t } = useTranslation();
+  const emailEnabled = usePublicSettings()?.emailEnabled ?? false;
+
+  let reminderHint = t("profile.notifications.billReminderEmailsHint");
+  if (!emailEnabled) {
+    reminderHint = t("profile.notifications.needsEmail");
+  } else if (!profile.emailConfirmed) {
+    reminderHint = t("profile.notifications.needsVerification");
+  }
 
   const schema = z
     .object({
       displayName: requiredText(t, updateMyProfileBodyDisplayNameMax),
       currentPassword: z.string(),
       newPassword: z.string(),
+      billReminderEmails: z.boolean(),
     })
     .refine(
       (value) =>
@@ -59,6 +70,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
     displayName: profile.displayName ?? "",
     currentPassword: "",
     newPassword: "",
+    billReminderEmails: profile.billReminderEmails,
   };
 
   const form = useServerForm({
@@ -70,6 +82,7 @@ export function ProfileForm({ profile }: Readonly<Props>) {
           displayName: value.displayName.trim(),
           currentPassword: value.currentPassword || null,
           newPassword: value.newPassword || null,
+          billReminderEmails: value.billReminderEmails,
         },
       }),
   });
@@ -101,6 +114,24 @@ export function ProfileForm({ profile }: Readonly<Props>) {
             />
           )}
         </form.Field>
+
+        <fieldset className="border-t pt-4">
+          <legend className="sr-only">{t("profile.notifications.title")}</legend>
+          <p className="text-sm font-medium">{t("profile.notifications.title")}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {t("profile.notifications.description")}
+          </p>
+          <form.Field name="billReminderEmails">
+            {(field) => (
+              <field.CheckboxField
+                id="profile-bill-reminder-emails"
+                className="mt-3"
+                label={t("profile.notifications.billReminderEmails")}
+                hint={reminderHint}
+              />
+            )}
+          </form.Field>
+        </fieldset>
 
         <FormError error={updateMutation.error} />
 

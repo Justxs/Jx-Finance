@@ -7,7 +7,13 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { ExchangeRateSyncResponse, PublicSettingsResponse, SettingsResponse } from "../model";
+import type {
+  ExchangeRateSyncResponse,
+  PublicSettingsResponse,
+  SettingsResponse,
+  SmtpSettingsResponse,
+  SmtpTestResponse,
+} from "../model";
 
 export const getSettingsMockHandler = (
   overrideResponse?:
@@ -104,9 +110,84 @@ export const getPublicSettingsMockHandler = (
     options,
   );
 };
+
+export const getSmtpSettingsMockHandler = (
+  overrideResponse?:
+    | SmtpSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SmtpSettingsResponse> | SmtpSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/settings/smtp",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateSmtpSettingsMockHandler = (
+  overrideResponse?:
+    | SmtpSettingsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<SmtpSettingsResponse> | SmtpSettingsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/settings/smtp",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getSendTestEmailMockHandler = (
+  overrideResponse?:
+    | SmtpTestResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<SmtpTestResponse> | SmtpTestResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/settings/smtp/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getSettingsMock = () => [
   getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
   getSyncExchangeRatesMockHandler(),
   getPublicSettingsMockHandler(),
+  getSmtpSettingsMockHandler(),
+  getUpdateSmtpSettingsMockHandler(),
+  getSendTestEmailMockHandler(),
 ];

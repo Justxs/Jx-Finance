@@ -1,6 +1,9 @@
 using System.Globalization;
 using JxFinance.Common;
+using JxFinance.Common.Email;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Email;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Data;
@@ -26,6 +29,8 @@ public sealed class RecurringBillReminderJob(
     {
         var db = services.GetRequiredService<AppDbContext>();
         var clock = services.GetRequiredService<IClock>();
+        var outbox = services.GetRequiredService<IEmailOutbox>();
+        var store = services.GetRequiredService<IInstanceSettingsStore>();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.RecurringBillReminders, ct);
 
@@ -51,6 +56,15 @@ public sealed class RecurringBillReminderJob(
             .Select(n => n.RelatedId!.Value)
             .ToListAsync(ct);
         var remindedSet = remindedToday.ToHashSet();
+
+        var ownerIds = dueBills.Select(b => b.UserId).Distinct().ToList();
+        var subscribers = await db.Users
+            .Where(u => ownerIds.Contains(u.Id) && u.BillReminderEmails && u.EmailConfirmed && u.Email != null)
+            .Select(u => new { u.Id, u.Email, u.DisplayName })
+            .ToListAsync(ct);
+        var byOwner = subscribers.ToDictionary(u => u.Id);
+        var settings = store.Current;
+        var product = EmailTexts.Product(settings.InstanceName);
 
         foreach (var bill in dueBills)
         {

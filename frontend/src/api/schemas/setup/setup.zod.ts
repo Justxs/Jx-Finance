@@ -34,6 +34,8 @@ export const SetupResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 
 /**

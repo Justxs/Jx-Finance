@@ -272,7 +272,7 @@ export const getUpdateMyProfileUrl = () => {
 };
 
 /**
- * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
+ * Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
  * @summary Update your own profile
  */
 export const updateMyProfile = async (

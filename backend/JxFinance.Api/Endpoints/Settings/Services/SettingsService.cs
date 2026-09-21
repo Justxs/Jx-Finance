@@ -1,15 +1,19 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Endpoints.Settings.UpdateSettings;
+using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -20,6 +24,10 @@ public sealed class SettingsService(
     AppDbContext db,
     IInstanceSettingsStore store,
     IExchangeRateService rates,
+    IEmailDelivery emails,
+    IAuthService authService,
+    ICurrentUser currentUser,
+    IDataProtectionProvider protection,
     IOptions<AppOptions> options) : ISettingsService
 {
     private const string LockRevaluedTables =
@@ -32,7 +40,7 @@ public sealed class SettingsService(
     }
 
     public PublicSettingsResponse GetPublic() =>
-        new(store.Current.InstanceName, store.Current.DefaultLanguage);
+        new(store.Current.InstanceName, store.Current.DefaultLanguage, store.Current.Smtp.IsConfigured);
 
     public async Task<Result<SettingsResponse>> UpdateAsync(
         UpdateSettingsRequest request,
@@ -88,6 +96,67 @@ public sealed class SettingsService(
         store.Set(settings);
 
         return await GetAsync(cancellationToken);
+    }
+
+    public SmtpSettingsResponse GetSmtp() => ToResponse(store.Current.Smtp);
+
+    public async Task<Result<SmtpSettingsResponse>> UpdateSmtpAsync(
+        UpdateSmtpSettingsRequest request,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var settings = await db.InstanceSettings.FirstOrDefaultAsync(cancellationToken);
+        if (settings is null)
+        {
+            settings = store.Defaults();
+            db.InstanceSettings.Add(settings);
+        }
+
+        var userName = OptionalText.Normalize(request.UserName);
+        settings.SmtpEnabled = request.Enabled;
+        settings.SmtpHost = OptionalText.Normalize(request.Host);
+        settings.SmtpPort = request.Port;
+        settings.SmtpEncryption = request.Encryption;
+        settings.SmtpUserName = userName;
+        settings.SmtpFromAddress = OptionalText.Normalize(request.FromAddress);
+        settings.SmtpFromName = OptionalText.Normalize(request.FromName);
+
+        if (userName is null)
+        {
+            settings.SmtpProtectedPassword = string.Empty;
+        }
+        else if (OptionalText.Normalize(request.Password) is { } password)
+        {
+            settings.SmtpProtectedPassword = protection
+                .CreateProtector(EmailDelivery.ProtectorPurpose)
+                .Protect(password);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        store.Set(settings);
+
+        return ToResponse(store.Current.Smtp);
+    }
+
+    public async Task<Result<SmtpTestResponse>> SendTestEmailAsync(CancellationToken cancellationToken)
+    {
+        if (await authService.FindByIdAsync(currentUser.Id, cancellationToken) is not { Email: { } address } administrator)
+        {
+            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+        }
+
+        var settings = store.Current;
+        var sent = await emails.SendAsync(
+            EmailTexts.Test(
+                settings.DefaultLanguage,
+                address,
+                administrator.DisplayName,
+                EmailTexts.Product(settings.InstanceName)),
+            cancellationToken);
+
+        return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
     }
 
     public async Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken)
@@ -198,4 +267,14 @@ public sealed class SettingsService(
         settings.FirstDayOfWeek,
         settings.DefaultAccountId,
         settings.DefaultPageSize);
+
+    private static SmtpSettingsResponse ToResponse(SmtpSettingsSnapshot smtp) => new(
+        smtp.Enabled,
+        smtp.Host,
+        smtp.Port,
+        smtp.Encryption,
+        smtp.UserName,
+        smtp.HasPassword,
+        smtp.FromAddress,
+        smtp.FromName);
 }

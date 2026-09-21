@@ -24,4 +24,6 @@ export interface UpdateMyProfileRequest {
    * @nullable
    */
   newPassword: string | null;
+  /** Send a reminder email beside the in-app notification of a recurring entry. Off by default, and it needs both a working mail server and a confirmed address to have any effect. */
+  billReminderEmails: boolean;
 }

@@ -98,6 +98,9 @@ describe("shouldIgnoreShortcut", () => {
     { dialogOpen: true },
     { pathname: "/login" },
     { pathname: "/setup" },
+    { pathname: "/forgot-password" },
+    { pathname: "/reset-password" },
+    { pathname: "/verify-email" },
   ])("ignores %j", (override) => {
     expect(shouldIgnoreShortcut({ ...base, ...override })).toBe(true);
   });

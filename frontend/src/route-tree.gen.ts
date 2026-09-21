@@ -11,6 +11,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccountsRouteImport } from './routes/accounts'
 import { Route as BudgetsRouteImport } from './routes/budgets'
 import { Route as CategoriesRouteImport } from './routes/categories'
+import { Route as CategorizationRulesRouteImport } from './routes/categorization-rules'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as GoalsRouteImport } from './routes/goals'
 import { Route as HouseholdsRouteImport } from './routes/households'
 import { Route as InvestmentsRouteImport } from './routes/investments'
@@ -19,10 +21,13 @@ import { Route as NetWorthRouteImport } from './routes/net-worth'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as RecurringBillsRouteImport } from './routes/recurring-bills'
 import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SetupRouteImport } from './routes/setup'
+import { Route as TagsRouteImport } from './routes/tags'
 import { Route as TransactionsRouteImport } from './routes/transactions'
 import { Route as UsersRouteImport } from './routes/users'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -42,6 +47,16 @@ const BudgetsRoute = BudgetsRouteImport.update({
 const CategoriesRoute = CategoriesRouteImport.update({
   id: '/categories',
   path: '/categories',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategorizationRulesRoute = CategorizationRulesRouteImport.update({
+  id: '/categorization-rules',
+  path: '/categorization-rules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GoalsRoute = GoalsRouteImport.update({
@@ -84,6 +99,11 @@ const ReportsRoute = ReportsRouteImport.update({
   path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -92,6 +112,11 @@ const SettingsRoute = SettingsRouteImport.update({
 const SetupRoute = SetupRouteImport.update({
   id: '/setup',
   path: '/setup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TagsRoute = TagsRouteImport.update({
+  id: '/tags',
+  path: '/tags',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TransactionsRoute = TransactionsRouteImport.update({
@@ -104,12 +129,19 @@ const UsersRoute = UsersRouteImport.update({
   path: '/users',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/categorization-rules': typeof CategorizationRulesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/investments': typeof InvestmentsRoute
@@ -118,16 +150,21 @@ export interface FileRoutesByFullPath {
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
+  '/tags': typeof TagsRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/categorization-rules': typeof CategorizationRulesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/investments': typeof InvestmentsRoute
@@ -136,10 +173,13 @@ export interface FileRoutesByTo {
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
+  '/tags': typeof TagsRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -147,6 +187,8 @@ export interface FileRoutesById {
   '/accounts': typeof AccountsRoute
   '/budgets': typeof BudgetsRoute
   '/categories': typeof CategoriesRoute
+  '/categorization-rules': typeof CategorizationRulesRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/goals': typeof GoalsRoute
   '/households': typeof HouseholdsRoute
   '/investments': typeof InvestmentsRoute
@@ -155,10 +197,13 @@ export interface FileRoutesById {
   '/profile': typeof ProfileRoute
   '/recurring-bills': typeof RecurringBillsRoute
   '/reports': typeof ReportsRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/settings': typeof SettingsRoute
   '/setup': typeof SetupRoute
+  '/tags': typeof TagsRoute
   '/transactions': typeof TransactionsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -167,6 +212,8 @@ export interface FileRouteTypes {
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/categorization-rules'
+    | '/forgot-password'
     | '/goals'
     | '/households'
     | '/investments'
@@ -175,16 +222,21 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/reset-password'
     | '/settings'
     | '/setup'
+    | '/tags'
     | '/transactions'
     | '/users'
+    | '/verify-email'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/categorization-rules'
+    | '/forgot-password'
     | '/goals'
     | '/households'
     | '/investments'
@@ -193,16 +245,21 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/reset-password'
     | '/settings'
     | '/setup'
+    | '/tags'
     | '/transactions'
     | '/users'
+    | '/verify-email'
   id:
     | '__root__'
     | '/'
     | '/accounts'
     | '/budgets'
     | '/categories'
+    | '/categorization-rules'
+    | '/forgot-password'
     | '/goals'
     | '/households'
     | '/investments'
@@ -211,10 +268,13 @@ export interface FileRouteTypes {
     | '/profile'
     | '/recurring-bills'
     | '/reports'
+    | '/reset-password'
     | '/settings'
     | '/setup'
+    | '/tags'
     | '/transactions'
     | '/users'
+    | '/verify-email'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,6 +282,8 @@ export interface RootRouteChildren {
   AccountsRoute: typeof AccountsRoute
   BudgetsRoute: typeof BudgetsRoute
   CategoriesRoute: typeof CategoriesRoute
+  CategorizationRulesRoute: typeof CategorizationRulesRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   GoalsRoute: typeof GoalsRoute
   HouseholdsRoute: typeof HouseholdsRoute
   InvestmentsRoute: typeof InvestmentsRoute
@@ -230,10 +292,13 @@ export interface RootRouteChildren {
   ProfileRoute: typeof ProfileRoute
   RecurringBillsRoute: typeof RecurringBillsRoute
   ReportsRoute: typeof ReportsRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   SettingsRoute: typeof SettingsRoute
   SetupRoute: typeof SetupRoute
+  TagsRoute: typeof TagsRoute
   TransactionsRoute: typeof TransactionsRoute
   UsersRoute: typeof UsersRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -264,6 +329,20 @@ declare module '@tanstack/react-router' {
       path: '/categories'
       fullPath: '/categories'
       preLoaderRoute: typeof CategoriesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categorization-rules': {
+      id: '/categorization-rules'
+      path: '/categorization-rules'
+      fullPath: '/categorization-rules'
+      preLoaderRoute: typeof CategorizationRulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/goals': {
@@ -322,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -334,6 +420,13 @@ declare module '@tanstack/react-router' {
       path: '/setup'
       fullPath: '/setup'
       preLoaderRoute: typeof SetupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tags': {
+      id: '/tags'
+      path: '/tags'
+      fullPath: '/tags'
+      preLoaderRoute: typeof TagsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transactions': {
@@ -350,6 +443,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UsersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -358,6 +458,8 @@ const rootRouteChildren: RootRouteChildren = {
   AccountsRoute: AccountsRoute,
   BudgetsRoute: BudgetsRoute,
   CategoriesRoute: CategoriesRoute,
+  CategorizationRulesRoute: CategorizationRulesRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   GoalsRoute: GoalsRoute,
   HouseholdsRoute: HouseholdsRoute,
   InvestmentsRoute: InvestmentsRoute,
@@ -366,10 +468,13 @@ const rootRouteChildren: RootRouteChildren = {
   ProfileRoute: ProfileRoute,
   RecurringBillsRoute: RecurringBillsRoute,
   ReportsRoute: ReportsRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   SettingsRoute: SettingsRoute,
   SetupRoute: SetupRoute,
+  TagsRoute: TagsRoute,
   TransactionsRoute: TransactionsRoute,
   UsersRoute: UsersRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

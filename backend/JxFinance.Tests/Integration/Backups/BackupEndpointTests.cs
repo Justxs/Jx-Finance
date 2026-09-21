@@ -199,6 +199,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("Accounts", tables);
         Assert.Contains("AspNetUsers", tables);
         Assert.DoesNotContain("UserSessions", tables);
+        Assert.DoesNotContain("EmailMessages", tables);
     }
 
     [Fact]

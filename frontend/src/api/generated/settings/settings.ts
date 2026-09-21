@@ -29,7 +29,10 @@ import type {
   ProblemDetails,
   PublicSettingsResponse,
   SettingsResponse,
+  SmtpSettingsResponse,
+  SmtpTestResponse,
   UpdateSettingsRequest,
+  UpdateSmtpSettingsRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -418,7 +421,7 @@ export const getPublicSettingsUrl = () => {
 };
 
 /**
- * Anonymous. Returns only the installation name and the default language.
+ * Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers "Forgot password". No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const publicSettings = async (
@@ -616,3 +619,278 @@ export function usePublicSettingsSuspense<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getSmtpSettingsUrl = () => {
+  return `/api/settings/smtp`;
+};
+
+/**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
+ * @summary Read the mail server of this installation
+ */
+export const smtpSettings = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SmtpSettingsResponse> => {
+  return customFetch<SmtpSettingsResponse>(getSmtpSettingsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSmtpSettingsQueryKey = () => {
+  return [`/api/settings/smtp`] as const;
+};
+
+export const getSmtpSettingsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSmtpSettingsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof smtpSettings>>> = ({ signal }) =>
+    smtpSettings({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof smtpSettings>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SmtpSettingsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof smtpSettings>>>;
+export type SmtpSettingsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSmtpSettingsSuspense<
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSmtpSettingsSuspense<
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSmtpSettingsSuspense<
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read the mail server of this installation
+ */
+
+export function useSmtpSettingsSuspense<
+  TData = Awaited<ReturnType<typeof smtpSettings>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof smtpSettings>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSmtpSettingsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateSmtpSettingsUrl = () => {
+  return `/api/settings/smtp`;
+};
+
+/**
+ * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one; clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. Switching enabled on needs a host and a sender address. Administrators only.
+ * @summary Save the mail server of this installation
+ */
+export const updateSmtpSettings = async (
+  updateSmtpSettingsRequest: UpdateSmtpSettingsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SmtpSettingsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<SmtpSettingsResponse>(getUpdateSmtpSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateSmtpSettingsRequest),
+  });
+};
+
+export const getUpdateSmtpSettingsMutationKey = () => ["updateSmtpSettings"] as const;
+
+export const getUpdateSmtpSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateSmtpSettings>>,
+    TError,
+    UpdateSmtpSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateSmtpSettings>>,
+  TError,
+  UpdateSmtpSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateSmtpSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateSmtpSettings>>,
+    UpdateSmtpSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateSmtpSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateSmtpSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateSmtpSettings>>
+>;
+export type UpdateSmtpSettingsMutationBody = UpdateSmtpSettingsRequest;
+export type UpdateSmtpSettingsMutationError = ErrorType<ProblemDetails>;
+export type UpdateSmtpSettingsMutationVariables = { data: UpdateSmtpSettingsRequest };
+
+/**
+ * @summary Save the mail server of this installation
+ */
+export const useUpdateSmtpSettings = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateSmtpSettings>>,
+      TError,
+      UpdateSmtpSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateSmtpSettings>>,
+  TError,
+  UpdateSmtpSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateSmtpSettingsMutationOptions(options), queryClient);
+};
+export const getSendTestEmailUrl = () => {
+  return `/api/settings/smtp/test`;
+};
+
+/**
+ * Sends one short message to the calling administrator's own address with the settings that are stored right now, and waits for the mail server to accept it. Nothing is written: the message does not go through the outbox and leaves no row behind, so a failed attempt is not retried. Success answers the address the message went to; a refusal answers 400 with email.sendFailed and the mail server's own words, email.notConfigured when the settings are incomplete or switched off, or email.passwordUnreadable when the stored password cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind. The attempt gives up after the configured send timeout, so a dead server cannot hold the request open. Save the settings before testing them. Rate limited to 10 calls per five minutes per client.
+ * @summary Send a test message
+ */
+export const sendTestEmail = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SmtpTestResponse> => {
+  return customFetch<SmtpTestResponse>(getSendTestEmailUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSendTestEmailMutationKey = () => ["sendTestEmail"] as const;
+
+export const getSendTestEmailMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof sendTestEmail>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof sendTestEmail>>, TError, void, TContext> => {
+  const mutationKey = getSendTestEmailMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendTestEmail>>, void> = () => {
+    return sendTestEmail(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendTestEmailMutationResult = NonNullable<Awaited<ReturnType<typeof sendTestEmail>>>;
+
+export type SendTestEmailMutationError = ErrorType<ProblemDetails | void>;
+
+/**
+ * @summary Send a test message
+ */
+export const useSendTestEmail = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendTestEmail>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof sendTestEmail>>, TError, void, TContext> => {
+  return useMutation(getSendTestEmailMutationOptions(options), queryClient);
+};

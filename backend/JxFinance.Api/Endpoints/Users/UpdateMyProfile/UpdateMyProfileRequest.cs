@@ -1,3 +1,7 @@
 namespace JxFinance.Endpoints.Users.UpdateMyProfile;
 
-public sealed record UpdateMyProfileRequest(string DisplayName, string? CurrentPassword, string? NewPassword);
+public sealed record UpdateMyProfileRequest(
+    string DisplayName,
+    string? CurrentPassword,
+    string? NewPassword,
+    bool BillReminderEmails);

@@ -13,4 +13,6 @@ export interface UserProfileResponse {
   role: string;
   twoFactorEnabled: boolean;
   isActive: boolean;
+  emailConfirmed: boolean;
+  billReminderEmails: boolean;
 }

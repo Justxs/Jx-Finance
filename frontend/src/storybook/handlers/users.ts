@@ -62,12 +62,17 @@ export const userHandlers = [
       role: "Member",
       twoFactorEnabled: false,
       isActive: true,
+      emailConfirmed: false,
+      billReminderEmails: false,
     };
     return mergeProfile(base, await readBody(request));
   }),
   getUpdateMyProfileMockHandler(async ({ request }) => {
     const body = await readBody(request);
-    return mergeProfile(currentUser, { displayName: body.displayName });
+    return {
+      ...mergeProfile(currentUser, { displayName: body.displayName }),
+      billReminderEmails: body.billReminderEmails === true,
+    };
   }),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),

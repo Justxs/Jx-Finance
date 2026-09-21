@@ -8,6 +8,8 @@ export const currentUser: UserProfileResponse = {
   role: "Admin",
   twoFactorEnabled: false,
   isActive: true,
+  emailConfirmed: true,
+  billReminderEmails: false,
 };
 
 export const currentUserWithTwoFactor: UserProfileResponse = {
@@ -22,6 +24,8 @@ export const memberUser: UserProfileResponse = {
   role: "Member",
   twoFactorEnabled: true,
   isActive: true,
+  emailConfirmed: true,
+  billReminderEmails: false,
 };
 
 export const longNameUser: UserProfileResponse = {
@@ -31,6 +35,8 @@ export const longNameUser: UserProfileResponse = {
   role: "Member",
   twoFactorEnabled: false,
   isActive: true,
+  emailConfirmed: true,
+  billReminderEmails: false,
 };
 
 export const inactiveUser: UserProfileResponse = {
@@ -40,6 +46,18 @@ export const inactiveUser: UserProfileResponse = {
   role: "Member",
   twoFactorEnabled: false,
   isActive: false,
+  emailConfirmed: true,
+  billReminderEmails: false,
+};
+
+export const unverifiedUser: UserProfileResponse = {
+  ...currentUser,
+  emailConfirmed: false,
+};
+
+export const reminderSubscriber: UserProfileResponse = {
+  ...currentUser,
+  billReminderEmails: true,
 };
 
 export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUser, inactiveUser];

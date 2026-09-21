@@ -325,7 +325,24 @@
     "createAdmin": "Create admin account",
     "twoFactorCode": "Authenticator code",
     "twoFactorCodeHint": "Enter the 6-digit code from your authenticator app, or a recovery code.",
-    "verifyCode": "Verify code"
+    "verifyCode": "Verify code",
+    "forgotPassword": "Forgot your password?",
+    "forgotTitle": "Reset your password",
+    "forgotSubtitle": "Type the address you sign in with. If it belongs to an account here, a link that sets a new password is sent to it.",
+    "sendResetLink": "Send reset link",
+    "forgotSent": "If that address belongs to an account here, a link is on its way. It is valid for one hour and works once.",
+    "backToSignIn": "Back to sign in",
+    "resetTitle": "Choose a new password",
+    "resetSubtitle": "The link works once. After the change every signed-in browser of this account has to sign in again.",
+    "resetLinkBroken": "This link is incomplete. Ask for a new one from the sign-in screen.",
+    "newPassword": "New password",
+    "setNewPassword": "Set new password",
+    "resetDone": "Your password was changed. Sign in with it.",
+    "verifyTitle": "Confirming your address",
+    "verifyPending": "One moment.",
+    "verifyDone": "Your address is confirmed.",
+    "verifyFailed": "This link is no longer valid. Sign in and ask for a new one on your profile.",
+    "confirmAddress": "Confirm this address"
   },
   "users": {
     "title": "Users",
@@ -387,7 +404,37 @@
     "recoveryCodesTitle": "Save your recovery codes",
     "recoveryCodesSubtitle": "Each code can be used once if you lose access to your authenticator app. Store them somewhere safe — they won't be shown again.",
     "recoveryCodesDone": "I've saved these codes",
-    "sectionsNav": "Profile sections"
+    "sectionsNav": "Profile sections",
+    "sessions": {
+      "title": "Signed-in browsers",
+      "description": "Every browser that is signed in to your account. Sign out the ones you no longer use or do not recognise.",
+      "browserOn": "{{browser}} on {{os}}",
+      "unknownBrowser": "Unknown browser",
+      "current": "This browser",
+      "lastActive": "Last active",
+      "signedIn": "Signed in",
+      "expires": "Expires",
+      "signOut": "Sign out",
+      "signOutOthers": "Sign out everywhere else",
+      "confirmTitle": "Sign this browser out?",
+      "confirmDescription": "It will have to sign in again with your password.",
+      "confirmOthersTitle": "Sign out everywhere else?",
+      "confirmOthersDescription": "Every other browser will have to sign in again. This browser stays signed in.",
+      "signedOut": "Browser signed out",
+      "othersSignedOut": "Signed out everywhere else"
+    },
+    "emailUnconfirmedTitle": "Confirm your email address",
+    "emailUnconfirmedBody": "{{email}} is not confirmed yet, so this installation sends no mail to it. Nothing else is blocked.",
+    "resendVerification": "Send the link again",
+    "verificationSent": "Confirmation email sent",
+    "notifications": {
+      "title": "Email notifications",
+      "description": "Reminders always appear in the bell. An email is extra, and only for recurring entries.",
+      "billReminderEmails": "Email me about a due recurring entry",
+      "billReminderEmailsHint": "One message per entry and day, beside the in-app reminder. Off by default.",
+      "needsEmail": "This installation cannot send email yet. Ask an administrator to set up the mail server.",
+      "needsVerification": "Confirm your address first; until then no mail is sent to it."
+    }
   },
   "settings": {
     "title": "Settings",
@@ -497,7 +544,35 @@
       "pageSizeHint": "Used by the transactions list."
     },
     "appearance": "Appearance",
-    "sectionsNav": "Settings sections"
+    "sectionsNav": "Settings sections",
+    "smtp": {
+      "title": "Email",
+      "description": "The mail server this installation sends through. Without it there are no password reset links, no address confirmations and no reminder emails.",
+      "enabled": "Send email from this installation",
+      "enabledHint": "Turn off to stop every outgoing message without losing the settings.",
+      "host": "Server",
+      "hostHint": "The SMTP host name, for example smtp.example.com.",
+      "port": "Port",
+      "encryption": "Encryption",
+      "encryptions": {
+        "none": "None",
+        "startTls": "STARTTLS (usually port 587)",
+        "sslOnConnect": "TLS on connect (usually port 465)"
+      },
+      "userName": "User name",
+      "userNameHint": "Leave empty for a relay that needs no sign-in. Clearing it also forgets the password.",
+      "password": "Password",
+      "passwordHint": "Stored encrypted and never shown again. Leave empty to keep the stored one.",
+      "passwordStored": "A password is stored.",
+      "fromAddress": "Sender address",
+      "fromAddressHint": "The address recipients see, for example finance@example.com.",
+      "fromName": "Sender name",
+      "fromNameHint": "Shown beside the sender address. Leave empty to use the address alone.",
+      "saved": "Mail server saved",
+      "test": "Send a test message",
+      "testHint": "Save first. The message goes to your own address and nothing is stored.",
+      "testSent": "Test message sent to {{email}}"
+    }
   },
   "budgets": {
     "title": "Budgets",
@@ -1194,7 +1269,11 @@
     "email": {
       "alreadyVerified": "This address is already confirmed.",
       "invalid": "Enter a valid email address.",
-      "taken": "This email is already in use."
+      "notConfigured": "This installation cannot send email yet. Set the mail server up in Settings.",
+      "passwordUnreadable": "The stored mail server password can no longer be read. Enter it again.",
+      "sendFailed": "The mail server refused the message: {{reason}}",
+      "taken": "This email is already in use.",
+      "tokenInvalid": "This link is no longer valid. Ask for a new one."
     },
     "enum": {
       "invalid": "Choose one of the available options."
@@ -1233,6 +1312,9 @@
     "password": {
       "incorrect": "The current password is wrong.",
       "tooWeak": "Choose a stronger password."
+    },
+    "passwordReset": {
+      "tokenInvalid": "This reset link is no longer valid. Ask for a new one."
     },
     "quantity": {
       "nonNegative": "Enter 0 or more with up to 8 decimals.",

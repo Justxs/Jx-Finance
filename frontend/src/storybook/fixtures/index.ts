@@ -18,6 +18,7 @@ export * from "./reports";
 export * from "./imports";
 export * from "./backups";
 export * from "./auth";
+export * from "./email";
 export * from "./setup";
 export * from "./problems";
 export * from "./investments";
