@@ -1,7 +1,19 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
-import { serverErrorProblem } from "@/storybook/fixtures";
+import {
+  getDashboardLayoutMockHandler,
+  getMonthlyTrendMockHandler,
+  getSaveDashboardLayoutMockHandler,
+} from "@/api/generated/dashboard/dashboard.msw";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import {
+  allHiddenDashboardLayout,
+  customDashboardLayout,
+  dashboardCardUnknownProblem,
+  hiddenCardsDashboardLayout,
+  serverErrorProblem,
+  settings,
+} from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -24,6 +36,21 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+const trendTitle = /^(income vs\. expenses|pajamos ir išlaidos)$/i;
+const accountsTitle = /^(balance by account|likutis pagal sąskaitą)$/i;
+const budgetsTitle = /^(budgets in their window|biudžetai savo lange)$/i;
+const customise = /^(customise|pritaikyti)$/i;
+
+async function cardHeadings(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement);
+  await canvas.findAllByRole("heading", { level: 2 });
+  return canvas.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
+}
+
+function withSettings(features: Partial<typeof settings.features>) {
+  return getSettingsMockHandler({ ...settings, features: { ...settings.features, ...features } });
+}
 
 export const Default: Story = {};
 
@@ -73,5 +100,123 @@ export const RetryRecoversFailedSection: Story = {
     );
 
     await waitFor(() => expect(canvas.queryAllByRole("alert")).toHaveLength(0));
+  },
+};
+
+export const CustomOrder: Story = {
+  parameters: {
+    msw: { handlers: [getDashboardLayoutMockHandler(customDashboardLayout), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const headings = await cardHeadings(canvasElement);
+    await expect(headings[0]).toMatch(accountsTitle);
+  },
+};
+
+export const HiddenCards: Story = {
+  parameters: {
+    msw: { handlers: [getDashboardLayoutMockHandler(hiddenCardsDashboardLayout), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("heading", { level: 2, name: accountsTitle });
+    await expect(canvas.queryByRole("heading", { name: trendTitle })).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole("heading", { name: /recent transactions|paskutinės operacijos/i }),
+    ).not.toBeInTheDocument();
+  },
+};
+
+export const AllHidden: Story = {
+  parameters: {
+    msw: { handlers: [getDashboardLayoutMockHandler(allHiddenDashboardLayout), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByText(/every card is hidden|visos kortelės paslėptos/i);
+    await expect(canvas.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
+
+    await userEvent.click(
+      canvas.getByRole("button", { name: /choose cards|pasirinkti korteles/i }),
+    );
+
+    await expect(
+      await canvas.findByRole("list", { name: /dashboard cards|suvestinės kortelės/i }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const FeatureSwitchedOff: Story = {
+  parameters: {
+    msw: { handlers: [withSettings({ budgets: false }), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("heading", { level: 2, name: accountsTitle });
+    await expect(canvas.queryByRole("heading", { name: budgetsTitle })).not.toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole("button", { name: customise }));
+
+    const list = await canvas.findByRole("list", { name: /dashboard cards|suvestinės kortelės/i });
+    await expect(within(list).queryByText(budgetsTitle)).not.toBeInTheDocument();
+    await expect(canvas.getByText(/switched off|išjungė/i)).toBeInTheDocument();
+  },
+};
+
+export const CustomiseAndSave: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await canvas.findByRole("heading", { level: 2, name: trendTitle });
+
+    await userEvent.click(canvas.getByRole("button", { name: customise }));
+    await userEvent.click(await canvas.findByRole("checkbox", { name: trendTitle }));
+    const up = canvas.getByRole("button", {
+      name: /^(move up|pakelti): (balance by account|likutis pagal sąskaitą)$/i,
+    });
+    up.focus();
+    await userEvent.keyboard("{Enter}{Enter}{Enter}{Enter}{Enter}{Enter}");
+    await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
+
+    await waitFor(async () => {
+      const headings = await cardHeadings(canvasElement);
+      await expect(headings[0]).toMatch(accountsTitle);
+    });
+    await expect(canvas.queryByRole("heading", { name: trendTitle })).not.toBeInTheDocument();
+  },
+};
+
+export const SaveError: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem, 400)),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: customise }));
+    await userEvent.click(await canvas.findByRole("button", { name: /^(save|išsaugoti)$/i }));
+
+    const alert = await canvas.findByRole("alert");
+    await expect(alert).toHaveTextContent(/does not know|nežino/i);
+    await expect(
+      canvas.getByRole("list", { name: /dashboard cards|suvestinės kortelės/i }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const LayoutUnavailable: Story = {
+  parameters: {
+    msw: {
+      handlers: [getDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByRole("alert")).toHaveTextContent(
+      /dashboard layout|suvestinės išdėstymas/i,
+    );
   },
 };

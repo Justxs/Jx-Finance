@@ -1,118 +1,92 @@
+import { SlidersHorizontal } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useDashboardLayoutSuspense } from "@/api/generated";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Panel } from "@/components/ui/section/section";
-import { RowsSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
-import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useMonthLabel } from "@/hooks/use-formatters";
-import { useTodayDate } from "@/hooks/use-settings";
-import { AccountBalances } from "../account-balances/account-balances";
-import { BudgetSnapshot } from "../budget-snapshot/budget-snapshot";
-import { CategoryBreakdownChart } from "../category-breakdown-chart/category-breakdown-chart";
-import { DashboardSection } from "../dashboard-section/dashboard-section";
-import { DashboardStats } from "../dashboard-stats/dashboard-stats";
-import { MonthlyTrendChart } from "../monthly-trend-chart/monthly-trend-chart";
-import { RecentTransactionsList } from "../recent-transactions-list/recent-transactions-list";
-import { SpendingPaceChart } from "../spending-pace-chart";
-import { UpcomingBills } from "../upcoming-bills/upcoming-bills";
+import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
+import { DashboardCard } from "../dashboard-card/dashboard-card";
+import { DashboardCustomiser } from "../dashboard-customiser/dashboard-customiser";
+import { shownCards } from "../dashboard-layout";
 
-const chartFallback = <Skeleton className="h-64 w-full rounded-sm" />;
-const third = "lg:col-span-3 xl:col-span-4";
-const wide = "lg:col-span-6 xl:col-span-8";
-const narrow = "lg:col-span-6 xl:col-span-4";
+const grid = "grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5";
+
+function DashboardSkeleton() {
+  return (
+    <div className={grid}>
+      <Skeleton className="h-72 w-full rounded-lg lg:col-span-6 xl:col-span-4" />
+      <Skeleton className="h-72 w-full rounded-lg lg:col-span-6 xl:col-span-8" />
+    </div>
+  );
+}
+
+interface ContentProps {
+  customising: boolean;
+  onCustomise: () => void;
+  onDone: () => void;
+}
+
+function DashboardContent({ customising, onCustomise, onDone }: Readonly<ContentProps>) {
+  const { t } = useTranslation();
+  const layout = useDashboardLayoutSuspense().data;
+  const { features } = useSettingsSuspense();
+
+  if (customising) {
+    return <DashboardCustomiser layout={layout} features={features} onDone={onDone} />;
+  }
+
+  const cards = shownCards(layout, features);
+
+  if (cards.length === 0) {
+    return (
+      <Panel className="flex flex-wrap items-center justify-between gap-3">
+        <EmptyText>{t("dashboard.layout.allHidden")}</EmptyText>
+        <Button variant="outline" onClick={onCustomise}>
+          <SlidersHorizontal />
+          {t("dashboard.layout.chooseCards")}
+        </Button>
+      </Panel>
+    );
+  }
+
+  return (
+    <div className={grid}>
+      {cards.map((card) => (
+        <DashboardCard key={card} card={card} />
+      ))}
+    </div>
+  );
+}
 
 export function DashboardPage() {
   const { t } = useTranslation();
   const monthLabel = useMonthLabel();
   const month = monthLabel(useTodayDate());
+  const [customising, setCustomising] = useState(false);
 
   return (
     <div className="space-y-6">
-      <PageHeader title={t("dashboard.title")} description={month} />
+      <PageHeader title={t("dashboard.title")} description={month}>
+        {customising ? null : (
+          <Button variant="outline" onClick={() => setCustomising(true)}>
+            <SlidersHorizontal />
+            {t("dashboard.layout.customise")}
+          </Button>
+        )}
+      </PageHeader>
 
-      <div className="grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5">
-        <Panel as="section" className={narrow} aria-label={t("dashboard.totalBalance")}>
-          <QueryBoundary
-            fallback={<Skeleton className="h-64 w-full rounded-sm" />}
-            errorSubject={t("dashboard.totalBalance")}
-          >
-            <DashboardStats />
-          </QueryBoundary>
-        </Panel>
-        <DashboardSection
-          className={wide}
-          title={t("dashboard.monthlyTrend")}
-          to="/reports"
-          linkLabel={t("nav.reports")}
-        >
-          <QueryBoundary fallback={chartFallback} errorSubject={t("dashboard.monthlyTrend")}>
-            <MonthlyTrendChart />
-          </QueryBoundary>
-        </DashboardSection>
-
-        <DashboardSection className={third} title={t("dashboard.spendingByCategory")}>
-          <QueryBoundary
-            fallback={<RowsSkeleton rows={6} />}
-            errorSubject={t("dashboard.spendingByCategory")}
-          >
-            <CategoryBreakdownChart />
-          </QueryBoundary>
-        </DashboardSection>
-        <DashboardSection className={third} title={t("dashboard.pace.title")}>
-          <QueryBoundary fallback={chartFallback} errorSubject={t("dashboard.pace.title")}>
-            <SpendingPaceChart />
-          </QueryBoundary>
-        </DashboardSection>
-        <DashboardSection
-          className={narrow}
-          title={t("dashboard.budgets")}
-          to="/budgets"
-          linkLabel={t("nav.budgets")}
-        >
-          <QueryBoundary fallback={<RowsSkeleton rows={5} />} errorSubject={t("dashboard.budgets")}>
-            <BudgetSnapshot />
-          </QueryBoundary>
-        </DashboardSection>
-
-        <DashboardSection
-          className={wide}
-          title={t("charts.netWorthLabel")}
-          to="/net-worth"
-          linkLabel={t("nav.netWorth")}
-        >
-          <QueryBoundary fallback={chartFallback} errorSubject={t("charts.netWorthLabel")}>
-            <NetWorthHistoryChart />
-          </QueryBoundary>
-        </DashboardSection>
-        <DashboardSection
-          className={narrow}
-          title={t("dashboard.accounts")}
-          to="/accounts"
-          linkLabel={t("nav.accounts")}
-        >
-          <QueryBoundary
-            fallback={<RowsSkeleton rows={5} />}
-            errorSubject={t("dashboard.accounts")}
-          >
-            <AccountBalances />
-          </QueryBoundary>
-        </DashboardSection>
-
-        <RecentTransactionsList className={wide} />
-        <DashboardSection
-          className={narrow}
-          title={t("dashboard.upcomingBills")}
-          to="/recurring-bills"
-          linkLabel={t("nav.recurringBills")}
-        >
-          <QueryBoundary
-            fallback={<RowsSkeleton rows={5} />}
-            errorSubject={t("dashboard.upcomingBills")}
-          >
-            <UpcomingBills />
-          </QueryBoundary>
-        </DashboardSection>
-      </div>
+      <QueryBoundary fallback={<DashboardSkeleton />} errorSubject={t("dashboard.layout.subject")}>
+        <DashboardContent
+          customising={customising}
+          onCustomise={() => setCustomising(true)}
+          onDone={() => setCustomising(false)}
+        />
+      </QueryBoundary>
     </div>
   );
 }

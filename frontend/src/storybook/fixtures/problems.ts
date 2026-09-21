@@ -92,3 +92,17 @@ export const scheduleIncompleteProblem: ProblemDetails = {
     },
   ],
 };
+
+export const dashboardCardUnknownProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/users/me/dashboard-layout",
+  errors: [
+    {
+      name: "order[0]",
+      reason: "'weather' is not a dashboard card.",
+      code: "dashboard.cardUnknown",
+    },
+  ],
+};

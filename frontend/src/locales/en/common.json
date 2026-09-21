@@ -90,7 +90,23 @@
     "noSpending": "No spending recorded this month.",
     "showTransactions": "Show {{category}} transactions",
     "keptShare": "{{percent}} of this month's income kept",
-    "overspent": "Spent more than came in this month"
+    "overspent": "Spent more than came in this month",
+    "layout": {
+      "customise": "Customise",
+      "title": "Customise the dashboard",
+      "intro": "Choose which cards to show and in what order. The layout is saved to your account, so it follows you to every browser and device.",
+      "cards": "Dashboard cards",
+      "moveUp": "Move up: {{card}}",
+      "moveDown": "Move down: {{card}}",
+      "moved": "{{card}} moved to position {{position}} of {{total}}.",
+      "switchedOff": "Cards of features an administrator switched off are not listed. They keep their place for when the feature comes back.",
+      "reset": "Reset to default",
+      "saved": "Dashboard layout saved.",
+      "resetDone": "Dashboard layout reset to the default.",
+      "allHidden": "Every card is hidden.",
+      "chooseCards": "Choose cards",
+      "subject": "Dashboard layout"
+    }
   },
   "accounts": {
     "title": "Accounts",
@@ -1623,6 +1639,10 @@
     },
     "currency": {
       "disabled": "This currency is not enabled."
+    },
+    "dashboard": {
+      "cardDuplicate": "A dashboard card appears more than once.",
+      "cardUnknown": "This version does not know one of the dashboard cards. Reload the page and try again."
     },
     "debt": {
       "paymentTooSmall": "The monthly payment does not repay the debt within 50 years. It has to be more than the first month's interest.",

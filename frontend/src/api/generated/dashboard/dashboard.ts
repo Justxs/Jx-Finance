@@ -5,12 +5,15 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
+  MutationFunction,
   QueryClient,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseSuspenseQueryOptions,
   UseSuspenseQueryResult,
 } from "@tanstack/react-query";
@@ -19,10 +22,12 @@ import type { ErrorType } from "../../client";
 import type {
   CategoryBreakdownParams,
   CategoryBreakdownResponse,
+  DashboardLayoutResponse,
   DashboardSummaryResponse,
   MonthlyTrendParams,
   MonthlyTrendResponse,
   ProblemDetails,
+  SaveDashboardLayoutRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -412,3 +417,297 @@ export function useDashboardSummarySuspense<
 
   return withQueryKey(query, queryOptions.queryKey);
 }
+
+export const getDashboardLayoutUrl = () => {
+  return `/api/users/me/dashboard-layout`;
+};
+
+/**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
+ * @summary Get your dashboard layout
+ */
+export const dashboardLayout = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DashboardLayoutResponse> => {
+  return customFetch<DashboardLayoutResponse>(getDashboardLayoutUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDashboardLayoutQueryKey = () => {
+  return [`/api/users/me/dashboard-layout`] as const;
+};
+
+export const getDashboardLayoutSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDashboardLayoutQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof dashboardLayout>>> = ({ signal }) =>
+    dashboardLayout({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof dashboardLayout>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type DashboardLayoutSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof dashboardLayout>>
+>;
+export type DashboardLayoutSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDashboardLayoutSuspense<
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDashboardLayoutSuspense<
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDashboardLayoutSuspense<
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get your dashboard layout
+ */
+
+export function useDashboardLayoutSuspense<
+  TData = Awaited<ReturnType<typeof dashboardLayout>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof dashboardLayout>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDashboardLayoutSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getResetDashboardLayoutUrl = () => {
+  return `/api/users/me/dashboard-layout`;
+};
+
+/**
+ * Forgets the saved layout of the signed-in user, so the dashboard shows every card in the default order again. The layouts of other users are untouched. Safe to repeat.
+ * @summary Reset your dashboard layout
+ */
+export const resetDashboardLayout = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DashboardLayoutResponse> => {
+  return customFetch<DashboardLayoutResponse>(getResetDashboardLayoutUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getResetDashboardLayoutMutationKey = () => ["resetDashboardLayout"] as const;
+
+export const getResetDashboardLayoutMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetDashboardLayout>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetDashboardLayout>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getResetDashboardLayoutMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetDashboardLayout>>,
+    void
+  > = () => {
+    return resetDashboardLayout(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetDashboardLayoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof resetDashboardLayout>>
+>;
+
+export type ResetDashboardLayoutMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Reset your dashboard layout
+ */
+export const useResetDashboardLayout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetDashboardLayout>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof resetDashboardLayout>>, TError, void, TContext> => {
+  return useMutation(getResetDashboardLayoutMutationOptions(options), queryClient);
+};
+export const getSaveDashboardLayoutUrl = () => {
+  return `/api/users/me/dashboard-layout`;
+};
+
+/**
+ * Stores the order of the dashboard cards and which of them are hidden, for the signed-in user only; household members each keep their own. Cards left out of the order are placed after the listed ones in their default order. A card whose feature switch is off keeps its place and comes back there when the feature is switched on again.
+ * @summary Save your dashboard layout
+ */
+export const saveDashboardLayout = async (
+  saveDashboardLayoutRequest: SaveDashboardLayoutRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DashboardLayoutResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<DashboardLayoutResponse>(getSaveDashboardLayoutUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(saveDashboardLayoutRequest),
+  });
+};
+
+export const getSaveDashboardLayoutMutationKey = () => ["saveDashboardLayout"] as const;
+
+export const getSaveDashboardLayoutMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof saveDashboardLayout>>,
+    TError,
+    SaveDashboardLayoutMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof saveDashboardLayout>>,
+  TError,
+  SaveDashboardLayoutMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSaveDashboardLayoutMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof saveDashboardLayout>>,
+    SaveDashboardLayoutMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return saveDashboardLayout(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SaveDashboardLayoutMutationResult = NonNullable<
+  Awaited<ReturnType<typeof saveDashboardLayout>>
+>;
+export type SaveDashboardLayoutMutationBody = SaveDashboardLayoutRequest;
+export type SaveDashboardLayoutMutationError = ErrorType<ProblemDetails>;
+export type SaveDashboardLayoutMutationVariables = { data: SaveDashboardLayoutRequest };
+
+/**
+ * @summary Save your dashboard layout
+ */
+export const useSaveDashboardLayout = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof saveDashboardLayout>>,
+      TError,
+      SaveDashboardLayoutMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof saveDashboardLayout>>,
+  TError,
+  SaveDashboardLayoutMutationVariables,
+  TContext
+> => {
+  return useMutation(getSaveDashboardLayoutMutationOptions(options), queryClient);
+};

@@ -11907,6 +11907,193 @@
         ]
       }
     },
+    "/api/users/me/dashboard-layout": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Get your dashboard layout",
+        "description": "Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.",
+        "operationId": "GetDashboardLayout",
+        "responses": {
+          "200": {
+            "description": "The layout of the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardLayoutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Reset your dashboard layout",
+        "description": "Forgets the saved layout of the signed-in user, so the dashboard shows every card in the default order again. The layouts of other users are untouched. Safe to repeat.",
+        "operationId": "ResetDashboardLayout",
+        "responses": {
+          "200": {
+            "description": "The default layout.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardLayoutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Save your dashboard layout",
+        "description": "Stores the order of the dashboard cards and which of them are hidden, for the signed-in user only; household members each keep their own. Cards left out of the order are placed after the listed ones in their default order. A card whose feature switch is off keeps its place and comes back there when the feature is switched on again.",
+        "operationId": "SaveDashboardLayout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDashboardLayoutRequest"
+              },
+              "example": {
+                "order": [
+                  "accounts",
+                  "summary",
+                  "monthlyTrend"
+                ],
+                "hidden": [
+                  "netWorth"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved layout with every card in its resolved position.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardLayoutResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed: dashboard.cardUnknown or dashboard.cardDuplicate.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/{id}/deactivate": {
       "post": {
         "tags": [
@@ -14480,6 +14667,45 @@
           }
         }
       },
+      "DashboardCard": {
+        "enum": [
+          "summary",
+          "monthlyTrend",
+          "spendingByCategory",
+          "spendingPace",
+          "budgets",
+          "netWorth",
+          "accounts",
+          "recentTransactions",
+          "upcomingBills"
+        ],
+        "type": "string"
+      },
+      "DashboardLayoutResponse": {
+        "required": [
+          "order",
+          "hidden",
+          "isDefault"
+        ],
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardCard"
+            }
+          },
+          "hidden": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardCard"
+            }
+          },
+          "isDefault": {
+            "type": "boolean"
+          }
+        }
+      },
       "DashboardSummaryResponse": {
         "required": [
           "totalBalance",
@@ -14845,6 +15071,8 @@
           "credentials.invalid",
           "credentials.lockedOut",
           "currency.disabled",
+          "dashboard.cardDuplicate",
+          "dashboard.cardUnknown",
           "debt.paymentTooSmall",
           "debt.scheduleIncomplete",
           "decimal.malformed",
@@ -16807,6 +17035,47 @@
             "type": "boolean",
             "default": true
           }
+        }
+      },
+      "SaveDashboardLayoutRequest": {
+        "required": [
+          "order",
+          "hidden"
+        ],
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Card ids from first to last: summary, monthlyTrend, spendingByCategory, spendingPace, budgets, netWorth, accounts, recentTransactions, upcomingBills. Each at most once.",
+            "example": [
+              "accounts",
+              "summary",
+              "monthlyTrend"
+            ]
+          },
+          "hidden": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Card ids the dashboard neither shows nor loads. Each at most once.",
+            "example": [
+              "netWorth"
+            ]
+          }
+        },
+        "example": {
+          "order": [
+            "accounts",
+            "summary",
+            "monthlyTrend"
+          ],
+          "hidden": [
+            "netWorth"
+          ]
         }
       },
       "SaveSecurityRequest": {

@@ -1,10 +1,12 @@
-import type {
-  CategoryBreakdownItem,
-  CategoryBreakdownResponse,
-  DashboardSummaryResponse,
-  MonthlyTrendItem,
-  MonthlyTrendResponse,
-  TransactionResponse,
+import {
+  type CategoryBreakdownItem,
+  type CategoryBreakdownResponse,
+  DashboardCard,
+  type DashboardLayoutResponse,
+  type DashboardSummaryResponse,
+  type MonthlyTrendItem,
+  type MonthlyTrendResponse,
+  type TransactionResponse,
 } from "@/api/generated/model";
 import { fromCents } from "@/lib/money";
 import { FIXTURE_MONTH_END, FIXTURE_MONTH_START } from "./base";
@@ -83,4 +85,38 @@ export const emptyCategoryBreakdown: CategoryBreakdownResponse = {
   items: [],
   periodStart: FIXTURE_MONTH_START,
   periodEnd: FIXTURE_MONTH_END,
+};
+
+export const defaultDashboardLayout: DashboardLayoutResponse = {
+  order: Object.values(DashboardCard),
+  hidden: [],
+  isDefault: true,
+};
+
+export const customDashboardLayout: DashboardLayoutResponse = {
+  order: [
+    "accounts",
+    "upcomingBills",
+    "summary",
+    "recentTransactions",
+    "monthlyTrend",
+    "spendingByCategory",
+    "spendingPace",
+    "budgets",
+    "netWorth",
+  ],
+  hidden: [],
+  isDefault: false,
+};
+
+export const hiddenCardsDashboardLayout: DashboardLayoutResponse = {
+  order: Object.values(DashboardCard),
+  hidden: ["monthlyTrend", "spendingPace", "netWorth", "recentTransactions"],
+  isDefault: false,
+};
+
+export const allHiddenDashboardLayout: DashboardLayoutResponse = {
+  order: Object.values(DashboardCard),
+  hidden: Object.values(DashboardCard),
+  isDefault: false,
 };

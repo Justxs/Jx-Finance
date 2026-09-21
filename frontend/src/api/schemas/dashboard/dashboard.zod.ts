@@ -68,3 +68,116 @@ export const DashboardSummaryResponse = zod.object({
   monthStart: zod.iso.date(),
   monthEnd: zod.iso.date(),
 });
+
+/**
+ * Returns the order of every dashboard card and the ones you hid. Without a saved layout this is the default order with nothing hidden and isDefault true. Card ids a saved layout holds but this version does not know are dropped, and cards the saved layout does not mention follow the saved ones in their default order. Feature switches are not applied here: the client leaves out a card whose feature is off.
+ * @summary Get your dashboard layout
+ */
+export const DashboardLayoutResponse = zod.object({
+  order: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  hidden: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  isDefault: zod.boolean(),
+});
+
+/**
+ * Forgets the saved layout of the signed-in user, so the dashboard shows every card in the default order again. The layouts of other users are untouched. Safe to repeat.
+ * @summary Reset your dashboard layout
+ */
+export const ResetDashboardLayoutResponse = zod.object({
+  order: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  hidden: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  isDefault: zod.boolean(),
+});
+
+/**
+ * Stores the order of the dashboard cards and which of them are hidden, for the signed-in user only; household members each keep their own. Cards left out of the order are placed after the listed ones in their default order. A card whose feature switch is off keeps its place and comes back there when the feature is switched on again.
+ * @summary Save your dashboard layout
+ */
+export const SaveDashboardLayoutBody = zod.object({
+  order: zod
+    .array(zod.string())
+    .describe(
+      "Card ids from first to last: summary, monthlyTrend, spendingByCategory, spendingPace, budgets, netWorth, accounts, recentTransactions, upcomingBills. Each at most once.",
+    ),
+  hidden: zod
+    .array(zod.string())
+    .describe("Card ids the dashboard neither shows nor loads. Each at most once."),
+});
+
+export const SaveDashboardLayoutResponse = zod.object({
+  order: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  hidden: zod.array(
+    zod.enum([
+      "summary",
+      "monthlyTrend",
+      "spendingByCategory",
+      "spendingPace",
+      "budgets",
+      "netWorth",
+      "accounts",
+      "recentTransactions",
+      "upcomingBills",
+    ]),
+  ),
+  isDefault: zod.boolean(),
+});
