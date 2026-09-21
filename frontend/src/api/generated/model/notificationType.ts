@@ -10,4 +10,6 @@ export type NotificationType = (typeof NotificationType)[keyof typeof Notificati
 
 export const NotificationType = {
   billDue: "billDue",
+  budgetWarning: "budgetWarning",
+  budgetExceeded: "budgetExceeded",
 } as const;

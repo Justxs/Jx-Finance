@@ -87,6 +87,7 @@ export * from "./netWorthHistoryResponse";
 export * from "./netWorthResponse";
 export * from "./netWorthSnapshotItem";
 export * from "./notificationChannel";
+export * from "./notificationPayload";
 export * from "./notificationResponse";
 export * from "./notificationsParams";
 export * from "./notificationType";

@@ -8,6 +8,8 @@ public enum AppLock : long
     RecurringBillReminders = 738192435,
     FirstRunSetup = 738192436,
     AdministratorChange = 738192437,
+    BudgetAlerts = 738192438,
+    EmailOutbox = 738192439,
 }
 
 public static class AdvisoryLock

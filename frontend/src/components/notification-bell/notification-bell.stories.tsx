@@ -1,7 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, within } from "storybook/test";
 import type { NotificationResponse } from "@/api/generated/model";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
-import { notifications } from "@/storybook/fixtures";
+import {
+  budgetExceededNotification,
+  budgetWarningNotification,
+  expenseDueNotification,
+  incomeDueNotification,
+  notifications,
+  transferDueNotification,
+} from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { QueryBoundary } from "../query-boundary/query-boundary";
 import { Skeleton } from "../ui/skeleton/skeleton";
@@ -16,6 +24,17 @@ function notificationsHandler(items: NotificationResponse[]) {
 
 const allRead: NotificationResponse[] = notifications.map((item) => ({ ...item, isRead: true }));
 
+const budgetAlerts: NotificationResponse[] = [
+  budgetExceededNotification,
+  budgetWarningNotification,
+];
+
+const recurringReminders: NotificationResponse[] = [
+  expenseDueNotification,
+  incomeDueNotification,
+  transferDueNotification,
+];
+
 function manyUnreadTitle(index: number) {
   return index === 0
     ? "A recurring bill with a very long name that should wrap inside the notification panel"
@@ -27,6 +46,7 @@ const manyUnread: NotificationResponse[] = Array.from({ length: 14 }, (_, index)
   type: "billDue",
   title: manyUnreadTitle(index),
   message: index === 1 ? "A plain text message instead of a due date." : "2026-09-20",
+  payload: index === 1 ? {} : { dueDate: "2026-09-20" },
   relatedType: null,
   relatedId: null,
   channel: "inApp",
@@ -61,6 +81,37 @@ export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } }
 
 export const ManyUnread: Story = {
   parameters: { msw: { handlers: [notificationsHandler(manyUnread), ...handlers] } },
+};
+
+export const BudgetAlerts: Story = {
+  parameters: { msw: { handlers: [notificationsHandler(budgetAlerts), ...handlers] } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /2 unread/i }));
+
+    const panel = within(await within(document.body).findByRole("dialog"));
+    const alerts = await panel.findAllByRole("link");
+
+    await expect(alerts).toHaveLength(2);
+    await expect(alerts[0]).toHaveAttribute("href", "/budgets");
+    await expect(alerts[0]).toHaveTextContent("Weekly limit reached");
+    await expect(alerts[1]).toHaveTextContent("Monthly limit: 80% used");
+  },
+};
+
+export const RecurringEntryReminders: Story = {
+  parameters: { msw: { handlers: [notificationsHandler(recurringReminders), ...handlers] } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole("button", { name: /3 unread/i }));
+
+    const panel = within(await within(document.body).findByRole("dialog"));
+    const entries = await panel.findAllByRole("link");
+
+    await expect(entries[0]).toHaveTextContent("Payment due");
+    await expect(entries[1]).toHaveTextContent("Expected");
+    await expect(entries[2]).toHaveTextContent("Transfer due");
+  },
 };
 
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
