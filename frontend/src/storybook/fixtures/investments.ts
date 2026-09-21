@@ -10,6 +10,8 @@ import type {
   ProblemDetails,
   SecurityPriceResponse,
   SecurityResponse,
+  TaxSummaryResponse,
+  ValueHistoryResponse,
 } from "@/api/generated/model";
 import { brokerAccount, checkingAccount, savingsAccount } from "./accounts";
 import { uid } from "./base";
@@ -225,6 +227,127 @@ export const emptyPortfolio: PortfolioResponse = {
   holdings: [],
   years: [],
 };
+
+const taxSummaryAccounts = [brokerAccount, savingsAccount].map((account) => ({
+  id: account.id,
+  name: account.name,
+}));
+
+export const taxSummary: TaxSummaryResponse = {
+  year: 2026,
+  reportingCurrency: "eur",
+  availableYears: [2026, 2025],
+  accounts: taxSummaryAccounts,
+  isComplete: true,
+  totals: {
+    proceeds: "2728.00",
+    costBasis: "2530.34",
+    gains: "223.28",
+    losses: "25.62",
+    realizedGain: "197.66",
+    dividends: "29.60",
+    interest: "6.31",
+    withholdingTax: "4.44",
+    fees: "8.35",
+  },
+  disposals: [
+    {
+      id: uid("d1d1d1d1", 1),
+      date: "2026-05-04",
+      accountId: brokerAccount.id,
+      securityId: worldEtf.id,
+      symbol: worldEtf.symbol,
+      name: worldEtf.name,
+      currency: "eur",
+      quantity: "12",
+      proceeds: "1450.00",
+      costBasis: "1475.62",
+      gain: "-25.62",
+      reportingProceeds: "1450.00",
+      reportingCostBasis: "1475.62",
+      reportingGain: "-25.62",
+      lots: [
+        { acquiredOn: "2025-05-22", quantity: "8", cost: "787.86", reportingCost: "787.86" },
+        { acquiredOn: "2026-03-02", quantity: "4", cost: "687.76", reportingCost: "687.76" },
+      ],
+    },
+    {
+      id: uid("d1d1d1d1", 2),
+      date: "2026-07-15",
+      accountId: brokerAccount.id,
+      securityId: usStock.id,
+      symbol: usStock.symbol,
+      name: usStock.name,
+      currency: "usd",
+      quantity: "3",
+      proceeds: "1405.70",
+      costBasis: "1160.19",
+      gain: "245.51",
+      reportingProceeds: "1278.00",
+      reportingCostBasis: "1054.72",
+      reportingGain: "223.28",
+      lots: [
+        { acquiredOn: "2025-08-14", quantity: "3", cost: "1160.19", reportingCost: "1054.72" },
+      ],
+    },
+  ],
+  cashEntries: [
+    cashEntry(1, "2026-03-12", "dividend", "usd", "12.45", "11.32", usStock.symbol),
+    cashEntry(2, "2026-03-12", "withholdingTax", "usd", "1.87", "1.70", usStock.symbol),
+    cashEntry(3, "2026-06-11", "dividend", "usd", "12.45", "11.32", usStock.symbol),
+    cashEntry(4, "2026-06-11", "withholdingTax", "usd", "1.87", "1.70", usStock.symbol),
+    cashEntry(5, "2026-08-04", "fee", "usd", "9.19", "8.35", null, "Market data subscription"),
+    cashEntry(6, "2026-08-05", "interest", "eur", "6.31", "6.31", null, "EUR credit interest"),
+    cashEntry(7, "2026-09-12", "dividend", "usd", "9.96", "6.96", usStock.symbol),
+    cashEntry(8, "2026-09-12", "withholdingTax", "usd", "1.49", "1.04", usStock.symbol),
+  ],
+};
+
+export const emptyTaxSummary: TaxSummaryResponse = {
+  year: 2024,
+  reportingCurrency: "eur",
+  availableYears: [2026, 2025],
+  accounts: taxSummaryAccounts,
+  isComplete: true,
+  totals: {
+    proceeds: "0.00",
+    costBasis: "0.00",
+    gains: "0.00",
+    losses: "0.00",
+    realizedGain: "0.00",
+    dividends: "0.00",
+    interest: "0.00",
+    withholdingTax: "0.00",
+    fees: "0.00",
+  },
+  disposals: [],
+  cashEntries: [],
+};
+
+export const incompleteTaxSummary: TaxSummaryResponse = { ...taxSummary, isComplete: false };
+
+function cashEntry(
+  n: number,
+  date: string,
+  type: InvestmentTransactionType,
+  currency: Currency,
+  amount: string,
+  reportingAmount: string,
+  symbol: string | null = null,
+  description: string | null = null,
+) {
+  return {
+    id: uid("d2d2d2d2", n),
+    date,
+    accountId: brokerAccount.id,
+    type,
+    symbol,
+    description,
+    currency,
+    amount,
+    reportingAmount,
+  };
+}
 
 interface EntrySeed {
   type: InvestmentTransactionType;

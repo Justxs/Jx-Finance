@@ -1,5 +1,5 @@
-import { useNavigate, useSearch } from "@tanstack/react-router";
-import { FileUp, Plus } from "lucide-react";
+import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { ArrowLeft, FileUp, Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense, usePortfolioSuspense } from "@/api/generated";
@@ -7,12 +7,13 @@ import type { AccountResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
-import { Button } from "@/components/ui/button/button";
+import { Button, buttonVariants } from "@/components/ui/button/button";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { namedOptions } from "@/lib/options";
+import { cn } from "@/lib/utils";
 import { ActivitySection } from "../activity-section/activity-section";
 import { AllocationSection } from "../allocation-section/allocation-section";
 import { BrokerImportDialog } from "../broker-import-dialog/broker-import-dialog";
@@ -22,6 +23,8 @@ import { portfolioParams } from "../investment-queries";
 import { PortfolioSummary } from "../portfolio-summary/portfolio-summary";
 import { PositionsSection } from "../positions-section";
 import { SecuritiesDialog } from "../securities-dialog/securities-dialog";
+import { TaxSummarySection } from "../tax-summary/tax-summary-section";
+import { ValueChartSection } from "../value-chart/value-chart-section";
 
 interface OverviewProps {
   accounts: readonly AccountResponse[];
@@ -72,6 +75,7 @@ function InvestmentsOverview({
   return (
     <StaleRegion stale={stale} className="space-y-5">
       <PortfolioSummary portfolio={portfolio.data} />
+      <ValueChartSection accountId={shownAccountId} />
       <AllocationSection
         holdings={portfolio.data.holdings}
         currency={portfolio.data.reportingCurrency}
@@ -101,29 +105,54 @@ export function InvestmentsPage() {
   const [importOpen, setImportOpen] = useState(false);
   const [securitiesOpen, setSecuritiesOpen] = useState(false);
   const noAccounts = accountList.length === 0;
+  const taxView = search.view === "taxSummary";
 
   return (
     <div className="space-y-5">
-      <PageHeader title={t("investments.title")} description={t("investments.description")}>
-        <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
-          {t("investments.securities.title")}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={noAccounts}
-          onClick={() => setImportOpen(true)}
-        >
-          <FileUp />
-          {t("investments.import.open")}
-        </Button>
-        <Button disabled={noAccounts} onClick={() => setEntryOpen(true)}>
-          <Plus />
-          {t("investments.entry.add")}
-        </Button>
+      <PageHeader
+        title={taxView ? t("investments.tax.title") : t("investments.title")}
+        description={taxView ? t("investments.tax.description") : t("investments.description")}
+      >
+        {taxView ? (
+          <Link
+            to="/investments"
+            search={{ accountId }}
+            className={cn(buttonVariants({ variant: "ghost", size: "sm" }), "print:hidden")}
+          >
+            <ArrowLeft />
+            {t("investments.tax.back")}
+          </Link>
+        ) : (
+          <>
+            <Link
+              to="/investments"
+              search={{ view: "taxSummary" }}
+              className={buttonVariants({ variant: "ghost", size: "sm" })}
+            >
+              <ReceiptText />
+              {t("investments.tax.open")}
+            </Link>
+            <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
+              {t("investments.securities.title")}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={noAccounts}
+              onClick={() => setImportOpen(true)}
+            >
+              <FileUp />
+              {t("investments.import.open")}
+            </Button>
+            <Button disabled={noAccounts} onClick={() => setEntryOpen(true)}>
+              <Plus />
+              {t("investments.entry.add")}
+            </Button>
+          </>
+        )}
       </PageHeader>
 
-      {accountList.length > 1 ? (
+      {!taxView && accountList.length > 1 ? (
         <div className="mb-4 w-full sm:w-56">
           <SelectField
             aria-label={t("investments.accountFilter")}
@@ -137,7 +166,7 @@ export function InvestmentsPage() {
       ) : null}
 
       <QueryBoundary
-        errorSubject={t("investments.title")}
+        errorSubject={taxView ? t("investments.tax.title") : t("investments.title")}
         fallback={
           <div className="space-y-5">
             <StatsSkeleton />
@@ -145,12 +174,16 @@ export function InvestmentsPage() {
           </div>
         }
       >
-        <InvestmentsOverview
-          accounts={accountList}
-          accountId={accountId}
-          onAddEntry={() => setEntryOpen(true)}
-          onImport={() => setImportOpen(true)}
-        />
+        {taxView ? (
+          <TaxSummarySection accounts={accountList} />
+        ) : (
+          <InvestmentsOverview
+            accounts={accountList}
+            accountId={accountId}
+            onAddEntry={() => setEntryOpen(true)}
+            onImport={() => setImportOpen(true)}
+          />
+        )}
       </QueryBoundary>
 
       <InvestmentEntryModal

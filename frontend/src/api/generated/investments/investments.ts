@@ -28,6 +28,7 @@ import type {
   BrokerConnectionResponse,
   BrokerImportResponse,
   CreateInvestmentTransactionRequest,
+  ExportTaxSummaryParams,
   ImportBrokerReportRequest,
   InvestmentTransactionResponse,
   InvestmentTransactionsParams,
@@ -38,9 +39,15 @@ import type {
   SaveBrokerConnectionRequest,
   SaveSecurityRequest,
   SecuritiesParams,
+  SecurityPriceResponse,
+  SecurityPricesParams,
   SecurityResponse,
   SetSecurityPriceRequest,
+  TaxSummaryParams,
+  TaxSummaryResponse,
   UpdateInvestmentTransactionRequest,
+  ValueHistoryParams,
+  ValueHistoryResponse,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -1103,8 +1110,8 @@ export const getSetSecurityPriceUrl = (id: string) => {
 };
 
 /**
- * Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.
- * @summary Set the last known price of a security
+ * Records the price for one date by hand, replacing a price already recorded for that date. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security follows the newest date: a price for an earlier date adds a history point and leaves the last known price alone. A broker import records the mark price of its report date the same way.
+ * @summary Record a price of a security
  */
 export const setSecurityPrice = async (
   id: string,
@@ -1184,7 +1191,7 @@ export type SetSecurityPriceMutationError = ErrorType<ProblemDetails>;
 export type SetSecurityPriceMutationVariables = { id: string; data: SetSecurityPriceRequest };
 
 /**
- * @summary Set the last known price of a security
+ * @summary Record a price of a security
  */
 export const useSetSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -1205,6 +1212,479 @@ export const useSetSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext
 > => {
   return useMutation(getSetSecurityPriceMutationOptions(options), queryClient);
 };
+export const getSecurityPricesUrl = (id: string, params?: SecurityPricesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/securities/${id}/prices?${stringifiedParams}`
+    : `/api/investments/securities/${id}/prices`;
+};
+
+/**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
+ * @summary List the price history of a security
+ */
+export const securityPrices = async (
+  id: string,
+  params?: SecurityPricesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SecurityPriceResponse[]> => {
+  return customFetch<SecurityPriceResponse[]>(getSecurityPricesUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSecurityPricesQueryKey = (id: string, params?: SecurityPricesParams) => {
+  return [`/api/investments/securities/${id}/prices`, ...(params ? [params] : [])] as const;
+};
+
+export const getSecurityPricesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: SecurityPricesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSecurityPricesQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof securityPrices>>> = ({ signal }) =>
+    securityPrices(id, params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof securityPrices>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SecurityPricesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof securityPrices>>
+>;
+export type SecurityPricesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSecurityPricesSuspense<
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: undefined | SecurityPricesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSecurityPricesSuspense<
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: SecurityPricesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSecurityPricesSuspense<
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: SecurityPricesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the price history of a security
+ */
+
+export function useSecurityPricesSuspense<
+  TData = Awaited<ReturnType<typeof securityPrices>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: SecurityPricesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof securityPrices>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSecurityPricesSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteSecurityPriceUrl = (id: string, date: string) => {
+  return `/api/investments/securities/${id}/prices/${date}`;
+};
+
+/**
+ * Removes the price recorded for one date. The same rule as setting a price applies: open to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security becomes the newest remaining point, or empty when none is left.
+ * @summary Delete a point of a security's price history
+ */
+export const deleteSecurityPrice = async (
+  id: string,
+  date: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteSecurityPriceUrl(id, date), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteSecurityPriceMutationKey = () => ["deleteSecurityPrice"] as const;
+
+export const getDeleteSecurityPriceMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteSecurityPrice>>,
+    TError,
+    DeleteSecurityPriceMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteSecurityPrice>>,
+  TError,
+  DeleteSecurityPriceMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteSecurityPriceMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteSecurityPrice>>,
+    DeleteSecurityPriceMutationVariables
+  > = (props) => {
+    const { id, date } = props ?? {};
+
+    return deleteSecurityPrice(id, date, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteSecurityPriceMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteSecurityPrice>>
+>;
+
+export type DeleteSecurityPriceMutationError = ErrorType<ProblemDetails>;
+export type DeleteSecurityPriceMutationVariables = { id: string; date: string };
+
+/**
+ * @summary Delete a point of a security's price history
+ */
+export const useDeleteSecurityPrice = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteSecurityPrice>>,
+      TError,
+      DeleteSecurityPriceMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteSecurityPrice>>,
+  TError,
+  DeleteSecurityPriceMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteSecurityPriceMutationOptions(options), queryClient);
+};
+export const getTaxSummaryUrl = (params?: TaxSummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/tax-summary?${stringifiedParams}`
+    : `/api/investments/tax-summary`;
+};
+
+/**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * @summary Get the yearly investment tax summary
+ */
+export const taxSummary = async (
+  params?: TaxSummaryParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TaxSummaryResponse> => {
+  return customFetch<TaxSummaryResponse>(getTaxSummaryUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getTaxSummaryQueryKey = (params?: TaxSummaryParams) => {
+  return [`/api/investments/tax-summary`, ...(params ? [params] : [])] as const;
+};
+
+export const getTaxSummarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TaxSummaryParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getTaxSummaryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof taxSummary>>> = ({ signal }) =>
+    taxSummary(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof taxSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type TaxSummarySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof taxSummary>>>;
+export type TaxSummarySuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | TaxSummaryParams,
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TaxSummaryParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TaxSummaryParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the yearly investment tax summary
+ */
+
+export function useTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof taxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: TaxSummaryParams,
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof taxSummary>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getTaxSummarySuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getExportTaxSummaryUrl = (params?: ExportTaxSummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/tax-summary/export?${stringifiedParams}`
+    : `/api/investments/tax-summary/export`;
+};
+
+/**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
+ * @summary Export the yearly investment tax summary as CSV
+ */
+export const exportTaxSummary = async (
+  params?: ExportTaxSummaryParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<Blob> => {
+  return customFetch<Blob>(getExportTaxSummaryUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getExportTaxSummaryQueryKey = (params?: ExportTaxSummaryParams) => {
+  return [`/api/investments/tax-summary/export`, ...(params ? [params] : [])] as const;
+};
+
+export const getExportTaxSummarySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ExportTaxSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getExportTaxSummaryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTaxSummary>>> = ({ signal }) =>
+    exportTaxSummary(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof exportTaxSummary>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ExportTaxSummarySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof exportTaxSummary>>
+>;
+export type ExportTaxSummarySuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useExportTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | ExportTaxSummaryParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ExportTaxSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useExportTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ExportTaxSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Export the yearly investment tax summary as CSV
+ */
+
+export function useExportTaxSummarySuspense<
+  TData = Awaited<ReturnType<typeof exportTaxSummary>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ExportTaxSummaryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTaxSummary>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getExportTaxSummarySuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getCreateInvestmentTransactionUrl = () => {
   return `/api/investments/transactions`;
 };
@@ -1654,3 +2134,131 @@ export const useUpdateInvestmentTransaction = <
 > => {
   return useMutation(getUpdateInvestmentTransactionMutationOptions(options), queryClient);
 };
+export const getValueHistoryUrl = (params?: ValueHistoryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/investments/value-history?${stringifiedParams}`
+    : `/api/investments/value-history`;
+};
+
+/**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
+ * @summary Get the portfolio value over time
+ */
+export const valueHistory = async (
+  params?: ValueHistoryParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<ValueHistoryResponse> => {
+  return customFetch<ValueHistoryResponse>(getValueHistoryUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getValueHistoryQueryKey = (params?: ValueHistoryParams) => {
+  return [`/api/investments/value-history`, ...(params ? [params] : [])] as const;
+};
+
+export const getValueHistorySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getValueHistoryQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof valueHistory>>> = ({ signal }) =>
+    valueHistory(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof valueHistory>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type ValueHistorySuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof valueHistory>>>;
+export type ValueHistorySuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params: undefined | ValueHistoryParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the portfolio value over time
+ */
+
+export function useValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof valueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  params?: ValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof valueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getValueHistorySuspenseQueryOptions(params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}

@@ -15,6 +15,10 @@ import {
   getUpdateInvestmentTransactionMockHandler,
   getSetSecurityPriceMockHandler,
   getUpdateSecurityMockHandler,
+  getSecurityPricesMockHandler,
+  getDeleteSecurityPriceMockHandler,
+  getTaxSummaryMockHandler,
+  getValueHistoryMockHandler,
 } from "@/api/generated/investments/investments.msw";
 import { InvestmentTransactionType, type SecurityResponse } from "@/api/generated/model";
 import {
@@ -23,10 +27,16 @@ import {
   brokerImportResult,
   duplicateSecurityProblem,
   emptyPortfolio,
+  emptyTaxSummary,
+  emptyValueHistory,
   investmentTransactions,
   oversellProblem,
   portfolio,
   securities,
+  securityPrices,
+  taxSummary,
+  valueHistory,
+  worldEtf,
 } from "@/storybook/fixtures";
 import { currencyCode, found, problem, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
@@ -140,6 +150,37 @@ export const investmentHandlers = [
       lastPriceDate: text(body.lastPriceDate) ?? FIXTURE_TODAY,
     };
   }),
+  getSecurityPricesMockHandler(({ params }) => {
+    const security = found(byId(securities, params.id));
+    if (security.id === worldEtf.id) {
+      return securityPrices;
+    }
+
+    return security.lastPrice && security.lastPriceDate
+      ? [{ date: security.lastPriceDate, price: security.lastPrice }]
+      : [];
+  }),
+  getDeleteSecurityPriceMockHandler(),
+  getValueHistoryMockHandler(({ request }) => {
+    const accountId = new URL(request.url).searchParams.get("accountId");
+    const held = portfolio.holdings.some((holding) => holding.accountId === accountId);
+    return !accountId || held ? valueHistory : emptyValueHistory;
+  }),
+  getTaxSummaryMockHandler(({ request }) => {
+    const params = new URL(request.url).searchParams;
+    const year = Number(params.get("year") ?? taxSummary.year);
+    const chosen = (params.get("accountIds") ?? "").split(",").filter(Boolean);
+    const accounts =
+      chosen.length === 0
+        ? taxSummary.accounts
+        : taxSummary.accounts.filter((account) => chosen.includes(account.id));
+    const kept = new Set(accounts.map((account) => account.id));
+    const disposals = taxSummary.disposals.filter((item) => kept.has(item.accountId));
+    const cashEntries = taxSummary.cashEntries.filter((item) => kept.has(item.accountId));
+    return year === taxSummary.year && disposals.length > 0
+      ? { ...taxSummary, accounts, disposals, cashEntries }
+      : { ...emptyTaxSummary, year, accounts };
+  }),
   getImportBrokerReportMockHandler(brokerImportResult),
   getBrokerConnectionsMockHandler(brokerConnections),
   getSaveBrokerConnectionMockHandler(async ({ params, request }) => {
@@ -162,5 +203,8 @@ export const emptyInvestmentHandlers: RequestHandler[] = [
   getPortfolioMockHandler(emptyPortfolio),
   getInvestmentTransactionsMockHandler(emptyPage),
   getSecuritiesMockHandler([]),
+  getSecurityPricesMockHandler([]),
+  getValueHistoryMockHandler(emptyValueHistory),
+  getTaxSummaryMockHandler({ ...emptyTaxSummary, availableYears: [], accounts: [] }),
   getBrokerConnectionsMockHandler([]),
 ];

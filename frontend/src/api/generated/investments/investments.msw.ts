@@ -13,7 +13,10 @@ import type {
   InvestmentTransactionResponse,
   PagedResponseOfInvestmentTransactionResponse,
   PortfolioResponse,
+  SecurityPriceResponse,
   SecurityResponse,
+  TaxSummaryResponse,
+  ValueHistoryResponse,
 } from "../model";
 
 export const getBrokerConnectionsMockHandler = (
@@ -251,6 +254,97 @@ export const getSetSecurityPriceMockHandler = (
   );
 };
 
+export const getSecurityPricesMockHandler = (
+  overrideResponse?:
+    | SecurityPriceResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SecurityPriceResponse[]> | SecurityPriceResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/investments/securities/:id/prices",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteSecurityPriceMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/investments/securities/:id/prices/:date",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getTaxSummaryMockHandler = (
+  overrideResponse?:
+    | TaxSummaryResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TaxSummaryResponse> | TaxSummaryResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/investments/tax-summary",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getExportTaxSummaryMockHandler = (
+  overrideResponse?:
+    | ArrayBuffer
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ArrayBuffer> | ArrayBuffer),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/investments/tax-summary/export",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      const binaryBody =
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined;
+      return HttpResponse.arrayBuffer(
+        binaryBody instanceof ArrayBuffer ? binaryBody : new ArrayBuffer(0),
+        { status: 200, headers: { "Content-Type": "application/octet-stream" } },
+      );
+    },
+    options,
+  );
+};
+
 export const getCreateInvestmentTransactionMockHandler = (
   overrideResponse?:
     | InvestmentTransactionResponse
@@ -343,6 +437,30 @@ export const getUpdateInvestmentTransactionMockHandler = (
     options,
   );
 };
+
+export const getValueHistoryMockHandler = (
+  overrideResponse?:
+    | ValueHistoryResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<ValueHistoryResponse> | ValueHistoryResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/investments/value-history",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
 export const getInvestmentsMock = () => [
   getBrokerConnectionsMockHandler(),
   getDeleteBrokerConnectionMockHandler(),
@@ -354,8 +472,13 @@ export const getInvestmentsMock = () => [
   getCreateSecurityMockHandler(),
   getUpdateSecurityMockHandler(),
   getSetSecurityPriceMockHandler(),
+  getSecurityPricesMockHandler(),
+  getDeleteSecurityPriceMockHandler(),
+  getTaxSummaryMockHandler(),
+  getExportTaxSummaryMockHandler(),
   getCreateInvestmentTransactionMockHandler(),
   getInvestmentTransactionsMockHandler(),
   getDeleteInvestmentTransactionMockHandler(),
   getUpdateInvestmentTransactionMockHandler(),
+  getValueHistoryMockHandler(),
 ];

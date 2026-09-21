@@ -582,8 +582,8 @@ export const UpdateSecurityResponse = zod.object({
 });
 
 /**
- * Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.
- * @summary Set the last known price of a security
+ * Records the price for one date by hand, replacing a price already recorded for that date. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security follows the newest date: a price for an earlier date adds a history point and leaves the last known price alone. A broker import records the mark price of its report date the same way.
+ * @summary Record a price of a security
  */
 export const setSecurityPriceBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
@@ -639,6 +639,244 @@ export const SetSecurityPriceResponse = zod.object({
   lastPrice: zod.stringFormat("decimal", setSecurityPriceResponseLastPriceRegExp).nullable(),
   lastPriceDate: zod.union([zod.null(), zod.iso.date()]),
 });
+
+/**
+ * Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.
+ * @summary List the price history of a security
+ */
+export const securityPricesResponsePriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const SecurityPricesResponseItem = zod.object({
+  date: zod.iso.date(),
+  price: zod.stringFormat("decimal", securityPricesResponsePriceRegExp),
+});
+export const SecurityPricesResponse = zod.array(SecurityPricesResponseItem);
+
+/**
+ * Removes the price recorded for one date. The same rule as setting a price applies: open to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security becomes the newest remaining point, or empty when none is left.
+ * @summary Delete a point of a security's price history
+ */
+export const DeleteSecurityPriceResponse = zod.void();
+
+/**
+ * Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.
+ * @summary Get the yearly investment tax summary
+ */
+export const taxSummaryResponseTotalsProceedsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsCostBasisRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsGainsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsLossesRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsRealizedGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsDividendsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsWithholdingTaxRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseTotalsFeesRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseDisposalsItemQuantityRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseDisposalsItemProceedsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseDisposalsItemCostBasisRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseDisposalsItemGainRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseDisposalsItemReportingProceedsRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseDisposalsItemReportingCostBasisRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseDisposalsItemReportingGainRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseDisposalsItemLotsItemQuantityRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseDisposalsItemLotsItemCostRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseDisposalsItemLotsItemReportingCostRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const taxSummaryResponseCashEntriesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const taxSummaryResponseCashEntriesItemReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const TaxSummaryResponse = zod.object({
+  year: zod.int(),
+  reportingCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  availableYears: zod.array(zod.int()),
+  accounts: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      name: zod.string(),
+    }),
+  ),
+  totals: zod.object({
+    proceeds: zod.stringFormat("decimal", taxSummaryResponseTotalsProceedsRegExp),
+    costBasis: zod.stringFormat("decimal", taxSummaryResponseTotalsCostBasisRegExp),
+    gains: zod.stringFormat("decimal", taxSummaryResponseTotalsGainsRegExp),
+    losses: zod.stringFormat("decimal", taxSummaryResponseTotalsLossesRegExp),
+    realizedGain: zod.stringFormat("decimal", taxSummaryResponseTotalsRealizedGainRegExp),
+    dividends: zod.stringFormat("decimal", taxSummaryResponseTotalsDividendsRegExp),
+    interest: zod.stringFormat("decimal", taxSummaryResponseTotalsInterestRegExp),
+    withholdingTax: zod.stringFormat("decimal", taxSummaryResponseTotalsWithholdingTaxRegExp),
+    fees: zod.stringFormat("decimal", taxSummaryResponseTotalsFeesRegExp),
+  }),
+  disposals: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      date: zod.iso.date(),
+      accountId: zod.uuid(),
+      securityId: zod.uuid(),
+      symbol: zod.string(),
+      name: zod.string(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      quantity: zod.stringFormat("decimal", taxSummaryResponseDisposalsItemQuantityRegExp),
+      proceeds: zod.stringFormat("decimal", taxSummaryResponseDisposalsItemProceedsRegExp),
+      costBasis: zod.stringFormat("decimal", taxSummaryResponseDisposalsItemCostBasisRegExp),
+      gain: zod.stringFormat("decimal", taxSummaryResponseDisposalsItemGainRegExp),
+      reportingProceeds: zod.stringFormat(
+        "decimal",
+        taxSummaryResponseDisposalsItemReportingProceedsRegExp,
+      ),
+      reportingCostBasis: zod.stringFormat(
+        "decimal",
+        taxSummaryResponseDisposalsItemReportingCostBasisRegExp,
+      ),
+      reportingGain: zod.stringFormat(
+        "decimal",
+        taxSummaryResponseDisposalsItemReportingGainRegExp,
+      ),
+      lots: zod.array(
+        zod.object({
+          acquiredOn: zod.iso.date(),
+          quantity: zod.stringFormat(
+            "decimal",
+            taxSummaryResponseDisposalsItemLotsItemQuantityRegExp,
+          ),
+          cost: zod.stringFormat("decimal", taxSummaryResponseDisposalsItemLotsItemCostRegExp),
+          reportingCost: zod.stringFormat(
+            "decimal",
+            taxSummaryResponseDisposalsItemLotsItemReportingCostRegExp,
+          ),
+        }),
+      ),
+    }),
+  ),
+  cashEntries: zod.array(
+    zod.object({
+      id: zod.uuid(),
+      date: zod.iso.date(),
+      accountId: zod.uuid(),
+      type: zod.enum(["buy", "sell", "dividend", "withholdingTax", "interest", "fee", "split"]),
+      symbol: zod.string().nullable(),
+      description: zod.string().nullable(),
+      currency: zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+      amount: zod.stringFormat("decimal", taxSummaryResponseCashEntriesItemAmountRegExp),
+      reportingAmount: zod.stringFormat(
+        "decimal",
+        taxSummaryResponseCashEntriesItemReportingAmountRegExp,
+      ),
+    }),
+  ),
+  isComplete: zod.boolean(),
+});
+
+/**
+ * Answers the same year as GET /api/investments/tax-summary as a CSV attachment named investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.
+ * @summary Export the yearly investment tax summary as CSV
+ */
+export const ExportTaxSummaryResponse = zod.unknown();
 
 /**
  * Buys and sells need a security, quantity and price, and move quantity times price plus or minus the fee in the security's currency. Dividends, withholding tax, interest and fees need an amount. A split needs a security and a ratio in Quantity and moves no cash. The cash effect lands on the account's balance in that currency and never counts as income or expense in reports or budgets.

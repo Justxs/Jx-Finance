@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
@@ -14,9 +15,9 @@ namespace JxFinance.Endpoints.Transactions.ExportTransactions;
 public sealed class ExportTransactionsEndpoint(
     ITransactionService transactionService,
     IAccountService accountService,
-    ICategoryService categoryService) : Endpoint<GetTransactionsRequest>
+    ICategoryService categoryService,
+    ITagService tagService) : Endpoint<GetTransactionsRequest>
 {
-    private const string FormulaTriggers = "=+-@\t\r";
     private const int BufferSize = 16 * 1024;
 
     public override void Configure()
@@ -28,7 +29,7 @@ public sealed class ExportTransactionsEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var (accountNames, categoryNames) = await LoadNamesAsync(accountService, categoryService, ct);
+        var names = await LoadNamesAsync(accountService, categoryService, tagService, ct);
 
         HttpContext.MarkResponseStart();
         HttpContext.Response.StatusCode = StatusCodes.Status200OK;
@@ -39,49 +40,39 @@ public sealed class ExportTransactionsEndpoint(
         await writer.WriteLineAsync("Date,Description,Account,Category,Tags,Type,Amount,Currency");
         await foreach (var transaction in transactionService.StreamExportAsync(req, ct))
         {
-            await writer.WriteLineAsync(Row(transaction, accountNames, categoryNames));
+            await writer.WriteLineAsync(Row(transaction, names));
         }
 
         await writer.FlushAsync(ct);
     }
 
-    public static async Task<(Dictionary<Guid, string> AccountNames, Dictionary<Guid, string> CategoryNames)> LoadNamesAsync(
+    public static async Task<ExportNames> LoadNamesAsync(
         IAccountService accountService,
         ICategoryService categoryService,
+        ITagService tagService,
         CancellationToken ct)
     {
         var accounts = await accountService.GetAllAsync(ct);
         var categories = await categoryService.GetAllAsync(ct);
         var tags = await tagService.GetAllAsync(ct);
 
-        return (
+        return new ExportNames(
             accounts.ToDictionary(a => a.Id, a => a.Name),
             categories.ToDictionary(c => c.Id.Value, c => c.Name),
             tags.ToDictionary(t => t.Id.Value, t => t.Name));
     }
 
-    private static string Row(
-        TransactionResponse transaction,
-        Dictionary<Guid, string> accountNames,
-        Dictionary<Guid, string> categoryNames)
+    private static string Row(TransactionResponse transaction, ExportNames names)
     {
-        var category = transaction.CategoryId is { } categoryId ? categoryNames.GetValueOrDefault(categoryId) : null;
-        return string.Join(
-            ',',
-            Escape(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
-            Escape(Neutralize(transaction.Description ?? "")),
-            Escape(Neutralize(accountNames.GetValueOrDefault(transaction.AccountId) ?? "")),
-            Escape(Neutralize(category ?? "")),
-            Escape(transaction.Type.ToString()),
-            Escape(transaction.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
-            Escape(transaction.Currency.ToCode()));
+        var category = transaction.CategoryId is { } categoryId ? names.Categories.GetValueOrDefault(categoryId) : null;
+        return CsvCell.Row(
+            CsvCell.Value(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+            CsvCell.Text(transaction.Description),
+            CsvCell.Text(names.Accounts.GetValueOrDefault(transaction.AccountId)),
+            CsvCell.Text(category),
+            CsvCell.Text(names.TagLabel(transaction.TagIds)),
+            CsvCell.Value(transaction.Type.ToString()),
+            CsvCell.Value(transaction.Amount.ToString("0.00", CultureInfo.InvariantCulture)),
+            CsvCell.Value(transaction.Currency.ToCode()));
     }
-
-    private static string Neutralize(string value) =>
-        value.Length > 0 && FormulaTriggers.Contains(value[0]) ? $"'{value}" : value;
-
-    private static string Escape(string value) =>
-        value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r')
-            ? $"\"{value.Replace("\"", "\"\"")}\""
-            : value;
 }
