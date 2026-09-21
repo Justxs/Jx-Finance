@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import type { TrashEntryResponse } from "@/api/generated/model";
 import { getRestoreDeletedMockHandler, getTrashMockHandler } from "@/api/generated/trash/trash.msw";
-import { serverErrorProblem, trashEntries } from "@/storybook/fixtures";
+import { recordedTrashEntries, serverErrorProblem, trashEntries } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -43,7 +43,7 @@ export const Default: Story = {
     await expect(canvas.getByText("Currency conversion")).toBeVisible();
     await expect(canvas.getByText("Investment entry")).toBeVisible();
     await expect(canvas.getByText("Sell 3 MSFT, 2026-07-15")).toBeVisible();
-    await expect(canvas.getAllByRole("button", { name: /^Restore:/u })).toHaveLength(9);
+    await expect(canvas.getAllByRole("button", { name: /^Restore:/u })).toHaveLength(10);
   },
 };
 
@@ -55,7 +55,7 @@ export const Lithuanian: Story = {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("Valiutos keitimas")).toBeVisible();
     await expect(canvas.getByText("Investicijų įrašas")).toBeVisible();
-    await expect(canvas.getAllByRole("button", { name: /^Atkurti:/u })).toHaveLength(9);
+    await expect(canvas.getAllByRole("button", { name: /^Atkurti:/u })).toHaveLength(10);
   },
 };
 
@@ -90,9 +90,9 @@ export const Paged: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText("Page 1 of 3")).toBeVisible();
+    await expect(await canvas.findByText("Page 1 of 4")).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
-    await waitFor(() => expect(canvas.getByText("Page 2 of 3")).toBeVisible());
+    await waitFor(() => expect(canvas.getByText("Page 2 of 4")).toBeVisible());
   },
 };
 
@@ -187,5 +187,52 @@ export const InvestmentRestoreRefused: Story = {
 
     await expect(await screen.findByText("Later sales depend on this entry.")).toBeInTheDocument();
     await expect(canvas.getByText("Sell 3 MSFT, 2026-07-15")).toBeVisible();
+  },
+};
+
+export const RecordedKinds: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getTrashMockHandler(({ request }) =>
+          paginate(recordedTrashEntries, new URL(request.url).searchParams),
+        ),
+        getRestoreDeletedMockHandler(
+          failWith(
+            {
+              ...serverErrorProblem,
+              status: 409,
+              title: "Cannot restore",
+              instance: "/api/trash/restore",
+              errors: [
+                {
+                  name: "GeneralErrors",
+                  reason: 'You already have another tag named "Atostogos".',
+                  code: "restore.nameTaken" as const,
+                },
+              ],
+            },
+            409,
+          ),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(await canvas.findByText("Maistas, 42 transactions, 1 budget")).toBeVisible();
+    await expect(canvas.getByText("Category")).toBeVisible();
+    await expect(canvas.getByText("Tag")).toBeVisible();
+    await expect(canvas.getByText("Categorization rule")).toBeVisible();
+    await expect(canvas.getByText("Household")).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole("button", { name: "Restore: Atostogos, 7 transactions" }),
+    );
+
+    await expect(
+      await screen.findByText("Another tag of yours has this name now. Rename or delete it first."),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText("Atostogos, 7 transactions")).toBeVisible();
   },
 };

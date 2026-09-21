@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, within } from "storybook/test";
 import {
   getRemoveMemberMockHandler,
   getUpdateHouseholdMockHandler,
@@ -61,5 +62,25 @@ export const SlowMutations: Story = {
         ...handlers,
       ],
     },
+  },
+};
+
+export const DeleteOffersUndo: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /^(delete|ištrinti): kazlauskų šeima$/i }),
+    );
+    const page = within(document.body);
+    const dialog = await page.findByRole("alertdialog");
+    await expect(
+      within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
+    ).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
+
+    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    await userEvent.click(undo);
+
+    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };

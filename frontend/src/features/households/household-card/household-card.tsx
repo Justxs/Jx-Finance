@@ -26,7 +26,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
   const isOwner = household.myRole === "owner";
 
   const deleteMutation = useDeleteHousehold();
-  const remove = useConfirmedDelete(deleteMutation, [household], (item) => item.name);
+  const remove = useConfirmedDelete(deleteMutation, [household], (item) => item.name, "household");
   const removeMutation = useRemoveMember();
 
   return (

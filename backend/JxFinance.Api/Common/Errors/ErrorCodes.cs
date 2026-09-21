@@ -67,6 +67,7 @@ public static class ErrorCodes
     public const string RestoreDetailsLost = "restore.detailsLost";
     public const string RestoreSlotTaken = "restore.slotTaken";
     public const string RestoreSecurityChanged = "restore.securityChanged";
+    public const string RestoreNameTaken = "restore.nameTaken";
     public const string ExportTooManyRows = "export.tooManyRows";
     public const string BackupInvalidFile = "backup.invalidFile";
     public const string BackupSchemaMismatch = "backup.schemaMismatch";
@@ -93,7 +94,8 @@ public static class ErrorCodes
     public static int StatusCodeFor(string? errorCode) => errorCode switch
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
-        ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken => StatusCodes.Status409Conflict,
+        ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
+            or RestoreNameTaken => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
         CredentialsLockedOut => StatusCodes.Status429TooManyRequests,

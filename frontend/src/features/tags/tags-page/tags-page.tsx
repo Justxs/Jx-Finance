@@ -1,7 +1,6 @@
 import { Plus } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { getTagsQueryKey, useDeleteTag, useTagsSuspense } from "@/api/generated";
 import type { TagResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -23,14 +22,11 @@ export function TagsPage() {
   const tags = useTagsSuspense();
 
   const deleteMutation = useDeleteTag({
-    mutation: {
-      ...optimisticRemoval<TagResponse>(getTagsQueryKey()),
-      onSuccess: () => toast.success(t("tags.deleted")),
-    },
+    mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()),
   });
 
   const tagList = useDeferredValue(tags.data) ?? [];
-  const remove = useConfirmedDelete(deleteMutation, tagList, (tag) => tag.name);
+  const remove = useConfirmedDelete(deleteMutation, tagList, (tag) => tag.name, "tag");
 
   return (
     <div className="space-y-5">

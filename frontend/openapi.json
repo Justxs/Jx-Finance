@@ -2869,7 +2869,7 @@
           "Categories"
         ],
         "summary": "Delete a category",
-        "description": "Removes the category. Transactions filed under it are kept and become uncategorised rather than being deleted along with it.",
+        "description": "Removes the category. Transactions, split lines and recurring entries filed under it are kept and become uncategorised, and the budgets on it are deleted with it. Which rows it cleared is recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the category back on the rows that are still uncategorised.",
         "operationId": "DeleteCategory",
         "parameters": [
           {
@@ -3396,7 +3396,7 @@
           "CategorizationRules"
         ],
         "summary": "Delete a categorization rule",
-        "description": "Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole.",
+        "description": "Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole. The deletion is listed in the trash with the tags the rule had, and POST /api/trash/restore puts it back at its old position with those tags.",
         "operationId": "DeleteCategorizationRule",
         "parameters": [
           {
@@ -5074,7 +5074,7 @@
           "Households"
         ],
         "summary": "Delete a household",
-        "description": "Disbands the household. Only an owner may do this, and only once nothing shared still points at it: accounts, categories, and transactions shared with the household must be made personal or removed first.",
+        "description": "Disbands the household. Only an owner may do this. Every account, category and tag shared into it becomes personal to the member who owns it; the memberships are kept. Which rows were shared is recorded, so the deletion is listed in the trash and POST /api/trash/restore brings the household back and shares those rows into it again.",
         "operationId": "DeleteHousehold",
         "parameters": [
           {
@@ -5092,7 +5092,7 @@
             "description": "The household is gone."
           },
           "400": {
-            "description": "Shared data still belongs to the household.",
+            "description": "Bad Request",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -9154,7 +9154,7 @@
           "Tags"
         ],
         "summary": "Delete a tag",
-        "description": "Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag.",
+        "description": "Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag. The transactions it was on are recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the tag back on them.",
         "operationId": "DeleteTag",
         "parameters": [
           {
@@ -10910,7 +10910,7 @@
           "Trash"
         ],
         "summary": "Restore a deleted record",
-        "description": "Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken. An investment entry is replayed first in first out against the holding as it stands now, with the entry back in its place by date, and is refused when that replay would sell more than was held at any point.",
+        "description": "Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken. An investment entry is replayed first in first out against the holding as it stands now, with the entry back in its place by date, and is refused when that replay would sell more than was held at any point. A category, a tag, a categorization rule or a household comes back with what its delete cleared, applied only where it is still sound: a transaction that got another category since keeps it, a budget whose slot is taken stays deleted, a tag link to a transaction that is no longer stored is skipped, a rule returns to its old position clamped to the end of the list, and a household re-shares only the rows that are still personal and owned by one of its members. Only an owner of the household can restore it.",
         "operationId": "RestoreDeleted",
         "requestBody": {
           "content": {
@@ -10931,7 +10931,7 @@
             "description": "The record is back, or was already back."
           },
           "400": {
-            "description": "Validation failed; the deletion is older than 30 days (restore.expired); the account or category it needs is gone (restore.referenceMissing); the fee transaction of a conversion was deleted on its own (restore.companionDeleted); or the split lines of the transaction are no longer stored (restore.detailsLost); the security of a restored buy or sell now has another currency (restore.securityChanged); a restored sale would sell more than is held on its date (holding.oversold); or later sales now depend on the shares a restored entry would take back (holding.dependentSales).",
+            "description": "Validation failed; the deletion is older than 30 days (restore.expired); the account or category it needs is gone (restore.referenceMissing); the fee transaction of a conversion was deleted on its own (restore.companionDeleted); or the split lines of the transaction are no longer stored (restore.detailsLost); the security of a restored buy or sell now has another currency (restore.securityChanged); a restored sale would sell more than is held on its date (holding.oversold); or later sales now depend on the shares a restored entry would take back (holding.dependentSales); or the rule list is already full (collection.invalidSize).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10942,6 +10942,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The signed-in user is no longer an owner of the household being restored (access.forbidden).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -10961,7 +10971,7 @@
             }
           },
           "409": {
-            "description": "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken).",
+            "description": "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken), or another tag of yours now has the name of the tag being restored (restore.nameTaken).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -13802,6 +13812,7 @@
           "restore.companionDeleted",
           "restore.detailsLost",
           "restore.expired",
+          "restore.nameTaken",
           "restore.referenceMissing",
           "restore.securityChanged",
           "restore.slotTaken",
@@ -16873,7 +16884,11 @@
           "asset",
           "debt",
           "recurringBill",
-          "investmentTransaction"
+          "investmentTransaction",
+          "category",
+          "tag",
+          "categorizationRule",
+          "household"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."

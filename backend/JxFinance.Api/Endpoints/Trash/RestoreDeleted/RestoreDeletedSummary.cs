@@ -18,7 +18,12 @@ public sealed class RestoreDeletedSummary : Summary<RestoreDeletedEndpoint, Rest
             + "on its own each refuse with their own code instead of restoring something broken. An "
             + "investment entry is replayed first in first out against the holding as it stands now, with "
             + "the entry back in its place by date, and is refused when that replay would sell more than "
-            + "was held at any point.";
+            + "was held at any point. A category, a tag, a categorization rule or a household comes back "
+            + "with what its delete cleared, applied only where it is still sound: a transaction that got "
+            + "another category since keeps it, a budget whose slot is taken stays deleted, a tag link to a "
+            + "transaction that is no longer stored is skipped, a rule returns to its old position clamped to "
+            + "the end of the list, and a household re-shares only the rows that are still personal and "
+            + "owned by one of its members. Only an owner of the household can restore it.";
         ExampleRequest = new RestoreDeletedRequest(TrashKind.Transaction, Guid.Empty);
         RequestParam(r => r.Kind, "Which kind of record to bring back, as listed by GET /api/trash.");
         RequestParam(r => r.EntityId, "The id the record had before it was deleted.");
@@ -29,8 +34,10 @@ public sealed class RestoreDeletedSummary : Summary<RestoreDeletedEndpoint, Rest
             + "split lines of the transaction are no longer stored (restore.detailsLost); the security of a "
             + "restored buy or sell now has another currency (restore.securityChanged); a restored sale "
             + "would sell more than is held on its date (holding.oversold); or later sales now depend on "
-            + "the shares a restored entry would take back (holding.dependentSales).";
+            + "the shares a restored entry would take back (holding.dependentSales); or the rule list is "
+            + "already full (collection.invalidSize).";
+        Responses[403] = "The signed-in user is no longer an owner of the household being restored (access.forbidden).";
         Responses[404] = "Nothing the signed-in user deleted matches that kind and id, or the feature it belongs to is switched off.";
-        Responses[409] = "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken).";
+        Responses[409] = "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken), or another tag of yours now has the name of the tag being restored (restore.nameTaken).";
     }
 }

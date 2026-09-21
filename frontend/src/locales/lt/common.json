@@ -183,7 +183,6 @@
     "icon": "Piktograma",
     "income": "Pajamos",
     "expense": "Išlaidos",
-    "deleted": "Kategorija ištrinta; jos operacijos liko be kategorijos",
     "empty": "Šioje grupėje kategorijų nėra."
   },
   "tags": {
@@ -197,7 +196,6 @@
     "explainer": "Žyma nurodo, kam buvo skirtas mokėjimas, nepriklausomai nuo kategorijos: atostogos, remontas, kompensuotinos išlaidos. Viena operacija gali turėti kelias žymas, o pati žyma nėra nei pajamos, nei išlaidos.",
     "created": "Žyma pridėta",
     "updated": "Žyma atnaujinta",
-    "deleted": "Žyma ištrinta; ji nuimta nuo operacijų, daugiau niekas nepakito",
     "field": "Žymos",
     "searchPlaceholder": "Ieškoti žymų...",
     "noMatches": "Tokios žymos nėra.",
@@ -268,7 +266,6 @@
     "orderHint": "Taisyklės tikrinamos iš viršaus. Eilutę nulemia pirmoji sutapusi, likusios praleidžiamos.",
     "created": "Taisyklė pridėta",
     "updated": "Taisyklė atnaujinta",
-    "deleted": "Taisyklė ištrinta; jos užpildytos operacijos lieka tokios, kokios buvo",
     "moved": "Eilės tvarka pakeista",
     "onAccount": "sąskaitoje {{account}}",
     "amountRange": "nuo {{from}} iki {{to}}",
@@ -399,7 +396,11 @@
       "asset": "Turtas",
       "debt": "Skola",
       "recurringBill": "Periodinis įrašas",
-      "investmentTransaction": "Investicijų įrašas"
+      "investmentTransaction": "Investicijų įrašas",
+      "category": "Kategorija",
+      "tag": "Žyma",
+      "categorizationRule": "Kategorizavimo taisyklė",
+      "household": "Namų ūkis"
     }
   },
   "theme": {
@@ -1589,6 +1590,7 @@
       "companionDeleted": "Šio keitimo mokesčio operacija buvo ištrinta atskirai. Pirmiausia atkurkite tą operaciją.",
       "detailsLost": "Šio įrašo dalių eilutės nebesaugomos, todėl jo atkurti tokio, koks buvo, nepavyks.",
       "expired": "Šis įrašas ištrintas per seniai, kad jį būtų galima atkurti.",
+      "nameTaken": "Kita jūsų žyma dabar turi šį pavadinimą. Pirmiausia ją pervadinkite arba ištrinkite.",
       "referenceMissing": "Šiam įrašui reikalingos sąskaitos arba kategorijos nebėra. Pirmiausia atkurkite ją.",
       "securityChanged": "Šio sandorio vertybinio popieriaus valiuta dabar kita, todėl įrašas su juo nebesutaptų.",
       "slotTaken": "Šio įrašo vietą jau užėmė kitas įrašas."

@@ -1,8 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Tags.Services;
 
 [RegisterService<ITagService>(LifeTime.Scoped)]
-public sealed class TagService(AppDbContext db, ICurrentUser currentUser) : ITagService
+public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDeletionRecorder deletions) : ITagService
 {
     public async Task<IReadOnlyList<Tag>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
@@ -73,6 +75,19 @@ public sealed class TagService(AppDbContext db, ICurrentUser currentUser) : ITag
         }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var linked = await db.TransactionTags
+            .Where(t => t.TagId == tagId)
+            .Select(t => t.TransactionId)
+            .ToListAsync(cancellationToken);
+        var live = await db.Transactions
+            .IgnoreQueryFilters()
+            .CountAsync(t => linked.Contains(t.Id) && !t.IsDeleted, cancellationToken);
+        var entry = deletions.Record(
+            TrashKind.Tag,
+            id,
+            TrashLabel.Counted(tag.Name, (live, "transaction", "transactions")));
+        entry.Remember(DeletionChangeKind.TransactionTag, linked.Select(t => t.Value));
 
         await db.TransactionTags.Where(t => t.TagId == tagId).ExecuteDeleteAsync(cancellationToken);
         db.Tags.Remove(tag);

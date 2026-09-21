@@ -60,7 +60,7 @@ export const HouseholdsResponseItem = zod.object({
 export const HouseholdsResponse = zod.array(HouseholdsResponseItem);
 
 /**
- * Disbands the household. Only an owner may do this, and only once nothing shared still points at it: accounts, categories, and transactions shared with the household must be made personal or removed first.
+ * Disbands the household. Only an owner may do this. Every account, category and tag shared into it becomes personal to the member who owns it; the memberships are kept. Which rows were shared is recorded, so the deletion is listed in the trash and POST /api/trash/restore brings the household back and shares those rows into it again.
  * @summary Delete a household
  */
 export const DeleteHouseholdResponse = zod.void();

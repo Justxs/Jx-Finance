@@ -1,7 +1,6 @@
 import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { getCategoriesQueryKey, useDeleteCategory, useCategoriesSuspense } from "@/api/generated";
 import type { CategoryResponse, FlowType } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -24,14 +23,16 @@ export function CategoriesPage() {
   const categories = useCategoriesSuspense();
 
   const deleteMutation = useDeleteCategory({
-    mutation: {
-      ...optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()),
-      onSuccess: () => toast.success(t("categories.deleted")),
-    },
+    mutation: optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()),
   });
 
   const categoryList = useDeferredValue(categories.data) ?? [];
-  const remove = useConfirmedDelete(deleteMutation, categoryList, (category) => category.name);
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    categoryList,
+    (category) => category.name,
+    "category",
+  );
   const groups: { type: FlowType; labelKey: TranslationKey }[] = [
     { type: "income", labelKey: "categories.income" },
     { type: "expense", labelKey: "categories.expense" },

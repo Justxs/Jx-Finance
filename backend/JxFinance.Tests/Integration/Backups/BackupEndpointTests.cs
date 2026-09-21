@@ -95,6 +95,31 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("450.00", await CurrentBalanceAsync(account));
     }
 
+    [Fact]
+    public async Task Restore_keeps_what_a_trash_entry_recorded_so_the_deletion_can_still_be_undone()
+    {
+        var account = await CreateAccountAsync(startingBalance: "10.00");
+        var category = await CreateCategoryAsync();
+        var transaction = await CreateTransactionAsync(Client, account, category, "expense", "4.20", "2026-06-07");
+        (await Client.DeleteAsync($"/api/categories/{category}")).EnsureSuccessStatusCode();
+        var backup = await CreateBackupAsync();
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var undo = await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "category", entityId = category });
+        var back = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
+
+        Assert.Equal(HttpStatusCode.NoContent, undo.StatusCode);
+        Assert.Equal(category, back!.CategoryId);
+    }
+
     private sealed record RestoredTransactionDto(Guid Id, Guid? CategoryId, string Amount, DateOnly Date, string? Description);
 
     [Fact]
@@ -198,6 +223,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var tables = document["tables"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).ToList();
         Assert.Contains("Accounts", tables);
         Assert.Contains("AspNetUsers", tables);
+        Assert.Contains("DeletionEntries", tables);
+        Assert.Contains("DeletionChanges", tables);
         Assert.DoesNotContain("UserSessions", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }

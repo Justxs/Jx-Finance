@@ -39,7 +39,33 @@ export const trashEntries: TrashEntryResponse[] = [
     "Sell 3 MSFT, 2026-07-15",
     "2026-09-06T14:18:00Z",
   ),
+  entry(
+    10,
+    "category",
+    ids.categories.food,
+    "Maistas, 42 transactions, 1 budget",
+    "2026-09-05T10:31:00Z",
+  ),
+  entry(11, "tag", ids.tags.holiday, "Atostogos, 7 transactions", "2026-09-04T19:03:00Z"),
+  entry(
+    12,
+    "categorizationRule",
+    ids.rules.groceries,
+    "Maisto prekės, 2 tags",
+    "2026-09-03T08:15:00Z",
+  ),
+  entry(
+    13,
+    "household",
+    ids.households.garden,
+    "Sodininkų bendrija, 2 accounts, 3 categories, 1 tag",
+    "2026-09-02T17:48:00Z",
+  ),
 ];
+
+export const recordedTrashEntries = trashEntries.filter((item) =>
+  ["category", "tag", "categorizationRule", "household"].includes(item.kind),
+);
 
 export const trashPage = {
   items: trashEntries,

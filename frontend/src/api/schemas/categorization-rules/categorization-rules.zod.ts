@@ -212,7 +212,7 @@ export const TestCategorizationRuleResponse = zod.object({
 });
 
 /**
- * Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole.
+ * Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole. The deletion is listed in the trash with the tags the rule had, and POST /api/trash/restore puts it back at its old position with those tags.
  * @summary Delete a categorization rule
  */
 export const DeleteCategorizationRuleResponse = zod.void();

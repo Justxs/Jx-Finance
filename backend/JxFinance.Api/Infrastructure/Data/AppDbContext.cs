@@ -64,6 +64,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
+    public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

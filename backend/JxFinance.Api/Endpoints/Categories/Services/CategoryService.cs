@@ -1,8 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +12,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Categories.Services;
 
 [RegisterService<ICategoryService>(LifeTime.Scoped)]
-public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, IClock clock) : ICategoryService
+public sealed class CategoryService(
+    AppDbContext db,
+    ICurrentUser currentUser,
+    IClock clock,
+    IDeletionRecorder deletions) : ICategoryService
 {
     public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Categories
@@ -96,6 +102,46 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, I
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var now = clock.UtcNow;
 
+        var transactions = await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => t.CategoryId == categoryId)
+            .Select(t => new { t.Id, t.IsDeleted })
+            .ToListAsync(cancellationToken);
+        var lines = await db.TransactionLines
+            .Where(l => l.CategoryId == categoryId)
+            .Select(l => new { l.Id, l.TransactionId })
+            .ToListAsync(cancellationToken);
+        var lineParents = lines.Select(l => l.TransactionId).Distinct().ToList();
+        var liveLineParents = await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => lineParents.Contains(t.Id) && !t.IsDeleted)
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+        var bills = await db.RecurringBills
+            .IgnoreQueryFilters()
+            .Where(b => b.CategoryId == categoryId)
+            .Select(b => new { b.Id, b.IsDeleted })
+            .ToListAsync(cancellationToken);
+        var budgets = await db.Budgets
+            .IgnoreQueryFilters()
+            .Where(b => b.CategoryId == categoryId && !b.IsDeleted)
+            .Select(b => b.Id)
+            .ToListAsync(cancellationToken);
+
+        var liveTransactions = transactions.Where(t => !t.IsDeleted).Select(t => t.Id).Union(liveLineParents).Count();
+        var entry = deletions.Record(
+            TrashKind.Category,
+            id,
+            TrashLabel.Counted(
+                category.Name,
+                (liveTransactions, "transaction", "transactions"),
+                (bills.Count(b => !b.IsDeleted), "recurring entry", "recurring entries"),
+                (budgets.Count, "budget", "budgets")));
+        entry.Remember(DeletionChangeKind.TransactionCategory, transactions.Select(t => t.Id.Value));
+        entry.Remember(DeletionChangeKind.LineCategory, lines.Select(l => l.Id));
+        entry.Remember(DeletionChangeKind.RecurringBillCategory, bills.Select(b => b.Id.Value));
+        entry.Remember(DeletionChangeKind.Budget, budgets.Select(b => b.Value));
+
         await db.Transactions
             .IgnoreQueryFilters()
             .Where(t => t.CategoryId == categoryId)
@@ -109,7 +155,7 @@ public sealed class CategoryService(AppDbContext db, ICurrentUser currentUser, I
             .ExecuteUpdateAsync(s => s.SetProperty(l => l.CategoryId, (CategoryId?)null), cancellationToken);
         await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.CategoryId, (CategoryId?)null), cancellationToken);
-        await db.Budgets.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
+        await db.Budgets.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId && !b.IsDeleted)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
         db.Categories.Remove(category);
         await db.SaveChangesAsync(cancellationToken);

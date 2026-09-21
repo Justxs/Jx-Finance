@@ -25,7 +25,11 @@ public sealed class ActiveHouseholdMiddleware(RequestDelegate next, IInstanceSet
             var userId = currentUser.Id;
             var householdId = requested.Value;
             var isMember = await db.HouseholdMemberships
-                .AnyAsync(m => m.HouseholdId == householdId && m.UserId == userId, context.RequestAborted);
+                .AnyAsync(
+                    m => m.HouseholdId == householdId
+                        && m.UserId == userId
+                        && db.Households.Any(h => h.Id == householdId),
+                    context.RequestAborted);
             if (isMember)
             {
                 context.Items[ActiveHousehold.ItemKey] = householdId;

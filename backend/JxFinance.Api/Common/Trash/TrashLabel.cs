@@ -14,6 +14,14 @@ public static class TrashLabel
 
     public static string Amount(Money amount) => $"{amount} {amount.Currency.ToCode()}";
 
+    public static string Counted(string name, params (int Count, string One, string Many)[] parts) =>
+        string.Join(
+            ", ",
+            parts
+                .Where(part => part.Count > 0)
+                .Select(part => $"{part.Count.ToString(CultureInfo.InvariantCulture)} {(part.Count == 1 ? part.One : part.Many)}")
+                .Prepend(name));
+
     public static string Investment(InvestmentTransaction entry, string? symbol)
     {
         var security = symbol is null ? string.Empty : $" {symbol}";

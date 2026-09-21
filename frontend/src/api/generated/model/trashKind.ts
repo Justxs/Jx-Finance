@@ -21,4 +21,8 @@ export const TrashKind = {
   debt: "debt",
   recurringBill: "recurringBill",
   investmentTransaction: "investmentTransaction",
+  category: "category",
+  tag: "tag",
+  categorizationRule: "categorizationRule",
+  household: "household",
 } as const;

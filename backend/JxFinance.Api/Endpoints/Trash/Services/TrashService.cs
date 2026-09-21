@@ -7,15 +7,19 @@ using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
+using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Goals;
+using JxFinance.Domain.Households;
 using JxFinance.Domain.Investments;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Trash.GetTrash;
 using JxFinance.Endpoints.Trash.Interfaces;
 using JxFinance.Endpoints.Trash.Mappers;
@@ -119,6 +123,7 @@ public sealed class TrashService(
                 $"This was deleted more than {DeletionEntry.RetentionDays} days ago and can no longer be restored.");
         }
 
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var restored = entry.Kind switch
         {
             TrashKind.Transaction => await RestoreTransactionAsync(entry, cancellationToken),
@@ -130,6 +135,10 @@ public sealed class TrashService(
             TrashKind.Debt => await RestoreDebtAsync(entry, cancellationToken),
             TrashKind.RecurringBill => await RestoreRecurringBillAsync(entry, cancellationToken),
             TrashKind.InvestmentTransaction => await RestoreInvestmentTransactionAsync(entry, cancellationToken),
+            TrashKind.Category => await RestoreCategoryAsync(entry, cancellationToken),
+            TrashKind.Tag => await RestoreTagAsync(entry, cancellationToken),
+            TrashKind.CategorizationRule => await RestoreRuleAsync(entry, cancellationToken),
+            TrashKind.Household => await RestoreHouseholdAsync(entry, cancellationToken),
             _ => Result.Failure(Gone),
         };
         if (restored.IsFailure)
@@ -139,6 +148,7 @@ public sealed class TrashService(
 
         entry.RestoredAt = clock.UtcNow;
         await db.SaveChangesAsync(cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
 
         return Result.Success();
     }
@@ -447,6 +457,274 @@ public sealed class TrashService(
 
         return Result.Success();
     }
+
+    private async Task<Result> RestoreCategoryAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var categoryId = new CategoryId(entry.EntityId);
+        var category = await db.Categories
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == categoryId && c.UserId == currentUser.Id, cancellationToken);
+        if (category is null)
+        {
+            return Gone;
+        }
+
+        if (!category.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        await db.Entry(entry).Collection(e => e.Changes).LoadAsync(cancellationToken);
+        category.IsDeleted = false;
+        var now = clock.UtcNow;
+        CategoryId? restoredId = categoryId;
+
+        var transactionIds = entry.Remembered(DeletionChangeKind.TransactionCategory)
+            .Select(id => new TransactionId(id))
+            .ToList();
+        await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => transactionIds.Contains(t.Id) && t.CategoryId == null && !t.IsSplit && t.Type == category.Type)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(t => t.CategoryId, restoredId).SetProperty(t => t.UpdatedAt, now),
+                cancellationToken);
+
+        var lineIds = entry.Remembered(DeletionChangeKind.LineCategory);
+        await db.TransactionLines
+            .Where(l => lineIds.Contains(l.Id) && l.CategoryId == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(l => l.CategoryId, restoredId), cancellationToken);
+
+        var billIds = entry.Remembered(DeletionChangeKind.RecurringBillCategory)
+            .Select(id => new RecurringBillId(id))
+            .ToList();
+        var shape = category.Type == FlowType.Income ? RecurringBillShape.Income : RecurringBillShape.Expense;
+        await db.RecurringBills
+            .IgnoreQueryFilters()
+            .Where(b => billIds.Contains(b.Id) && b.CategoryId == null && b.Shape == shape)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(b => b.CategoryId, restoredId), cancellationToken);
+
+        var budgetIds = entry.Remembered(DeletionChangeKind.Budget).Select(id => new BudgetId(id)).ToList();
+        var budgets = await db.Budgets
+            .IgnoreQueryFilters()
+            .Where(b => budgetIds.Contains(b.Id) && b.IsDeleted && b.CategoryId == categoryId)
+            .ToListAsync(cancellationToken);
+        foreach (var budget in budgets)
+        {
+            if (await BudgetMayReturnAsync(budget, category, cancellationToken))
+            {
+                budget.IsDeleted = false;
+            }
+        }
+
+        return Result.Success();
+    }
+
+    private async Task<bool> BudgetMayReturnAsync(Budget budget, Category category, CancellationToken cancellationToken)
+    {
+        var taken = await db.Budgets
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                b => !b.IsDeleted
+                    && b.Id != budget.Id
+                    && b.UserId == budget.UserId
+                    && b.CategoryId == budget.CategoryId
+                    && b.Period == budget.Period,
+                cancellationToken);
+        if (taken)
+        {
+            return false;
+        }
+
+        return budget.UserId == category.UserId
+            || (category is { Scope: Scope.Shared, HouseholdId: { } householdId }
+                && await IsLiveMemberAsync(householdId, budget.UserId, cancellationToken));
+    }
+
+    private async Task<Result> RestoreTagAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var tagId = new TagId(entry.EntityId);
+        var tag = await db.Tags
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Id == tagId && t.UserId == currentUser.Id, cancellationToken);
+        if (tag is null)
+        {
+            return Gone;
+        }
+
+        if (!tag.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        var pattern = LikePattern.Exactly(tag.Name);
+        var nameTaken = await db.Tags
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                t => !t.IsDeleted
+                    && t.UserId == tag.UserId
+                    && t.Id != tagId
+                    && EF.Functions.ILike(t.Name, pattern, LikePattern.Escape),
+                cancellationToken);
+        if (nameTaken)
+        {
+            return new DomainError(
+                ErrorCodes.RestoreNameTaken,
+                $"You already have another tag named \"{tag.Name}\". Rename or delete it first.");
+        }
+
+        await db.Entry(entry).Collection(e => e.Changes).LoadAsync(cancellationToken);
+        var remembered = entry.Remembered(DeletionChangeKind.TransactionTag)
+            .Select(id => new TransactionId(id))
+            .ToList();
+        var stored = await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => remembered.Contains(t.Id))
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+        var present = await db.TransactionTags
+            .Where(x => x.TagId == tagId && remembered.Contains(x.TransactionId))
+            .Select(x => x.TransactionId)
+            .ToListAsync(cancellationToken);
+
+        tag.IsDeleted = false;
+        db.TransactionTags.AddRange(
+            stored.Except(present).Select(transactionId => new TransactionTag { TransactionId = transactionId, TagId = tagId }));
+
+        return Result.Success();
+    }
+
+    private async Task<Result> RestoreRuleAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var ruleId = new CategorizationRuleId(entry.EntityId);
+        var rule = await db.CategorizationRules
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(r => r.Id == ruleId && r.UserId == currentUser.Id, cancellationToken);
+        if (rule is null)
+        {
+            return Gone;
+        }
+
+        if (!rule.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        var rules = await db.CategorizationRules
+            .OrderBy(r => r.Position)
+            .ThenBy(r => r.CreatedAt)
+            .ToListAsync(cancellationToken);
+        if (rules.Count >= RuleLimits.MaxRulesPerUser)
+        {
+            return new DomainError(
+                ErrorCodes.CollectionInvalidSize,
+                $"You already have {RuleLimits.MaxRulesPerUser} rules. Delete one before restoring this one.");
+        }
+
+        await db.Entry(entry).Collection(e => e.Changes).LoadAsync(cancellationToken);
+        var remembered = entry.Remembered(DeletionChangeKind.RuleTag).Select(id => new TagId(id)).ToList();
+        var tags = await db.Tags
+            .IgnoreQueryFilters()
+            .Where(t => remembered.Contains(t.Id))
+            .Select(t => t.Id)
+            .ToListAsync(cancellationToken);
+
+        rule.IsDeleted = false;
+        rules.Insert(Math.Clamp(rule.Position, 0, rules.Count), rule);
+        for (var index = 0; index < rules.Count; index++)
+        {
+            rules[index].Position = index;
+        }
+
+        db.CategorizationRuleTags.AddRange(tags.Select(tagId => new CategorizationRuleTag { RuleId = ruleId, TagId = tagId }));
+
+        return Result.Success();
+    }
+
+    private async Task<Result> RestoreHouseholdAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var householdId = new HouseholdId(entry.EntityId);
+        var household = await db.Households
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(h => h.Id == householdId, cancellationToken);
+        if (household is null)
+        {
+            return Gone;
+        }
+
+        var memberships = await db.HouseholdMemberships
+            .IgnoreQueryFilters()
+            .Where(m => m.HouseholdId == householdId && !m.IsDeleted)
+            .ToListAsync(cancellationToken);
+        if (!memberships.Any(m => m.UserId == currentUser.Id && m.Role == HouseholdRole.Owner))
+        {
+            return new DomainError(ErrorCodes.AccessForbidden, "Only an owner of this household can restore it.");
+        }
+
+        if (!household.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        await db.Entry(entry).Collection(e => e.Changes).LoadAsync(cancellationToken);
+        var members = memberships.Select(m => m.UserId).ToList();
+        var now = clock.UtcNow;
+        HouseholdId? sharedInto = householdId;
+        household.IsDeleted = false;
+
+        var accountIds = entry.Remembered(DeletionChangeKind.AccountShare).Select(id => new AccountId(id)).ToList();
+        await db.Accounts
+            .IgnoreQueryFilters()
+            .Where(a => accountIds.Contains(a.Id)
+                && a.Scope == Scope.Personal
+                && a.HouseholdId == null
+                && members.Contains(a.UserId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(a => a.Scope, Scope.Shared)
+                    .SetProperty(a => a.HouseholdId, sharedInto)
+                    .SetProperty(a => a.UpdatedAt, a => a.IsDeleted ? a.UpdatedAt : now),
+                cancellationToken);
+
+        var categoryIds = entry.Remembered(DeletionChangeKind.CategoryShare).Select(id => new CategoryId(id)).ToList();
+        await db.Categories
+            .IgnoreQueryFilters()
+            .Where(c => categoryIds.Contains(c.Id)
+                && c.Scope == Scope.Personal
+                && c.HouseholdId == null
+                && members.Contains(c.UserId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(c => c.Scope, Scope.Shared)
+                    .SetProperty(c => c.HouseholdId, sharedInto)
+                    .SetProperty(c => c.UpdatedAt, c => c.IsDeleted ? c.UpdatedAt : now),
+                cancellationToken);
+
+        var tagIds = entry.Remembered(DeletionChangeKind.TagShare).Select(id => new TagId(id)).ToList();
+        await db.Tags
+            .IgnoreQueryFilters()
+            .Where(t => tagIds.Contains(t.Id)
+                && t.Scope == Scope.Personal
+                && t.HouseholdId == null
+                && members.Contains(t.UserId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(t => t.Scope, Scope.Shared)
+                    .SetProperty(t => t.HouseholdId, sharedInto)
+                    .SetProperty(t => t.UpdatedAt, t => t.IsDeleted ? t.UpdatedAt : now),
+                cancellationToken);
+
+        return Result.Success();
+    }
+
+    private Task<bool> IsLiveMemberAsync(HouseholdId householdId, Guid userId, CancellationToken cancellationToken) =>
+        db.HouseholdMemberships
+            .IgnoreQueryFilters()
+            .AnyAsync(
+                m => m.HouseholdId == householdId
+                    && m.UserId == userId
+                    && !m.IsDeleted
+                    && db.Households.IgnoreQueryFilters().Any(h => h.Id == householdId && !h.IsDeleted),
+                cancellationToken);
 
     private Task<bool> AccountVisibleAsync(AccountId accountId, CancellationToken cancellationToken) =>
         db.Accounts.AnyAsync(a => a.Id == accountId, cancellationToken);
