@@ -33,13 +33,21 @@ import { TransferForm } from "./transfer-form";
 
 interface Props {
   accounts: AccountResponse[];
+  addOpen?: boolean;
+  onAddOpenChange?: (open: boolean) => void;
 }
 
-export function TransfersSection({ accounts }: Readonly<Props>) {
+export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
-  const [addOpen, setAddOpen] = useState(false);
+  const [ownAddOpen, setOwnAddOpen] = useState(false);
+  const createOpen = addOpen ?? ownAddOpen;
+
+  function setAddOpen(open: boolean) {
+    setOwnAddOpen(open);
+    onAddOpenChange?.(open);
+  }
 
   const paging = usePagedList();
   const { page, setPage, shownPage, stale } = paging;
@@ -77,6 +85,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
     deleteMutation,
     items,
     (transfer) => `${transferRoute(transfer)} · ${transferAmount(transfer)}`,
+    "transfer",
   );
 
   let content: ReactNode;
@@ -118,7 +127,7 @@ export function TransfersSection({ accounts }: Readonly<Props>) {
           {t("transfers.add")}
         </Button>
       </SectionHeader>
-      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
+      <Modal open={createOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}

@@ -765,6 +765,24 @@
     "search": "Search transactions",
     "help": "Show keyboard shortcuts"
   },
+  "commandPalette": {
+    "title": "Command palette",
+    "description": "Type to search pages, accounts, categories, tags and actions. Move with the arrow keys, choose with Enter, close with Escape.",
+    "searchLabel": "Search pages, records and actions",
+    "placeholder": "Search pages, records and actions…",
+    "resultsLabel": "Matches",
+    "count": "Matches: {{count}}",
+    "empty": "Nothing matches what you typed.",
+    "run": "Run",
+    "goTo": "Go to",
+    "openTransactions": "Open transactions",
+    "newTransfer": "New transfer",
+    "language": "Language",
+    "theme": {
+      "dark": "Switch to the dark theme",
+      "light": "Switch to the light theme"
+    }
+  },
   "goals": {
     "title": "Goals",
     "add": "Add goal",

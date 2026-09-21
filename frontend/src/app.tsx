@@ -14,6 +14,7 @@ import { pageViewTransition } from "@/lib/page-transition";
 import { queryClient } from "@/lib/query-client";
 import { registerShortcuts } from "@/lib/shortcuts";
 import { initLocale } from "@/stores/app-store";
+import { isCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { isShortcutsHelpOpen, toggleShortcutsHelp } from "@/stores/shortcuts-help-store";
 import { routeTree } from "./route-tree.gen";
 
@@ -52,7 +53,13 @@ async function loadDefaultLanguage() {
   return settings.defaultLanguage;
 }
 
-registerShortcuts(router, toggleShortcutsHelp, isShortcutsHelpOpen, isFeatureOn);
+registerShortcuts(router, {
+  toggleHelp: toggleShortcutsHelp,
+  isHelpOpen: isShortcutsHelpOpen,
+  togglePalette: toggleCommandPalette,
+  isPaletteOpen: isCommandPaletteOpen,
+  isFeatureEnabled: isFeatureOn,
+});
 void initLocale(loadDefaultLanguage);
 
 export function App() {

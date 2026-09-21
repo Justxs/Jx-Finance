@@ -25,6 +25,7 @@ export const accountsSearchSchema = z.object({
     .optional()
     .catch(undefined),
   direction: z.enum(["asc", "desc"]).optional().catch(undefined),
+  new: z.enum(["account", "transfer"]).optional().catch(undefined),
 });
 
 export const Route = createFileRoute("/accounts")({
