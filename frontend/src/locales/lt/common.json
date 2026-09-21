@@ -1519,6 +1519,13 @@
       "notFound": "Šis įrašas nebeegzistuoja.",
       "readOnly": "Importuotų įrašų redaguoti negalima."
     },
+    "restore": {
+      "companionDeleted": "Šio keitimo mokesčio operacija buvo ištrinta atskirai. Pirmiausia atkurkite tą operaciją.",
+      "detailsLost": "Šio įrašo dalių eilutės nebesaugomos, todėl jo atkurti tokio, koks buvo, nepavyks.",
+      "expired": "Šis įrašas ištrintas per seniai, kad jį būtų galima atkurti.",
+      "referenceMissing": "Šiam įrašui reikalingos sąskaitos arba kategorijos nebėra. Pirmiausia atkurkite ją.",
+      "slotTaken": "Šio įrašo vietą jau užėmė kitas įrašas."
+    },
     "security": {
       "notHeld": "Kainą gali nustatyti tik šį vertybinį popierių turintis naudotojas arba administratorius."
     },

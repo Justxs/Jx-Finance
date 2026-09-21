@@ -1,7 +1,14 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import type { TrashKind } from "@/api/generated/model";
+import { useUndoToast } from "@/hooks/use-undo-toast";
+
+interface DeleteOptions {
+  onSuccess?: () => void;
+}
 
 interface DeleteMutation {
-  mutate: (variables: { id: string }) => void;
+  mutate: (variables: { id: string }, options?: DeleteOptions) => void;
   isPending: boolean;
   variables?: { id: string };
 }
@@ -10,9 +17,21 @@ export function useConfirmedDelete<T extends { id: string }>(
   mutation: DeleteMutation,
   items: readonly T[],
   labelOf: (item: T) => string | null | undefined,
+  undoKind?: TrashKind,
 ) {
+  const { t } = useTranslation();
   const [target, setTarget] = useState<string | null>(null);
+  const showUndoToast = useUndoToast();
   const item = items.find((candidate) => candidate.id === target);
+  const itemLabel = (item ? labelOf(item) : undefined) ?? undefined;
+
+  function confirm(id: string) {
+    if (!undoKind) {
+      mutation.mutate({ id });
+      return;
+    }
+    mutation.mutate({ id }, { onSuccess: () => showUndoToast(undoKind, id, itemLabel) });
+  }
 
   return {
     request: (id: string) => setTarget(id),
@@ -20,9 +39,10 @@ export function useConfirmedDelete<T extends { id: string }>(
     busy: mutation.isPending,
     dialogProps: {
       target,
-      itemLabel: (item ? labelOf(item) : undefined) ?? undefined,
+      itemLabel,
+      description: undoKind ? t("confirmDelete.undoable") : undefined,
       onCancel: () => setTarget(null),
-      onConfirm: (id: string) => mutation.mutate({ id }),
+      onConfirm: confirm,
     },
   };
 }

@@ -42,11 +42,21 @@ public static class EntityLookup
         return found;
     }
 
+    public static Task<Result<Guid>> DeleteOrNotFoundAsync<T>(
+        this AppDbContext db,
+        Guid id,
+        Expression<Func<T, bool>> predicate,
+        string message,
+        CancellationToken cancellationToken)
+        where T : class =>
+        db.DeleteOrNotFoundAsync(id, predicate, message, _ => { }, cancellationToken);
+
     public static async Task<Result<Guid>> DeleteOrNotFoundAsync<T>(
         this AppDbContext db,
         Guid id,
         Expression<Func<T, bool>> predicate,
         string message,
+        Action<T> beforeDelete,
         CancellationToken cancellationToken)
         where T : class
     {
@@ -56,6 +66,7 @@ public static class EntityLookup
             return found.Error;
         }
 
+        beforeDelete(entity);
         db.Set<T>().Remove(entity);
         await db.SaveChangesAsync(cancellationToken);
 

@@ -1,6 +1,7 @@
 import { Pencil, Plus, Trash2 } from "lucide-react";
 import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { TrashKind } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { RowTransition } from "@/components/row-transition/row-transition";
@@ -35,7 +36,8 @@ interface Props {
   items: readonly HoldingItem[];
   deletingId?: string;
   deleteDisabled: boolean;
-  onDelete: (id: string) => void;
+  onDelete: (id: string, options?: { onSuccess?: () => void }) => void;
+  undoKind: TrashKind;
   form: ComponentType<HoldingFormProps>;
 }
 
@@ -48,6 +50,7 @@ export function HoldingsSection({
   deletingId,
   deleteDisabled,
   onDelete,
+  undoKind,
   form: Form,
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -55,12 +58,13 @@ export function HoldingsSection({
   const [addOpen, setAddOpen] = useState(false);
   const remove = useConfirmedDelete(
     {
-      mutate: ({ id }) => onDelete(id),
+      mutate: ({ id }, options) => onDelete(id, options),
       isPending: deleteDisabled,
       variables: deletingId ? { id: deletingId } : undefined,
     },
     items,
     (item) => item.name,
+    undoKind,
   );
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const editItem = items.find((item) => item.id === editTarget);

@@ -102,6 +102,7 @@ export function ConversionsSection({
     deleteMutation,
     items,
     (conversion) => `${accountNames.get(conversion.accountId) ?? ""} · ${amounts(conversion)}`,
+    "conversion",
   );
 
   let content: ReactNode;

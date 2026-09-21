@@ -42,7 +42,8 @@
   },
   "confirmDelete": {
     "title": "Delete this item?",
-    "description": "This can't be undone."
+    "description": "This can't be undone.",
+    "undoable": "You can undo this straight away, or from the trash in your profile for the next 30 days."
   },
   "datePicker": {
     "placeholder": "Pick a date",
@@ -1491,6 +1492,13 @@
     "resource": {
       "notFound": "This no longer exists.",
       "readOnly": "Imported entries cannot be edited."
+    },
+    "restore": {
+      "companionDeleted": "The fee transaction of this conversion was deleted on its own. Restore that transaction first.",
+      "detailsLost": "The split lines of this entry are no longer stored, so it cannot come back as it was.",
+      "expired": "This was deleted too long ago to be restored.",
+      "referenceMissing": "The account or category this entry needs is gone. Restore that first.",
+      "slotTaken": "Another record already holds the place this one needs."
     },
     "security": {
       "notHeld": "Only someone who holds this security, or an administrator, can set its price."

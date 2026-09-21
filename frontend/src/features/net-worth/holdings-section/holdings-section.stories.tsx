@@ -53,6 +53,7 @@ const meta = {
     items,
     deleteDisabled: false,
     onDelete: fn(),
+    undoKind: "asset",
     form: StubForm,
   },
   decorators: [withWidth("wide")],

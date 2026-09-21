@@ -1,15 +1,32 @@
-import { FileUp, type LucideIcon, Palette, ShieldCheck, UserRound } from "lucide-react";
+import {
+  FileUp,
+  type LucideIcon,
+  MonitorSmartphone,
+  Palette,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SectionNav } from "@/components/section-nav/section-nav";
 import type { TranslationKey } from "@/lib/i18n";
 
-export const profileSections = ["account", "security", "import", "appearance"] as const;
+export const profileSections = [
+  "account",
+  "security",
+  "sessions",
+  "trash",
+  "import",
+  "appearance",
+] as const;
 
 export type ProfileSection = (typeof profileSections)[number];
 
 const items: Record<ProfileSection, { labelKey: TranslationKey; icon: LucideIcon }> = {
   account: { labelKey: "profile.detailsTitle", icon: UserRound },
   security: { labelKey: "profile.twoFactorTitle", icon: ShieldCheck },
+  sessions: { labelKey: "profile.sessions.title", icon: MonitorSmartphone },
+  trash: { labelKey: "trash.title", icon: Trash2 },
   import: { labelKey: "imports.sectionTitle", icon: FileUp },
   appearance: { labelKey: "settings.appearance", icon: Palette },
 };

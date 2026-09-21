@@ -1368,6 +1368,54 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("TransferImports");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Trash.DeletionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CompanionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<Guid>("EntityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTimeOffset?>("RestoredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "EntityId");
+
+                    b.HasIndex("UserId", "DeletedAt");
+
+                    b.ToTable("DeletionEntries");
+                });
+
             modelBuilder.Entity("JxFinance.Infrastructure.Auth.AppRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1960,6 +2008,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasOne("JxFinance.Domain.Transfers.Transfer", null)
                         .WithMany()
                         .HasForeignKey("TransferId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Trash.DeletionEntry", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

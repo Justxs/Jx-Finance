@@ -2,9 +2,11 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.References;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Budgets.CreateBudget;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Budgets.Mappers;
@@ -20,7 +22,7 @@ public sealed class BudgetService(
     AppDbContext db,
     IBudgetUsageCalculator usageCalculator,
     IReferenceGuard references,
-    IClock clock,
+    IDeletionRecorder deletions,
     BudgetMapper mapper)
     : IBudgetService
 {
@@ -84,7 +86,23 @@ public sealed class BudgetService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var budgetId = new BudgetId(id);
-        return db.DeleteOrNotFoundAsync<Budget>(id, b => b.Id == budgetId, "Budget not found.", cancellationToken);
+        var found = await db.Budgets.FindOrNotFoundAsync(b => b.Id == budgetId, "Budget not found.", cancellationToken);
+        if (!found.TryGetValue(out var budget))
+        {
+            return found.Error;
+        }
+
+        var categoryName = await db.Categories
+            .Where(c => c.Id == budget.CategoryId)
+            .Select(c => c.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        deletions.Record(TrashKind.Budget, id, $"{categoryName ?? budget.Period.ToString()}, {TrashLabel.Amount(budget.LimitAmount)}");
+
+        db.Budgets.Remove(budget);
+        await db.SaveChangesAsync(cancellationToken);
+
+        return id;
     }
 
     private async Task<DomainError?> ValidateAsync(

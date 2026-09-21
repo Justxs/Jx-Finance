@@ -45,7 +45,8 @@ export function DebtsSection() {
       }))}
       deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
       deleteDisabled={deleteMutation.isPending}
-      onDelete={(id) => deleteMutation.mutate({ id })}
+      onDelete={(id, options) => deleteMutation.mutate({ id }, options)}
+      undoKind="debt"
       form={DebtForm}
     />
   );

@@ -1,7 +1,14 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Errors;
+using JxFinance.Common.References;
+using JxFinance.Common.Trash;
+using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
+using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Accounts.Interfaces;
+using JxFinance.Endpoints.Goals.CreateGoal;
 using JxFinance.Endpoints.Goals.Interfaces;
 using JxFinance.Endpoints.Goals.Mappers;
 using JxFinance.Endpoints.Goals.Shared;
@@ -70,7 +77,12 @@ public sealed class GoalService(
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var goalId = new GoalId(id);
-        return db.DeleteOrNotFoundAsync<Goal>(id, g => g.Id == goalId, NotFound, cancellationToken);
+        return db.DeleteOrNotFoundAsync<Goal>(
+            id,
+            g => g.Id == goalId,
+            NotFound,
+            goal => deletions.Record(TrashKind.Goal, id, goal.Name),
+            cancellationToken);
     }
 
     private Task<DomainError?> FundingAccountErrorAsync(Goal goal, CancellationToken cancellationToken) =>

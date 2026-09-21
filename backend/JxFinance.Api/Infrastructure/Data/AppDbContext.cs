@@ -18,6 +18,7 @@ using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
+using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Auth;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
+    public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
+    public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {
