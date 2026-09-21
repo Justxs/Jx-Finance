@@ -10,6 +10,7 @@ import type { RequestHandlerOptions } from "msw";
 import type {
   AssetResponse,
   DebtResponse,
+  DebtScheduleResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
 } from "../model";
@@ -196,6 +197,30 @@ export const getUpdateDebtMockHandler = (
   );
 };
 
+export const getDebtScheduleMockHandler = (
+  overrideResponse?:
+    | DebtScheduleResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DebtScheduleResponse> | DebtScheduleResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/debts/:id/schedule",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getNetWorthMockHandler = (
   overrideResponse?:
     | NetWorthResponse
@@ -252,6 +277,7 @@ export const getNetWorthMock = () => [
   getDebtsMockHandler(),
   getDeleteDebtMockHandler(),
   getUpdateDebtMockHandler(),
+  getDebtScheduleMockHandler(),
   getNetWorthMockHandler(),
   getNetWorthHistoryMockHandler(),
 ];

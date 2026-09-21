@@ -1,5 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Amortization;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
@@ -80,6 +82,45 @@ public sealed class NetWorthService(
             cancellationToken);
     }
 
+    public async Task<Result<DebtScheduleResponse>> GetDebtScheduleAsync(Guid id, ExtraPayments extra, CancellationToken cancellationToken)
+    {
+        var debtId = new DebtId(id);
+        var debt = await db.Debts.AsNoTracking().FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
+        if (debt is null)
+        {
+            return Result<DebtScheduleResponse>.Failure(ErrorCodes.ResourceNotFound, DebtNotFound);
+        }
+
+        if (AmortizationTerms.From(debt) is not { } terms)
+        {
+            return Result<DebtScheduleResponse>.Failure(
+                ErrorCodes.DebtScheduleIncomplete,
+                "The debt needs a loan amount, an interest rate, a first payment date, and a term or a monthly payment.");
+        }
+
+        if (!AmortizationCalculator.Calculate(terms).TryGetValue(out var plan))
+        {
+            return Result<DebtScheduleResponse>.Failure(ErrorCodes.DebtPaymentTooSmall, AmortizationCalculator.PaymentTooSmallMessage);
+        }
+
+        var withExtra = extra.IsNone ? null : AmortizationCalculator.Calculate(terms, extra).Value;
+        var today = clock.Today;
+
+        return new DebtScheduleResponse(
+            id,
+            today,
+            terms.Principal,
+            terms.AnnualRatePercent,
+            terms.Type,
+            plan.RegularPayment,
+            plan.BalanceOn(today),
+            plan.PaymentsMadeBy(today),
+            ToPlan(plan),
+            withExtra is null ? null : ToPlan(withExtra),
+            withExtra is null ? null : plan.TotalInterest - withExtra.TotalInterest,
+            withExtra is null ? null : plan.Rows.Count - withExtra.Rows.Count);
+    }
+
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -117,6 +158,16 @@ public sealed class NetWorthService(
 
         return new NetWorthHistoryResponse(items);
     }
+
+    private static DebtSchedulePlan ToPlan(AmortizationSchedule schedule) => new(
+        schedule.PayoffDate,
+        schedule.Rows.Count,
+        schedule.TotalPaid,
+        schedule.TotalInterest,
+        schedule.TotalExtra,
+        schedule.Rows
+            .Select(row => new DebtScheduleRow(row.Number, row.Date, row.Payment, row.Interest, row.Principal, row.Extra, row.Balance))
+            .ToList());
 
     private async Task<(decimal Accounts, decimal Assets, decimal Debts, decimal NetWorth, bool IsComplete)> ComputeTotalsAsync(
         CancellationToken cancellationToken)

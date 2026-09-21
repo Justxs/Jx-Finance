@@ -93,7 +93,7 @@ export const UpdateAssetResponse = zod.object({
 });
 
 /**
- * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards.
+ * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.
  * @summary Add a debt
  */
 export const createDebtBodyNameMin = 0;
@@ -102,6 +102,11 @@ export const createDebtBodyNameMax = 100;
 export const createDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createDebtBodyInterestRateMin = 0;
 export const createDebtBodyInterestRateMax = 100;
+
+export const createDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtBodyTermMonthsMax = 600;
+
+export const createDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateDebtBody = zod.object({
   name: zod.string().min(createDebtBodyNameMin).max(createDebtBodyNameMax),
@@ -116,9 +121,41 @@ export const CreateDebtBody = zod.object({
     .nullable()
     .describe("Optional annual rate as a percentage, for example 2.4."),
   asOf: zod.iso.date(),
+  loanAmount: zod
+    .stringFormat("decimal", createDebtBodyLoanAmountRegExp)
+    .nullish()
+    .describe("Optional principal borrowed at the start, a positive decimal string."),
+  firstPaymentDate: zod
+    .union([zod.null(), zod.iso.date()])
+    .optional()
+    .describe(
+      "Optional date of the first monthly payment; later payments fall on the same day of the month.",
+    ),
+  termMonths: zod
+    .int()
+    .min(1)
+    .max(createDebtBodyTermMonthsMax)
+    .nullish()
+    .describe(
+      "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
+    ),
+  monthlyPayment: zod
+    .stringFormat("decimal", createDebtBodyMonthlyPaymentRegExp)
+    .nullish()
+    .describe(
+      "Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).",
+    ),
+  amortizationType: zod
+    .union([zod.null(), zod.enum(["annuity", "linear"])])
+    .optional()
+    .describe(
+      "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
+    ),
 });
 
 export const createDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateDebtResponse = zod.object({
   id: zod.uuid(),
@@ -127,13 +164,21 @@ export const CreateDebtResponse = zod.object({
   outstandingAmount: zod.stringFormat("decimal", createDebtResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", createDebtResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod.stringFormat("decimal", createDebtResponseMonthlyPaymentRegExp).nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
 });
 
 /**
- * Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.
+ * Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.
  * @summary List debts
  */
 export const debtsResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtsResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtsResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const DebtsResponseItem = zod.object({
   id: zod.uuid(),
@@ -142,6 +187,12 @@ export const DebtsResponseItem = zod.object({
   outstandingAmount: zod.stringFormat("decimal", debtsResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", debtsResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod.stringFormat("decimal", debtsResponseMonthlyPaymentRegExp).nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
 });
 export const DebtsResponse = zod.array(DebtsResponseItem);
 
@@ -152,7 +203,7 @@ export const DebtsResponse = zod.array(DebtsResponseItem);
 export const DeleteDebtResponse = zod.void();
 
 /**
- * Records a new outstanding balance, rate, or name. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down.
+ * Records a new outstanding balance, rate, name or repayment terms. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down. The request replaces the debt, so repayment terms left out are cleared.
  * @summary Update a debt
  */
 export const updateDebtBodyNameMin = 0;
@@ -161,6 +212,11 @@ export const updateDebtBodyNameMax = 100;
 export const updateDebtBodyOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateDebtBodyInterestRateMin = 0;
 export const updateDebtBodyInterestRateMax = 100;
+
+export const updateDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtBodyTermMonthsMax = 600;
+
+export const updateDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateDebtBody = zod.object({
   name: zod.string().min(updateDebtBodyNameMin).max(updateDebtBodyNameMax),
@@ -172,9 +228,41 @@ export const UpdateDebtBody = zod.object({
     .max(updateDebtBodyInterestRateMax)
     .nullable(),
   asOf: zod.iso.date(),
+  loanAmount: zod
+    .stringFormat("decimal", updateDebtBodyLoanAmountRegExp)
+    .nullish()
+    .describe("Optional principal borrowed at the start, a positive decimal string."),
+  firstPaymentDate: zod
+    .union([zod.null(), zod.iso.date()])
+    .optional()
+    .describe(
+      "Optional date of the first monthly payment; later payments fall on the same day of the month.",
+    ),
+  termMonths: zod
+    .int()
+    .min(1)
+    .max(updateDebtBodyTermMonthsMax)
+    .nullish()
+    .describe(
+      "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
+    ),
+  monthlyPayment: zod
+    .stringFormat("decimal", updateDebtBodyMonthlyPaymentRegExp)
+    .nullish()
+    .describe(
+      "Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).",
+    ),
+  amortizationType: zod
+    .union([zod.null(), zod.enum(["annuity", "linear"])])
+    .optional()
+    .describe(
+      "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
+    ),
 });
 
 export const updateDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateDebtResponse = zod.object({
   id: zod.uuid(),
@@ -183,6 +271,118 @@ export const UpdateDebtResponse = zod.object({
   outstandingAmount: zod.stringFormat("decimal", updateDebtResponseOutstandingAmountRegExp),
   interestRate: zod.number().nullable(),
   asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", updateDebtResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod.stringFormat("decimal", updateDebtResponseMonthlyPaymentRegExp).nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
+});
+
+/**
+ * Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments, and what they save.
+ * @summary Get the repayment schedule of a debt
+ */
+export const debtScheduleResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponseRegularPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponseScheduledBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanTotalPaidRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanTotalInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanTotalExtraRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanRowsItemPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanRowsItemInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanRowsItemPrincipalRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanRowsItemExtraRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponsePlanRowsItemBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponseWithExtraTwoTotalPaidRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtScheduleResponseWithExtraTwoTotalInterestRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoTotalExtraRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoRowsItemPaymentRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoRowsItemInterestRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoRowsItemPrincipalRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoRowsItemExtraRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseWithExtraTwoRowsItemBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtScheduleResponseInterestSavedRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const DebtScheduleResponse = zod.object({
+  debtId: zod.uuid(),
+  asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", debtScheduleResponseLoanAmountRegExp),
+  interestRate: zod.number(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  regularPayment: zod.stringFormat("decimal", debtScheduleResponseRegularPaymentRegExp),
+  scheduledBalance: zod.stringFormat("decimal", debtScheduleResponseScheduledBalanceRegExp),
+  paymentsMade: zod.int(),
+  plan: zod.object({
+    payoffDate: zod.iso.date(),
+    payments: zod.int(),
+    totalPaid: zod.stringFormat("decimal", debtScheduleResponsePlanTotalPaidRegExp),
+    totalInterest: zod.stringFormat("decimal", debtScheduleResponsePlanTotalInterestRegExp),
+    totalExtra: zod.stringFormat("decimal", debtScheduleResponsePlanTotalExtraRegExp),
+    rows: zod.array(
+      zod.object({
+        number: zod.int(),
+        date: zod.iso.date(),
+        payment: zod.stringFormat("decimal", debtScheduleResponsePlanRowsItemPaymentRegExp),
+        interest: zod.stringFormat("decimal", debtScheduleResponsePlanRowsItemInterestRegExp),
+        principal: zod.stringFormat("decimal", debtScheduleResponsePlanRowsItemPrincipalRegExp),
+        extra: zod.stringFormat("decimal", debtScheduleResponsePlanRowsItemExtraRegExp),
+        balance: zod.stringFormat("decimal", debtScheduleResponsePlanRowsItemBalanceRegExp),
+      }),
+    ),
+  }),
+  withExtra: zod.union([
+    zod.null(),
+    zod.object({
+      payoffDate: zod.iso.date(),
+      payments: zod.int(),
+      totalPaid: zod.stringFormat("decimal", debtScheduleResponseWithExtraTwoTotalPaidRegExp),
+      totalInterest: zod.stringFormat(
+        "decimal",
+        debtScheduleResponseWithExtraTwoTotalInterestRegExp,
+      ),
+      totalExtra: zod.stringFormat("decimal", debtScheduleResponseWithExtraTwoTotalExtraRegExp),
+      rows: zod.array(
+        zod.object({
+          number: zod.int(),
+          date: zod.iso.date(),
+          payment: zod.stringFormat(
+            "decimal",
+            debtScheduleResponseWithExtraTwoRowsItemPaymentRegExp,
+          ),
+          interest: zod.stringFormat(
+            "decimal",
+            debtScheduleResponseWithExtraTwoRowsItemInterestRegExp,
+          ),
+          principal: zod.stringFormat(
+            "decimal",
+            debtScheduleResponseWithExtraTwoRowsItemPrincipalRegExp,
+          ),
+          extra: zod.stringFormat("decimal", debtScheduleResponseWithExtraTwoRowsItemExtraRegExp),
+          balance: zod.stringFormat(
+            "decimal",
+            debtScheduleResponseWithExtraTwoRowsItemBalanceRegExp,
+          ),
+        }),
+      ),
+    }),
+  ]),
+  interestSaved: zod.stringFormat("decimal", debtScheduleResponseInterestSavedRegExp).nullable(),
+  paymentsSaved: zod.int().nullable(),
 });
 
 /**

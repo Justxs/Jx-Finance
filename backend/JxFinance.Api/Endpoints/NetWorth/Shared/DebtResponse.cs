@@ -9,4 +9,10 @@ public sealed record DebtResponse(
     DebtType Type,
     [property: Money] decimal OutstandingAmount,
     decimal? InterestRate,
-    DateOnly AsOf);
+    DateOnly AsOf,
+    [property: Money] decimal? LoanAmount,
+    DateOnly? FirstPaymentDate,
+    int? TermMonths,
+    [property: Money] decimal? MonthlyPayment,
+    AmortizationType AmortizationType,
+    DateOnly? PayoffDate);

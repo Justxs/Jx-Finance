@@ -288,6 +288,41 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             points);
     }
 
+    [Fact]
+    public async Task Restore_brings_back_the_repayment_terms_of_a_debt()
+    {
+        var debt = await PostAsync<RestoredDebtDto>(
+            Client,
+            "/api/debts",
+            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", interestRate = 5m, asOf = Today, loanAmount = "100000.00", firstPaymentDate = "2026-01-01", termMonths = 360, amortizationType = "linear" });
+        var backup = await CreateBackupAsync();
+        (await Client.PutAsJsonAsync(
+            $"/api/debts/{debt.Id}",
+            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", asOf = Today, monthlyPayment = "10.00" })).EnsureSuccessStatusCode();
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts"))!, d => d.Id == debt.Id);
+        Assert.Equal(debt, restored);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule")).StatusCode);
+    }
+
+    private sealed record RestoredDebtDto(
+        Guid Id,
+        string LoanAmount,
+        DateOnly? FirstPaymentDate,
+        int? TermMonths,
+        string? MonthlyPayment,
+        string AmortizationType,
+        DateOnly? PayoffDate);
+
     private async Task SetPriceAsync(Guid securityId, string lastPrice, string lastPriceDate) =>
         (await Client.PutAsJsonAsync($"/api/investments/securities/{securityId}/price", new { lastPrice, lastPriceDate })).EnsureSuccessStatusCode();
 

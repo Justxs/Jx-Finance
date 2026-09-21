@@ -5,7 +5,7 @@ import { withWidth } from "@/storybook/decorators";
 import { openedDialog } from "@/storybook/interactions";
 import { type HoldingFormProps, type HoldingItem, HoldingsSection } from "./holdings-section";
 
-function StubForm({ onCreated, onCancel }: Readonly<HoldingFormProps>) {
+function StubForm({ onCreated, onCancel }: Readonly<HoldingFormProps<unknown>>) {
   return (
     <div className="flex justify-end gap-2">
       <Button variant="outline" onClick={onCancel}>

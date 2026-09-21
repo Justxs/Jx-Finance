@@ -15,6 +15,10 @@ function asPage(fixture: unknown) {
   return paginate(Array.isArray(fixture) ? fixture : [], new URLSearchParams("pageSize=100000"));
 }
 
+function asList(fixture: unknown) {
+  return [fixture];
+}
+
 function asItems(fixture: unknown) {
   return { items: fixture };
 }
@@ -153,6 +157,14 @@ const contracts: Record<string, Contract> = {
   notifications: { schema: schemas.NotificationsResponse },
   assets: { schema: schemas.AssetsResponse },
   debts: { schema: schemas.DebtsResponse },
+  zeroRateDebt: { schema: schemas.DebtsResponse, toResponse: asList },
+  linearDebt: { schema: schemas.DebtsResponse, toResponse: asList },
+  mortgageSchedule: { schema: schemas.DebtScheduleResponse },
+  mortgageScheduleWithExtra: { schema: schemas.DebtScheduleResponse },
+  zeroRateSchedule: { schema: schemas.DebtScheduleResponse },
+  linearSchedule: { schema: schemas.DebtScheduleResponse },
+  debtPaymentTooSmallProblem: { schema: schemas.ProblemDetailsResponse },
+  scheduleIncompleteProblem: { schema: schemas.ProblemDetailsResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },
   netWorthHistoryItems: { schema: schemas.NetWorthHistoryResponse, toResponse: asItems },
@@ -248,7 +260,19 @@ function buildReport() {
   return fixtures.buildReportSummary("2026-08-01", "2026-09-30");
 }
 
+function buildSchedule() {
+  return fixtures.buildDebtSchedule(fixtures.linearDebt, {
+    extraMonthly: "25.00",
+    lumpSum: "1000.00",
+    lumpSumDate: "2027-01-01",
+  });
+}
+
 const builtResponses: Record<string, { schema: ZodType; build: () => unknown }> = {
+  buildDebtSchedule: {
+    schema: schemas.DebtScheduleResponse,
+    build: buildSchedule,
+  },
   buildTransactionsSummary: {
     schema: schemas.TransactionsSummaryResponse,
     build: buildSummary,

@@ -1,11 +1,14 @@
+import { Link } from "@tanstack/react-router";
+import { CalendarRange } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generated";
 import type { DebtResponse } from "@/api/generated/model";
+import { buttonVariants } from "@/components/ui/button/button";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
-import { DebtForm } from "./debt-form";
+import { DebtForm, type DebtFormValues, debtFormValues } from "./debt-form";
 
 export function DebtsSection() {
   const { t } = useTranslation();
@@ -18,8 +21,28 @@ export function DebtsSection() {
   });
   const debtList = useDeferredValue(debts.data);
 
+  function scheduleLink(debt: DebtResponse) {
+    if (debt.payoffDate === null) {
+      return null;
+    }
+
+    const label = t("netWorth.schedule.open", { name: debt.name });
+
+    return (
+      <Link
+        to="/net-worth/debts/$debtId"
+        params={{ debtId: debt.id }}
+        aria-label={label}
+        title={label}
+        className={buttonVariants({ variant: "ghost", size: "icon" })}
+      >
+        <CalendarRange />
+      </Link>
+    );
+  }
+
   return (
-    <HoldingsSection
+    <HoldingsSection<DebtFormValues>
       title={t("netWorth.debts")}
       addLabel={t("netWorth.addDebt")}
       emptyLabel={t("netWorth.noDebts")}
@@ -31,17 +54,15 @@ export function DebtsSection() {
           t(`netWorth.debtTypes.${debt.type}`),
           formatDate(debt.asOf),
           debt.interestRate ? formatRate(debt.interestRate) : null,
+          debt.payoffDate
+            ? t("netWorth.repayment.paidOff", { date: formatDate(debt.payoffDate) })
+            : null,
         ]
           .filter(Boolean)
           .join(" · "),
         amount: Number(debt.outstandingAmount),
-        values: {
-          name: debt.name ?? "",
-          type: debt.type,
-          amount: debt.outstandingAmount,
-          interestRate: debt.interestRate === null ? "" : String(debt.interestRate),
-          asOf: debt.asOf,
-        },
+        values: debtFormValues(debt),
+        action: scheduleLink(debt),
       }))}
       deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
       deleteDisabled={deleteMutation.isPending}

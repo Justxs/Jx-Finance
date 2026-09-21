@@ -62,3 +62,33 @@ export const duplicateTagProblem: ProblemDetails = {
   detail: 'You already have a tag named "Atostogos 2026".',
   code: "conflict.duplicate",
 };
+
+export const debtPaymentTooSmallProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/debts",
+  errors: [
+    {
+      name: "monthlyPayment",
+      reason:
+        "The monthly payment does not repay the debt within 50 years; it has to be more than the first month's interest.",
+      code: "debt.paymentTooSmall",
+    },
+  ],
+};
+
+export const scheduleIncompleteProblem: ProblemDetails = {
+  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  instance: "/api/debts/cccccccc-0000-0000-0000-000000000002/schedule",
+  errors: [
+    {
+      name: "generalErrors",
+      reason:
+        "The debt needs a loan amount, an interest rate, a first payment date, and a term or a monthly payment.",
+      code: "debt.scheduleIncomplete",
+    },
+  ],
+};

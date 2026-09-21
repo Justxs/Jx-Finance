@@ -1,6 +1,7 @@
 import {
   getCreateAssetMockHandler,
   getCreateDebtMockHandler,
+  getDebtScheduleMockHandler,
   getDeleteAssetMockHandler,
   getDeleteDebtMockHandler,
   getAssetsMockHandler,
@@ -10,10 +11,22 @@ import {
   getUpdateAssetMockHandler,
   getUpdateDebtMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
-import { FIXTURE_TODAY, assets, debts, netWorth, netWorthHistory } from "@/storybook/fixtures";
-import { found, readBody } from "./http";
+import {
+  FIXTURE_TODAY,
+  assets,
+  buildDebtSchedule,
+  debts,
+  linearDebt,
+  netWorth,
+  netWorthHistory,
+  scheduleIncompleteProblem,
+  zeroRateDebt,
+} from "@/storybook/fixtures";
+import { found, problem, readBody } from "./http";
 import { NEW_ID } from "./ids";
 import { byId } from "./lists";
+
+const scheduledDebts = [...debts, zeroRateDebt, linearDebt];
 
 export const assetHandlers = [
   getAssetsMockHandler(assets),
@@ -32,8 +45,22 @@ export const assetHandlers = [
   getDeleteAssetMockHandler(),
 ];
 
+export const debtScheduleHandler = getDebtScheduleMockHandler(({ params, request }) => {
+  const debt = found(byId(scheduledDebts, params.id));
+  if (debt.payoffDate === null) {
+    throw problem(scheduleIncompleteProblem, 400);
+  }
+  const query = new URL(request.url).searchParams;
+  return buildDebtSchedule(debt, {
+    extraMonthly: query.get("extraMonthly"),
+    lumpSum: query.get("lumpSum"),
+    lumpSumDate: query.get("lumpSumDate"),
+  });
+});
+
 export const debtHandlers = [
   getDebtsMockHandler(debts),
+  debtScheduleHandler,
   getCreateDebtMockHandler(async ({ request }) => ({
     id: NEW_ID,
     name: "",
@@ -41,10 +68,16 @@ export const debtHandlers = [
     outstandingAmount: "0.00",
     interestRate: null,
     asOf: FIXTURE_TODAY,
+    loanAmount: null,
+    firstPaymentDate: null,
+    termMonths: null,
+    monthlyPayment: null,
+    amortizationType: "annuity",
+    payoffDate: null,
     ...(await readBody(request)),
   })),
   getUpdateDebtMockHandler(async ({ params, request }) => ({
-    ...found(byId(debts, params.id)),
+    ...found(byId(scheduledDebts, params.id)),
     ...(await readBody(request)),
   })),
   getDeleteDebtMockHandler(),

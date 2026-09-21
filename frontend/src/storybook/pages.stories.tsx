@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { AppAt } from "./decorators";
+import { ids } from "./fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "./handlers";
 
 const meta = {
@@ -30,6 +31,8 @@ export const Goals: Story = { args: { path: "/goals" } };
 export const RecurringBills: Story = { args: { path: "/recurring-bills" } };
 
 export const NetWorth: Story = { args: { path: "/net-worth" } };
+
+export const DebtSchedule: Story = { args: { path: `/net-worth/debts/${ids.debts.mortgage}` } };
 
 export const Investments: Story = { args: { path: "/investments" } };
 

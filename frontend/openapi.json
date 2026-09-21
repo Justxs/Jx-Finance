@@ -4432,7 +4432,7 @@
           "NetWorth"
         ],
         "summary": "Add a debt",
-        "description": "Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards.",
+        "description": "Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.",
         "operationId": "CreateDebt",
         "requestBody": {
           "content": {
@@ -4445,7 +4445,12 @@
                 "type": "mortgage",
                 "outstandingAmount": "120000.00",
                 "interestRate": 2.4,
-                "asOf": "2026-09-01"
+                "asOf": "2026-09-01",
+                "loanAmount": "150000.00",
+                "firstPaymentDate": "2020-10-15",
+                "termMonths": 360,
+                "monthlyPayment": null,
+                "amortizationType": "annuity"
               }
             }
           },
@@ -4504,7 +4509,7 @@
           "NetWorth"
         ],
         "summary": "List debts",
-        "description": "Returns the debts you track, each with its outstanding amount, optional interest rate, and the date those figures are as of.",
+        "description": "Returns the debts you track, each with its outstanding amount, optional interest rate, the date those figures are as of, the repayment terms when set, and payoffDate, the date of the last scheduled payment when the terms are complete.",
         "operationId": "GetDebts",
         "responses": {
           "200": {
@@ -4633,7 +4638,7 @@
           "NetWorth"
         ],
         "summary": "Update a debt",
-        "description": "Records a new outstanding balance, rate, or name. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down.",
+        "description": "Records a new outstanding balance, rate, name or repayment terms. This is how repayment progress is tracked: lower outstandingAmount as the debt is paid down. The request replaces the debt, so repayment terms left out are cleared.",
         "operationId": "UpdateDebt",
         "parameters": [
           {
@@ -4659,7 +4664,12 @@
                 "type": "mortgage",
                 "outstandingAmount": "118500.00",
                 "interestRate": 2.4,
-                "asOf": "2026-10-01"
+                "asOf": "2026-10-01",
+                "loanAmount": "150000.00",
+                "firstPaymentDate": "2020-10-15",
+                "termMonths": 360,
+                "monthlyPayment": null,
+                "amortizationType": "annuity"
               }
             }
           },
@@ -4678,6 +4688,119 @@
           },
           "400": {
             "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/debts/{id}/schedule": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Get the repayment schedule of a debt",
+        "description": "Computes the monthly amortization schedule of a debt from its loan amount, annual interest rate, first payment date and either its term or its fixed monthly payment. Every row splits the payment into interest and principal, amounts are rounded to cents and the last payment absorbs the rounding. The schedule is computed on every request and never stored. With extraMonthly or lumpSum the response also carries withExtra, the same debt repaid with those overpayments, and what they save.",
+        "operationId": "GetDebtSchedule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "extraMonthly",
+            "in": "query",
+            "description": "Optional overpayment added to every monthly payment, as a decimal string such as \"100.00\".",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "lumpSum",
+            "in": "query",
+            "description": "Optional one-off overpayment, as a decimal string. Needs lumpSumDate.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
+            "name": "lumpSumDate",
+            "in": "query",
+            "description": "The date of the one-off overpayment; it is paid with the first scheduled payment on or after it.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The schedule, its totals and the scheduled balance as of today.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtScheduleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed. debt.scheduleIncomplete when the debt lacks a loan amount, rate, first payment date, or term and payment; debt.paymentTooSmall when the payment does not repay it within 50 years.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12297,6 +12420,13 @@
           "role": "member"
         }
       },
+      "AmortizationType": {
+        "enum": [
+          "annuity",
+          "linear"
+        ],
+        "type": "string"
+      },
       "ArchivedAccountResponse": {
         "required": [
           "id",
@@ -13679,6 +13809,58 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "loanAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional principal borrowed at the start, a positive decimal string.",
+            "format": "decimal",
+            "example": "150000.00"
+          },
+          "firstPaymentDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ],
+            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month.",
+            "example": "2020-10-15"
+          },
+          "termMonths": {
+            "maximum": 600,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
+            "format": "int32",
+            "example": 360
+          },
+          "monthlyPayment": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).",
+            "format": "decimal"
+          },
+          "amortizationType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AmortizationType"
+              }
+            ],
+            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
+            "example": "annuity"
           }
         },
         "example": {
@@ -13686,7 +13868,12 @@
           "type": "mortgage",
           "outstandingAmount": "120000.00",
           "interestRate": 2.4,
-          "asOf": "2026-09-01"
+          "asOf": "2026-09-01",
+          "loanAmount": "150000.00",
+          "firstPaymentDate": "2020-10-15",
+          "termMonths": 360,
+          "monthlyPayment": null,
+          "amortizationType": "annuity"
         }
       },
       "CreateGoalRequest": {
@@ -14334,7 +14521,13 @@
           "type",
           "outstandingAmount",
           "interestRate",
-          "asOf"
+          "asOf",
+          "loanAmount",
+          "firstPaymentDate",
+          "termMonths",
+          "monthlyPayment",
+          "amortizationType",
+          "payoffDate"
         ],
         "type": "object",
         "properties": {
@@ -14361,6 +14554,205 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "loanAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "firstPaymentDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "termMonths": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "monthlyPayment": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "amortizationType": {
+            "$ref": "#/components/schemas/AmortizationType"
+          },
+          "payoffDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          }
+        }
+      },
+      "DebtSchedulePlan": {
+        "required": [
+          "payoffDate",
+          "payments",
+          "totalPaid",
+          "totalInterest",
+          "totalExtra",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "payoffDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "payments": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaid": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "totalInterest": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "totalExtra": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DebtScheduleRow"
+            }
+          }
+        }
+      },
+      "DebtScheduleResponse": {
+        "required": [
+          "debtId",
+          "asOf",
+          "loanAmount",
+          "interestRate",
+          "amortizationType",
+          "regularPayment",
+          "scheduledBalance",
+          "paymentsMade",
+          "plan",
+          "withExtra",
+          "interestSaved",
+          "paymentsSaved"
+        ],
+        "type": "object",
+        "properties": {
+          "debtId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "asOf": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "loanAmount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "interestRate": {
+            "type": "number",
+            "format": "double"
+          },
+          "amortizationType": {
+            "$ref": "#/components/schemas/AmortizationType"
+          },
+          "regularPayment": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "scheduledBalance": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "paymentsMade": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "plan": {
+            "$ref": "#/components/schemas/DebtSchedulePlan"
+          },
+          "withExtra": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DebtSchedulePlan"
+              }
+            ]
+          },
+          "interestSaved": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "paymentsSaved": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DebtScheduleRow": {
+        "required": [
+          "number",
+          "date",
+          "payment",
+          "interest",
+          "principal",
+          "extra",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "payment": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "interest": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "principal": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "extra": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "balance": {
+            "type": "string",
+            "format": "decimal"
           }
         }
       },
@@ -14453,6 +14845,8 @@
           "credentials.invalid",
           "credentials.lockedOut",
           "currency.disabled",
+          "debt.paymentTooSmall",
+          "debt.scheduleIncomplete",
           "decimal.malformed",
           "email.alreadyVerified",
           "email.invalid",
@@ -18026,6 +18420,58 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "loanAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional principal borrowed at the start, a positive decimal string.",
+            "format": "decimal",
+            "example": "150000.00"
+          },
+          "firstPaymentDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ],
+            "description": "Optional date of the first monthly payment; later payments fall on the same day of the month.",
+            "example": "2020-10-15"
+          },
+          "termMonths": {
+            "maximum": 600,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.",
+            "format": "int32",
+            "example": 360
+          },
+          "monthlyPayment": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).",
+            "format": "decimal"
+          },
+          "amortizationType": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AmortizationType"
+              }
+            ],
+            "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
+            "example": "annuity"
           }
         },
         "example": {
@@ -18033,7 +18479,12 @@
           "type": "mortgage",
           "outstandingAmount": "118500.00",
           "interestRate": 2.4,
-          "asOf": "2026-10-01"
+          "asOf": "2026-10-01",
+          "loanAmount": "150000.00",
+          "firstPaymentDate": "2020-10-15",
+          "termMonths": 360,
+          "monthlyPayment": null,
+          "amortizationType": "annuity"
         }
       },
       "UpdateGoalRequest": {
