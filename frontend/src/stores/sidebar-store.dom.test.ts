@@ -1,11 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
-async function loadStore() {
-  vi.resetModules();
-  return import("./sidebar-store");
-}
+const loadStore = await freshModuleLoader(() => import("./sidebar-store"));
 
 test("starts expanded", async () => {
   const store = await loadStore();

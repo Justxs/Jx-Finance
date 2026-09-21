@@ -1,13 +1,13 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import { i18n } from "@/lib/i18n";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences, storedPreferences } from "@/test/preferences";
 
-async function loadStore() {
-  vi.resetModules();
+const loadStore = await freshModuleLoader(async () => {
   vi.doMock("@/lib/i18n", () => ({ i18n }));
   return import("./app-store");
-}
+});
 
 afterEach(async () => {
   vi.doUnmock("@/lib/i18n");

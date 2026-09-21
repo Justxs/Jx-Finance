@@ -1,11 +1,9 @@
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
-async function loadStore() {
-  vi.resetModules();
-  return import("./theme-store");
-}
+const loadStore = await freshModuleLoader(() => import("./theme-store"));
 
 function preferDark() {
   vi.stubGlobal("matchMedia", (query: string) => ({

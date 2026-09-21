@@ -1,17 +1,15 @@
 import { act, renderHook } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences } from "@/test/preferences";
 
 const family = "33333333-0000-4000-8000-000000000001";
 const garden = "33333333-0000-4000-8000-000000000002";
 
-async function load() {
-  vi.resetModules();
-  return {
-    useExportUrl: (await import("./use-export-url")).useExportUrl,
-    setActiveHousehold: (await import("@/stores/active-household-store")).setActiveHousehold,
-  };
-}
+const load = await freshModuleLoader(async () => ({
+  useExportUrl: (await import("./use-export-url")).useExportUrl,
+  setActiveHousehold: (await import("@/stores/active-household-store")).setActiveHousehold,
+}));
 
 function csvLink(useExportUrl: (path: string, params: Record<string, string>) => string) {
   return renderHook(() => useExportUrl("/api/transactions/export", { dateFrom: "2026-01-01" }));

@@ -1,6 +1,5 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RouterProvider, createMemoryHistory, createRouter } from "@tanstack/react-router";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import type { QueryClient } from "@tanstack/react-query";
+import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import type {
   AccountResponse,
@@ -8,12 +7,18 @@ import type {
   TagResponse,
   UserProfileResponse,
 } from "@/api/generated/model";
-import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
-import { routeTree } from "@/route-tree.gen";
 import { setCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { preferencesCollection } from "@/stores/preferences";
+import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
+
+await Promise.all([
+  import("@/features/net-worth/net-worth-history-chart/net-worth-history-chart"),
+  import("@/features/net-worth/net-worth-composition-chart/net-worth-composition-chart"),
+]);
+
+vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
 
 const admin: UserProfileResponse = {
   id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
@@ -99,31 +104,14 @@ function requestsTo(pathname: string) {
 }
 
 function mount() {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  const router = createRouter({
-    routeTree,
-    context: { queryClient },
-    history: createMemoryHistory({ initialEntries: ["/net-worth"] }),
-  });
-  render(
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <RouterProvider router={router} />
-      </TooltipProvider>
-    </QueryClientProvider>,
-  );
-  return { queryClient, router };
-}
-
-async function settled(queryClient: QueryClient) {
-  await waitFor(() => expect(queryClient.isFetching()).toBe(0));
+  return mountApp("/net-worth");
 }
 
 async function openPalette(queryClient: QueryClient) {
   await act(async () => {
     toggleCommandPalette();
   });
-  const dialog = await screen.findByRole("dialog");
+  const dialog = await screen.findByRole("dialog", {}, appWait);
   await settled(queryClient);
   return dialog;
 }
@@ -155,7 +143,7 @@ afterEach(() => {
 
 test("nothing is loaded for the palette until it is opened for the first time", async () => {
   const { queryClient } = mount();
-  await screen.findByRole("heading", { level: 1, name: "Net worth" });
+  await screen.findByRole("heading", { level: 1, name: "Net worth" }, appWait);
   await settled(queryClient);
 
   expect(requestsTo("/api/accounts")).toHaveLength(0);
@@ -231,8 +219,8 @@ test("the arrow keys move the active descendant and Enter runs the entry", async
     fireEvent.keyDown(input, { key: "Enter" });
   });
 
-  await waitFor(() => expect(router.state.location.pathname).toBe("/tags"));
-  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(router.state.location.pathname).toBe("/tags"), appWait);
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull(), appWait);
 });
 
 test("what was chosen is offered first the next time", async () => {
@@ -244,7 +232,7 @@ test("what was chosen is offered first the next time", async () => {
   await act(async () => {
     fireEvent.keyDown(searchBox(), { key: "Enter" });
   });
-  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull(), appWait);
 
   await openPalette(queryClient);
 

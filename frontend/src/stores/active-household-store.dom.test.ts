@@ -1,14 +1,12 @@
 import { act, renderHook } from "@testing-library/react";
-import { expect, test, vi } from "vitest";
+import { expect, test } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { seedPreferences, storedPreferences } from "@/test/preferences";
 
 const family = "22222222-0000-4000-8000-000000000001";
 const garden = "22222222-0000-4000-8000-000000000002";
 
-async function loadStore() {
-  vi.resetModules();
-  return import("./active-household-store");
-}
+const loadStore = await freshModuleLoader(() => import("./active-household-store"));
 
 test("starts on everything", async () => {
   const store = await loadStore();

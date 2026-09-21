@@ -1,7 +1,10 @@
 import { readFileSync } from "node:fs";
 import { Script } from "node:vm";
 import { expect, test, vi } from "vitest";
+import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences } from "@/test/preferences";
+
+const loadPreferences = await freshModuleLoader(() => import("./preferences"));
 
 const themeInit = new Script(readFileSync("public/theme-init.js", "utf8"), {
   filename: "public/theme-init.js",
@@ -22,8 +25,7 @@ function preferDark() {
 }
 
 test("applies what the preferences collection stored", async () => {
-  vi.resetModules();
-  const preferences = await import("./preferences");
+  const preferences = await loadPreferences();
   preferences.savePreferences({ theme: "dark", palette: "plum", font: "plex", textSize: "large" });
   root().className = "";
 
