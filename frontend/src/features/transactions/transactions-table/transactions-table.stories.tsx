@@ -8,6 +8,7 @@ import {
   foreignCurrencyTransactions,
   longDescriptionTransaction,
   splitTransaction,
+  tags,
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
@@ -25,6 +26,7 @@ interface HarnessProps {
 const NO_IDS: string[] = [];
 const accountNames = new Map(accounts.map((account) => [account.id, account.name]));
 const categoryById = new Map(categories.map((category) => [category.id, category]));
+const tagById = new Map(tags.map((tag) => [tag.id, tag]));
 
 function TransactionsTableHarness({
   data = transactions.slice(0, 10),
@@ -34,10 +36,11 @@ function TransactionsTableHarness({
 }: Readonly<HarnessProps>) {
   const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set(initialSelectedIds));
   const selectableIds = data.filter(isSelectableTransaction).map((item) => item.id);
-  const columnHeaders = useTransactionColumnHeaders({ accounts, categories });
+  const columnHeaders = useTransactionColumnHeaders({ accounts, categories, tags });
   const columns = useTransactionColumns({
     accountNames,
     categoryById,
+    tagById,
     onEdit: (transaction) => toast.message(`Edit ${transaction.description ?? transaction.id}`),
     onDelete: (id) => toast.message(`Delete ${id}`),
     deletingId,

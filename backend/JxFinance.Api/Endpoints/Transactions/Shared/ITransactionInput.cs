@@ -11,5 +11,6 @@ public interface ITransactionInput
     DateOnly Date { get; }
     string? Description { get; }
     IReadOnlyList<TransactionLineRequest>? Lines { get; }
+    IReadOnlyList<Guid>? TagIds { get; }
     Currency? Currency { get; }
 }

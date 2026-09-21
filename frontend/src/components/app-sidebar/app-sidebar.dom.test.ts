@@ -29,7 +29,7 @@ function paths(features: FeatureFlags, isAdmin: boolean) {
 }
 
 test("the core ledger pages are always there", () => {
-  expect(paths(allOff, false)).toEqual(["/", "/transactions", "/accounts", "/categories"]);
+  expect(paths(allOff, false)).toEqual(["/", "/transactions", "/accounts", "/categories", "/tags"]);
 });
 
 test("each feature flag adds its page", () => {
@@ -38,10 +38,11 @@ test("each feature flag adds its page", () => {
     "/transactions",
     "/accounts",
     "/categories",
+    "/tags",
     "/budgets",
     "/investments",
   ]);
-  expect(paths(allOn, false)).toHaveLength(11);
+  expect(paths(allOn, false)).toHaveLength(13);
 });
 
 test("multi-currency has no page of its own", () => {

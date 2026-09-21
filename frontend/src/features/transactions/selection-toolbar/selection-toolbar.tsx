@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, TransactionResponse } from "@/api/generated/model";
+import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
+import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { namedOptions } from "@/lib/options";
 
 const UNCATEGORIZED = "none";
@@ -10,20 +12,27 @@ const UNCATEGORIZED = "none";
 interface Props {
   selected: TransactionResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
   pending: boolean;
+  tagPending: boolean;
   onApply: (categoryId: string | null) => void;
+  onApplyTags: (tagIds: string[]) => void;
   onClear: () => void;
 }
 
 export function SelectionToolbar({
   selected,
   categories,
+  tags,
   pending,
+  tagPending,
   onApply,
+  onApplyTags,
   onClear,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [choice, setChoice] = useState("");
+  const [tagChoice, setTagChoice] = useState<string[]>([]);
 
   const types = new Set(selected.map((item) => item.type));
   const mixed = types.size > 1;
@@ -65,6 +74,39 @@ export function SelectionToolbar({
       >
         {t("transactions.setCategory")}
       </Button>
+      <Popover>
+        <PopoverTrigger
+          render={
+            <Button type="button" variant="outline" pending={tagPending} disabled={pending} />
+          }
+        >
+          {t("tags.bulkApply")}
+        </PopoverTrigger>
+        <PopoverContent align="start" aria-label={t("tags.field")} className="w-72">
+          <div className="space-y-2">
+            <TagPicker
+              tags={tags}
+              value={tagChoice}
+              onChange={setTagChoice}
+              aria-label={t("tags.field")}
+              aria-describedby="tx-bulk-tags-hint"
+            />
+            <p id="tx-bulk-tags-hint" className="text-xs text-muted-foreground">
+              {t("tags.bulkReplaceHint")}
+            </p>
+          </div>
+          <div className="flex justify-end border-t pt-2">
+            <Button
+              type="button"
+              size="sm"
+              disabled={tags.length === 0 || tagPending}
+              onClick={() => onApplyTags(tagChoice)}
+            >
+              {t("tags.bulkApply")}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
       <Button type="button" variant="ghost" disabled={pending} onClick={onClear}>
         {t("transactions.clearSelection")}
       </Button>

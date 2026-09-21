@@ -13,6 +13,6 @@ export interface ImportConfirmRequest {
    * @minLength 1
    */
   accountId: string;
-  /** The rows to import, as returned by preview, with any category corrections applied. */
+  /** The rows to import, as returned by preview, with any category and tag corrections applied. */
   rows: ImportConfirmRow[];
 }

@@ -85,6 +85,20 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         return created.Id;
     }
 
+    protected async Task<Guid> CreateTagAsync(string? name = null, Guid? householdId = null, HttpClient? client = null)
+    {
+        var created = await PostAsync<IdDto>(
+            client ?? Client,
+            "/api/tags",
+            new
+            {
+                name = name ?? $"Tag {Guid.NewGuid():N}",
+                scope = householdId is null ? "personal" : "shared",
+                householdId,
+            });
+        return created.Id;
+    }
+
     protected async Task<Guid> CreateHouseholdAsync(params TestUser[] members)
     {
         var household = await PostAsync<IdDto>(Client, "/api/households", new { name = $"Household {Guid.NewGuid():N}" });

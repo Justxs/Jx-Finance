@@ -4,6 +4,7 @@ using FastEndpoints;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
+using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -35,8 +36,8 @@ public sealed class ExportTransactionsEndpoint(
         HttpContext.Response.Headers.ContentDisposition = "attachment; filename=transactions.csv";
 
         await using var writer = new StreamWriter(HttpContext.Response.Body, new UTF8Encoding(false), BufferSize, leaveOpen: true);
-        await writer.WriteLineAsync("Date,Description,Account,Category,Type,Amount,Currency");
-        await foreach (var transaction in transactionService.StreamExportAsync(req).WithCancellation(ct))
+        await writer.WriteLineAsync("Date,Description,Account,Category,Tags,Type,Amount,Currency");
+        await foreach (var transaction in transactionService.StreamExportAsync(req, ct))
         {
             await writer.WriteLineAsync(Row(transaction, accountNames, categoryNames));
         }
@@ -51,10 +52,12 @@ public sealed class ExportTransactionsEndpoint(
     {
         var accounts = await accountService.GetAllAsync(ct);
         var categories = await categoryService.GetAllAsync(ct);
+        var tags = await tagService.GetAllAsync(ct);
 
         return (
             accounts.ToDictionary(a => a.Id, a => a.Name),
-            categories.ToDictionary(c => c.Id.Value, c => c.Name));
+            categories.ToDictionary(c => c.Id.Value, c => c.Name),
+            tags.ToDictionary(t => t.Id.Value, t => t.Name));
     }
 
     private static string Row(

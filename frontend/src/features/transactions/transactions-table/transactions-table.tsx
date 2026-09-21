@@ -28,6 +28,7 @@ const columnClass: Record<string, string> = {
   select: "w-10 pr-0",
   date: "w-27",
   categoryId: "w-36",
+  tagIds: "w-36",
   accountId: "w-36",
   amount: "w-30 text-right",
   actions: "w-24",
@@ -151,7 +152,7 @@ export function TransactionsTable({
           <Table
             className={cn(
               "table-fixed",
-              selection ? "min-w-184" : "min-w-176",
+              selection ? "min-w-220" : "min-w-212",
               staleVariants({ stale: isPlaceholder }),
             )}
             aria-busy={isPlaceholder}

@@ -14,6 +14,7 @@ using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Settings;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Infrastructure.Auth;
@@ -35,6 +36,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
+    public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();
     public DbSet<TransferImport> TransferImports => Set<TransferImport>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();

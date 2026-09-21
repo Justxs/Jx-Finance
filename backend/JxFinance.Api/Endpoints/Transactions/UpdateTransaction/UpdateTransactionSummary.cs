@@ -10,7 +10,8 @@ public sealed class UpdateTransactionSummary : Summary<UpdateTransactionEndpoint
         Summary = "Update a transaction";
         Description = "Replaces the transaction. Split lines are replaced wholesale rather than merged: "
             + "send the full set you want to keep, or omit lines to turn a split back into a plain "
-            + "transaction. Moving it to another account adjusts both balances.";
+            + "transaction. Tags are replaced the same way: send the full set, and an empty list or an "
+            + "absent tagIds clears them. Moving it to another account adjusts both balances.";
         ExampleRequest = new UpdateTransactionRequest(
             Guid.Empty,
             Guid.Empty,
@@ -22,7 +23,7 @@ public sealed class UpdateTransactionSummary : Summary<UpdateTransactionEndpoint
             null);
         Params["id"] = "The transaction id. Takes precedence over the id in the body.";
         Responses[200] = "The updated transaction.";
-        Responses[400] = "Validation failed, the split lines do not add up, or the account or category is not visible to you.";
+        Responses[400] = "Validation failed, the split lines do not add up, or the account, category or a tag is not visible to you.";
         Responses[404] = "No such transaction is visible to the signed-in user.";
     }
 }

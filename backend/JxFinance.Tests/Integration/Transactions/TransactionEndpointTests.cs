@@ -143,7 +143,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
 
         var csv = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Date,Description,Account,Category,Type,Amount", csv);
+        Assert.Contains("Date,Description,Account,Category,Tags,Type,Amount", csv);
         Assert.Contains(accountName, csv);
         Assert.Contains("Export me", csv);
         Assert.Contains("12.34", csv);

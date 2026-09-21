@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
   useCategoriesSuspense,
+  useTagsSuspense,
   useTransactionsSuspense,
   useImportConfirm,
   useImportPreview,
@@ -41,6 +42,8 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
 
   const categories = useCategoriesSuspense();
   const categoryList = categories.data ?? [];
+  const tags = useTagsSuspense();
+  const tagList = tags.data ?? [];
   const history = useTransactionsSuspense(recallParams);
 
   const previewMutation = useImportPreview({
@@ -118,6 +121,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
           amount: row.amount,
           type: row.type,
           categoryId: row.transferAccountId ? null : row.categoryId || null,
+          tagIds: row.transferAccountId ? [] : row.tagIds,
           transferAccountId: row.transferAccountId || null,
           existingTransferId: row.existingTransferId || null,
         })),
@@ -156,6 +160,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
             accountId={accountId}
             accounts={accounts}
             categories={categoryList}
+            tags={tagList}
             onRowChange={updateRow}
             onRowsChange={setRows}
             onConfirm={handleConfirm}

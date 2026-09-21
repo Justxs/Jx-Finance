@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -46,7 +47,16 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             Description = OptionalText.Normalize(line.Description),
         }).ToList();
 
-    public TransactionResponse FromEntity(Transaction transaction, IReadOnlyList<TransactionLine>? lines) => new(
+    public List<TransactionTag> ToTags(TransactionId transactionId, IReadOnlyList<Guid>? tagIds) =>
+        (tagIds ?? [])
+            .Distinct()
+            .Select(tagId => new TransactionTag { TransactionId = transactionId, TagId = new TagId(tagId) })
+            .ToList();
+
+    public TransactionResponse FromEntity(
+        Transaction transaction,
+        IReadOnlyList<TransactionLine>? lines,
+        IReadOnlyList<TagId>? tagIds = null) => new(
         transaction.Id.Value,
         transaction.AccountId.Value,
         transaction.CategoryId?.Value,
@@ -65,7 +75,8 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
                 line.Description)).ToList()
             : null,
         transaction.Amount.Currency,
-        Money.Round(transaction.ReportingAmount));
+        Money.Round(transaction.ReportingAmount),
+        (tagIds ?? []).Select(tagId => tagId.Value).ToList());
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {

@@ -2,6 +2,7 @@ import { HttpResponse } from "msw";
 import type { TransactionLineResponse, TransactionResponse } from "@/api/generated/model";
 import {
   getBulkCategorizeTransactionsMockHandler,
+  getBulkTagTransactionsMockHandler,
   getCreateTransactionMockHandler,
   getDeleteTransactionMockHandler,
   getExportTransactionsMockHandler,
@@ -28,6 +29,13 @@ import { applyDirection, byId, compareText, includesText, paginate } from "./lis
 
 function accountName(id: string | null): string {
   return accounts.find((item) => item.id === id)?.name ?? "";
+}
+
+function matchesTags(item: TransactionResponse, tagIds: string): boolean {
+  return tagIds
+    .split(",")
+    .filter(Boolean)
+    .every((tagId) => item.tagIds.includes(tagId));
 }
 
 function matchesCategory(item: TransactionResponse, categoryId: string): boolean {
@@ -57,6 +65,7 @@ function compareTransactions(sort: string | null) {
 function filterTransactions(params: URLSearchParams): TransactionResponse[] {
   const accountId = params.get("accountId");
   const categoryId = params.get("categoryId");
+  const tagIds = params.get("tagIds");
   const type = params.get("type");
   const search = params.get("search");
   const dateFrom = params.get("dateFrom");
@@ -65,6 +74,7 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
     (item) =>
       (!accountId || item.accountId === accountId) &&
       (!categoryId || matchesCategory(item, categoryId)) &&
+      (!tagIds || matchesTags(item, tagIds)) &&
       (!type || item.type === type) &&
       (!search || includesText(item.description, search)) &&
       (!dateFrom || item.date >= dateFrom) &&
@@ -139,6 +149,7 @@ export const transactionHandlers = [
       isSplit: false,
       createdAt: CREATED_AT,
       lines: null,
+      tagIds: [],
     };
     return mergeTransaction(base, await readBody(request));
   }),
@@ -147,4 +158,13 @@ export const transactionHandlers = [
     mergeTransaction(found(byId(transactions, params.id)), await readBody(request)),
   ),
   getDeleteTransactionMockHandler(),
+  getBulkTagTransactionsMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
+    const matched = requested.map((id) => byId(transactions, id));
+    if (matched.some((item) => item === undefined)) {
+      throw notFound();
+    }
+    return { updated: matched.length };
+  }),
 ];

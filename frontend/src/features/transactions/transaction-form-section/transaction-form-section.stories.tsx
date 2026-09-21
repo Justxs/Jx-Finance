@@ -3,7 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import type { TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
-import { accounts, categories, splitTransaction, transactions } from "@/storybook/fixtures";
+import { accounts, categories, splitTransaction, tags, transactions } from "@/storybook/fixtures";
 import { TransactionFormSection } from "./transaction-form-section";
 
 interface HarnessProps {
@@ -31,6 +31,7 @@ function FormSectionHarness({
       <TransactionFormSection
         accounts={accounts}
         categories={categories}
+        tags={tags}
         createOpen={createOpen}
         onCreateOpenChange={setCreateOpen}
         editing={editing}

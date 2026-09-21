@@ -22,6 +22,8 @@ import type { ErrorType } from "../../client";
 import type {
   BulkCategorizeTransactionsRequest,
   BulkCategorizeTransactionsResponse,
+  BulkTagTransactionsRequest,
+  BulkTagTransactionsResponse,
   CreateTransactionRequest,
   ExportTransactionsParams,
   ExportTransactionsPdfParams,
@@ -56,7 +58,7 @@ export const getCreateTransactionUrl = () => {
 };
 
 /**
- * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored.
+ * Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not.
  * @summary Record a transaction
  */
 export const createTransaction = async (
@@ -397,6 +399,112 @@ export const useBulkCategorizeTransactions = <
   TContext
 > => {
   return useMutation(getBulkCategorizeTransactionsMutationOptions(options), queryClient);
+};
+export const getBulkTagTransactionsUrl = () => {
+  return `/api/transactions/bulk-tags`;
+};
+
+/**
+ * Replaces the whole set of tags on every listed transaction with the tags sent, so an empty list clears them. Unlike the category operation this accepts split transactions, because a tag belongs to the payment and not to a split line. The request is all-or-nothing: if any id is not visible to you or any tag is not visible to you, nothing changes. Repeated ids count once, and the amounts, categories and split lines of the transactions are untouched.
+ * @summary Set the tags of several transactions
+ */
+export const bulkTagTransactions = async (
+  bulkTagTransactionsRequest: BulkTagTransactionsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<BulkTagTransactionsResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<BulkTagTransactionsResponse>(getBulkTagTransactionsUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(bulkTagTransactionsRequest),
+  });
+};
+
+export const getBulkTagTransactionsMutationKey = () => ["bulkTagTransactions"] as const;
+
+export const getBulkTagTransactionsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof bulkTagTransactions>>,
+    TError,
+    BulkTagTransactionsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof bulkTagTransactions>>,
+  TError,
+  BulkTagTransactionsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getBulkTagTransactionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof bulkTagTransactions>>,
+    BulkTagTransactionsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return bulkTagTransactions(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type BulkTagTransactionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof bulkTagTransactions>>
+>;
+export type BulkTagTransactionsMutationBody = BulkTagTransactionsRequest;
+export type BulkTagTransactionsMutationError = ErrorType<ProblemDetails>;
+export type BulkTagTransactionsMutationVariables = { data: BulkTagTransactionsRequest };
+
+/**
+ * @summary Set the tags of several transactions
+ */
+export const useBulkTagTransactions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof bulkTagTransactions>>,
+      TError,
+      BulkTagTransactionsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof bulkTagTransactions>>,
+  TError,
+  BulkTagTransactionsMutationVariables,
+  TContext
+> => {
+  return useMutation(getBulkTagTransactionsMutationOptions(options), queryClient);
 };
 export const getExportTransactionsUrl = (params: ExportTransactionsParams) => {
   const normalizedParams = new URLSearchParams();
@@ -881,7 +989,7 @@ export const getTransactionUrl = (id: string) => {
 };
 
 /**
- * Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.
+ * Returns a single transaction, including its split lines when it has any and the ids of the tags it carries. A transaction you cannot see is reported as missing rather than forbidden.
  * @summary Get one transaction
  */
 export const transaction = async (
@@ -996,7 +1104,7 @@ export const getUpdateTransactionUrl = (id: string) => {
 };
 
 /**
- * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Moving it to another account adjusts both balances.
+ * Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances.
  * @summary Update a transaction
  */
 export const updateTransaction = async (

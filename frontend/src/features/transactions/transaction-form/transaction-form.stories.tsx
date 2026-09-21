@@ -9,6 +9,7 @@ import {
   categories,
   longDescriptionTransaction,
   splitTransaction,
+  tags,
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
@@ -58,7 +59,7 @@ function MutationBackedForm(args: Readonly<ComponentProps<typeof TransactionForm
 const meta = {
   title: "Features/Transactions/TransactionForm",
   component: TransactionForm,
-  args: { accounts, categories, pending: false, onSubmit: fn(), onCancel: fn() },
+  args: { accounts, categories, tags, pending: false, onSubmit: fn(), onCancel: fn() },
   decorators: [withWidth("w-[min(42rem,90vw)]")],
 } satisfies Meta<typeof TransactionForm>;
 
@@ -92,6 +93,8 @@ export const WithoutCancel: Story = { args: { onCancel: undefined } };
 export const NoCategories: Story = { args: { categories: [] } };
 
 export const NoAccounts: Story = { args: { accounts: [] } };
+
+export const NoTags: Story = { args: { tags: [] } };
 
 export const WithAddAnother: Story = {
   args: { onSubmitAndAddAnother: fn(async () => true) },

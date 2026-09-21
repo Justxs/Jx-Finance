@@ -26,7 +26,7 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
         Assert.Null(response.Content.Headers.ContentLength);
         var lines = (await response.Content.ReadAsStringAsync())
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        Assert.Equal("Date,Description,Account,Category,Type,Amount,Currency", lines[0]);
+        Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency", lines[0]);
         Assert.Equal(13, lines.Length);
         Assert.StartsWith("2026-05-01,Row 1,", lines[1]);
         Assert.EndsWith(",Expense,1.00,EUR", lines[1]);

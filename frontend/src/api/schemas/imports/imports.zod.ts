@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.
  * @summary Commit previewed statement rows
  */
 
@@ -64,9 +64,12 @@ export const ImportConfirmBody = zod.object({
             ]),
           ])
           .optional(),
+        tagIds: zod.array(zod.uuid()).nullish(),
       }),
     )
-    .describe("The rows to import, as returned by preview, with any category corrections applied."),
+    .describe(
+      "The rows to import, as returned by preview, with any category and tag corrections applied.",
+    ),
 });
 
 export const ImportConfirmResponse = zod.object({

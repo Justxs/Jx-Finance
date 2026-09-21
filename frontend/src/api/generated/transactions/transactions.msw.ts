@@ -9,6 +9,7 @@ import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
   BulkCategorizeTransactionsResponse,
+  BulkTagTransactionsResponse,
   PagedResponseOfTransactionResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
@@ -72,6 +73,30 @@ export const getBulkCategorizeTransactionsMockHandler = (
 ) => {
   return http.post(
     "*/api/transactions/bulk-category",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getBulkTagTransactionsMockHandler = (
+  overrideResponse?:
+    | BulkTagTransactionsResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<BulkTagTransactionsResponse> | BulkTagTransactionsResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/transactions/bulk-tags",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -228,6 +253,7 @@ export const getTransactionsMock = () => [
   getCreateTransactionMockHandler(),
   getTransactionsMockHandler(),
   getBulkCategorizeTransactionsMockHandler(),
+  getBulkTagTransactionsMockHandler(),
   getExportTransactionsMockHandler(),
   getExportTransactionsPdfMockHandler(),
   getTransactionsSummaryMockHandler(),

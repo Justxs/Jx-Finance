@@ -14,4 +14,6 @@ public sealed record ReportSummaryResponse(
     IReadOnlyList<CategoryBreakdownItem> ExpenseByCategory,
     IReadOnlyList<CategoryBreakdownItem> IncomeByCategory,
     IReadOnlyList<ReportTrendPoint> Trend,
-    string TrendBucket);
+    string TrendBucket,
+    IReadOnlyList<TagBreakdownItem> ExpenseByTag,
+    ReportComparisonTotals? Comparison = null);

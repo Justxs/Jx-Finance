@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { accounts, categories } from "@/storybook/fixtures";
+import { accounts, categories, tags } from "@/storybook/fixtures";
 import { TransactionsFiltersDialog } from "./transactions-filters-dialog";
 
 const meta = {
   title: "Features/Transactions/TransactionsFiltersDialog",
   component: TransactionsFiltersDialog,
-  args: { accounts, categories },
+  args: { accounts, categories, tags },
   parameters: { route: "/transactions" },
 } satisfies Meta<typeof TransactionsFiltersDialog>;
 
@@ -19,6 +19,11 @@ export const ClosedWithActiveFilters: Story = {
 };
 
 export const Open: Story = { args: { defaultOpen: true } };
+
+export const OpenWithTagFilter: Story = {
+  args: { defaultOpen: true },
+  parameters: { route: `/transactions?tagIds=${tags[0]?.id ?? ""}` },
+};
 
 export const OpenWithActiveFilters: Story = {
   args: { defaultOpen: true },

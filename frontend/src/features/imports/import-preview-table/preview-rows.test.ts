@@ -67,6 +67,7 @@ function transaction(
     lines: null,
     currency: "eur",
     reportingAmount: "1.00",
+    tagIds: [],
   };
 }
 
@@ -109,6 +110,65 @@ describe("category recall", () => {
     ];
 
     expect(recallCategoryId(row("1", "Lidl", "expense", "1.00"), history, categories)).toBe("");
+  });
+});
+
+describe("rule suggestions", () => {
+  test("a matching rule fills the category and the tags and beats the recall", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          suggestedCategoryId: "transport",
+          suggestedTagIds: ["commute"],
+          matchedRuleName: "Transport",
+        }),
+      ],
+      [transaction("2026-08-01", "Trafi bilietas", "expense", "food")],
+      categories,
+    );
+
+    expect(rows[0]).toMatchObject({
+      categoryId: "transport",
+      categorySuggested: true,
+      ruleName: "Transport",
+      tagIds: ["commute"],
+    });
+  });
+
+  test("a rule that only adds tags leaves the recall to pick the category", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          suggestedTagIds: ["commute"],
+          matchedRuleName: "Commuting",
+        }),
+      ],
+      [transaction("2026-08-01", "Trafi bilietas", "expense", "food")],
+      categories,
+    );
+
+    expect(rows[0]).toMatchObject({
+      categoryId: "food",
+      ruleName: "Commuting",
+      tagIds: ["commute"],
+    });
+  });
+
+  test("a duplicate row is left untouched by its rule", () => {
+    const rows = toPreviewRows(
+      [
+        row("1", "Trafi bilietas", "expense", "29.00", {
+          isDuplicate: true,
+          suggestedCategoryId: "transport",
+          suggestedTagIds: ["commute"],
+          matchedRuleName: "Transport",
+        }),
+      ],
+      [],
+      categories,
+    );
+
+    expect(rows[0]).toMatchObject({ categoryId: "", ruleName: null, tagIds: [] });
   });
 });
 

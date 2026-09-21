@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -6,8 +7,10 @@ using JxFinance.Common.References;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
+using JxFinance.Endpoints.Transactions.BulkTagTransactions;
 using JxFinance.Endpoints.Transactions.CreateTransaction;
 using JxFinance.Endpoints.Transactions.GetTransactions;
 using JxFinance.Endpoints.Transactions.GetTransactionsSummary;
@@ -38,15 +41,30 @@ public sealed class TransactionService(
         var page = await Filtered(request).ToPageAsync(request, query => Sorted(query, request), cancellationToken);
 
         var linesByTransaction = await LoadLinesAsync(page.Items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
+        var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
 
-        return page.Map(t => mapper.FromEntity(t, linesByTransaction.GetValueOrDefault(t.Id)));
+        return page.Map(t => mapper.FromEntity(
+            t,
+            linesByTransaction.GetValueOrDefault(t.Id),
+            tagsByTransaction.GetValueOrDefault(t.Id)));
     }
 
-    public IAsyncEnumerable<TransactionResponse> StreamExportAsync(GetTransactionsRequest request) =>
-        Sorted(Filtered(request), request)
+    public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
+        GetTransactionsRequest request,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var tagsByTransaction = await LoadTagsOfFilteredAsync(request, cancellationToken);
+
+        var rows = Sorted(Filtered(request), request)
             .AsNoTracking()
             .AsAsyncEnumerable()
-            .Select(t => mapper.FromEntity(t, null));
+            .WithCancellation(cancellationToken);
+
+        await foreach (var transaction in rows)
+        {
+            yield return mapper.FromEntity(transaction, null, tagsByTransaction.GetValueOrDefault(transaction.Id));
+        }
+    }
 
     public async Task<Result<IReadOnlyList<TransactionResponse>>> ExportForPdfAsync(
         GetTransactionsRequest request,
@@ -64,7 +82,9 @@ public sealed class TransactionService(
                 $"A PDF holds at most {limit} transactions. Narrow the filters, or export CSV instead.");
         }
 
-        return items.Select(t => mapper.FromEntity(t, null)).ToList();
+        var tagsByTransaction = await LoadTagsAsync(items.Select(t => t.Id), cancellationToken);
+
+        return items.Select(t => mapper.FromEntity(t, null, tagsByTransaction.GetValueOrDefault(t.Id))).ToList();
     }
 
     public async Task<TransactionsSummaryResponse> GetSummaryAsync(
@@ -133,6 +153,12 @@ public sealed class TransactionService(
                 (t.IsSplit && db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == typedCategoryId)));
         }
 
+        foreach (var tagId in TagFilter.Parse(request.TagIds))
+        {
+            var typedTagId = new TagId(tagId);
+            query = query.Where(t => db.TransactionTags.Any(x => x.TransactionId == t.Id && x.TagId == typedTagId));
+        }
+
         if (request.Type is { } type)
         {
             query = query.Where(t => t.Type == type);
@@ -169,8 +195,9 @@ public sealed class TransactionService(
         var lines = transaction.IsSplit
             ? await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken)
             : [];
+        var tagIds = await TagIdsOfAsync(transactionId, cancellationToken);
 
-        return mapper.FromEntity(transaction, lines);
+        return mapper.FromEntity(transaction, lines, tagIds);
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(
@@ -185,6 +212,12 @@ public sealed class TransactionService(
         if (referenceError is not null)
         {
             return referenceError;
+        }
+
+        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        if (tagError is not null)
+        {
+            return tagError;
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -214,9 +247,15 @@ public sealed class TransactionService(
             db.TransactionLines.AddRange(lines);
         }
 
+        var tags = mapper.ToTags(transaction.Id, request.TagIds);
+        if (tags.Count > 0)
+        {
+            db.TransactionTags.AddRange(tags);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transaction, lines);
+        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList());
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -238,6 +277,12 @@ public sealed class TransactionService(
         if (referenceError is not null)
         {
             return referenceError;
+        }
+
+        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        if (tagError is not null)
+        {
+            return tagError;
         }
 
         var isSplit = request.Lines is { Count: > 0 };
@@ -272,6 +317,14 @@ public sealed class TransactionService(
             db.TransactionLines.RemoveRange(existingLines);
         }
 
+        var existingTags = await db.TransactionTags
+            .Where(x => x.TransactionId == transactionId)
+            .ToListAsync(cancellationToken);
+        if (existingTags.Count > 0)
+        {
+            db.TransactionTags.RemoveRange(existingTags);
+        }
+
         mapper.Apply(request, transaction, currency, reportingAmount);
 
         var lines = isSplit ? mapper.ToLines(transactionId, currentUser.Id, request.Lines!, currency) : [];
@@ -280,20 +333,25 @@ public sealed class TransactionService(
             db.TransactionLines.AddRange(lines);
         }
 
+        var tags = mapper.ToTags(transactionId, request.TagIds);
+        if (tags.Count > 0)
+        {
+            db.TransactionTags.AddRange(tags);
+        }
+
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transaction, lines);
+        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList());
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
         BulkCategorizeTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var ids = request.TransactionIds.Distinct().Select(id => new TransactionId(id)).ToList();
-        var transactions = await db.Transactions.Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
-        if (transactions.Count != ids.Count)
+        var loaded = await LoadForBulkAsync(request.TransactionIds, cancellationToken);
+        if (!loaded.TryGetValue(out var transactions))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return loaded.Error;
         }
 
         if (transactions.Any(t => t.IsSplit))
@@ -321,6 +379,34 @@ public sealed class TransactionService(
         return transactions.Count;
     }
 
+    public async Task<Result<int>> BulkTagAsync(
+        BulkTagTransactionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var loaded = await LoadForBulkAsync(request.TransactionIds, cancellationToken);
+        if (!loaded.TryGetValue(out var transactions))
+        {
+            return loaded.Error;
+        }
+
+        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        if (tagError is not null)
+        {
+            return tagError;
+        }
+
+        var ids = transactions.Select(t => t.Id).ToList();
+
+        await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        await db.TransactionTags.Where(x => ids.Contains(x.TransactionId)).ExecuteDeleteAsync(cancellationToken);
+        db.TransactionTags.AddRange(ids.SelectMany(id => mapper.ToTags(id, request.TagIds)));
+        await db.SaveChangesAsync(cancellationToken);
+        await dbTransaction.CommitAsync(cancellationToken);
+
+        return transactions.Count;
+    }
+
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(id);
@@ -340,6 +426,18 @@ public sealed class TransactionService(
         await db.SaveChangesAsync(cancellationToken);
 
         return id;
+    }
+
+    private async Task<Result<List<Transaction>>> LoadForBulkAsync(
+        IReadOnlyList<Guid> transactionIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = transactionIds.Distinct().Select(id => new TransactionId(id)).ToList();
+        var transactions = await db.Transactions.Where(t => ids.Contains(t.Id)).ToListAsync(cancellationToken);
+
+        return transactions.Count == ids.Count
+            ? transactions
+            : new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
     }
 
     private async Task<Result<(Currency Currency, decimal ReportingAmount)>> ValueAsync(
@@ -394,6 +492,23 @@ public sealed class TransactionService(
             cancellationToken);
     }
 
+    private async Task<DomainError?> ValidateTagsAsync(
+        IReadOnlyList<Guid>? tagIds,
+        CancellationToken cancellationToken)
+    {
+        var wanted = (tagIds ?? []).Distinct().Select(id => new TagId(id)).ToList();
+        if (wanted.Count == 0)
+        {
+            return null;
+        }
+
+        var visible = await db.Tags.CountAsync(t => wanted.Contains(t.Id), cancellationToken);
+
+        return visible == wanted.Count
+            ? null
+            : new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
+    }
+
     private async Task<DomainError?> ValidateLinesAsync(
         IReadOnlyList<TransactionLineRequest> lines,
         FlowType type,
@@ -424,4 +539,46 @@ public sealed class TransactionService(
         var lines = await db.TransactionLines.Where(l => ids.Contains(l.TransactionId)).ToListAsync(cancellationToken);
         return lines.GroupBy(l => l.TransactionId).ToDictionary(g => g.Key, g => g.ToList());
     }
+
+    private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsAsync(
+        IEnumerable<TransactionId> transactionIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = transactionIds.ToList();
+        if (ids.Count == 0)
+        {
+            return [];
+        }
+
+        var pairs = await db.TransactionTags
+            .Where(x => ids.Contains(x.TransactionId))
+            .Select(x => new { x.TransactionId, x.TagId })
+            .ToListAsync(cancellationToken);
+
+        return Group(pairs.Select(pair => (pair.TransactionId, pair.TagId)));
+    }
+
+    private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsOfFilteredAsync(
+        ITransactionFilter request,
+        CancellationToken cancellationToken)
+    {
+        var matching = Filtered(request);
+        var pairs = await db.TransactionTags
+            .Where(x => matching.Any(t => t.Id == x.TransactionId))
+            .Select(x => new { x.TransactionId, x.TagId })
+            .ToListAsync(cancellationToken);
+
+        return Group(pairs.Select(pair => (pair.TransactionId, pair.TagId)));
+    }
+
+    private async Task<List<TagId>> TagIdsOfAsync(TransactionId transactionId, CancellationToken cancellationToken) =>
+        await db.TransactionTags
+            .Where(x => x.TransactionId == transactionId)
+            .Select(x => x.TagId)
+            .ToListAsync(cancellationToken);
+
+    private static Dictionary<TransactionId, List<TagId>> Group(IEnumerable<(TransactionId TransactionId, TagId TagId)> pairs) =>
+        pairs
+            .GroupBy(pair => pair.TransactionId)
+            .ToDictionary(group => group.Key, group => group.Select(pair => pair.TagId).ToList());
 }

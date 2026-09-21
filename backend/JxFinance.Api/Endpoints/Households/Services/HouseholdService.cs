@@ -219,6 +219,15 @@ public sealed class HouseholdService(
                     .SetProperty(c => c.HouseholdId, (HouseholdId?)null)
                     .SetProperty(c => c.UpdatedAt, now),
                 cancellationToken);
+
+        await db.Tags
+            .Where(t => t.HouseholdId == householdId && (ownerId == null || t.UserId == ownerId))
+            .ExecuteUpdateAsync(
+                setters => setters
+                    .SetProperty(t => t.Scope, Scope.Personal)
+                    .SetProperty(t => t.HouseholdId, (HouseholdId?)null)
+                    .SetProperty(t => t.UpdatedAt, now),
+                cancellationToken);
     }
 
     private Task<Result<Household>> FindAsync(Guid id, CancellationToken cancellationToken)

@@ -17,4 +17,5 @@ public sealed record TransactionResponse(
     DateTimeOffset CreatedAt,
     IReadOnlyList<TransactionLineResponse>? Lines,
     Currency Currency,
-    [property: Money] decimal ReportingAmount);
+    [property: Money] decimal ReportingAmount,
+    IReadOnlyList<Guid> TagIds);

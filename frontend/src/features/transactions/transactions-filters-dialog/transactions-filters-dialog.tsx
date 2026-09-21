@@ -1,13 +1,14 @@
 import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
 import { Label } from "@/components/ui/label/label";
+import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
@@ -21,6 +22,7 @@ type SortValue = `${SortField}:${SortDirection}`;
 interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
   className?: string;
   defaultOpen?: boolean;
 }
@@ -28,11 +30,12 @@ interface Props {
 export function TransactionsFiltersDialog({
   accounts,
   categories,
+  tags,
   className,
   defaultOpen = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories });
+  const filters = useTransactionFilters({ accounts, categories, tags });
   const { search, setFilter, activeCount } = filters;
   const [open, setOpen] = useState(defaultOpen);
   const text = useDebouncedDraft(
@@ -126,6 +129,23 @@ export function TransactionsFiltersDialog({
               options={filters.categoryOptions}
             />
           </div>
+
+          {tags.length > 0 ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="tx-filter-tags">{t("tags.field")}</Label>
+              <TagPicker
+                id="tx-filter-tags"
+                tags={tags}
+                value={filters.selectedTagIds}
+                onChange={filters.setTagIds}
+                aria-label={t("tags.field")}
+                aria-describedby="tx-filter-tags-hint"
+              />
+              <p id="tx-filter-tags-hint" className="text-xs text-muted-foreground">
+                {t("tags.filterHint")}
+              </p>
+            </div>
+          ) : null}
 
           <div className="space-y-1.5">
             <Label htmlFor="tx-filter-account">{t("transactions.account")}</Label>

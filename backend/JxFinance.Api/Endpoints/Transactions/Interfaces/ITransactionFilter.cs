@@ -8,6 +8,8 @@ public interface ITransactionFilter
 
     Guid? CategoryId { get; }
 
+    string? TagIds { get; }
+
     FlowType? Type { get; }
 
     string? Search { get; }

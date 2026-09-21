@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import {
@@ -9,16 +9,18 @@ import {
   ColumnHeader,
 } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
+import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  tags: TagResponse[];
 }
 
-export function useTransactionColumnHeaders({ accounts, categories }: Args) {
+export function useTransactionColumnHeaders({ accounts, categories, tags }: Args) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories });
+  const filters = useTransactionFilters({ accounts, categories, tags });
   const { search, setFilter } = filters;
 
   type SortKey = NonNullable<typeof search.sort>;
@@ -78,6 +80,29 @@ export function useTransactionColumnHeaders({ accounts, categories }: Args) {
           options={filters.categoryOptions}
         />
       </ColumnFilter>,
+    ),
+    tagIds: (
+      <ColumnHeader<string>
+        label={t("tags.field")}
+        filter={
+          <ColumnFilter
+            label={t("tags.field")}
+            active={filters.selectedTagIds.length > 0}
+            onClear={() => filters.setTagIds([])}
+          >
+            <TagPicker
+              tags={tags}
+              value={filters.selectedTagIds}
+              onChange={filters.setTagIds}
+              aria-label={t("tags.field")}
+              aria-describedby="tx-tag-filter-hint"
+            />
+            <p id="tx-tag-filter-hint" className="text-xs text-muted-foreground">
+              {t("tags.filterHint")}
+            </p>
+          </ColumnFilter>
+        }
+      />
     ),
     accountId: header(
       "account",

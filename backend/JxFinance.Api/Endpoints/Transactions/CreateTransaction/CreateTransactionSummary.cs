@@ -11,7 +11,8 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         Summary = "Record a transaction";
         Description = "Posts income or an expense to an account. Leave lines empty for an ordinary "
             + "transaction. To split one payment across several categories, send the lines instead: they "
-            + "must add up to the transaction amount, and the top-level categoryId is then ignored.";
+            + "must add up to the transaction amount, and the top-level categoryId is then ignored. Tags "
+            + "belong to the whole payment and are sent as tagIds, split or not.";
         ExampleRequest = new CreateTransactionRequest(
             Guid.Empty,
             Guid.Empty,
@@ -26,7 +27,8 @@ public sealed class CreateTransactionSummary : Summary<CreateTransactionEndpoint
         RequestParam(r => r.Amount, SummaryText.PositiveMoney);
         RequestParam(r => r.Date, "The date the money moved, as YYYY-MM-DD.");
         RequestParam(r => r.Lines, "Optional split lines. Their amounts must sum to the transaction amount.");
+        RequestParam(r => r.TagIds, "Optional tags for the whole payment, at most ten, each visible to you.");
         Responses[201] = "The transaction was created. The Location header points at it.";
-        Responses[400] = "Validation failed, the split lines do not add up, or the account or category is not visible to you.";
+        Responses[400] = "Validation failed, the split lines do not add up, or the account, category or a tag is not visible to you.";
     }
 }

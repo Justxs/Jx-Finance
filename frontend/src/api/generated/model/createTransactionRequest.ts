@@ -36,5 +36,7 @@ export interface CreateTransactionRequest {
    * @nullable
    */
   lines: TransactionLineRequest[] | null;
+  /** @nullable */
+  tagIds: string[] | null;
   currency?: null | Currency;
 }

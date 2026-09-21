@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
-import { categories, transactions } from "@/storybook/fixtures";
+import { categories, tags, transactions } from "@/storybook/fixtures";
 import { SelectionToolbar } from "./selection-toolbar";
 
 const expenses = transactions.filter((item) => item.type === "expense" && !item.isSplit);
@@ -13,8 +13,11 @@ const meta = {
   args: {
     selected: expenses.slice(0, 3),
     categories,
+    tags,
     pending: false,
+    tagPending: false,
     onApply: fn(),
+    onApplyTags: fn(),
     onClear: fn(),
   },
   decorators: [withWidth("w-[min(56rem,92vw)]")],

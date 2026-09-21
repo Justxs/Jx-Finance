@@ -9,6 +9,8 @@ public sealed class GetTransactionsSummaryRequest : ITransactionFilter
 
     public Guid? CategoryId { get; init; }
 
+    public string? TagIds { get; init; }
+
     public FlowType? Type { get; init; }
 
     public string? Search { get; init; }
