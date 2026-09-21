@@ -14,7 +14,11 @@ public sealed class GetReportSummaryEndpoint(IReportService reportService) : End
 
     public override async Task HandleAsync(GetReportSummaryRequest req, CancellationToken ct)
     {
-        var response = await reportService.GetSummaryAsync(req.DateFrom, req.DateTo, ct);
+        var response = await reportService.GetSummaryAsync(
+            req.DateFrom,
+            req.DateTo,
+            req.Comparison ?? ReportComparisonMode.None,
+            ct);
         await Send.OkAsync(response, ct);
     }
 }

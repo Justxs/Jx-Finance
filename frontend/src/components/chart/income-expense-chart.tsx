@@ -20,6 +20,8 @@ interface IncomeExpensePoint {
   label: string;
   income: number;
   expense: number;
+  comparisonIncome?: number;
+  comparisonExpense?: number;
 }
 
 interface Props {
@@ -31,6 +33,8 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   const { t } = useTranslation();
   const axisMoney = useAxisMoney();
 
+  const compared = data.some((point) => point.comparisonIncome !== undefined);
+
   const series: ChartSeries[] = [
     {
       key: "income",
@@ -40,6 +44,24 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
       tone: "text-income",
     },
     { key: "expense", label: t("charts.expense"), color: "var(--chart-3)", sign: "−" },
+    ...(compared
+      ? ([
+          {
+            key: "comparisonIncome",
+            label: t("charts.earlierIncome"),
+            color: "var(--chart-2)",
+            sign: "+",
+            shape: "dashed",
+          },
+          {
+            key: "comparisonExpense",
+            label: t("charts.earlierExpense"),
+            color: "var(--chart-3)",
+            sign: "−",
+            shape: "dashed",
+          },
+        ] satisfies ChartSeries[])
+      : []),
     {
       key: "net",
       label: t("charts.net"),
@@ -52,7 +74,15 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
   const chartData = data.map((point) => ({ ...point, net: point.income - point.expense }));
   const showDots = chartData.length <= 16;
 
-  if (chartData.every((point) => point.income === 0 && point.expense === 0)) {
+  if (
+    chartData.every(
+      (point) =>
+        point.income === 0 &&
+        point.expense === 0 &&
+        !point.comparisonIncome &&
+        !point.comparisonExpense,
+    )
+  ) {
     return <EmptyText>{t("charts.empty")}</EmptyText>;
   }
 
@@ -103,6 +133,30 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
               fill="var(--chart-3)"
               radius={[1, 1, 0, 0]}
             />
+            {compared ? (
+              <Line
+                isAnimationActive={false}
+                type="linear"
+                dataKey="comparisonIncome"
+                stroke="var(--chart-2)"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                dot={false}
+                activeDot={{ r: 3, fill: "var(--chart-2)" }}
+              />
+            ) : null}
+            {compared ? (
+              <Line
+                isAnimationActive={false}
+                type="linear"
+                dataKey="comparisonExpense"
+                stroke="var(--chart-3)"
+                strokeWidth={1.5}
+                strokeDasharray="4 3"
+                dot={false}
+                activeDot={{ r: 3, fill: "var(--chart-3)" }}
+              />
+            ) : null}
             <Line
               isAnimationActive={false}
               type="linear"

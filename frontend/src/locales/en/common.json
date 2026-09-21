@@ -1268,7 +1268,23 @@
     },
     "netWorthChange": "Net worth change",
     "notEnoughNetWorthHistory": "Not enough net worth history in this period yet.",
-    "customRange": "Custom range"
+    "customRange": "Custom range",
+    "comparison": {
+      "label": "Compare with",
+      "modes": {
+        "none": "No comparison",
+        "previousPeriod": "Previous period",
+        "previousYear": "Same period last year"
+      },
+      "against": "Compared with {{from}} – {{to}}",
+      "was": "was {{amount}}",
+      "noBase": "up from nothing",
+      "verdict": {
+        "better": "better than the earlier period",
+        "worse": "worse than the earlier period",
+        "same": "unchanged from the earlier period"
+      }
+    }
   },
   "imports": {
     "file": "CSV file",

@@ -969,6 +969,67 @@
         ]
       }
     },
+    "/api/auth/forgot-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Ask for a password reset link",
+        "description": "Queues an email with a single-use reset link when the address belongs to an active user of this installation and the mail server is configured. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.",
+        "operationId": "ForgotPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              },
+              "example": {
+                "email": "you@example.com"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The request was accepted; an email is on its way if the address can receive one."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -1191,6 +1252,385 @@
           },
           "429": {
             "description": "Too many renewals; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/reset-password": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Set a new password from a reset link",
+        "description": "Consumes the token from the emailed link and stores the new password. The token is ASP.NET Identity's own password-reset token: it carries the user's security stamp, so the completed reset invalidates it and a second attempt with the same link answers 400 passwordReset.tokenInvalid. An unknown address, a deactivated user, an expired token and a tampered token all answer with that same code, so nothing is learned from the difference. A password the validators refuse answers password.tooWeak. A successful reset clears the failed-attempt counter and a temporary lockout, changes the security stamp and therefore ends every open session of that user; a deactivation stays in place. A rejected token does not count toward the lockout. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "ResetPassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              },
+              "example": {
+                "email": "you@example.com",
+                "token": "CfDJ8…",
+                "newPassword": "correct horse battery staple"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The password was changed; sign in with it."
+          },
+          "400": {
+            "description": "The link is no longer valid, or the new password was refused.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/send-verification-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Send the confirmation email again",
+        "description": "Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.",
+        "operationId": "SendVerificationEmail",
+        "responses": {
+          "204": {
+            "description": "A confirmation email is queued."
+          },
+          "400": {
+            "description": "The address is already confirmed, or this installation cannot send email.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The caller no longer exists.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/sessions": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "List signed-in browsers",
+        "description": "Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.",
+        "operationId": "GetSessions",
+        "responses": {
+          "200": {
+            "description": "The live sessions of the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SessionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/sessions/revoke-others": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign out everywhere else",
+        "description": "Deletes every session of the caller except the one that makes the request, including expired and stale rows. Safe to call when no other session exists.",
+        "operationId": "RevokeOtherSessions",
+        "responses": {
+          "204": {
+            "description": "Only the current session is left."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/sessions/{id}": {
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Sign another browser out",
+        "description": "Deletes one of the caller's other sessions. That browser is refused on its next request, because every request checks that its session still exists, and it cannot refresh. The session that makes the request is refused with session.current; it ends through sign out.",
+        "operationId": "RevokeSession",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the session, as returned by the session list.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The session is gone."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The id is the current session; sign out instead.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No session with this id belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/auth/verify-email": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Confirm an email address",
+        "description": "Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "VerifyEmail",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              },
+              "example": {
+                "email": "you@example.com",
+                "token": "CfDJ8…"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The address is confirmed."
+          },
+          "400": {
+            "description": "The link is no longer valid; ask for a new one from the profile.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts from this client; wait and retry."
           },
           "500": {
             "description": "Server Error",
@@ -1715,7 +2155,7 @@
           "Backups"
         ],
         "summary": "Replace all data with a stored backup",
-        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in once their short-lived access token runs out. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.",
+        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.",
         "operationId": "RestoreBackup",
         "parameters": [
           {
@@ -1833,7 +2273,7 @@
           "Budgets"
         ],
         "summary": "Create a budget",
-        "description": "Sets a spending limit for one category. A category can carry a single budget, so creating a second one for the same category is rejected.",
+        "description": "Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.",
         "operationId": "CreateBudget",
         "requestBody": {
           "content": {
@@ -1843,7 +2283,9 @@
               },
               "example": {
                 "categoryId": "00000000-0000-0000-0000-000000000000",
-                "limitAmount": "400.00"
+                "limitAmount": "400.00",
+                "period": "monthly",
+                "rolloverEnabled": false
               }
             }
           },
@@ -1861,7 +2303,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the category is not visible to you, or it already has a budget.",
+            "description": "Validation failed, or the category is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1872,6 +2314,16 @@
           },
           "401": {
             "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "That category already has a budget for the same period.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -1902,7 +2354,7 @@
           "Budgets"
         ],
         "summary": "List budgets",
-        "description": "Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.",
+        "description": "Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.",
         "operationId": "GetBudgets",
         "responses": {
           "200": {
@@ -2031,7 +2483,7 @@
           "Budgets"
         ],
         "summary": "Update a budget",
-        "description": "Changes the limit, or moves the budget to a different category. Spending already recorded is re-evaluated against the new limit the next time the budget is read.",
+        "description": "Changes the limit, the period or the rollover switch, or moves the budget to a different category. Spending already recorded is re-evaluated against the new window the next time the budget is read.",
         "operationId": "UpdateBudget",
         "parameters": [
           {
@@ -2054,7 +2506,9 @@
               },
               "example": {
                 "categoryId": "00000000-0000-0000-0000-000000000000",
-                "limitAmount": "450.00"
+                "limitAmount": "450.00",
+                "period": "monthly",
+                "rolloverEnabled": true
               }
             }
           },
@@ -2093,6 +2547,16 @@
           },
           "404": {
             "description": "No such budget is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another budget already covers that category for the same period.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2400,6 +2864,623 @@
           },
           "404": {
             "description": "No such category is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Create a categorization rule",
+        "description": "Adds a rule that reads a transaction description and fills in a category, a set of tags, or both. The new rule goes last, so it only decides rows no earlier rule claimed; move it with the reorder operation. A rule never changes anything on its own: it suggests a category in the import preview, and it writes to the ledger only when you ask for a run.",
+        "operationId": "CreateCategorizationRule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCategorizationRuleRequest"
+              },
+              "example": {
+                "name": "Groceries",
+                "match": "contains",
+                "pattern": "MAXIMA",
+                "tagIds": [ ],
+                "accountId": null,
+                "minAmount": null,
+                "maxAmount": null,
+                "categoryId": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The rule was created. The Location header points at it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorizationRuleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the rule sets neither a category nor a tag, a referenced account, category or tag is not visible to you, or you already have 100 rules.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "List categorization rules",
+        "description": "Returns your own rules in the order they are evaluated, lowest position first. Rules are personal: nobody else sees them, not even a member of a household you share an account with. The first rule whose condition matches a description decides what the row gets, so the order is the rule, not a detail of the list.",
+        "operationId": "GetCategorizationRules",
+        "responses": {
+          "200": {
+            "description": "The rules of the signed-in user, in evaluation order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategorizationRuleResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/run": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Run the rules over the ledger",
+        "description": "Applies the rules to the transactions the preview counted, in one database transaction: the first rule that claims a row sets its category and adds its tags, and no later rule touches that row again. Tags are added, never removed, so a tag somebody put on a row by hand survives. With recategorize false, the default, a row that already carries a category is not offered to any rule; with true, a matching row's category is replaced. Split transactions are never touched.",
+        "operationId": "RunCategorizationRules",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRulesRequest"
+              },
+              "example": {
+                "accountId": null,
+                "recategorize": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "One entry per rule with the number of rows it changed, and the total.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunRulesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The named account is not visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/run/preview": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Count what a run of the rules would touch",
+        "description": "Reads the ledger and answers how many rows each rule would fill in, without writing anything. The count is the one the run will use: rules are evaluated in order and a row belongs to the first rule that claims it, so the numbers never double-count a row. By default only rows with no category at all are considered; split transactions are left out, because their categories live on their lines. The matching happens in PostgreSQL, so the size of the ledger does not decide how much the server loads.",
+        "operationId": "PreviewCategorizationRun",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunRulesRequest"
+              },
+              "example": {
+                "accountId": null,
+                "recategorize": false
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "One entry per rule with the number of rows it would touch, and the total.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunRulesResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The named account is not visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/test": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Try a rule against a sample description",
+        "description": "Answers whether a condition that has not been saved yet would match a sample description, and whether a sample amount falls inside the range. Nothing is read from the ledger and nothing is written, so the form can ask this on every keystroke. The answer separates the two halves of the condition, so a rule that fails only on the amount can say so. The action the rule would take is already in the form, which is why this call does not repeat it.",
+        "operationId": "TestCategorizationRule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestCategorizationRuleRequest"
+              },
+              "example": {
+                "match": "contains",
+                "pattern": "MAXIMA",
+                "description": "Pirkinys MAXIMA X-123 VILNIUS",
+                "amount": null,
+                "minAmount": null,
+                "maxAmount": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Whether the whole condition matches, and each half of it separately.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TestCategorizationRuleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/{id}": {
+      "delete": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Delete a categorization rule",
+        "description": "Removes the rule and the tags it would have added. The transactions it filled in earlier keep their category and their tags, because a rule writes once and owns nothing afterwards. The rules below it close the gap, so the positions stay 0, 1, 2 without a hole.",
+        "operationId": "DeleteCategorizationRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The rule id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The rule is gone and the remaining rules are renumbered."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such rule belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Update a categorization rule",
+        "description": "Replaces the condition, the narrowing and the action of a rule. The tag list is replaced whole, so an empty list clears the tags the rule would add. The position is not part of this body; reorder with the move operation. Transactions the rule already filled keep what they got: a rule is applied when it runs, never afterwards.",
+        "operationId": "UpdateCategorizationRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The rule id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCategorizationRuleRequest"
+              },
+              "example": {
+                "name": "Groceries",
+                "match": "contains",
+                "pattern": "MAXIMA",
+                "tagIds": [ ],
+                "accountId": null,
+                "minAmount": null,
+                "maxAmount": null,
+                "categoryId": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated rule.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CategorizationRuleResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, the rule sets neither a category nor a tag, or a referenced account, category or tag is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such rule belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/categorization-rules/{id}/move": {
+      "post": {
+        "tags": [
+          "CategorizationRules"
+        ],
+        "summary": "Move a rule one place up or down",
+        "description": "Swaps the rule with its neighbour and answers the whole list in its new order, so a client never has to guess what the positions became. Moving the first rule up or the last rule down changes nothing and still answers the list. Positions stay dense: every move renumbers them 0, 1, 2 in the order the list comes back.",
+        "operationId": "MoveCategorizationRule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The rule id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveCategorizationRuleRequest"
+              },
+              "example": {
+                "direction": "up"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Every rule of the signed-in user, in the new evaluation order.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CategorizationRuleResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such rule belongs to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2824,7 +3905,7 @@
           "Dashboard"
         ],
         "summary": "Get spending split by category",
-        "description": "Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.",
+        "description": "Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null.",
         "operationId": "GetCategoryBreakdown",
         "parameters": [
           {
@@ -2894,7 +3975,7 @@
           "Dashboard"
         ],
         "summary": "Get the monthly income and expense trend",
-        "description": "Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.",
+        "description": "Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.",
         "operationId": "GetMonthlyTrend",
         "parameters": [
           {
@@ -2963,7 +4044,7 @@
           "Dashboard"
         ],
         "summary": "Get the dashboard summary",
-        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.",
+        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary.",
         "operationId": "GetDashboardSummary",
         "responses": {
           "200": {
@@ -3415,7 +4496,7 @@
           "Goals"
         ],
         "summary": "Create a savings goal",
-        "description": "Starts tracking progress towards a target amount, optionally by a target date. The goal is a standalone tracker: it is not tied to an account, and moving money does not update it by itself.",
+        "description": "Starts tracking progress towards a target amount, optionally by a target date. A manual goal keeps the amount you type in currentAmount; moving money does not update it by itself. A goal funded from an account follows that account's reporting balance instead, taking the share given by fundingSharePercent, and ignores currentAmount.",
         "operationId": "CreateGoal",
         "requestBody": {
           "content": {
@@ -3427,7 +4508,10 @@
                 "name": "Emergency fund",
                 "targetAmount": "5000.00",
                 "currentAmount": "1200.00",
-                "targetDate": "2027-01-01"
+                "targetDate": "2027-01-01",
+                "funding": "manual",
+                "fundingAccountId": null,
+                "fundingSharePercent": null
               }
             }
           },
@@ -3486,7 +4570,7 @@
           "Goals"
         ],
         "summary": "List savings goals",
-        "description": "Returns your savings goals with the amount saved so far against each target.",
+        "description": "Returns your savings goals with the amount saved so far against each target in progressAmount. For a manual goal that is the stored currentAmount; for a goal funded from an account it is the share of that account's reporting balance, computed for this request and never below zero. progressAmount is null when the funding account is archived or no longer visible, and the rest of the list is still returned.",
         "operationId": "GetGoals",
         "responses": {
           "200": {
@@ -3615,7 +4699,7 @@
           "Goals"
         ],
         "summary": "Update a savings goal",
-        "description": "Changes the name, the target, the target date, or how much has been put aside. This is how progress is recorded: raise currentAmount as money is saved.",
+        "description": "Changes the name, the target, the target date, how much has been put aside, and where progress comes from. For a manual goal this is how progress is recorded: raise currentAmount as money is saved. Switching to account funding leaves the stored currentAmount alone and stops using it; switching back to manual brings that stored amount into use again.",
         "operationId": "UpdateGoal",
         "parameters": [
           {
@@ -3640,7 +4724,10 @@
                 "name": "Emergency fund",
                 "targetAmount": "5000.00",
                 "currentAmount": "1500.00",
-                "targetDate": "2027-01-01"
+                "targetDate": "2027-01-01",
+                "funding": "manual",
+                "fundingAccountId": null,
+                "fundingSharePercent": null
               }
             }
           },
@@ -4410,7 +5497,7 @@
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped.",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -4434,7 +5521,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or the account is not visible to the signed-in user.",
+            "description": "Validation failed, a tag is not visible to you, or the account is not visible to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -4477,7 +5564,7 @@
           "Imports"
         ],
         "summary": "Preview a Swedbank CSV statement",
-        "description": "Parses an exported Swedbank statement and returns the rows it found, each with a suggested category and a flag saying whether a matching transaction already exists in the account. Nothing is written: this call only reads the file, and the client decides which rows to keep before calling confirm. Send the file as multipart/form-data.",
+        "description": "Parses an exported Swedbank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
         "operationId": "ImportPreview",
         "requestBody": {
           "content": {
@@ -5222,8 +6309,8 @@
         "tags": [
           "Investments"
         ],
-        "summary": "Set the last known price of a security",
-        "description": "Sets the price by hand. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. A broker import overwrites the price when its report date is the same or newer.",
+        "summary": "Record a price of a security",
+        "description": "Records the price for one date by hand, replacing a price already recorded for that date. Securities are shared by every user of the installation, so this is open only to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security follows the newest date: a price for an earlier date adds a history point and leaves the last known price alone. A broker import records the mark price of its report date the same way.",
         "operationId": "SetSecurityPrice",
         "parameters": [
           {
@@ -5248,7 +6335,7 @@
         },
         "responses": {
           "200": {
-            "description": "The security with its new price.",
+            "description": "The security with its last known price.",
             "content": {
               "application/json": {
                 "schema": {
@@ -5289,6 +6376,377 @@
           },
           "404": {
             "description": "No such security.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone else recorded a price for the same date at the same moment. Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/investments/securities/{id}/prices": {
+      "get": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "List the price history of a security",
+        "description": "Returns the recorded prices of a security, one per date, newest first. A point is written whenever a price is set by hand, a security is saved with a price, or a broker import carries a mark price for an open position. There is no market data feed, so dates between points have no row. Like securities themselves, the history is shared by every user of the installation.",
+        "operationId": "GetSecurityPrices",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Only points on or after this date.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Only points on or before this date.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The history points, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SecurityPriceResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/investments/securities/{id}/prices/{date}": {
+      "delete": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Delete a point of a security's price history",
+        "description": "Removes the price recorded for one date. The same rule as setting a price applies: open to a user who currently holds the security on an account they can see, and to administrators. The last known price of the security becomes the newest remaining point, or empty when none is left.",
+        "operationId": "DeleteSecurityPrice",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the point, as yyyy-MM-dd.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The caller holds no open position in this security and is not an administrator.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such security, or no price recorded for that date.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/investments/tax-summary": {
+      "get": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Get the yearly investment tax summary",
+        "description": "Returns one calendar year of recorded investment activity on the accounts the caller can see: every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee of that year. Every amount is given both in the currency it was recorded in and in the reporting currency at the rate frozen on the entry's date; withholding tax and fees are reported as positive amounts paid. AvailableYears lists the years that hold anything, newest first, and Year falls back to the newest of them, or to the current year when nothing is recorded. A year with nothing recorded answers an empty summary rather than an error. This is a summary of recorded data, not tax advice: no tax, allowance or rate is applied.",
+        "operationId": "GetTaxSummary",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The calendar year to report. Defaults to the newest year that holds anything.",
+            "schema": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "accountIds",
+            "in": "query",
+            "description": "Up to 50 account ids separated by commas. Defaults to every account the caller can see.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The summary of the year.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxSummaryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/investments/tax-summary/export": {
+      "get": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Export the yearly investment tax summary as CSV",
+        "description": "Answers the same year as GET /api/investments/tax-summary as a CSV attachment named investment-tax-summary-<year>.csv. Rows are written to the response as they are produced, so the answer carries no Content-Length. The Section column says what a row is: a Disposal row, one Lot row per lot that disposal consumed, and one Dividend, Interest, WithholdingTax or Fee row per cash entry. Every row carries the amount in the currency it was recorded in and again in the reporting currency at the frozen rate. There are no total rows: every row is a recorded entry. This is a summary of recorded data, not tax advice.",
+        "operationId": "ExportTaxSummary",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The calendar year to report. Defaults to the newest year that holds anything.",
+            "schema": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "accountIds",
+            "in": "query",
+            "description": "Up to 50 account ids separated by commas. Defaults to every account the caller can see.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The CSV file.",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5670,6 +7128,101 @@
         ]
       }
     },
+    "/api/investments/value-history": {
+      "get": {
+        "tags": [
+          "Investments"
+        ],
+        "summary": "Get the portfolio value over time",
+        "description": "Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.",
+        "operationId": "GetValueHistory",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "description": "First date of the range. Defaults to one year before the end.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Last date of the range. Defaults to today and is never later than today.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "accountId",
+            "in": "query",
+            "description": "Only positions on this account.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The points, oldest first. Empty when there was no trade on or before the end of the range.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValueHistoryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/networth": {
       "get": {
         "tags": [
@@ -5790,7 +7343,7 @@
           "Notifications"
         ],
         "summary": "List notifications",
-        "description": "Returns your notifications, newest first. These are raised by background jobs, for example when a recurring bill is about to fall due.",
+        "description": "Returns your notifications, newest first. Background jobs raise them: a recurring bill about to fall due, or a budget that has reached 80% or 100% of its effective limit in the current window. Each row carries a typed payload the client turns into localized text, and rows stay listed even when the feature that produced them is switched off afterwards.",
         "operationId": "GetNotifications",
         "parameters": [
           {
@@ -6025,8 +7578,8 @@
         "tags": [
           "RecurringBills"
         ],
-        "summary": "Create a recurring bill",
-        "description": "Schedules a bill or a recurring income. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction is only written once the occurrence is confirmed.",
+        "summary": "Create a recurring entry",
+        "description": "Schedules a recurring expense, a recurring income or a recurring transfer. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction or a transfer is only written once the occurrence is confirmed.",
         "operationId": "CreateRecurringBill",
         "requestBody": {
           "content": {
@@ -6036,10 +7589,12 @@
               },
               "example": {
                 "name": "Rent",
+                "shape": "expense",
                 "kind": "fixed",
                 "amount": "650.00",
                 "categoryId": null,
                 "accountId": null,
+                "toAccountId": null,
                 "cadence": "monthly",
                 "nextDueDate": "2026-10-01",
                 "remindDaysBefore": 3
@@ -6050,7 +7605,7 @@
         },
         "responses": {
           "201": {
-            "description": "The recurring bill was created. The Location header points at it.",
+            "description": "The recurring entry was created. The Location header points at it.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6060,7 +7615,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or the account or category is not visible to you.",
+            "description": "Validation failed, the shape is missing a field it needs, or the account or category is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6100,12 +7655,12 @@
         "tags": [
           "RecurringBills"
         ],
-        "summary": "List recurring bills",
-        "description": "Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.",
+        "summary": "List recurring entries",
+        "description": "Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.",
         "operationId": "GetRecurringBills",
         "responses": {
           "200": {
-            "description": "The recurring bills belonging to the signed-in user.",
+            "description": "The recurring entries belonging to the signed-in user.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6155,19 +7710,139 @@
         ]
       }
     },
+    "/api/recurring-bills/suggestions": {
+      "get": {
+        "tags": [
+          "RecurringBills"
+        ],
+        "summary": "Suggest subscriptions found in the ledger",
+        "description": "Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.",
+        "operationId": "GetSubscriptionCandidates",
+        "responses": {
+          "200": {
+            "description": "The subscription candidates, the soonest expected occurrence first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SubscriptionCandidateResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/recurring-bills/suggestions/dismiss": {
+      "post": {
+        "tags": [
+          "RecurringBills"
+        ],
+        "summary": "Dismiss a subscription suggestion",
+        "description": "Hides one suggested subscription for the signed-in user. The dismissal is stored against the account and the normalized description the suggestion was grouped by, not against the transactions behind it, so a new payment arriving in the same group does not bring the suggestion back. Dismissing the same group twice changes nothing. It is a personal choice: another member of the same household still sees the suggestion.",
+        "operationId": "DismissSubscriptionCandidate",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismissSubscriptionCandidateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The suggestion will not be offered to you again."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/recurring-bills/{id}": {
       "delete": {
         "tags": [
           "RecurringBills"
         ],
-        "summary": "Delete a recurring bill",
-        "description": "Removes the schedule and its reminders. Transactions already posted from it stay in the ledger.",
+        "summary": "Delete a recurring entry",
+        "description": "Removes the schedule and its reminders. Transactions and transfers already posted from it stay in the ledger.",
         "operationId": "DeleteRecurringBill",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The recurring bill id.",
+            "description": "The recurring entry id.",
             "required": true,
             "schema": {
               "type": "string"
@@ -6176,7 +7851,7 @@
         ],
         "responses": {
           "204": {
-            "description": "The recurring bill is gone."
+            "description": "The recurring entry is gone."
           },
           "400": {
             "description": "Bad Request",
@@ -6199,7 +7874,7 @@
             }
           },
           "404": {
-            "description": "No such recurring bill belongs to the signed-in user.",
+            "description": "No such recurring entry belongs to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6229,14 +7904,14 @@
         "tags": [
           "RecurringBills"
         ],
-        "summary": "Get one recurring bill",
-        "description": "Returns a single schedule with its cadence, reminder lead time, and next due date.",
+        "summary": "Get one recurring entry",
+        "description": "Returns a single schedule with its shape, cadence, reminder lead time, and next due date.",
         "operationId": "GetRecurringBill",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The recurring bill id.",
+            "description": "The recurring entry id.",
             "required": true,
             "schema": {
               "type": "string"
@@ -6245,7 +7920,7 @@
         ],
         "responses": {
           "200": {
-            "description": "The recurring bill.",
+            "description": "The recurring entry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6275,7 +7950,7 @@
             }
           },
           "404": {
-            "description": "No such recurring bill belongs to the signed-in user.",
+            "description": "No such recurring entry belongs to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6305,14 +7980,14 @@
         "tags": [
           "RecurringBills"
         ],
-        "summary": "Update a recurring bill",
-        "description": "Changes the schedule, the expected amount, or the reminder lead time. Setting isActive to false stops reminders without losing the schedule or the transactions already posted from it.",
+        "summary": "Update a recurring entry",
+        "description": "Changes the shape, the schedule, the expected amount, or the reminder lead time. A shape change must bring the fields the new shape needs: a Transfer needs both accounts and no category, an Expense or an Income needs no destination account. Setting isActive to false stops reminders without losing the schedule or the rows already posted from it.",
         "operationId": "UpdateRecurringBill",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The recurring bill id. Takes precedence over the id in the body.",
+            "description": "The recurring entry id. Takes precedence over the id in the body.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6329,10 +8004,12 @@
               },
               "example": {
                 "name": "Rent",
+                "shape": "expense",
                 "kind": "fixed",
                 "amount": "675.00",
                 "categoryId": null,
                 "accountId": null,
+                "toAccountId": null,
                 "cadence": "monthly",
                 "nextDueDate": "2026-11-01",
                 "remindDaysBefore": 3,
@@ -6344,7 +8021,7 @@
         },
         "responses": {
           "200": {
-            "description": "The updated recurring bill.",
+            "description": "The updated recurring entry.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6354,7 +8031,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, or the account or category is not visible to you.",
+            "description": "Validation failed, the shape is missing a field it needs, or the account or category is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6374,7 +8051,7 @@
             }
           },
           "404": {
-            "description": "No such recurring bill belongs to the signed-in user.",
+            "description": "No such recurring entry belongs to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6407,13 +8084,13 @@
           "RecurringBills"
         ],
         "summary": "Confirm a due occurrence",
-        "description": "Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.",
+        "description": "Posts one occurrence of the schedule and rolls the next due date forward by the cadence. An Expense writes an expense transaction, an Income writes an income transaction and a Transfer writes a transfer between the two accounts on the entry. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same occurrence twice.",
         "operationId": "ConfirmRecurringBill",
         "parameters": [
           {
             "name": "id",
             "in": "path",
-            "description": "The recurring bill id. Takes precedence over the id in the body.",
+            "description": "The recurring entry id. Takes precedence over the id in the body.",
             "required": true,
             "schema": {
               "type": "string",
@@ -6431,7 +8108,8 @@
               "example": {
                 "amount": "650.00",
                 "accountId": null,
-                "expectedDueDate": "2026-10-01"
+                "expectedDueDate": "2026-10-01",
+                "receivedAmount": null
               }
             }
           },
@@ -6439,7 +8117,7 @@
         },
         "responses": {
           "200": {
-            "description": "The posted transaction and the new next due date.",
+            "description": "The posted transaction or transfer and the new next due date.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6449,7 +8127,7 @@
             }
           },
           "400": {
-            "description": "The due date does not match, the amount is missing, or the account is not visible to you.",
+            "description": "The amount is missing, a currency pair needs a received amount, or an account is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6469,7 +8147,7 @@
             }
           },
           "404": {
-            "description": "No such recurring bill belongs to the signed-in user.",
+            "description": "No such recurring entry belongs to the signed-in user.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6502,7 +8180,7 @@
           "Reports"
         ],
         "summary": "Summarise income and expenses over a range",
-        "description": "Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months.",
+        "description": "Returns income, expense, and net totals for an arbitrary date range, with the per-category split. Unlike the dashboard endpoints, the window is yours to choose rather than being pinned to calendar months. While the investments feature is on, dividends and interest from the investment ledger count as income and withholding tax and standalone fees as expense; buys, sells and splits never do. Those amounts have no category: they arrive as one entry per list with categoryId null and syntheticGroup set (investmentIncome or investmentTaxesAndFees), which a client should localize and not link to a category. Entries of real categories, and the uncategorized entry, have syntheticGroup null. expenseByTag splits the same expense total by tag, with one entry per tag the period touches and a final entry with tagId null for the expenses that carry no tag. A transaction can carry several tags and then counts once under each of them, so the tag entries can add up to more than totalExpense; only the untagged entry is disjoint from the rest. Investment entries carry no tag and are left out of this list. Ask for a comparison and every figure gains its counterpart from an earlier period: comparison holds that period's own dates and totals, every category, synthetic group and tag entry gains comparisonAmount, and every trend point gains comparisonBucketStart, comparisonIncome and comparisonExpense. A category, group or tag that only one of the two periods touched is still one entry, with zero on the side that has nothing. Trend points are paired by position, so the first bucket of the range meets the first bucket of the earlier one; a bucket with no counterpart compares against zero. Without the parameter every comparison field is null and the response is the one it always was. The difference and its percentage are the client's to compute, because a change from zero has no percentage to show.",
         "operationId": "GetReportSummary",
         "parameters": [
           {
@@ -6527,6 +8205,14 @@
                 "string"
               ],
               "format": "date"
+            }
+          },
+          {
+            "name": "comparison",
+            "in": "query",
+            "description": "Which earlier period to answer beside this one: previousPeriod for the same number of days immediately before the range, previousYear for the same range a year earlier, where a range that ends on the last day of a month again ends on the last day of that month, so February meets the whole of February. Omit it, or send none, for no comparison.",
+            "schema": {
+              "$ref": "#/components/schemas/ReportComparisonMode"
             }
           }
         ],
@@ -6788,7 +8474,7 @@
           "Settings"
         ],
         "summary": "Read the settings the sign-in page needs",
-        "description": "Anonymous. Returns only the installation name and the default language.",
+        "description": "Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers \"Forgot password\". No host name, no address and no credential is part of the answer.",
         "operationId": "GetPublicSettings",
         "responses": {
           "200": {
@@ -6832,6 +8518,234 @@
             }
           }
         }
+      }
+    },
+    "/api/settings/smtp": {
+      "get": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Read the mail server of this installation",
+        "description": "Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.",
+        "operationId": "GetSmtpSettings",
+        "responses": {
+          "200": {
+            "description": "The stored mail server settings, without the password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can read the mail server settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Save the mail server of this installation",
+        "description": "Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one; clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. Switching enabled on needs a host and a sender address. Administrators only.",
+        "operationId": "UpdateSmtpSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSmtpSettingsRequest"
+              },
+              "example": {
+                "enabled": true,
+                "host": "smtp.example.com",
+                "port": 587,
+                "encryption": "startTls",
+                "userName": "finance@example.com",
+                "password": "app-password",
+                "fromAddress": "finance@example.com",
+                "fromName": "Jx Finance"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The saved settings, without the password.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpSettingsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can change installation settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
+    "/api/settings/smtp/test": {
+      "post": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Send a test message",
+        "description": "Sends one short message to the calling administrator's own address with the settings that are stored right now, and waits for the mail server to accept it. Nothing is written: the message does not go through the outbox and leaves no row behind, so a failed attempt is not retried. Success answers the address the message went to; a refusal answers 400 with email.sendFailed and the mail server's own words, email.notConfigured when the settings are incomplete or switched off, or email.passwordUnreadable when the stored password cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind. The attempt gives up after the configured send timeout, so a dead server cannot hold the request open. Save the settings before testing them. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "SendTestEmail",
+        "responses": {
+          "200": {
+            "description": "The mail server accepted the message.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SmtpTestResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The mail server refused the message, or the settings are incomplete.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can send a test message.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many test messages from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
       }
     },
     "/api/setup": {
@@ -6946,13 +8860,347 @@
         }
       }
     },
+    "/api/tags": {
+      "post": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Create a tag",
+        "description": "Adds a tag that transactions can be marked with. A tag says what a payment was for across categories — a holiday, a renovation, something to be reimbursed — so it has no flow type and the same tag can sit on income and on an expense. Names are unique per owner, ignoring case.",
+        "operationId": "CreateTag",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTagRequest"
+              },
+              "example": {
+                "name": "Holiday 2026",
+                "scope": "personal",
+                "householdId": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The tag was created. The Location header points at it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the named household is not one of yours.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "You already have a tag with that name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "List tags",
+        "description": "Returns your personal tags plus the shared tags of the households you belong to, by name. A tag has no flow type, so the same list serves income and expense. While a household is active, the tags of the other households are left out, exactly as categories are.",
+        "operationId": "GetTags",
+        "responses": {
+          "200": {
+            "description": "The tags visible to the signed-in user.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TagResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/tags/{id}": {
+      "delete": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Delete a tag",
+        "description": "Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag.",
+        "operationId": "DeleteTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The tag id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The tag is gone and no transaction carries it any more."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only the owner can delete a shared tag.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such tag is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Tags"
+        ],
+        "summary": "Update a tag",
+        "description": "Renames a tag or moves it between personal and shared. A household member can rename a shared tag; only its owner can change the sharing or delete it. The transactions already marked with the tag keep it.",
+        "operationId": "UpdateTag",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The tag id. Takes precedence over the id in the body.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTagRequest"
+              },
+              "example": {
+                "name": "Holiday 2026",
+                "scope": "personal",
+                "householdId": null
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The updated tag.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TagResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or the named household is not one of yours.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only the owner can change the sharing of a tag.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such tag is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The owner already has another tag with that name.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions": {
       "post": {
         "tags": [
           "Transactions"
         ],
         "summary": "Record a transaction",
-        "description": "Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored.",
+        "description": "Posts income or an expense to an account. Leave lines empty for an ordinary transaction. To split one payment across several categories, send the lines instead: they must add up to the transaction amount, and the top-level categoryId is then ignored. Tags belong to the whole payment and are sent as tagIds, split or not.",
         "operationId": "CreateTransaction",
         "requestBody": {
           "content": {
@@ -6968,6 +9216,7 @@
                 "date": "2026-09-12",
                 "description": "Weekly shop",
                 "lines": null,
+                "tagIds": null,
                 "currency": null
               }
             }
@@ -6986,7 +9235,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, or the account or category is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7072,6 +9321,17 @@
                 "string"
               ],
               "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
             }
           },
           {
@@ -7264,6 +9524,91 @@
         ]
       }
     },
+    "/api/transactions/bulk-tags": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Set the tags of several transactions",
+        "description": "Replaces the whole set of tags on every listed transaction with the tags sent, so an empty list clears them. Unlike the category operation this accepts split transactions, because a tag belongs to the payment and not to a split line. The request is all-or-nothing: if any id is not visible to you or any tag is not visible to you, nothing changes. Repeated ids count once, and the amounts, categories and split lines of the transactions are untouched.",
+        "operationId": "BulkTagTransactions",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkTagTransactionsRequest"
+              },
+              "example": {
+                "transactionIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ],
+                "tagIds": [
+                  "00000000-0000-0000-0000-000000000000"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The number of transactions updated.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkTagTransactionsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or a tag is not visible to you.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "At least one listed transaction is not visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/transactions/export": {
       "get": {
         "tags": [
@@ -7313,6 +9658,17 @@
                 "string"
               ],
               "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
             }
           },
           {
@@ -7475,6 +9831,17 @@
             }
           },
           {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
+            }
+          },
+          {
             "name": "type",
             "in": "query",
             "description": "Income or Expense.",
@@ -7613,6 +9980,17 @@
                 "string"
               ],
               "format": "uuid"
+            }
+          },
+          {
+            "name": "tagIds",
+            "in": "query",
+            "description": "Comma-separated tag ids, at most ten. A transaction is kept only when it carries every one of them, so adding a tag always narrows the list. Tags sit on the transaction, never on a split line.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ]
             }
           },
           {
@@ -7783,7 +10161,7 @@
           "Transactions"
         ],
         "summary": "Get one transaction",
-        "description": "Returns a single transaction, including its split lines when it has any. A transaction you cannot see is reported as missing rather than forbidden.",
+        "description": "Returns a single transaction, including its split lines when it has any and the ids of the tags it carries. A transaction you cannot see is reported as missing rather than forbidden.",
         "operationId": "GetTransaction",
         "parameters": [
           {
@@ -7859,7 +10237,7 @@
           "Transactions"
         ],
         "summary": "Update a transaction",
-        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Moving it to another account adjusts both balances.",
+        "description": "Replaces the transaction. Split lines are replaced wholesale rather than merged: send the full set you want to keep, or omit lines to turn a split back into a plain transaction. Tags are replaced the same way: send the full set, and an empty list or an absent tagIds clears them. Moving it to another account adjusts both balances.",
         "operationId": "UpdateTransaction",
         "parameters": [
           {
@@ -7888,6 +10266,7 @@
                 "date": "2026-09-12",
                 "description": "Weekly shop",
                 "lines": null,
+                "tagIds": null,
                 "currency": null
               }
             }
@@ -7906,7 +10285,7 @@
             }
           },
           "400": {
-            "description": "Validation failed, the split lines do not add up, or the account or category is not visible to you.",
+            "description": "Validation failed, the split lines do not add up, or the account, category or a tag is not visible to you.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -8298,6 +10677,169 @@
         ]
       }
     },
+    "/api/trash": {
+      "get": {
+        "tags": [
+          "Trash"
+        ],
+        "summary": "List what you deleted recently",
+        "description": "Returns a page of the records the signed-in user deleted in the last 30 days and has not restored, newest first. Each row names the kind of record, the words it was known by when it was deleted and the moment it went. Only the caller's own deletions are listed, even on a shared account: somebody else's delete is theirs to undo. A kind whose feature is switched off is left out. Nothing here is a promise that the record can still come back — a row whose account was archived afterwards is still listed and explains itself when restoring is attempted.",
+        "operationId": "GetTrash",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A page of deleted records with the total row count.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResponseOfTrashEntryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/trash/restore": {
+      "post": {
+        "tags": [
+          "Trash"
+        ],
+        "summary": "Restore a deleted record",
+        "description": "Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken.",
+        "operationId": "RestoreDeleted",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RestoreDeletedRequest"
+              },
+              "example": {
+                "kind": "transaction",
+                "entityId": "00000000-0000-0000-0000-000000000000"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The record is back, or was already back."
+          },
+          "400": {
+            "description": "Validation failed; the deletion is older than 30 days (restore.expired); the account or category it needs is gone (restore.referenceMissing); the fee transaction of a conversion was deleted on its own (restore.companionDeleted); or the split lines of the transaction are no longer stored (restore.detailsLost).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Nothing the signed-in user deleted matches that kind and id, or the feature it belongs to is switched off.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users": {
       "post": {
         "tags": [
@@ -8510,7 +11052,7 @@
           "Users"
         ],
         "summary": "Update your own profile",
-        "description": "Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.",
+        "description": "Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.",
         "operationId": "UpdateMyProfile",
         "requestBody": {
           "content": {
@@ -8521,7 +11063,8 @@
               "example": {
                 "displayName": "Justas",
                 "currentPassword": null,
-                "newPassword": null
+                "newPassword": null,
+                "billReminderEmails": false
               }
             }
           },
@@ -9288,15 +11831,30 @@
           }
         }
       },
+      "BudgetPeriod": {
+        "enum": [
+          "monthly",
+          "weekly",
+          "quarterly",
+          "yearly"
+        ],
+        "type": "string",
+        "description": "Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."
+      },
       "BudgetResponse": {
         "required": [
           "id",
           "categoryId",
           "categoryName",
           "limitAmount",
+          "carriedAmount",
+          "effectiveLimit",
           "spent",
           "remaining",
-          "period"
+          "period",
+          "rolloverEnabled",
+          "windowStart",
+          "windowEnd"
         ],
         "type": "object",
         "properties": {
@@ -9315,6 +11873,14 @@
             "type": "string",
             "format": "decimal"
           },
+          "carriedAmount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "effectiveLimit": {
+            "type": "string",
+            "format": "decimal"
+          },
           "spent": {
             "type": "string",
             "format": "decimal"
@@ -9324,7 +11890,16 @@
             "format": "decimal"
           },
           "period": {
-            "type": "string"
+            "$ref": "#/components/schemas/BudgetPeriod"
+          },
+          "rolloverEnabled": {
+            "type": "boolean"
+          },
+          "windowStart": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "windowEnd": {
+            "$ref": "#/components/schemas/DateOnly"
           }
         }
       },
@@ -9376,6 +11951,128 @@
           }
         }
       },
+      "BulkTagTransactionsRequest": {
+        "required": [
+          "transactionIds",
+          "tagIds"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Between 1 and 200 transaction ids.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          },
+          "tagIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The tags the listed transactions should carry, at most ten; an empty list clears them.",
+            "example": [
+              "00000000-0000-0000-0000-000000000000"
+            ]
+          }
+        },
+        "example": {
+          "transactionIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ],
+          "tagIds": [
+            "00000000-0000-0000-0000-000000000000"
+          ]
+        }
+      },
+      "BulkTagTransactionsResponse": {
+        "required": [
+          "updated"
+        ],
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CategorizationRuleResponse": {
+        "required": [
+          "id",
+          "name",
+          "position",
+          "match",
+          "pattern",
+          "accountId",
+          "minAmount",
+          "maxAmount",
+          "categoryId",
+          "tagIds"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "match": {
+            "$ref": "#/components/schemas/DescriptionMatch"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "minAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "maxAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "CategoryBreakdownItem": {
         "required": [
           "categoryId",
@@ -9403,6 +12100,23 @@
           },
           "amount": {
             "type": "string",
+            "format": "decimal"
+          },
+          "syntheticGroup": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyntheticCategoryGroup"
+              }
+            ]
+          },
+          "comparisonAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "decimal"
           }
         }
@@ -9485,7 +12199,7 @@
               "null",
               "string"
             ],
-            "description": "Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.",
+            "description": "Actual amount. Required for a Variable entry; defaults to the scheduled amount for a Fixed one.",
             "format": "decimal",
             "example": "650.00"
           },
@@ -9494,23 +12208,33 @@
               "null",
               "string"
             ],
-            "description": "Account to post to. Defaults to the account on the schedule.",
+            "description": "Account to post to. Ignored by a Transfer, which uses the two accounts on the entry.",
             "format": "uuid"
           },
           "expectedDueDate": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "receivedAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "What arrives in the destination account. Required when a Transfer crosses two currencies.",
+            "format": "decimal"
           }
         },
         "example": {
           "amount": "650.00",
           "accountId": null,
-          "expectedDueDate": "2026-10-01"
+          "expectedDueDate": "2026-10-01",
+          "receivedAmount": null
         }
       },
       "ConfirmRecurringBillResponse": {
         "required": [
           "bill",
-          "transactionId"
+          "transactionId",
+          "transferId"
         ],
         "type": "object",
         "properties": {
@@ -9518,7 +12242,17 @@
             "$ref": "#/components/schemas/RecurringBillResponse"
           },
           "transactionId": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "transferId": {
+            "type": [
+              "null",
+              "string"
+            ],
             "format": "uuid"
           }
         }
@@ -9751,7 +12485,9 @@
       "CreateBudgetRequest": {
         "required": [
           "categoryId",
-          "limitAmount"
+          "limitAmount",
+          "period",
+          "rolloverEnabled"
         ],
         "type": "object",
         "properties": {
@@ -9767,11 +12503,102 @@
             "description": "Decimal string with at most two decimal places, greater than zero.",
             "format": "decimal",
             "example": "400.00"
+          },
+          "period": {
+            "$ref": "#/components/schemas/BudgetPeriod"
+          },
+          "rolloverEnabled": {
+            "type": "boolean",
+            "description": "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation.",
+            "example": false
           }
         },
         "example": {
           "categoryId": "00000000-0000-0000-0000-000000000000",
-          "limitAmount": "400.00"
+          "limitAmount": "400.00",
+          "period": "monthly",
+          "rolloverEnabled": false
+        }
+      },
+      "CreateCategorizationRuleRequest": {
+        "required": [
+          "name",
+          "match",
+          "pattern",
+          "tagIds"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "What the rule is called on the rules screen and in a run's result.",
+            "example": "Groceries"
+          },
+          "match": {
+            "$ref": "#/components/schemas/DescriptionMatch"
+          },
+          "pattern": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string",
+            "description": "The text the description is compared with. Per cent and underscore are literal characters, not wildcards.",
+            "example": "MAXIMA"
+          },
+          "tagIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The tags the rule adds, at most ten; an empty list adds none. A run adds them and never removes tags the row already carries.",
+            "example": [ ]
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Narrows the rule to one account; leave it out to let the rule see every account you can.",
+            "format": "uuid"
+          },
+          "minAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Lowest transaction amount the rule accepts, in the transaction's own currency.",
+            "format": "decimal"
+          },
+          "maxAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Highest transaction amount the rule accepts, in the transaction's own currency.",
+            "format": "decimal"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The category the rule sets. Its flow type also narrows the rule: an expense category never matches income.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "example": {
+          "name": "Groceries",
+          "match": "contains",
+          "pattern": "MAXIMA",
+          "tagIds": [ ],
+          "accountId": null,
+          "minAmount": null,
+          "maxAmount": null,
+          "categoryId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "CreateCategoryRequest": {
@@ -9968,7 +12795,10 @@
           "name",
           "targetAmount",
           "currentAmount",
-          "targetDate"
+          "targetDate",
+          "funding",
+          "fundingAccountId",
+          "fundingSharePercent"
         ],
         "type": "object",
         "properties": {
@@ -9989,7 +12819,7 @@
               "null",
               "string"
             ],
-            "description": "Amount already saved, zero or more. Defaults to zero when omitted.",
+            "description": "Amount already saved, zero or more. Defaults to zero when omitted, and is ignored for a goal funded from an account.",
             "format": "decimal",
             "example": "1200.00"
           },
@@ -10004,13 +12834,37 @@
             ],
             "description": "Optional date to reach the target by, as YYYY-MM-DD.",
             "example": "2027-01-01"
+          },
+          "funding": {
+            "$ref": "#/components/schemas/GoalFunding"
+          },
+          "fundingAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The account that funds the goal. Required when funding is account, and must be empty otherwise.",
+            "format": "uuid"
+          },
+          "fundingSharePercent": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
+            "format": "int32"
           }
         },
         "example": {
           "name": "Emergency fund",
           "targetAmount": "5000.00",
           "currentAmount": "1200.00",
-          "targetDate": "2027-01-01"
+          "targetDate": "2027-01-01",
+          "funding": "manual",
+          "fundingAccountId": null,
+          "fundingSharePercent": null
         }
       },
       "CreateHouseholdRequest": {
@@ -10127,10 +12981,12 @@
       "CreateRecurringBillRequest": {
         "required": [
           "name",
+          "shape",
           "kind",
           "amount",
           "categoryId",
           "accountId",
+          "toAccountId",
           "cadence",
           "nextDueDate",
           "remindDaysBefore"
@@ -10143,6 +12999,9 @@
             "type": "string",
             "example": "Rent"
           },
+          "shape": {
+            "$ref": "#/components/schemas/RecurringBillShape"
+          },
           "kind": {
             "$ref": "#/components/schemas/RecurringBillKind"
           },
@@ -10151,7 +13010,7 @@
               "null",
               "string"
             ],
-            "description": "Expected amount. Required for a Fixed bill, optional for a Variable one.",
+            "description": "Expected amount. Required for a Fixed entry, optional for a Variable one.",
             "format": "decimal",
             "example": "650.00"
           },
@@ -10160,6 +13019,7 @@
               "null",
               "string"
             ],
+            "description": "Expense or income category matching the shape. A Transfer must leave it empty.",
             "format": "uuid"
           },
           "accountId": {
@@ -10167,6 +13027,15 @@
               "null",
               "string"
             ],
+            "description": "The account, or for a Transfer the account the money leaves. Required for a Transfer.",
+            "format": "uuid"
+          },
+          "toAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The account the money arrives in. Required for a Transfer, rejected otherwise.",
             "format": "uuid"
           },
           "cadence": {
@@ -10186,13 +13055,48 @@
         },
         "example": {
           "name": "Rent",
+          "shape": "expense",
           "kind": "fixed",
           "amount": "650.00",
           "categoryId": null,
           "accountId": null,
+          "toAccountId": null,
           "cadence": "monthly",
           "nextDueDate": "2026-10-01",
           "remindDaysBefore": 3
+        }
+      },
+      "CreateTagRequest": {
+        "required": [
+          "name",
+          "scope",
+          "householdId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "description": "Display name, unique among your own tags whatever the casing.",
+            "example": "Holiday 2026"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Required when Scope is Shared; must be a household you belong to.",
+            "format": "uuid"
+          }
+        },
+        "example": {
+          "name": "Holiday 2026",
+          "scope": "personal",
+          "householdId": null
         }
       },
       "CreateTransactionRequest": {
@@ -10203,7 +13107,8 @@
           "amount",
           "date",
           "description",
-          "lines"
+          "lines",
+          "tagIds"
         ],
         "type": "object",
         "properties": {
@@ -10254,6 +13159,16 @@
             },
             "description": "Optional split lines. Their amounts must sum to the transaction amount."
           },
+          "tagIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           "currency": {
             "oneOf": [
               {
@@ -10273,6 +13188,7 @@
           "date": "2026-09-12",
           "description": "Weekly shop",
           "lines": null,
+          "tagIds": null,
           "currency": null
         }
       },
@@ -10558,6 +13474,33 @@
         "type": "string",
         "description": "Mortgage, Loan, or Other."
       },
+      "DescriptionMatch": {
+        "enum": [
+          "contains",
+          "startsWith",
+          "exact"
+        ],
+        "type": "string"
+      },
+      "DismissSubscriptionCandidateRequest": {
+        "required": [
+          "accountId",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string"
+          }
+        }
+      },
       "EnableTwoFactorRequest": {
         "required": [
           "code"
@@ -10607,8 +13550,13 @@
           "credentials.lockedOut",
           "currency.disabled",
           "decimal.malformed",
+          "email.alreadyVerified",
           "email.invalid",
+          "email.notConfigured",
+          "email.passwordUnreadable",
+          "email.sendFailed",
           "email.taken",
+          "email.tokenInvalid",
           "enum.invalid",
           "exchangeRate.unavailable",
           "export.tooManyRows",
@@ -10618,6 +13566,7 @@
           "household.lastOwner",
           "household.notMember",
           "household.required",
+          "household.scopeMismatch",
           "iban.invalid",
           "import.invalidFile",
           "import.transferAlreadyMatched",
@@ -10627,6 +13576,7 @@
           "money.positive",
           "password.incorrect",
           "password.tooWeak",
+          "passwordReset.tokenInvalid",
           "quantity.nonNegative",
           "quantity.positive",
           "range.invalid",
@@ -10637,7 +13587,13 @@
           "required",
           "resource.notFound",
           "resource.readOnly",
+          "restore.companionDeleted",
+          "restore.detailsLost",
+          "restore.expired",
+          "restore.referenceMissing",
+          "restore.slotTaken",
           "security.notHeld",
+          "session.current",
           "setup.alreadyCompleted",
           "text.invalidFormat",
           "text.tooLong",
@@ -10713,7 +13669,8 @@
           "import",
           "households",
           "multiCurrency",
-          "investments"
+          "investments",
+          "categorizationRules"
         ],
         "type": "object",
         "properties": {
@@ -10743,6 +13700,9 @@
           },
           "investments": {
             "type": "boolean"
+          },
+          "categorizationRules": {
+            "type": "boolean"
           }
         }
       },
@@ -10760,6 +13720,25 @@
         ],
         "type": "string"
       },
+      "ForgotPasswordRequest": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "minLength": 0,
+            "pattern": "^[^@]+@[^@]+$",
+            "type": "string",
+            "format": "email",
+            "example": "you@example.com"
+          }
+        },
+        "example": {
+          "email": "you@example.com"
+        }
+      },
       "GetPingResponse": {
         "required": [
           "message",
@@ -10776,13 +13755,24 @@
           }
         }
       },
+      "GoalFunding": {
+        "enum": [
+          "manual",
+          "account"
+        ],
+        "type": "string"
+      },
       "GoalResponse": {
         "required": [
           "id",
           "name",
           "targetAmount",
           "currentAmount",
-          "targetDate"
+          "targetDate",
+          "funding",
+          "fundingAccountId",
+          "fundingSharePercent",
+          "progressAmount"
         ],
         "type": "object",
         "properties": {
@@ -10810,6 +13800,27 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ]
+          },
+          "funding": {
+            "$ref": "#/components/schemas/GoalFunding"
+          },
+          "fundingAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fundingSharePercent": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "progressAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
           }
         }
       },
@@ -10985,7 +13996,7 @@
             "items": {
               "$ref": "#/components/schemas/ImportConfirmRow"
             },
-            "description": "The rows to import, as returned by preview, with any category corrections applied."
+            "description": "The rows to import, as returned by preview, with any category and tag corrections applied."
           }
         }
       },
@@ -11066,6 +14077,16 @@
                 "$ref": "#/components/schemas/Currency"
               }
             ]
+          },
+          "tagIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -11107,7 +14128,10 @@
           "type",
           "isDuplicate",
           "looksLikeTransfer",
-          "currency"
+          "currency",
+          "suggestedCategoryId",
+          "suggestedTagIds",
+          "matchedRuleName"
         ],
         "type": "object",
         "properties": {
@@ -11144,6 +14168,26 @@
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "suggestedCategoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "suggestedTagIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "matchedRuleName": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -11350,6 +14394,29 @@
           }
         }
       },
+      "MoveCategorizationRuleRequest": {
+        "required": [
+          "direction"
+        ],
+        "type": "object",
+        "properties": {
+          "direction": {
+            "$ref": "#/components/schemas/MoveDirection"
+          }
+        },
+        "example": {
+          "direction": "up"
+        }
+      },
+      "MoveDirection": {
+        "enum": [
+          "up",
+          "down"
+        ],
+        "type": "string",
+        "description": "up moves the rule earlier, down moves it later.",
+        "example": "up"
+      },
       "NetWorthHistoryResponse": {
         "required": [
           "items"
@@ -11429,12 +14496,55 @@
         ],
         "type": "string"
       },
+      "NotificationPayload": {
+        "type": "object",
+        "properties": {
+          "dueDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "thresholdPercent": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "period": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/BudgetPeriod"
+              }
+            ]
+          },
+          "shape": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecurringBillShape"
+              }
+            ]
+          }
+        }
+      },
       "NotificationResponse": {
         "required": [
           "id",
           "type",
           "title",
           "message",
+          "payload",
           "relatedType",
           "relatedId",
           "channel",
@@ -11455,6 +14565,9 @@
           },
           "message": {
             "type": "string"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/NotificationPayload"
           },
           "relatedType": {
             "type": [
@@ -11483,7 +14596,9 @@
       },
       "NotificationType": {
         "enum": [
-          "billDue"
+          "billDue",
+          "budgetWarning",
+          "budgetExceeded"
         ],
         "type": "string"
       },
@@ -11591,6 +14706,35 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TransferResponse"
+            }
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResponseOfTrashEntryResponse": {
+        "required": [
+          "items",
+          "page",
+          "pageSize",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrashEntryResponse"
             }
           },
           "page": {
@@ -11806,7 +14950,8 @@
       "PublicSettingsResponse": {
         "required": [
           "instanceName",
-          "defaultLanguage"
+          "defaultLanguage",
+          "emailEnabled"
         ],
         "type": "object",
         "properties": {
@@ -11818,6 +14963,9 @@
           },
           "defaultLanguage": {
             "type": "string"
+          },
+          "emailEnabled": {
+            "type": "boolean"
           }
         }
       },
@@ -11858,10 +15006,12 @@
         "required": [
           "id",
           "name",
+          "shape",
           "kind",
           "amount",
           "categoryId",
           "accountId",
+          "toAccountId",
           "cadence",
           "nextDueDate",
           "remindDaysBefore",
@@ -11875,6 +15025,9 @@
           },
           "name": {
             "type": "string"
+          },
+          "shape": {
+            "$ref": "#/components/schemas/RecurringBillShape"
           },
           "kind": {
             "$ref": "#/components/schemas/RecurringBillKind"
@@ -11900,6 +15053,13 @@
             ],
             "format": "uuid"
           },
+          "toAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "cadence": {
             "$ref": "#/components/schemas/RecurringBillCadence"
           },
@@ -11915,6 +15075,57 @@
           }
         }
       },
+      "RecurringBillShape": {
+        "enum": [
+          "expense",
+          "income",
+          "transfer"
+        ],
+        "type": "string",
+        "description": "Expense, Income, or Transfer. Decides what a confirmation writes."
+      },
+      "ReportComparisonMode": {
+        "enum": [
+          "none",
+          "previousPeriod",
+          "previousYear"
+        ],
+        "type": "string"
+      },
+      "ReportComparisonTotals": {
+        "required": [
+          "mode",
+          "periodStart",
+          "periodEnd",
+          "totalIncome",
+          "totalExpense",
+          "net"
+        ],
+        "type": "object",
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/ReportComparisonMode"
+          },
+          "periodStart": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "periodEnd": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "totalIncome": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "totalExpense": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "net": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "ReportSummaryResponse": {
         "required": [
           "periodStart",
@@ -11923,8 +15134,10 @@
           "totalExpense",
           "net",
           "expenseByCategory",
+          "incomeByCategory",
           "trend",
-          "trendBucket"
+          "trendBucket",
+          "expenseByTag"
         ],
         "type": "object",
         "properties": {
@@ -11952,6 +15165,12 @@
               "$ref": "#/components/schemas/CategoryBreakdownItem"
             }
           },
+          "incomeByCategory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CategoryBreakdownItem"
+            }
+          },
           "trend": {
             "type": "array",
             "items": {
@@ -11960,6 +15179,22 @@
           },
           "trendBucket": {
             "type": "string"
+          },
+          "expenseByTag": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TagBreakdownItem"
+            }
+          },
+          "comparison": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ReportComparisonTotals"
+              }
+            ]
           }
         }
       },
@@ -11981,7 +15216,67 @@
           "expense": {
             "type": "string",
             "format": "decimal"
+          },
+          "comparisonBucketStart": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "comparisonIncome": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "comparisonExpense": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
           }
+        }
+      },
+      "ResetPasswordRequest": {
+        "required": [
+          "email",
+          "token",
+          "newPassword"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "minLength": 0,
+            "pattern": "^[^@]+@[^@]+$",
+            "type": "string",
+            "format": "email",
+            "example": "you@example.com"
+          },
+          "token": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The token from the emailed link, sent back unchanged.",
+            "example": "CfDJ8…"
+          },
+          "newPassword": {
+            "maxLength": 100,
+            "minLength": 8,
+            "type": "string",
+            "example": "correct horse battery staple"
+          }
+        },
+        "example": {
+          "email": "you@example.com",
+          "token": "CfDJ8…",
+          "newPassword": "correct horse battery staple"
         }
       },
       "ResetUserPasswordRequest": {
@@ -12055,6 +15350,96 @@
           "rows": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "RestoreDeletedRequest": {
+        "required": [
+          "kind",
+          "entityId"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/TrashKind"
+          },
+          "entityId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "The id the record had before it was deleted.",
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "example": {
+          "kind": "transaction",
+          "entityId": "00000000-0000-0000-0000-000000000000"
+        }
+      },
+      "RunRulesRequest": {
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Narrows the run to one account; leave it out for every account you can see.",
+            "format": "uuid"
+          },
+          "recategorize": {
+            "type": "boolean",
+            "description": "false, the default, leaves every row that already carries a category alone. true also offers those rows to the rules and replaces the category on the ones that match.",
+            "default": false,
+            "example": false
+          }
+        },
+        "example": {
+          "accountId": null,
+          "recategorize": false
+        }
+      },
+      "RunRulesResponse": {
+        "required": [
+          "rules",
+          "total",
+          "recategorize"
+        ],
+        "type": "object",
+        "properties": {
+          "rules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RunRulesRow"
+            }
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "recategorize": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RunRulesRow": {
+        "required": [
+          "ruleId",
+          "name",
+          "rowCount"
+        ],
+        "type": "object",
+        "properties": {
+          "ruleId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rowCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -12146,7 +15531,7 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ],
-            "description": "Defaults to today when a price is given without a date."
+            "description": "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone."
           }
         }
       },
@@ -12156,6 +15541,22 @@
           "shared"
         ],
         "type": "string"
+      },
+      "SecurityPriceResponse": {
+        "required": [
+          "date",
+          "price"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "price": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
       },
       "SecurityResponse": {
         "required": [
@@ -12229,6 +15630,48 @@
         ],
         "type": "string"
       },
+      "SessionResponse": {
+        "required": [
+          "id",
+          "createdAt",
+          "lastSeenAt",
+          "expiresAt",
+          "isPersistent",
+          "userAgent",
+          "isCurrent"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "isPersistent": {
+            "type": "boolean"
+          },
+          "userAgent": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isCurrent": {
+            "type": "boolean"
+          }
+        }
+      },
       "SetSecurityPriceRequest": {
         "required": [
           "lastPrice"
@@ -12248,7 +15691,7 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ],
-            "description": "Defaults to today."
+            "description": "Defaults to today in the installation time zone. Not in the future."
           }
         }
       },
@@ -12383,12 +15826,552 @@
           }
         }
       },
+      "SmtpEncryption": {
+        "enum": [
+          "none",
+          "startTls",
+          "sslOnConnect"
+        ],
+        "type": "string",
+        "description": "none, startTls or sslOnConnect."
+      },
+      "SmtpSettingsResponse": {
+        "required": [
+          "enabled",
+          "host",
+          "port",
+          "encryption",
+          "userName",
+          "hasPassword",
+          "fromAddress",
+          "fromName"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "host": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "port": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "encryption": {
+            "$ref": "#/components/schemas/SmtpEncryption"
+          },
+          "userName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasPassword": {
+            "type": "boolean"
+          },
+          "fromAddress": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fromName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SmtpTestResponse": {
+        "required": [
+          "sentTo"
+        ],
+        "type": "object",
+        "properties": {
+          "sentTo": {
+            "type": "string"
+          }
+        }
+      },
       "SortDirection": {
         "enum": [
           "asc",
           "desc"
         ],
         "type": "string"
+      },
+      "SubscriptionCandidateResponse": {
+        "required": [
+          "description",
+          "accountId",
+          "categoryId",
+          "cadence",
+          "typicalAmount",
+          "occurrenceDates",
+          "nextExpectedDate"
+        ],
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "cadence": {
+            "$ref": "#/components/schemas/RecurringBillCadence"
+          },
+          "typicalAmount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "occurrenceDates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DateOnly"
+            }
+          },
+          "nextExpectedDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
+      "SyntheticCategoryGroup": {
+        "enum": [
+          "investmentIncome",
+          "investmentTaxesAndFees"
+        ],
+        "type": "string"
+      },
+      "TagBreakdownItem": {
+        "required": [
+          "tagId",
+          "tagName",
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "tagId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "tagName": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "comparisonAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
+      "TagResponse": {
+        "required": [
+          "id",
+          "name",
+          "scope",
+          "householdId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "TaxCashEntryResponse": {
+        "required": [
+          "id",
+          "date",
+          "accountId",
+          "type",
+          "symbol",
+          "description",
+          "currency",
+          "amount",
+          "reportingAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "type": {
+            "$ref": "#/components/schemas/InvestmentTransactionType"
+          },
+          "symbol": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "reportingAmount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "TaxDisposalResponse": {
+        "required": [
+          "id",
+          "date",
+          "accountId",
+          "securityId",
+          "symbol",
+          "name",
+          "currency",
+          "quantity",
+          "proceeds",
+          "costBasis",
+          "gain",
+          "reportingProceeds",
+          "reportingCostBasis",
+          "reportingGain",
+          "lots"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "securityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "quantity": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "proceeds": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "costBasis": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "gain": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "reportingProceeds": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "reportingCostBasis": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "reportingGain": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "lots": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxLotResponse"
+            }
+          }
+        }
+      },
+      "TaxLotResponse": {
+        "required": [
+          "acquiredOn",
+          "quantity",
+          "cost",
+          "reportingCost"
+        ],
+        "type": "object",
+        "properties": {
+          "acquiredOn": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "quantity": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "cost": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "reportingCost": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "TaxSummaryAccount": {
+        "required": [
+          "id",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "TaxSummaryResponse": {
+        "required": [
+          "year",
+          "reportingCurrency",
+          "availableYears",
+          "accounts",
+          "totals",
+          "disposals",
+          "cashEntries",
+          "isComplete"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "reportingCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "availableYears": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxSummaryAccount"
+            }
+          },
+          "totals": {
+            "$ref": "#/components/schemas/TaxSummaryTotals"
+          },
+          "disposals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxDisposalResponse"
+            }
+          },
+          "cashEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxCashEntryResponse"
+            }
+          },
+          "isComplete": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TaxSummaryTotals": {
+        "required": [
+          "proceeds",
+          "costBasis",
+          "gains",
+          "losses",
+          "realizedGain",
+          "dividends",
+          "interest",
+          "withholdingTax",
+          "fees"
+        ],
+        "type": "object",
+        "properties": {
+          "proceeds": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "costBasis": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "gains": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "losses": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "realizedGain": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "dividends": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "interest": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "withholdingTax": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "fees": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "TestCategorizationRuleRequest": {
+        "required": [
+          "match",
+          "pattern",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "match": {
+            "$ref": "#/components/schemas/DescriptionMatch"
+          },
+          "pattern": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string",
+            "description": "The text the draft rule compares with.",
+            "example": "MAXIMA"
+          },
+          "description": {
+            "maxLength": 500,
+            "minLength": 0,
+            "type": "string",
+            "description": "The sample description typed into the form.",
+            "example": "Pirkinys MAXIMA X-123 VILNIUS"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "An optional sample amount; leave it out to test the description alone.",
+            "format": "decimal"
+          },
+          "minAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The draft rule's lowest amount.",
+            "format": "decimal"
+          },
+          "maxAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The draft rule's highest amount.",
+            "format": "decimal"
+          }
+        },
+        "example": {
+          "match": "contains",
+          "pattern": "MAXIMA",
+          "description": "Pirkinys MAXIMA X-123 VILNIUS",
+          "amount": null,
+          "minAmount": null,
+          "maxAmount": null
+        }
+      },
+      "TestCategorizationRuleResponse": {
+        "required": [
+          "matches",
+          "descriptionMatches",
+          "amountMatches"
+        ],
+        "type": "object",
+        "properties": {
+          "matches": {
+            "type": "boolean"
+          },
+          "descriptionMatches": {
+            "type": "boolean"
+          },
+          "amountMatches": {
+            "type": "boolean"
+          }
+        }
       },
       "TransactionLineRequest": {
         "required": [
@@ -12463,7 +16446,8 @@
           "createdAt",
           "lines",
           "currency",
-          "reportingAmount"
+          "reportingAmount",
+          "tagIds"
         ],
         "type": "object",
         "properties": {
@@ -12523,6 +16507,13 @@
           "reportingAmount": {
             "type": "string",
             "format": "decimal"
+          },
+          "tagIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
           }
         }
       },
@@ -12628,6 +16619,50 @@
             "type": "boolean"
           }
         }
+      },
+      "TrashEntryResponse": {
+        "required": [
+          "id",
+          "kind",
+          "entityId",
+          "description",
+          "deletedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/TrashKind"
+          },
+          "entityId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": "string"
+          },
+          "deletedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TrashKind": {
+        "enum": [
+          "transaction",
+          "transfer",
+          "conversion",
+          "budget",
+          "goal",
+          "asset",
+          "debt",
+          "recurringBill"
+        ],
+        "type": "string",
+        "description": "Which kind of record to bring back, as listed by GET /api/trash."
       },
       "TwoFactorSetupResponse": {
         "required": [
@@ -12772,7 +16807,9 @@
       "UpdateBudgetRequest": {
         "required": [
           "categoryId",
-          "limitAmount"
+          "limitAmount",
+          "period",
+          "rolloverEnabled"
         ],
         "type": "object",
         "properties": {
@@ -12786,11 +16823,95 @@
             "type": "string",
             "format": "decimal",
             "example": "450.00"
+          },
+          "period": {
+            "$ref": "#/components/schemas/BudgetPeriod"
+          },
+          "rolloverEnabled": {
+            "type": "boolean",
+            "description": "Whether the previous window's remainder adjusts this window's limit.",
+            "example": true
           }
         },
         "example": {
           "categoryId": "00000000-0000-0000-0000-000000000000",
-          "limitAmount": "450.00"
+          "limitAmount": "450.00",
+          "period": "monthly",
+          "rolloverEnabled": true
+        }
+      },
+      "UpdateCategorizationRuleRequest": {
+        "required": [
+          "name",
+          "match",
+          "pattern",
+          "tagIds"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "example": "Groceries"
+          },
+          "match": {
+            "$ref": "#/components/schemas/DescriptionMatch"
+          },
+          "pattern": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": "string",
+            "example": "MAXIMA"
+          },
+          "tagIds": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "example": [ ]
+          },
+          "accountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "minAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "maxAmount": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid",
+            "example": "00000000-0000-0000-0000-000000000000"
+          }
+        },
+        "example": {
+          "name": "Groceries",
+          "match": "contains",
+          "pattern": "MAXIMA",
+          "tagIds": [ ],
+          "accountId": null,
+          "minAmount": null,
+          "maxAmount": null,
+          "categoryId": "00000000-0000-0000-0000-000000000000"
         }
       },
       "UpdateCategoryRequest": {
@@ -12969,7 +17090,10 @@
           "name",
           "targetAmount",
           "currentAmount",
-          "targetDate"
+          "targetDate",
+          "funding",
+          "fundingAccountId",
+          "fundingSharePercent"
         ],
         "type": "object",
         "properties": {
@@ -12985,7 +17109,11 @@
             "example": "5000.00"
           },
           "currentAmount": {
-            "type": "string",
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Amount saved so far, zero or more. Required for a manual goal, ignored for a goal funded from an account.",
             "format": "decimal",
             "example": "1500.00"
           },
@@ -12999,13 +17127,37 @@
               }
             ],
             "example": "2027-01-01"
+          },
+          "funding": {
+            "$ref": "#/components/schemas/GoalFunding"
+          },
+          "fundingAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The account that funds the goal. Required when funding is account, and must be empty otherwise.",
+            "format": "uuid"
+          },
+          "fundingSharePercent": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": [
+              "null",
+              "integer"
+            ],
+            "description": "The share of that account's balance that counts, as a whole percentage from 1 to 100. Defaults to 100.",
+            "format": "int32"
           }
         },
         "example": {
           "name": "Emergency fund",
           "targetAmount": "5000.00",
           "currentAmount": "1500.00",
-          "targetDate": "2027-01-01"
+          "targetDate": "2027-01-01",
+          "funding": "manual",
+          "fundingAccountId": null,
+          "fundingSharePercent": null
         }
       },
       "UpdateHouseholdRequest": {
@@ -13137,7 +17289,8 @@
         "required": [
           "displayName",
           "currentPassword",
-          "newPassword"
+          "newPassword",
+          "billReminderEmails"
         ],
         "type": "object",
         "properties": {
@@ -13162,21 +17315,29 @@
               "string"
             ],
             "description": "Omit to leave the password alone."
+          },
+          "billReminderEmails": {
+            "type": "boolean",
+            "description": "Send a reminder email beside the in-app notification of a recurring entry. Off by default, and it needs both a working mail server and a confirmed address to have any effect.",
+            "example": false
           }
         },
         "example": {
           "displayName": "Justas",
           "currentPassword": null,
-          "newPassword": null
+          "newPassword": null,
+          "billReminderEmails": false
         }
       },
       "UpdateRecurringBillRequest": {
         "required": [
           "name",
+          "shape",
           "kind",
           "amount",
           "categoryId",
           "accountId",
+          "toAccountId",
           "cadence",
           "nextDueDate",
           "remindDaysBefore",
@@ -13189,6 +17350,9 @@
             "minLength": 0,
             "type": "string",
             "example": "Rent"
+          },
+          "shape": {
+            "$ref": "#/components/schemas/RecurringBillShape"
           },
           "kind": {
             "$ref": "#/components/schemas/RecurringBillKind"
@@ -13215,6 +17379,13 @@
             ],
             "format": "uuid"
           },
+          "toAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
           "cadence": {
             "$ref": "#/components/schemas/RecurringBillCadence"
           },
@@ -13235,10 +17406,12 @@
         },
         "example": {
           "name": "Rent",
+          "shape": "expense",
           "kind": "fixed",
           "amount": "675.00",
           "categoryId": null,
           "accountId": null,
+          "toAccountId": null,
           "cadence": "monthly",
           "nextDueDate": "2026-11-01",
           "remindDaysBefore": 3,
@@ -13309,8 +17482,127 @@
           }
         }
       },
+      "UpdateSmtpSettingsRequest": {
+        "required": [
+          "enabled",
+          "host",
+          "port",
+          "encryption",
+          "userName",
+          "password",
+          "fromAddress",
+          "fromName"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "host": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "smtp.example.com"
+          },
+          "port": {
+            "maximum": 65535,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32",
+            "example": 587
+          },
+          "encryption": {
+            "$ref": "#/components/schemas/SmtpEncryption"
+          },
+          "userName": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "finance@example.com"
+          },
+          "password": {
+            "maxLength": 255,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Leave empty to keep the stored password.",
+            "example": "app-password"
+          },
+          "fromAddress": {
+            "maxLength": 320,
+            "minLength": 0,
+            "pattern": "^[^@]+@[^@]+$",
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "email",
+            "example": "finance@example.com"
+          },
+          "fromName": {
+            "maxLength": 100,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "example": "Jx Finance"
+          }
+        },
+        "example": {
+          "enabled": true,
+          "host": "smtp.example.com",
+          "port": 587,
+          "encryption": "startTls",
+          "userName": "finance@example.com",
+          "password": "app-password",
+          "fromAddress": "finance@example.com",
+          "fromName": "Jx Finance"
+        }
+      },
+      "UpdateTagRequest": {
+        "required": [
+          "name",
+          "scope",
+          "householdId"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 50,
+            "minLength": 0,
+            "type": "string",
+            "example": "Holiday 2026"
+          },
+          "scope": {
+            "$ref": "#/components/schemas/Scope"
+          },
+          "householdId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        },
+        "example": {
+          "name": "Holiday 2026",
+          "scope": "personal",
+          "householdId": null
+        }
+      },
       "UpdateTransactionRequest": {
         "required": [
+          "tagIds",
           "accountId",
           "categoryId",
           "type",
@@ -13364,6 +17656,16 @@
               "$ref": "#/components/schemas/TransactionLineRequest"
             }
           },
+          "tagIds": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
           "currency": {
             "oneOf": [
               {
@@ -13383,6 +17685,7 @@
           "date": "2026-09-12",
           "description": "Weekly shop",
           "lines": null,
+          "tagIds": null,
           "currency": null
         }
       },
@@ -13507,7 +17810,9 @@
           "displayName",
           "role",
           "twoFactorEnabled",
-          "isActive"
+          "isActive",
+          "emailConfirmed",
+          "billReminderEmails"
         ],
         "type": "object",
         "properties": {
@@ -13529,6 +17834,12 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "emailConfirmed": {
+            "type": "boolean"
+          },
+          "billReminderEmails": {
+            "type": "boolean"
           }
         }
       },
@@ -13540,6 +17851,77 @@
           "status"
         ],
         "type": "string"
+      },
+      "ValueHistoryPoint": {
+        "required": [
+          "date",
+          "marketValue",
+          "costBasis",
+          "isPartial"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "marketValue": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "costBasis": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "isPartial": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ValueHistoryResponse": {
+        "required": [
+          "reportingCurrency",
+          "points"
+        ],
+        "type": "object",
+        "properties": {
+          "reportingCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ValueHistoryPoint"
+            }
+          }
+        }
+      },
+      "VerifyEmailRequest": {
+        "required": [
+          "email",
+          "token"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "minLength": 0,
+            "pattern": "^[^@]+@[^@]+$",
+            "type": "string",
+            "format": "email",
+            "example": "you@example.com"
+          },
+          "token": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": "string",
+            "description": "The token from the emailed link, sent back unchanged.",
+            "example": "CfDJ8…"
+          }
+        },
+        "example": {
+          "email": "you@example.com",
+          "token": "CfDJ8…"
+        }
       }
     },
     "securitySchemes": {
@@ -13576,6 +17958,9 @@
       "description": "The income and expense categories transactions are attributed to."
     },
     {
+      "name": "CategorizationRules"
+    },
+    {
       "name": "Conversions",
       "description": "One currency exchanged for another inside a single account."
     },
@@ -13609,7 +17994,7 @@
     },
     {
       "name": "Notifications",
-      "description": "In-app notifications raised by background jobs."
+      "description": "In-app notifications raised by background jobs: bill reminders and budget alerts."
     },
     {
       "name": "Diagnostics",
@@ -13617,7 +18002,7 @@
     },
     {
       "name": "RecurringBills",
-      "description": "Scheduled bills and income, and confirming a due occurrence."
+      "description": "Recurring entries — scheduled expenses, income and transfers — and confirming a due occurrence."
     },
     {
       "name": "Reports",
@@ -13627,12 +18012,18 @@
       "name": "Settings"
     },
     {
+      "name": "Tags"
+    },
+    {
       "name": "Transactions",
       "description": "The ledger: single and split transactions, plus CSV and PDF exports."
     },
     {
       "name": "Transfers",
       "description": "Money moved between two of your own accounts, in one currency or across two."
+    },
+    {
+      "name": "Trash"
     },
     {
       "name": "Users",

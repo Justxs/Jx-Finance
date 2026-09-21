@@ -23,7 +23,7 @@ public static class BackupDatabase
                 t.Schema is null ? Quote(t.Name) : $"{Quote(t.Schema)}.{Quote(t.Name)}",
                 t.Columns.Select(c => new ColumnShape(c.Name, c.StoreType)).ToList(),
                 t.ForeignKeyConstraints.Select(f => f.Name).ToList(),
-                t.Name != sessions))
+                !transient.Contains(t.Name, StringComparer.Ordinal)))
             .ToList();
     }
 

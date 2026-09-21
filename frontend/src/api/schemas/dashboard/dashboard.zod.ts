@@ -12,6 +12,9 @@ import * as zod from "zod";
  * @summary Get spending split by category
  */
 export const categoryBreakdownResponseItemsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const categoryBreakdownResponseItemsItemComparisonAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const CategoryBreakdownResponse = zod.object({
   items: zod.array(
