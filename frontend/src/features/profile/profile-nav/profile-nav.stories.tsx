@@ -17,6 +17,8 @@ export const Default: Story = {};
 
 export const SecurityActive: Story = { args: { current: "security" } };
 
+export const SessionsActive: Story = { args: { current: "sessions" } };
+
 export const WithoutImport: Story = {
   args: { sections: profileSections.filter((section) => section !== "import") },
 };

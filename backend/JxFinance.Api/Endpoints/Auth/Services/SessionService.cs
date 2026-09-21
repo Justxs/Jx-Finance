@@ -3,8 +3,10 @@ using System.Security.Cryptography;
 using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
+using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
+using JxFinance.Endpoints.Auth.Sessions;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
@@ -20,6 +22,7 @@ public sealed class SessionService(
     AppDbContext db,
     JwtSigningKey signingKey,
     IConfiguration configuration,
+    ICurrentUser currentUser,
     IClock clock) : ISessionService
 {
     private static readonly TimeSpan AccessTokenLifetime = TimeSpan.FromMinutes(10);
@@ -44,6 +47,8 @@ public sealed class SessionService(
             IsPersistent = rememberMe,
             CreatedAt = now,
             ExpiresAt = now.Add(rememberMe ? RememberMeSessionLifetime : DefaultSessionLifetime),
+            LastSeenAt = now,
+            UserAgent = ReadUserAgent(),
         };
         db.Add(session);
         await IssueAsync(session, user, cancellationToken);
@@ -94,7 +99,8 @@ public sealed class SessionService(
                 setters => setters
                     .SetProperty(s => s.TokenHash, newHash)
                     .SetProperty(s => s.PreviousTokenHash, currentHash)
-                    .SetProperty(s => s.RotatedAt, now),
+                    .SetProperty(s => s.RotatedAt, now)
+                    .SetProperty(s => s.LastSeenAt, now),
                 cancellationToken);
 
         if (rotated == 0 && !await db.UserSessions.AnyAsync(s => s.Id == session.Id, cancellationToken))
@@ -132,6 +138,57 @@ public sealed class SessionService(
             await db.UserSessions.Where(s => s.Id == sessionId).ExecuteDeleteAsync(cancellationToken);
 
         ClearCookies();
+    }
+
+    public async Task<IReadOnlyList<SessionResponse>> GetSessionsAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.Id;
+        var currentId = CurrentSessionId();
+        var stamp = Http.User.FindFirstValue(AuthClaims.SecurityStamp);
+        var now = clock.UtcNow;
+
+        var sessions = await db.UserSessions
+            .AsNoTracking()
+            .Where(s => s.UserId == userId && s.ExpiresAt > now && s.SecurityStamp == stamp)
+            .OrderByDescending(s => s.LastSeenAt)
+            .ThenByDescending(s => s.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return sessions
+            .Select(s => new SessionResponse(s.Id, s.CreatedAt, s.LastSeenAt, s.ExpiresAt, s.IsPersistent, s.UserAgent, s.Id == currentId))
+            .ToList();
+    }
+
+    public async Task<Result<Guid>> RevokeAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var userId = currentUser.Id;
+        if (!await db.UserSessions.AnyAsync(s => s.Id == id && s.UserId == userId, cancellationToken))
+            return new DomainError(ErrorCodes.ResourceNotFound, "Session not found.");
+
+        if (id == CurrentSessionId())
+            return new DomainError(ErrorCodes.SessionCurrent, "Sign out to end the session of this browser.");
+
+        await db.UserSessions.Where(s => s.Id == id && s.UserId == userId).ExecuteDeleteAsync(cancellationToken);
+        return id;
+    }
+
+    public async Task RevokeOthersAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.Id;
+        var currentId = CurrentSessionId();
+        await db.UserSessions.Where(s => s.UserId == userId && s.Id != currentId).ExecuteDeleteAsync(cancellationToken);
+    }
+
+    private Guid? CurrentSessionId() =>
+        Guid.TryParse(Http.User.FindFirstValue(AuthClaims.SessionId), out var sessionId) ? sessionId : null;
+
+    private string? ReadUserAgent()
+    {
+        var userAgent = Http.Request.Headers.UserAgent.ToString().Trim();
+        if (userAgent.Length == 0)
+            return null;
+
+        return userAgent.Length > UserSession.UserAgentMaxLength ? userAgent[..UserSession.UserAgentMaxLength] : userAgent;
     }
 
     private async Task IssueAsync(UserSession session, AppUser user, CancellationToken cancellationToken)

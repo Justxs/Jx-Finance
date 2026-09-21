@@ -1,7 +1,10 @@
 using System.Security.Claims;
 using FastEndpoints.Security;
+using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Infrastructure.Auth;
 
@@ -47,6 +50,17 @@ public static class JwtCookieAuthentication
             || user.IsDeactivated)
         {
             context.Fail("The session is no longer valid.");
+            return;
+        }
+
+        var now = context.HttpContext.RequestServices.GetRequiredService<IClock>().UtcNow;
+        var db = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+        if (!Guid.TryParse(principal.FindFirstValue(AuthClaims.SessionId), out var sessionId)
+            || !await db.UserSessions.AnyAsync(
+                s => s.Id == sessionId && s.UserId == userId && s.ExpiresAt > now,
+                context.HttpContext.RequestAborted))
+        {
+            context.Fail("The session has ended.");
         }
     }
 }

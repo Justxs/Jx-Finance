@@ -15,7 +15,7 @@ public sealed class RestoreBackupSummary : Summary<RestoreBackupEndpoint, Restor
             + "backup. The backups kept on the server are files, not data, so the list survives a restore. "
             + "Every sign-in session is deleted and the caller's cookies are cleared, so the client "
             + "must send the user to sign in again with a password from the backup; other signed-in users "
-            + "are asked to sign in once their short-lived access token runs out. The backup must come from "
+            + "are asked to sign in on their next request. The backup must come from "
             + "the same database version as the running application; an older or newer one answers "
             + "backup.schemaMismatch. A backup that holds more data than the installation accepts answers "
             + "backup.tooLarge. Rate limited to 5 attempts per five minutes per client.";
