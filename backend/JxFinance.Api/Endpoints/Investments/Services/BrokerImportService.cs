@@ -95,7 +95,11 @@ public sealed class BrokerImportService(
     }
 
     private static bool IsSecurityCollision(DbUpdateException exception) =>
-        exception.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation, TableName: "Securities" };
+        exception.InnerException is PostgresException
+        {
+            SqlState: PostgresErrorCodes.UniqueViolation,
+            TableName: "Securities" or "SecurityPrices",
+        };
 
     public async Task<IReadOnlyList<BrokerConnectionResponse>> GetConnectionsAsync(CancellationToken cancellationToken)
     {

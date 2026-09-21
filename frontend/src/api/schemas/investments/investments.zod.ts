@@ -419,7 +419,9 @@ export const CreateSecurityBody = zod.object({
   lastPriceDate: zod
     .union([zod.null(), zod.iso.date()])
     .optional()
-    .describe("Defaults to today when a price is given without a date."),
+    .describe(
+      "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone.",
+    ),
 });
 
 export const createSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -529,7 +531,9 @@ export const UpdateSecurityBody = zod.object({
   lastPriceDate: zod
     .union([zod.null(), zod.iso.date()])
     .optional()
-    .describe("Defaults to today when a price is given without a date."),
+    .describe(
+      "Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone.",
+    ),
 });
 
 export const updateSecurityResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -585,7 +589,10 @@ export const setSecurityPriceBodyLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,
 
 export const SetSecurityPriceBody = zod.object({
   lastPrice: zod.stringFormat("decimal", setSecurityPriceBodyLastPriceRegExp),
-  lastPriceDate: zod.union([zod.null(), zod.iso.date()]).optional().describe("Defaults to today."),
+  lastPriceDate: zod
+    .union([zod.null(), zod.iso.date()])
+    .optional()
+    .describe("Defaults to today in the installation time zone. Not in the future."),
 });
 
 export const setSecurityPriceResponseLastPriceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -974,4 +981,54 @@ export const UpdateInvestmentTransactionResponse = zod.object({
   description: zod.string().nullable(),
   source: zod.enum(["manual", "interactiveBrokers"]),
   createdAt: zod.iso.datetime({ offset: true }),
+});
+
+/**
+ * Returns the market value and the invested cost of the caller's open positions for a series of dates, in the reporting currency. Nothing is stored: for every date the buys, sells and splits up to that date are replayed first in, first out, each open position is valued at the latest recorded price on or before the date and converted at the exchange rate on or before the date, and the cost is what the remaining lots cost at the rate of their purchase. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and starts no earlier than the first trade. A point is partial when a position had no price or no exchange rate yet, or an imported history sold more than it bought; such a position is left out of both figures.
+ * @summary Get the portfolio value over time
+ */
+export const valueHistoryResponsePointsItemMarketValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const valueHistoryResponsePointsItemCostBasisRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const ValueHistoryResponse = zod.object({
+  reportingCurrency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  points: zod.array(
+    zod.object({
+      date: zod.iso.date(),
+      marketValue: zod.stringFormat("decimal", valueHistoryResponsePointsItemMarketValueRegExp),
+      costBasis: zod.stringFormat("decimal", valueHistoryResponsePointsItemCostBasisRegExp),
+      isPartial: zod.boolean(),
+    }),
+  ),
 });

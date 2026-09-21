@@ -13,6 +13,8 @@ public interface IExchangeRateService
 
     Task<RateTable> GetForDateAsync(DateOnly date, CancellationToken cancellationToken);
 
+    Task<RateHistory> GetHistoryAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
     Task<Result<decimal>> ToReportingAsync(Money amount, DateOnly date, CancellationToken cancellationToken);
 
     Task<Result<decimal>> ConvertAsync(Money amount, Currency to, DateOnly date, CancellationToken cancellationToken);

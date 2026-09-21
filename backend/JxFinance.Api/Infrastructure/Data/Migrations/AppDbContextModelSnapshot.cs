@@ -566,6 +566,23 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("Securities");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Investments.SecurityPrice", b =>
+                {
+                    b.Property<Guid>("SecurityId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 8)
+                        .HasColumnType("numeric(18,8)");
+
+                    b.HasKey("SecurityId", "Date");
+
+                    b.ToTable("SecurityPrices");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.NetWorth.Asset", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1462,6 +1479,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Investments.SecurityPrice", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Investments.Security", null)
+                        .WithMany()
+                        .HasForeignKey("SecurityId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

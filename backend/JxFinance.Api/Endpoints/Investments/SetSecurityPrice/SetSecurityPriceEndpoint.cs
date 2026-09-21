@@ -6,19 +6,19 @@ using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Investments.SetSecurityPrice;
 
-public sealed class SetSecurityPriceEndpoint(IInvestmentService investmentService)
+public sealed class SetSecurityPriceEndpoint(ISecurityPriceService priceService)
     : Endpoint<SetSecurityPriceRequest, SecurityResponse>
 {
     public override void Configure()
     {
         Put("investments/securities/{id:guid}/price");
         Group<InvestmentsGroup>();
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(SetSecurityPriceRequest req, CancellationToken ct)
     {
-        var updated = (await investmentService.SetSecurityPriceAsync(req, User.IsInRole(AppRoles.Admin), ct)).ValueOrThrow();
+        var updated = (await priceService.SetPriceAsync(req, User.IsInRole(AppRoles.Admin), ct)).ValueOrThrow();
         await Send.OkAsync(updated, ct);
     }
 }

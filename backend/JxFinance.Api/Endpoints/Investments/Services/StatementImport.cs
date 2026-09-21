@@ -68,7 +68,7 @@ public sealed class StatementImport(
             return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
         }
 
-        UpdatePrices();
+        await UpdatePricesAsync(cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);
 
@@ -316,16 +316,29 @@ public sealed class StatementImport(
         return null;
     }
 
-    private void UpdatePrices()
+    private async Task UpdatePricesAsync(CancellationToken cancellationToken)
     {
-        foreach (var position in statement.OpenPositions.Where(p => SecurityCategories.Contains(p.Instrument.AssetCategory)))
+        var marks = statement.OpenPositions
+            .Where(p => SecurityCategories.Contains(p.Instrument.AssetCategory))
+            .Select(p => (Security: Find(p.Instrument), p.Date, p.MarkPrice))
+            .Where(m => m.Security is not null)
+            .ToList();
+        if (marks.Count == 0)
         {
-            if (Find(position.Instrument) is { } security
-                && (security.LastPriceDate is null || position.Date >= security.LastPriceDate)
-                && (security.LastPrice != position.MarkPrice || security.LastPriceDate != position.Date))
+            return;
+        }
+
+        var dates = marks.Select(m => m.Date).Distinct().ToList();
+        var securityIds = marks.Select(m => m.Security!.Id).Distinct().ToList();
+        var recorded = (await db.SecurityPrices
+                .Where(p => dates.Contains(p.Date) && securityIds.Contains(p.SecurityId))
+                .ToListAsync(cancellationToken))
+            .ToDictionary(p => (p.SecurityId, p.Date));
+
+        foreach (var (security, date, markPrice) in marks)
+        {
+            if (SecurityPriceBook.Record(db, security!, date, markPrice, recorded.GetValueOrDefault((security!.Id, date))))
             {
-                security.LastPrice = position.MarkPrice;
-                security.LastPriceDate = position.Date;
                 counts.PricesUpdated++;
             }
         }

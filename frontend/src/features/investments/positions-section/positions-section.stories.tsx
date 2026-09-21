@@ -74,6 +74,15 @@ async function openPriceDialog(canvasElement: HTMLElement) {
   return within(await within(document.body).findByRole("dialog"));
 }
 
+export const PriceDialogListsHistory: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await openPriceDialog(canvasElement);
+
+    await expect(await dialog.findByRole("heading", { name: "Price history" })).toBeVisible();
+    await expect(await dialog.findAllByRole("button", { name: /^Delete: / })).toHaveLength(4);
+  },
+};
+
 export const SavesPrice: Story = {
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement);

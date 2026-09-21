@@ -8,6 +8,7 @@ import type {
   InvestmentTransactionType,
   PortfolioResponse,
   ProblemDetails,
+  SecurityPriceResponse,
   SecurityResponse,
 } from "@/api/generated/model";
 import { brokerAccount, checkingAccount, savingsAccount } from "./accounts";
@@ -161,6 +162,46 @@ export const portfolio: PortfolioResponse = {
     },
   ],
 };
+
+export const securityPrices: SecurityPriceResponse[] = [
+  { date: "2026-09-17", price: "128.46" },
+  { date: "2026-08-31", price: "126.1" },
+  { date: "2026-06-30", price: "119.875" },
+  { date: "2026-03-31", price: "112.4" },
+];
+
+const valueHistorySeed: readonly [string, number, number][] = [
+  ["2025-09-18", 5210.4, 5000],
+  ["2025-10-18", 5388.12, 5000],
+  ["2025-11-18", 5295.77, 5000],
+  ["2025-12-18", 6840.05, 6500],
+  ["2026-01-18", 7102.61, 6500],
+  ["2026-02-18", 6934.18, 6500],
+  ["2026-03-18", 7420.9, 6500],
+  ["2026-04-18", 8615.33, 7800],
+  ["2026-05-18", 8902.47, 7800],
+  ["2026-06-18", 9240.02, 7800],
+  ["2026-07-18", 10112.56, 8836.93],
+  ["2026-08-18", 10388.71, 8836.93],
+  ["2026-09-18", 10574.99, 8836.93],
+];
+
+export const valueHistory: ValueHistoryResponse = {
+  reportingCurrency: "eur",
+  points: valueHistorySeed.map(([date, value, cost]) => ({
+    date,
+    marketValue: value.toFixed(2),
+    costBasis: cost.toFixed(2),
+    isPartial: false,
+  })),
+};
+
+export const partialValueHistory: ValueHistoryResponse = {
+  ...valueHistory,
+  points: valueHistory.points.map((point, index) => ({ ...point, isPartial: index < 4 })),
+};
+
+export const emptyValueHistory: ValueHistoryResponse = { reportingCurrency: "eur", points: [] };
 
 export const incompletePortfolio: PortfolioResponse = {
   ...portfolio,
