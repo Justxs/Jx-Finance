@@ -7,6 +7,7 @@ import {
   useAccountsSuspense,
   useCategoriesSuspense,
   useRecurringBillsSuspense,
+  useSubscriptionCandidatesSuspense,
 } from "@/api/generated";
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -21,6 +22,7 @@ import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillRow } from "../recurring-bill-row";
+import { SubscriptionSuggestions } from "../subscription-suggestions/subscription-suggestions";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
@@ -29,6 +31,7 @@ export function RecurringBillsPage() {
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
   const bills = useRecurringBillsSuspense();
+  const candidates = useSubscriptionCandidatesSuspense();
 
   const deleteMutation = useDeleteRecurringBill({
     mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
@@ -37,7 +40,8 @@ export function RecurringBillsPage() {
   const accountList = accounts.data ?? [];
   const categoryList = categories.data ?? [];
   const billList = useDeferredValue(bills.data) ?? [];
-  const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name);
+  const candidateList = useDeferredValue(candidates.data) ?? [];
+  const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name, "recurringBill");
 
   let content: ReactNode;
   if (billList.length === 0) {
@@ -85,6 +89,11 @@ export function RecurringBillsPage() {
         </Section>
       ) : null}
       {content}
+      <SubscriptionSuggestions
+        candidates={candidateList}
+        accounts={accountList}
+        categories={categoryList}
+      />
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );

@@ -23,8 +23,10 @@ import type {
   ConfirmRecurringBillRequest,
   ConfirmRecurringBillResponse,
   CreateRecurringBillRequest,
+  DismissSubscriptionCandidateRequest,
   ProblemDetails,
   RecurringBillResponse,
+  SubscriptionCandidateResponse,
   UpdateRecurringBillRequest,
 } from "../model";
 
@@ -50,8 +52,8 @@ export const getCreateRecurringBillUrl = () => {
 };
 
 /**
- * Schedules a bill or a recurring income. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction is only written once the occurrence is confirmed.
- * @summary Create a recurring bill
+ * Schedules a recurring expense, a recurring income or a recurring transfer. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction or a transfer is only written once the occurrence is confirmed.
+ * @summary Create a recurring entry
  */
 export const createRecurringBill = async (
   createRecurringBillRequest: CreateRecurringBillRequest,
@@ -130,7 +132,7 @@ export type CreateRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type CreateRecurringBillMutationVariables = { data: CreateRecurringBillRequest };
 
 /**
- * @summary Create a recurring bill
+ * @summary Create a recurring entry
  */
 export const useCreateRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -156,8 +158,8 @@ export const getRecurringBillsUrl = () => {
 };
 
 /**
- * Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
- * @summary List recurring bills
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
+ * @summary List recurring entries
  */
 export const recurringBills = async (
   options?: Parameters<typeof customFetch>[1],
@@ -237,7 +239,7 @@ export function useRecurringBillsSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary List recurring bills
+ * @summary List recurring entries
  */
 
 export function useRecurringBillsSuspense<
@@ -262,13 +264,236 @@ export function useRecurringBillsSuspense<
   return withQueryKey(query, queryOptions.queryKey);
 }
 
+export const getSubscriptionCandidatesUrl = () => {
+  return `/api/recurring-bills/suggestions`;
+};
+
+/**
+ * Reads the expenses you can see from the last 24 months, groups them by a normalized description and account, and answers the groups that look like a subscription: at least 3 occurrences, a gap between them that fits one cadence, and amounts within a tolerance of their median. Call it to offer a ready-made recurring entry. Groups an active recurring entry already covers and groups you dismissed are left out. Nothing is written.
+ * @summary Suggest subscriptions found in the ledger
+ */
+export const subscriptionCandidates = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SubscriptionCandidateResponse[]> => {
+  return customFetch<SubscriptionCandidateResponse[]>(getSubscriptionCandidatesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSubscriptionCandidatesQueryKey = () => {
+  return [`/api/recurring-bills/suggestions`] as const;
+};
+
+export const getSubscriptionCandidatesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<
+    UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSubscriptionCandidatesQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof subscriptionCandidates>>> = ({ signal }) =>
+    subscriptionCandidates({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof subscriptionCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SubscriptionCandidatesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof subscriptionCandidates>>
+>;
+export type SubscriptionCandidatesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSubscriptionCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSubscriptionCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSubscriptionCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Suggest subscriptions found in the ledger
+ */
+
+export function useSubscriptionCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof subscriptionCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof subscriptionCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSubscriptionCandidatesSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDismissSubscriptionCandidateUrl = () => {
+  return `/api/recurring-bills/suggestions/dismiss`;
+};
+
+/**
+ * Hides one suggested subscription for the signed-in user. The dismissal is stored against the account and the normalized description the suggestion was grouped by, not against the transactions behind it, so a new payment arriving in the same group does not bring the suggestion back. Dismissing the same group twice changes nothing. It is a personal choice: another member of the same household still sees the suggestion.
+ * @summary Dismiss a subscription suggestion
+ */
+export const dismissSubscriptionCandidate = async (
+  dismissSubscriptionCandidateRequest: DismissSubscriptionCandidateRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getDismissSubscriptionCandidateUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(dismissSubscriptionCandidateRequest),
+  });
+};
+
+export const getDismissSubscriptionCandidateMutationKey = () =>
+  ["dismissSubscriptionCandidate"] as const;
+
+export const getDismissSubscriptionCandidateMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dismissSubscriptionCandidate>>,
+    TError,
+    DismissSubscriptionCandidateMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dismissSubscriptionCandidate>>,
+  TError,
+  DismissSubscriptionCandidateMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDismissSubscriptionCandidateMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dismissSubscriptionCandidate>>,
+    DismissSubscriptionCandidateMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return dismissSubscriptionCandidate(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DismissSubscriptionCandidateMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dismissSubscriptionCandidate>>
+>;
+export type DismissSubscriptionCandidateMutationBody = DismissSubscriptionCandidateRequest;
+export type DismissSubscriptionCandidateMutationError = ErrorType<ProblemDetails>;
+export type DismissSubscriptionCandidateMutationVariables = {
+  data: DismissSubscriptionCandidateRequest;
+};
+
+/**
+ * @summary Dismiss a subscription suggestion
+ */
+export const useDismissSubscriptionCandidate = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof dismissSubscriptionCandidate>>,
+      TError,
+      DismissSubscriptionCandidateMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof dismissSubscriptionCandidate>>,
+  TError,
+  DismissSubscriptionCandidateMutationVariables,
+  TContext
+> => {
+  return useMutation(getDismissSubscriptionCandidateMutationOptions(options), queryClient);
+};
 export const getDeleteRecurringBillUrl = (id: string) => {
   return `/api/recurring-bills/${id}`;
 };
 
 /**
- * Removes the schedule and its reminders. Transactions already posted from it stay in the ledger.
- * @summary Delete a recurring bill
+ * Removes the schedule and its reminders. Transactions and transfers already posted from it stay in the ledger.
+ * @summary Delete a recurring entry
  */
 export const deleteRecurringBill = async (
   id: string,
@@ -326,7 +551,7 @@ export type DeleteRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type DeleteRecurringBillMutationVariables = { id: string };
 
 /**
- * @summary Delete a recurring bill
+ * @summary Delete a recurring entry
  */
 export const useDeleteRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -352,8 +577,8 @@ export const getRecurringBillUrl = (id: string) => {
 };
 
 /**
- * Returns a single schedule with its cadence, reminder lead time, and next due date.
- * @summary Get one recurring bill
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
+ * @summary Get one recurring entry
  */
 export const recurringBill = async (
   id: string,
@@ -440,7 +665,7 @@ export function useRecurringBillSuspense<
   queryClient?: QueryClient,
 ): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 /**
- * @summary Get one recurring bill
+ * @summary Get one recurring entry
  */
 
 export function useRecurringBillSuspense<
@@ -471,8 +696,8 @@ export const getUpdateRecurringBillUrl = (id: string) => {
 };
 
 /**
- * Changes the schedule, the expected amount, or the reminder lead time. Setting isActive to false stops reminders without losing the schedule or the transactions already posted from it.
- * @summary Update a recurring bill
+ * Changes the shape, the schedule, the expected amount, or the reminder lead time. A shape change must bring the fields the new shape needs: a Transfer needs both accounts and no category, an Expense or an Income needs no destination account. Setting isActive to false stops reminders without losing the schedule or the rows already posted from it.
+ * @summary Update a recurring entry
  */
 export const updateRecurringBill = async (
   id: string,
@@ -552,7 +777,7 @@ export type UpdateRecurringBillMutationError = ErrorType<ProblemDetails>;
 export type UpdateRecurringBillMutationVariables = { id: string; data: UpdateRecurringBillRequest };
 
 /**
- * @summary Update a recurring bill
+ * @summary Update a recurring entry
  */
 export const useUpdateRecurringBill = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {
@@ -578,7 +803,7 @@ export const getConfirmRecurringBillUrl = (id: string) => {
 };
 
 /**
- * Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.
+ * Posts one occurrence of the schedule and rolls the next due date forward by the cadence. An Expense writes an expense transaction, an Income writes an income transaction and a Transfer writes a transfer between the two accounts on the entry. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same occurrence twice.
  * @summary Confirm a due occurrence
  */
 export const confirmRecurringBill = async (

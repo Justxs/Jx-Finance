@@ -3,6 +3,7 @@ import {
   getAccountsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
   getRecurringBillsSuspenseQueryOptions,
+  getSubscriptionCandidatesSuspenseQueryOptions,
 } from "@/api/generated";
 import { RecurringBillsPage } from "@/features/recurring-bills/recurring-bills-page/recurring-bills-page";
 import { requireFeature } from "@/lib/feature-gate";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/recurring-bills")({
     warm(queryClient, getAccountsSuspenseQueryOptions());
     warm(queryClient, getCategoriesSuspenseQueryOptions());
     warm(queryClient, getRecurringBillsSuspenseQueryOptions());
+    warm(queryClient, getSubscriptionCandidatesSuspenseQueryOptions());
   },
   component: RecurringBillsPage,
 });

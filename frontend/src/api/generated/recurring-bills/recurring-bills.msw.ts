@@ -7,7 +7,11 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { ConfirmRecurringBillResponse, RecurringBillResponse } from "../model";
+import type {
+  ConfirmRecurringBillResponse,
+  RecurringBillResponse,
+  SubscriptionCandidateResponse,
+} from "../model";
 
 export const getCreateRecurringBillMockHandler = (
   overrideResponse?:
@@ -52,6 +56,49 @@ export const getRecurringBillsMockHandler = (
           : undefined,
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getSubscriptionCandidatesMockHandler = (
+  overrideResponse?:
+    | SubscriptionCandidateResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<SubscriptionCandidateResponse[]> | SubscriptionCandidateResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/recurring-bills/suggestions",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDismissSubscriptionCandidateMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/recurring-bills/suggestions/dismiss",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -150,6 +197,8 @@ export const getConfirmRecurringBillMockHandler = (
 export const getRecurringBillsMock = () => [
   getCreateRecurringBillMockHandler(),
   getRecurringBillsMockHandler(),
+  getSubscriptionCandidatesMockHandler(),
+  getDismissSubscriptionCandidateMockHandler(),
   getDeleteRecurringBillMockHandler(),
   getRecurringBillMockHandler(),
   getUpdateRecurringBillMockHandler(),

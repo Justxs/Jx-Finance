@@ -3,6 +3,13 @@ import type {
   ImportPreviewRow,
   ProblemDetails,
 } from "@/api/generated/model";
+import { ids } from "./base";
+
+const noSuggestion = {
+  suggestedCategoryId: null,
+  suggestedTagIds: [] as string[],
+  matchedRuleName: null,
+};
 
 export const importPreviewRows: ImportPreviewRow[] = [
   {
@@ -15,6 +22,9 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: true,
     looksLikeTransfer: false,
     currency: "eur",
+    suggestedCategoryId: ids.categories.food,
+    suggestedTagIds: [],
+    matchedRuleName: "Parduotuvės",
   },
   {
     importRef: "2026091800000003",
@@ -26,6 +36,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    ...noSuggestion,
   },
   {
     importRef: "2026091800000004",
@@ -37,6 +48,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: true,
     currency: "eur",
+    ...noSuggestion,
   },
   {
     importRef: "2026091700000031",
@@ -48,6 +60,9 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    suggestedCategoryId: ids.categories.transport,
+    suggestedTagIds: [],
+    matchedRuleName: "Viešasis transportas",
   },
   {
     importRef: "2026091600000021",
@@ -59,6 +74,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: true,
     looksLikeTransfer: false,
     currency: "eur",
+    ...noSuggestion,
   },
   {
     importRef: "2026091500000008",
@@ -71,6 +87,9 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    suggestedCategoryId: ids.categories.utilities,
+    suggestedTagIds: [ids.tags.renovation],
+    matchedRuleName: "Elektra",
   },
   {
     importRef: "2026091500000009",
@@ -82,6 +101,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    ...noSuggestion,
   },
   {
     importRef: "2026091200000015",
@@ -93,6 +113,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: false,
     currency: "eur",
+    ...noSuggestion,
   },
   {
     importRef: "2026091000000002",
@@ -104,6 +125,7 @@ export const importPreviewRows: ImportPreviewRow[] = [
     isDuplicate: false,
     looksLikeTransfer: true,
     currency: "eur",
+    ...noSuggestion,
   },
 ];
 
@@ -111,6 +133,10 @@ export const importPreview: ImportPreviewResponse = { rows: importPreviewRows };
 
 export const importPreviewAllDuplicates: ImportPreviewResponse = {
   rows: importPreviewRows.map((row) => ({ ...row, isDuplicate: true })),
+};
+
+export const importPreviewWithoutRules: ImportPreviewResponse = {
+  rows: importPreviewRows.map((row) => ({ ...row, ...noSuggestion })),
 };
 
 export const importFormatProblem: ProblemDetails = {

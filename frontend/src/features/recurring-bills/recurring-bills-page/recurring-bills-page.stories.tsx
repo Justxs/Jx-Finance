@@ -1,12 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import {
   getDeleteRecurringBillMockHandler,
   getRecurringBillsMockHandler,
+  getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { inactiveBill, recurringBills, many } from "@/storybook/fixtures";
+import { inactiveBill, recurringBills, many, subscriptionCandidates } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -45,6 +46,39 @@ export const OnlyInactive: Story = {
   },
 };
 
+export const NothingToSuggest: Story = {
+  parameters: {
+    msw: {
+      handlers: [getSubscriptionCandidatesMockHandler([]), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(
+      await canvas.findByText(/nothing repeats often enough|kol kas nėra pakankamai/i),
+    ).toBeInTheDocument();
+  },
+};
+
+export const SuggestionCreatesAnEntry: Story = {
+  parameters: {
+    msw: {
+      handlers: [getSubscriptionCandidatesMockHandler(subscriptionCandidates), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const create = await canvas.findAllByRole("button", {
+      name: /create entry|sukurti įrašą/i,
+    });
+    await userEvent.click(create[0]!);
+    const dialog = await openedDialog();
+    await expect(within(dialog).getByLabelText(/^(name|pavadinimas)$/i)).toHaveValue(
+      "Lemon gym abonementas",
+    );
+  },
+};
+
 export const LongList: Story = {
   parameters: {
     msw: {
@@ -57,7 +91,7 @@ export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      await canvas.findByRole("button", { name: /add recurring bill|pridėti periodinę/i }),
+      await canvas.findByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
     await openedDialog();
   },
@@ -72,7 +106,7 @@ export const AddDialogWithoutAccounts: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
-      await canvas.findByRole("button", { name: /add recurring bill|pridėti periodinę/i }),
+      await canvas.findByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
     await openedDialog();
   },
