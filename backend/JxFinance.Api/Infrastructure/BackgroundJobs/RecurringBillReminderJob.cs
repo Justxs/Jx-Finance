@@ -65,6 +65,7 @@ public sealed class RecurringBillReminderJob(
                 Type = NotificationType.BillDue,
                 Title = bill.Name,
                 Message = bill.NextDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Payload = new NotificationPayload { DueDate = bill.NextDueDate, Shape = bill.Shape },
                 RelatedType = RelatedType,
                 RelatedId = bill.Id.Value,
                 Channel = NotificationChannel.InApp,

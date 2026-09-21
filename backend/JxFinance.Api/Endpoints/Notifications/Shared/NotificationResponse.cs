@@ -7,6 +7,7 @@ public sealed record NotificationResponse(
     NotificationType Type,
     string Title,
     string Message,
+    NotificationPayload Payload,
     string? RelatedType,
     Guid? RelatedId,
     NotificationChannel Channel,

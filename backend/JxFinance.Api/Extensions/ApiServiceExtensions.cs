@@ -59,6 +59,7 @@ public static class ApiServiceExtensions
         if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue("App:BackgroundJobs", true))
         {
             builder.Services.AddHostedService<RecurringBillReminderJob>();
+            builder.Services.AddHostedService<BudgetAlertJob>();
             builder.Services.AddHostedService<NetWorthSnapshotJob>();
             builder.Services.AddHostedService<ExchangeRateSyncJob>();
             builder.Services.AddHostedService<BrokerSyncJob>();

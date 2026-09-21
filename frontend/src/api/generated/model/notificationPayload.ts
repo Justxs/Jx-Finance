@@ -5,21 +5,14 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import type { NotificationChannel } from "./notificationChannel";
-import type { NotificationPayload } from "./notificationPayload";
-import type { NotificationType } from "./notificationType";
+import type { BudgetPeriod } from "./budgetPeriod";
+import type { NullableOfDateOnly } from "./nullableOfDateOnly";
+import type { RecurringBillShape } from "./recurringBillShape";
 
-export interface NotificationResponse {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  payload: NotificationPayload;
+export interface NotificationPayload {
+  dueDate?: null | NullableOfDateOnly;
   /** @nullable */
-  relatedType: string | null;
-  /** @nullable */
-  relatedId: string | null;
-  channel: NotificationChannel;
-  isRead: boolean;
-  createdAt: string;
+  thresholdPercent?: number | null;
+  period?: null | BudgetPeriod;
+  shape?: null | RecurringBillShape;
 }

@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -7,7 +8,11 @@ import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
 } from "@/api/generated";
-import type { NotificationResponse, NotificationsParams } from "@/api/generated/model";
+import type {
+  NotificationResponse,
+  NotificationType,
+  NotificationsParams,
+} from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import {
   Popover,
@@ -18,6 +23,7 @@ import {
 import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useDate } from "@/hooks/use-formatters";
+import { type FeatureKey, useSettings } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
@@ -44,6 +50,14 @@ export function NotificationBellUnavailable() {
 
 export const unreadParams: NotificationsParams = { unread: true };
 
+const producers = {
+  billDue: { feature: "recurringBills", to: "/recurring-bills" },
+  budgetWarning: { feature: "budgets", to: "/budgets" },
+  budgetExceeded: { feature: "budgets", to: "/budgets" },
+} as const satisfies Record<NotificationType, { feature: FeatureKey; to: string }>;
+
+const entryClassName = "block w-full px-4 py-3 text-left text-sm hover:bg-accent";
+
 function noNotifications(): NotificationResponse[] {
   return [];
 }
@@ -55,6 +69,7 @@ interface Props {
 export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const { t } = useTranslation();
   const date = useDate();
+  const features = useSettings().features;
   const [open, setOpen] = useState(false);
 
   const unreadKey = getNotificationsQueryKey(unreadParams);
@@ -77,10 +92,50 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   });
 
   function describe(notification: NotificationResponse) {
-    const dueDate = notification.type === "billDue" ? parseIso(notification.message ?? "") : null;
-    return dueDate
-      ? t("notifications.billDue", { date: date.format(dueDate) })
-      : notification.message;
+    const { dueDate, thresholdPercent, period, shape } = notification.payload;
+
+    if (notification.type === "billDue") {
+      const due = dueDate ? parseIso(dueDate) : null;
+      return due
+        ? t(`notifications.billDue.${shape ?? "expense"}`, { date: date.format(due) })
+        : notification.message;
+    }
+
+    if (!period) {
+      return notification.message;
+    }
+
+    const periodName = t(`budgets.periods.${period}`);
+    return notification.type === "budgetExceeded"
+      ? t("notifications.budgetExceeded", { period: periodName })
+      : t("notifications.budgetWarning", { period: periodName, percent: thresholdPercent ?? 80 });
+  }
+
+  function destination(notification: NotificationResponse) {
+    const producer = producers[notification.type];
+    return features[producer.feature] ? producer.to : null;
+  }
+
+  function entryState(notification: NotificationResponse) {
+    return cn(
+      entryClassName,
+      staleVariants({
+        stale: markReadMutation.isPending && markReadMutation.variables?.id === notification.id,
+      }),
+    );
+  }
+
+  function body(notification: NotificationResponse) {
+    return (
+      <>
+        <p className="font-medium">{notification.title}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground">{describe(notification)}</p>
+      </>
+    );
+  }
+
+  function markRead(notification: NotificationResponse) {
+    markReadMutation.mutate({ id: notification.id });
   }
 
   return (
@@ -122,28 +177,35 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
               </p>
             ) : (
               <ul className="divide-y divide-border">
-                {unreadList.map((notification) => (
-                  <li key={notification.id}>
-                    <button
-                      type="button"
-                      className={cn(
-                        "w-full px-4 py-3 text-left text-sm hover:bg-accent",
-                        staleVariants({
-                          stale:
-                            markReadMutation.isPending &&
-                            markReadMutation.variables?.id === notification.id,
-                        }),
+                {unreadList.map((notification) => {
+                  const to = destination(notification);
+
+                  return (
+                    <li key={notification.id}>
+                      {to ? (
+                        <Link
+                          to={to}
+                          className={entryState(notification)}
+                          onClick={() => {
+                            setOpen(false);
+                            markRead(notification);
+                          }}
+                        >
+                          {body(notification)}
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          className={entryState(notification)}
+                          disabled={markReadMutation.isPending}
+                          onClick={() => markRead(notification)}
+                        >
+                          {body(notification)}
+                        </button>
                       )}
-                      disabled={markReadMutation.isPending}
-                      onClick={() => markReadMutation.mutate({ id: notification.id })}
-                    >
-                      <p className="font-medium">{notification.title}</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {describe(notification)}
-                      </p>
-                    </button>
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
