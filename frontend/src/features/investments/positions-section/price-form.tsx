@@ -29,7 +29,10 @@ export function PriceForm({ security, pending, error, onSubmit, onCancel }: Read
 
   const schema = z.object({
     lastPrice: quantity(t, "investments.validation.price"),
-    lastPriceDate: requiredValue(t),
+    lastPriceDate: requiredValue(t).refine(
+      (value) => value <= today,
+      t("investments.validation.priceDateFuture"),
+    ),
   });
 
   const defaultValues: PriceFormValues = {

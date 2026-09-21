@@ -35,6 +35,6 @@ export interface SaveSecurityRequest {
   exchange?: string | null;
   /** @nullable */
   lastPrice?: string | null;
-  /** Defaults to today when a price is given without a date. */
+  /** Defaults to today when a price is given without a date. Not in the future. The price is recorded in the price history; one dated before the last known price leaves the last known price alone. */
   lastPriceDate?: null | NullableOfDateOnly;
 }

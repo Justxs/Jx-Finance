@@ -98,6 +98,36 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record RestoredTransactionDto(Guid Id, Guid? CategoryId, string Amount, DateOnly Date, string? Description);
 
     [Fact]
+    public async Task Restore_brings_back_the_price_history_of_a_security()
+    {
+        var security = await CreateSecurityAsync(Client);
+        await SetPriceAsync(security, "10", "2026-06-01");
+        await SetPriceAsync(security, "12", "2026-06-08");
+        var backup = await CreateBackupAsync();
+        await SetPriceAsync(security, "99", "2026-06-15");
+        (await Client.DeleteAsync($"/api/investments/securities/{security}/prices/2026-06-01")).EnsureSuccessStatusCode();
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var points = await Client.GetFromJsonAsync<List<RestoredPriceDto>>($"/api/investments/securities/{security}/prices");
+        Assert.Equal(
+            [new RestoredPriceDto(new DateOnly(2026, 6, 8), "12"), new RestoredPriceDto(new DateOnly(2026, 6, 1), "10")],
+            points);
+    }
+
+    private async Task SetPriceAsync(Guid securityId, string lastPrice, string lastPriceDate) =>
+        (await Client.PutAsJsonAsync($"/api/investments/securities/{securityId}/price", new { lastPrice, lastPriceDate })).EnsureSuccessStatusCode();
+
+    private sealed record RestoredPriceDto(DateOnly Date, string Price);
+
+    [Fact]
     public async Task Created_backup_is_listed_newest_first_with_its_size_and_note()
     {
         var older = await CreateBackupAsync("before the import");

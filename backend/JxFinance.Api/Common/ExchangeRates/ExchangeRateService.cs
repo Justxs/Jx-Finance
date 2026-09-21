@@ -54,6 +54,16 @@ public sealed class ExchangeRateService(
         return table;
     }
 
+    public async Task<RateHistory> GetHistoryAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        var rates = await db.ExchangeRates
+            .AsNoTracking()
+            .Where(r => r.Date <= to
+                && r.Date >= (db.ExchangeRates.Where(x => x.Date <= from).Max(x => (DateOnly?)x.Date) ?? from))
+            .ToListAsync(cancellationToken);
+        return new RateHistory(rates);
+    }
+
     public Task<Result<decimal>> ToReportingAsync(Money amount, DateOnly date, CancellationToken cancellationToken) =>
         ConvertAsync(amount, ReportingCurrency, date, cancellationToken);
 

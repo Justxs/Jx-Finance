@@ -9,6 +9,6 @@ import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface SetSecurityPriceRequest {
   lastPrice: string;
-  /** Defaults to today. */
+  /** Defaults to today in the installation time zone. Not in the future. */
   lastPriceDate?: null | NullableOfDateOnly;
 }

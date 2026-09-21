@@ -35,6 +35,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();
     public DbSet<ExchangeRate> ExchangeRates => Set<ExchangeRate>();
     public DbSet<Security> Securities => Set<Security>();
+    public DbSet<SecurityPrice> SecurityPrices => Set<SecurityPrice>();
     public DbSet<InvestmentTransaction> InvestmentTransactions => Set<InvestmentTransaction>();
     public DbSet<BrokerConnection> BrokerConnections => Set<BrokerConnection>();
     public DbSet<InstanceSettings> InstanceSettings => Set<InstanceSettings>();

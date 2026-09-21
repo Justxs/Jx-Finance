@@ -61,7 +61,9 @@ public sealed class InvestmentMapper
         security.LastPrice,
         security.LastPriceDate);
 
-    public void Apply(SaveSecurityRequest request, string symbol, Security security, DateOnly today)
+    public SecurityPriceResponse FromEntity(SecurityPrice price) => new(price.Date, price.Price);
+
+    public void Apply(SaveSecurityRequest request, string symbol, Security security)
     {
         security.Symbol = symbol;
         security.Name = request.Name.Trim();
@@ -69,11 +71,6 @@ public sealed class InvestmentMapper
         security.Exchange = OptionalText.Normalize(request.Exchange)?.ToUpperInvariant();
         security.Type = request.Type;
         security.Currency = request.Currency;
-        if (request.LastPrice is not null)
-        {
-            security.LastPrice = request.LastPrice;
-            security.LastPriceDate = request.LastPriceDate ?? today;
-        }
     }
 
     public HoldingResponse ToHolding(

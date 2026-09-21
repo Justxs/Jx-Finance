@@ -12,7 +12,6 @@ using JxFinance.Endpoints.Investments.GetSecurities;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Mappers;
 using JxFinance.Endpoints.Investments.SaveSecurity;
-using JxFinance.Endpoints.Investments.SetSecurityPrice;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Endpoints.Investments.UpdateInvestmentTransaction;
 using JxFinance.Infrastructure.Data;
@@ -349,7 +348,8 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
 
         var security = new Security();
         db.Securities.Add(security);
-        mapper.Apply(request, symbol, security, clock.Today);
+        mapper.Apply(request, symbol, security);
+        await RecordPriceAsync(request, security, cancellationToken);
         try
         {
             await db.SaveChangesAsync(cancellationToken);
@@ -385,49 +385,17 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 "The currency cannot change once the security has transactions.");
         }
 
-        mapper.Apply(request, symbol, security, clock.Today);
+        mapper.Apply(request, symbol, security);
+        await RecordPriceAsync(request, security, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
         return mapper.FromEntity(security);
     }
 
-    public async Task<Result<SecurityResponse>> SetSecurityPriceAsync(
-        SetSecurityPriceRequest request,
-        bool isAdministrator,
-        CancellationToken cancellationToken)
-    {
-        var id = new SecurityId(request.Id);
-        var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-        if (security is null)
-        {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
-        }
-
-        if (!isAdministrator && !await HoldsAsync(id, cancellationToken))
-        {
-            return new DomainError(
-                ErrorCodes.SecurityNotHeld,
-                "Only someone who holds this security, or an administrator, can set its price.");
-        }
-
-        security.LastPrice = request.LastPrice;
-        security.LastPriceDate = request.LastPriceDate ?? clock.Today;
-        await db.SaveChangesAsync(cancellationToken);
-
-        return mapper.FromEntity(security);
-    }
-
-    private async Task<bool> HoldsAsync(SecurityId securityId, CancellationToken cancellationToken)
-    {
-        var history = await db.InvestmentTransactions
-            .AsNoTracking()
-            .Where(t => t.SecurityId == securityId)
-            .ToListAsync(cancellationToken);
-
-        return history
-            .GroupBy(t => t.AccountId)
-            .Any(account => Portfolio.Positions(account).GetValueOrDefault(securityId)?.Quantity > 0m);
-    }
+    private Task RecordPriceAsync(SaveSecurityRequest request, Security security, CancellationToken cancellationToken) =>
+        request.LastPrice is { } price
+            ? SecurityPriceBook.RecordAsync(db, security, request.LastPriceDate ?? clock.Today, price, cancellationToken)
+            : Task.CompletedTask;
 
     private static Result<SecurityResponse> Duplicate(string symbol, Currency currency) =>
         new DomainError(ErrorCodes.ConflictDuplicate, $"{symbol} in {currency.ToCode()} already exists.");

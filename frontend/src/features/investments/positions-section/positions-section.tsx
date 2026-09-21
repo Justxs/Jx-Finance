@@ -8,10 +8,13 @@ import type {
   SecurityResponse,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
+import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { silent } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
+import { PriceHistory } from "../price-history/price-history";
 import { PositionsTable } from "./positions-table";
 import { PriceForm } from "./price-form";
 
@@ -107,14 +110,24 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
         description={priceSecurity ? `${priceSecurity.symbol} · ${priceSecurity.name}` : undefined}
       >
         {priceSecurity ? (
-          <PriceForm
-            key={priceSecurity.id}
-            security={priceSecurity}
-            pending={priceMutation.isPending}
-            error={priceMutation.error}
-            onSubmit={(values) => priceMutation.mutateAsync({ id: priceSecurity.id, data: values })}
-            onCancel={() => setPriceOpen(false)}
-          />
+          <>
+            <PriceForm
+              key={priceSecurity.id}
+              security={priceSecurity}
+              pending={priceMutation.isPending}
+              error={priceMutation.error}
+              onSubmit={(values) =>
+                priceMutation.mutateAsync({ id: priceSecurity.id, data: values })
+              }
+              onCancel={() => setPriceOpen(false)}
+            />
+            <QueryBoundary
+              fallback={<RowsSkeleton rows={3} />}
+              errorSubject={t("investments.priceHistory.title")}
+            >
+              <PriceHistory security={priceSecurity} />
+            </QueryBoundary>
+          </>
         ) : null}
       </Modal>
     </Section>
