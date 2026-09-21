@@ -32,6 +32,13 @@ export const trashEntries: TrashEntryResponse[] = [
   ),
   entry(7, "asset", ids.assets.car, "Automobilis", "2026-09-10T12:20:00Z"),
   entry(8, "debt", ids.debts.mortgage, "Būsto paskola", "2026-09-08T08:44:00Z"),
+  entry(
+    9,
+    "investmentTransaction",
+    uid("ffffffff", 6),
+    "Sell 3 MSFT, 2026-07-15",
+    "2026-09-06T14:18:00Z",
+  ),
 ];
 
 export const trashPage = {

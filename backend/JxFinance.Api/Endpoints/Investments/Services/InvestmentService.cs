@@ -2,9 +2,12 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Holdings;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Investments.CreateInvestmentTransaction;
 using JxFinance.Endpoints.Investments.GetInvestmentTransactions;
 using JxFinance.Endpoints.Investments.GetPortfolio;
@@ -21,8 +24,13 @@ using Npgsql;
 namespace JxFinance.Endpoints.Investments.Services;
 
 [RegisterService<IInvestmentService>(LifeTime.Scoped)]
-public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, IExchangeRateService rates, IClock clock)
-    : IInvestmentService
+public sealed class InvestmentService(
+    AppDbContext db,
+    InvestmentMapper mapper,
+    IExchangeRateService rates,
+    IClock clock,
+    IHoldingLedger ledger,
+    IDeletionRecorder deletions) : IInvestmentService
 {
     private const string OversoldMessage =
         "This would sell more than was held on that date; short positions are not supported.";
@@ -314,7 +322,11 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
                 "Later sales depend on this entry. Delete those first.");
         }
 
+        var symbol = transaction.SecurityId is { } heldId
+            ? await db.Securities.Where(s => s.Id == heldId).Select(s => s.Symbol).FirstOrDefaultAsync(cancellationToken)
+            : null;
         db.InvestmentTransactions.Remove(transaction);
+        deletions.Record(TrashKind.InvestmentTransaction, id, TrashLabel.Investment(transaction, symbol));
         await db.SaveChangesAsync(cancellationToken);
 
         return id;
@@ -404,19 +416,8 @@ public sealed class InvestmentService(AppDbContext db, InvestmentMapper mapper, 
         AccountId accountId,
         SecurityId securityId,
         Func<IEnumerable<InvestmentTransaction>, IEnumerable<InvestmentTransaction>> change,
-        CancellationToken cancellationToken)
-    {
-        var history = await db.InvestmentTransactions
-            .AsNoTracking()
-            .Where(t => t.AccountId == accountId && t.SecurityId == securityId)
-            .ToListAsync(cancellationToken);
-        if (Portfolio.Positions(history).GetValueOrDefault(securityId)?.IsOversold == true)
-        {
-            return false;
-        }
-
-        return Portfolio.Positions(change(history)).GetValueOrDefault(securityId)?.IsOversold == true;
-    }
+        CancellationToken cancellationToken) =>
+        await ledger.FirstOversoldSaleAsync(accountId, securityId, change, cancellationToken) is not null;
 
     private sealed class YearTotals
     {

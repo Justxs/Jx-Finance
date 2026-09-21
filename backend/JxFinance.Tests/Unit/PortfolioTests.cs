@@ -62,6 +62,24 @@ public sealed class PortfolioTests
     }
 
     [Fact]
+    public void The_first_sale_that_sells_more_than_was_held_is_named()
+    {
+        var covered = Entry(InvestmentTransactionType.Sell, 2, 6m, 10m);
+        var uncovered = Entry(InvestmentTransactionType.Sell, 3, 6m, 10m);
+        var later = Entry(InvestmentTransactionType.Sell, 4, 1m, 10m);
+
+        var position = Portfolio.Positions(
+        [
+            later,
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            uncovered,
+            covered,
+        ])[Fund];
+
+        Assert.Equal(uncovered.Id, position.FirstOversoldSale);
+    }
+
+    [Fact]
     public void Fees_raise_cost_and_lower_proceeds()
     {
         var position = Portfolio.Positions(

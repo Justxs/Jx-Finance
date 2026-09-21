@@ -1085,7 +1085,7 @@ export const InvestmentTransactionsResponse = zod.object({
 });
 
 /**
- * Removes the entry and its cash effect. A later broker import will not bring a deleted imported entry back.
+ * Removes the entry and its cash effect and records it in the trash, so POST /api/trash/restore can bring it back for 30 days. A later broker import will not bring a deleted imported entry back. A buy or split that later sales depend on is refused.
  * @summary Delete an investment transaction
  */
 export const DeleteInvestmentTransactionResponse = zod.void();

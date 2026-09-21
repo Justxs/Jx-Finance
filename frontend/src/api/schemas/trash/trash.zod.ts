@@ -25,6 +25,7 @@ export const TrashResponse = zod.object({
           "asset",
           "debt",
           "recurringBill",
+          "investmentTransaction",
         ])
         .describe("Which kind of record to bring back, as listed by GET /api/trash."),
       entityId: zod.uuid(),
@@ -38,7 +39,7 @@ export const TrashResponse = zod.object({
 });
 
 /**
- * Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken.
+ * Brings back the record the signed-in user deleted, named by its kind and its own id rather than by a trash row id, so the toast that appears right after a delete and the trash screen call the same operation. A record that is already back answers 204 again, which makes the call safe to repeat. Restoring a transaction brings its split lines and its tags with it, because deleting never removed them; restoring a currency conversion brings back the fee transaction that went with it. The record has to be visible again to come back: an archived account, a deleted category or a fee transaction that was deleted on its own each refuse with their own code instead of restoring something broken. An investment entry is replayed first in first out against the holding as it stands now, with the entry back in its place by date, and is refused when that replay would sell more than was held at any point.
  * @summary Restore a deleted record
  */
 
@@ -53,6 +54,7 @@ export const RestoreDeletedBody = zod.object({
       "asset",
       "debt",
       "recurringBill",
+      "investmentTransaction",
     ])
     .describe("Which kind of record to bring back, as listed by GET /api/trash."),
   entityId: zod.uuid().min(1).describe("The id the record had before it was deleted."),

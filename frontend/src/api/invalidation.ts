@@ -222,13 +222,16 @@ const rules: readonly Rule[] = [
     after: [
       api.getCreateInvestmentTransactionMutationKey,
       api.getUpdateInvestmentTransactionMutationKey,
-      api.getDeleteInvestmentTransactionMutationKey,
       api.getCreateSecurityMutationKey,
       api.getUpdateSecurityMutationKey,
       api.getSetSecurityPriceMutationKey,
       api.getDeleteSecurityPriceMutationKey,
     ],
     refresh: holdings,
+  },
+  {
+    after: [api.getDeleteInvestmentTransactionMutationKey],
+    refresh: [...holdings, api.getTrashQueryKey],
   },
   {
     after: [api.getImportBrokerReportMutationKey, api.getSyncBrokerConnectionMutationKey],

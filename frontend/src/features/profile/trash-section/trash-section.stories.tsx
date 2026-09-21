@@ -41,7 +41,9 @@ export const Default: Story = {
     await expect(await canvas.findByText("Maxima, 42.18 EUR")).toBeVisible();
     await expect(canvas.getAllByText("Transaction")).toHaveLength(1);
     await expect(canvas.getByText("Currency conversion")).toBeVisible();
-    await expect(canvas.getAllByRole("button", { name: /^Restore:/u })).toHaveLength(8);
+    await expect(canvas.getByText("Investment entry")).toBeVisible();
+    await expect(canvas.getByText("Sell 3 MSFT, 2026-07-15")).toBeVisible();
+    await expect(canvas.getAllByRole("button", { name: /^Restore:/u })).toHaveLength(9);
   },
 };
 
@@ -52,7 +54,8 @@ export const Lithuanian: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("Valiutos keitimas")).toBeVisible();
-    await expect(canvas.getAllByRole("button", { name: /^Atkurti:/u })).toHaveLength(8);
+    await expect(canvas.getByText("Investicijų įrašas")).toBeVisible();
+    await expect(canvas.getAllByRole("button", { name: /^Atkurti:/u })).toHaveLength(9);
   },
 };
 
@@ -147,5 +150,42 @@ export const RestoreRefused: Story = {
       await screen.findByText(/The account or category this entry needs is gone/u),
     ).toBeInTheDocument();
     await expect(canvas.getByText("Maxima, 42.18 EUR")).toBeVisible();
+  },
+};
+
+export const InvestmentRestoreRefused: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getRestoreDeletedMockHandler(
+          failWith(
+            {
+              ...serverErrorProblem,
+              status: 400,
+              title: "Cannot restore",
+              instance: "/api/trash/restore",
+              errors: [
+                {
+                  name: "GeneralErrors",
+                  reason: "Later sales now depend on the shares this entry would take back.",
+                  code: "holding.dependentSales" as const,
+                },
+              ],
+            },
+            400,
+          ),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      await canvas.findByRole("button", { name: "Restore: Sell 3 MSFT, 2026-07-15" }),
+    );
+
+    await expect(await screen.findByText("Later sales depend on this entry.")).toBeInTheDocument();
+    await expect(canvas.getByText("Sell 3 MSFT, 2026-07-15")).toBeVisible();
   },
 };

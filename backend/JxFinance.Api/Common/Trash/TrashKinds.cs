@@ -13,6 +13,7 @@ public static class TrashKinds
         TrashKind.Goal => Feature.Goals,
         TrashKind.Asset or TrashKind.Debt => Feature.NetWorth,
         TrashKind.RecurringBill => Feature.RecurringBills,
+        TrashKind.InvestmentTransaction => Feature.Investments,
         _ => null,
     };
 

@@ -20,4 +20,5 @@ export const TrashKind = {
   asset: "asset",
   debt: "debt",
   recurringBill: "recurringBill",
+  investmentTransaction: "investmentTransaction",
 } as const;

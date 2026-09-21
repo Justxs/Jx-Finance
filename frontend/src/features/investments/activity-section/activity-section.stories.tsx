@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -65,5 +65,20 @@ export const FilteredByType: Story = {
     await chooseOption(await canvas.findByLabelText("Entry type"), "Sell");
     await waitFor(() => expect(canvas.queryByText("Interest")).not.toBeInTheDocument());
     await expect(canvas.getByText("+$1,405.70")).toBeInTheDocument();
+  },
+};
+
+export const DeleteOffersUndo: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const page = within(document.body);
+    await userEvent.click(await canvas.findByRole("button", { name: /^Delete: Sell · MSFT, / }));
+    const dialog = await page.findByRole("alertdialog");
+    await expect(within(dialog).getByText(/You can undo this straight away/)).toBeVisible();
+    await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
+
+    await userEvent.click(await page.findByRole("button", { name: "Undo" }));
+
+    await expect(await page.findByText("Brought back")).toBeInTheDocument();
   },
 };

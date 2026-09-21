@@ -39,7 +39,9 @@ public sealed class Position(SecurityId securityId)
 
     public decimal ReportingCostBasis => lots.Sum(l => l.Quantity * l.ReportingUnitCost);
 
-    public bool IsOversold { get; private set; }
+    public bool IsOversold => FirstOversoldSale is not null;
+
+    public InvestmentTransactionId? FirstOversoldSale { get; private set; }
 
     public IReadOnlyList<RealizedSale> Sales => sales;
 
@@ -88,7 +90,11 @@ public sealed class Position(SecurityId securityId)
             }
         }
 
-        IsOversold |= remaining > 0;
+        if (remaining > 0)
+        {
+            FirstOversoldSale ??= id;
+        }
+
         sales.Add(new RealizedSale(id, date, quantity, proceeds, reportingProceeds, cost, reportingCost, consumed));
     }
 

@@ -15,7 +15,10 @@ public sealed class RestoreDeletedSummary : Summary<RestoreDeletedEndpoint, Rest
             + "its tags with it, because deleting never removed them; restoring a currency conversion "
             + "brings back the fee transaction that went with it. The record has to be visible again to "
             + "come back: an archived account, a deleted category or a fee transaction that was deleted "
-            + "on its own each refuse with their own code instead of restoring something broken.";
+            + "on its own each refuse with their own code instead of restoring something broken. An "
+            + "investment entry is replayed first in first out against the holding as it stands now, with "
+            + "the entry back in its place by date, and is refused when that replay would sell more than "
+            + "was held at any point.";
         ExampleRequest = new RestoreDeletedRequest(TrashKind.Transaction, Guid.Empty);
         RequestParam(r => r.Kind, "Which kind of record to bring back, as listed by GET /api/trash.");
         RequestParam(r => r.EntityId, "The id the record had before it was deleted.");
@@ -23,7 +26,10 @@ public sealed class RestoreDeletedSummary : Summary<RestoreDeletedEndpoint, Rest
         Responses[400] = $"Validation failed; the deletion is older than {DeletionEntry.RetentionDays} days "
             + "(restore.expired); the account or category it needs is gone (restore.referenceMissing); the "
             + "fee transaction of a conversion was deleted on its own (restore.companionDeleted); or the "
-            + "split lines of the transaction are no longer stored (restore.detailsLost).";
+            + "split lines of the transaction are no longer stored (restore.detailsLost); the security of a "
+            + "restored buy or sell now has another currency (restore.securityChanged); a restored sale "
+            + "would sell more than is held on its date (holding.oversold); or later sales now depend on "
+            + "the shares a restored entry would take back (holding.dependentSales).";
         Responses[404] = "Nothing the signed-in user deleted matches that kind and id, or the feature it belongs to is switched off.";
         Responses[409] = "Another record already holds the place this one needs, such as a budget on the same category and period (restore.slotTaken).";
     }

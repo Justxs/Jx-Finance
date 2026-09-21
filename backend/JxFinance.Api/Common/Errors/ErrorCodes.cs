@@ -66,6 +66,7 @@ public static class ErrorCodes
     public const string RestoreCompanionDeleted = "restore.companionDeleted";
     public const string RestoreDetailsLost = "restore.detailsLost";
     public const string RestoreSlotTaken = "restore.slotTaken";
+    public const string RestoreSecurityChanged = "restore.securityChanged";
     public const string ExportTooManyRows = "export.tooManyRows";
     public const string BackupInvalidFile = "backup.invalidFile";
     public const string BackupSchemaMismatch = "backup.schemaMismatch";
