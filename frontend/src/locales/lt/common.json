@@ -398,7 +398,8 @@
       "goal": "Tikslas",
       "asset": "Turtas",
       "debt": "Skola",
-      "recurringBill": "Periodinis įrašas"
+      "recurringBill": "Periodinis įrašas",
+      "investmentTransaction": "Investicijų įrašas"
     }
   },
   "theme": {
@@ -1589,6 +1590,7 @@
       "detailsLost": "Šio įrašo dalių eilutės nebesaugomos, todėl jo atkurti tokio, koks buvo, nepavyks.",
       "expired": "Šis įrašas ištrintas per seniai, kad jį būtų galima atkurti.",
       "referenceMissing": "Šiam įrašui reikalingos sąskaitos arba kategorijos nebėra. Pirmiausia atkurkite ją.",
+      "securityChanged": "Šio sandorio vertybinio popieriaus valiuta dabar kita, todėl įrašas su juo nebesutaptų.",
       "slotTaken": "Šio įrašo vietą jau užėmė kitas įrašas."
     },
     "security": {

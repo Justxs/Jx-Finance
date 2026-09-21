@@ -386,7 +386,8 @@
       "goal": "Goal",
       "asset": "Asset",
       "debt": "Debt",
-      "recurringBill": "Recurring entry"
+      "recurringBill": "Recurring entry",
+      "investmentTransaction": "Investment entry"
     }
   },
   "theme": {
@@ -1543,6 +1544,7 @@
       "detailsLost": "The split lines of this entry are no longer stored, so it cannot come back as it was.",
       "expired": "This was deleted too long ago to be restored.",
       "referenceMissing": "The account or category this entry needs is gone. Restore that first.",
+      "securityChanged": "The security of this trade has a different currency now, so the entry would no longer match it.",
       "slotTaken": "Another record already holds the place this one needs."
     },
     "security": {

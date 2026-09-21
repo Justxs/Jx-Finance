@@ -101,6 +101,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
     deleteMutation,
     items,
     (entry) => `${title(entry)} · ${formatDate(entry.date)} · ${cash(entry)}`,
+    "investmentTransaction",
   );
 
   let content: ReactNode;

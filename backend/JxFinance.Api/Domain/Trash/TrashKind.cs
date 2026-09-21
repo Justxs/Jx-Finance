@@ -10,4 +10,5 @@ public enum TrashKind
     Asset,
     Debt,
     RecurringBill,
+    InvestmentTransaction,
 }

@@ -69,6 +69,7 @@ export const ErrorCode = {
   restoredetailsLost: "restore.detailsLost",
   restoreexpired: "restore.expired",
   restorereferenceMissing: "restore.referenceMissing",
+  restoresecurityChanged: "restore.securityChanged",
   restoreslotTaken: "restore.slotTaken",
   securitynotHeld: "security.notHeld",
   sessioncurrent: "session.current",

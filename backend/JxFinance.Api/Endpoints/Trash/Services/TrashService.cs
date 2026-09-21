@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Holdings;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
@@ -9,6 +10,7 @@ using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Goals;
+using JxFinance.Domain.Investments;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
@@ -30,6 +32,7 @@ public sealed class TrashService(
     ICurrentUser currentUser,
     IClock clock,
     IInstanceSettingsStore settings,
+    IHoldingLedger ledger,
     TrashMapper mapper) : ITrashService
 {
     private static readonly DomainError Gone =
@@ -51,6 +54,21 @@ public sealed class TrashService(
     private static readonly DomainError LinesGone = new(
         ErrorCodes.RestoreDetailsLost,
         "The split lines of this transaction are no longer stored, so it would come back without its categories.");
+
+    private static readonly DomainError SecurityGone =
+        new(ErrorCodes.RestoreReferenceMissing, "The security this entry was recorded against is no longer stored.");
+
+    private static readonly DomainError SecurityChanged = new(
+        ErrorCodes.RestoreSecurityChanged,
+        "The security this entry was traded in has a different currency now, so the entry would no longer match it.");
+
+    private static readonly DomainError SaleUncovered = new(
+        ErrorCodes.HoldingOversold,
+        "This sale would sell more than is held on its date now. Restore or record the purchase it sold first.");
+
+    private static readonly DomainError LaterSalesDepend = new(
+        ErrorCodes.HoldingDependentSales,
+        "Later sales now depend on the shares this entry would take back. Delete or correct those first.");
 
     public async Task<PagedResponse<TrashEntryResponse>> GetPageAsync(
         GetTrashRequest request,
@@ -111,6 +129,7 @@ public sealed class TrashService(
             TrashKind.Asset => await RestoreAssetAsync(entry, cancellationToken),
             TrashKind.Debt => await RestoreDebtAsync(entry, cancellationToken),
             TrashKind.RecurringBill => await RestoreRecurringBillAsync(entry, cancellationToken),
+            TrashKind.InvestmentTransaction => await RestoreInvestmentTransactionAsync(entry, cancellationToken),
             _ => Result.Failure(Gone),
         };
         if (restored.IsFailure)
@@ -371,6 +390,60 @@ public sealed class TrashService(
         }
 
         bill.IsDeleted = false;
+
+        return Result.Success();
+    }
+
+    private async Task<Result> RestoreInvestmentTransactionAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var entryId = new InvestmentTransactionId(entry.EntityId);
+        var investment = await db.InvestmentTransactions
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.Id == entryId, cancellationToken);
+        if (investment is null)
+        {
+            return Gone;
+        }
+
+        if (!await AccountVisibleAsync(investment.AccountId, cancellationToken))
+        {
+            return AccountGone;
+        }
+
+        if (!investment.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        if (investment.SecurityId is { } securityId)
+        {
+            var currency = await db.Securities
+                .Where(s => s.Id == securityId)
+                .Select(s => (Currency?)s.Currency)
+                .FirstOrDefaultAsync(cancellationToken);
+            if (currency is null)
+            {
+                return SecurityGone;
+            }
+
+            if (investment.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell
+                && investment.CashAmount.Currency != currency)
+            {
+                return SecurityChanged;
+            }
+
+            var oversold = await ledger.FirstOversoldSaleAsync(
+                investment.AccountId,
+                securityId,
+                history => history.Append(investment),
+                cancellationToken);
+            if (oversold is { } saleId)
+            {
+                return saleId == entryId ? SaleUncovered : LaterSalesDepend;
+            }
+        }
+
+        investment.IsDeleted = false;
 
         return Result.Success();
     }
