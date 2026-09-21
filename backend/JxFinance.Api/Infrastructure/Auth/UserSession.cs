@@ -2,6 +2,8 @@ namespace JxFinance.Infrastructure.Auth;
 
 public sealed class UserSession
 {
+    public const int UserAgentMaxLength = 256;
+
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
@@ -19,4 +21,8 @@ public sealed class UserSession
     public DateTimeOffset CreatedAt { get; set; }
 
     public DateTimeOffset ExpiresAt { get; set; }
+
+    public DateTimeOffset LastSeenAt { get; set; }
+
+    public string? UserAgent { get; set; }
 }

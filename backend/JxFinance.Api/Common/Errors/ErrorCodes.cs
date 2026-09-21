@@ -37,6 +37,7 @@ public static class ErrorCodes
     public const string PasswordIncorrect = "password.incorrect";
     public const string PasswordTooWeak = "password.tooWeak";
     public const string TwoFactorInvalidCode = "twoFactor.invalidCode";
+    public const string SessionCurrent = "session.current";
     public const string SetupAlreadyCompleted = "setup.alreadyCompleted";
     public const string FeatureDisabled = "feature.disabled";
     public const string UserSelfChange = "user.selfChange";

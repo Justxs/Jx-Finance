@@ -9,7 +9,11 @@ public static class BackupDatabase
 {
     public static List<TableShape> ReadShapes(AppDbContext db)
     {
-        var sessions = db.Model.FindEntityType(typeof(UserSession))!.GetTableName();
+        string?[] transient =
+        [
+            db.Model.FindEntityType(typeof(UserSession))!.GetTableName(),
+            db.Model.FindEntityType(typeof(EmailMessage))!.GetTableName(),
+        ];
 
         return db.Model.GetRelationalModel().Tables
             .OrderBy(t => t.Name, StringComparer.Ordinal)

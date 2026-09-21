@@ -4,17 +4,27 @@ import {
   getLoginMockHandler,
   getLogoutMockHandler,
   getMeMockHandler,
+  getResetPasswordMockHandler,
+  getRevokeOtherSessionsMockHandler,
+  getRevokeSessionMockHandler,
+  getSendVerificationEmailMockHandler,
+  getSessionsMockHandler,
   getSetupTwoFactorMockHandler,
 } from "@/api/generated/auth/auth.msw";
 import {
   currentUser,
   loginSuccess,
   loginTwoFactorRequired,
+  resetLink,
+  resetTokenInvalidProblem,
+  sessionCurrentProblem,
+  sessions,
   twoFactorRecoveryCodes,
   twoFactorSetup,
   unauthorizedProblem,
+  verificationTokenInvalidProblem,
 } from "@/storybook/fixtures";
-import { problem, readBody, text } from "./http";
+import { found, problem, readBody, text } from "./http";
 
 export const authHandlers = [
   getMeMockHandler(currentUser),
@@ -33,4 +43,25 @@ export const authHandlers = [
   getSetupTwoFactorMockHandler(twoFactorSetup),
   getEnableTwoFactorMockHandler(twoFactorRecoveryCodes),
   getDisableTwoFactorMockHandler(),
+  getSessionsMockHandler(sessions),
+  getRevokeSessionMockHandler(({ params }) => {
+    if (found(sessions.find((session) => session.id === params.id)).isCurrent) {
+      throw problem(sessionCurrentProblem, 403);
+    }
+  }),
+  getRevokeOtherSessionsMockHandler(),
+  getForgotPasswordMockHandler(),
+  getResetPasswordMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    if (text(body.token) !== resetLink.token) {
+      throw problem(resetTokenInvalidProblem, 400);
+    }
+  }),
+  getVerifyEmailMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    if (text(body.token) !== resetLink.token) {
+      throw problem(verificationTokenInvalidProblem, 400);
+    }
+  }),
+  getSendVerificationEmailMockHandler(),
 ];
