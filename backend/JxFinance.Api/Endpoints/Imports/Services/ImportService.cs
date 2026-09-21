@@ -69,6 +69,7 @@ public sealed class ImportService(
         }
 
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
+        var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
 
         var rows = parsedRows
             .Select((r, index) => new ImportPreviewRow(

@@ -56,6 +56,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<Debt> Debts => Set<Debt>();
     public DbSet<RecurringBill> RecurringBills => Set<RecurringBill>();
+    public DbSet<SubscriptionDismissal> SubscriptionDismissals => Set<SubscriptionDismissal>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NetWorthSnapshot> NetWorthSnapshots => Set<NetWorthSnapshot>();
     public DbSet<Household> Households => Set<Household>();

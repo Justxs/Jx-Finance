@@ -4,6 +4,7 @@ import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getBudgetsMockHandler } from "@/api/generated/budgets/budgets.msw";
 import { getCategoriesMockHandler } from "@/api/generated/categories/categories.msw";
+import { getCategorizationRulesMockHandler } from "@/api/generated/categorization-rules/categorization-rules.msw";
 import { getConversionsMockHandler } from "@/api/generated/conversions/conversions.msw";
 import {
   getCategoryBreakdownMockHandler,
@@ -20,14 +21,19 @@ import {
   getNetWorthMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
-import { getRecurringBillsMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
+import {
+  getRecurringBillsMockHandler,
+  getSubscriptionCandidatesMockHandler,
+} from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
 import { getSetupStatusMockHandler } from "@/api/generated/setup/setup.msw";
+import { getTagsMockHandler } from "@/api/generated/tags/tags.msw";
 import {
   getTransactionsMockHandler,
   getTransactionsSummaryMockHandler,
 } from "@/api/generated/transactions/transactions.msw";
 import { getTransfersMockHandler } from "@/api/generated/transfers/transfers.msw";
+import { getTrashMockHandler } from "@/api/generated/trash/trash.msw";
 import { getUsersMockHandler } from "@/api/generated/users/users.msw";
 import {
   currentUser,
@@ -47,6 +53,7 @@ import { authHandlers } from "./auth";
 import { backupHandlers } from "./backups";
 import { budgetHandlers } from "./budgets";
 import { categoryHandlers } from "./categories";
+import { categorizationRuleHandlers } from "./categorization-rules";
 import { conversionHandlers } from "./conversions";
 import { currencyHandlers } from "./currencies";
 import { dashboardHandlers } from "./dashboard";
@@ -62,8 +69,10 @@ import { recurringBillHandlers } from "./recurring-bills";
 import { reportHandlers } from "./reports";
 import { settingsHandlers } from "./settings";
 import { setupHandlers } from "./setup";
+import { tagHandlers } from "./tags";
 import { transactionHandlers } from "./transactions";
 import { transferHandlers } from "./transfers";
+import { trashHandlers } from "./trash";
 import { userHandlers } from "./users";
 
 export { failWith, failWithStatus, onRouteOf, pending, problem } from "./http";
@@ -74,6 +83,7 @@ export const handlers: RequestHandler[] = [
   ...authHandlers,
   ...backupHandlers,
   ...budgetHandlers,
+  ...categorizationRuleHandlers,
   ...categoryHandlers,
   ...conversionHandlers,
   ...currencyHandlers,
@@ -89,8 +99,10 @@ export const handlers: RequestHandler[] = [
   ...reportHandlers,
   ...settingsHandlers,
   ...setupHandlers,
+  ...tagHandlers,
   ...transactionHandlers,
   ...transferHandlers,
+  ...trashHandlers,
   ...userHandlers,
 ];
 
@@ -119,11 +131,14 @@ export const emptyHandlers: RequestHandler[] = [
   getAssetsMockHandler([]),
   getBudgetsMockHandler([]),
   getCategoriesMockHandler([]),
+  getCategorizationRulesMockHandler([]),
   getDebtsMockHandler([]),
   getGoalsMockHandler([]),
   getHouseholdsMockHandler([]),
   getNotificationsMockHandler([]),
   getRecurringBillsMockHandler([]),
+  getSubscriptionCandidatesMockHandler([]),
+  getTagsMockHandler([]),
   getUsersMockHandler([currentUser]),
   getTransactionsSummaryMockHandler(emptyTransactionsSummary),
   getTransactionsMockHandler(emptyPage),
@@ -144,6 +159,7 @@ export const emptyHandlers: RequestHandler[] = [
     };
   }),
   getImportPreviewMockHandler({ rows: [] }),
+  getTrashMockHandler(emptyPage),
   ...handlers,
 ];
 

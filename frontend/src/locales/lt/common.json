@@ -1210,15 +1210,35 @@
       "transfer": "Registruoti pervedimą"
     },
     "forecast": "Mokėtina per artimiausius šešis mėnesius",
-    "forecastSeries": "Mokėtinos sąskaitos",
-    "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos mokėjimų nėra.",
-    "forecastLabel": "Fiksuotų mokėjimų suma kiekvieną iš artimiausių šešių mėnesių",
-    "editTitle": "Redaguoti periodinę sąskaitą",
-    "activeHint": "Neaktyvi sąskaita nesiunčia priminimų ir jos negalima patvirtinti.",
-    "chooseAccount": "Pasirinkite sąskaitą",
-    "confirmFixed": "„{{name}}“ mokėjimas ({{amount}}) bus įrašytas kaip {{date}} išlaida, o sąskaitos terminas perkeltas į kitą datą.",
-    "confirmVariable": "Jūsų įvesta „{{name}}“ suma bus įrašyta kaip {{date}} išlaida, o sąskaitos terminas perkeltas į kitą datą.",
-    "confirmStale": "Šis mokėjimas jau patvirtintas arba sąskaita pakeista kitur. Sąskaitos duomenys atnaujinti: patikrinkite viršuje nurodytą terminą ir, jei vis dar reikia, patvirtinkite dar kartą."
+    "forecastSeries": "Mokėtinos išlaidos",
+    "forecastEmpty": "Per artimiausius šešis mėnesius fiksuotos sumos išlaidų nėra.",
+    "forecastLabel": "Fiksuotų periodinių išlaidų suma kiekvieną iš artimiausių šešių mėnesių",
+    "editTitle": "Redaguoti periodinį įrašą",
+    "activeHint": "Neaktyvus įrašas nesiunčia priminimų ir jo negalima patvirtinti.",
+    "confirmFixed": {
+      "expense": "„{{name}}“ suma {{amount}} bus įrašyta kaip {{date}} išlaida, o įrašo terminas perkeltas į kitą datą.",
+      "income": "„{{name}}“ suma {{amount}} bus įrašyta kaip {{date}} pajamos, o įrašo terminas perkeltas į kitą datą.",
+      "transfer": "{{amount}} bus pervesta iš „{{from}}“ į „{{to}}“ {{date}} data, o įrašo terminas perkeltas į kitą datą."
+    },
+    "confirmVariable": {
+      "expense": "Jūsų įvesta „{{name}}“ suma bus įrašyta kaip {{date}} išlaida, o įrašo terminas perkeltas į kitą datą.",
+      "income": "Jūsų įvesta „{{name}}“ suma bus įrašyta kaip {{date}} pajamos, o įrašo terminas perkeltas į kitą datą.",
+      "transfer": "Jūsų įvesta suma bus pervesta iš „{{from}}“ į „{{to}}“ {{date}} data, o įrašo terminas perkeltas į kitą datą."
+    },
+    "confirmStale": "Šis įvykis jau patvirtintas arba įrašas pakeistas kitur. Įrašo duomenys atnaujinti: patikrinkite viršuje nurodytą terminą ir, jei vis dar reikia, patvirtinkite dar kartą."
+  },
+  "subscriptions": {
+    "title": "Pastebėtos prenumeratos",
+    "explainer": "Pastarųjų dvejų metų išlaidos, kurios kartojasi tolygiu ritmu ir panašia suma ir kurių dar neapima nė vienas aktyvus periodinis įrašas. Kol kas nieko neįrašyta: sukurkite įrašą, kad sektumėte, arba atmeskite, kad daugiau nebūtų siūloma.",
+    "empty": "Kol kas nėra pakankamai dažnai pasikartojančių išlaidų.",
+    "nextExpected": "Kitas numatomas",
+    "basedOn_one": "Pagal {{count}} mokėjimą",
+    "basedOn_other": "Pagal {{count}} mokėjimus",
+    "create": "Sukurti įrašą",
+    "createTitle": "Sukurti periodinį įrašą",
+    "createDescription": "Užpildyta pagal rastus mokėjimus. Prieš išsaugodami galite viską pakeisti.",
+    "dismiss": "Atmesti",
+    "dismissed": "Pasiūlymas atmestas"
   },
   "notifications": {
     "title": "Pranešimai",
