@@ -14,6 +14,18 @@ public sealed class DeletionEntry : OwnableEntity
     public DateTimeOffset DeletedAt { get; set; }
     public DateTimeOffset? RestoredAt { get; set; }
     public Guid? CompanionId { get; set; }
+    public List<DeletionChange> Changes { get; } = [];
+
+    public void Remember(DeletionChangeKind kind, IEnumerable<Guid> rowIds) =>
+        Changes.AddRange(rowIds.Distinct().Select(rowId => new DeletionChange
+        {
+            DeletionEntryId = Id,
+            Kind = kind,
+            RowId = rowId,
+        }));
+
+    public IReadOnlyList<Guid> Remembered(DeletionChangeKind kind) =>
+        [.. Changes.Where(c => c.Kind == kind).Select(c => c.RowId)];
 
     public static DateTimeOffset WindowStart(DateTimeOffset now) => now.AddDays(-RetentionDays);
 }

@@ -3,12 +3,14 @@ using JxFinance.Common;
 using JxFinance.Common.CategorizationRules;
 using JxFinance.Common.Errors;
 using JxFinance.Common.References;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Mappers;
 using JxFinance.Endpoints.CategorizationRules.Shared;
@@ -21,7 +23,8 @@ namespace JxFinance.Endpoints.CategorizationRules.Services;
 public sealed class CategorizationRuleService(
     AppDbContext db,
     CategorizationRuleMapper mapper,
-    IReferenceGuard references) : ICategorizationRuleService
+    IReferenceGuard references,
+    IDeletionRecorder deletions) : ICategorizationRuleService
 {
     public async Task<IReadOnlyList<CategorizationRuleWithTags>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -102,6 +105,16 @@ public sealed class CategorizationRuleService(
         }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var tagIds = await db.CategorizationRuleTags
+            .Where(t => t.RuleId == ruleId)
+            .Select(t => t.TagId)
+            .ToListAsync(cancellationToken);
+        var entry = deletions.Record(
+            TrashKind.CategorizationRule,
+            id,
+            TrashLabel.Counted(rule.Name, (tagIds.Count, "tag", "tags")));
+        entry.Remember(DeletionChangeKind.RuleTag, tagIds.Select(t => t.Value));
 
         await db.CategorizationRuleTags.Where(t => t.RuleId == ruleId).ExecuteDeleteAsync(cancellationToken);
         db.CategorizationRules.Remove(rule);

@@ -39,16 +39,18 @@ export function RulesPage() {
   const tags = useTagsSuspense();
 
   const deleteMutation = useDeleteCategorizationRule({
-    mutation: {
-      ...optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
-      onSuccess: () => toast.success(t("categorizationRules.deleted")),
-    },
+    mutation: optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
   });
 
   const moveMutation = useMoveCategorizationRule(silent());
 
   const ruleList = useDeferredValue(rules.data) ?? [];
-  const remove = useConfirmedDelete(deleteMutation, ruleList, (rule) => rule.name);
+  const remove = useConfirmedDelete(
+    deleteMutation,
+    ruleList,
+    (rule) => rule.name,
+    "categorizationRule",
+  );
 
   const accountNames = nameById(accounts.data);
   const categoryNames = nameById(categories.data);

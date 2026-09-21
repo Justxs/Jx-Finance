@@ -10,7 +10,7 @@ public sealed class RestoreDeletedEndpoint(ITrashService trashService) : Endpoin
     {
         Post("trash/restore");
         Group<TrashGroup>();
-        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
+        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
     public override async Task HandleAsync(RestoreDeletedRequest req, CancellationToken ct)

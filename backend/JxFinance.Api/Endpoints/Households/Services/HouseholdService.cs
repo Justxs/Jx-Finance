@@ -1,8 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
+using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Households.AddMember;
 using JxFinance.Endpoints.Households.CreateHousehold;
 using JxFinance.Endpoints.Households.Interfaces;
@@ -20,7 +22,8 @@ public sealed class HouseholdService(
     AppDbContext db,
     ICurrentUser currentUser,
     HouseholdMapper mapper,
-    IClock clock) : IHouseholdService
+    IClock clock,
+    IDeletionRecorder deletions) : IHouseholdService
 {
     public async Task<IReadOnlyList<HouseholdResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -88,6 +91,7 @@ public sealed class HouseholdService(
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await RecordDeletionAsync(household, cancellationToken);
         await MakePersonalAsync(household.Id, null, cancellationToken);
         db.Households.Remove(household);
         await db.SaveChangesAsync(cancellationToken);
@@ -198,6 +202,38 @@ public sealed class HouseholdService(
         return await ToResponseAsync(household, cancellationToken);
     }
 
+    private async Task RecordDeletionAsync(Household household, CancellationToken cancellationToken)
+    {
+        var householdId = household.Id;
+        var accounts = await db.Accounts
+            .IgnoreQueryFilters()
+            .Where(a => a.HouseholdId == householdId)
+            .Select(a => new { a.Id, a.IsDeleted })
+            .ToListAsync(cancellationToken);
+        var categories = await db.Categories
+            .IgnoreQueryFilters()
+            .Where(c => c.HouseholdId == householdId)
+            .Select(c => new { c.Id, c.IsDeleted })
+            .ToListAsync(cancellationToken);
+        var tags = await db.Tags
+            .IgnoreQueryFilters()
+            .Where(t => t.HouseholdId == householdId)
+            .Select(t => new { t.Id, t.IsDeleted })
+            .ToListAsync(cancellationToken);
+
+        var entry = deletions.Record(
+            TrashKind.Household,
+            householdId.Value,
+            TrashLabel.Counted(
+                household.Name,
+                (accounts.Count(a => !a.IsDeleted), "account", "accounts"),
+                (categories.Count(c => !c.IsDeleted), "category", "categories"),
+                (tags.Count(t => !t.IsDeleted), "tag", "tags")));
+        entry.Remember(DeletionChangeKind.AccountShare, accounts.Select(a => a.Id.Value));
+        entry.Remember(DeletionChangeKind.CategoryShare, categories.Select(c => c.Id.Value));
+        entry.Remember(DeletionChangeKind.TagShare, tags.Select(t => t.Id.Value));
+    }
+
     private async Task MakePersonalAsync(HouseholdId householdId, Guid? ownerId, CancellationToken cancellationToken)
     {
         var now = clock.UtcNow;
@@ -213,21 +249,23 @@ public sealed class HouseholdService(
                 cancellationToken);
 
         await db.Categories
+            .IgnoreQueryFilters()
             .Where(c => c.HouseholdId == householdId && (ownerId == null || c.UserId == ownerId))
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(c => c.Scope, Scope.Personal)
                     .SetProperty(c => c.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(c => c.UpdatedAt, now),
+                    .SetProperty(c => c.UpdatedAt, c => c.IsDeleted ? c.UpdatedAt : now),
                 cancellationToken);
 
         await db.Tags
+            .IgnoreQueryFilters()
             .Where(t => t.HouseholdId == householdId && (ownerId == null || t.UserId == ownerId))
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(t => t.Scope, Scope.Personal)
                     .SetProperty(t => t.HouseholdId, (HouseholdId?)null)
-                    .SetProperty(t => t.UpdatedAt, now),
+                    .SetProperty(t => t.UpdatedAt, t => t.IsDeleted ? t.UpdatedAt : now),
                 cancellationToken);
     }
 

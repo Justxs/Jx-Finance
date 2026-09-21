@@ -68,6 +68,7 @@ export const ErrorCode = {
   restorecompanionDeleted: "restore.companionDeleted",
   restoredetailsLost: "restore.detailsLost",
   restoreexpired: "restore.expired",
+  restorenameTaken: "restore.nameTaken",
   restorereferenceMissing: "restore.referenceMissing",
   restoresecurityChanged: "restore.securityChanged",
   restoreslotTaken: "restore.slotTaken",

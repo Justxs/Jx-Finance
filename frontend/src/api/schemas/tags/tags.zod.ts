@@ -47,7 +47,7 @@ export const TagsResponseItem = zod.object({
 export const TagsResponse = zod.array(TagsResponseItem);
 
 /**
- * Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag.
+ * Removes the tag and takes it off every transaction that carried it, the way deleting a category leaves its transactions uncategorised. The transactions themselves, their amounts, categories and split lines are untouched. Only the owner can delete a shared tag. The transactions it was on are recorded, so the deletion is listed in the trash and POST /api/trash/restore puts the tag back on them.
  * @summary Delete a tag
  */
 export const DeleteTagResponse = zod.void();

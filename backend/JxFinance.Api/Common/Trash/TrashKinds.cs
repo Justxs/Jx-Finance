@@ -14,6 +14,8 @@ public static class TrashKinds
         TrashKind.Asset or TrashKind.Debt => Feature.NetWorth,
         TrashKind.RecurringBill => Feature.RecurringBills,
         TrashKind.InvestmentTransaction => Feature.Investments,
+        TrashKind.CategorizationRule => Feature.CategorizationRules,
+        TrashKind.Household => Feature.Households,
         _ => null,
     };
 

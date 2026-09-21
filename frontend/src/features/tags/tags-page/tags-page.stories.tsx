@@ -63,7 +63,7 @@ export const DeletePending: Story = {
   },
 };
 
-export const DeleteSucceeds: Story = {
+export const DeleteOffersUndo: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {
@@ -71,6 +71,15 @@ export const DeleteSucceeds: Story = {
     });
     await userEvent.click(deleteButtons[0]!);
     const dialog = await within(document.body).findByRole("alertdialog");
+    const page = within(document.body);
+    await expect(
+      within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
+    ).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
+
+    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    await userEvent.click(undo);
+
+    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };

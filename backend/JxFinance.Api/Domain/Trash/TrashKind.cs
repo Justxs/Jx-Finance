@@ -11,4 +11,8 @@ public enum TrashKind
     Debt,
     RecurringBill,
     InvestmentTransaction,
+    Category,
+    Tag,
+    CategorizationRule,
+    Household,
 }

@@ -183,7 +183,6 @@
     "icon": "Icon",
     "income": "Income",
     "expense": "Expense",
-    "deleted": "Category deleted; its transactions are now uncategorized",
     "empty": "No categories in this group."
   },
   "tags": {
@@ -197,7 +196,6 @@
     "explainer": "A tag says what a payment was for across categories: a holiday, a renovation, something to be reimbursed. A transaction can carry several, and a tag has no income or expense side.",
     "created": "Tag added",
     "updated": "Tag updated",
-    "deleted": "Tag deleted; it was taken off its transactions and nothing else changed",
     "field": "Tags",
     "searchPlaceholder": "Search tags...",
     "noMatches": "No tag matches.",
@@ -264,7 +262,6 @@
     "orderHint": "Rules are tried from the top. The first one that matches decides the row and the rest are skipped.",
     "created": "Rule added",
     "updated": "Rule updated",
-    "deleted": "Rule deleted; the transactions it filled in keep what they got",
     "moved": "Order changed",
     "onAccount": "on {{account}}",
     "amountRange": "{{from}} to {{to}}",
@@ -387,7 +384,11 @@
       "asset": "Asset",
       "debt": "Debt",
       "recurringBill": "Recurring entry",
-      "investmentTransaction": "Investment entry"
+      "investmentTransaction": "Investment entry",
+      "category": "Category",
+      "tag": "Tag",
+      "categorizationRule": "Categorization rule",
+      "household": "Household"
     }
   },
   "theme": {
@@ -1543,6 +1544,7 @@
       "companionDeleted": "The fee transaction of this conversion was deleted on its own. Restore that transaction first.",
       "detailsLost": "The split lines of this entry are no longer stored, so it cannot come back as it was.",
       "expired": "This was deleted too long ago to be restored.",
+      "nameTaken": "Another tag of yours has this name now. Rename or delete it first.",
       "referenceMissing": "The account or category this entry needs is gone. Restore that first.",
       "securityChanged": "The security of this trade has a different currency now, so the entry would no longer match it.",
       "slotTaken": "Another record already holds the place this one needs."

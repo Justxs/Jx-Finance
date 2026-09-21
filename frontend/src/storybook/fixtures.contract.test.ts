@@ -219,6 +219,7 @@ const contracts: Record<string, Contract> = {
   brokerImportNothingNew: { schema: schemas.ImportBrokerReportResponse },
   brokerImportWithWarnings: { schema: schemas.ImportBrokerReportResponse },
   trashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
+  recordedTrashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
   trashPage: { schema: schemas.TrashResponse },
 };
 
