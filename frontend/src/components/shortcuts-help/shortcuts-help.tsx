@@ -9,7 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
 import { useSettings } from "@/hooks/use-settings";
-import { type Shortcut, visibleShortcuts } from "@/lib/shortcuts";
+import { type Shortcut, shortcutKeyLabel, visibleShortcuts } from "@/lib/shortcuts";
 import { useShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
 
 interface RowProps {
@@ -29,7 +29,7 @@ function ShortcutRow({ shortcut }: Readonly<RowProps>) {
               <span className="text-xs text-muted-foreground">{t("shortcuts.then")}</span>
             ) : null}
             <kbd className="inline-flex h-5 min-w-5 items-center justify-center rounded-sm border bg-muted/40 px-1 font-mono text-xs">
-              {key}
+              {shortcutKeyLabel(key)}
             </kbd>
           </Fragment>
         ))}

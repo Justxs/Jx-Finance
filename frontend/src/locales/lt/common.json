@@ -781,6 +781,24 @@
     "search": "Ieškoti operacijų",
     "help": "Rodyti sparčiuosius klavišus"
   },
+  "commandPalette": {
+    "title": "Komandų paletė",
+    "description": "Rašykite ir ieškokite puslapių, sąskaitų, kategorijų, žymų bei veiksmų. Judėkite rodyklėmis, pasirinkite Enter, uždarykite Escape.",
+    "searchLabel": "Ieškoti puslapių, įrašų ir veiksmų",
+    "placeholder": "Ieškoti puslapių, įrašų ir veiksmų…",
+    "resultsLabel": "Atitikmenys",
+    "count": "Atitikmenų: {{count}}",
+    "empty": "Nieko neradome pagal jūsų įvestį.",
+    "run": "Vykdyti",
+    "goTo": "Eiti į",
+    "openTransactions": "Atverti operacijas",
+    "newTransfer": "Naujas pervedimas",
+    "language": "Kalba",
+    "theme": {
+      "dark": "Perjungti į tamsią temą",
+      "light": "Perjungti į šviesią temą"
+    }
+  },
   "goals": {
     "title": "Tikslai",
     "add": "Pridėti tikslą",

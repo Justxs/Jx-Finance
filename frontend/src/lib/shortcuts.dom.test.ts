@@ -3,8 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   PREFIX_TIMEOUT_MS,
+  isModifierShortcut,
   registerShortcuts,
   type ShortcutFeature,
+  shortcutKeyLabel,
   shortcuts,
   shouldIgnoreShortcut,
   toHotkeySteps,
@@ -28,16 +30,25 @@ describe("key map", () => {
     );
 
     expect(steps).toEqual({
+      "command-palette": ["Mod+K"],
       "new-transaction": ["N"],
       search: ["/"],
       help: [{ key: "?", shift: true }],
     });
   });
 
+  test("only the palette carries a modifier, and its key is spelled out for the help list", () => {
+    expect(shortcuts.filter(isModifierShortcut).map((shortcut) => shortcut.id)).toEqual([
+      "command-palette",
+    ]);
+    expect(shortcutKeyLabel("Mod+K")).toMatch(/K$/u);
+    expect(shortcutKeyLabel("g")).toBe("g");
+  });
+
   test("go-to shortcuts map to a G sequence", () => {
     const goTo = shortcuts.filter((shortcut) => shortcut.group === "goTo");
 
-    expect(goTo).toHaveLength(11);
+    expect(goTo).toHaveLength(12);
     for (const shortcut of goTo) {
       expect(toHotkeySteps(shortcut)).toEqual(["G", shortcut.keys[1]?.toUpperCase()]);
     }
@@ -104,6 +115,14 @@ describe("shouldIgnoreShortcut", () => {
   ])("ignores %j", (override) => {
     expect(shouldIgnoreShortcut({ ...base, ...override })).toBe(true);
   });
+
+  test("a shortcut with a modifier still runs while a field has focus", () => {
+    expect(shouldIgnoreShortcut({ ...base, editableTarget: true, modified: true })).toBe(false);
+  });
+
+  test("a shortcut with a modifier still yields to another open dialog", () => {
+    expect(shouldIgnoreShortcut({ ...base, dialogOpen: true, modified: true })).toBe(true);
+  });
 });
 
 describe("registerShortcuts", () => {
@@ -112,21 +131,28 @@ describe("registerShortcuts", () => {
   function setup({
     pathname = "/budgets",
     helpOpen = false,
+    paletteOpen = false,
     isFeatureEnabled,
   }: {
     pathname?: string;
     helpOpen?: boolean;
+    paletteOpen?: boolean;
     isFeatureEnabled?: (feature: ShortcutFeature) => boolean;
   } = {}) {
     const navigate = vi.fn();
     const toggleHelp = vi.fn();
+    const togglePalette = vi.fn();
     unregister = registerShortcuts(
       { state: { location: { pathname } }, navigate },
-      toggleHelp,
-      () => helpOpen,
-      isFeatureEnabled,
+      {
+        toggleHelp,
+        isHelpOpen: () => helpOpen,
+        togglePalette,
+        isPaletteOpen: () => paletteOpen,
+        isFeatureEnabled,
+      },
     );
-    return { navigate, toggleHelp, user: userEvent.setup() };
+    return { navigate, toggleHelp, togglePalette, user: userEvent.setup() };
   }
 
   afterEach(() => {
@@ -144,6 +170,36 @@ describe("registerShortcuts", () => {
       to: "/transactions",
       search: { new: true },
     });
+  });
+
+  test("the modifier shortcut opens the palette, and opens it again while typing", async () => {
+    const { togglePalette, navigate, user } = setup();
+
+    await user.keyboard("{Control>}k{/Control}");
+    expect(togglePalette).toHaveBeenCalledOnce();
+
+    const input = document.createElement("input");
+    document.body.replaceChildren(input);
+    await user.click(input);
+    await user.keyboard("{Control>}k{/Control}");
+
+    expect(togglePalette).toHaveBeenCalledTimes(2);
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  test("the palette's own dialog does not block its shortcut, another dialog does", async () => {
+    const open = setup({ paletteOpen: true });
+    document.body.innerHTML = '<div role="dialog"></div>';
+    await open.user.keyboard("{Control>}k{/Control}");
+    expect(open.togglePalette).toHaveBeenCalledOnce();
+
+    open.togglePalette.mockClear();
+    unregister?.();
+
+    const blocked = setup();
+    document.body.innerHTML = '<div role="dialog"></div>';
+    await blocked.user.keyboard("{Control>}k{/Control}");
+    expect(blocked.togglePalette).not.toHaveBeenCalled();
   });
 
   test("g then a letter navigates", async () => {

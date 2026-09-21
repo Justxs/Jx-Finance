@@ -35,7 +35,8 @@ export const Open: Story = {
   },
   play: async () => {
     const dialog = await within(document.body).findByRole("dialog");
-    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(14);
+    await expect(within(dialog).getAllByRole("listitem")).toHaveLength(16);
+    await within(dialog).findByText("Command palette");
   },
 };
 
@@ -51,7 +52,11 @@ export const Lithuanian: Story = {
 };
 
 export const OpenedByQuestionMark: Story = {
-  beforeEach: () => registerShortcuts(storyRouter, toggleShortcutsHelp, isShortcutsHelpOpen),
+  beforeEach: () =>
+    registerShortcuts(storyRouter, {
+      toggleHelp: toggleShortcutsHelp,
+      isHelpOpen: isShortcutsHelpOpen,
+    }),
   play: async () => {
     const body = within(document.body);
     await expect(body.queryByRole("dialog")).toBeNull();

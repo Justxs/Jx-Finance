@@ -1,4 +1,4 @@
-import { useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -30,12 +30,27 @@ export function AccountsPage() {
   const { t } = useTranslation();
   const { features } = useSettings();
 
-  const [shown, stale] = useDeferredParams(useSearch({ from: "/accounts" }));
+  const { new: creating, ...filters } = useSearch({ from: "/accounts" });
+  const navigate = useNavigate({ from: "/accounts" });
+  const [shown, stale] = useDeferredParams(filters);
   const accounts = useAccountsSuspense(accountListParams(shown));
   const allAccounts = useAccountsSuspense();
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [createOpen, setCreateOpen] = useState(false);
   const [convertAccountId, setConvertAccountId] = useState<string | null>(null);
+
+  function setCreating(next: "account" | "transfer" | undefined) {
+    void navigate({ search: (prev) => ({ ...prev, new: next }), replace: next === undefined });
+  }
+
+  function setCreateOpen(open: boolean) {
+    setCreating(open ? "account" : undefined);
+  }
+
+  function setTransferOpen(open: boolean) {
+    setCreating(open ? "transfer" : undefined);
+  }
+
+  const createOpen = creating === "account";
 
   const createMutation = useCreateAccount({
     mutation: {
@@ -113,7 +128,11 @@ export function AccountsPage() {
       ) : null}
 
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <TransfersSection accounts={allAccountList} />
+        <TransfersSection
+          accounts={allAccountList}
+          addOpen={creating === "transfer"}
+          onAddOpenChange={setTransferOpen}
+        />
       </QueryBoundary>
 
       {features.multiCurrency ? (

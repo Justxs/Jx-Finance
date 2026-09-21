@@ -1,4 +1,5 @@
 import {
+  formatForDisplay,
   getHotkeyManager,
   getSequenceManager,
   normalizeHotkey,
@@ -31,7 +32,8 @@ const DISABLED_PATHS = new Set([
 type ShortcutAction =
   | { type: "navigate"; to: string; search?: Record<string, unknown> }
   | { type: "search" }
-  | { type: "help" };
+  | { type: "help" }
+  | { type: "palette" };
 
 export interface Shortcut {
   id: string;
@@ -59,6 +61,13 @@ function goTo(
 }
 
 export const shortcuts: readonly Shortcut[] = [
+  {
+    id: "command-palette",
+    keys: ["Mod+K"],
+    labelKey: "commandPalette.title",
+    group: "actions",
+    action: { type: "palette" },
+  },
   {
     id: "new-transaction",
     keys: ["n"],
@@ -100,19 +109,28 @@ export function visibleShortcuts(isFeatureEnabled: (feature: ShortcutFeature) =>
   );
 }
 
+export function isModifierShortcut(shortcut: Shortcut) {
+  return shortcut.keys.some((key) => key.includes("+"));
+}
+
+export function shortcutKeyLabel(key: string) {
+  return key.includes("+") ? formatForDisplay(key) : key;
+}
+
 interface ShortcutContext {
   defaultPrevented: boolean;
   repeat: boolean;
   editableTarget: boolean;
   dialogOpen: boolean;
   pathname: string;
+  modified?: boolean;
 }
 
 export function shouldIgnoreShortcut(context: ShortcutContext) {
   return (
     context.defaultPrevented ||
     context.repeat ||
-    context.editableTarget ||
+    (context.editableTarget && context.modified !== true) ||
     context.dialogOpen ||
     DISABLED_PATHS.has(context.pathname)
   );
@@ -122,9 +140,17 @@ export function toHotkeySteps(shortcut: Shortcut): RegisterableHotkey[] {
   return shortcut.keys.map((key) => (key === "?" ? { key, shift: true } : normalizeHotkey(key)));
 }
 
-interface ShortcutRouter {
+export interface ShortcutRouter {
   state: { location: { pathname: string } };
   navigate: (options: { to: string; search?: Record<string, unknown> }) => unknown;
+}
+
+export interface ShortcutRuntime {
+  toggleHelp: () => void;
+  isHelpOpen: () => boolean;
+  togglePalette: () => void;
+  isPaletteOpen: () => boolean;
+  isFeatureEnabled: (feature: ShortcutFeature) => boolean;
 }
 
 function isEditableTarget(target: EventTarget | null) {
@@ -145,24 +171,40 @@ function focusSearchTarget() {
   return true;
 }
 
+function alwaysFalse() {
+  return false;
+}
+
+function alwaysTrue() {
+  return true;
+}
+
 const HOTKEY_OPTIONS = { preventDefault: false, stopPropagation: false } as const;
 
 export function registerShortcuts(
   router: RegisteredRouter | ShortcutRouter,
-  toggleHelp: () => void,
-  isHelpOpen: () => boolean = () => false,
-  isFeatureEnabled: (feature: ShortcutFeature) => boolean = () => true,
+  runtime: Partial<ShortcutRuntime> = {},
 ) {
   const target = router as ShortcutRouter;
+  const isHelpOpen = runtime.isHelpOpen ?? alwaysFalse;
+  const isPaletteOpen = runtime.isPaletteOpen ?? alwaysFalse;
+  const isFeatureEnabled = runtime.isFeatureEnabled ?? alwaysTrue;
 
-  function runAction(event: KeyboardEvent, action: ShortcutAction) {
-    const helpOpen = isHelpOpen();
+  function otherDialogOpen() {
+    if (isHelpOpen() || isPaletteOpen()) {
+      return false;
+    }
+    return document.querySelector(DIALOG_SELECTOR) !== null;
+  }
+
+  function runAction(event: KeyboardEvent, action: ShortcutAction, modified: boolean) {
     const ignored = shouldIgnoreShortcut({
       defaultPrevented: event.defaultPrevented,
       repeat: event.repeat,
       editableTarget: isEditableTarget(event.target),
-      dialogOpen: !helpOpen && document.querySelector(DIALOG_SELECTOR) !== null,
+      dialogOpen: otherDialogOpen(),
       pathname: target.state.location.pathname,
+      modified,
     });
 
     if (ignored) {
@@ -172,12 +214,17 @@ export function registerShortcuts(
     event.preventDefault();
 
     if (action.type === "help") {
-      toggleHelp();
+      runtime.toggleHelp?.();
       return;
     }
 
-    if (helpOpen) {
-      toggleHelp();
+    if (isHelpOpen()) {
+      runtime.toggleHelp?.();
+    }
+
+    if (action.type === "palette") {
+      runtime.togglePalette?.();
+      return;
     }
 
     if (action.type === "search") {
@@ -193,12 +240,13 @@ export function registerShortcuts(
   const handles = shortcuts.map((shortcut) => {
     const steps = toHotkeySteps(shortcut);
     const [first, ...rest] = steps;
+    const modified = isModifierShortcut(shortcut);
 
     function callback(event: KeyboardEvent) {
       if (shortcut.feature !== undefined && !isFeatureEnabled(shortcut.feature)) {
         return;
       }
-      runAction(event, shortcut.action);
+      runAction(event, shortcut.action, modified);
     }
 
     if (first !== undefined && rest.length === 0) {

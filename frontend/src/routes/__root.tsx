@@ -19,6 +19,7 @@ import {
   visibleNav,
 } from "@/components/app-sidebar/app-sidebar";
 import { Brand } from "@/components/brand/brand";
+import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { LogoutButton } from "@/components/logout-button/logout-button";
 import {
@@ -32,12 +33,20 @@ import { RoutePending } from "@/components/route-pending/route-pending";
 import { Splash } from "@/components/splash/splash";
 import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
+import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
 import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { type RouterContext, warm } from "@/lib/route-prefetch";
 import { cn } from "@/lib/utils";
 
-const UNAUTHENTICATED_PATHS = new Set(["/login", "/setup"]);
+const UNAUTHENTICATED_PATHS = new Set([
+  "/login",
+  "/setup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+]);
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ location }) => {
@@ -61,7 +70,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       return;
     }
 
-    if (location.pathname !== "/login") {
+    if (!UNAUTHENTICATED_PATHS.has(location.pathname)) {
       throw redirect({ to: "/login" });
     }
   },
@@ -121,17 +130,25 @@ function RootLayout() {
       >
         {t("nav.skip")}
       </a>
-      <QueryBoundary
-        fallback={<Skeleton className="hidden h-screen w-58 shrink-0 rounded-none md:block" />}
-      >
-        <AppSidebar />
-      </QueryBoundary>
+      <div className="contents print:hidden">
+        <QueryBoundary
+          fallback={<Skeleton className="hidden h-screen w-58 shrink-0 rounded-none md:block" />}
+        >
+          <AppSidebar />
+        </QueryBoundary>
+        <QueryBoundary fallback={null} errorFallback={null}>
+          <CommandPalette />
+        </QueryBoundary>
+      </div>
 
       <div className="flex min-h-screen min-w-0 flex-1 flex-col">
-        <header className="flex h-14 shrink-0 items-center gap-0.5 border-b bg-sidebar px-4 sm:px-6 md:hidden">
+        <header className="flex h-14 shrink-0 items-center gap-0.5 border-b bg-sidebar px-4 sm:px-6 md:hidden print:hidden">
           <Link to="/" className="mr-auto flex items-center">
             <Brand size="sm" />
           </Link>
+          <QueryBoundary fallback={null} errorFallback={null}>
+            <HouseholdSwitcher className="w-28" />
+          </QueryBoundary>
           <QueryBoundary
             fallback={<Skeleton className="size-9 rounded-md" />}
             errorFallback={<NotificationBellUnavailable />}
@@ -145,7 +162,7 @@ function RootLayout() {
 
         <nav
           aria-label={t("nav.main")}
-          className="flex gap-1 overflow-x-auto border-b bg-sidebar px-2 py-1.5 md:hidden"
+          className="flex gap-1 overflow-x-auto border-b bg-sidebar px-2 py-1.5 md:hidden print:hidden"
         >
           {mobileNavItems.map((item) => (
             <Link
@@ -161,8 +178,13 @@ function RootLayout() {
         </nav>
         <main
           id="main-content"
-          className="w-full min-w-0 flex-1 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14"
+          className="w-full min-w-0 flex-1 space-y-5 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14 print:px-0 print:py-0"
         >
+          <div className="contents print:hidden">
+            <QueryBoundary fallback={null} errorFallback={null}>
+              <EmailVerificationBanner />
+            </QueryBoundary>
+          </div>
           <QueryBoundary
             key={location.pathname}
             fallback={<RoutePending />}
