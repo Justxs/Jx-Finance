@@ -5,13 +5,14 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
-using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
+using JxFinance.Endpoints.Transfers.CreateTransfer;
+using JxFinance.Endpoints.Transfers.Interfaces;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -24,10 +25,13 @@ public sealed class RecurringBillService(
     IReferenceGuard references) : IRecurringBillService
 {
     private static readonly DomainError CategoryGone =
-        new(ErrorCodes.ReferenceNotFound, "The bill category is no longer available.");
+        new(ErrorCodes.ReferenceNotFound, "The category of this recurring entry is no longer available.");
 
     private static readonly DomainError CategoryNotExpense =
         new(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
+
+    private static readonly DomainError CategoryNotIncome =
+        new(ErrorCodes.CategoryWrongType, "Choose an accessible income category.");
 
     public async Task<IReadOnlyList<RecurringBill>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -38,12 +42,12 @@ public sealed class RecurringBillService(
     public Task<Result<RecurringBill>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        return db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring bill not found.", cancellationToken);
+        return db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
     }
 
     public async Task<Result<RecurringBill>> CreateAsync(RecurringBill bill, CancellationToken cancellationToken)
     {
-        var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
+        var error = await ValidateReferencesAsync(bill, cancellationToken);
         if (error is not null) return error;
 
         db.RecurringBills.Add(bill);
@@ -58,11 +62,11 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring entry not found.");
         }
 
         apply(bill);
-        var error = await ValidateReferencesAsync(bill.AccountId?.Value, bill.CategoryId?.Value, cancellationToken);
+        var error = await ValidateReferencesAsync(bill, cancellationToken);
         if (error is not null) return error;
         await db.SaveChangesAsync(cancellationToken);
 
@@ -85,43 +89,82 @@ public sealed class RecurringBillService(
         var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
         if (bill is null)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring bill not found.");
+            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring entry not found.");
         }
 
         if (!bill.IsActive)
-            return new DomainError(ErrorCodes.RecurringBillInactive, "This bill is inactive.");
+            return new DomainError(ErrorCodes.RecurringBillInactive, "This recurring entry is inactive.");
         if (request.ExpectedDueDate != bill.NextDueDate)
-            return new DomainError(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the bill.");
+            return new DomainError(ErrorCodes.ConflictStale, "This occurrence has changed or was already confirmed. Refresh the entry.");
 
-        Money amount;
-        if (bill.Kind == RecurringBillKind.Fixed)
+        var amount = ResolveAmount(bill, request);
+        if (amount.IsFailure)
         {
-            amount = bill.Amount!.Value;
+            return amount.Error;
+        }
+
+        Guid? transactionId = null;
+        Guid? transferId = null;
+        if (bill.Shape == RecurringBillShape.Transfer)
+        {
+            var posted = await PostTransferAsync(bill, request, amount.Value, cancellationToken);
+            if (posted.IsFailure) return posted.Error;
+            transferId = posted.Value;
         }
         else
         {
-            if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
-            {
-                return new DomainError(
-                    ErrorCodes.MoneyPositive,
-                    "A variable bill needs an amount to confirm.");
-            }
-
-            amount = new Money(confirmed);
+            var posted = await PostTransactionAsync(bill, request, amount.Value, cancellationToken);
+            if (posted.IsFailure) return posted.Error;
+            transactionId = posted.Value;
         }
 
+        bill.Advance();
+
+        await db.Notifications.Where(n => n.RelatedType == "RecurringBill" && n.RelatedId == request.Id && !n.IsRead)
+            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await dbTransaction.CommitAsync(cancellationToken);
+        return new RecurringBillConfirmation(bill, transactionId, transferId);
+    }
+
+    private static Result<decimal> ResolveAmount(RecurringBill bill, ConfirmRecurringBillRequest request)
+    {
+        if (bill.Kind == RecurringBillKind.Fixed)
+        {
+            return bill.Amount!.Value.Amount;
+        }
+
+        if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
+        {
+            return new DomainError(
+                ErrorCodes.MoneyPositive,
+                "A variable recurring entry needs an amount to confirm.");
+        }
+
+        return confirmed;
+    }
+
+    private async Task<Result<Guid>> PostTransactionAsync(
+        RecurringBill bill,
+        ConfirmRecurringBillRequest request,
+        decimal amount,
+        CancellationToken cancellationToken)
+    {
         var accountId = request.AccountId is { } requestAccountId ? new AccountId(requestAccountId) : bill.AccountId;
         if (accountId is null)
         {
             return new DomainError(
                 ErrorCodes.Required,
-                "An account is required to confirm this bill.");
+                "An account is required to confirm this recurring entry.");
         }
 
+        var flow = FlowOf(bill.Shape);
         var referenceError = await references.AccountExistsAsync(accountId.Value, cancellationToken);
         if (referenceError is null && bill.CategoryId is { } categoryId)
         {
-            referenceError = await references.CategoryOfTypeAsync(categoryId, FlowType.Expense, CategoryGone, cancellationToken);
+            referenceError = await references.CategoryOfTypeAsync(categoryId, flow, CategoryGone, cancellationToken);
         }
 
         if (referenceError is not null)
@@ -133,31 +176,63 @@ public sealed class RecurringBillService(
         {
             AccountId = accountId.Value,
             CategoryId = bill.CategoryId,
-            Type = FlowType.Expense,
-            Amount = new Money(amount.Amount, rates.ReportingCurrency),
-            ReportingAmount = amount.Amount,
+            Type = flow,
+            Amount = new Money(amount, rates.ReportingCurrency),
+            ReportingAmount = amount,
             Date = bill.NextDueDate,
             Description = bill.Name,
             Source = TransactionSource.Manual,
         };
         db.Transactions.Add(transaction);
 
-        bill.Advance();
-
-        await db.Notifications.Where(n => n.RelatedType == "RecurringBill" && n.RelatedId == request.Id && !n.IsRead)
-            .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
-
-        await db.SaveChangesAsync(cancellationToken);
-
-        await dbTransaction.CommitAsync(cancellationToken);
-        return new RecurringBillConfirmation(bill, transaction.Id.Value);
+        return transaction.Id.Value;
     }
 
-    private async Task<DomainError?> ValidateReferencesAsync(Guid? accountId, Guid? categoryId, CancellationToken ct)
+    private async Task<Result<Guid>> PostTransferAsync(
+        RecurringBill bill,
+        ConfirmRecurringBillRequest request,
+        decimal amount,
+        CancellationToken cancellationToken)
     {
-        if (accountId is { } a && await references.AccountExistsAsync(new AccountId(a), ct) is { } accountError) return accountError;
-        return categoryId is { } c
-            ? await references.CategoryOfTypeAsync(new CategoryId(c), FlowType.Expense, CategoryNotExpense, ct)
-            : null;
+        if (bill.AccountId is not { } fromAccountId || bill.ToAccountId is not { } toAccountId)
+        {
+            return new DomainError(
+                ErrorCodes.Required,
+                "Both accounts are required to confirm this recurring transfer.");
+        }
+
+        var created = await transfers.CreateAsync(
+            new CreateTransferRequest(
+                fromAccountId.Value,
+                toAccountId.Value,
+                amount,
+                bill.NextDueDate,
+                bill.Name,
+                ReceivedAmount: request.ReceivedAmount),
+            cancellationToken);
+
+        if (!created.TryGetValue(out var transfer))
+        {
+            return created.Error;
+        }
+
+        return transfer.Id;
+    }
+
+    private static FlowType FlowOf(RecurringBillShape shape) =>
+        shape == RecurringBillShape.Income ? FlowType.Income : FlowType.Expense;
+
+    private async Task<DomainError?> ValidateReferencesAsync(RecurringBill bill, CancellationToken ct)
+    {
+        if (bill.AccountId is { } from && await references.AccountExistsAsync(from, ct) is { } fromError) return fromError;
+        if (bill.ToAccountId is { } to && await references.AccountExistsAsync(to, ct) is { } toError) return toError;
+        if (bill.Shape == RecurringBillShape.Transfer || bill.CategoryId is not { } categoryId) return null;
+
+        var flow = FlowOf(bill.Shape);
+        return await references.CategoryOfTypeAsync(
+            categoryId,
+            flow,
+            flow == FlowType.Income ? CategoryNotIncome : CategoryNotExpense,
+            ct);
     }
 }

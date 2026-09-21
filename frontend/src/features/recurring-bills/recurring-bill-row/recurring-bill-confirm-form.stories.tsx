@@ -1,20 +1,30 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import type { AccountResponse } from "@/api/generated/model";
 import { getConfirmRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   billInactiveProblem,
+  billReceivedAmountProblem,
   billStaleProblem,
+  brokerAccount,
   checkingAccount,
+  crossCurrencyTransferBill,
   dueSoonBill,
+  incomeBill,
   serverErrorProblem,
+  transferBill,
   validationProblem,
   variableBill,
 } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
+
+const crossCurrencyAccounts: AccountResponse[] = accounts.map((account) =>
+  account.id === brokerAccount.id ? { ...account, currency: "usd" } : account,
+);
 
 const meta = {
   title: "Features/RecurringBills/RecurringBillConfirmForm",
@@ -50,6 +60,76 @@ export const VariableWithoutDefaultAccount: Story = {
 
 export const WithoutDefaultAccountNoAccounts: Story = {
   args: { bill: { ...dueSoonBill, accountId: null }, accounts: [] },
+};
+
+export const Income: Story = {
+  args: { bill: incomeBill },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/as income dated/u)).toBeVisible();
+    await expect(canvas.queryByLabelText("Amount received")).toBeNull();
+  },
+};
+
+export const Transfer: Story = {
+  args: { bill: transferBill },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText(/as a transfer dated/u)).toBeVisible();
+    await expect(canvas.queryByLabelText("Amount received")).toBeNull();
+  },
+};
+
+export const CrossCurrencyTransfer: Story = {
+  args: { bill: crossCurrencyTransferBill, accounts: crossCurrencyAccounts },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByLabelText("Amount received")).toBeVisible();
+    await expect(canvas.getByText(/different currencies/u)).toBeVisible();
+  },
+};
+
+export const CrossCurrencyTransferNeedsTheReceivedAmount: Story = {
+  args: { bill: crossCurrencyTransferBill, accounts: crossCurrencyAccounts },
+  play: async ({ canvasElement, args }) => {
+    const canvas = await confirm(canvasElement);
+
+    await expect(await canvas.findByText(/Enter an amount greater than 0/u)).toBeVisible();
+    await expect(args.onDone).not.toHaveBeenCalled();
+
+    await fireEvent.change(canvas.getByLabelText("Amount received"), {
+      target: { value: "324.60" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
+
+    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+  },
+};
+
+export const CrossCurrencyTransferRejectedByServer: Story = {
+  args: { bill: crossCurrencyTransferBill, accounts: crossCurrencyAccounts },
+  parameters: {
+    msw: {
+      handlers: [
+        getConfirmRecurringBillMockHandler(failWith(billReceivedAmountProblem, 400)),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.change(canvas.getByLabelText("Amount received"), {
+      target: { value: "324.60" },
+    });
+    await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
+
+    await expect(
+      await canvas.findByText("Enter the received amount for a transfer between currencies."),
+    ).toBeVisible();
+  },
 };
 
 export const ConfirmsFixedBill: Story = {
@@ -117,7 +197,7 @@ export const InactiveBill: Story = {
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 
-    await expect(await canvas.findByText("This bill is inactive.")).toBeVisible();
+    await expect(await canvas.findByText("This recurring entry is inactive.")).toBeVisible();
   },
 };
 

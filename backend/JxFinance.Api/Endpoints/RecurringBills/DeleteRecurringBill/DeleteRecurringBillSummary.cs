@@ -6,11 +6,11 @@ public sealed class DeleteRecurringBillSummary : Summary<DeleteRecurringBillEndp
 {
     public DeleteRecurringBillSummary()
     {
-        Summary = "Delete a recurring bill";
-        Description = "Removes the schedule and its reminders. Transactions already posted from it stay "
-            + "in the ledger.";
-        Params["id"] = "The recurring bill id.";
-        Responses[204] = "The recurring bill is gone.";
-        Responses[404] = "No such recurring bill belongs to the signed-in user.";
+        Summary = "Delete a recurring entry";
+        Description = "Removes the schedule and its reminders. Transactions and transfers already posted "
+            + "from it stay in the ledger.";
+        Params["id"] = "The recurring entry id.";
+        Responses[204] = "The recurring entry is gone.";
+        Responses[404] = "No such recurring entry belongs to the signed-in user.";
     }
 }

@@ -8,6 +8,7 @@
 import type { DateOnly } from "./dateOnly";
 import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
+import type { RecurringBillShape } from "./recurringBillShape";
 
 export interface CreateRecurringBillRequest {
   /**
@@ -15,16 +16,28 @@ export interface CreateRecurringBillRequest {
    * @maxLength 100
    */
   name: string;
+  shape: RecurringBillShape;
   kind: RecurringBillKind;
   /**
-   * Expected amount. Required for a Fixed bill, optional for a Variable one.
+   * Expected amount. Required for a Fixed entry, optional for a Variable one.
    * @nullable
    */
   amount: string | null;
-  /** @nullable */
+  /**
+   * Expense or income category matching the shape. A Transfer must leave it empty.
+   * @nullable
+   */
   categoryId: string | null;
-  /** @nullable */
+  /**
+   * The account, or for a Transfer the account the money leaves. Required for a Transfer.
+   * @nullable
+   */
   accountId: string | null;
+  /**
+   * The account the money arrives in. Required for a Transfer, rejected otherwise.
+   * @nullable
+   */
+  toAccountId: string | null;
   cadence: RecurringBillCadence;
   nextDueDate: DateOnly;
   /**

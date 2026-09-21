@@ -98,8 +98,8 @@ public static class OpenApiExtensions
         tags["Households"] = "Households and their members; the unit that shared data belongs to.";
         tags["Imports"] = "Bank statement import: preview a CSV, then confirm the rows to keep.";
         tags["NetWorth"] = "Assets, debts, and the resulting net worth over time.";
-        tags["Notifications"] = "In-app notifications raised by background jobs.";
-        tags["RecurringBills"] = "Scheduled bills and income, and confirming a due occurrence.";
+        tags["Notifications"] = "In-app notifications raised by background jobs: bill reminders and budget alerts.";
+        tags["RecurringBills"] = "Recurring entries — scheduled expenses, income and transfers — and confirming a due occurrence.";
         tags["Reports"] = "Income and expense summaries over an arbitrary date range.";
         tags["Setup"] = "First-run provisioning of the administrator account.";
         tags["Transactions"] = "The ledger: single and split transactions, plus CSV and PDF exports.";

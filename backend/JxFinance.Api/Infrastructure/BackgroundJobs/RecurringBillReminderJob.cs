@@ -70,6 +70,21 @@ public sealed class RecurringBillReminderJob(
                 RelatedId = bill.Id.Value,
                 Channel = NotificationChannel.InApp,
             });
+
+            if (byOwner.TryGetValue(bill.UserId, out var owner))
+            {
+                outbox.Enqueue(
+                    EmailKind.BillReminder,
+                    EmailTexts.BillReminder(
+                        settings.DefaultLanguage,
+                        owner.Email!,
+                        owner.DisplayName,
+                        bill.Name,
+                        bill.NextDueDate,
+                        bill.Shape,
+                        product),
+                    $"bill:{bill.Id.Value}:{today:yyyy-MM-dd}");
+            }
         }
 
         await db.SaveChangesAsync(ct);

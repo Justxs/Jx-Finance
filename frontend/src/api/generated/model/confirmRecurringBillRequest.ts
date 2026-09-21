@@ -9,14 +9,19 @@ import type { DateOnly } from "./dateOnly";
 
 export interface ConfirmRecurringBillRequest {
   /**
-   * Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.
+   * Actual amount. Required for a Variable entry; defaults to the scheduled amount for a Fixed one.
    * @nullable
    */
   amount: string | null;
   /**
-   * Account to post to. Defaults to the account on the schedule.
+   * Account to post to. Ignored by a Transfer, which uses the two accounts on the entry.
    * @nullable
    */
   accountId: string | null;
   expectedDueDate: DateOnly;
+  /**
+   * What arrives in the destination account. Required when a Transfer crosses two currencies.
+   * @nullable
+   */
+  receivedAmount?: string | null;
 }

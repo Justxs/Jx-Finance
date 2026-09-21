@@ -7,10 +7,12 @@ namespace JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 public sealed record UpdateRecurringBillRequest(
     Guid Id,
     string Name,
+    RecurringBillShape Shape,
     RecurringBillKind Kind,
     [property: Money] decimal? Amount,
     Guid? CategoryId,
     Guid? AccountId,
+    Guid? ToAccountId,
     RecurringBillCadence Cadence,
     DateOnly NextDueDate,
     int RemindDaysBefore,

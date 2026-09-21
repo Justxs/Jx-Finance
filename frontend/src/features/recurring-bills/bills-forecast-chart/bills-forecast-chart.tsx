@@ -41,7 +41,10 @@ export function BillsForecastChart({ bills }: Readonly<Props>) {
 
   const totals = Array.from({ length: MONTHS_AHEAD }, () => 0);
   for (const bill of bills) {
-    let due = bill.isActive && bill.amount !== null ? parseIso(bill.nextDueDate) : null;
+    let due =
+      bill.isActive && bill.shape === "expense" && bill.amount !== null
+        ? parseIso(bill.nextDueDate)
+        : null;
     for (let step = 0; due && step < MAX_OCCURRENCES; step += 1) {
       const index = monthIndex(due, start);
       if (index >= MONTHS_AHEAD) {

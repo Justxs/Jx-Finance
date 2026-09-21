@@ -27,10 +27,12 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
     private static void Apply(IRecurringBillInput input, RecurringBill bill)
     {
         bill.Name = input.Name.Trim();
+        bill.Shape = input.Shape;
         bill.Kind = input.Kind;
         bill.Amount = input.Amount is { } amount ? new Money(amount) : null;
         bill.CategoryId = input.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
         bill.AccountId = input.AccountId is { } accountId ? new AccountId(accountId) : null;
+        bill.ToAccountId = input.ToAccountId is { } toAccountId ? new AccountId(toAccountId) : null;
         bill.Cadence = input.Cadence;
         if (bill.NextDueDate != input.NextDueDate)
         {
@@ -43,10 +45,12 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
     public override RecurringBillResponse FromEntity(RecurringBill bill) => new(
         bill.Id.Value,
         bill.Name,
+        bill.Shape,
         bill.Kind,
         bill.Amount?.Amount,
         bill.CategoryId?.Value,
         bill.AccountId?.Value,
+        bill.ToAccountId?.Value,
         bill.Cadence,
         bill.NextDueDate,
         bill.RemindDaysBefore,
