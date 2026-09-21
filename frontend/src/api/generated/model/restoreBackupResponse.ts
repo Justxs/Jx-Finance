@@ -10,4 +10,5 @@ export interface RestoreBackupResponse {
   createdAt: string;
   tables: number;
   rows: number;
+  attachments: number;
 }

@@ -20,6 +20,7 @@ function transaction(
   description: string | null,
   source: TransactionResponse["source"],
   tagIds: string[] = [],
+  attachmentCount = 0,
 ): TransactionResponse {
   return {
     id: uid("55555555", n),
@@ -36,6 +37,7 @@ function transaction(
     createdAt: `${date}T${String(8 + (n % 12)).padStart(2, "0")}:30:00Z`,
     lines: null,
     tagIds,
+    attachmentCount,
   };
 }
 
@@ -74,6 +76,7 @@ export const splitTransaction: TransactionResponse = {
   ),
   isSplit: true,
   lines: splitTransactionLines,
+  attachmentCount: 2,
 };
 
 export const longDescriptionTransaction: TransactionResponse = transaction(
@@ -152,6 +155,8 @@ export const transactions: TransactionResponse[] = [
     "42.18",
     "Maxima X, Ukmergės g.",
     "imported",
+    [],
+    1,
   ),
   transaction(
     2,

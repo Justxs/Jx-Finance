@@ -58,7 +58,7 @@ async function main() {
   const services = JSON.parse(docker(["config", "--format", "json"], { capture: true })).services;
   const published = Object.entries(services).flatMap(([name, service]) => (service.ports ?? []).map((entry) => `${name}:${entry.target}`));
   check("only the frontend HTTPS port is published", published.join(",") === "frontend:443", published.join(","));
-  for (const volume of ["auth_keys", "backups"]) {
+  for (const volume of ["auth_keys", "backups", "attachments"]) {
     const users = Object.entries(services)
       .filter(([, service]) => (service.volumes ?? []).some((mount) => mount.source === volume))
       .map(([name]) => name);

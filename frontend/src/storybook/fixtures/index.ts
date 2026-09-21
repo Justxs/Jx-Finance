@@ -7,6 +7,7 @@ export * from "./categories";
 export * from "./tags";
 export * from "./categorization-rules";
 export * from "./transactions";
+export * from "./attachments";
 export * from "./transfers";
 export * from "./conversions";
 export * from "./settings";

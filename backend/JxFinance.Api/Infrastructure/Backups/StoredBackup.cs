@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace JxFinance.Infrastructure.Backups;
 
 public sealed record StoredBackup(
@@ -10,4 +12,9 @@ public sealed record StoredBackup(
     bool Uploaded)
 {
     public long SizeBytes { get; init; }
+
+    public int Attachments { get; init; }
+
+    [JsonIgnore]
+    public bool IsArchive { get; init; }
 }

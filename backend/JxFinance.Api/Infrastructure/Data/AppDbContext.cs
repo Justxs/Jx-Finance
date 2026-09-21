@@ -44,6 +44,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<Transaction> Transactions => Set<Transaction>();
     public DbSet<TransactionLine> TransactionLines => Set<TransactionLine>();
     public DbSet<TransactionTag> TransactionTags => Set<TransactionTag>();
+    public DbSet<TransactionAttachment> TransactionAttachments => Set<TransactionAttachment>();
     public DbSet<TransferImport> TransferImports => Set<TransferImport>();
     public DbSet<Transfer> Transfers => Set<Transfer>();
     public DbSet<CurrencyConversion> CurrencyConversions => Set<CurrencyConversion>();
@@ -193,6 +194,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 var filter = (LambdaExpression)accountScopedFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
                 entityType.SetQueryFilter(filter);
             }
+            else if (clrType == typeof(TransactionAttachment))
+            {
+                entityType.SetQueryFilter(AttachmentFilter());
+            }
             else if (clrType == typeof(Transfer))
             {
                 entityType.SetQueryFilter(TransferFilter());
@@ -238,6 +243,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     private Expression<Func<T, bool>> AccountScopedFilter<T>() where T : EntityBase, IAccountScoped =>
         entity => !entity.IsDeleted &&
             Accounts.Any(a => a.Id == entity.AccountId);
+
+    private Expression<Func<TransactionAttachment, bool>> AttachmentFilter() =>
+        a => !a.IsDeleted && Transactions.Any(t => t.Id == a.TransactionId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
         t => !t.IsDeleted &&

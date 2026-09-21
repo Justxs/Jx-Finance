@@ -32,6 +32,7 @@ services:
     environment:
       App__DataProtectionDirectory: /keys
       App__BackupDirectory: /backups
+      App__AttachmentDirectory: /attachments
     env_file:
       - .env
     ports:
@@ -39,6 +40,7 @@ services:
     volumes:
       - auth_keys:/keys
       - backups:/backups
+      - attachments:/attachments
     depends_on:
       db:
         condition: service_healthy
@@ -83,3 +85,4 @@ volumes:
   db_data:
   auth_keys:
   backups:
+  attachments:

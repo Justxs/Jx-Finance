@@ -55,6 +55,14 @@ const rules: readonly Rule[] = [
     refresh: [...ledger, api.getTrashQueryKey],
   },
   {
+    after: [api.getUploadAttachmentMutationKey],
+    refresh: [api.getTransactionsQueryKey],
+  },
+  {
+    after: [api.getDeleteAttachmentMutationKey],
+    refresh: [api.getTransactionsQueryKey, api.getTrashQueryKey],
+  },
+  {
     after: [api.getRestoreDeletedMutationKey, api.getRestoreAccountMutationKey],
     refresh: "everything",
   },

@@ -376,7 +376,34 @@
     "saveTemplate": "Išsaugoti šabloną",
     "templateName": "Šablono pavadinimas",
     "templateNamePlaceholder": "pvz. Savaitės maisto produktai",
-    "templateSaved": "Šablonas išsaugotas"
+    "templateSaved": "Šablonas išsaugotas",
+    "attachments": {
+      "title": "Čekiai ir failai",
+      "hint": "JPEG, PNG, WebP, HEIC arba PDF, iki {{size}} MB kiekvienas ir iki {{max}} vienai operacijai.",
+      "drop": "Nutempkite failus čia arba pasirinkite juos",
+      "dropActive": "Paleiskite, kad pridėtumėte",
+      "empty": "Failų dar nepridėta.",
+      "uploading_one": "Įkeliamas {{count}} failas…",
+      "uploading_few": "Įkeliami {{count}} failai…",
+      "uploading_many": "Įkeliama {{count}} failo…",
+      "uploading_other": "Įkeliama {{count}} failų…",
+      "uploaded_one": "Pridėtas {{count}} failas",
+      "uploaded_few": "Pridėti {{count}} failai",
+      "uploaded_many": "Pridėta {{count}} failo",
+      "uploaded_other": "Pridėta {{count}} failų",
+      "download": "Atsisiųsti",
+      "remove": "Pašalinti",
+      "uploadedBy": "{{name}}, {{date}}",
+      "preview": "{{name}} peržiūra",
+      "loadError": "Nepavyko įkelti šios operacijos failų.",
+      "fileTooLarge": "{{name}} didesnis nei {{size}} MB.",
+      "fileTypeNotAllowed": "{{name}} nėra JPEG, PNG, WebP, HEIC ar PDF failas.",
+      "tooMany": "Prie šios operacijos dar tilpo tik {{free}} failai; {{name}} nepridėtas.",
+      "count_one": "Pridėtas {{count}} failas",
+      "count_few": "Pridėti {{count}} failai",
+      "count_many": "Pridėta {{count}} failo",
+      "count_other": "Pridėta {{count}} failų"
+    }
   },
   "trash": {
     "title": "Šiukšlinė",
@@ -400,7 +427,8 @@
       "category": "Kategorija",
       "tag": "Žyma",
       "categorizationRule": "Kategorizavimo taisyklė",
-      "household": "Namų ūkis"
+      "household": "Namų ūkis",
+      "attachment": "Failas"
     }
   },
   "theme": {
@@ -418,6 +446,7 @@
     "date": "Padaryta",
     "size": "Dydis",
     "rows": "Eilutės",
+    "attachments": "Failai",
     "uploadedTag": "Įkelta",
     "otherVersionTag": "Kita versija",
     "otherVersionHint": "Padaryta kitos programos versijos. Ją galima atsisiųsti, bet ne atkurti čia.",
@@ -431,10 +460,10 @@
     "uploadTitle": "Pridėti kopijos failą",
     "uploadHint": "Įkelkite anksčiau atsisiųstą kopiją iš šios ar kitos diegties. Ji tik pridedama prie sąrašo; niekas neatkuriama, kol nepasirenkate „Atkurti“.",
     "file": "Kopijos failas",
-    "chooseFile": "Pasirinkite .json.gz kopijos failą",
+    "chooseFile": "Pasirinkite kopijos failą (.zip arba senesnės versijos .json.gz)",
     "fileRequired": "Pirmiausia pasirinkite kopijos failą.",
     "fileEmpty": "Failas tuščias.",
-    "fileTooLarge": "Failas didesnis nei 100 MB.",
+    "fileTooLarge": "Failas didesnis nei 2 GB.",
     "upload": "Įkelti",
     "uploaded": "Kopija pridėta prie sąrašo.",
     "confirmTitle": "Pakeisti visus duomenis šia kopija?",
@@ -1328,7 +1357,8 @@
       "category": "Kategorija",
       "tag": "Žyma",
       "household": "Namų ūkis",
-      "member": "Narys"
+      "member": "Narys",
+      "attachment": "Failas"
     },
     "sentences": {
       "created": "{{actor}} pridėjo: {{description}}",
@@ -1346,7 +1376,10 @@
       "memberAdded": "{{actor}} pridėjo narį {{description}}",
       "memberRemoved": "{{actor}} pašalino narį {{description}}",
       "memberRoleChanged": "{{actor}} pakeitė nario {{description}} vaidmenį",
-      "renamed": "{{actor}} pervadino namų ūkį į {{description}}"
+      "renamed": "{{actor}} pervadino namų ūkį į {{description}}",
+      "createdAttachment": "{{actor}} pridėjo failą {{description}}",
+      "deletedAttachment": "{{actor}} pašalino failą {{description}}",
+      "restoredAttachment": "{{actor}} atkūrė failą {{description}}"
     },
     "fields": {
       "amount": "suma",
@@ -1553,6 +1586,13 @@
   "serverErrors": {
     "access": {
       "forbidden": "Neturite teisės atlikti šio veiksmo."
+    },
+    "attachment": {
+      "contentMismatch": "Failo turinys neatitinka jo tipo. Išsaugokite jį iš naujo programa, kuria jis sukurtas, ir bandykite dar kartą.",
+      "empty": "Failas tuščias.",
+      "limitReached": "Prie šios operacijos jau pridėta 10 failų. Pirmiausia pašalinkite vieną.",
+      "tooLarge": "Failas didesnis nei 10 MB.",
+      "typeNotAllowed": "Galima pridėti tik JPEG, PNG, WebP ir HEIC paveikslėlius bei PDF dokumentus."
     },
     "backup": {
       "invalidFile": "Failas nėra tinkama atsarginė kopija. Niekas nepakeista.",

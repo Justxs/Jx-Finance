@@ -8,7 +8,7 @@ namespace JxFinance.Endpoints.Backups.UploadBackup;
 
 public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoint<UploadBackupRequest, BackupResponse>
 {
-    public const int MaxFileBytes = 100 * 1024 * 1024;
+    public const long MaxFileBytes = 2L * 1024 * 1024 * 1024;
 
     public override void Configure()
     {
@@ -24,7 +24,7 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
     public override async Task HandleAsync(UploadBackupRequest req, CancellationToken ct)
     {
         if (req.File is null || req.File.Length is <= 0 or > MaxFileBytes)
-            ThrowError(r => r.File, "Choose a non-empty backup file no larger than 100 MB.", ErrorCodes.BackupInvalidFile);
+            ThrowError(r => r.File, "Choose a non-empty backup file no larger than 2 GB.", ErrorCodes.BackupInvalidFile);
 
         await using var stream = req.File.OpenReadStream();
         var backup = (await backupService.UploadAsync(stream, req.Note, ct)).ValueOrThrow();

@@ -904,7 +904,7 @@ export const getDeleteTransactionUrl = (id: string) => {
 };
 
 /**
- * Removes the transaction and any split lines, and adjusts the account balance accordingly.
+ * Removes the transaction and adjusts the account balance accordingly. Its split lines, tags and attached files are kept with it, so POST /api/trash/restore brings it back whole for the next 30 days.
  * @summary Delete a transaction
  */
 export const deleteTransaction = async (

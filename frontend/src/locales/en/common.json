@@ -364,7 +364,28 @@
     "saveTemplate": "Save template",
     "templateName": "Template name",
     "templateNamePlaceholder": "e.g. Weekly groceries",
-    "templateSaved": "Template saved"
+    "templateSaved": "Template saved",
+    "attachments": {
+      "title": "Receipts and files",
+      "hint": "JPEG, PNG, WebP, HEIC or PDF, up to {{size}} MB each and {{max}} per transaction.",
+      "drop": "Drop files here or choose them",
+      "dropActive": "Drop to attach",
+      "empty": "No files attached yet.",
+      "uploading_one": "Uploading {{count}} file…",
+      "uploading_other": "Uploading {{count}} files…",
+      "uploaded_one": "{{count}} file attached",
+      "uploaded_other": "{{count}} files attached",
+      "download": "Download",
+      "remove": "Remove",
+      "uploadedBy": "{{name}}, {{date}}",
+      "preview": "Preview of {{name}}",
+      "loadError": "The files of this transaction could not be loaded.",
+      "fileTooLarge": "{{name}} is larger than {{size}} MB.",
+      "fileTypeNotAllowed": "{{name}} is not a JPEG, PNG, WebP, HEIC or PDF file.",
+      "tooMany": "Only {{free}} more files fit on this transaction; {{name}} was left out.",
+      "count_one": "{{count}} file attached",
+      "count_other": "{{count}} files attached"
+    }
   },
   "trash": {
     "title": "Trash",
@@ -388,7 +409,8 @@
       "category": "Category",
       "tag": "Tag",
       "categorizationRule": "Categorization rule",
-      "household": "Household"
+      "household": "Household",
+      "attachment": "File"
     }
   },
   "theme": {
@@ -406,6 +428,7 @@
     "date": "Taken",
     "size": "Size",
     "rows": "Rows",
+    "attachments": "Files",
     "uploadedTag": "Uploaded",
     "otherVersionTag": "Other version",
     "otherVersionHint": "Taken by another version of the application. It can be downloaded but not restored here.",
@@ -419,10 +442,10 @@
     "uploadTitle": "Add a backup file",
     "uploadHint": "Upload a backup you downloaded earlier, from this or another installation. It is only added to the list; nothing is restored until you choose Restore.",
     "file": "Backup file",
-    "chooseFile": "Choose a .json.gz backup file",
+    "chooseFile": "Choose a backup file (.zip, or .json.gz from an older version)",
     "fileRequired": "Choose a backup file first.",
     "fileEmpty": "The file is empty.",
-    "fileTooLarge": "The file is larger than 100 MB.",
+    "fileTooLarge": "The file is larger than 2 GB.",
     "upload": "Upload",
     "uploaded": "Backup added to the list.",
     "confirmTitle": "Replace all data with this backup?",
@@ -1294,7 +1317,8 @@
       "category": "Category",
       "tag": "Tag",
       "household": "Household",
-      "member": "Member"
+      "member": "Member",
+      "attachment": "File"
     },
     "sentences": {
       "created": "{{actor}} added {{description}}",
@@ -1312,7 +1336,10 @@
       "memberAdded": "{{actor}} added {{description}} as a member",
       "memberRemoved": "{{actor}} removed {{description}} from the household",
       "memberRoleChanged": "{{actor}} changed the role of {{description}}",
-      "renamed": "{{actor}} renamed the household to {{description}}"
+      "renamed": "{{actor}} renamed the household to {{description}}",
+      "createdAttachment": "{{actor}} attached {{description}}",
+      "deletedAttachment": "{{actor}} removed the file {{description}}",
+      "restoredAttachment": "{{actor}} restored the file {{description}}"
     },
     "fields": {
       "amount": "amount",
@@ -1507,6 +1534,13 @@
   "serverErrors": {
     "access": {
       "forbidden": "You do not have permission to do this."
+    },
+    "attachment": {
+      "contentMismatch": "The file's content does not match its type. Save it again from the program that made it and retry.",
+      "empty": "The file is empty.",
+      "limitReached": "This transaction already has 10 files. Remove one first.",
+      "tooLarge": "The file is larger than 10 MB.",
+      "typeNotAllowed": "Only JPEG, PNG, WebP and HEIC images and PDF documents can be attached."
     },
     "backup": {
       "invalidFile": "The file is not a usable backup. Nothing was changed.",

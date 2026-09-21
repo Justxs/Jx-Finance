@@ -48,6 +48,7 @@ export function BackupsTable({
           <TableHead>{t("backup.note")}</TableHead>
           <TableHead className="text-right">{t("backup.size")}</TableHead>
           <TableHead className="text-right">{t("backup.rows")}</TableHead>
+          <TableHead className="text-right">{t("backup.attachments")}</TableHead>
           <TableHead>
             <span className="sr-only">{t("common.actions")}</span>
           </TableHead>
@@ -77,6 +78,9 @@ export function BackupsTable({
                 {formatBytes(backup.sizeBytes)}
               </TableCell>
               <TableCell className="text-right tabular-nums">{count.format(backup.rows)}</TableCell>
+              <TableCell className="text-right tabular-nums">
+                {count.format(backup.attachments)}
+              </TableCell>
               <TableCell>
                 <div className="flex justify-end gap-1">
                   <a

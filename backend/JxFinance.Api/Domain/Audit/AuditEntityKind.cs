@@ -11,4 +11,5 @@ public enum AuditEntityKind
     Tag,
     Household,
     Member,
+    Attachment,
 }

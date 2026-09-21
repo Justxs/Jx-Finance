@@ -12,7 +12,9 @@ public sealed class RestoreBackupSummary : Summary<RestoreBackupEndpoint, Restor
             + "changes. The caller confirms the action with their current password; a wrong password answers "
             + "password.incorrect and counts toward the sign-in lockout, and a locked-out account answers "
             + "credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the "
-            + "backup. The backups kept on the server are files, not data, so the list survives a restore. "
+            + "backup, and the attached files of the archive are written back to the attachment directory "
+            + "after their SHA-256 has been checked against the restored rows; a file that does not match "
+            + "rolls the whole restore back. The backups kept on the server are files, not data, so the list survives a restore. "
             + "Every sign-in session is deleted and the caller's cookies are cleared, so the client "
             + "must send the user to sign in again with a password from the backup; other signed-in users "
             + "are asked to sign in on their next request. The backup must come from "
@@ -22,7 +24,7 @@ public sealed class RestoreBackupSummary : Summary<RestoreBackupEndpoint, Restor
         ExampleRequest = new RestoreBackupRequest(Guid.Empty, "correct horse battery staple");
         Params["id"] = "The backup id.";
         RequestParam(r => r.Password, "The current password of the signed-in administrator.");
-        Responses[200] = "When the restored backup was taken and how many tables and rows were loaded.";
+        Responses[200] = "When the restored backup was taken and how many tables, rows and attached files were loaded.";
         Responses[400] = "The password is wrong, the file is damaged or too large, or the backup comes from another database version.";
         Responses[403] = "Only administrators can restore a backup.";
         Responses[404] = "No backup with this id.";

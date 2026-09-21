@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { toast } from "sonner";
+import { expect, within } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import {
   accounts,
@@ -86,7 +87,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByText("1 file attached")).toBeInTheDocument();
+    await expect(canvas.getByText("2 files attached")).toBeInTheDocument();
+  },
+};
 
 export const Empty: Story = { args: { data: [] } };
 

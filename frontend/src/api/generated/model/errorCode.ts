@@ -13,6 +13,11 @@ export type ErrorCode = (typeof ErrorCode)[keyof typeof ErrorCode];
 
 export const ErrorCode = {
   accessforbidden: "access.forbidden",
+  attachmentcontentMismatch: "attachment.contentMismatch",
+  attachmentempty: "attachment.empty",
+  attachmentlimitReached: "attachment.limitReached",
+  attachmenttooLarge: "attachment.tooLarge",
+  attachmenttypeNotAllowed: "attachment.typeNotAllowed",
   backupinvalidFile: "backup.invalidFile",
   backupschemaMismatch: "backup.schemaMismatch",
   backuptooLarge: "backup.tooLarge",

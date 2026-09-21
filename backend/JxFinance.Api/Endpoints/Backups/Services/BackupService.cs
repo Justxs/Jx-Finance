@@ -6,10 +6,12 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.RestoreBackup;
 using JxFinance.Endpoints.Backups.Shared;
+using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Backups;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
@@ -23,6 +25,7 @@ namespace JxFinance.Endpoints.Backups.Services;
 public sealed class BackupService(
     AppDbContext db,
     BackupStore backups,
+    AttachmentStore files,
     IInstanceSettingsStore store,
     IClock clock,
     IAuthService authService,
@@ -53,20 +56,39 @@ public sealed class BackupService(
             id,
             async stream =>
             {
-                var (tables, rows) = await WriteAsync(stream, createdAt, migration, cancellationToken);
-                return new StoredBackup(id, createdAt, OptionalText.Normalize(note), migration, tables, rows, Uploaded: false);
+                var (tables, rows, attachments) = await WriteArchiveAsync(stream, createdAt, migration, cancellationToken);
+                return new StoredBackup(id, createdAt, OptionalText.Normalize(note), migration, tables, rows, Uploaded: false)
+                {
+                    Attachments = attachments,
+                };
             },
             cancellationToken);
 
-        logger.LogInformation("Backup {BackupId} created: {Rows} rows, {Size} bytes.", id, stored.Rows, stored.SizeBytes);
+        logger.LogInformation(
+            "Backup {BackupId} created: {Rows} rows, {Attachments} attachments, {Size} bytes.",
+            id,
+            stored.Rows,
+            stored.Attachments,
+            stored.SizeBytes);
         return ToResponse(stored, migration);
     }
 
     public async Task<Result<BackupResponse>> UploadAsync(Stream input, string? note, CancellationToken cancellationToken)
     {
-        var compressed = await IsCompressedAsync(input, cancellationToken);
+        var container = await BackupArchive.DetectAsync(input, cancellationToken);
         var inspector = new BackupInspector();
-        if (await ReadAsync(input, compressed, inspector, cancellationToken) is { } failure)
+        var attachments = 0;
+        var failure = await ReadAsync(
+            input,
+            container,
+            inspector,
+            archive =>
+            {
+                attachments = archive is null ? 0 : BackupArchive.CountAttachments(archive);
+                return Task.CompletedTask;
+            },
+            cancellationToken);
+        if (failure is not null)
         {
             return failure;
         }
@@ -77,14 +99,14 @@ public sealed class BackupService(
             async stream =>
             {
                 input.Position = 0;
-                if (compressed)
-                {
-                    await input.CopyToAsync(stream, cancellationToken);
-                }
-                else
+                if (container == BackupContainer.Json)
                 {
                     await using var gzip = new GZipStream(stream, CompressionLevel.Optimal, leaveOpen: true);
                     await input.CopyToAsync(gzip, cancellationToken);
+                }
+                else
+                {
+                    await input.CopyToAsync(stream, cancellationToken);
                 }
 
                 return new StoredBackup(
@@ -94,7 +116,10 @@ public sealed class BackupService(
                     inspector.Header.Migration ?? "",
                     inspector.Tables,
                     inspector.Rows,
-                    Uploaded: true);
+                    Uploaded: true)
+                {
+                    Attachments = attachments,
+                };
             },
             cancellationToken);
 
@@ -132,9 +157,11 @@ public sealed class BackupService(
             return NotFound;
         }
 
+        var (extension, contentType) = stored.IsArchive ? (".zip", "application/zip") : (".json.gz", "application/gzip");
         return new BackupDownload(
             backups.OpenRead(id),
-            $"jx-finance-backup-{stored.CreatedAt.UtcDateTime:yyyyMMdd-HHmmss}.json.gz",
+            $"jx-finance-backup-{stored.CreatedAt.UtcDateTime:yyyyMMdd-HHmmss}{extension}",
+            contentType,
             stored.SizeBytes);
     }
 
@@ -167,10 +194,42 @@ public sealed class BackupService(
         backup.SizeBytes,
         backup.Tables,
         backup.Rows,
+        backup.Attachments,
         backup.Uploaded,
         string.Equals(backup.Migration, migration, StringComparison.Ordinal));
 
-    private async Task<(int Tables, long Rows)> WriteAsync(
+    private async Task<(int Tables, long Rows, int Attachments)> WriteArchiveAsync(
+        Stream output,
+        DateTimeOffset createdAt,
+        string migration,
+        CancellationToken cancellationToken)
+    {
+        using var archive = new ZipArchive(output, ZipArchiveMode.Create, leaveOpen: true);
+        (int Tables, long Rows, List<Guid> Attachments) written;
+        await using (var document = archive.CreateEntry(BackupArchive.DocumentEntry, CompressionLevel.Optimal).Open())
+        {
+            written = await WriteAsync(document, createdAt, migration, cancellationToken);
+        }
+
+        var attached = 0;
+        foreach (var attachmentId in written.Attachments)
+        {
+            if (!files.Exists(attachmentId))
+            {
+                logger.LogWarning("Attachment {AttachmentId} has no file and is left out of the backup.", attachmentId);
+                continue;
+            }
+
+            await using var source = files.OpenRead(attachmentId);
+            await using var target = archive.CreateEntry(BackupArchive.AttachmentEntry(attachmentId), CompressionLevel.NoCompression).Open();
+            await source.CopyToAsync(target, cancellationToken);
+            attached++;
+        }
+
+        return (written.Tables, written.Rows, attached);
+    }
+
+    private async Task<(int Tables, long Rows, List<Guid> Attachments)> WriteAsync(
         Stream output,
         DateTimeOffset createdAt,
         string migration,
@@ -182,8 +241,7 @@ public sealed class BackupService(
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.RepeatableRead, cancellationToken);
         var connection = (NpgsqlConnection)db.Database.GetDbConnection();
 
-        await using var gzip = new GZipStream(output, CompressionLevel.Optimal, leaveOpen: true);
-        await using var json = new Utf8JsonWriter(gzip);
+        await using var json = new Utf8JsonWriter(output);
 
         json.WriteStartObject();
         json.WriteString("format", Format);
@@ -208,19 +266,33 @@ public sealed class BackupService(
         json.WriteEndArray();
         json.WriteEndObject();
         await json.FlushAsync(cancellationToken);
+
+        var attachments = await db.TransactionAttachments
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Select(a => a.Id)
+            .ToListAsync(cancellationToken);
         await transaction.CommitAsync(cancellationToken);
-        return (tables.Count, rows);
+        return (tables.Count, rows, attachments.Select(a => a.Value).ToList());
     }
 
     private async Task<Result<RestoreBackupResponse>> RestoreAsync(Stream input, CancellationToken cancellationToken)
     {
-        var compressed = await IsCompressedAsync(input, cancellationToken);
+        var container = await BackupArchive.DetectAsync(input, cancellationToken);
         var migration = await CurrentMigrationAsync(cancellationToken);
         await using var restorer = new BackupRestorer(db, BackupDatabase.ReadShapes(db), migration, options.Value.BackupLockTimeoutSeconds);
+        using var staging = files.BeginStaging();
+        var missing = 0;
 
         try
         {
-            if (await ReadAsync(input, compressed, restorer, cancellationToken) is { } failure)
+            var failure = await ReadAsync(
+                input,
+                container,
+                restorer,
+                async archive => missing = await StageAttachmentsAsync(archive, staging, cancellationToken),
+                cancellationToken);
+            if (failure is not null)
             {
                 return failure;
             }
@@ -249,24 +321,50 @@ public sealed class BackupService(
                 "The database was busy with other work. Nothing was changed; try again in a moment.");
         }
 
+        var attachments = staging.Publish();
         var header = restorer.Header!;
         db.ChangeTracker.Clear();
         store.Set(await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(cancellationToken) ?? store.Defaults());
         logger.LogWarning(
-            "Installation restored from a backup taken at {CreatedAt}: {Tables} tables, {Rows} rows.",
+            "Installation restored from a backup taken at {CreatedAt}: {Tables} tables, {Rows} rows, {Attachments} attachment files.",
             header.CreatedAt,
             restorer.Tables,
-            restorer.Rows);
+            restorer.Rows,
+            attachments);
+        if (missing > 0)
+        {
+            logger.LogWarning("{Missing} attachments of the restored backup have no file in it.", missing);
+        }
 
-        return new RestoreBackupResponse(header.CreatedAt, restorer.Tables, restorer.Rows);
+        return new RestoreBackupResponse(header.CreatedAt, restorer.Tables, restorer.Rows, attachments);
     }
 
-    private static async Task<bool> IsCompressedAsync(Stream input, CancellationToken cancellationToken)
+    private async Task<int> StageAttachmentsAsync(ZipArchive? archive, AttachmentStaging staging, CancellationToken cancellationToken)
     {
-        var magic = new byte[2];
-        var read = await input.ReadAtLeastAsync(magic, 2, throwOnEndOfStream: false, cancellationToken);
-        input.Position = 0;
-        return read == 2 && magic[0] == 0x1f && magic[1] == 0x8b;
+        var expected = await db.TransactionAttachments
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Select(a => new { a.Id, a.Sha256 })
+            .ToListAsync(cancellationToken);
+
+        var missing = 0;
+        foreach (var attachment in expected)
+        {
+            if (archive?.GetEntry(BackupArchive.AttachmentEntry(attachment.Id.Value)) is not { } entry)
+            {
+                missing++;
+                continue;
+            }
+
+            await using var content = entry.Open();
+            var staged = await staging.AddAsync(attachment.Id.Value, content, TransactionAttachment.MaxFileBytes, cancellationToken);
+            if (!string.Equals(staged.Sha256, attachment.Sha256, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new BackupFileException("A file in the backup does not match the checksum recorded for it. Nothing was changed.");
+            }
+        }
+
+        return missing;
     }
 
     public static void EnsureSupported(BackupHeader header)
@@ -276,16 +374,33 @@ public sealed class BackupService(
 
     private async Task<DomainError?> ReadAsync(
         Stream input,
-        bool compressed,
+        BackupContainer container,
         IBackupVisitor visitor,
+        Func<ZipArchive?, Task> afterDocument,
         CancellationToken cancellationToken)
     {
         var maximumBytes = options.Value.BackupMaxDecompressedBytes;
         try
         {
-            await using var gzip = compressed ? new GZipStream(input, CompressionMode.Decompress, leaveOpen: true) : null;
-            await using var limited = new LimitedReadStream(gzip ?? input, maximumBytes);
-            await new BackupReader(visitor).ReadAsync(limited, cancellationToken);
+            if (container == BackupContainer.Zip)
+            {
+                using var archive = new ZipArchive(input, ZipArchiveMode.Read, leaveOpen: true);
+                await using (var document = BackupArchive.Document(archive).Open())
+                {
+                    await ReadDocumentAsync(document, maximumBytes, visitor, cancellationToken);
+                }
+
+                await afterDocument(archive);
+            }
+            else
+            {
+                await using var gzip = container == BackupContainer.Gzip
+                    ? new GZipStream(input, CompressionMode.Decompress, leaveOpen: true)
+                    : null;
+                await ReadDocumentAsync(gzip ?? input, maximumBytes, visitor, cancellationToken);
+                await afterDocument(null);
+            }
+
             return null;
         }
         catch (BackupTooLargeException)
@@ -298,10 +413,24 @@ public sealed class BackupService(
         {
             return new DomainError(ex.Code, ex.Message);
         }
+        catch (AttachmentTooLargeException)
+        {
+            return new DomainError(ErrorCodes.BackupInvalidFile, "A file in the backup is larger than an attachment can be.");
+        }
         catch (Exception ex) when (ex is JsonException or InvalidDataException)
         {
             return new DomainError(ErrorCodes.BackupInvalidFile, "The file is not a Jx Finance backup.");
         }
+    }
+
+    private static async Task ReadDocumentAsync(
+        Stream document,
+        long maximumBytes,
+        IBackupVisitor visitor,
+        CancellationToken cancellationToken)
+    {
+        await using var limited = new LimitedReadStream(document, maximumBytes);
+        await new BackupReader(visitor).ReadAsync(limited, cancellationToken);
     }
 
     private static async Task<long> WriteRowsAsync(

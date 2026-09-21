@@ -30,6 +30,7 @@ const KINDS = [
   "transfer",
   "conversion",
   "investmentTransaction",
+  "attachment",
   "account",
   "category",
   "tag",
@@ -70,7 +71,10 @@ type SentenceKey =
   | "archived"
   | "createdHousehold"
   | "deletedHousehold"
-  | "restoredHousehold";
+  | "restoredHousehold"
+  | "createdAttachment"
+  | "deletedAttachment"
+  | "restoredAttachment";
 
 export interface ActivityFilters {
   memberId: string;
@@ -83,6 +87,12 @@ const HOUSEHOLD_SENTENCES: Partial<Record<AuditEventResponse["action"], Sentence
   created: "createdHousehold",
   deleted: "deletedHousehold",
   restored: "restoredHousehold",
+};
+
+const ATTACHMENT_SENTENCES: Partial<Record<AuditEventResponse["action"], SentenceKey>> = {
+  created: "createdAttachment",
+  deleted: "deletedAttachment",
+  restored: "restoredAttachment",
 };
 
 const NO_FILTERS: ActivityFilters = { memberId: ALL, kind: ALL, from: "", to: "" };
@@ -98,6 +108,11 @@ export function sentenceKey(event: AuditEventResponse): SentenceKey {
   const householdKey = event.entityKind === "household" ? HOUSEHOLD_SENTENCES[event.action] : null;
   if (householdKey) {
     return householdKey;
+  }
+  const attachmentKey =
+    event.entityKind === "attachment" ? ATTACHMENT_SENTENCES[event.action] : null;
+  if (attachmentKey) {
+    return attachmentKey;
   }
   if (event.entityKind === "account" && event.action === "deleted") {
     return "archived";

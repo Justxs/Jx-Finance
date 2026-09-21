@@ -69,6 +69,11 @@ public static class ErrorCodes
     public const string RestoreSecurityChanged = "restore.securityChanged";
     public const string RestoreNameTaken = "restore.nameTaken";
     public const string ExportTooManyRows = "export.tooManyRows";
+    public const string AttachmentEmpty = "attachment.empty";
+    public const string AttachmentTooLarge = "attachment.tooLarge";
+    public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";
+    public const string AttachmentContentMismatch = "attachment.contentMismatch";
+    public const string AttachmentLimitReached = "attachment.limitReached";
     public const string BackupInvalidFile = "backup.invalidFile";
     public const string BackupSchemaMismatch = "backup.schemaMismatch";
     public const string BackupTooLarge = "backup.tooLarge";
@@ -95,7 +100,7 @@ public static class ErrorCodes
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
-            or RestoreNameTaken => StatusCodes.Status409Conflict,
+            or RestoreNameTaken or AttachmentLimitReached => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
         CredentialsLockedOut => StatusCodes.Status429TooManyRequests,

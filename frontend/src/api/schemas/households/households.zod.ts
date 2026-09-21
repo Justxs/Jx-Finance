@@ -150,6 +150,7 @@ export const HouseholdAuditResponse = zod.object({
         "tag",
         "household",
         "member",
+        "attachment",
       ]),
       entityId: zod.uuid().nullable(),
       description: zod.string(),

@@ -29,4 +29,5 @@ export interface TransactionResponse {
   currency: Currency;
   reportingAmount: string;
   tagIds: string[];
+  attachmentCount: number;
 }

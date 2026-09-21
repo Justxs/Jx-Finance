@@ -23,6 +23,8 @@ public sealed class ApiFixture : AppFixture<Program>
 
     public HttpClient Api { get; private set; } = default!;
 
+    public string AttachmentDirectory => Path.Combine(_keyDirectory, "attachments");
+
     public string ConnectionString { get; private set; } = default!;
 
     protected override async ValueTask PreSetupAsync()
@@ -45,6 +47,7 @@ public sealed class ApiFixture : AppFixture<Program>
         builder.UseSetting("App:BackgroundJobs", "false");
         builder.UseSetting("App:DataProtectionDirectory", _keyDirectory);
         builder.UseSetting("App:BackupDirectory", Path.Combine(_keyDirectory, "backups"));
+        builder.UseSetting("App:AttachmentDirectory", AttachmentDirectory);
         builder.UseSetting("App:BackupMaxDecompressedBytes", BackupMaxDecompressedBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("App:BackupLockTimeoutSeconds", "2");
         builder.UseSetting("App:RevalueBatchSize", "3");

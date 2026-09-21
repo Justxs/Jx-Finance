@@ -69,3 +69,26 @@ test("the sentence depends on the kind for households, archived accounts and bul
   expect(sentenceKey({ ...base, action: "renamed", entityKind: "household" })).toBe("renamed");
   expect(sentenceKey({ ...base, action: "shared", entityKind: "account" })).toBe("shared");
 });
+
+test("a file added, removed and restored reads as attached, removed and restored", () => {
+  const base = eventAt(0);
+
+  expect(sentenceKey({ ...base, action: "created", entityKind: "attachment" })).toBe(
+    "createdAttachment",
+  );
+  expect(sentenceKey({ ...base, action: "deleted", entityKind: "attachment" })).toBe(
+    "deletedAttachment",
+  );
+  expect(sentenceKey({ ...base, action: "restored", entityKind: "attachment" })).toBe(
+    "restoredAttachment",
+  );
+
+  renderEvent({
+    ...base,
+    action: "created",
+    entityKind: "attachment",
+    description: "receipt.png, Maxima, 40.00 EUR",
+  });
+
+  expect(screen.getByText(/attached receipt\.png, Maxima, 40\.00 EUR/)).toBeInTheDocument();
+});

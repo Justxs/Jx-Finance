@@ -19,6 +19,7 @@ function transaction(overrides: Partial<TransactionResponse>): TransactionRespon
     currency: "eur",
     reportingAmount: "1.00",
     tagIds: [],
+    attachmentCount: 0,
     ...overrides,
   };
 }

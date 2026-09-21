@@ -878,6 +878,183 @@
         ]
       }
     },
+    "/api/attachments/{id}": {
+      "delete": {
+        "tags": [
+          "Attachments"
+        ],
+        "summary": "Remove a file from a transaction",
+        "description": "Moves the file to the trash: it disappears from the transaction but stays on disk, and POST /api/trash/restore with kind attachment puts it back for the next 30 days. After that a background job removes the file for good. Anyone who can see the transaction can remove its files; on a shared account the household's activity log records it.",
+        "operationId": "DeleteAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The attachment id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The file is in the trash."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such attachment is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/attachments/{id}/content": {
+      "get": {
+        "tags": [
+          "Attachments"
+        ],
+        "summary": "Download a file of a transaction",
+        "description": "Streams the stored file with the content type detected at upload, always as an attachment (Content-Disposition: attachment) with X-Content-Type-Options: nosniff and a sandboxing Content-Security-Policy, so a browser never renders it as a page. An image element may still show an image from this address, which is how thumbnails are drawn. The ETag is the file's SHA-256; send it back in If-None-Match to get 304 instead of the bytes.",
+        "operationId": "DownloadAttachment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The attachment id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The file.",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/heic": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "304": {
+            "description": "The copy you hold is current."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such attachment is visible to the signed-in user, or its file is no longer stored.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/auth/2fa/disable": {
       "post": {
         "tags": [
@@ -1799,7 +1976,7 @@
           "Backups"
         ],
         "summary": "Take a backup of the whole installation",
-        "description": "Administrators only. Writes every table of the installation into one gzip-compressed JSON file in the backup directory of the server: users with their password hashes, households, settings, exchange rates and all financial data of every user. Sign-in sessions are left out. The file is read from one database snapshot, so it is consistent even while others keep working. Broker tokens inside it stay encrypted with the key directory of this installation and have to be entered again on any other one.",
+        "description": "Administrators only. Writes every table of the installation as JSON, together with every file attached to a transaction, into one zip archive in the backup directory of the server: users with their password hashes, households, settings, exchange rates and all financial data of every user. Sign-in sessions are left out. Attached files, those in the trash included, are stored uncompressed next to the JSON, so the archive is about as large as the attachment directory plus the compressed data. The file is read from one database snapshot, so it is consistent even while others keep working. Broker tokens inside it stay encrypted with the key directory of this installation and have to be entered again on any other one.",
         "operationId": "CreateBackup",
         "requestBody": {
           "content": {
@@ -1975,7 +2152,7 @@
             }
           },
           "400": {
-            "description": "No file, a file over 100 MB, a file that is not a backup, or one that holds more data once decompressed than the installation accepts (backup.tooLarge).",
+            "description": "No file, a file over 2 GB, a file that is not a backup, or one that holds more data once decompressed than the installation accepts (backup.tooLarge).",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -2227,8 +2404,14 @@
         ],
         "responses": {
           "200": {
-            "description": "The gzip-compressed JSON backup.",
+            "description": "A zip archive holding backup.json and the attached files under attachments/, or, for a backup taken before attachments existed, the gzip-compressed JSON on its own.",
             "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
               "application/gzip": {
                 "schema": {
                   "type": "string",
@@ -2303,7 +2486,7 @@
           "Backups"
         ],
         "summary": "Replace all data with a stored backup",
-        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.",
+        "description": "Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup, and the attached files of the archive are written back to the attachment directory after their SHA-256 has been checked against the restored rows; a file that does not match rolls the whole restore back. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.",
         "operationId": "RestoreBackup",
         "parameters": [
           {
@@ -2333,7 +2516,7 @@
         },
         "responses": {
           "200": {
-            "description": "When the restored backup was taken and how many tables and rows were loaded.",
+            "description": "When the restored backup was taken and how many tables, rows and attached files were loaded.",
             "content": {
               "application/json": {
                 "schema": {
@@ -10383,7 +10566,7 @@
           "Transactions"
         ],
         "summary": "Delete a transaction",
-        "description": "Removes the transaction and any split lines, and adjusts the account balance accordingly.",
+        "description": "Removes the transaction and adjusts the account balance accordingly. Its split lines, tags and attached files are kept with it, so POST /api/trash/restore brings it back whole for the next 30 days.",
         "operationId": "DeleteTransaction",
         "parameters": [
           {
@@ -10604,6 +10787,187 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/{transactionId}/attachments": {
+      "get": {
+        "tags": [
+          "Attachments"
+        ],
+        "summary": "List the files of a transaction",
+        "description": "Returns the receipts and documents attached to one transaction, oldest first, with their sanitized file name, detected content type, size, SHA-256 and who uploaded them. Anyone who can see the transaction sees its files: the owner of the account and, for a shared account, every member of its household, narrowed by the active household like the transaction itself. Files in the trash are left out.",
+        "operationId": "GetAttachments",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "description": "The transaction id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The files of the transaction.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AttachmentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transaction is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Attachments"
+        ],
+        "summary": "Attach a file to a transaction",
+        "description": "Stores one receipt or document with the transaction. Send it as multipart/form-data in the field file. JPEG, PNG, WebP and HEIC images and PDF documents are accepted, at most 10 MB each and 10 per transaction. The type is read from the file's first bytes, not trusted from the upload: a declared type that disagrees with the content is refused. The file is kept under a generated id; the name you sent is only shown back, with path parts, control characters and reserved characters removed and an extension that matches the content. On a shared account the household's activity log records the upload.",
+        "operationId": "UploadAttachment",
+        "parameters": [
+          {
+            "name": "transactionId",
+            "in": "path",
+            "description": "The transaction id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadAttachmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "The stored file.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AttachmentResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No file (required), an empty file (attachment.empty), a file over 10 MB (attachment.tooLarge), a type that is not accepted (attachment.typeNotAllowed), or content that does not match the declared type (attachment.contentMismatch).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transaction is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The transaction already has 10 files (attachment.limitReached).",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "The request body is larger than an attachment can be."
           },
           "500": {
             "description": "Server Error",
@@ -12037,6 +12401,54 @@
         "type": "string",
         "description": "Property, Vehicle, Investment, Valuable, or Other."
       },
+      "AttachmentResponse": {
+        "required": [
+          "id",
+          "transactionId",
+          "fileName",
+          "contentType",
+          "sizeBytes",
+          "sha256",
+          "uploadedById",
+          "uploadedByName",
+          "uploadedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "sizeBytes": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "uploadedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "uploadedByName": {
+            "type": "string"
+          },
+          "uploadedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "AuditAction": {
         "enum": [
           "created",
@@ -12088,7 +12500,8 @@
           "category",
           "tag",
           "household",
-          "member"
+          "member",
+          "attachment"
         ],
         "type": "string"
       },
@@ -12161,6 +12574,7 @@
           "sizeBytes",
           "tables",
           "rows",
+          "attachments",
           "uploaded",
           "restorable"
         ],
@@ -12191,6 +12605,10 @@
           "rows": {
             "type": "integer",
             "format": "int64"
+          },
+          "attachments": {
+            "type": "integer",
+            "format": "int32"
           },
           "uploaded": {
             "type": "boolean"
@@ -14016,6 +14434,11 @@
       "ErrorCode": {
         "enum": [
           "access.forbidden",
+          "attachment.contentMismatch",
+          "attachment.empty",
+          "attachment.limitReached",
+          "attachment.tooLarge",
+          "attachment.typeNotAllowed",
           "backup.invalidFile",
           "backup.schemaMismatch",
           "backup.tooLarge",
@@ -15847,7 +16270,8 @@
         "required": [
           "createdAt",
           "tables",
-          "rows"
+          "rows",
+          "attachments"
         ],
         "type": "object",
         "properties": {
@@ -15862,6 +16286,10 @@
           "rows": {
             "type": "integer",
             "format": "int64"
+          },
+          "attachments": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -16959,7 +17387,8 @@
           "lines",
           "currency",
           "reportingAmount",
-          "tagIds"
+          "tagIds",
+          "attachmentCount"
         ],
         "type": "object",
         "properties": {
@@ -17026,6 +17455,10 @@
               "type": "string",
               "format": "uuid"
             }
+          },
+          "attachmentCount": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -17176,7 +17609,8 @@
           "category",
           "tag",
           "categorizationRule",
-          "household"
+          "household",
+          "attachment"
         ],
         "type": "string",
         "description": "Which kind of record to bring back, as listed by GET /api/trash."
@@ -18302,6 +18736,18 @@
           "role": "Admin"
         }
       },
+      "UploadAttachmentRequest": {
+        "required": [
+          "file"
+        ],
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        }
+      },
       "UploadBackupRequest": {
         "type": "object",
         "properties": {
@@ -18454,6 +18900,9 @@
     {
       "name": "Accounts",
       "description": "Bank, cash, and card accounts that transactions post to."
+    },
+    {
+      "name": "Attachments"
     },
     {
       "name": "Auth",

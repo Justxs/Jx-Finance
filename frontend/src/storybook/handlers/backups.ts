@@ -24,6 +24,7 @@ function freshBackup(note: string | null, uploaded: boolean): BackupResponse {
     sizeBytes: 415_302,
     tables: 27,
     rows: 4820,
+    attachments: 38,
     uploaded,
     restorable: true,
   };

@@ -7,5 +7,6 @@ public sealed record BackupResponse(
     long SizeBytes,
     int Tables,
     long Rows,
+    int Attachments,
     bool Uploaded,
     bool Restorable);

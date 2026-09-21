@@ -25,6 +25,7 @@ using JxFinance.Endpoints.Trash.Interfaces;
 using JxFinance.Endpoints.Trash.Mappers;
 using JxFinance.Endpoints.Trash.RestoreDeleted;
 using JxFinance.Endpoints.Trash.Shared;
+using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -37,6 +38,7 @@ public sealed class TrashService(
     IClock clock,
     IInstanceSettingsStore settings,
     IHoldingLedger ledger,
+    AttachmentStore attachmentFiles,
     TrashMapper mapper) : ITrashService
 {
     private static readonly DomainError Gone =
@@ -73,6 +75,18 @@ public sealed class TrashService(
     private static readonly DomainError LaterSalesDepend = new(
         ErrorCodes.HoldingDependentSales,
         "Later sales now depend on the shares this entry would take back. Delete or correct those first.");
+
+    private static readonly DomainError TransactionGone = new(
+        ErrorCodes.RestoreReferenceMissing,
+        "The transaction this file belonged to is deleted or no longer visible. Restore the transaction first.");
+
+    private static readonly DomainError AttachmentFileGone = new(
+        ErrorCodes.RestoreDetailsLost,
+        "The file itself is no longer stored, so there is nothing to bring back.");
+
+    private static readonly DomainError AttachmentSlotsFull = new(
+        ErrorCodes.AttachmentLimitReached,
+        $"The transaction already has {TransactionAttachment.MaxPerTransaction} files. Remove one first.");
 
     public async Task<PagedResponse<TrashEntryResponse>> GetPageAsync(
         GetTrashRequest request,
@@ -139,6 +153,7 @@ public sealed class TrashService(
             TrashKind.Tag => await RestoreTagAsync(entry, cancellationToken),
             TrashKind.CategorizationRule => await RestoreRuleAsync(entry, cancellationToken),
             TrashKind.Household => await RestoreHouseholdAsync(entry, cancellationToken),
+            TrashKind.Attachment => await RestoreAttachmentAsync(entry, cancellationToken),
             _ => Result.Failure(Gone),
         };
         if (restored.IsFailure)
@@ -712,6 +727,44 @@ public sealed class TrashService(
                     .SetProperty(t => t.HouseholdId, sharedInto)
                     .SetProperty(t => t.UpdatedAt, t => t.IsDeleted ? t.UpdatedAt : now),
                 cancellationToken);
+
+        return Result.Success();
+    }
+
+    private async Task<Result> RestoreAttachmentAsync(DeletionEntry entry, CancellationToken cancellationToken)
+    {
+        var attachmentId = new TransactionAttachmentId(entry.EntityId);
+        var attachment = await db.TransactionAttachments
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(a => a.Id == attachmentId, cancellationToken);
+        if (attachment is null)
+        {
+            return Gone;
+        }
+
+        if (!await db.Transactions.AnyAsync(t => t.Id == attachment.TransactionId, cancellationToken))
+        {
+            return TransactionGone;
+        }
+
+        if (!attachment.IsDeleted)
+        {
+            return Result.Success();
+        }
+
+        if (!attachmentFiles.Exists(entry.EntityId))
+        {
+            return AttachmentFileGone;
+        }
+
+        await db.Database.LockAsync(attachment.TransactionId.Value, cancellationToken);
+        if (await db.TransactionAttachments.CountAsync(a => a.TransactionId == attachment.TransactionId, cancellationToken)
+            >= TransactionAttachment.MaxPerTransaction)
+        {
+            return AttachmentSlotsFull;
+        }
+
+        attachment.IsDeleted = false;
 
         return Result.Success();
     }

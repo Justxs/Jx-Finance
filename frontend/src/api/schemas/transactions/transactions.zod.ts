@@ -140,6 +140,7 @@ export const CreateTransactionResponse = zod.object({
   ]),
   reportingAmount: zod.stringFormat("decimal", createTransactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
+  attachmentCount: zod.int(),
 });
 
 /**
@@ -214,6 +215,7 @@ export const TransactionsResponse = zod.object({
         transactionsResponseItemsItemReportingAmountRegExp,
       ),
       tagIds: zod.array(zod.uuid()),
+      attachmentCount: zod.int(),
     }),
   ),
   page: zod.int(),
@@ -283,7 +285,7 @@ export const TransactionsSummaryResponse = zod.object({
 });
 
 /**
- * Removes the transaction and any split lines, and adjusts the account balance accordingly.
+ * Removes the transaction and adjusts the account balance accordingly. Its split lines, tags and attached files are kept with it, so POST /api/trash/restore brings it back whole for the next 30 days.
  * @summary Delete a transaction
  */
 export const DeleteTransactionResponse = zod.void();
@@ -351,6 +353,7 @@ export const TransactionResponse = zod.object({
   ]),
   reportingAmount: zod.stringFormat("decimal", transactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
+  attachmentCount: zod.int(),
 });
 
 /**
@@ -483,4 +486,5 @@ export const UpdateTransactionResponse = zod.object({
   ]),
   reportingAmount: zod.stringFormat("decimal", updateTransactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
+  attachmentCount: zod.int(),
 });

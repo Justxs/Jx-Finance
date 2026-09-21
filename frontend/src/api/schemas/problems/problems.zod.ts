@@ -38,6 +38,11 @@ export const ProblemDetailsResponse = zod
             code: zod
               .enum([
                 "access.forbidden",
+                "attachment.contentMismatch",
+                "attachment.empty",
+                "attachment.limitReached",
+                "attachment.tooLarge",
+                "attachment.typeNotAllowed",
                 "backup.invalidFile",
                 "backup.schemaMismatch",
                 "backup.tooLarge",
@@ -125,6 +130,11 @@ export const ProblemDetailsResponse = zod
     code: zod
       .enum([
         "access.forbidden",
+        "attachment.contentMismatch",
+        "attachment.empty",
+        "attachment.limitReached",
+        "attachment.tooLarge",
+        "attachment.typeNotAllowed",
         "backup.invalidFile",
         "backup.schemaMismatch",
         "backup.tooLarge",

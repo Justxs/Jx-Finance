@@ -8,6 +8,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { staleVariants } from "@/components/ui/stale-region/stale-region";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
+import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
 import {
@@ -78,6 +79,7 @@ export function TransactionsList({
                 <p className="min-w-0 flex-1 truncate font-medium" title={name}>
                   {name}
                 </p>
+                <AttachmentCount count={row.attachmentCount} />
                 <TransactionAmount
                   transaction={row}
                   showReporting

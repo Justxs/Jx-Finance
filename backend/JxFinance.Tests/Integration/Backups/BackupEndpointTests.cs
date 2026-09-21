@@ -149,6 +149,121 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private sealed record RestoredTransactionDto(Guid Id, Guid? CategoryId, string Amount, DateOnly Date, string? Description);
 
     [Fact]
+    public async Task Restore_writes_the_attached_files_back_and_they_download_byte_for_byte()
+    {
+        var account = await CreateAccountAsync(startingBalance: "10.00");
+        var transaction = await CreateTransactionAsync(Client, account, null, "expense", "3.10", "2026-06-09", "Receipt kept");
+        var receipt = PdfBytes("kept");
+        var kept = await UploadAttachmentAsync(transaction.Id, receipt, "kept.pdf");
+        var trashed = await UploadAttachmentAsync(transaction.Id, PdfBytes("trashed"), "trashed.pdf");
+        (await Client.DeleteAsync($"/api/attachments/{trashed.Id}")).EnsureSuccessStatusCode();
+        var backup = await CreateBackupAsync();
+        var later = await UploadAttachmentAsync(transaction.Id, PdfBytes("later"), "later.pdf");
+        File.Delete(AttachmentPath(kept.Id));
+        File.Delete(AttachmentPath(trashed.Id));
+
+        RestoredDto restored;
+        try
+        {
+            var response = await RestoreAsync(backup.Id);
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            restored = (await response.Content.ReadFromJsonAsync<RestoredDto>())!;
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        var listed = await Client.GetFromJsonAsync<List<AttachmentRowDto>>($"/api/transactions/{transaction.Id}/attachments");
+        Assert.Equal([kept.Id], listed!.Select(a => a.Id));
+        Assert.Equal(receipt, await Client.GetByteArrayAsync($"/api/attachments/{kept.Id}/content"));
+        Assert.True(File.Exists(AttachmentPath(trashed.Id)));
+        Assert.Equal(
+            HttpStatusCode.NoContent,
+            (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = trashed.Id })).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/attachments/{later.Id}/content")).StatusCode);
+        Assert.True(restored.Attachments >= 2);
+        Assert.True(backup.Attachments >= 2);
+    }
+
+    [Fact]
+    public async Task The_archive_holds_every_attached_file_under_its_id()
+    {
+        var account = await CreateAccountAsync(startingBalance: "10.00");
+        var transaction = await CreateTransactionAsync(Client, account, null, "expense", "1.10", "2026-06-10");
+        var receipt = PdfBytes("in the archive");
+        var attachment = await UploadAttachmentAsync(transaction.Id, receipt, "archived.pdf");
+
+        using var archive = new ZipArchive(new MemoryStream(await DownloadAsync((await CreateBackupAsync()).Id)), ZipArchiveMode.Read);
+        var entry = archive.GetEntry($"attachments/{attachment.Id:N}");
+
+        Assert.NotNull(entry);
+        await using var content = entry.Open();
+        using var copy = new MemoryStream();
+        await content.CopyToAsync(copy, TestContext.Current.CancellationToken);
+        Assert.Equal(receipt, copy.ToArray());
+        Assert.All(archive.Entries, e => Assert.True(e.FullName == "backup.json" || e.FullName.StartsWith("attachments/", StringComparison.Ordinal)));
+    }
+
+    [Fact]
+    public async Task An_archive_with_a_file_that_does_not_match_its_checksum_is_rolled_back()
+    {
+        var account = await CreateAccountAsync(startingBalance: "10.00");
+        var transaction = await CreateTransactionAsync(Client, account, null, "expense", "2.10", "2026-06-11");
+        var attachment = await UploadAttachmentAsync(transaction.Id, PdfBytes("original"), "original.pdf");
+        var file = await DownloadAsync((await CreateBackupAsync()).Id);
+        using var tampered = new MemoryStream();
+        tampered.Write(file);
+        using (var archive = new ZipArchive(tampered, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            archive.GetEntry($"attachments/{attachment.Id:N}")!.Delete();
+            await using var replaced = archive.CreateEntry($"attachments/{attachment.Id:N}").Open();
+            await replaced.WriteAsync(PdfBytes("forged"), TestContext.Current.CancellationToken);
+        }
+
+        var uploaded = await UploadAsync(tampered.ToArray());
+        Assert.Equal(HttpStatusCode.Created, uploaded.StatusCode);
+        var stored = (await uploaded.Content.ReadFromJsonAsync<BackupDto>())!;
+        var afterwards = await CreateAccountAsync(startingBalance: "7.00");
+
+        var response = await RestoreAsync(stored.Id);
+
+        await AssertRejectedAsync(response, "backup.invalidFile");
+        Assert.Equal("7.00", await CurrentBalanceAsync(afterwards));
+    }
+
+    [Fact]
+    public async Task An_archive_with_an_unexpected_entry_is_not_stored()
+    {
+        var file = await DownloadAsync((await CreateBackupAsync()).Id);
+        using var altered = new MemoryStream();
+        altered.Write(file);
+        using (var archive = new ZipArchive(altered, ZipArchiveMode.Update, leaveOpen: true))
+        {
+            await using var extra = archive.CreateEntry("../outside.txt").Open();
+            await extra.WriteAsync(Encoding.UTF8.GetBytes("nope"), TestContext.Current.CancellationToken);
+        }
+
+        await AssertRejectedAsync(await UploadAsync(altered.ToArray()), "backup.invalidFile");
+    }
+
+    private static byte[] PdfBytes(string text) => Encoding.ASCII.GetBytes($"%PDF-1.7\n% {text} {Guid.NewGuid():N}\n%%EOF");
+
+    private string AttachmentPath(Guid id) =>
+        Path.Combine(Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["App:AttachmentDirectory"]!, id.ToString("N"));
+
+    private async Task<AttachmentRowDto> UploadAttachmentAsync(Guid transactionId, byte[] file, string name)
+    {
+        using var content = new MultipartFormDataContent();
+        var fileContent = new ByteArrayContent(file);
+        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/pdf");
+        content.Add(fileContent, "file", name);
+        var response = await Client.PostAsync($"/api/transactions/{transactionId}/attachments", content);
+        Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<AttachmentRowDto>())!;
+    }
+
+    [Fact]
     public async Task Restore_brings_back_the_price_history_of_a_security()
     {
         var security = await CreateSecurityAsync(Client);
@@ -232,15 +347,15 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Download_is_a_gzip_file_without_sessions()
+    public async Task Download_is_a_zip_archive_without_sessions()
     {
         var backup = await CreateBackupAsync();
 
         var response = await Client.GetAsync($"/api/backups/{backup.Id}/download");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("application/gzip", response.Content.Headers.ContentType?.MediaType);
-        Assert.EndsWith(".json.gz", response.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
+        Assert.Equal("application/zip", response.Content.Headers.ContentType?.MediaType);
+        Assert.EndsWith(".zip", response.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
         var file = await response.Content.ReadAsByteArrayAsync();
         Assert.Equal(backup.SizeBytes, file.Length);
 
@@ -252,6 +367,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Contains("DeletionEntries", tables);
         Assert.Contains("DeletionChanges", tables);
         Assert.Contains("AuditEvents", tables);
+        Assert.Contains("TransactionAttachments", tables);
         Assert.DoesNotContain("UserSessions", tables);
         Assert.DoesNotContain("EmailMessages", tables);
     }
@@ -522,8 +638,9 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
     private static JsonNode Unzip(byte[] file)
     {
-        using var gzip = new GZipStream(new MemoryStream(file), CompressionMode.Decompress);
-        return JsonNode.Parse(gzip)!;
+        using var archive = new ZipArchive(new MemoryStream(file), ZipArchiveMode.Read);
+        using var document = archive.GetEntry("backup.json")!.Open();
+        return JsonNode.Parse(document)!;
     }
 
     private sealed record BackupDto(
@@ -533,8 +650,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         long SizeBytes,
         int Tables,
         long Rows,
+        int Attachments,
         bool Uploaded,
         bool Restorable);
 
-    private sealed record RestoredDto(DateTimeOffset CreatedAt, int Tables, long Rows);
+    private sealed record RestoredDto(DateTimeOffset CreatedAt, int Tables, long Rows, int Attachments);
+
+    private sealed record AttachmentRowDto(Guid Id, string FileName, string Sha256);
 }

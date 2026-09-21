@@ -1,10 +1,16 @@
+import { execSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { defineConfig } from "orval";
 import { z } from "zod";
 
 const input = "./openapi.json";
-const format = "oxfmt";
 const decimalFieldsFile = "./src/api/generated/decimal-fields.ts";
+
+function formatFolder(folder: string) {
+  return function format() {
+    execSync(`oxfmt ${folder}`, { stdio: "inherit" });
+  };
+}
 
 interface SchemaNode {
   $ref?: string;
@@ -197,7 +203,7 @@ export default defineConfig({
       },
     },
     hooks: {
-      afterAllFilesWrite: [writeDecimalFields, format],
+      afterAllFilesWrite: [writeDecimalFields, formatFolder("./src/api/generated")],
     },
   },
   zod: {
@@ -216,7 +222,7 @@ export default defineConfig({
       },
     },
     hooks: {
-      afterAllFilesWrite: format,
+      afterAllFilesWrite: formatFolder("./src/api/schemas"),
     },
   },
 });

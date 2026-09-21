@@ -16,6 +16,7 @@ function Get-DevEnvironment {
     $variables = [ordered]@{}
     $variables["ConnectionStrings__Default"] = "Host=localhost;Port=5432;Database=$($envVars['POSTGRES_DB']);Username=$($envVars['POSTGRES_USER']);Password=$($envVars['POSTGRES_PASSWORD'])"
     $variables["App__BackupDirectory"] = Join-Path $Root ".local/backups"
+    $variables["App__AttachmentDirectory"] = Join-Path $Root ".local/attachments"
     return $variables
 }
 

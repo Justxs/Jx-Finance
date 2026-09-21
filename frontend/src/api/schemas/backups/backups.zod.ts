@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Administrators only. Writes every table of the installation into one gzip-compressed JSON file in the backup directory of the server: users with their password hashes, households, settings, exchange rates and all financial data of every user. Sign-in sessions are left out. The file is read from one database snapshot, so it is consistent even while others keep working. Broker tokens inside it stay encrypted with the key directory of this installation and have to be entered again on any other one.
+ * Administrators only. Writes every table of the installation as JSON, together with every file attached to a transaction, into one zip archive in the backup directory of the server: users with their password hashes, households, settings, exchange rates and all financial data of every user. Sign-in sessions are left out. Attached files, those in the trash included, are stored uncompressed next to the JSON, so the archive is about as large as the attachment directory plus the compressed data. The file is read from one database snapshot, so it is consistent even while others keep working. Broker tokens inside it stay encrypted with the key directory of this installation and have to be entered again on any other one.
  * @summary Take a backup of the whole installation
  */
 export const createBackupBodyNoteMin = 0;
@@ -30,6 +30,7 @@ export const CreateBackupResponse = zod.object({
   sizeBytes: zod.int(),
   tables: zod.int(),
   rows: zod.int(),
+  attachments: zod.int(),
   uploaded: zod.boolean(),
   restorable: zod.boolean(),
 });
@@ -45,6 +46,7 @@ export const BackupsResponseItem = zod.object({
   sizeBytes: zod.int(),
   tables: zod.int(),
   rows: zod.int(),
+  attachments: zod.int(),
   uploaded: zod.boolean(),
   restorable: zod.boolean(),
 });
@@ -74,6 +76,7 @@ export const UploadBackupResponse = zod.object({
   sizeBytes: zod.int(),
   tables: zod.int(),
   rows: zod.int(),
+  attachments: zod.int(),
   uploaded: zod.boolean(),
   restorable: zod.boolean(),
 });
@@ -107,6 +110,7 @@ export const UpdateBackupResponse = zod.object({
   sizeBytes: zod.int(),
   tables: zod.int(),
   rows: zod.int(),
+  attachments: zod.int(),
   uploaded: zod.boolean(),
   restorable: zod.boolean(),
 });
@@ -118,7 +122,7 @@ export const UpdateBackupResponse = zod.object({
 export const DownloadBackupResponse = zod.unknown();
 
 /**
- * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.
+ * Administrators only. Deletes everything in the installation and loads the stored backup instead, in one database transaction: either the whole file is restored or nothing changes. The caller confirms the action with their current password; a wrong password answers password.incorrect and counts toward the sign-in lockout, and a locked-out account answers credentials.lockedOut. Users, passwords, households, settings and all financial data become those of the backup, and the attached files of the archive are written back to the attachment directory after their SHA-256 has been checked against the restored rows; a file that does not match rolls the whole restore back. The backups kept on the server are files, not data, so the list survives a restore. Every sign-in session is deleted and the caller's cookies are cleared, so the client must send the user to sign in again with a password from the backup; other signed-in users are asked to sign in on their next request. The backup must come from the same database version as the running application; an older or newer one answers backup.schemaMismatch. A backup that holds more data than the installation accepts answers backup.tooLarge. Rate limited to 5 attempts per five minutes per client.
  * @summary Replace all data with a stored backup
  */
 export const restoreBackupBodyPasswordMin = 0;
@@ -136,4 +140,5 @@ export const RestoreBackupResponse = zod.object({
   createdAt: zod.iso.datetime({ offset: true }),
   tables: zod.int(),
   rows: zod.int(),
+  attachments: zod.int(),
 });

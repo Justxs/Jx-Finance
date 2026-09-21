@@ -71,6 +71,7 @@ function transaction(
     currency: "eur",
     reportingAmount: "1.00",
     tagIds: [],
+    attachmentCount: 0,
   };
 }
 

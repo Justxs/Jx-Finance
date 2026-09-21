@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using FastEndpoints;
 using JxFinance.Api;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Endpoints.Backups.UploadBackup;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
@@ -26,6 +27,8 @@ public static class ApiServiceExtensions
         builder.Services.AddProblemDetails();
         builder.Services.ConfigureHttpJsonOptions(options =>
             options.SerializerOptions.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase)));
+        builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
+            form => form.MultipartBodyLengthLimit = UploadBackupEndpoint.MaxFileBytes + (1024 * 1024));
         builder.Services.AddFastEndpoints(DiscoveredTypes.All);
         builder.Services.RegisterServicesFromJxFinanceApi();
         builder.Services.AddApiOpenApiDocument();
@@ -65,6 +68,7 @@ public static class ApiServiceExtensions
             builder.Services.AddHostedService<BrokerSyncJob>();
             builder.Services.AddHostedService<EmailOutboxJob>();
             builder.Services.AddHostedService<AuditRetentionJob>();
+            builder.Services.AddHostedService<AttachmentPurgeJob>();
         }
 
         return builder;

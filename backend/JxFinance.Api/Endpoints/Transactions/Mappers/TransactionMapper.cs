@@ -56,7 +56,8 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
     public TransactionResponse FromEntity(
         Transaction transaction,
         IReadOnlyList<TransactionLine>? lines,
-        IReadOnlyList<TagId>? tagIds = null) => new(
+        IReadOnlyList<TagId>? tagIds = null,
+        int attachmentCount = 0) => new(
         transaction.Id.Value,
         transaction.AccountId.Value,
         transaction.CategoryId?.Value,
@@ -76,7 +77,8 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             : null,
         transaction.Amount.Currency,
         Money.Round(transaction.ReportingAmount),
-        (tagIds ?? []).Select(tagId => tagId.Value).ToList());
+        (tagIds ?? []).Select(tagId => tagId.Value).ToList(),
+        attachmentCount);
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {
