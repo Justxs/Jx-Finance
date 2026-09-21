@@ -1,6 +1,8 @@
 using System.Globalization;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
+using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Dashboard.Interfaces;
@@ -15,7 +17,8 @@ public sealed class DashboardService(
     AppDbContext db,
     IClock clock,
     ICategoryAttributionService attributions,
-    IAccountService accountService)
+    IAccountService accountService,
+    IInvestmentCashFlowService investmentCashFlows)
     : IDashboardService
 {
     public async Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken)
@@ -51,26 +54,15 @@ public sealed class DashboardService(
         var (periodStart, periodEnd) = ResolveMonth(month, nowLocal);
 
         var categoryAttributions = await attributions.GetAttributionsAsync(
-            periodStart,
-            periodEnd,
+            period,
+            null,
             FlowType.Expense,
             cancellationToken);
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
-        var items = categoryAttributions
-            .GroupBy(a => a.CategoryId)
-            .Select(g =>
-            {
-                var category = g.Key.HasValue ? categories.GetValueOrDefault(g.Key.Value) : null;
-                return new CategoryBreakdownItem(
-                    g.Key?.Value,
-                    category?.Name ?? "Uncategorized",
-                    category?.Icon,
-                    Money.Round(g.Sum(a => a.Amount)));
-            })
-            .OrderByDescending(i => i.Amount)
-            .ToList();
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken);
+        var items = CategoryBreakdownBuilder.Build(categoryAttributions, categories, investmentFlows, FlowType.Expense);
 
         return new CategoryBreakdownResponse(items, periodStart, periodEnd.AddDays(-1));
     }
@@ -92,12 +84,17 @@ public sealed class DashboardService(
         for (var i = 0; i < clamped; i++)
         {
             var monthStart = earliestStart.AddMonths(i);
-            var income = totals
+            var monthFlows = investmentFlows
+                .Where(f => f.Date.Year == monthStart.Year && f.Date.Month == monthStart.Month)
+                .ToList();
+            var income = (totals
                 .FirstOrDefault(t => t.Year == monthStart.Year && t.Month == monthStart.Month && t.Type == FlowType.Income)
-                ?.Total ?? 0m;
-            var expense = totals
+                ?.Total ?? 0m)
+                + monthFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
+            var expense = (totals
                 .FirstOrDefault(t => t.Year == monthStart.Year && t.Month == monthStart.Month && t.Type == FlowType.Expense)
-                ?.Total ?? 0m;
+                ?.Total ?? 0m)
+                + monthFlows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount);
 
             items.Add(new MonthlyTrendItem(
                 monthStart.Year,

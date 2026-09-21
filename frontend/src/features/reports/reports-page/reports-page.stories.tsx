@@ -70,6 +70,23 @@ export const ChangesPreset: Story = {
   },
 };
 
+export const InvestmentIncomeIsAGroupWithoutALink: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const heading = await canvas.findByRole("heading", {
+      name: /income by category|pajamos pagal kategoriją/i,
+    });
+    const section = within(heading.closest("section")!);
+
+    await expect(section.getByText(/^(investment income|investicijų pajamos)$/i)).toBeVisible();
+    await expect(
+      section.queryByRole("link", { name: /investment income|investicijų pajamos/i }),
+    ).toBeNull();
+    const links = section.getAllByRole("link").map((link) => link.getAttribute("href") ?? "");
+    await expect(links.filter((href) => !href.includes("type=income"))).toEqual([]);
+  },
+};
+
 export const CategoryLinksCarryTheRange: Story = {
   parameters: { route: routeFor({ dateFrom: "2026-08-10", dateTo: "2026-09-12" }) },
   play: async ({ canvasElement }) => {

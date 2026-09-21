@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.CategoryAttributions;
+using JxFinance.Common.InvestmentCashFlows;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Dashboard.Shared;
 using JxFinance.Endpoints.Reports.Interfaces;
@@ -10,7 +11,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Reports.Services;
 
 [RegisterService<IReportService>(LifeTime.Scoped)]
-public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttributionService attributions) : IReportService
+public sealed class ReportService(
+    AppDbContext db,
+    IClock clock,
+    ICategoryAttributionService attributions,
+    IInvestmentCashFlowService investmentCashFlows) : IReportService
 {
     public async Task<ReportSummaryResponse> GetSummaryAsync(
         DateOnly? dateFrom,
@@ -22,14 +27,8 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
         var periodStart = dateFrom ?? new DateOnly(periodEnd.Year, periodEnd.Month, 1);
         var exclusiveEnd = periodEnd.AddDays(1);
 
-        var totals = await db.Transactions
-            .Where(t => t.Date >= periodStart && t.Date < exclusiveEnd)
-            .GroupBy(t => t.Type)
-            .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
-            .ToListAsync(cancellationToken);
-
-        var totalIncome = totals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m;
-        var totalExpense = totals.FirstOrDefault(t => t.Type == FlowType.Expense)?.Total ?? 0m;
+        var flows = await ReadTransactionFlowsAsync(period, earlier, cancellationToken);
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, earlier, cancellationToken);
 
         var expenseAttributions = await attributions.GetAttributionsAsync(
             periodStart,
@@ -39,18 +38,23 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
-        var expenseByCategory = expenseAttributions
-            .GroupBy(a => a.CategoryId)
-            .Select(g =>
-            {
-                var category = g.Key.HasValue ? categories.GetValueOrDefault(g.Key.Value) : null;
-                return new CategoryBreakdownItem(
-                    g.Key?.Value,
-                    category?.Name ?? "Uncategorized",
-                    category?.Icon,
-                    Money.Round(g.Sum(a => a.Amount)));
-            })
-            .OrderByDescending(i => i.Amount)
+        var expenseByCategory = CategoryBreakdownBuilder.Build(
+            expenseAttributions.Where(a => period.Contains(a.Date)),
+            categories,
+            investmentFlows.Where(f => period.Contains(f.Date)),
+            FlowType.Expense,
+            earlier is null ? null : expenseAttributions.Where(a => earlier.Value.Contains(a.Date)),
+            earlier is null ? null : investmentFlows.Where(f => earlier.Value.Contains(f.Date)));
+        var incomeByCategory = CategoryBreakdownBuilder.Build(
+            incomeAttributions.Where(a => period.Contains(a.Date)),
+            categories,
+            investmentFlows.Where(f => period.Contains(f.Date)),
+            FlowType.Income,
+            earlier is null ? null : incomeAttributions.Where(a => earlier.Value.Contains(a.Date)),
+            earlier is null ? null : investmentFlows.Where(f => earlier.Value.Contains(f.Date)));
+
+        var everything = flows
+            .Concat(investmentFlows.Select(f => new DatedFlow(f.Date, f.Type, f.Amount)))
             .ToList();
 
         var (trend, bucket) = await BuildTrendAsync(periodStart, exclusiveEnd, cancellationToken);
@@ -62,6 +66,7 @@ public sealed class ReportService(AppDbContext db, IClock clock, ICategoryAttrib
             totalExpense,
             totalIncome - totalExpense,
             expenseByCategory,
+            incomeByCategory,
             trend,
             bucket);
     }

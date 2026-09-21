@@ -59,7 +59,7 @@ export const getCategoryBreakdownUrl = (params?: CategoryBreakdownParams) => {
 };
 
 /**
- * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately.
+ * Returns expenses for one month grouped by category, ordered by amount, for the dashboard pie chart. Split transactions contribute to each of their lines separately. While the investments feature is on, withholding tax and standalone fees from the investment ledger arrive as one entry with categoryId null and syntheticGroup investmentTaxesAndFees; localize its name and do not link it to a category. Every other entry has syntheticGroup null.
  * @summary Get spending split by category
  */
 export const categoryBreakdown = async (
@@ -190,7 +190,7 @@ export const getMonthlyTrendUrl = (params: MonthlyTrendParams) => {
 };
 
 /**
- * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis.
+ * Returns income and expense totals per month, oldest first, ending with the current month. Months with no activity are still present with zero totals so the chart keeps an even x-axis. While the investments feature is on, the totals include investment dividends and interest as income and withholding tax and standalone fees as expense.
  * @summary Get the monthly income and expense trend
  */
 export const monthlyTrend = async (
@@ -307,7 +307,7 @@ export const getDashboardSummaryUrl = () => {
 };
 
 /**
- * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's.
+ * Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary.
  * @summary Get the dashboard summary
  */
 export const dashboardSummary = async (

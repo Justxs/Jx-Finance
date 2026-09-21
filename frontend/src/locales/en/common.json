@@ -896,6 +896,12 @@
     "net": "Net",
     "trend": "Trend",
     "expenseByCategory": "Expense by category",
+    "incomeByCategory": "Income by category",
+    "noIncome": "No income recorded in this period.",
+    "syntheticGroups": {
+      "investmentIncome": "Investment income",
+      "investmentTaxesAndFees": "Investment taxes and fees"
+    },
     "netWorthChange": "Net worth change",
     "notEnoughNetWorthHistory": "Not enough net worth history in this period yet.",
     "customRange": "Custom range"

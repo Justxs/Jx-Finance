@@ -12,5 +12,6 @@ public sealed record ReportSummaryResponse(
     [property: Money] decimal TotalExpense,
     [property: Money] decimal Net,
     IReadOnlyList<CategoryBreakdownItem> ExpenseByCategory,
+    IReadOnlyList<CategoryBreakdownItem> IncomeByCategory,
     IReadOnlyList<ReportTrendPoint> Trend,
     string TrendBucket);
