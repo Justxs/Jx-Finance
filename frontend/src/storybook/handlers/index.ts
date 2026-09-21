@@ -1,6 +1,9 @@
 import { HttpHandler } from "msw";
 import type { RequestHandler } from "msw";
-import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
+import {
+  getAccountsMockHandler,
+  getArchivedAccountsMockHandler,
+} from "@/api/generated/accounts/accounts.msw";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getBudgetsMockHandler } from "@/api/generated/budgets/budgets.msw";
 import { getCategoriesMockHandler } from "@/api/generated/categories/categories.msw";
@@ -128,6 +131,7 @@ function dataGetHandlers(): HttpHandler[] {
 
 export const emptyHandlers: RequestHandler[] = [
   getAccountsMockHandler([]),
+  getArchivedAccountsMockHandler([]),
   getAssetsMockHandler([]),
   getBudgetsMockHandler([]),
   getCategoriesMockHandler([]),

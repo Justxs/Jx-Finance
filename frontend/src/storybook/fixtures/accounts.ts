@@ -1,4 +1,4 @@
-import type { AccountResponse } from "@/api/generated/model";
+import type { AccountResponse, ArchivedAccountResponse } from "@/api/generated/model";
 import { ids } from "./base";
 
 export const checkingAccount: AccountResponse = {
@@ -98,3 +98,33 @@ export const accounts: AccountResponse[] = [
   sharedAccount,
   brokerAccount,
 ];
+
+export const archivedAccount: ArchivedAccountResponse = {
+  id: ids.accounts.archived,
+  name: "Senoji SEB kortelė",
+  description: "Uždaryta perėjus į Swedbank",
+  iban: "LT307044060001234567",
+  type: "checking",
+  startingBalance: "320.00",
+  currency: "eur",
+  scope: "personal",
+  householdId: null,
+  archivedAt: "2026-08-30T14:05:00Z",
+  canRestore: true,
+};
+
+export const archivedSharedAccount: ArchivedAccountResponse = {
+  id: ids.accounts.archivedShared,
+  name: "Sodo išlaidos",
+  description: null,
+  iban: null,
+  type: "cash",
+  startingBalance: "0.00",
+  currency: "eur",
+  scope: "shared",
+  householdId: ids.households.family,
+  archivedAt: "2026-07-12T08:30:00Z",
+  canRestore: false,
+};
+
+export const archivedAccounts: ArchivedAccountResponse[] = [archivedAccount, archivedSharedAccount];

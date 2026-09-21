@@ -117,7 +117,17 @@
     "currency": "Pagrindinė valiuta",
     "currencyHint": "Pradinis likutis ir sąskaitos suma rodomi šia valiuta. Sąskaitoje gali būti ir kitų valiutų.",
     "holdings": "Vertybiniai popieriai ≈ {{value}}",
-    "share": "Likutis pagal sąskaitą"
+    "share": "Likutis pagal sąskaitą",
+    "archiveTitle": "Archyvuoti šią sąskaitą?",
+    "archiveDescription": "Ji dings iš sąrašų, pasirinkimų ir sumų, o kartu bus paslėptos ir jos operacijos. Vėliau ją galėsite atkurti šio puslapio skiltyje „Archyvuotos sąskaitos“.",
+    "restored": "Sąskaita atkurta",
+    "archivedList": {
+      "summary": "Archyvuotos sąskaitos ({{count}})",
+      "label": "Archyvuotos sąskaitos",
+      "archivedOn": "Archyvuota {{date}}",
+      "restore": "Atkurti",
+      "ownerOnly": "Atkurti gali tik savininkas"
+    }
   },
   "transfers": {
     "title": "Pervesti pinigus",

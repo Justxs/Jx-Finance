@@ -1,13 +1,15 @@
 import {
+  getArchivedAccountsMockHandler,
   getCreateAccountMockHandler,
   getDeleteAccountMockHandler,
   getAccountMockHandler,
   getAccountsMockHandler,
+  getRestoreAccountMockHandler,
   getUpdateAccountMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
-import { accounts, checkingAccount } from "@/storybook/fixtures";
+import { accounts, archivedAccounts, checkingAccount } from "@/storybook/fixtures";
 import { found, readBody } from "./http";
 import type { Body } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
@@ -52,6 +54,7 @@ function mergeAccount(base: AccountResponse, body: Body): AccountResponse {
 }
 
 export const accountHandlers = [
+  getArchivedAccountsMockHandler(archivedAccounts),
   getAccountsMockHandler(({ request }) => filterAccounts(new URL(request.url).searchParams)),
   getCreateAccountMockHandler(async ({ request }) => {
     const created: AccountResponse = {
@@ -75,4 +78,16 @@ export const accountHandlers = [
     mergeAccount(found(byId(accounts, params.id)), await readBody(request)),
   ),
   getDeleteAccountMockHandler(),
+  getRestoreAccountMockHandler(({ params }) => {
+    const archived = found(byId(archivedAccounts, params.id));
+    return {
+      ...checkingAccount,
+      ...archived,
+      createdAt: CREATED_AT,
+      currentBalance: archived.startingBalance,
+      reportingBalance: archived.startingBalance,
+      holdingsValue: "0.00",
+      balances: [{ currency: archived.currency, amount: archived.startingBalance }],
+    };
+  }),
 ];

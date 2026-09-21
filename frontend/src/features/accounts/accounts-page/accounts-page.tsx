@@ -23,6 +23,7 @@ import { useSettings } from "@/hooks/use-settings";
 import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table/accounts-table";
+import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
 import { ConversionsSection } from "../conversions-section";
 import { TransfersSection } from "../transfers-section";
 
@@ -118,6 +119,10 @@ export function AccountsPage() {
         />
       </Panel>
 
+      <QueryBoundary fallback={<Skeleton className="h-8 w-48" />}>
+        <ArchivedAccounts />
+      </QueryBoundary>
+
       {accountList.length > 1 ? (
         <Section>
           <SectionTitle className="mb-4">{t("accounts.share")}</SectionTitle>
@@ -145,7 +150,12 @@ export function AccountsPage() {
         </QueryBoundary>
       ) : null}
 
-      <ConfirmDeleteDialog {...remove.dialogProps} />
+      <ConfirmDeleteDialog
+        {...remove.dialogProps}
+        title={t("accounts.archiveTitle")}
+        description={t("accounts.archiveDescription")}
+        confirmLabel={t("actions.archive")}
+      />
     </div>
   );
 }

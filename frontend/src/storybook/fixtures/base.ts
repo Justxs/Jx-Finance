@@ -47,6 +47,7 @@ export const ids = {
     shared: uid("33333333", 4),
     broker: uid("33333333", 5),
     archived: uid("33333333", 6),
+    archivedShared: uid("33333333", 7),
   },
   categories: {
     salary: uid("44444444", 1),
