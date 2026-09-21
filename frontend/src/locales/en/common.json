@@ -8,6 +8,8 @@
     "transactions": "Transactions",
     "accounts": "Accounts",
     "categories": "Categories",
+    "tags": "Tags",
+    "categorizationRules": "Rules",
     "budgets": "Budgets",
     "goals": "Goals",
     "netWorth": "Net worth",
@@ -597,6 +599,10 @@
         "investments": {
           "name": "Investments",
           "hint": "Securities, trades, dividends and Interactive Brokers import."
+        },
+        "categorizationRules": {
+          "name": "Categorization rules",
+          "hint": "Rules that fill a category and tags from a description, in the import preview and on demand."
         }
       }
     },

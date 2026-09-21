@@ -13,6 +13,7 @@ export function settingsFixture(overrides: Partial<SettingsResponse> = {}): Sett
       households: false,
       multiCurrency: true,
       investments: true,
+      categorizationRules: true,
     },
     reportingCurrency: "eur",
     enabledCurrencies: ["eur", "usd"],

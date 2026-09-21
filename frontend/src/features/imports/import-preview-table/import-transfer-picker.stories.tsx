@@ -27,6 +27,9 @@ const fallbackRow: ImportPreviewRow = {
   isDuplicate: false,
   looksLikeTransfer: true,
   currency: "eur",
+  suggestedCategoryId: null,
+  suggestedTagIds: [],
+  matchedRuleName: null,
 };
 
 function toState(
@@ -40,6 +43,8 @@ function toState(
     existingTransferId: "",
     categoryId: "",
     categorySuggested: false,
+    ruleName: null,
+    tagIds: [],
     ...patch,
   };
 }

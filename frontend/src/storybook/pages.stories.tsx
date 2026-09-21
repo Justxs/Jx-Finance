@@ -19,6 +19,10 @@ export const Accounts: Story = { args: { path: "/accounts" } };
 
 export const Categories: Story = { args: { path: "/categories" } };
 
+export const Tags: Story = { args: { path: "/tags" } };
+
+export const CategorizationRules: Story = { args: { path: "/categorization-rules" } };
+
 export const Budgets: Story = { args: { path: "/budgets" } };
 
 export const Goals: Story = { args: { path: "/goals" } };

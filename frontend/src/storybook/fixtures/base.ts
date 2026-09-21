@@ -46,6 +46,7 @@ export const ids = {
     cash: uid("33333333", 3),
     shared: uid("33333333", 4),
     broker: uid("33333333", 5),
+    archived: uid("33333333", 6),
   },
   categories: {
     salary: uid("44444444", 1),
@@ -62,6 +63,20 @@ export const ids = {
     shopping: uid("44444444", 12),
     householdGoods: uid("44444444", 13),
     noIcon: uid("44444444", 14),
+  },
+  tags: {
+    holiday: uid("4a4a4a4a", 1),
+    renovation: uid("4a4a4a4a", 2),
+    reimbursable: uid("4a4a4a4a", 3),
+    children: uid("4a4a4a4a", 4),
+    car: uid("4a4a4a4a", 5),
+  },
+  rules: {
+    groceries: uid("4b4b4b4b", 1),
+    transport: uid("4b4b4b4b", 2),
+    utilities: uid("4b4b4b4b", 3),
+    salary: uid("4b4b4b4b", 4),
+    holidayCard: uid("4b4b4b4b", 5),
   },
   transactions: {
     maxima: uid("55555555", 1),
@@ -91,6 +106,9 @@ export const ids = {
     vacation: uid("88888888", 1),
     emergencyFund: uid("88888888", 2),
     bicycle: uid("88888888", 3),
+    houseDeposit: uid("88888888", 4),
+    carReplacement: uid("88888888", 5),
+    holidayHome: uid("88888888", 6),
   },
   bills: {
     telia: uid("99999999", 1),
@@ -99,12 +117,19 @@ export const ids = {
     insurance: uid("99999999", 4),
     netflix: uid("99999999", 5),
     water: uid("99999999", 6),
+    salary: uid("99999999", 7),
+    savingsOrder: uid("99999999", 8),
+    brokerTopUp: uid("99999999", 9),
   },
   notifications: {
     telia: uid("aaaaaaaa", 1),
     water: uid("aaaaaaaa", 2),
     ignitis: uid("aaaaaaaa", 3),
     mortgage: uid("aaaaaaaa", 4),
+    foodWarning: uid("aaaaaaaa", 5),
+    transportExceeded: uid("aaaaaaaa", 6),
+    salary: uid("aaaaaaaa", 7),
+    savingsOrder: uid("aaaaaaaa", 8),
   },
   assets: {
     apartment: uid("bbbbbbbb", 1),

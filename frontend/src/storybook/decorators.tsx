@@ -39,6 +39,8 @@ const STORY_ROUTES = [
   { path: "/users", validateSearch: usersSearchSchema },
   { path: "/budgets" },
   { path: "/categories" },
+  { path: "/tags" },
+  { path: "/categorization-rules" },
   { path: "/goals" },
   { path: "/households" },
   { path: "/net-worth" },

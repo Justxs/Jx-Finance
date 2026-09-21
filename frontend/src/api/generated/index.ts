@@ -3,6 +3,7 @@ export * from "./auth/auth";
 export * from "./backups/backups";
 export * from "./budgets/budgets";
 export * from "./categories/categories";
+export * from "./categorization-rules/categorization-rules";
 export * from "./conversions/conversions";
 export * from "./currencies/currencies";
 export * from "./dashboard/dashboard";

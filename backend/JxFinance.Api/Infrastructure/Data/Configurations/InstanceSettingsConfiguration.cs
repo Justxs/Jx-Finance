@@ -9,7 +9,8 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
     public void Configure(EntityTypeBuilder<InstanceSettings> builder)
     {
         builder.Property(s => s.Id).ValueGeneratedNever();
-        builder.ComplexProperty(s => s.Features);
+        builder.ComplexProperty(s => s.Features, features =>
+            features.Property(f => f.CategorizationRules).HasDefaultValue(true));
         builder.Property(s => s.InstanceName).HasMaxLength(40);
         builder.Property(s => s.EnabledCurrencyCodes).HasMaxLength(200);
         builder.Property(s => s.DefaultLanguage).HasMaxLength(5);

@@ -14,6 +14,8 @@ using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
+using JxFinance.Endpoints.CategorizationRules.Interfaces;
+using JxFinance.Endpoints.CategorizationRules.Shared;
 using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Interfaces;
 using JxFinance.Endpoints.Imports.Preview;
@@ -24,7 +26,12 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Imports.Services;
 
 [RegisterService<IImportService>(LifeTime.Scoped)]
-public sealed class ImportService(AppDbContext db, IExchangeRateService rates, IReferenceGuard references) : IImportService
+public sealed class ImportService(
+    AppDbContext db,
+    IExchangeRateService rates,
+    IReferenceGuard references,
+    ICategorizationRuleService rules,
+    IInstanceSettingsStore settings) : IImportService
 {
     private const string TransactionRowType = "20";
 
@@ -252,6 +259,23 @@ public sealed class ImportService(AppDbContext db, IExchangeRateService rates, I
         }
 
         return rows;
+    }
+
+    private async Task<IReadOnlyList<RuleSuggestion?>> SuggestionsAsync(
+        AccountId accountId,
+        IReadOnlyList<ParsedRow> parsedRows,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.Current.IsEnabled(Feature.CategorizationRules))
+        {
+            return parsedRows.Select(_ => (RuleSuggestion?)null).ToList();
+        }
+
+        var candidates = parsedRows
+            .Select(r => new RuleCandidate(r.Description, r.Amount, r.Type))
+            .ToList();
+
+        return await rules.SuggestAsync(accountId, candidates, cancellationToken);
     }
 
     private static bool LooksLikeTransfer(string? payee, string? description)

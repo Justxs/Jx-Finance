@@ -22,6 +22,7 @@ public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSetting
         ("/api/households", Feature.Households),
         ("/api/conversions", Feature.MultiCurrency),
         ("/api/investments", Feature.Investments),
+        ("/api/categorization-rules", Feature.CategorizationRules),
     ];
 
     public async Task InvokeAsync(HttpContext context)

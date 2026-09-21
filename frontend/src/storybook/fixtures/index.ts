@@ -3,6 +3,8 @@ export * from "./users";
 export * from "./households";
 export * from "./accounts";
 export * from "./categories";
+export * from "./tags";
+export * from "./categorization-rules";
 export * from "./transactions";
 export * from "./transfers";
 export * from "./conversions";

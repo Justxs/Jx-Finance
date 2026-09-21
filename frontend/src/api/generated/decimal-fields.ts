@@ -11,6 +11,8 @@ export const decimalFields: ReadonlySet<string> = new Set([
   "fromAmount",
   "lastPrice",
   "limitAmount",
+  "maxAmount",
+  "minAmount",
   "outstandingAmount",
   "price",
   "quantity",

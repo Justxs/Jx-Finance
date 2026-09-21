@@ -11,4 +11,5 @@ public enum Feature
     Households,
     MultiCurrency,
     Investments,
+    CategorizationRules,
 }
