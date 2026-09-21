@@ -8,6 +8,7 @@ import {
   incomeCategories,
   overLimitBudget,
   validationProblem,
+  weeklyRolloverBudget,
 } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { CreateBudgetForm } from "./create-budget-form";
@@ -24,7 +25,18 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Edit: Story = { args: { initial: budgets[1] } };
+export const Edit: Story = { args: { initial: budgets[2] } };
+
+export const EditWeeklyWithRollover: Story = {
+  args: { initial: weeklyRolloverBudget },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("checkbox", { name: /carry|perkelti/i })).toBeChecked();
+    await expect(canvas.getByRole("combobox", { name: /period|laikotarpis/i })).toHaveTextContent(
+      /weekly|savaitinis/i,
+    );
+  },
+};
 
 export const EditOverLimit: Story = { args: { initial: overLimitBudget } };
 

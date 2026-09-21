@@ -46,6 +46,25 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
+    public async Task A_budget_without_a_period_stays_monthly_with_no_carry()
+    {
+        var category = await CreateCategoryAsync();
+
+        var budget = await PostAsync<BudgetDto>(
+            Client,
+            "/api/budgets",
+            new { categoryId = category, limitAmount = "200.00" });
+
+        var monthStart = new DateOnly(Today.Year, Today.Month, 1);
+        Assert.Equal("monthly", budget.Period);
+        Assert.False(budget.RolloverEnabled);
+        Assert.Equal(("0.00", "200.00", "200.00"), (budget.CarriedAmount, budget.EffectiveLimit, budget.Remaining));
+        Assert.Equal((monthStart, monthStart.AddMonths(1).AddDays(-1)), (budget.WindowStart, budget.WindowEnd));
+
+        await Client.DeleteAsync($"/api/budgets/{budget.Id}");
+    }
+
+    [Fact]
     public async Task Create_rejects_a_budget_on_an_income_category()
     {
         var category = await CreateCategoryAsync("income");
@@ -78,6 +97,4 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
     }
-
-    private sealed record BudgetDto(Guid Id, Guid CategoryId, string LimitAmount, string Spent, string Remaining);
 }

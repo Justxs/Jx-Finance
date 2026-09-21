@@ -37,7 +37,7 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
   const chartData = budgets
     .map((budget) => ({
       name: budget.categoryName,
-      limit: Number(budget.limitAmount),
+      limit: Number(budget.effectiveLimit),
       spent: Number(budget.spent),
     }))
     .toSorted((a, b) => b.limit - a.limit);

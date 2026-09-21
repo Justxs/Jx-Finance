@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Sets a spending limit for one category. A category can carry a single budget, so creating a second one for the same category is rejected.
+ * Sets a spending limit for one category over a weekly, monthly, quarterly or yearly window. A category can carry one budget per period, so a second budget for the same category and period is rejected; the same category may hold, say, a weekly and a yearly budget at once.
  * @summary Create a budget
  */
 
@@ -22,9 +22,19 @@ export const CreateBudgetBody = zod.object({
   limitAmount: zod
     .stringFormat("decimal", createBudgetBodyLimitAmountRegExp)
     .describe("Decimal string with at most two decimal places, greater than zero."),
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  rolloverEnabled: zod
+    .boolean()
+    .describe(
+      "When true, what is left of the previous window raises this window's limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation.",
+    ),
 });
 
 export const createBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createBudgetResponseCarriedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createBudgetResponseEffectiveLimitRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createBudgetResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
@@ -33,16 +43,25 @@ export const CreateBudgetResponse = zod.object({
   categoryId: zod.uuid(),
   categoryName: zod.string(),
   limitAmount: zod.stringFormat("decimal", createBudgetResponseLimitAmountRegExp),
+  carriedAmount: zod.stringFormat("decimal", createBudgetResponseCarriedAmountRegExp),
+  effectiveLimit: zod.stringFormat("decimal", createBudgetResponseEffectiveLimitRegExp),
   spent: zod.stringFormat("decimal", createBudgetResponseSpentRegExp),
   remaining: zod.stringFormat("decimal", createBudgetResponseRemainingRegExp),
-  period: zod.string(),
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  rolloverEnabled: zod.boolean(),
+  windowStart: zod.iso.date(),
+  windowEnd: zod.iso.date(),
 });
 
 /**
- * Returns every budget you can see, each with the amount spent against it so far in the current period, so the client can render progress without a second call.
+ * Returns every budget you can see, each with its current window, the amount spent against it inside that window, the base limit, the amount carried over from the previous window and the effective limit the two add up to, so the client can render progress and explain the number without a second call.
  * @summary List budgets
  */
 export const budgetsResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const budgetsResponseCarriedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const budgetsResponseEffectiveLimitRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const budgetsResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const budgetsResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
@@ -51,9 +70,16 @@ export const BudgetsResponseItem = zod.object({
   categoryId: zod.uuid(),
   categoryName: zod.string(),
   limitAmount: zod.stringFormat("decimal", budgetsResponseLimitAmountRegExp),
+  carriedAmount: zod.stringFormat("decimal", budgetsResponseCarriedAmountRegExp),
+  effectiveLimit: zod.stringFormat("decimal", budgetsResponseEffectiveLimitRegExp),
   spent: zod.stringFormat("decimal", budgetsResponseSpentRegExp),
   remaining: zod.stringFormat("decimal", budgetsResponseRemainingRegExp),
-  period: zod.string(),
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  rolloverEnabled: zod.boolean(),
+  windowStart: zod.iso.date(),
+  windowEnd: zod.iso.date(),
 });
 export const BudgetsResponse = zod.array(BudgetsResponseItem);
 
@@ -64,7 +90,7 @@ export const BudgetsResponse = zod.array(BudgetsResponseItem);
 export const DeleteBudgetResponse = zod.void();
 
 /**
- * Changes the limit, or moves the budget to a different category. Spending already recorded is re-evaluated against the new limit the next time the budget is read.
+ * Changes the limit, the period or the rollover switch, or moves the budget to a different category. Spending already recorded is re-evaluated against the new window the next time the budget is read.
  * @summary Update a budget
  */
 
@@ -73,9 +99,17 @@ export const updateBudgetBodyLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8}
 export const UpdateBudgetBody = zod.object({
   categoryId: zod.uuid().min(1),
   limitAmount: zod.stringFormat("decimal", updateBudgetBodyLimitAmountRegExp),
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  rolloverEnabled: zod
+    .boolean()
+    .describe("Whether the previous window's remainder adjusts this window's limit."),
 });
 
 export const updateBudgetResponseLimitAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateBudgetResponseCarriedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateBudgetResponseEffectiveLimitRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateBudgetResponseSpentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateBudgetResponseRemainingRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
@@ -84,7 +118,14 @@ export const UpdateBudgetResponse = zod.object({
   categoryId: zod.uuid(),
   categoryName: zod.string(),
   limitAmount: zod.stringFormat("decimal", updateBudgetResponseLimitAmountRegExp),
+  carriedAmount: zod.stringFormat("decimal", updateBudgetResponseCarriedAmountRegExp),
+  effectiveLimit: zod.stringFormat("decimal", updateBudgetResponseEffectiveLimitRegExp),
   spent: zod.stringFormat("decimal", updateBudgetResponseSpentRegExp),
   remaining: zod.stringFormat("decimal", updateBudgetResponseRemainingRegExp),
-  period: zod.string(),
+  period: zod
+    .enum(["monthly", "weekly", "quarterly", "yearly"])
+    .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+  rolloverEnabled: zod.boolean(),
+  windowStart: zod.iso.date(),
+  windowEnd: zod.iso.date(),
 });

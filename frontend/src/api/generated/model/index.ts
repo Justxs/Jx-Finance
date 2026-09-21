@@ -16,6 +16,7 @@ export * from "./assetType";
 export * from "./backupResponse";
 export * from "./brokerConnectionResponse";
 export * from "./brokerImportResponse";
+export * from "./budgetPeriod";
 export * from "./budgetResponse";
 export * from "./bulkCategorizeTransactionsRequest";
 export * from "./bulkCategorizeTransactionsResponse";

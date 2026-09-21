@@ -5,7 +5,7 @@ import {
   getBudgetsMockHandler,
 } from "@/api/generated/budgets/budgets.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { budgets, ids, overLimitBudget, many } from "@/storybook/fixtures";
+import { budgets, ids, overLimitBudget, many, weeklyRolloverBudget } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -37,13 +37,15 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(await canvas.findByText(/spent this month|išleista šį mėnesį/i)).toBeVisible();
+    await expect(await canvas.findByText(/spent in window|išleista lange/i)).toBeVisible();
     await expect(canvas.getByText(/^(budgeted|suplanuota)$/i)).toBeVisible();
     const links = canvas.getAllByRole("link");
     await expect(links[0]).toHaveAttribute(
       "href",
       expect.stringMatching(/\/transactions\?.*categoryId=.*type=expense.*dateFrom=/),
     );
+    await expect(canvas.getByText(/weekly|savaitinis/i)).toBeVisible();
+    await expect(canvas.getByText(/carried|perkelta/i)).toBeVisible();
   },
 };
 
@@ -52,7 +54,7 @@ export const Empty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText(/no budgets yet|biudžetų dar nėra/i);
-    await expect(canvas.queryByText(/spent this month|išleista šį mėnesį/i)).toBeNull();
+    await expect(canvas.queryByText(/spent in window|išleista lange/i)).toBeNull();
   },
 };
 
@@ -71,6 +73,7 @@ export const AllOverLimit: Story = {
             id: ids.budgets.transport,
             categoryName: "Transportas",
             limitAmount: "10.00",
+            effectiveLimit: "10.00",
             spent: "98.40",
             remaining: "-88.40",
           },
@@ -91,11 +94,41 @@ export const ZeroLimit: Story = {
     msw: {
       handlers: [
         getBudgetsMockHandler([
-          { ...overLimitBudget, limitAmount: "0.00", spent: "0.00", remaining: "0.00" },
+          {
+            ...overLimitBudget,
+            limitAmount: "0.00",
+            effectiveLimit: "0.00",
+            spent: "0.00",
+            remaining: "0.00",
+          },
         ]),
         ...handlers,
       ],
     },
+  },
+};
+
+export const NegativeCarry: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        getBudgetsMockHandler([
+          {
+            ...weeklyRolloverBudget,
+            carriedAmount: "-18.00",
+            effectiveLimit: "22.00",
+            spent: "30.00",
+            remaining: "-8.00",
+          },
+        ]),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const carry = await canvas.findByText(/carried|perkelta/i);
+    await expect(carry).toHaveTextContent(/−\D*18[.,]00/u);
   },
 };
 

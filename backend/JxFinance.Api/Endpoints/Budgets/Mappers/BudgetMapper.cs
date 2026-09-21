@@ -21,18 +21,26 @@ public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, B
     {
         budget.CategoryId = new CategoryId(input.CategoryId);
         budget.LimitAmount = new Money(input.LimitAmount);
+        budget.Period = input.Period;
+        budget.RolloverEnabled = input.RolloverEnabled;
     }
 
-    public BudgetResponse FromEntity(Budget budget, string? categoryName, decimal spent)
+    public BudgetResponse FromEntity(Budget budget, string? categoryName, BudgetUsage usage)
     {
-        var limit = (decimal)budget.LimitAmount;
+        var limit = budget.LimitAmount.Amount;
+        var effectiveLimit = limit + usage.Carried;
         return new BudgetResponse(
             budget.Id.Value,
             budget.CategoryId.Value,
             categoryName ?? "Unknown",
-            budget.LimitAmount.Amount,
-            spent,
-            limit - spent,
-            budget.Period.ToString());
+            limit,
+            usage.Carried,
+            effectiveLimit,
+            usage.Spent,
+            effectiveLimit - usage.Spent,
+            budget.Period,
+            budget.RolloverEnabled,
+            usage.Window.Start,
+            usage.Window.LastDay);
     }
 }

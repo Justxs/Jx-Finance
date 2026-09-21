@@ -9,4 +9,5 @@ public sealed class Budget : OwnableEntity
     public CategoryId CategoryId { get; set; }
     public Money LimitAmount { get; set; }
     public BudgetPeriod Period { get; set; } = BudgetPeriod.Monthly;
+    public bool RolloverEnabled { get; set; }
 }

@@ -16,6 +16,26 @@ export const NotificationsResponseItem = zod.object({
   type: zod.enum(["billDue"]),
   title: zod.string(),
   message: zod.string(),
+  payload: zod.object({
+    dueDate: zod.union([zod.null(), zod.iso.date()]).optional(),
+    thresholdPercent: zod.int().nullish(),
+    period: zod
+      .union([
+        zod.null(),
+        zod
+          .enum(["monthly", "weekly", "quarterly", "yearly"])
+          .describe("Weekly, Monthly, Quarterly, or Yearly. Defaults to Monthly."),
+      ])
+      .optional(),
+    shape: zod
+      .union([
+        zod.null(),
+        zod
+          .enum(["expense", "income", "transfer"])
+          .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
+      ])
+      .optional(),
+  }),
   relatedType: zod.string().nullable(),
   relatedId: zod.uuid().nullable(),
   channel: zod.enum(["inApp", "email"]),

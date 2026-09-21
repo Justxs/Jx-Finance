@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudget, useUpdateBudget } from "@/api/generated";
-import type { CategoryResponse, BudgetResponse } from "@/api/generated/model";
+import type { BudgetPeriod, CategoryResponse, BudgetResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
@@ -11,6 +11,8 @@ import { positiveMoney, requiredValue } from "@/lib/validation";
 interface FormValues {
   categoryId: string;
   limitAmount: string;
+  period: BudgetPeriod;
+  rolloverEnabled: boolean;
 }
 
 interface Props {
@@ -27,6 +29,8 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   const schema = z.object({
     categoryId: requiredValue(t),
     limitAmount: positiveMoney(t),
+    period: z.enum(["weekly", "monthly", "quarterly", "yearly"]),
+    rolloverEnabled: z.boolean(),
   });
 
   const { create, update, pending, error } = upsert(
@@ -37,13 +41,20 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   const defaultValues: FormValues = {
     categoryId: initial?.categoryId ?? expenseCategories[0]?.id ?? "",
     limitAmount: initial?.limitAmount ?? "",
+    period: initial?.period ?? "monthly",
+    rolloverEnabled: initial?.rolloverEnabled ?? false,
   };
 
   const form = useServerForm({
     defaultValues,
     schema,
     submit: (value) => {
-      const data = { categoryId: value.categoryId, limitAmount: value.limitAmount };
+      const data = {
+        categoryId: value.categoryId,
+        limitAmount: value.limitAmount,
+        period: value.period,
+        rolloverEnabled: value.rolloverEnabled,
+      };
 
       return initial?.id ? update({ id: initial.id, data }) : create({ data });
     },
@@ -72,6 +83,32 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
 
           <form.Field name="limitAmount">
             {(field) => <field.MoneyInputField id="budget-limit" label={t("budgets.limit")} />}
+          </form.Field>
+
+          <form.Field name="period">
+            {(field) => (
+              <field.SelectFieldControl
+                id="budget-period"
+                label={t("budgets.period")}
+                options={[
+                  { value: "weekly", label: t("budgets.periods.weekly") },
+                  { value: "monthly", label: t("budgets.periods.monthly") },
+                  { value: "quarterly", label: t("budgets.periods.quarterly") },
+                  { value: "yearly", label: t("budgets.periods.yearly") },
+                ]}
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="rolloverEnabled">
+            {(field) => (
+              <field.CheckboxField
+                id="budget-rollover"
+                label={t("budgets.rollover")}
+                hint={t("budgets.rolloverHint")}
+                className="col-span-full"
+              />
+            )}
           </form.Field>
         </FormGrid>
 

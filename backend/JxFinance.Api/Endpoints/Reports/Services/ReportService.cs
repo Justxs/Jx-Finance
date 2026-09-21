@@ -17,6 +17,10 @@ public sealed class ReportService(
     ICategoryAttributionService attributions,
     IInvestmentCashFlowService investmentCashFlows) : IReportService
 {
+    private sealed record DatedFlow(DateOnly Date, FlowType Type, decimal Amount);
+
+    private sealed record Bucket(DateOnly Start, decimal Income, decimal Expense);
+
     public async Task<ReportSummaryResponse> GetSummaryAsync(
         DateOnly? dateFrom,
         DateOnly? dateTo,
