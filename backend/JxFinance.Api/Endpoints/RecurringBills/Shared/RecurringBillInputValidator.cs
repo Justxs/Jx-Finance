@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.RecurringBills;
 
@@ -10,6 +11,7 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
 {
     protected RecurringBillInputValidator()
     {
+        RuleFor(r => r.Shape).IsKnownEnum();
         RuleFor(r => r.Kind).IsKnownEnum();
         RuleFor(r => r.Cadence).IsKnownEnum();
         RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
@@ -20,7 +22,26 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             .WithMessage("Amount must be a positive decimal with at most 2 decimal places.");
         RuleFor(r => r.Amount)
             .IsPresent()
-            .WithMessage("A fixed bill must have an amount.")
+            .WithMessage("A fixed entry must have an amount.")
             .When(r => r.Kind == RecurringBillKind.Fixed);
+
+        When(r => r.Shape == RecurringBillShape.Transfer, () =>
+        {
+            RuleFor(r => r.AccountId)
+                .IsRequired()
+                .WithMessage("A recurring transfer needs the account the money leaves.");
+            RuleFor(r => r.ToAccountId)
+                .IsRequired()
+                .WithMessage("A recurring transfer needs the account the money arrives in.")
+                .DiffersFrom(r => r.AccountId)
+                .WithErrorCode(ErrorCodes.TransferSameAccount)
+                .WithMessage("Source and destination accounts must differ.");
+            RuleFor(r => r.CategoryId)
+                .IsAbsent()
+                .WithMessage("A recurring transfer has no category.");
+        }).Otherwise(() =>
+            RuleFor(r => r.ToAccountId)
+                .IsAbsent()
+                .WithMessage("Only a recurring transfer has a destination account."));
     }
 }

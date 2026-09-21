@@ -22,17 +22,27 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
   const money = useMoney();
   const fieldId = `bill-${bill.id}-confirm`;
   const isVariable = bill.kind === "variable";
-  const needsAccount = !bill.accountId;
+  const isTransfer = bill.shape === "transfer";
+  const needsAccount = !isTransfer && !bill.accountId;
+
+  const fromAccount = accounts.find((account) => account.id === bill.accountId);
+  const toAccount = accounts.find((account) => account.id === bill.toAccountId);
+  const crossCurrency =
+    isTransfer &&
+    fromAccount !== undefined &&
+    toAccount !== undefined &&
+    fromAccount.currency !== toAccount.currency;
 
   const schema = z.object({
     amount: isVariable ? positiveMoney(t) : z.string(),
     accountId: needsAccount ? requiredValue(t) : z.string(),
+    receivedAmount: crossCurrency ? positiveMoney(t) : z.string(),
   });
 
   const confirmMutation = useConfirmRecurringBill(silent({ onSuccess: onDone }));
 
   const form = useServerForm({
-    defaultValues: { amount: "", accountId: "" },
+    defaultValues: { amount: "", accountId: "", receivedAmount: "" },
     schema,
     submit: (value) =>
       confirmMutation.mutateAsync({
@@ -41,26 +51,27 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
           expectedDueDate: bill.nextDueDate,
           amount: isVariable ? value.amount : null,
           accountId: needsAccount ? value.accountId : null,
+          receivedAmount: crossCurrency ? value.receivedAmount : null,
         },
       }),
   });
 
   const stale = hasServerErrorCode(confirmMutation.error, "conflict.stale");
+  const sentence = {
+    name: bill.name,
+    date: formatDate(bill.nextDueDate),
+    amount: bill.amount ? money.format(Number(bill.amount)) : "",
+    from: fromAccount?.name ?? "",
+    to: toAccount?.name ?? "",
+  };
 
   return (
     <form.AppForm>
       <form.FormShell className="grid items-start gap-4 *:min-w-0">
         <p className="text-sm text-muted-foreground">
           {bill.amount
-            ? t("recurringBills.confirmFixed", {
-                name: bill.name,
-                date: formatDate(bill.nextDueDate),
-                amount: money.format(Number(bill.amount)),
-              })
-            : t("recurringBills.confirmVariable", {
-                name: bill.name,
-                date: formatDate(bill.nextDueDate),
-              })}
+            ? t(`recurringBills.confirmFixed.${bill.shape}`, sentence)
+            : t(`recurringBills.confirmVariable.${bill.shape}`, sentence)}
         </p>
 
         {isVariable ? (
@@ -71,6 +82,19 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
                 label={t("recurringBills.amount")}
                 touchedOnly
                 autoFocus
+              />
+            )}
+          </form.Field>
+        ) : null}
+
+        {crossCurrency ? (
+          <form.Field name="receivedAmount">
+            {(field) => (
+              <field.MoneyInputField
+                id={`${fieldId}-received`}
+                label={t("recurringBills.receivedAmount")}
+                hint={t("recurringBills.receivedAmountHint")}
+                touchedOnly
               />
             )}
           </form.Field>

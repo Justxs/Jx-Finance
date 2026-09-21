@@ -11,7 +11,7 @@
     "budgets": "Biudžetai",
     "goals": "Tikslai",
     "netWorth": "Grynoji vertė",
-    "recurringBills": "Periodinės sąskaitos",
+    "recurringBills": "Periodiniai įrašai",
     "households": "Namų ūkiai",
     "reports": "Ataskaitos",
     "users": "Naudotojai",
@@ -426,8 +426,8 @@
           "hint": "Taupymo tikslai ir pažanga."
         },
         "recurringBills": {
-          "name": "Periodinės sąskaitos",
-          "hint": "Mokėjimo terminai ir priminimai. Išjungus priminimai nebesiunčiami."
+          "name": "Periodiniai įrašai",
+          "hint": "Periodinių išlaidų, pajamų ir pervedimų terminai bei priminimai. Išjungus priminimai nebesiunčiami."
         },
         "netWorth": {
           "name": "Grynasis turtas",
@@ -928,10 +928,16 @@
     "allocation": "Paskirstymas"
   },
   "recurringBills": {
-    "title": "Periodinės sąskaitos",
-    "add": "Pridėti periodinę sąskaitą",
+    "title": "Periodiniai įrašai",
+    "add": "Pridėti periodinį įrašą",
     "name": "Pavadinimas",
     "namePlaceholder": "pvz. Nuoma",
+    "shape": "Ką įrašo",
+    "shapes": {
+      "expense": "Išlaidos",
+      "income": "Pajamos",
+      "transfer": "Pervedimas"
+    },
     "kind": "Rūšis",
     "kinds": {
       "fixed": "Fiksuota suma",
@@ -957,8 +963,10 @@
     "confirm": "Patvirtinti",
     "confirmTitle": "Patvirtinti mokėjimą",
     "confirmAccountRequired": "Pasirinkite sąskaitą, iš kurios buvo sumokėta.",
-    "empty": "Periodinių sąskaitų dar nėra.",
-    "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte pridėti periodines sąskaitas.",
+    "receivedAmount": "Gauta suma",
+    "receivedAmountHint": "Sąskaitų valiutos skiriasi, todėl įveskite, kiek buvo gauta.",
+    "empty": "Periodinių įrašų dar nėra.",
+    "needAccount": "Pirmiausia sukurkite sąskaitą, kad galėtumėte kurti periodinius įrašus.",
     "overdue": "Vėluoja",
     "recordPayment": "Registruoti mokėjimą",
     "forecast": "Mokėtina per artimiausius šešis mėnesius",
@@ -976,7 +984,13 @@
     "title": "Pranešimai",
     "empty": "Naujų pranešimų nėra.",
     "markAllRead": "Pažymėti visus kaip skaitytus",
-    "billDue": "Mokėjimo data: {{date}}",
+    "billDue": {
+      "expense": "Mokėjimo data: {{date}}",
+      "income": "Numatoma gauti: {{date}}",
+      "transfer": "Pervedimo data: {{date}}"
+    },
+    "budgetWarning": "{{period}} limitas: panaudota {{percent}}%",
+    "budgetExceeded": "{{period}} limitas pasiektas",
     "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
     "unavailable": "Nepavyko įkelti pranešimų"
   },

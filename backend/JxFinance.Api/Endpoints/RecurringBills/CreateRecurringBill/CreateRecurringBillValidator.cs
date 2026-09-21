@@ -12,7 +12,7 @@ public sealed class CreateRecurringBillValidator : RecurringBillInputValidator<C
         RuleFor(r => r.Amount)
             .Must(a => a is null)
             .WithErrorCode(ErrorCodes.ValueMustBeEmpty)
-            .WithMessage("A variable bill's amount is entered when it's confirmed, not set upfront.")
+            .WithMessage("A variable entry's amount is entered when it's confirmed, not set upfront.")
             .When(r => r.Kind == RecurringBillKind.Variable);
     }
 }

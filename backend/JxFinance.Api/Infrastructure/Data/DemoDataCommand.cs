@@ -123,7 +123,31 @@ public static class DemoDataCommand
             Cadence = RecurringBillCadence.Monthly,
         };
         electricity.Schedule(today.AddDays(2));
-        db.RecurringBills.AddRange(rent, electricity);
+        var salary = new RecurringBill
+        {
+            UserId = user.Id,
+            Name = "Salary",
+            Shape = RecurringBillShape.Income,
+            Kind = RecurringBillKind.Fixed,
+            Amount = new Money(2450.00m),
+            CategoryId = categories["Salary"],
+            AccountId = checking.Id,
+            Cadence = RecurringBillCadence.Monthly,
+        };
+        salary.Schedule(new DateOnly(today.Year, today.Month, 10).AddMonths(1));
+        var toSavings = new RecurringBill
+        {
+            UserId = user.Id,
+            Name = "Standing order to savings",
+            Shape = RecurringBillShape.Transfer,
+            Kind = RecurringBillKind.Fixed,
+            Amount = new Money(200.00m),
+            AccountId = checking.Id,
+            ToAccountId = savings.Id,
+            Cadence = RecurringBillCadence.Monthly,
+        };
+        toSavings.Schedule(new DateOnly(today.Year, today.Month, 12).AddMonths(1));
+        db.RecurringBills.AddRange(rent, electricity, salary, toSavings);
 
         await db.SaveChangesAsync();
         Console.WriteLine($"Seeded {Months} months of demo data for {email}.");

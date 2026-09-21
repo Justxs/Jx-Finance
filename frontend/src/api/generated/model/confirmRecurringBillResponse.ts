@@ -9,5 +9,8 @@ import type { RecurringBillResponse } from "./recurringBillResponse";
 
 export interface ConfirmRecurringBillResponse {
   bill: RecurringBillResponse;
-  transactionId: string;
+  /** @nullable */
+  transactionId: string | null;
+  /** @nullable */
+  transferId: string | null;
 }

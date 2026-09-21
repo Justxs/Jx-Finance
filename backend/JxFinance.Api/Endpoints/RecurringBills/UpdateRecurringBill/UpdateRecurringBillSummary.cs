@@ -7,24 +7,27 @@ public sealed class UpdateRecurringBillSummary : Summary<UpdateRecurringBillEndp
 {
     public UpdateRecurringBillSummary()
     {
-        Summary = "Update a recurring bill";
-        Description = "Changes the schedule, the expected amount, or the reminder lead time. Setting "
-            + "isActive to false stops reminders without losing the schedule or the transactions already "
-            + "posted from it.";
+        Summary = "Update a recurring entry";
+        Description = "Changes the shape, the schedule, the expected amount, or the reminder lead time. "
+            + "A shape change must bring the fields the new shape needs: a Transfer needs both accounts and "
+            + "no category, an Expense or an Income needs no destination account. Setting isActive to false "
+            + "stops reminders without losing the schedule or the rows already posted from it.";
         ExampleRequest = new UpdateRecurringBillRequest(
             Guid.Empty,
             "Rent",
+            RecurringBillShape.Expense,
             RecurringBillKind.Fixed,
             675.00m,
+            null,
             null,
             null,
             RecurringBillCadence.Monthly,
             new DateOnly(2026, 11, 1),
             3,
             true);
-        Params["id"] = "The recurring bill id. Takes precedence over the id in the body.";
-        Responses[200] = "The updated recurring bill.";
-        Responses[400] = "Validation failed, or the account or category is not visible to you.";
-        Responses[404] = "No such recurring bill belongs to the signed-in user.";
+        Params["id"] = "The recurring entry id. Takes precedence over the id in the body.";
+        Responses[200] = "The updated recurring entry.";
+        Responses[400] = "Validation failed, the shape is missing a field it needs, or the account or category is not visible to you.";
+        Responses[404] = "No such recurring entry belongs to the signed-in user.";
     }
 }

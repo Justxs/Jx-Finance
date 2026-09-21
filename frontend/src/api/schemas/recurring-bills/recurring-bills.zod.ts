@@ -8,8 +8,8 @@
 import * as zod from "zod";
 
 /**
- * Schedules a bill or a recurring income. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction is only written once the occurrence is confirmed.
- * @summary Create a recurring bill
+ * Schedules a recurring expense, a recurring income or a recurring transfer. Nothing is posted to the ledger on a schedule: the background job raises a reminder before the due date, and a transaction or a transfer is only written once the occurrence is confirmed.
+ * @summary Create a recurring entry
  */
 export const createRecurringBillBodyNameMin = 0;
 export const createRecurringBillBodyNameMax = 100;
@@ -20,15 +20,30 @@ export const createRecurringBillBodyRemindDaysBeforeMax = 365;
 
 export const CreateRecurringBillBody = zod.object({
   name: zod.string().min(createRecurringBillBodyNameMin).max(createRecurringBillBodyNameMax),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod
     .stringFormat("decimal", createRecurringBillBodyAmountRegExp)
     .nullable()
-    .describe("Expected amount. Required for a Fixed bill, optional for a Variable one."),
-  categoryId: zod.uuid().nullable(),
-  accountId: zod.uuid().nullable(),
+    .describe("Expected amount. Required for a Fixed entry, optional for a Variable one."),
+  categoryId: zod
+    .uuid()
+    .nullable()
+    .describe("Expense or income category matching the shape. A Transfer must leave it empty."),
+  accountId: zod
+    .uuid()
+    .nullable()
+    .describe(
+      "The account, or for a Transfer the account the money leaves. Required for a Transfer.",
+    ),
+  toAccountId: zod
+    .uuid()
+    .nullable()
+    .describe("The account the money arrives in. Required for a Transfer, rejected otherwise."),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -45,12 +60,16 @@ export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\
 export const CreateRecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod.stringFormat("decimal", createRecurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -60,20 +79,24 @@ export const CreateRecurringBillResponse = zod.object({
 });
 
 /**
- * Returns your scheduled bills and income, each with its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
- * @summary List recurring bills
+ * Returns your scheduled expenses, income and transfers, each with its shape, its cadence and the date it next falls due. Inactive schedules are included so they can be reactivated.
+ * @summary List recurring entries
  */
 export const recurringBillsResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const RecurringBillsResponseItem = zod.object({
   id: zod.uuid(),
   name: zod.string(),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod.stringFormat("decimal", recurringBillsResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -129,20 +152,24 @@ export const DismissSubscriptionCandidateResponse = zod.void();
 export const DeleteRecurringBillResponse = zod.void();
 
 /**
- * Returns a single schedule with its cadence, reminder lead time, and next due date.
- * @summary Get one recurring bill
+ * Returns a single schedule with its shape, cadence, reminder lead time, and next due date.
+ * @summary Get one recurring entry
  */
 export const recurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const RecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod.stringFormat("decimal", recurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -152,8 +179,8 @@ export const RecurringBillResponse = zod.object({
 });
 
 /**
- * Changes the schedule, the expected amount, or the reminder lead time. Setting isActive to false stops reminders without losing the schedule or the transactions already posted from it.
- * @summary Update a recurring bill
+ * Changes the shape, the schedule, the expected amount, or the reminder lead time. A shape change must bring the fields the new shape needs: a Transfer needs both accounts and no category, an Expense or an Income needs no destination account. Setting isActive to false stops reminders without losing the schedule or the rows already posted from it.
+ * @summary Update a recurring entry
  */
 export const updateRecurringBillBodyNameMin = 0;
 export const updateRecurringBillBodyNameMax = 100;
@@ -164,12 +191,16 @@ export const updateRecurringBillBodyRemindDaysBeforeMax = 365;
 
 export const UpdateRecurringBillBody = zod.object({
   name: zod.string().min(updateRecurringBillBodyNameMin).max(updateRecurringBillBodyNameMax),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod.stringFormat("decimal", updateRecurringBillBodyAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -186,12 +217,16 @@ export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\
 export const UpdateRecurringBillResponse = zod.object({
   id: zod.uuid(),
   name: zod.string(),
+  shape: zod
+    .enum(["expense", "income", "transfer"])
+    .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
   kind: zod
     .enum(["fixed", "variable"])
     .describe("Fixed when the amount is always the same; Variable when it changes each time."),
   amount: zod.stringFormat("decimal", updateRecurringBillResponseAmountRegExp).nullable(),
   categoryId: zod.uuid().nullable(),
   accountId: zod.uuid().nullable(),
+  toAccountId: zod.uuid().nullable(),
   cadence: zod
     .enum(["weekly", "monthly", "quarterly", "yearly"])
     .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -201,23 +236,32 @@ export const UpdateRecurringBillResponse = zod.object({
 });
 
 /**
- * Posts the transaction for one occurrence of the schedule and rolls the next due date forward by the cadence. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same bill twice.
+ * Posts one occurrence of the schedule and rolls the next due date forward by the cadence. An Expense writes an expense transaction, an Income writes an income transaction and a Transfer writes a transfer between the two accounts on the entry. expectedDueDate identifies which occurrence is being confirmed, so a retry or a double click cannot post the same occurrence twice.
  * @summary Confirm a due occurrence
  */
 export const confirmRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const confirmRecurringBillBodyReceivedAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const ConfirmRecurringBillBody = zod.object({
   amount: zod
     .stringFormat("decimal", confirmRecurringBillBodyAmountRegExp)
     .nullable()
     .describe(
-      "Actual amount. Required for a Variable bill; defaults to the scheduled amount for a Fixed one.",
+      "Actual amount. Required for a Variable entry; defaults to the scheduled amount for a Fixed one.",
     ),
   accountId: zod
     .uuid()
     .nullable()
-    .describe("Account to post to. Defaults to the account on the schedule."),
+    .describe(
+      "Account to post to. Ignored by a Transfer, which uses the two accounts on the entry.",
+    ),
   expectedDueDate: zod.iso.date(),
+  receivedAmount: zod
+    .stringFormat("decimal", confirmRecurringBillBodyReceivedAmountRegExp)
+    .nullish()
+    .describe(
+      "What arrives in the destination account. Required when a Transfer crosses two currencies.",
+    ),
 });
 
 export const confirmRecurringBillResponseBillAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -226,12 +270,16 @@ export const ConfirmRecurringBillResponse = zod.object({
   bill: zod.object({
     id: zod.uuid(),
     name: zod.string(),
+    shape: zod
+      .enum(["expense", "income", "transfer"])
+      .describe("Expense, Income, or Transfer. Decides what a confirmation writes."),
     kind: zod
       .enum(["fixed", "variable"])
       .describe("Fixed when the amount is always the same; Variable when it changes each time."),
     amount: zod.stringFormat("decimal", confirmRecurringBillResponseBillAmountRegExp).nullable(),
     categoryId: zod.uuid().nullable(),
     accountId: zod.uuid().nullable(),
+    toAccountId: zod.uuid().nullable(),
     cadence: zod
       .enum(["weekly", "monthly", "quarterly", "yearly"])
       .describe("Weekly, Monthly, Quarterly, or Yearly."),
@@ -239,5 +287,6 @@ export const ConfirmRecurringBillResponse = zod.object({
     remindDaysBefore: zod.int(),
     isActive: zod.boolean(),
   }),
-  transactionId: zod.uuid(),
+  transactionId: zod.uuid().nullable(),
+  transferId: zod.uuid().nullable(),
 });

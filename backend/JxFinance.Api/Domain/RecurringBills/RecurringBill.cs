@@ -8,10 +8,12 @@ public sealed class RecurringBill : OwnableEntity
 {
     public RecurringBillId Id { get; set; } = RecurringBillId.New();
     public required string Name { get; set; }
+    public RecurringBillShape Shape { get; set; }
     public RecurringBillKind Kind { get; set; }
     public Money? Amount { get; set; }
     public CategoryId? CategoryId { get; set; }
     public AccountId? AccountId { get; set; }
+    public AccountId? ToAccountId { get; set; }
     public RecurringBillCadence Cadence { get; set; }
     public DateOnly NextDueDate { get; set; }
     public int AnchorDay { get; set; }

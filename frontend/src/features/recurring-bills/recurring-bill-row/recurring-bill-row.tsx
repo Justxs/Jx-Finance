@@ -5,6 +5,7 @@ import type {
   AccountResponse,
   CategoryResponse,
   RecurringBillResponse,
+  RecurringBillShape,
 } from "@/api/generated/model";
 import { Modal } from "@/components/modal";
 import { RowTransition } from "@/components/row-transition/row-transition";
@@ -15,6 +16,12 @@ import { useToday } from "@/hooks/use-settings";
 import { cn } from "@/lib/utils";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
+
+const shapeTone = {
+  expense: "negative",
+  income: "positive",
+  transfer: "accent",
+} as const satisfies Record<RecurringBillShape, "negative" | "positive" | "accent">;
 
 interface Props {
   bill: RecurringBillResponse;
@@ -40,15 +47,17 @@ export function RecurringBillRow({
 
   const category = categories.find((c) => c.id === bill.categoryId);
   const account = accounts.find((a) => a.id === bill.accountId);
+  const toAccount = accounts.find((a) => a.id === bill.toAccountId);
 
   const today = useToday();
   const overdue = bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < today;
+  const isTransfer = bill.shape === "transfer";
 
   const meta = [
     t(`recurringBills.cadences.${bill.cadence}`),
     bill.amount ? t(`recurringBills.kinds.${bill.kind}`) : null,
     category?.name,
-    account?.name,
+    isTransfer && account && toAccount ? `${account.name} → ${toAccount.name}` : account?.name,
   ].filter(Boolean);
 
   return (
@@ -65,6 +74,7 @@ export function RecurringBillRow({
               >
                 {bill.name}
               </p>
+              <Tag tone={shapeTone[bill.shape]}>{t(`recurringBills.shapes.${bill.shape}`)}</Tag>
               {bill.isActive ? null : <Tag tone="neutral">{t("recurringBills.inactive")}</Tag>}
               {overdue ? <Tag tone="negative">{t("recurringBills.overdue")}</Tag> : null}
             </div>
@@ -97,7 +107,7 @@ export function RecurringBillRow({
               disabled={!bill.isActive}
               onClick={() => setMode("confirm")}
             >
-              {t("recurringBills.recordPayment")}
+              {t(`recurringBills.record.${bill.shape}`)}
             </Button>
             <Button
               variant="ghost"

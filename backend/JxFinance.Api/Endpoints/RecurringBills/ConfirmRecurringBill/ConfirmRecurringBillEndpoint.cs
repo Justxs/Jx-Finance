@@ -18,6 +18,11 @@ public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurring
     public override async Task HandleAsync(ConfirmRecurringBillRequest req, CancellationToken ct)
     {
         var confirmation = (await recurringBillService.ConfirmAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(new ConfirmRecurringBillResponse(Map.FromEntity(confirmation.Bill), confirmation.TransactionId), ct);
+        await Send.OkAsync(
+            new ConfirmRecurringBillResponse(
+                Map.FromEntity(confirmation.Bill),
+                confirmation.TransactionId,
+                confirmation.TransferId),
+            ct);
     }
 }

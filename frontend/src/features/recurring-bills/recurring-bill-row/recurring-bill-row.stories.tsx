@@ -1,13 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, within } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
 import {
   accounts,
   categories,
   dueSoonBill,
   inactiveBill,
+  incomeBill,
   overdueBill,
   recurringBills,
+  savingsAccount,
+  transferBill,
   variableBill,
 } from "@/storybook/fixtures";
 import { openedDialog } from "@/storybook/interactions";
@@ -49,6 +52,38 @@ export const Overdue: Story = { args: { bill: overdueBill } };
 export const Variable: Story = { args: { bill: variableBill } };
 
 export const Inactive: Story = { args: { bill: inactiveBill } };
+
+export const Income: Story = {
+  args: { bill: incomeBill },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText("Income")).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Record income" })).toBeVisible();
+  },
+};
+
+export const Transfer: Story = {
+  args: { bill: transferBill },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByText("Transfer")).toBeVisible();
+    await expect(canvas.getByText(new RegExp(`→ ${savingsAccount.name}`, "u"))).toBeVisible();
+    await expect(canvas.getByRole("button", { name: "Record transfer" })).toBeVisible();
+  },
+};
+
+export const ConfirmDialogOpenTransfer: Story = {
+  args: { bill: transferBill },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      canvas.getByRole("button", { name: /^(record transfer|registruoti pervedimą)$/i }),
+    );
+    await openedDialog();
+  },
+};
 
 export const LongNameYearlyNoAccount: Story = { args: { bill: longNameBill } };
 

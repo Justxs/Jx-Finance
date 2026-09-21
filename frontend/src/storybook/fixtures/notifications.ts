@@ -5,7 +5,14 @@ import type {
   RecurringBillResponse,
 } from "@/api/generated/model";
 import { ids } from "./base";
-import { dueSoonBill, overdueBill, variableBill } from "./recurring-bills";
+import { overLimitBudget, weeklyRolloverBudget } from "./budgets";
+import {
+  dueSoonBill,
+  incomeBill,
+  overdueBill,
+  transferBill,
+  variableBill,
+} from "./recurring-bills";
 
 function billNotification(
   id: string,
@@ -95,6 +102,8 @@ export const notifications: NotificationResponse[] = [
   billNotification(ids.notifications.water, overdueBill, false, "inApp", "2026-09-14T06:00:00Z"),
   budgetWarningNotification,
   billNotification(ids.notifications.ignitis, variableBill, true, "email", "2026-08-20T06:00:00Z"),
+  incomeDueNotification,
+  transferDueNotification,
   {
     id: ids.notifications.mortgage,
     type: "billDue",

@@ -11,7 +11,7 @@
     "budgets": "Budgets",
     "goals": "Goals",
     "netWorth": "Net worth",
-    "recurringBills": "Recurring bills",
+    "recurringBills": "Recurring entries",
     "households": "Households",
     "reports": "Reports",
     "users": "Users",
@@ -418,8 +418,8 @@
           "hint": "Savings targets and progress."
         },
         "recurringBills": {
-          "name": "Recurring bills",
-          "hint": "Due dates and reminders. Off also stops the reminders."
+          "name": "Recurring entries",
+          "hint": "Due dates and reminders for recurring expenses, income and transfers. Off also stops the reminders."
         },
         "netWorth": {
           "name": "Net worth",
@@ -900,17 +900,23 @@
     "allocation": "Allocation"
   },
   "recurringBills": {
-    "title": "Recurring bills",
-    "add": "Add recurring bill",
+    "title": "Recurring entries",
+    "add": "Add recurring entry",
     "name": "Name",
     "namePlaceholder": "e.g. Rent",
+    "shape": "Records",
+    "shapes": {
+      "expense": "Expense",
+      "income": "Income",
+      "transfer": "Transfer"
+    },
     "kind": "Kind",
     "kinds": {
       "fixed": "Fixed amount",
       "variable": "Variable amount"
     },
     "amount": "Amount",
-    "variableAmountHint": "Variable bills don't need an amount upfront — you'll enter it when you confirm.",
+    "variableAmountHint": "Variable entries don't need an amount upfront — you'll enter it when you confirm.",
     "category": "Category",
     "noCategory": "No category",
     "transferNoCategory": "A transfer has no category: the money stays between your own accounts.",
@@ -931,10 +937,12 @@
     "active": "Active",
     "inactive": "Inactive",
     "confirm": "Confirm",
-    "confirmTitle": "Confirm bill payment",
+    "confirmTitle": "Confirm recurring entry",
     "confirmAccountRequired": "Choose the account this was paid from.",
-    "empty": "No recurring bills yet.",
-    "needAccount": "Create an account first to set up recurring bills.",
+    "receivedAmount": "Amount received",
+    "receivedAmountHint": "The two accounts hold different currencies, so enter what arrived.",
+    "empty": "No recurring entries yet.",
+    "needAccount": "Create an account first to set up recurring entries.",
     "overdue": "Overdue",
     "record": {
       "expense": "Record payment",
@@ -942,21 +950,47 @@
       "transfer": "Record transfer"
     },
     "forecast": "Due in the next six months",
-    "forecastSeries": "Bills due",
-    "forecastEmpty": "No fixed-amount bills are due in the next six months.",
-    "forecastLabel": "Total of fixed bills due in each of the next six months",
-    "editTitle": "Edit recurring bill",
-    "activeHint": "An inactive bill sends no reminders and cannot be confirmed.",
-    "chooseAccount": "Choose an account",
-    "confirmFixed": "Records {{amount}} for {{name}} as an expense dated {{date}} and moves the bill to its next due date.",
-    "confirmVariable": "Records the amount you enter for {{name}} as an expense dated {{date}} and moves the bill to its next due date.",
-    "confirmStale": "This payment was already confirmed, or the bill changed somewhere else. The bill has been refreshed: check the due date above and confirm again if it is still owed."
+    "forecastSeries": "Expenses due",
+    "forecastEmpty": "No fixed-amount expenses are due in the next six months.",
+    "forecastLabel": "Total of fixed recurring expenses due in each of the next six months",
+    "editTitle": "Edit recurring entry",
+    "activeHint": "An inactive entry sends no reminders and cannot be confirmed.",
+    "confirmFixed": {
+      "expense": "Records {{amount}} for {{name}} as an expense dated {{date}} and moves the entry to its next due date.",
+      "income": "Records {{amount}} for {{name}} as income dated {{date}} and moves the entry to its next due date.",
+      "transfer": "Moves {{amount}} from {{from}} to {{to}} as a transfer dated {{date}} and moves the entry to its next due date."
+    },
+    "confirmVariable": {
+      "expense": "Records the amount you enter for {{name}} as an expense dated {{date}} and moves the entry to its next due date.",
+      "income": "Records the amount you enter for {{name}} as income dated {{date}} and moves the entry to its next due date.",
+      "transfer": "Moves the amount you enter from {{from}} to {{to}} as a transfer dated {{date}} and moves the entry to its next due date."
+    },
+    "confirmStale": "This occurrence was already confirmed, or the entry changed somewhere else. The entry has been refreshed: check the due date above and confirm again if it is still owed."
+  },
+  "subscriptions": {
+    "title": "Subscriptions we spotted",
+    "explainer": "Expenses from the last two years that repeat on a steady schedule for about the same amount, and that no active recurring entry covers yet. Nothing has been written: create an entry to keep track of one, or dismiss it to stop being offered it.",
+    "empty": "Nothing repeats often enough yet to suggest.",
+    "nextExpected": "Next expected",
+    "basedOn_one": "Based on {{count}} payment",
+    "basedOn_other": "Based on {{count}} payments",
+    "create": "Create entry",
+    "createTitle": "Create a recurring entry",
+    "createDescription": "Filled in from the payments we found. Change anything before saving.",
+    "dismiss": "Dismiss",
+    "dismissed": "Suggestion dismissed"
   },
   "notifications": {
     "title": "Notifications",
     "empty": "No new notifications.",
     "markAllRead": "Mark all as read",
-    "billDue": "Due {{date}}",
+    "billDue": {
+      "expense": "Payment due {{date}}",
+      "income": "Expected {{date}}",
+      "transfer": "Transfer due {{date}}"
+    },
+    "budgetWarning": "{{period}} limit: {{percent}}% used",
+    "budgetExceeded": "{{period}} limit reached",
     "titleWithCount": "Notifications, {{count}} unread",
     "unavailable": "Notifications could not be loaded"
   },
@@ -1204,7 +1238,7 @@
       "invalid": "The value is outside the allowed range."
     },
     "recurringBill": {
-      "inactive": "This bill is inactive."
+      "inactive": "This recurring entry is inactive."
     },
     "reference": {
       "notFound": "The selected item no longer exists."

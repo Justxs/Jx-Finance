@@ -8,6 +8,7 @@
 import type { DateOnly } from "./dateOnly";
 import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
+import type { RecurringBillShape } from "./recurringBillShape";
 
 export interface UpdateRecurringBillRequest {
   /**
@@ -15,6 +16,7 @@ export interface UpdateRecurringBillRequest {
    * @maxLength 100
    */
   name: string;
+  shape: RecurringBillShape;
   kind: RecurringBillKind;
   /** @nullable */
   amount: string | null;
@@ -22,6 +24,8 @@ export interface UpdateRecurringBillRequest {
   categoryId: string | null;
   /** @nullable */
   accountId: string | null;
+  /** @nullable */
+  toAccountId: string | null;
   cadence: RecurringBillCadence;
   nextDueDate: DateOnly;
   /**
