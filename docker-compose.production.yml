@@ -5,6 +5,7 @@ services:
     ports: !reset []
     environment:
       App__SecureCookies: "true"
+      App__SiteUrl: "https://${SITE_ADDRESS:-finance.internal}"
       AllowedHosts: "${SITE_ADDRESS:-finance.internal};localhost"
   frontend:
     ports: !override

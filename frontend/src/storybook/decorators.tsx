@@ -23,9 +23,12 @@ import { accountsSearchSchema } from "@/routes/accounts";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
+import { resetPasswordSearchSchema } from "@/routes/reset-password";
 import { settingsSearchSchema } from "@/routes/settings";
 import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
+import { verifyEmailSearchSchema } from "@/routes/verify-email";
+import { clearTransactionViews } from "@/stores/transaction-views";
 
 const STORY_ROUTES = [
   { path: "/" },
@@ -44,6 +47,9 @@ const STORY_ROUTES = [
   { path: "/settings", validateSearch: settingsSearchSchema },
   { path: "/login" },
   { path: "/setup" },
+  { path: "/forgot-password" },
+  { path: "/reset-password", validateSearch: resetPasswordSearchSchema },
+  { path: "/verify-email", validateSearch: verifyEmailSearchSchema },
 ] as const;
 
 const STORY_WIDTHS = {
@@ -97,6 +103,7 @@ export function disposeStoryState() {
     client.clear();
   }
   storyQueryClients.clear();
+  clearTransactionViews();
   toast.dismiss();
 }
 

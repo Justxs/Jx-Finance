@@ -27,12 +27,16 @@ import type { ErrorType } from "../../client";
 import type {
   EnableTwoFactorRequest,
   EnableTwoFactorResponse,
+  ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
   ProblemDetails,
   ReauthenticateRequest,
+  ResetPasswordRequest,
+  SessionResponse,
   TwoFactorSetupResponse,
   UserProfileResponse,
+  VerifyEmailRequest,
 } from "../model";
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
@@ -367,6 +371,110 @@ export const useSetupTwoFactor = <TError = ErrorType<ProblemDetails | void>, TCo
   TContext
 > => {
   return useMutation(getSetupTwoFactorMutationOptions(options), queryClient);
+};
+export const getForgotPasswordUrl = () => {
+  return `/api/auth/forgot-password`;
+};
+
+/**
+ * Queues an email with a single-use reset link when the address belongs to an active user of this installation and the mail server is configured. The answer is 204 in every case, including an unknown address, a deactivated user and an installation that cannot send mail, so the screen cannot be used to find out which addresses exist. The link is valid for one hour and stops working as soon as it is used, because the token carries the user's security stamp and a completed reset changes that stamp. Asking for a reset never counts toward the failed-attempt lockout: otherwise anyone could lock an account by repeating the request. Rate limited to 5 calls per five minutes per client.
+ * @summary Ask for a password reset link
+ */
+export const forgotPassword = async (
+  forgotPasswordRequest: ForgotPasswordRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getForgotPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(forgotPasswordRequest),
+  });
+};
+
+export const getForgotPasswordMutationKey = () => ["forgotPassword"] as const;
+
+export const getForgotPasswordMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof forgotPassword>>,
+    TError,
+    ForgotPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof forgotPassword>>,
+  TError,
+  ForgotPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getForgotPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof forgotPassword>>,
+    ForgotPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return forgotPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ForgotPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof forgotPassword>>>;
+export type ForgotPasswordMutationBody = ForgotPasswordRequest;
+export type ForgotPasswordMutationError = ErrorType<ProblemDetails | void>;
+export type ForgotPasswordMutationVariables = { data: ForgotPasswordRequest };
+
+/**
+ * @summary Ask for a password reset link
+ */
+export const useForgotPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof forgotPassword>>,
+      TError,
+      ForgotPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof forgotPassword>>,
+  TError,
+  ForgotPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getForgotPasswordMutationOptions(options), queryClient);
 };
 export const getLoginUrl = () => {
   return `/api/auth/login`;
@@ -758,4 +866,544 @@ export const useRefresh = <TError = ErrorType<ProblemDetails | void>, TContext =
   queryClient?: QueryClient,
 ): UseMutationResult<Awaited<ReturnType<typeof refresh>>, TError, void, TContext> => {
   return useMutation(getRefreshMutationOptions(options), queryClient);
+};
+export const getResetPasswordUrl = () => {
+  return `/api/auth/reset-password`;
+};
+
+/**
+ * Consumes the token from the emailed link and stores the new password. The token is ASP.NET Identity's own password-reset token: it carries the user's security stamp, so the completed reset invalidates it and a second attempt with the same link answers 400 passwordReset.tokenInvalid. An unknown address, a deactivated user, an expired token and a tampered token all answer with that same code, so nothing is learned from the difference. A password the validators refuse answers password.tooWeak. A successful reset clears the failed-attempt counter and a temporary lockout, changes the security stamp and therefore ends every open session of that user; a deactivation stays in place. A rejected token does not count toward the lockout. Rate limited to 10 calls per five minutes per client.
+ * @summary Set a new password from a reset link
+ */
+export const resetPassword = async (
+  resetPasswordRequest: ResetPasswordRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getResetPasswordUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(resetPasswordRequest),
+  });
+};
+
+export const getResetPasswordMutationKey = () => ["resetPassword"] as const;
+
+export const getResetPasswordMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof resetPassword>>,
+    TError,
+    ResetPasswordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof resetPassword>>,
+  TError,
+  ResetPasswordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getResetPasswordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof resetPassword>>,
+    ResetPasswordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return resetPassword(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ResetPasswordMutationResult = NonNullable<Awaited<ReturnType<typeof resetPassword>>>;
+export type ResetPasswordMutationBody = ResetPasswordRequest;
+export type ResetPasswordMutationError = ErrorType<ProblemDetails | void>;
+export type ResetPasswordMutationVariables = { data: ResetPasswordRequest };
+
+/**
+ * @summary Set a new password from a reset link
+ */
+export const useResetPassword = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof resetPassword>>,
+      TError,
+      ResetPasswordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof resetPassword>>,
+  TError,
+  ResetPasswordMutationVariables,
+  TContext
+> => {
+  return useMutation(getResetPasswordMutationOptions(options), queryClient);
+};
+export const getSendVerificationEmailUrl = () => {
+  return `/api/auth/send-verification-email`;
+};
+
+/**
+ * Queues a new confirmation link for the caller's own address. Answers 400 email.alreadyVerified when the address is already confirmed and 400 email.notConfigured when this installation has no mail server yet, so the screen can say which of the two it is. The message leaves through the outbox, so the call returns without waiting for the mail server. Rate limited to 5 calls per five minutes per client.
+ * @summary Send the confirmation email again
+ */
+export const sendVerificationEmail = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getSendVerificationEmailUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getSendVerificationEmailMutationKey = () => ["sendVerificationEmail"] as const;
+
+export const getSendVerificationEmailMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof sendVerificationEmail>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof sendVerificationEmail>>,
+  TError,
+  void,
+  TContext
+> => {
+  const mutationKey = getSendVerificationEmailMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof sendVerificationEmail>>,
+    void
+  > = () => {
+    return sendVerificationEmail(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SendVerificationEmailMutationResult = NonNullable<
+  Awaited<ReturnType<typeof sendVerificationEmail>>
+>;
+
+export type SendVerificationEmailMutationError = ErrorType<ProblemDetails | void>;
+
+/**
+ * @summary Send the confirmation email again
+ */
+export const useSendVerificationEmail = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof sendVerificationEmail>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof sendVerificationEmail>>, TError, void, TContext> => {
+  return useMutation(getSendVerificationEmailMutationOptions(options), queryClient);
+};
+export const getSessionsUrl = () => {
+  return `/api/auth/sessions`;
+};
+
+/**
+ * Returns one row per browser that is signed in as the caller, most recently active first. Expired sessions and sessions from before the last password or two-factor change are left out. Each row carries the user agent sent at sign-in, when the session was created, last refreshed and when it expires, and marks the session that made this request. Token hashes are never returned.
+ * @summary List signed-in browsers
+ */
+export const sessions = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<SessionResponse[]> => {
+  return customFetch<SessionResponse[]>(getSessionsUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getSessionsQueryKey = () => {
+  return [`/api/auth/sessions`] as const;
+};
+
+export const getSessionsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getSessionsQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof sessions>>> = ({ signal }) =>
+    sessions({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof sessions>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+};
+
+export type SessionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof sessions>>>;
+export type SessionsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useSessionsSuspense<
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSessionsSuspense<
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useSessionsSuspense<
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List signed-in browsers
+ */
+
+export function useSessionsSuspense<
+  TData = Awaited<ReturnType<typeof sessions>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof sessions>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getSessionsSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getRevokeOtherSessionsUrl = () => {
+  return `/api/auth/sessions/revoke-others`;
+};
+
+/**
+ * Deletes every session of the caller except the one that makes the request, including expired and stale rows. Safe to call when no other session exists.
+ * @summary Sign out everywhere else
+ */
+export const revokeOtherSessions = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRevokeOtherSessionsUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getRevokeOtherSessionsMutationKey = () => ["revokeOtherSessions"] as const;
+
+export const getRevokeOtherSessionsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeOtherSessions>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof revokeOtherSessions>>, TError, void, TContext> => {
+  const mutationKey = getRevokeOtherSessionsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeOtherSessions>>,
+    void
+  > = () => {
+    return revokeOtherSessions(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeOtherSessionsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof revokeOtherSessions>>
+>;
+
+export type RevokeOtherSessionsMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Sign out everywhere else
+ */
+export const useRevokeOtherSessions = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokeOtherSessions>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof revokeOtherSessions>>, TError, void, TContext> => {
+  return useMutation(getRevokeOtherSessionsMutationOptions(options), queryClient);
+};
+export const getRevokeSessionUrl = (id: string) => {
+  return `/api/auth/sessions/${id}`;
+};
+
+/**
+ * Deletes one of the caller's other sessions. That browser is refused on its next request, because every request checks that its session still exists, and it cannot refresh. The session that makes the request is refused with session.current; it ends through sign out.
+ * @summary Sign another browser out
+ */
+export const revokeSession = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRevokeSessionUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRevokeSessionMutationKey = () => ["revokeSession"] as const;
+
+export const getRevokeSessionMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof revokeSession>>,
+    TError,
+    RevokeSessionMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof revokeSession>>,
+  TError,
+  RevokeSessionMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRevokeSessionMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof revokeSession>>,
+    RevokeSessionMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return revokeSession(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RevokeSessionMutationResult = NonNullable<Awaited<ReturnType<typeof revokeSession>>>;
+
+export type RevokeSessionMutationError = ErrorType<ProblemDetails>;
+export type RevokeSessionMutationVariables = { id: string };
+
+/**
+ * @summary Sign another browser out
+ */
+export const useRevokeSession = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof revokeSession>>,
+      TError,
+      RevokeSessionMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof revokeSession>>,
+  TError,
+  RevokeSessionMutationVariables,
+  TContext
+> => {
+  return useMutation(getRevokeSessionMutationOptions(options), queryClient);
+};
+export const getVerifyEmailUrl = () => {
+  return `/api/auth/verify-email`;
+};
+
+/**
+ * Consumes the token from the confirmation link and marks the address confirmed. The token is ASP.NET Identity's own email-confirmation token and is valid for one day. Opening the link again after the address is confirmed answers 204, so a second click is not an error; an unknown address, an expired token and a tampered token answer 400 email.tokenInvalid. The call needs no session, because the person reading the mailbox may not be signed in. An unconfirmed address blocks nothing but unsolicited mail to it, so nothing else changes. Rate limited to 10 calls per five minutes per client.
+ * @summary Confirm an email address
+ */
+export const verifyEmail = async (
+  verifyEmailRequest: VerifyEmailRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getVerifyEmailUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(verifyEmailRequest),
+  });
+};
+
+export const getVerifyEmailMutationKey = () => ["verifyEmail"] as const;
+
+export const getVerifyEmailMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof verifyEmail>>,
+    TError,
+    VerifyEmailMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof verifyEmail>>,
+  TError,
+  VerifyEmailMutationVariables,
+  TContext
+> => {
+  const mutationKey = getVerifyEmailMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof verifyEmail>>,
+    VerifyEmailMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return verifyEmail(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type VerifyEmailMutationResult = NonNullable<Awaited<ReturnType<typeof verifyEmail>>>;
+export type VerifyEmailMutationBody = VerifyEmailRequest;
+export type VerifyEmailMutationError = ErrorType<ProblemDetails | void>;
+export type VerifyEmailMutationVariables = { data: VerifyEmailRequest };
+
+/**
+ * @summary Confirm an email address
+ */
+export const useVerifyEmail = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof verifyEmail>>,
+      TError,
+      VerifyEmailMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof verifyEmail>>,
+  TError,
+  VerifyEmailMutationVariables,
+  TContext
+> => {
+  return useMutation(getVerifyEmailMutationOptions(options), queryClient);
 };

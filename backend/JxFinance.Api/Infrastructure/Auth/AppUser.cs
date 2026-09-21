@@ -12,5 +12,7 @@ public sealed class AppUser : IdentityUser<Guid>
 
     public string DisplayName { get; set; } = string.Empty;
 
+    public bool BillReminderEmails { get; set; }
+
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;
 }

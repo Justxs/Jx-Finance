@@ -14,7 +14,8 @@ public sealed record InstanceSettingsSnapshot(
     TimeZoneInfo TimeZone,
     FirstDayOfWeek FirstDayOfWeek,
     Guid? DefaultAccountId,
-    int DefaultPageSize)
+    int DefaultPageSize,
+    SmtpSettingsSnapshot Smtp)
 {
     public bool IsEnabled(Feature feature) => Features.IsEnabled(feature);
 
@@ -43,7 +44,8 @@ public sealed record InstanceSettingsSnapshot(
             ResolveTimeZone(settings.TimeZone),
             settings.FirstDayOfWeek,
             settings.DefaultAccountId,
-            settings.DefaultPageSize);
+            settings.DefaultPageSize,
+            SmtpSettingsSnapshot.From(settings));
     }
 
     public static bool IsValidTimeZone(string? id)

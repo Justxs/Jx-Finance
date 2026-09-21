@@ -29,6 +29,7 @@ public static class DependencyInjection
 
         services.AddSingleton<IClock, Time.SystemClock>();
         services.AddSingleton<Backups.BackupStore>();
+        services.AddSingleton<Common.Email.IEmailTransport, Email.MailKitEmailTransport>();
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
 
@@ -41,10 +42,18 @@ public static class DependencyInjection
                 options.Lockout.AllowedForNewUsers = true;
                 options.Lockout.MaxFailedAccessAttempts = 5;
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(15);
+                options.Tokens.EmailConfirmationTokenProvider = EmailConfirmationTokenProviderOptions.ProviderName;
             })
             .AddRoles<AppRole>()
             .AddEntityFrameworkStores<AppDbContext>()
-            .AddDefaultTokenProviders();
+            .AddDefaultTokenProviders()
+            .AddTokenProvider<EmailConfirmationTokenProvider>(EmailConfirmationTokenProviderOptions.ProviderName);
+
+        var passwordResetMinutes = configuration.GetValue(
+            $"{AppOptions.SectionName}:Email:PasswordResetMinutes",
+            new EmailOptions().PasswordResetMinutes);
+        services.Configure<DataProtectionTokenProviderOptions>(
+            tokens => tokens.TokenLifespan = TimeSpan.FromMinutes(Math.Max(passwordResetMinutes, 1)));
 
         var keyDirectory = configuration["App:DataProtectionDirectory"];
         var protection = services.AddDataProtection().SetApplicationName("JxFinance");

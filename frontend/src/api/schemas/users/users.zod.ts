@@ -43,6 +43,8 @@ export const CreateUserResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 
 /**
@@ -56,11 +58,13 @@ export const UsersResponseItem = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 export const UsersResponse = zod.array(UsersResponseItem);
 
 /**
- * Changes your display name and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
+ * Changes your display name, your bill reminder email preference and, optionally, your password. A password change needs the current password as well, and refreshes the session cookie so the browser stays signed in. This is the one user endpoint that does not require the Admin role.
  * @summary Update your own profile
  */
 export const updateMyProfileBodyDisplayNameMin = 0;
@@ -81,6 +85,11 @@ export const UpdateMyProfileBody = zod.object({
     .max(updateMyProfileBodyNewPasswordMax)
     .nullable()
     .describe("Omit to leave the password alone."),
+  billReminderEmails: zod
+    .boolean()
+    .describe(
+      "Send a reminder email beside the in-app notification of a recurring entry. Off by default, and it needs both a working mail server and a confirmed address to have any effect.",
+    ),
 });
 
 export const UpdateMyProfileResponse = zod.object({
@@ -90,6 +99,8 @@ export const UpdateMyProfileResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 
 /**
@@ -142,6 +153,8 @@ export const ResetUserPasswordResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });
 
 /**
@@ -159,4 +172,6 @@ export const UpdateUserRoleResponse = zod.object({
   role: zod.string(),
   twoFactorEnabled: zod.boolean(),
   isActive: zod.boolean(),
+  emailConfirmed: zod.boolean(),
+  billReminderEmails: zod.boolean(),
 });

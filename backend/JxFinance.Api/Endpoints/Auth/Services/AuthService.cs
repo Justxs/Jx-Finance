@@ -102,7 +102,15 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         var roles = await userManager.GetRolesAsync(user);
         var role = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
         var isActive = !user.IsDeactivated;
-        return new UserProfileResponse(user.Id, user.Email!, user.DisplayName, role, user.TwoFactorEnabled, isActive);
+        return new UserProfileResponse(
+            user.Id,
+            user.Email!,
+            user.DisplayName,
+            role,
+            user.TwoFactorEnabled,
+            isActive,
+            user.EmailConfirmed,
+            user.BillReminderEmails);
     }
 
     public async Task<UserProfileResponse?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken)

@@ -1,6 +1,7 @@
 import {
   getDisableTwoFactorMockHandler,
   getEnableTwoFactorMockHandler,
+  getForgotPasswordMockHandler,
   getLoginMockHandler,
   getLogoutMockHandler,
   getMeMockHandler,
@@ -10,6 +11,7 @@ import {
   getSendVerificationEmailMockHandler,
   getSessionsMockHandler,
   getSetupTwoFactorMockHandler,
+  getVerifyEmailMockHandler,
 } from "@/api/generated/auth/auth.msw";
 import {
   currentUser,

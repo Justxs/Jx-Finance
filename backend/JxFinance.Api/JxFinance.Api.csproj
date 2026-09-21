@@ -10,6 +10,7 @@
     </PackageReference>
     <PackageReference Include="FastEndpoints.OpenApi" />
     <PackageReference Include="FastEndpoints.Security" />
+    <PackageReference Include="MailKit" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">

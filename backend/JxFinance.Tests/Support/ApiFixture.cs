@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using FastEndpoints.Testing;
+using JxFinance.Common.Email;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using Microsoft.AspNetCore.Hosting;
@@ -15,6 +16,7 @@ public sealed class ApiFixture : AppFixture<Program>
     public const string TestAdminPassword = "Test-Password-123!";
     public const long BackupMaxDecompressedBytes = 32L * 1024 * 1024;
     public const int PdfExportMaxRows = 5;
+    public const string SiteUrl = "https://finance.test";
 
     private PostgreSqlContainer? _db;
     private readonly string _keyDirectory = Path.Combine(Path.GetTempPath(), "jx-test-keys", Guid.NewGuid().ToString("N"));
@@ -48,6 +50,7 @@ public sealed class ApiFixture : AppFixture<Program>
         builder.UseSetting("App:RevalueBatchSize", "3");
         builder.UseSetting("App:PdfExportMaxRows", PdfExportMaxRows.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("App:ApiDocs", "true");
+        builder.UseSetting("App:SiteUrl", SiteUrl);
     }
 
     protected override void ConfigureServices(IServiceCollection services)
@@ -56,6 +59,9 @@ public sealed class ApiFixture : AppFixture<Program>
         services.AddSingleton<IExchangeRateProvider, FixedRateProvider>();
         services.RemoveAll<IFlexClient>();
         services.AddSingleton<IFlexClient, SampleFlexReport>();
+        services.RemoveAll<IEmailTransport>();
+        services.AddSingleton<FakeEmailTransport>();
+        services.AddSingleton<IEmailTransport>(sp => sp.GetRequiredService<FakeEmailTransport>());
     }
 
     protected override async ValueTask SetupAsync()

@@ -301,10 +301,106 @@ export const SyncExchangeRatesResponse = zod.object({
 });
 
 /**
- * Anonymous. Returns only the installation name and the default language.
+ * Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers "Forgot password". No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const PublicSettingsResponse = zod.object({
   instanceName: zod.string().nullable(),
   defaultLanguage: zod.string(),
+  emailEnabled: zod.boolean(),
+});
+
+/**
+ * Answers the SMTP host, port, encryption mode, user name, sender address and sender name, plus the enabled switch. The password is never part of the answer; hasPassword says only whether one is stored. Administrators only, unlike GET /api/settings, because these values describe an outside system.
+ * @summary Read the mail server of this installation
+ */
+export const SmtpSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  host: zod.string().nullable(),
+  port: zod.int(),
+  encryption: zod
+    .enum(["none", "startTls", "sslOnConnect"])
+    .describe("none, startTls or sslOnConnect."),
+  userName: zod.string().nullable(),
+  hasPassword: zod.boolean(),
+  fromAddress: zod.string().nullable(),
+  fromName: zod.string().nullable(),
+});
+
+/**
+ * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one; clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. Switching enabled on needs a host and a sender address. Administrators only.
+ * @summary Save the mail server of this installation
+ */
+export const updateSmtpSettingsBodyHostMin = 0;
+export const updateSmtpSettingsBodyHostMax = 255;
+
+export const updateSmtpSettingsBodyPortMax = 65535;
+
+export const updateSmtpSettingsBodyUserNameMin = 0;
+export const updateSmtpSettingsBodyUserNameMax = 255;
+
+export const updateSmtpSettingsBodyPasswordMin = 0;
+export const updateSmtpSettingsBodyPasswordMax = 255;
+
+export const updateSmtpSettingsBodyFromAddressMin = 0;
+export const updateSmtpSettingsBodyFromAddressMax = 320;
+
+export const updateSmtpSettingsBodyFromAddressRegExp = new RegExp("^[^@]+@[^@]+$");
+export const updateSmtpSettingsBodyFromNameMin = 0;
+export const updateSmtpSettingsBodyFromNameMax = 100;
+
+export const UpdateSmtpSettingsBody = zod.object({
+  enabled: zod.boolean(),
+  host: zod
+    .string()
+    .min(updateSmtpSettingsBodyHostMin)
+    .max(updateSmtpSettingsBodyHostMax)
+    .nullable(),
+  port: zod.int().min(1).max(updateSmtpSettingsBodyPortMax),
+  encryption: zod
+    .enum(["none", "startTls", "sslOnConnect"])
+    .describe("none, startTls or sslOnConnect."),
+  userName: zod
+    .string()
+    .min(updateSmtpSettingsBodyUserNameMin)
+    .max(updateSmtpSettingsBodyUserNameMax)
+    .nullable(),
+  password: zod
+    .string()
+    .min(updateSmtpSettingsBodyPasswordMin)
+    .max(updateSmtpSettingsBodyPasswordMax)
+    .nullable()
+    .describe("Leave empty to keep the stored password."),
+  fromAddress: zod
+    .email()
+    .min(updateSmtpSettingsBodyFromAddressMin)
+    .max(updateSmtpSettingsBodyFromAddressMax)
+    .regex(updateSmtpSettingsBodyFromAddressRegExp)
+    .nullable(),
+  fromName: zod
+    .string()
+    .min(updateSmtpSettingsBodyFromNameMin)
+    .max(updateSmtpSettingsBodyFromNameMax)
+    .nullable(),
+});
+
+export const UpdateSmtpSettingsResponse = zod.object({
+  enabled: zod.boolean(),
+  host: zod.string().nullable(),
+  port: zod.int(),
+  encryption: zod
+    .enum(["none", "startTls", "sslOnConnect"])
+    .describe("none, startTls or sslOnConnect."),
+  userName: zod.string().nullable(),
+  hasPassword: zod.boolean(),
+  fromAddress: zod.string().nullable(),
+  fromName: zod.string().nullable(),
+});
+
+/**
+ * Sends one short message to the calling administrator's own address with the settings that are stored right now, and waits for the mail server to accept it. Nothing is written: the message does not go through the outbox and leaves no row behind, so a failed attempt is not retried. Success answers the address the message went to; a refusal answers 400 with email.sendFailed and the mail server's own words, email.notConfigured when the settings are incomplete or switched off, or email.passwordUnreadable when the stored password cannot be decrypted, which is what a restore into an installation with different data protection keys leaves behind. The attempt gives up after the configured send timeout, so a dead server cannot hold the request open. Save the settings before testing them. Rate limited to 10 calls per five minutes per client.
+ * @summary Send a test message
+ */
+export const SendTestEmailResponse = zod.object({
+  sentTo: zod.string(),
 });

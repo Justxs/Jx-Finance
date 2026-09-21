@@ -21,6 +21,7 @@ import { useSettings, useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
 import { SettingsForm } from "../settings-form/settings-form";
 import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav/settings-nav";
+import { SmtpSection } from "../smtp-section/smtp-section";
 
 function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
   const { t } = useTranslation();
@@ -116,6 +117,7 @@ export function SettingsPage() {
           <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
             <SettingsContent section={section} />
           </QueryBoundary>
+          {section === "email" ? <SmtpSection /> : null}
           {section === "import" ? <ImportDataSection /> : null}
           {section === "backups" ? <BackupSection /> : null}
           {section === "appearance" ? (

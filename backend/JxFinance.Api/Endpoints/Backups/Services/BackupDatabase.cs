@@ -1,3 +1,4 @@
+using JxFinance.Domain.Email;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;

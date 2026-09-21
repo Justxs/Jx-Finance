@@ -20,7 +20,13 @@ const SEARCH_TARGET_SELECTOR = '[data-shortcut="search"]';
 
 export type ShortcutFeature = keyof FeatureFlags;
 
-const DISABLED_PATHS = new Set(["/login", "/setup"]);
+const DISABLED_PATHS = new Set([
+  "/login",
+  "/setup",
+  "/forgot-password",
+  "/reset-password",
+  "/verify-email",
+]);
 
 type ShortcutAction =
   | { type: "navigate"; to: string; search?: Record<string, unknown> }

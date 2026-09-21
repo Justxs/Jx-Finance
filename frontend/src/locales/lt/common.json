@@ -333,7 +333,24 @@
     "createAdmin": "Sukurti administratoriaus paskyrą",
     "twoFactorCode": "Autentifikavimo kodas",
     "twoFactorCodeHint": "Įveskite 6 skaitmenų kodą iš autentifikavimo programėlės arba atsarginį kodą.",
-    "verifyCode": "Patvirtinti kodą"
+    "verifyCode": "Patvirtinti kodą",
+    "forgotPassword": "Pamiršote slaptažodį?",
+    "forgotTitle": "Atkurkite slaptažodį",
+    "forgotSubtitle": "Įveskite adresą, kuriuo prisijungiate. Jei jis priklauso čia esančiai paskyrai, į jį išsiųsime nuorodą naujam slaptažodžiui nustatyti.",
+    "sendResetLink": "Siųsti atkūrimo nuorodą",
+    "forgotSent": "Jei šis adresas priklauso čia esančiai paskyrai, nuoroda jau pakeliui. Ji galioja vieną valandą ir veikia vieną kartą.",
+    "backToSignIn": "Grįžti į prisijungimą",
+    "resetTitle": "Pasirinkite naują slaptažodį",
+    "resetSubtitle": "Nuoroda veikia vieną kartą. Pakeitus slaptažodį visos šios paskyros naršyklės turės prisijungti iš naujo.",
+    "resetLinkBroken": "Ši nuoroda nepilna. Paprašykite naujos prisijungimo lange.",
+    "newPassword": "Naujas slaptažodis",
+    "setNewPassword": "Nustatyti slaptažodį",
+    "resetDone": "Slaptažodis pakeistas. Prisijunkite su juo.",
+    "verifyTitle": "Tvirtinamas adresas",
+    "verifyPending": "Akimirką.",
+    "verifyDone": "Jūsų adresas patvirtintas.",
+    "verifyFailed": "Ši nuoroda nebegalioja. Prisijunkite ir paprašykite naujos savo profilyje.",
+    "confirmAddress": "Patvirtinti šį adresą"
   },
   "users": {
     "title": "Naudotojai",
@@ -395,7 +412,37 @@
     "recoveryCodesTitle": "Išsaugokite atsarginius kodus",
     "recoveryCodesSubtitle": "Kiekvieną kodą galima naudoti vieną kartą, jei prarastumėte prieigą prie autentifikavimo programėlės. Saugokite juos saugioje vietoje — jie nebus rodomi pakartotinai.",
     "recoveryCodesDone": "Išsaugojau šiuos kodus",
-    "sectionsNav": "Profilio skyriai"
+    "sectionsNav": "Profilio skyriai",
+    "sessions": {
+      "title": "Prisijungusios naršyklės",
+      "description": "Visos naršyklės, kuriose esate prisijungę prie savo paskyros. Atjunkite tas, kurių nebenaudojate arba neatpažįstate.",
+      "browserOn": "{{browser}}, {{os}}",
+      "unknownBrowser": "Nežinoma naršyklė",
+      "current": "Ši naršyklė",
+      "lastActive": "Paskutinį kartą aktyvi",
+      "signedIn": "Prisijungta",
+      "expires": "Galioja iki",
+      "signOut": "Atjungti",
+      "signOutOthers": "Atjungti visur kitur",
+      "confirmTitle": "Atjungti šią naršyklę?",
+      "confirmDescription": "Joje reikės iš naujo prisijungti su jūsų slaptažodžiu.",
+      "confirmOthersTitle": "Atjungti visur kitur?",
+      "confirmOthersDescription": "Visose kitose naršyklėse reikės prisijungti iš naujo. Ši naršyklė liks prisijungusi.",
+      "signedOut": "Naršyklė atjungta",
+      "othersSignedOut": "Atjungta visur kitur"
+    },
+    "emailUnconfirmedTitle": "Patvirtinkite el. pašto adresą",
+    "emailUnconfirmedBody": "{{email}} dar nepatvirtintas, todėl į jį nesiunčiami jokie laiškai. Daugiau niekas neribojama.",
+    "resendVerification": "Siųsti nuorodą dar kartą",
+    "verificationSent": "Patvirtinimo laiškas išsiųstas",
+    "notifications": {
+      "title": "Pranešimai el. paštu",
+      "description": "Priminimai visada rodomi varpelyje. Laiškas yra papildomas ir tik apie pasikartojančius įrašus.",
+      "billReminderEmails": "Siųsti laišką apie artėjantį pasikartojantį įrašą",
+      "billReminderEmailsHint": "Vienas laiškas įrašui per dieną, šalia pranešimo programoje. Pagal numatymą išjungta.",
+      "needsEmail": "Ši įdiegtis dar negali siųsti laiškų. Paprašykite administratoriaus nustatyti pašto serverį.",
+      "needsVerification": "Pirmiausia patvirtinkite adresą; kol kas į jį laiškai nesiunčiami."
+    }
   },
   "settings": {
     "title": "Nustatymai",
@@ -509,7 +556,35 @@
       "pageSizeHint": "Naudojama operacijų sąraše."
     },
     "appearance": "Išvaizda",
-    "sectionsNav": "Nustatymų skyriai"
+    "sectionsNav": "Nustatymų skyriai",
+    "smtp": {
+      "title": "El. paštas",
+      "description": "Pašto serveris, per kurį ši įdiegtis siunčia laiškus. Be jo nėra nei slaptažodžio atkūrimo nuorodų, nei adreso patvirtinimų, nei priminimų laiškais.",
+      "enabled": "Siųsti laiškus iš šios įdiegties",
+      "enabledHint": "Išjunkite, kad sustabdytumėte visus laiškus neprarasdami nustatymų.",
+      "host": "Serveris",
+      "hostHint": "SMTP serverio vardas, pavyzdžiui smtp.example.com.",
+      "port": "Prievadas",
+      "encryption": "Šifravimas",
+      "encryptions": {
+        "none": "Jokio",
+        "startTls": "STARTTLS (dažniausiai 587 prievadas)",
+        "sslOnConnect": "TLS iš karto (dažniausiai 465 prievadas)"
+      },
+      "userName": "Naudotojo vardas",
+      "userNameHint": "Palikite tuščią, jei serveriui prisijungti nereikia. Ištrynus jį pamirštamas ir slaptažodis.",
+      "password": "Slaptažodis",
+      "passwordHint": "Saugomas užšifruotas ir daugiau nerodomas. Palikite tuščią, kad liktų išsaugotasis.",
+      "passwordStored": "Slaptažodis išsaugotas.",
+      "fromAddress": "Siuntėjo adresas",
+      "fromAddressHint": "Adresas, kurį mato gavėjai, pavyzdžiui finance@example.com.",
+      "fromName": "Siuntėjo vardas",
+      "fromNameHint": "Rodomas šalia siuntėjo adreso. Palikite tuščią, kad liktų tik adresas.",
+      "saved": "Pašto serveris išsaugotas",
+      "test": "Siųsti bandomąjį laišką",
+      "testHint": "Pirmiausia išsaugokite. Laiškas siunčiamas jūsų adresu ir niekas neįrašoma.",
+      "testSent": "Bandomasis laiškas išsiųstas adresu {{email}}"
+    }
   },
   "budgets": {
     "title": "Biudžetai",
@@ -1238,6 +1313,9 @@
     "password": {
       "incorrect": "Dabartinis slaptažodis neteisingas.",
       "tooWeak": "Pasirinkite stipresnį slaptažodį."
+    },
+    "passwordReset": {
+      "tokenInvalid": "Ši atkūrimo nuoroda nebegalioja. Paprašykite naujos."
     },
     "quantity": {
       "nonNegative": "Įveskite 0 arba daugiau, iki 8 skaitmenų po kablelio.",
