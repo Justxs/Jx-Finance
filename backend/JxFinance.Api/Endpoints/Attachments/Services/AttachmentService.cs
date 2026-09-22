@@ -9,6 +9,7 @@ using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Attachments.Interfaces;
 using JxFinance.Endpoints.Attachments.Shared;
 using JxFinance.Infrastructure.Attachments;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -243,7 +244,7 @@ public sealed class AttachmentService(
             .Select(u => new { u.Id, u.DisplayName, u.Email })
             .ToDictionaryAsync(
                 u => u.Id,
-                u => string.IsNullOrWhiteSpace(u.DisplayName) ? u.Email ?? "" : u.DisplayName,
+                u => AppUser.DisplayNameOrEmail(u.DisplayName, u.Email),
                 cancellationToken);
 
         return

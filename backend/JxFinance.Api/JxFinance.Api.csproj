@@ -31,6 +31,10 @@
     <PackageReference Include="Serilog.Sinks.OpenTelemetry" />
   </ItemGroup>
 
+  <ItemGroup>
+    <InternalsVisibleTo Include="JxFinance.Tests" />
+  </ItemGroup>
+
   <PropertyGroup>
     <RootNamespace>JxFinance</RootNamespace>
     <UserSecretsId>7d616548-4f8d-4f12-9a0d-e3b09fc2c396</UserSecretsId>

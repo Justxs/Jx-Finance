@@ -1,3 +1,4 @@
+using JxFinance.Common;
 using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
@@ -81,9 +82,5 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
         _ => SecureSocketOptions.StartTls,
     };
 
-    private static string Describe(Exception exception)
-    {
-        var message = exception.Message.Trim();
-        return message.Length > EmailMessage.ErrorMaxLength ? message[..EmailMessage.ErrorMaxLength] : message;
-    }
+    private static string Describe(Exception exception) => TextLimit.Cut(exception.Message, EmailMessage.ErrorMaxLength);
 }

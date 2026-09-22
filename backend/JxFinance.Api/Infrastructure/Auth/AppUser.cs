@@ -18,4 +18,7 @@ public sealed class AppUser : IdentityUser<Guid>
     public DashboardLayout? DashboardLayout { get; set; }
 
     public bool IsDeactivated => LockoutEnd >= DeactivatedUntil;
+
+    public static string DisplayNameOrEmail(string? displayName, string? email) =>
+        string.IsNullOrWhiteSpace(displayName) ? email ?? "" : displayName;
 }

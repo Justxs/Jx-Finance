@@ -14,19 +14,11 @@ public sealed class DeletionRecorder(AppDbContext db, IClock clock) : IDeletionR
         {
             Kind = kind,
             EntityId = entityId,
-            Description = Shorten(description),
+            Description = TextLimit.Ellipsize(description, DeletionEntry.DescriptionMaxLength),
             DeletedAt = clock.UtcNow,
             CompanionId = companionId,
         };
         db.DeletionEntries.Add(entry);
         return entry;
-    }
-
-    private static string Shorten(string description)
-    {
-        var trimmed = description.Trim();
-        return trimmed.Length <= DeletionEntry.DescriptionMaxLength
-            ? trimmed
-            : trimmed[..(DeletionEntry.DescriptionMaxLength - 1)] + "…";
     }
 }
