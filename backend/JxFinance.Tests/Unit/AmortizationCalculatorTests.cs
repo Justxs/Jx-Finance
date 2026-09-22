@@ -258,18 +258,18 @@ public sealed class AmortizationCalculatorTests
     [Fact]
     public void Terms_are_read_from_a_debt_only_when_enough_is_set()
     {
-        var debt = new Debt { Name = "Loan", LoanAmount = new(1000m), InterestRate = 5m, FirstPaymentDate = First, TermMonths = 12 };
+        var debt = new Debt { Name = "Loan", LoanAmount = 1000m, InterestRate = 5m, FirstPaymentDate = First, TermMonths = 12 };
 
         Assert.Equal(new AmortizationTerms(1000m, 5m, First, 12, null), AmortizationTerms.From(debt));
-        Assert.Null(AmortizationTerms.From(new Debt { Name = "Loan", LoanAmount = new(1000m), InterestRate = 5m, FirstPaymentDate = First }));
-        Assert.Null(AmortizationTerms.From(new Debt { Name = "Loan", LoanAmount = new(1000m), FirstPaymentDate = First, TermMonths = 12 }));
+        Assert.Null(AmortizationTerms.From(new Debt { Name = "Loan", LoanAmount = 1000m, InterestRate = 5m, FirstPaymentDate = First }));
+        Assert.Null(AmortizationTerms.From(new Debt { Name = "Loan", LoanAmount = 1000m, FirstPaymentDate = First, TermMonths = 12 }));
         Assert.Null(AmortizationTerms.From(new Debt
         {
             Name = "Loan",
-            LoanAmount = new(1000m),
+            LoanAmount = 1000m,
             InterestRate = 5m,
             FirstPaymentDate = First,
-            MonthlyPayment = new(100m),
+            MonthlyPayment = 100m,
             AmortizationType = AmortizationType.Linear,
         }));
     }

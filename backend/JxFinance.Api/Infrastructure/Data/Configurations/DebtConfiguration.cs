@@ -9,7 +9,11 @@ public sealed class DebtConfiguration : IEntityTypeConfiguration<Debt>
     public void Configure(EntityTypeBuilder<Debt> builder)
     {
         builder.Property(d => d.Name).HasMaxLength(100);
+        builder.ComplexProperty(d => d.OutstandingAmount, money => money.HasColumns("OutstandingAmount", DbSchema.CurrencyColumn));
+        builder.Ignore(d => d.Currency);
         builder.Property(d => d.InterestRate).HasPrecision(5, 2);
+        builder.Property(d => d.LoanAmount).HasPrecision(18, 2);
+        builder.Property(d => d.MonthlyPayment).HasPrecision(18, 2);
         builder.HasIndex(d => d.UserId);
     }
 }

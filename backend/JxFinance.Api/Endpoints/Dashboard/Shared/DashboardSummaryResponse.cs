@@ -7,4 +7,5 @@ public sealed record DashboardSummaryResponse(
     [property: Money] decimal MonthIncome,
     [property: Money] decimal MonthExpense,
     DateOnly MonthStart,
-    DateOnly MonthEnd);
+    DateOnly MonthEnd,
+    bool IsComplete);

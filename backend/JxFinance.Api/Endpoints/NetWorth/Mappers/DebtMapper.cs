@@ -1,5 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common.Amortization;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
@@ -11,7 +12,11 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
 {
     public override Debt ToEntity(CreateDebtRequest request)
     {
-        var debt = new Debt { Name = request.Name };
+        var debt = new Debt
+        {
+            Name = request.Name,
+            OutstandingAmount = new Money(0m, Resolve<IInstanceSettingsStore>().Current.ReportingCurrency),
+        };
         Apply(request, debt);
         return debt;
     }
@@ -20,13 +25,13 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
     {
         debt.Name = input.Name.Trim();
         debt.Type = input.Type;
-        debt.OutstandingAmount = new Money(input.OutstandingAmount!.Value);
+        debt.OutstandingAmount = new Money(input.OutstandingAmount!.Value, debt.Currency);
         debt.InterestRate = input.InterestRate;
         debt.AsOf = input.AsOf;
-        debt.LoanAmount = input.LoanAmount is { } loanAmount ? new Money(loanAmount) : null;
+        debt.LoanAmount = input.LoanAmount;
         debt.FirstPaymentDate = input.FirstPaymentDate;
         debt.TermMonths = input.TermMonths;
-        debt.MonthlyPayment = input.MonthlyPayment is { } payment ? new Money(payment) : null;
+        debt.MonthlyPayment = input.MonthlyPayment;
         debt.AmortizationType = input.AmortizationType ?? AmortizationType.Annuity;
     }
 
@@ -37,12 +42,13 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
         debt.OutstandingAmount.Amount,
         debt.InterestRate,
         debt.AsOf,
-        debt.LoanAmount?.Amount,
+        debt.LoanAmount,
         debt.FirstPaymentDate,
         debt.TermMonths,
-        debt.MonthlyPayment?.Amount,
+        debt.MonthlyPayment,
         debt.AmortizationType,
-        PayoffDate(debt));
+        PayoffDate(debt),
+        debt.Currency);
 
     private static DateOnly? PayoffDate(Debt debt) =>
         AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var schedule)

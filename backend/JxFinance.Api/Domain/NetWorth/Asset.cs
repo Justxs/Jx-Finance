@@ -8,5 +8,6 @@ public sealed class Asset : OwnableEntity
     public required string Name { get; set; }
     public AssetType Type { get; set; }
     public Money CurrentValue { get; set; }
+    public Currency Currency => CurrentValue.Currency;
     public DateOnly AsOf { get; set; }
 }

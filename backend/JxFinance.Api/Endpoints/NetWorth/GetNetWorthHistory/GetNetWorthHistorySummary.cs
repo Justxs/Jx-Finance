@@ -9,7 +9,8 @@ public sealed class GetNetWorthHistorySummary : Summary<GetNetWorthHistoryEndpoi
         Summary = "Get the net worth history";
         Description = "Returns the snapshots taken by the nightly background job, oldest first. "
             + "Snapshots are only written while the job runs, so a freshly seeded instance can answer "
-            + "with an empty series.";
+            + "with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its "
+            + "date, and left out when no rate is known.";
         Responses[200] = "The recorded snapshots.";
     }
 }

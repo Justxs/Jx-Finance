@@ -14,11 +14,11 @@ public sealed record AmortizationTerms(
         debt is { LoanAmount: { } principal, InterestRate: { } rate, FirstPaymentDate: { } firstPaymentDate }
         && (debt.TermMonths is not null || (debt.MonthlyPayment is not null && debt.AmortizationType == AmortizationType.Annuity))
             ? new AmortizationTerms(
-                principal.Amount,
+                principal,
                 rate,
                 firstPaymentDate,
                 debt.TermMonths,
-                debt.TermMonths is null ? debt.MonthlyPayment?.Amount : null,
+                debt.TermMonths is null ? debt.MonthlyPayment : null,
                 debt.AmortizationType)
             : null;
 }

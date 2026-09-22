@@ -8,6 +8,10 @@ public sealed class NetWorthSnapshotConfiguration : IEntityTypeConfiguration<Net
 {
     public void Configure(EntityTypeBuilder<NetWorthSnapshot> builder)
     {
+        builder.Property(s => s.Accounts).HasPrecision(18, 2);
+        builder.Property(s => s.Assets).HasPrecision(18, 2);
+        builder.Property(s => s.Debts).HasPrecision(18, 2);
+        builder.Property(s => s.NetWorthValue).HasPrecision(18, 2);
         builder.HasIndex(s => new { s.UserId, s.Date }).IsUnique();
     }
 }

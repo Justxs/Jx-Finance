@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
@@ -8,7 +9,7 @@ using JxFinance.Endpoints.Goals.Shared;
 namespace JxFinance.Endpoints.Goals.Mappers;
 
 [RegisterService<GoalMapper>(LifeTime.Singleton)]
-public sealed class GoalMapper : Mapper<CreateGoalRequest, GoalResponse, Goal>
+public sealed class GoalMapper(IInstanceSettingsStore settings) : Mapper<CreateGoalRequest, GoalResponse, Goal>
 {
     public override Goal ToEntity(CreateGoalRequest request)
     {
@@ -20,7 +21,7 @@ public sealed class GoalMapper : Mapper<CreateGoalRequest, GoalResponse, Goal>
     public void Apply(IGoalInput input, Goal goal)
     {
         goal.Name = input.Name.Trim();
-        goal.TargetAmount = new Money(input.TargetAmount);
+        goal.TargetAmount = new Money(input.TargetAmount, settings.Current.ReportingCurrency);
         goal.TargetDate = input.TargetDate;
         goal.Funding = input.Funding;
         goal.FundingSharePercent = input.FundingSharePercent ?? 100;
@@ -32,7 +33,7 @@ public sealed class GoalMapper : Mapper<CreateGoalRequest, GoalResponse, Goal>
         }
 
         goal.FundingAccountId = null;
-        goal.CurrentAmount = new Money(input.CurrentAmount ?? 0m);
+        goal.CurrentAmount = new Money(input.CurrentAmount ?? 0m, settings.Current.ReportingCurrency);
     }
 
     public GoalResponse FromEntity(Goal goal, decimal? progressAmount) => new(

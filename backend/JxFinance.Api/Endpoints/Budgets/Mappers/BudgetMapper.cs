@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -8,7 +9,7 @@ using JxFinance.Endpoints.Budgets.Shared;
 namespace JxFinance.Endpoints.Budgets.Mappers;
 
 [RegisterService<BudgetMapper>(LifeTime.Singleton)]
-public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, Budget>
+public sealed class BudgetMapper(IInstanceSettingsStore settings) : Mapper<CreateBudgetRequest, BudgetResponse, Budget>
 {
     public override Budget ToEntity(CreateBudgetRequest request)
     {
@@ -20,7 +21,7 @@ public sealed class BudgetMapper : Mapper<CreateBudgetRequest, BudgetResponse, B
     public void Apply(IBudgetInput input, Budget budget)
     {
         budget.CategoryId = new CategoryId(input.CategoryId);
-        budget.LimitAmount = new Money(input.LimitAmount);
+        budget.LimitAmount = new Money(input.LimitAmount, settings.Current.ReportingCurrency);
         budget.Period = input.Period;
         budget.RolloverEnabled = input.RolloverEnabled;
     }

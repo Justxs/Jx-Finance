@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
@@ -10,7 +11,11 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
 {
     public override Asset ToEntity(CreateAssetRequest request)
     {
-        var asset = new Asset { Name = request.Name };
+        var asset = new Asset
+        {
+            Name = request.Name,
+            CurrentValue = new Money(0m, Resolve<IInstanceSettingsStore>().Current.ReportingCurrency),
+        };
         Apply(request, asset);
         return asset;
     }
@@ -19,7 +24,7 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
     {
         asset.Name = input.Name.Trim();
         asset.Type = input.Type;
-        asset.CurrentValue = new Money(input.CurrentValue!.Value);
+        asset.CurrentValue = new Money(input.CurrentValue!.Value, asset.Currency);
         asset.AsOf = input.AsOf;
     }
 
@@ -28,5 +33,6 @@ public sealed class AssetMapper : Mapper<CreateAssetRequest, AssetResponse, Asse
         asset.Name,
         asset.Type,
         asset.CurrentValue.Amount,
-        asset.AsOf);
+        asset.AsOf,
+        asset.Currency);
 }

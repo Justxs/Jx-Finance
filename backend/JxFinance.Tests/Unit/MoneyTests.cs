@@ -10,7 +10,7 @@ public sealed class MoneyTests
     [InlineData("1.004", "1.00")]
     [InlineData("2.675", "2.68")]
     public void Amounts_round_half_away_from_zero_to_cents(string raw, string expected) =>
-        Assert.Equal(decimal.Parse(expected), new Money(decimal.Parse(raw)).Amount);
+        Assert.Equal(decimal.Parse(expected), new Money(decimal.Parse(raw), Currency.Eur).Amount);
 
     [Fact]
     public void Arithmetic_keeps_the_currency()

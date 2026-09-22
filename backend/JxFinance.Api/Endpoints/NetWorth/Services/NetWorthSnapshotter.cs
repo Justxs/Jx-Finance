@@ -27,6 +27,7 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
         var service = new NetWorthService(
             db,
             new AccountService(db, user, services.GetRequiredService<AccountMapper>(), rates, new HoldingsValuation(db, rates, settings)),
+            rates,
             clock,
             new DeletionRecorder(db, clock),
             user);
