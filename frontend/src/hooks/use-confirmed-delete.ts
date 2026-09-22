@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TrashKind } from "@/api/generated/model";
 import { useUndoToast } from "@/hooks/use-undo-toast";
+import { pendingId } from "@/lib/mutations";
 
 interface DeleteOptions {
   onSuccess?: () => void;
@@ -35,7 +36,7 @@ export function useConfirmedDelete<T extends { id: string }>(
 
   return {
     request: (id: string) => setTarget(id),
-    pendingId: mutation.isPending ? mutation.variables?.id : undefined,
+    pendingId: pendingId(mutation),
     busy: mutation.isPending,
     dialogProps: {
       target,

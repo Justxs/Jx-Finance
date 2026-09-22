@@ -1,8 +1,5 @@
 import { Button } from "@/components/ui/button/button";
-import { type Locale, useLocale } from "@/stores/app-store";
-
-const labels: Record<Locale, string> = { en: "English", lt: "Lietuvių" };
-const nextLocale: Record<Locale, Locale> = { en: "lt", lt: "en" };
+import { localeNames, nextLocale, useLocale } from "@/stores/app-store";
 
 export function LanguageToggle() {
   const { locale, setLocale } = useLocale();
@@ -15,8 +12,8 @@ export function LanguageToggle() {
       size="icon"
       lang={next}
       onClick={() => setLocale(next)}
-      aria-label={`${locale.toUpperCase()}, ${labels[next]}`}
-      tooltip={labels[next]}
+      aria-label={`${locale.toUpperCase()}, ${localeNames[next]}`}
+      tooltip={localeNames[next]}
     >
       <span aria-hidden="true" className="text-xs font-semibold tracking-wide uppercase">
         {locale}

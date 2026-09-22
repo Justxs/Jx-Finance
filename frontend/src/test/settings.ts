@@ -1,30 +1,13 @@
 import type { SettingsResponse } from "@/api/generated/model";
-import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { settings } from "@/storybook/fixtures/settings";
 
 export function settingsFixture(overrides: Partial<SettingsResponse> = {}): SettingsResponse {
   return {
+    ...settings,
     instanceName: "Home",
-    features: {
-      budgets: true,
-      goals: false,
-      recurringBills: true,
-      netWorth: true,
-      reports: true,
-      import: true,
-      households: false,
-      multiCurrency: true,
-      investments: true,
-      categorizationRules: true,
-    },
-    reportingCurrency: DEFAULT_CURRENCY,
+    features: { ...settings.features, goals: false, households: false },
     enabledCurrencies: ["eur", "usd"],
-    exchangeRateSyncEnabled: true,
     ratesAsOf: null,
-    defaultLanguage: "en",
-    timeZone: "Europe/Vilnius",
-    firstDayOfWeek: "monday",
-    defaultAccountId: null,
-    defaultPageSize: 20,
     ...overrides,
   };
 }

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
 import type { AssetResponse } from "@/api/generated/model";
 import { useIsoDate } from "@/hooks/use-formatters";
+import { pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
 import { AssetForm } from "./asset-form";
@@ -35,7 +36,7 @@ export function AssetsSection() {
           asOf: asset.asOf,
         },
       }))}
-      deletingId={deleteMutation.isPending ? deleteMutation.variables?.id : undefined}
+      deletingId={pendingId(deleteMutation)}
       deleteDisabled={deleteMutation.isPending}
       onDelete={(id, options) => deleteMutation.mutate({ id }, options)}
       undoKind="asset"

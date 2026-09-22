@@ -9,7 +9,10 @@ import {
   type SettingsResponse,
   type UpdateSettingsRequest,
 } from "@/api/generated/model";
-import { updateSettingsBodyInstanceNameMax } from "@/api/schemas/settings/settings.zod";
+import {
+  UpdateSettingsBody,
+  updateSettingsBodyInstanceNameMax,
+} from "@/api/schemas/settings/settings.zod";
 import { useServerForm } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
@@ -56,18 +59,7 @@ export function SettingsForm({
 
   const schema = z.object({
     instanceName: optionalText(t, updateSettingsBodyInstanceNameMax),
-    features: z.object({
-      budgets: z.boolean(),
-      goals: z.boolean(),
-      recurringBills: z.boolean(),
-      netWorth: z.boolean(),
-      reports: z.boolean(),
-      import: z.boolean(),
-      households: z.boolean(),
-      multiCurrency: z.boolean(),
-      investments: z.boolean(),
-      categorizationRules: z.boolean(),
-    }),
+    features: UpdateSettingsBody.shape.features,
     reportingCurrency: z.enum(Currency),
     enabledCurrencies: z.array(z.enum(Currency)),
     exchangeRateSyncEnabled: z.boolean(),

@@ -55,7 +55,7 @@ test("leaves the label out when the item has none", () => {
 
 test("reports which row is being deleted", () => {
   const idle = setup({ variables: { id: "g1" } });
-  expect(idle.result.current.pendingId).toBeUndefined();
+  expect(idle.result.current.pendingId).toBeNull();
   expect(idle.result.current.busy).toBe(false);
 
   const busy = setup({ isPending: true, variables: { id: "g1" } });

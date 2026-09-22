@@ -116,7 +116,7 @@ export function AccountsPage() {
           accounts={accountList}
           stale={stale}
           onEdit={startEditing}
-          deletingId={remove.pendingId ?? null}
+          deletingId={remove.pendingId}
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
         />

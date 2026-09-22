@@ -1,23 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import {
-  ArrowLeftRight,
-  Bookmark,
-  CalendarClock,
-  ChartCandlestick,
-  FileBarChart,
-  House,
-  LayoutDashboard,
-  ListChecks,
-  PanelLeftClose,
-  PanelLeftOpen,
-  PiggyBank,
-  Scale,
-  Tags,
-  Target,
-  Settings,
-  Users,
-  WalletCards,
-} from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
@@ -36,6 +18,7 @@ import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useSettings } from "@/hooks/use-settings";
+import { adminNavPages, navPages } from "@/lib/navigation";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
@@ -53,50 +36,11 @@ function initials(name: string | undefined) {
     .join("");
 }
 
-const navItems = [
-  { to: "/", key: "nav.dashboard", icon: LayoutDashboard, group: "ledger" },
-  { to: "/transactions", key: "nav.transactions", icon: ArrowLeftRight, group: "ledger" },
-  { to: "/accounts", key: "nav.accounts", icon: WalletCards, group: "ledger" },
-  { to: "/categories", key: "nav.categories", icon: Tags, group: "ledger" },
-  { to: "/tags", key: "nav.tags", icon: Bookmark, group: "ledger" },
-  {
-    to: "/categorization-rules",
-    key: "nav.categorizationRules",
-    icon: ListChecks,
-    group: "ledger",
-    feature: "categorizationRules",
-  },
-  { to: "/budgets", key: "nav.budgets", icon: PiggyBank, group: "plan", feature: "budgets" },
-  { to: "/goals", key: "nav.goals", icon: Target, group: "plan", feature: "goals" },
-  {
-    to: "/recurring-bills",
-    key: "nav.recurringBills",
-    icon: CalendarClock,
-    group: "plan",
-    feature: "recurringBills",
-  },
-  { to: "/net-worth", key: "nav.netWorth", icon: Scale, group: "review", feature: "netWorth" },
-  {
-    to: "/investments",
-    key: "nav.investments",
-    icon: ChartCandlestick,
-    group: "review",
-    feature: "investments",
-  },
-  { to: "/reports", key: "nav.reports", icon: FileBarChart, group: "review", feature: "reports" },
-  { to: "/households", key: "nav.households", icon: House, group: "manage", feature: "households" },
-] as const;
-
-const adminNavItems = [
-  { to: "/users", key: "nav.users", icon: Users, group: "manage" },
-  { to: "/settings", key: "nav.settings", icon: Settings, group: "manage" },
-] as const;
-
-export type NavItem = (typeof navItems)[number] | (typeof adminNavItems)[number];
+export type NavItem = (typeof navPages)[number] | (typeof adminNavPages)[number];
 
 export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly NavItem[] {
-  const enabled = navItems.filter((item) => !("feature" in item) || features[item.feature]);
-  return isAdmin ? [...enabled, ...adminNavItems] : enabled;
+  const enabled = navPages.filter((item) => !("feature" in item) || features[item.feature]);
+  return isAdmin ? [...enabled, ...adminNavPages] : enabled;
 }
 
 export const navLinkClass =
