@@ -85,7 +85,9 @@ public static class ErrorCodes
     public const string BrokerRejected = "broker.rejected";
     public const string BrokerTokenRequired = "broker.tokenRequired";
     public const string EmailNotConfigured = "email.notConfigured";
+    public const string EmailPasswordRequired = "email.passwordRequired";
     public const string EmailPasswordUnreadable = "email.passwordUnreadable";
+    public const string EmailInsecureConnection = "email.insecureConnection";
     public const string EmailSendFailed = "email.sendFailed";
     public const string EmailAlreadyVerified = "email.alreadyVerified";
     public const string EmailTokenInvalid = "email.tokenInvalid";
