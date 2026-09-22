@@ -11,7 +11,6 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
     public void Configure(EntityTypeBuilder<Transaction> builder)
     {
         builder.ComplexProperty(t => t.Amount, money => money.HasColumns("Amount", DbSchema.CurrencyColumn));
-        builder.Property(t => t.ReportingAmount).HasPrecision(18, 2);
         builder.Property(t => t.Description).HasMaxLength(500);
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.HasIndex(t => new { t.UserId, t.Date });

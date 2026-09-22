@@ -113,6 +113,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 .HaveConversion(typeof(StronglyTypedIdConverter<>).MakeGenericType(idType));
         }
 
+        configurationBuilder.Properties<decimal>().HavePrecision(18, 2);
         configurationBuilder.Properties<Currency>().HaveConversion<CurrencyConverter>().HaveMaxLength(3);
         configurationBuilder.Properties<Money>().HaveConversion<MoneyConverter>().HavePrecision(18, 2);
     }

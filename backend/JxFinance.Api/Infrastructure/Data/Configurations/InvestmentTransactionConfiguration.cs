@@ -12,8 +12,6 @@ public sealed class InvestmentTransactionConfiguration : IEntityTypeConfiguratio
         builder.ComplexProperty(t => t.CashAmount, money => money.HasColumns("CashAmount", DbSchema.CurrencyColumn));
         builder.Property(t => t.Quantity).HasPrecision(20, 8);
         builder.Property(t => t.Price).HasPrecision(20, 8);
-        builder.Property(t => t.Fee).HasPrecision(18, 2);
-        builder.Property(t => t.ReportingAmount).HasPrecision(18, 2);
         builder.Property(t => t.Description).HasMaxLength(500);
         builder.Property(t => t.ExternalId).HasMaxLength(64);
         builder.HasIndex(t => new { t.AccountId, t.Date });
