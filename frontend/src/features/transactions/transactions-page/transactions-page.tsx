@@ -230,7 +230,7 @@ export function TransactionsPage() {
       )}`,
     "transaction",
   );
-  const deletingId = remove.pendingId ?? null;
+  const deletingId = remove.pendingId;
 
   function handleToggleRow(id: string, selected: boolean) {
     setSelection((previous) => {

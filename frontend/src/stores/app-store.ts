@@ -11,6 +11,10 @@ import {
 
 export type Locale = NonNullable<Preferences["locale"]>;
 
+export const localeNames: Record<Locale, string> = { en: "English", lt: "Lietuvių" };
+
+export const nextLocale: Record<Locale, Locale> = { en: "lt", lt: "en" };
+
 const fallbackLocale = new Store<Locale>("en");
 
 function isLocale(value: unknown): value is Locale {

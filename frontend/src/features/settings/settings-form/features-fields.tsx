@@ -13,14 +13,39 @@ interface Props {
   fields: typeof featuresFieldGroup.fields;
 }
 
-const featureGroups: { titleKey: TranslationKey; features: FeatureKey[] }[] = [
-  { titleKey: "settings.featureGroups.plan", features: ["budgets", "goals", "recurringBills"] },
-  { titleKey: "settings.featureGroups.review", features: ["netWorth", "investments", "reports"] },
-  {
-    titleKey: "settings.featureGroups.ledger",
-    features: ["import", "categorizationRules", "households", "multiCurrency"],
-  },
-];
+type FeatureGroup = "plan" | "review" | "ledger";
+
+const groupOf = {
+  budgets: "plan",
+  goals: "plan",
+  recurringBills: "plan",
+  netWorth: "review",
+  investments: "review",
+  reports: "review",
+  import: "ledger",
+  categorizationRules: "ledger",
+  households: "ledger",
+  multiCurrency: "ledger",
+} as const satisfies Record<FeatureKey, FeatureGroup>;
+
+const groupTitles: Record<FeatureGroup, TranslationKey> = {
+  plan: "settings.featureGroups.plan",
+  review: "settings.featureGroups.review",
+  ledger: "settings.featureGroups.ledger",
+};
+
+const groupOrder: readonly FeatureGroup[] = ["plan", "review", "ledger"];
+
+function isFeatureKey(value: string): value is FeatureKey {
+  return value in groupOf;
+}
+
+const featureKeys = Object.keys(groupOf).filter(isFeatureKey);
+
+const featureGroups = groupOrder.map((group) => ({
+  titleKey: groupTitles[group],
+  features: featureKeys.filter((feature) => groupOf[feature] === group),
+}));
 
 function FeaturesFieldsGroup({ fields }: Readonly<Props>) {
   const { t } = useTranslation();

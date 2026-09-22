@@ -72,7 +72,7 @@ export function UsersPage() {
           onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
           rolePendingId={pendingId(roleMutation)}
           onDeactivate={deactivate.request}
-          deactivatePendingId={deactivate.pendingId ?? null}
+          deactivatePendingId={deactivate.pendingId}
           onReactivate={(id) => reactivateMutation.mutate({ id })}
           reactivatePendingId={pendingId(reactivateMutation)}
           onResetPassword={setResetId}

@@ -5,21 +5,20 @@ import type {
   HouseholdResponse,
   TagResponse,
 } from "@/api/generated/model";
+import type { FeatureKey } from "@/hooks/use-settings";
 import type { Translate, TranslationKey } from "@/lib/i18n";
-import type { RoutePath } from "@/lib/shortcuts";
+import { type RoutePath, adminNavPages, navPages, profileNavPage } from "@/lib/navigation";
+import { type Locale, localeNames, nextLocale } from "@/stores/app-store";
+import type { Theme } from "@/stores/theme-store";
 
 export const commandGroups = ["actions", "pages", "accounts", "categories", "tags"] as const;
 
 export type CommandGroup = (typeof commandGroups)[number];
 
-export type CommandTheme = "light" | "dark";
-
-export type CommandLocale = "en" | "lt";
-
 export type CommandTarget =
   | { kind: "navigate"; to: RoutePath; search?: Record<string, unknown> }
-  | { kind: "theme"; theme: CommandTheme }
-  | { kind: "locale"; locale: CommandLocale }
+  | { kind: "theme"; theme: Theme }
+  | { kind: "locale"; locale: Locale }
   | { kind: "household"; householdId: string | undefined }
   | { kind: "backup" }
   | { kind: "signOut" };
@@ -33,8 +32,6 @@ export interface CommandEntry {
   target: CommandTarget;
 }
 
-type FeatureKey = keyof FeatureFlags;
-
 interface PageCommand {
   id: string;
   to: RoutePath;
@@ -45,118 +42,79 @@ interface PageCommand {
   admin?: boolean;
 }
 
+interface PageSection {
+  id: string;
+  search: Record<string, unknown>;
+  labelKey: TranslationKey;
+  feature?: FeatureKey;
+}
+
+const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
+  "/investments": [
+    { id: "page-tax-summary", search: { view: "taxSummary" }, labelKey: "investments.tax.title" },
+  ],
+  "/profile": [
+    { id: "page-trash", search: { section: "trash" }, labelKey: "trash.title" },
+    { id: "page-sessions", search: { section: "sessions" }, labelKey: "profile.sessions.title" },
+    { id: "page-two-factor", search: { section: "security" }, labelKey: "profile.twoFactorTitle" },
+    {
+      id: "page-import",
+      search: { section: "import" },
+      labelKey: "imports.sectionTitle",
+      feature: "import",
+    },
+    { id: "page-appearance", search: { section: "appearance" }, labelKey: "settings.appearance" },
+  ],
+  "/settings": [
+    {
+      id: "page-settings-features",
+      search: { section: "features" },
+      labelKey: "settings.features.title",
+    },
+    { id: "page-settings-email", search: { section: "email" }, labelKey: "settings.smtp.title" },
+    { id: "page-settings-backups", search: { section: "backups" }, labelKey: "backup.title" },
+  ],
+};
+
+interface NavPage {
+  to: RoutePath;
+  key: TranslationKey;
+  feature?: FeatureKey;
+}
+
+function pageId(to: RoutePath) {
+  return `page-${to === "/" ? "dashboard" : to.slice(1)}`;
+}
+
+function commandsFor(page: NavPage, admin: boolean): PageCommand[] {
+  const sections = pageSections[page.to] ?? [];
+
+  return [
+    { id: pageId(page.to), to: page.to, labelKey: page.key, feature: page.feature, admin },
+    ...sections.map((section) => ({
+      id: section.id,
+      to: page.to,
+      search: section.search,
+      labelKey: section.labelKey,
+      parentKey: page.key,
+      feature: section.feature ?? page.feature,
+      admin,
+    })),
+  ];
+}
+
 const pageCommands: readonly PageCommand[] = [
-  { id: "page-dashboard", to: "/", labelKey: "nav.dashboard" },
-  { id: "page-transactions", to: "/transactions", labelKey: "nav.transactions" },
-  { id: "page-accounts", to: "/accounts", labelKey: "nav.accounts" },
-  { id: "page-categories", to: "/categories", labelKey: "nav.categories" },
-  { id: "page-tags", to: "/tags", labelKey: "nav.tags" },
-  {
-    id: "page-categorization-rules",
-    to: "/categorization-rules",
-    labelKey: "nav.categorizationRules",
-    feature: "categorizationRules",
-  },
-  { id: "page-budgets", to: "/budgets", labelKey: "nav.budgets", feature: "budgets" },
-  { id: "page-goals", to: "/goals", labelKey: "nav.goals", feature: "goals" },
-  {
-    id: "page-recurring-bills",
-    to: "/recurring-bills",
-    labelKey: "nav.recurringBills",
-    feature: "recurringBills",
-  },
-  { id: "page-net-worth", to: "/net-worth", labelKey: "nav.netWorth", feature: "netWorth" },
-  {
-    id: "page-investments",
-    to: "/investments",
-    labelKey: "nav.investments",
-    feature: "investments",
-  },
-  {
-    id: "page-tax-summary",
-    to: "/investments",
-    search: { view: "taxSummary" },
-    labelKey: "investments.tax.title",
-    parentKey: "nav.investments",
-    feature: "investments",
-  },
-  { id: "page-reports", to: "/reports", labelKey: "nav.reports", feature: "reports" },
-  { id: "page-households", to: "/households", labelKey: "nav.households", feature: "households" },
-  { id: "page-profile", to: "/profile", labelKey: "nav.profile" },
-  {
-    id: "page-trash",
-    to: "/profile",
-    search: { section: "trash" },
-    labelKey: "trash.title",
-    parentKey: "nav.profile",
-  },
-  {
-    id: "page-sessions",
-    to: "/profile",
-    search: { section: "sessions" },
-    labelKey: "profile.sessions.title",
-    parentKey: "nav.profile",
-  },
-  {
-    id: "page-two-factor",
-    to: "/profile",
-    search: { section: "security" },
-    labelKey: "profile.twoFactorTitle",
-    parentKey: "nav.profile",
-  },
-  {
-    id: "page-import",
-    to: "/profile",
-    search: { section: "import" },
-    labelKey: "imports.sectionTitle",
-    parentKey: "nav.profile",
-    feature: "import",
-  },
-  {
-    id: "page-appearance",
-    to: "/profile",
-    search: { section: "appearance" },
-    labelKey: "settings.appearance",
-    parentKey: "nav.profile",
-  },
-  { id: "page-users", to: "/users", labelKey: "nav.users", admin: true },
-  { id: "page-settings", to: "/settings", labelKey: "nav.settings", admin: true },
-  {
-    id: "page-settings-features",
-    to: "/settings",
-    search: { section: "features" },
-    labelKey: "settings.features.title",
-    parentKey: "nav.settings",
-    admin: true,
-  },
-  {
-    id: "page-settings-email",
-    to: "/settings",
-    search: { section: "email" },
-    labelKey: "settings.smtp.title",
-    parentKey: "nav.settings",
-    admin: true,
-  },
-  {
-    id: "page-settings-backups",
-    to: "/settings",
-    search: { section: "backups" },
-    labelKey: "backup.title",
-    parentKey: "nav.settings",
-    admin: true,
-  },
+  ...navPages.flatMap((page) => commandsFor(page, false)),
+  ...commandsFor(profileNavPage, false),
+  ...adminNavPages.flatMap((page) => commandsFor(page, true)),
 ];
-
-const localeNames: Record<CommandLocale, string> = { en: "English", lt: "Lietuvių" };
-
-const otherLocale: Record<CommandLocale, CommandLocale> = { en: "lt", lt: "en" };
 
 export interface CommandSources {
   t: Translate;
   features: FeatureFlags;
   isAdmin: boolean;
-  theme: CommandTheme;
-  locale: CommandLocale;
+  theme: Theme;
+  locale: Locale;
   activeHouseholdId: string | undefined;
   accounts: readonly AccountResponse[];
   categories: readonly CategoryResponse[];
@@ -226,10 +184,10 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
     {
       id: "action-locale",
       group: "actions",
-      label: localeNames[otherLocale[locale]],
+      label: localeNames[nextLocale[locale]],
       hint: t("commandPalette.language"),
       keywords: t("commandPalette.language"),
-      target: { kind: "locale", locale: otherLocale[locale] },
+      target: { kind: "locale", locale: nextLocale[locale] },
     },
   ];
 

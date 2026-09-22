@@ -1,12 +1,12 @@
 import { createSequenceMatcher } from "@tanstack/react-hotkeys";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import type { FeatureKey } from "@/hooks/use-settings";
 import {
   PREFIX_TIMEOUT_MS,
   SEARCH_SHORTCUT_TARGET,
   isModifierShortcut,
   registerShortcuts,
-  type ShortcutFeature,
   shortcutKeyLabel,
   shortcuts,
   shouldIgnoreShortcut,
@@ -86,7 +86,7 @@ describe("key map", () => {
 
 describe("visibleShortcuts", () => {
   test("hides shortcuts of disabled features and keeps the rest", () => {
-    const disabled = new Set<ShortcutFeature>(["budgets", "investments"]);
+    const disabled = new Set<FeatureKey>(["budgets", "investments"]);
     const visible = visibleShortcuts((feature) => !disabled.has(feature)).map(
       (shortcut) => shortcut.id,
     );
@@ -138,7 +138,7 @@ describe("registerShortcuts", () => {
     pathname?: string;
     helpOpen?: boolean;
     paletteOpen?: boolean;
-    isFeatureEnabled?: (feature: ShortcutFeature) => boolean;
+    isFeatureEnabled?: (feature: FeatureKey) => boolean;
   } = {}) {
     const navigate = vi.fn();
     const toggleHelp = vi.fn();

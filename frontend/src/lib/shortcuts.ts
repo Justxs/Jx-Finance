@@ -6,13 +6,12 @@ import {
   normalizeRegisterableHotkey,
   type RegisterableHotkey,
 } from "@tanstack/react-hotkeys";
-import type { LinkProps, RegisteredRouter } from "@tanstack/react-router";
-import type { FeatureFlags } from "@/api/generated/model";
+import type { RegisteredRouter } from "@tanstack/react-router";
+import type { FeatureKey } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
+import { PUBLIC_PATHS, type RoutePath, navPages } from "@/lib/navigation";
 
 export const PREFIX_TIMEOUT_MS = 1200;
-
-export type RoutePath = NonNullable<LinkProps["to"]>;
 
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="textbox"]';
@@ -22,16 +21,6 @@ const DIALOG_SELECTOR = '[role="dialog"], [role="alertdialog"]';
 export const SEARCH_SHORTCUT_TARGET = "search";
 
 export const SEARCH_TARGET_SELECTOR = `[data-shortcut="${SEARCH_SHORTCUT_TARGET}"]`;
-
-export type ShortcutFeature = keyof FeatureFlags;
-
-const DISABLED_PATHS: ReadonlySet<string> = new Set<RoutePath>([
-  "/login",
-  "/setup",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-]);
 
 type ShortcutAction =
   | { type: "navigate"; to: RoutePath; search?: Record<string, unknown> }
@@ -45,14 +34,14 @@ export interface Shortcut {
   labelKey: TranslationKey;
   group: "actions" | "goTo";
   action: ShortcutAction;
-  feature?: ShortcutFeature;
+  feature?: FeatureKey;
 }
 
 function goTo(
   key: string,
   to: RoutePath,
   labelKey: TranslationKey,
-  feature?: ShortcutFeature,
+  feature?: FeatureKey,
 ): Shortcut {
   return {
     id: `go-${key}`,
@@ -93,21 +82,14 @@ export const shortcuts: readonly Shortcut[] = [
     group: "actions",
     action: { type: "help" },
   },
-  goTo("d", "/", "nav.dashboard"),
-  goTo("t", "/transactions", "nav.transactions"),
-  goTo("a", "/accounts", "nav.accounts"),
-  goTo("c", "/categories", "nav.categories"),
-  goTo("u", "/categorization-rules", "nav.categorizationRules", "categorizationRules"),
-  goTo("b", "/budgets", "nav.budgets", "budgets"),
-  goTo("o", "/goals", "nav.goals", "goals"),
-  goTo("l", "/recurring-bills", "nav.recurringBills", "recurringBills"),
-  goTo("w", "/net-worth", "nav.netWorth", "netWorth"),
-  goTo("v", "/investments", "nav.investments", "investments"),
-  goTo("r", "/reports", "nav.reports", "reports"),
-  goTo("h", "/households", "nav.households", "households"),
+  ...navPages.flatMap((page) =>
+    "shortcut" in page
+      ? [goTo(page.shortcut, page.to, page.key, "feature" in page ? page.feature : undefined)]
+      : [],
+  ),
 ];
 
-export function visibleShortcuts(isFeatureEnabled: (feature: ShortcutFeature) => boolean) {
+export function visibleShortcuts(isFeatureEnabled: (feature: FeatureKey) => boolean) {
   return shortcuts.filter(
     (shortcut) => shortcut.feature === undefined || isFeatureEnabled(shortcut.feature),
   );
@@ -136,7 +118,7 @@ export function shouldIgnoreShortcut(context: ShortcutContext) {
     context.repeat ||
     (context.editableTarget && context.modified !== true) ||
     context.dialogOpen ||
-    DISABLED_PATHS.has(context.pathname)
+    PUBLIC_PATHS.has(context.pathname)
   );
 }
 
@@ -154,7 +136,7 @@ export interface ShortcutRuntime {
   isHelpOpen: () => boolean;
   togglePalette: () => void;
   isPaletteOpen: () => boolean;
-  isFeatureEnabled: (feature: ShortcutFeature) => boolean;
+  isFeatureEnabled: (feature: FeatureKey) => boolean;
 }
 
 function isEditableTarget(target: EventTarget | null) {

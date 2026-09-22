@@ -37,17 +37,10 @@ import { CommandPalette } from "@/features/command-palette/command-palette/comma
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
 import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
+import { PUBLIC_PATHS, profileNavPage } from "@/lib/navigation";
 import { type RouterContext, warm } from "@/lib/route-prefetch";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
-
-const UNAUTHENTICATED_PATHS = new Set([
-  "/login",
-  "/setup",
-  "/forgot-password",
-  "/reset-password",
-  "/verify-email",
-]);
 
 export const Route = createRootRouteWithContext<RouterContext>()({
   beforeLoad: async ({ context: { queryClient }, location }) => {
@@ -71,12 +64,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       return;
     }
 
-    if (!UNAUTHENTICATED_PATHS.has(location.pathname)) {
+    if (!PUBLIC_PATHS.has(location.pathname)) {
       throw redirect({ to: "/login" });
     }
   },
   loader: ({ context: { queryClient }, location }) => {
-    if (UNAUTHENTICATED_PATHS.has(location.pathname)) {
+    if (PUBLIC_PATHS.has(location.pathname)) {
       return;
     }
     warm(queryClient, settingsQueryOptions());
@@ -90,21 +83,21 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 interface MobileNavItem {
-  to: NavItem["to"] | "/profile";
-  key: NavItem["key"] | "nav.profile";
+  to: NavItem["to"] | (typeof profileNavPage)["to"];
+  key: NavItem["key"] | (typeof profileNavPage)["key"];
 }
 
 function RootLayout() {
   const location = useLocation();
   const { t } = useTranslation();
-  const authenticatedArea = !UNAUTHENTICATED_PATHS.has(location.pathname);
+  const authenticatedArea = !PUBLIC_PATHS.has(location.pathname);
   const me = useMe({ query: { enabled: authenticatedArea } });
   const settings = useSettings({ enabled: authenticatedArea });
   const instanceName = usePublicSettings()?.instanceName;
 
   const mobileNavItems: readonly MobileNavItem[] = [
     ...visibleNav(settings.features, me.data?.role === UserRole.admin),
-    { to: "/profile", key: "nav.profile" },
+    profileNavPage,
   ];
 
   const currentItem = mobileNavItems.find((item) => item.to === location.pathname);

@@ -36,7 +36,7 @@ interface Props<TValues> {
   emptyLabel: string;
   tone?: "neutral" | "expense";
   items: readonly HoldingItem<TValues>[];
-  deletingId?: string;
+  deletingId?: string | null;
   deleteDisabled: boolean;
   onDelete: (id: string, options?: { onSuccess?: () => void }) => void;
   undoKind: TrashKind;
