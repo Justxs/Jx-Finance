@@ -20,7 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog/dialog";
 import { useSettings } from "@/hooks/use-settings";
-import { setAuthenticated } from "@/lib/auth-gate";
+import { endSession } from "@/lib/auth-gate";
 import type { ShortcutRouter } from "@/lib/shortcuts";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
@@ -82,11 +82,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
 
   const logoutMutation = useLogout({
     mutation: {
-      onSuccess: () => {
-        setAuthenticated(false);
-        queryClient.clear();
-        void (router as ShortcutRouter).navigate({ to: "/login" });
-      },
+      onSuccess: () => endSession(queryClient, (router as ShortcutRouter).navigate),
     },
   });
 

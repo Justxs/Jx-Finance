@@ -22,10 +22,8 @@ import {
 } from "@/components/ui/table/table";
 import { Tag } from "@/components/ui/tag/tag";
 import { useSearchTable } from "@/hooks/use-search-table";
-import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
-
-const roles = [UserRole.member, UserRole.admin] as const;
+import { roleOptions, userName } from "../user-queries";
 
 interface Props {
   users: UserProfileResponse[];
@@ -62,19 +60,19 @@ export function UsersTable({
   const { setFilter } = table;
 
   const filtered = Boolean(search.search) || Boolean(search.role) || search.isActive !== undefined;
-  const roleOptions = roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }));
+  const options = roleOptions(t);
 
   function roleSelect(user: UserProfileResponse) {
     const isSelf = user.id === currentUserId;
     return (
       <SelectField
-        aria-label={`${t("users.role")}: ${user.displayName || user.email}`}
+        aria-label={`${t("users.role")}: ${userName(user)}`}
         value={user.role}
         className={rolePendingId === user.id ? "stale" : undefined}
         aria-busy={rolePendingId === user.id}
         disabled={isSelf || rolePendingId !== null}
         onChange={(role) => onRoleChange(user.id, role)}
-        options={roleOptions}
+        options={options}
       />
     );
   }
@@ -91,7 +89,7 @@ export function UsersTable({
     if (user.id === currentUserId) {
       return null;
     }
-    const name = user.displayName || user.email;
+    const name = userName(user);
     const busy = deactivatePendingId !== null || reactivatePendingId !== null;
     const resetLabel = `${t("users.resetPassword.action")}: ${name}`;
     const statusLabel = `${t(user.isActive ? "users.deactivate" : "users.reactivate")}: ${name}`;
@@ -200,7 +198,7 @@ export function UsersTable({
                           aria-label={t("users.role")}
                           value={search.role ?? ""}
                           onChange={(role) => setFilter({ role: role || undefined })}
-                          options={[{ value: "", label: t("users.allRoles") }, ...roleOptions]}
+                          options={[{ value: "", label: t("users.allRoles") }, ...options]}
                         />
                       </ColumnFilter>
                     }

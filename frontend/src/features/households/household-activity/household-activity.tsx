@@ -17,6 +17,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { Tag } from "@/components/ui/tag/tag";
+import { userName } from "@/features/users/user-queries";
 import { useDateTime } from "@/hooks/use-formatters";
 import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
 
@@ -224,10 +225,7 @@ function ActivityFilterBar({ idPrefix, members, value, onChange }: Readonly<Filt
           onChange={(memberId) => onChange({ ...value, memberId })}
           options={[
             { value: ALL, label: t("audit.filters.everyone") },
-            ...members.map((member) => ({
-              value: member.userId,
-              label: member.displayName || member.email,
-            })),
+            ...members.map((member) => ({ value: member.userId, label: userName(member) })),
           ]}
         />
       </div>

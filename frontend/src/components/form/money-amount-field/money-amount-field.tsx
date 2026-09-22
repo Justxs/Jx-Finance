@@ -40,8 +40,8 @@ export function MoneyAmountField({
   onCurrencyChange,
 }: Readonly<Props>) {
   const { error, ...aria } = fieldAria(field, { id, hint, touchedOnly });
-  const currencyErrorId = `${id}-currency-error`;
-  const currencyError: string | undefined = currencyField.errors[0]?.message;
+  const currencyId = `${id}-currency`;
+  const { error: currencyError, ...currencyAria } = fieldAria(currencyField, { id: currencyId });
 
   return (
     <FieldShell
@@ -49,7 +49,7 @@ export function MoneyAmountField({
       label={label}
       hint={hint}
       error={error}
-      footer={<FieldError id={currencyErrorId} message={currencyError} />}
+      footer={<FieldError id={`${currencyId}-error`} message={currencyError} />}
     >
       <div className="flex gap-2">
         <Input
@@ -66,9 +66,8 @@ export function MoneyAmountField({
         />
         <CurrencySelect
           compact
+          {...currencyAria}
           aria-label={currencyLabel}
-          aria-invalid={Boolean(currencyError)}
-          aria-describedby={currencyError ? currencyErrorId : undefined}
           value={currencyField.value}
           preferred={preferred}
           only={only}

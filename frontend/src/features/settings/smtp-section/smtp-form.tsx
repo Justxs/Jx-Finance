@@ -3,11 +3,10 @@ import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { SmtpEncryption } from "@/api/generated/model";
 import type { SmtpSettingsResponse, UpdateSmtpSettingsRequest } from "@/api/generated/model";
-import { useAppForm } from "@/components/form";
+import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { submitToServer } from "@/lib/form-server-errors";
 import { optionalText, requiredValue } from "@/lib/validation";
 
 interface FormValues {
@@ -77,28 +76,23 @@ export function SmtpForm({
     fromName: settings.fromName ?? "",
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value, formApi } = submission;
-
-      return submitToServer(submission, () =>
-        onSubmit(
-          {
-            enabled: value.enabled,
-            host: value.host.trim() || null,
-            port: Number(value.port),
-            encryption: value.encryption,
-            userName: value.userName.trim() || null,
-            password: value.password || null,
-            fromAddress: value.fromAddress.trim() || null,
-            fromName: value.fromName.trim() || null,
-          },
-          () => formApi.reset({ ...value, password: "" }),
-        ),
-      );
-    },
+    schema,
+    submit: (value, formApi) =>
+      onSubmit(
+        {
+          enabled: value.enabled,
+          host: value.host.trim() || null,
+          port: Number(value.port),
+          encryption: value.encryption,
+          userName: value.userName.trim() || null,
+          password: value.password || null,
+          fromAddress: value.fromAddress.trim() || null,
+          fromName: value.fromName.trim() || null,
+        },
+        () => formApi.reset({ ...value, password: "" }),
+      ),
   });
 
   return (

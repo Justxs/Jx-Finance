@@ -4,11 +4,11 @@ import { toast } from "sonner";
 import { usePreviewCategorizationRun, useRunCategorizationRules } from "@/api/generated";
 import type { AccountResponse, RunRulesResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Label } from "@/components/ui/label/label";
 import { Rows } from "@/components/ui/rows/rows";
 import { silent } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
@@ -56,8 +56,7 @@ export function RunRulesDialog({ accounts, hasRules, onDone, onCancel }: Readonl
         {t("categorizationRules.runDescription")}
       </p>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="run-account">{t("categorizationRules.runAccount")}</Label>
+      <FieldShell id="run-account" label={t("categorizationRules.runAccount")}>
         <SelectField
           id="run-account"
           value={accountId}
@@ -67,7 +66,7 @@ export function RunRulesDialog({ accounts, hasRules, onDone, onCancel }: Readonl
             clearPreview();
           }}
         />
-      </div>
+      </FieldShell>
 
       <div className="space-y-1.5">
         <label className="flex items-start gap-2.5 text-sm">

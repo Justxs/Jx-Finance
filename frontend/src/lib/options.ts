@@ -24,6 +24,10 @@ export function nameById(items: readonly Named[] | undefined) {
   return new Map((items ?? []).map((item) => [item.id, item.name]));
 }
 
+export function byId<T extends { id: string }>(items: readonly T[] | undefined) {
+  return new Map((items ?? []).map((item) => [item.id, item]));
+}
+
 export function withMissingOption(
   options: readonly NamedOption[],
   id: string | null | undefined,

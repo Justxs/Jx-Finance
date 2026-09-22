@@ -6,7 +6,9 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import { userName } from "@/features/users/user-queries";
 import { cn } from "@/lib/utils";
+import { householdRoleOptions } from "../household-roles";
 
 interface Props {
   householdId: string;
@@ -39,7 +41,7 @@ export function MemberRow({
         {isOwnerView ? (
           <div className="flex items-center gap-2">
             <SelectField
-              aria-label={`${t("users.role")}: ${member.displayName || member.email}`}
+              aria-label={`${t("users.role")}: ${userName(member)}`}
               aria-busy={roleMutation.isPending}
               value={member.role}
               className={cn("w-auto", roleMutation.isPending && "stale")}
@@ -51,10 +53,7 @@ export function MemberRow({
                   data: { role },
                 })
               }
-              options={[
-                { value: "owner", label: t("households.roles.owner") },
-                { value: "member", label: t("households.roles.member") },
-              ]}
+              options={householdRoleOptions(t, ["owner", "member"])}
             />
             <Button
               variant="ghost"
@@ -62,7 +61,7 @@ export function MemberRow({
               pending={removePending}
               disabled={removeDisabled}
               onClick={onRemove}
-              aria-label={`${t("actions.delete")}: ${member.displayName || member.email}`}
+              aria-label={`${t("actions.delete")}: ${userName(member)}`}
             >
               <Trash2 />
             </Button>

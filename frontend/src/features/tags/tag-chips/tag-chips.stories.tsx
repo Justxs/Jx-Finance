@@ -1,9 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { byId } from "@/lib/options";
 import { withWidth } from "@/storybook/decorators";
 import { ids, tags } from "@/storybook/fixtures";
-import { TagChips, tagMapOf } from "./tag-chips";
+import { TagChips } from "./tag-chips";
 
-const tagById = tagMapOf(tags);
+const tagById = byId(tags);
 
 const meta = {
   title: "Features/Tags/TagChips",

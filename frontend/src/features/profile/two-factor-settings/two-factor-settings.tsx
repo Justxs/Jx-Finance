@@ -2,11 +2,13 @@ import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
+import { z } from "zod";
 import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
-import { Button } from "@/components/ui/button/button";
-import { Input } from "@/components/ui/input/input";
-import { Label } from "@/components/ui/label/label";
+import type { TwoFactorSetupResponse } from "@/api/generated/model";
+import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { silent } from "@/lib/mutations";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 
@@ -14,55 +16,65 @@ interface PasswordPromptProps {
   subtitle: string;
   submitLabel: string;
   destructive?: boolean;
-  password: string;
   pending: boolean;
-  onPasswordChange: (value: string) => void;
-  onSubmit: () => void;
+  error: unknown;
+  onSubmit: (password: string) => Promise<unknown>;
 }
 
 function PasswordPrompt({
   subtitle,
   submitLabel,
   destructive = false,
-  password,
   pending,
-  onPasswordChange,
+  error,
   onSubmit,
 }: Readonly<PasswordPromptProps>) {
   const { t } = useTranslation();
 
+  const form = useServerForm({
+    defaultValues: { password: "" },
+    schema: z.object({ password: z.string() }),
+    submit: async (value, formApi) => {
+      try {
+        await onSubmit(value.password);
+      } finally {
+        formApi.setFieldValue("password", "");
+      }
+    },
+  });
+
   return (
-    <Section
-      as="form"
-      noValidate
-      className="space-y-4 *:max-w-md"
-      onSubmit={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        if (password && !pending) {
-          onSubmit();
-        }
-      }}
-    >
-      <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
-      <p className="text-sm text-muted-foreground">{subtitle}</p>
-      <Label htmlFor="two-factor-password">{t("profile.currentPassword")}</Label>
-      <Input
-        id="two-factor-password"
-        type="password"
-        autoComplete="current-password"
-        value={password}
-        onChange={(e) => onPasswordChange(e.target.value)}
-      />
-      <Button
-        type="submit"
-        variant={destructive ? "destructive" : "default"}
-        pending={pending}
-        disabled={!password}
-      >
-        {submitLabel}
-      </Button>
-    </Section>
+    <form.AppForm>
+      <form.FormShell as={Section} className="space-y-4 *:max-w-md">
+        <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
+
+        <form.Field name="password">
+          {(field) => (
+            <field.TextField
+              id="two-factor-password"
+              label={t("profile.currentPassword")}
+              type="password"
+              autoComplete="current-password"
+            />
+          )}
+        </form.Field>
+
+        <FormError error={error} />
+
+        <form.Subscribe selector={(state) => state.values.password !== ""}>
+          {(ready) => (
+            <form.SubmitButton
+              variant={destructive ? "destructive" : "default"}
+              pending={pending}
+              disabled={!ready}
+            >
+              {submitLabel}
+            </form.SubmitButton>
+          )}
+        </form.Subscribe>
+      </form.FormShell>
+    </form.AppForm>
   );
 }
 
@@ -70,31 +82,26 @@ export function TwoFactorSettings() {
   const { t } = useTranslation();
   const me = useMeSuspense();
 
-  const [password, setPassword] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [sharedKey, setSharedKey] = useState<string | null>(null);
   const [recoveryCodes, setRecoveryCodes] = useState<string[] | null>(null);
 
-  const setupMutation = useSetupTwoFactor({
-    mutation: {
-      onSuccess: async (data) => {
-        setPassword("");
+  const setupMutation = useSetupTwoFactor(
+    silent({
+      onSuccess: async (data: TwoFactorSetupResponse) => {
         setSharedKey(data.sharedKey ?? null);
         setQrDataUrl(await QRCode.toDataURL(data.authenticatorUri ?? ""));
       },
-      onError: () => setPassword(""),
-    },
-  });
+    }),
+  );
 
-  const disableMutation = useDisableTwoFactor({
-    mutation: {
+  const disableMutation = useDisableTwoFactor(
+    silent({
       onSuccess: () => {
-        setPassword("");
         toast.success(t("profile.twoFactorDisabled"));
       },
-      onError: () => setPassword(""),
-    },
-  });
+    }),
+  );
 
   function cancelSetup() {
     setQrDataUrl(null);
@@ -116,10 +123,9 @@ export function TwoFactorSettings() {
         subtitle={t("profile.twoFactorEnabledSubtitle")}
         submitLabel={t("profile.disableTwoFactor")}
         destructive
-        password={password}
         pending={disableMutation.isPending}
-        onPasswordChange={setPassword}
-        onSubmit={() => disableMutation.mutate({ data: { password } })}
+        error={disableMutation.error}
+        onSubmit={(password) => disableMutation.mutateAsync({ data: { password } })}
       />
     );
   }
@@ -139,10 +145,9 @@ export function TwoFactorSettings() {
     <PasswordPrompt
       subtitle={t("profile.twoFactorDisabledSubtitle")}
       submitLabel={t("profile.enableTwoFactor")}
-      password={password}
       pending={setupMutation.isPending}
-      onPasswordChange={setPassword}
-      onSubmit={() => setupMutation.mutate({ data: { password } })}
+      error={setupMutation.error}
+      onSubmit={(password) => setupMutation.mutateAsync({ data: { password } })}
     />
   );
 }

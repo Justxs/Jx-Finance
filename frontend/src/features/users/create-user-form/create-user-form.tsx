@@ -12,8 +12,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silent } from "@/lib/mutations";
 import { UserRole } from "@/lib/user-role";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
-
-const roles = [UserRole.member, UserRole.admin] as const;
+import { roleOptions, userRoles } from "../user-queries";
 
 interface FormValues {
   email: string;
@@ -33,7 +32,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
   const schema = z.object({
     email: requiredEmail(t),
     displayName: requiredText(t, createUserBodyDisplayNameMax),
-    role: z.enum(roles),
+    role: z.enum(userRoles),
     password: password(t, createUserBodyPasswordMin, createUserBodyPasswordMax),
   });
 
@@ -81,7 +80,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
               <field.SelectFieldControl
                 id="user-role"
                 label={t("users.role")}
-                options={roles.map((role) => ({ value: role, label: t(`users.roles.${role}`) }))}
+                options={roleOptions(t)}
               />
             )}
           </form.Field>

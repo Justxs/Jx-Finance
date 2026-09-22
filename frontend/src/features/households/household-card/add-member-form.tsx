@@ -6,6 +6,7 @@ import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { requiredEmail } from "@/lib/validation";
+import { householdRoleOptions } from "../household-roles";
 
 interface FormValues {
   email: string;
@@ -63,10 +64,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
               aria-label={t("users.role")}
               className="min-w-0"
               fitContent
-              options={[
-                { value: "member", label: t("households.roles.member") },
-                { value: "owner", label: t("households.roles.owner") },
-              ]}
+              options={householdRoleOptions(t, ["member", "owner"])}
             />
           )}
         </form.Field>

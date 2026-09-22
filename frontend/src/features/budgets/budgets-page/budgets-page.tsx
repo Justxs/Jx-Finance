@@ -8,7 +8,7 @@ import {
   useBudgetsSuspense,
   useCategoriesSuspense,
 } from "@/api/generated";
-import type { BudgetPeriod, BudgetResponse } from "@/api/generated/model";
+import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
@@ -25,6 +25,8 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { EXPENSE_TONE } from "@/lib/tone";
+import { cn } from "@/lib/utils";
+import { budgetPeriodLabel } from "../budget-periods";
 import { BudgetUsageChart } from "../budget-usage-chart";
 import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
@@ -37,13 +39,6 @@ export function BudgetsPage() {
 
   const categories = useCategoriesSuspense();
   const budgets = useBudgetsSuspense();
-
-  const periodLabels: Record<BudgetPeriod, string> = {
-    weekly: t("budgets.periods.weekly"),
-    monthly: t("budgets.periods.monthly"),
-    quarterly: t("budgets.periods.quarterly"),
-    yearly: t("budgets.periods.yearly"),
-  };
 
   function openForm(budget: BudgetResponse | null) {
     setEditing(budget);
@@ -103,7 +98,7 @@ export function BudgetsPage() {
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {t("budgets.windowLabel", {
-                        period: periodLabels[budget.period],
+                        period: budgetPeriodLabel(t, budget.period),
                         from: isoDate(budget.windowStart),
                         to: isoDate(budget.windowEnd),
                       })}
@@ -117,7 +112,10 @@ export function BudgetsPage() {
                       </span>
                     </p>
                     <p
-                      className={`text-xs tabular-nums ${overBudget ? EXPENSE_TONE : "text-muted-foreground"}`}
+                      className={cn(
+                        "text-xs tabular-nums",
+                        overBudget ? EXPENSE_TONE : "text-muted-foreground",
+                      )}
                     >
                       {overBudget
                         ? t("budgets.over", { amount: money.format(spent - limit) })

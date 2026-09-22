@@ -21,7 +21,7 @@ interface Args {
 
 export function useTransactionColumnHeaders({ accounts, categories, tags }: Args) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories, tags });
+  const filters = useTransactionFilters({ accounts, categories });
   const { search, setFilter } = filters;
 
   type SortKey = NonNullable<typeof search.sort>;

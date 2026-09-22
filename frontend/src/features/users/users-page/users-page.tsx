@@ -17,9 +17,10 @@ import { Button } from "@/components/ui/button/button";
 import { Panel } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
+import { pendingId } from "@/lib/mutations";
 import { CreateUserForm } from "../create-user-form/create-user-form";
 import { ResetPasswordDialog } from "../reset-password-dialog/reset-password-dialog";
-import { userListParams } from "../user-queries";
+import { userListParams, userName } from "../user-queries";
 import { UsersTable } from "../users-table/users-table";
 
 export function UsersPage() {
@@ -48,11 +49,7 @@ export function UsersPage() {
   });
 
   const list = users.data ?? [];
-  const deactivate = useConfirmedDelete(
-    deactivateMutation,
-    list,
-    (user) => user.displayName || user.email,
-  );
+  const deactivate = useConfirmedDelete(deactivateMutation, list, userName);
 
   return (
     <div className="space-y-5">
@@ -73,13 +70,11 @@ export function UsersPage() {
           stale={stale}
           currentUserId={me.data?.id}
           onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
-          rolePendingId={roleMutation.isPending ? (roleMutation.variables?.id ?? null) : null}
+          rolePendingId={pendingId(roleMutation)}
           onDeactivate={deactivate.request}
           deactivatePendingId={deactivate.pendingId ?? null}
           onReactivate={(id) => reactivateMutation.mutate({ id })}
-          reactivatePendingId={
-            reactivateMutation.isPending ? (reactivateMutation.variables?.id ?? null) : null
-          }
+          reactivatePendingId={pendingId(reactivateMutation)}
           onResetPassword={setResetId}
         />
       </Panel>

@@ -15,6 +15,7 @@ import {
   ScrollRegion,
 } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { usePageClamp } from "@/hooks/use-paged-list";
 import { ImportRow } from "./import-row";
 import { ImportSummaryBar } from "./import-summary-bar";
 import {
@@ -53,15 +54,14 @@ export function ImportPreviewTable({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [page, setPage] = useState(1);
+  const pages = usePageClamp({ page, setPage }, rows.length, PREVIEW_PAGE_SIZE);
 
   if (rows.length === 0) {
     return <EmptyText>{t("imports.noRows")}</EmptyText>;
   }
 
   const summary = summarizeSelection(rows);
-  const pages = Math.max(1, Math.ceil(rows.length / PREVIEW_PAGE_SIZE));
-  const shownPage = Math.min(page, pages);
-  const offset = (shownPage - 1) * PREVIEW_PAGE_SIZE;
+  const offset = (page - 1) * PREVIEW_PAGE_SIZE;
   const pageRows = rows.slice(offset, offset + PREVIEW_PAGE_SIZE);
 
   const selectAll = (
@@ -144,7 +144,7 @@ export function ImportPreviewTable({
         </ScrollRegion>
       </div>
 
-      <Pagination page={shownPage} pages={pages} onPageChange={setPage} />
+      <Pagination page={page} pages={pages} onPageChange={setPage} />
 
       <div className="flex flex-wrap justify-end gap-2">
         <Button variant="outline" disabled={confirmPending} onClick={onCancel}>

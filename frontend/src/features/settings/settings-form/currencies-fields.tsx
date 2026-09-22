@@ -1,11 +1,12 @@
 import { useTranslation } from "react-i18next";
 import type { Currency } from "@/api/generated/model";
-import { allCurrencies, orderCurrencies } from "@/components/currency-select/currency-select";
+import { orderCurrencies } from "@/components/currency-select/currency-select";
 import { defineAppFieldGroup } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useCurrencyName } from "@/hooks/use-formatters";
+import { ALL_CURRENCIES } from "@/lib/currency";
 
 const currenciesFieldGroup = defineAppFieldGroup(({ strict }) => ({
   multiCurrency: strict<boolean>(),
@@ -61,7 +62,7 @@ function CurrenciesFieldsGroup({ fields, savedReportingCurrency }: Readonly<Prop
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => field.handleChange([...allCurrencies])}
+                        onClick={() => field.handleChange([...ALL_CURRENCIES])}
                       >
                         {t("settings.currencies.selectAll")}
                       </Button>

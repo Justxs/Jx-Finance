@@ -28,7 +28,7 @@ export function SavedFilters({
   defaultOpen,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories, tags });
+  const filters = useTransactionFilters({ accounts, categories });
   const saved = useSavedFilters();
 
   const known = {

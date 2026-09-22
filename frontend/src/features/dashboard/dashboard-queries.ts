@@ -3,7 +3,7 @@ import type {
   ReportSummaryParams,
   TransactionsParams,
 } from "@/api/generated/model";
-import { monthBounds } from "@/lib/calendar";
+import { monthBounds, previousMonth } from "@/lib/calendar";
 
 export const monthlyTrendParams: MonthlyTrendParams = { months: 6 };
 
@@ -17,6 +17,6 @@ interface SpendingPaceRanges {
 export function spendingPaceRanges(today: Date): SpendingPaceRanges {
   return {
     current: monthBounds(today),
-    previous: monthBounds(new Date(today.getFullYear(), today.getMonth() - 1, 1)),
+    previous: monthBounds(previousMonth(today)),
   };
 }

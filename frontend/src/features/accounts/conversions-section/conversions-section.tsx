@@ -28,6 +28,7 @@ import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
+import { metaLine } from "@/lib/utils";
 import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
 import { ConversionEditDialog } from "./conversion-edit-dialog";
 import { ConversionForm } from "./conversion-form";
@@ -93,9 +94,7 @@ export function ConversionsSection({
           })
         : null;
 
-    return [formatDate(conversion.date), rate, fee, conversion.description]
-      .filter(Boolean)
-      .join(" · ");
+    return metaLine(formatDate(conversion.date), rate, fee, conversion.description);
   }
 
   const remove = useConfirmedDelete(

@@ -14,12 +14,14 @@ import type {
   NotificationsParams,
 } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import {
   Popover,
   PopoverContent,
   PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover/popover";
+import { Rows } from "@/components/ui/rows/rows";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { type FeatureKey, useSettings } from "@/hooks/use-settings";
@@ -169,11 +171,11 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
           </div>
           <div className="max-h-[min(24rem,calc(100dvh-9rem))] overflow-y-auto overscroll-contain wrap-break-word">
             {unreadList.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-                {t("notifications.empty")}
-              </p>
+              <div className="px-4 text-center">
+                <EmptyText>{t("notifications.empty")}</EmptyText>
+              </div>
             ) : (
-              <ul className="divide-y divide-border">
+              <Rows>
                 {unreadList.map((notification) => {
                   const to = destination(notification);
 
@@ -203,7 +205,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
                     </li>
                   );
                 })}
-              </ul>
+              </Rows>
             )}
           </div>
         </PopoverContent>

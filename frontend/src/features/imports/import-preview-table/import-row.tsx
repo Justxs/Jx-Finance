@@ -9,7 +9,7 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
 import type { PreviewRowState } from "./preview-rows";
@@ -42,7 +42,7 @@ export function ImportRow({
 
   const rowCategories = categories.filter((category) => category.type === row.type);
   const name = row.payee || row.description || EMPTY_VALUE;
-  const rowName = [formatDate(row.date), row.payee || row.description].filter(Boolean).join(" · ");
+  const rowName = metaLine(formatDate(row.date), row.payee || row.description);
   const showTransfer = transferOpen || row.looksLikeTransfer || Boolean(row.transferAccountId);
   const filledByRule = Boolean(row.ruleName) && !row.transferAccountId;
   const recalled = row.categorySuggested && !row.ruleName && !row.transferAccountId;
@@ -63,8 +63,7 @@ export function ImportRow({
         row.type === "income" ? INCOME_TONE : "text-foreground",
       )}
     >
-      {row.type === "income" ? "+" : "−"}
-      {money.format(Number(row.amount), row.currency)}
+      {money.formatSigned(Number(row.amount), row.type === "income" ? "+" : "−", row.currency)}
     </span>
   );
 

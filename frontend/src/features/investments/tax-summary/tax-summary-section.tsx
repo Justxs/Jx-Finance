@@ -13,7 +13,12 @@ import { useExportUrl } from "@/hooks/use-export-url";
 import { TAX_SUMMARY_EXPORT_PATH } from "@/lib/export-url";
 import { nameById } from "@/lib/options";
 import { gainTone } from "@/lib/tone";
-import { taxAccountIds, taxSummaryParams, taxYearOptions } from "../investment-queries";
+import {
+  TAX_ACCOUNT_SEPARATOR,
+  taxAccountIds,
+  taxSummaryParams,
+  taxYearOptions,
+} from "../investment-queries";
 import { TaxAccountPicker } from "./tax-account-picker";
 import { TaxCashTable } from "./tax-cash-table";
 import { TaxDisposalsTable } from "./tax-disposals-table";
@@ -95,7 +100,7 @@ export function TaxSummarySection({ accounts }: Readonly<Props>) {
                 void navigate({
                   search: (previous) => ({
                     ...previous,
-                    taxAccounts: next.length === 0 ? undefined : next.join(","),
+                    taxAccounts: next.length === 0 ? undefined : next.join(TAX_ACCOUNT_SEPARATOR),
                   }),
                   replace: true,
                 })

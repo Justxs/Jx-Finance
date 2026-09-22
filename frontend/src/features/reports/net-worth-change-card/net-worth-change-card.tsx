@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
+import { ChangeBadge } from "@/components/change-badge/change-badge";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useMoney } from "@/hooks/use-formatters";
-import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
+import { changeOf } from "@/lib/comparison";
 
 interface Props {
   dateFrom: string;
@@ -30,17 +31,17 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
 
   const start = Number(items[0]?.netWorth ?? 0);
   const end = Number(items.at(-1)?.netWorth ?? 0);
-  const change = end - start;
+  const change = changeOf(end, start);
 
   return (
     <Section>
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
         <SectionTitle>{t("reports.netWorthChange")}</SectionTitle>
-        <p
-          className={`text-xl font-semibold whitespace-nowrap tabular-nums ${change >= 0 ? INCOME_TONE : EXPENSE_TONE}`}
-        >
-          {money.formatSigned(change)}
-        </p>
+        <ChangeBadge
+          change={change}
+          good="up"
+          className="text-xl font-semibold whitespace-nowrap"
+        />
       </div>
       <p className="mt-1 text-xs text-muted-foreground tabular-nums sm:text-right">
         {money.format(start)} → {money.format(end)}

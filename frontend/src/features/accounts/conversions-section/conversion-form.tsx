@@ -20,6 +20,7 @@ import {
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { silentQuery } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {
   isPositiveMoney,
@@ -131,12 +132,7 @@ function ConversionRate({
   const reference = useExchangeRate(
     { from: fromCurrency, to: toCurrency, date },
     {
-      query: {
-        enabled: fromCurrency !== toCurrency && date !== "",
-        retry: false,
-        throwOnError: false,
-        meta: { silent: true },
-      },
+      query: { enabled: fromCurrency !== toCurrency && date !== "", ...silentQuery },
     },
   );
 

@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
-import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
+import { EXPENSE_TONE, gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+
+const NEUTRAL_TONE = "text-foreground";
 
 export function DashboardStats() {
   const { t } = useTranslation();
@@ -15,26 +17,21 @@ export function DashboardStats() {
   const net = income - expense;
   const spentShare = income > 0 ? Math.min(1, expense / income) : 0;
 
-  let netTone = "text-foreground";
-  if (net !== 0) {
-    netTone = net > 0 ? INCOME_TONE : EXPENSE_TONE;
-  }
-
   const rows = [
     {
       label: t("dashboard.monthIncome"),
-      value: income === 0 ? money.format(0) : money.formatSigned(income, "+"),
-      tone: income === 0 ? "text-foreground" : INCOME_TONE,
+      value: money.formatSigned(income, "+"),
+      tone: gainTone(income) ?? NEUTRAL_TONE,
     },
     {
       label: t("dashboard.monthExpense"),
-      value: expense === 0 ? money.format(0) : money.formatSigned(expense, "−"),
-      tone: expense === 0 ? "text-foreground" : EXPENSE_TONE,
+      value: money.formatSigned(expense, "−"),
+      tone: expense === 0 ? NEUTRAL_TONE : EXPENSE_TONE,
     },
     {
       label: t("dashboard.monthNet"),
-      value: net === 0 ? money.format(0) : money.formatSigned(net, "auto"),
-      tone: netTone,
+      value: money.formatSigned(net, "auto"),
+      tone: gainTone(net) ?? NEUTRAL_TONE,
     },
   ];
 

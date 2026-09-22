@@ -8,15 +8,12 @@ import {
 import type { FeatureFlags, SettingsResponse } from "@/api/generated/model";
 import { parseIso, todayInZone } from "@/lib/calendar";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { silentQuery } from "@/lib/mutations";
 
 export type FeatureKey = keyof FeatureFlags;
 
 const settingsQuery = { staleTime: 5 * 60 * 1000, retry: false } as const;
-const quietSettingsQuery = {
-  ...settingsQuery,
-  throwOnError: false,
-  meta: { silent: true },
-} as const;
+const quietSettingsQuery = { ...settingsQuery, ...silentQuery } as const;
 
 export function settingsQueryOptions() {
   return getSettingsQueryOptions({ query: settingsQuery });
@@ -67,6 +64,10 @@ export function useSettingsSuspense(): SettingsResponse {
 
 export function usePublicSettings() {
   return usePublicSettingsQuery({ query: quietSettingsQuery }).data;
+}
+
+export function useEmailEnabled(): boolean {
+  return usePublicSettings()?.emailEnabled ?? false;
 }
 
 export function useFeature(feature: FeatureKey): boolean {

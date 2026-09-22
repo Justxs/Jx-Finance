@@ -2,12 +2,12 @@ import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
-import { Label } from "@/components/ui/label/label";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
@@ -35,7 +35,7 @@ export function TransactionsFiltersDialog({
   defaultOpen = false,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const filters = useTransactionFilters({ accounts, categories, tags });
+  const filters = useTransactionFilters({ accounts, categories });
   const { search, setFilter, activeCount } = filters;
   const [open, setOpen] = useState(defaultOpen);
   const text = useDebouncedDraft(
@@ -90,8 +90,7 @@ export function TransactionsFiltersDialog({
 
       <Modal open={open} onOpenChange={setOpen} title={t("transactions.filtersTitle")}>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-search">{t("transactions.description")}</Label>
+          <FieldShell id="tx-filter-search" label={t("transactions.description")}>
             <Input
               id="tx-filter-search"
               type="search"
@@ -99,40 +98,36 @@ export function TransactionsFiltersDialog({
               value={text.draft}
               onChange={(event) => text.change(event.target.value)}
             />
-          </div>
+          </FieldShell>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-type">{t("transactions.type")}</Label>
+          <FieldShell id="tx-filter-type" label={t("transactions.type")}>
             <SelectField<TransactionTypeFilter>
               id="tx-filter-type"
               value={search.type ?? ""}
               onChange={(value) => setFilter({ type: value || undefined })}
               options={filters.typeOptions}
             />
-          </div>
+          </FieldShell>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-date">{t("transactions.date")}</Label>
+          <FieldShell id="tx-filter-date" label={t("transactions.date")}>
             <DateRangePicker
               id="tx-filter-date"
               value={filters.dateRange}
               onChange={filters.setDateRange}
             />
-          </div>
+          </FieldShell>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-category">{t("transactions.category")}</Label>
+          <FieldShell id="tx-filter-category" label={t("transactions.category")}>
             <SelectField
               id="tx-filter-category"
               value={search.categoryId ?? ""}
               onChange={(value) => setFilter({ categoryId: value || undefined })}
               options={filters.categoryOptions}
             />
-          </div>
+          </FieldShell>
 
           {tags.length > 0 ? (
-            <div className="space-y-1.5">
-              <Label htmlFor="tx-filter-tags">{t("tags.field")}</Label>
+            <FieldShell id="tx-filter-tags" label={t("tags.field")} hint={t("tags.filterHint")}>
               <TagPicker
                 id="tx-filter-tags"
                 tags={tags}
@@ -141,24 +136,19 @@ export function TransactionsFiltersDialog({
                 aria-label={t("tags.field")}
                 aria-describedby="tx-filter-tags-hint"
               />
-              <p id="tx-filter-tags-hint" className="text-xs text-muted-foreground">
-                {t("tags.filterHint")}
-              </p>
-            </div>
+            </FieldShell>
           ) : null}
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-account">{t("transactions.account")}</Label>
+          <FieldShell id="tx-filter-account" label={t("transactions.account")}>
             <SelectField
               id="tx-filter-account"
               value={search.accountId ?? ""}
               onChange={(value) => setFilter({ accountId: value || undefined })}
               options={filters.accountOptions}
             />
-          </div>
+          </FieldShell>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="tx-filter-sort">{t("transactions.sortBy")}</Label>
+          <FieldShell id="tx-filter-sort" label={t("transactions.sortBy")}>
             <SelectField<SortValue>
               id="tx-filter-sort"
               value={sortValue}
@@ -170,7 +160,7 @@ export function TransactionsFiltersDialog({
               }}
               options={sortOptions}
             />
-          </div>
+          </FieldShell>
 
           <div className="flex flex-wrap justify-end gap-2 pt-2">
             <Button type="button" variant="outline" disabled={activeCount === 0} onClick={clearAll}>

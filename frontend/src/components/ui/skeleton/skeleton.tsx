@@ -1,9 +1,10 @@
+import type { ComponentProps } from "react";
 import { Rows } from "@/components/ui/rows/rows";
 import { Panel } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { cn } from "@/lib/utils";
 
-function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
+function Skeleton({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"

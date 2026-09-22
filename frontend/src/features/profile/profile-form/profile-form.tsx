@@ -10,7 +10,7 @@ import {
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { usePublicSettings } from "@/hooks/use-settings";
+import { useEmailEnabled } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
 import { requiredText } from "@/lib/validation";
 
@@ -27,7 +27,7 @@ interface Props {
 
 export function ProfileForm({ profile }: Readonly<Props>) {
   const { t } = useTranslation();
-  const emailEnabled = usePublicSettings()?.emailEnabled ?? false;
+  const emailEnabled = useEmailEnabled();
 
   let reminderHint = t("profile.notifications.billReminderEmailsHint");
   if (!emailEnabled) {

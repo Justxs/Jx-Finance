@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 
@@ -53,12 +53,12 @@ export function RecurringBillRow({
   const overdue = bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < today;
   const isTransfer = bill.shape === "transfer";
 
-  const meta = [
+  const meta = metaLine(
     t(`recurringBills.cadences.${bill.cadence}`),
     bill.amount ? t(`recurringBills.kinds.${bill.kind}`) : null,
     category?.name,
     isTransfer && account && toAccount ? `${account.name} → ${toAccount.name}` : account?.name,
-  ].filter(Boolean);
+  );
 
   return (
     <RowTransition>
@@ -82,7 +82,7 @@ export function RecurringBillRow({
               <span className={cn("tabular-nums", bill.isActive && "text-foreground")}>
                 {t("recurringBills.nextDueDate")}: {formatDate(bill.nextDueDate)}
               </span>
-              {meta.length > 0 ? ` · ${meta.join(" · ")}` : ""}
+              {meta ? ` · ${meta}` : ""}
             </p>
           </div>
           {bill.amount ? (

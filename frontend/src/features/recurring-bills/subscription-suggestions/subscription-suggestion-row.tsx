@@ -12,6 +12,7 @@ import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { metaLine } from "@/lib/utils";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 
 const MAX_LISTED_DATES = 4;
@@ -46,7 +47,7 @@ export function SubscriptionSuggestionRow({
   const name = suggestedName(candidate.description);
   const account = accounts.find((item) => item.id === candidate.accountId);
   const category = categories.find((item) => item.id === candidate.categoryId);
-  const listed = candidate.occurrenceDates.slice(-MAX_LISTED_DATES).map(formatDate).join(" · ");
+  const listed = metaLine(...candidate.occurrenceDates.slice(-MAX_LISTED_DATES).map(formatDate));
 
   return (
     <RowTransition>

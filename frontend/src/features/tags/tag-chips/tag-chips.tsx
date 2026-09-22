@@ -36,7 +36,3 @@ export function TagChips({ tagIds, tagById, className, limit = LIMIT }: Readonly
     </span>
   );
 }
-
-export function tagMapOf(tags: readonly TagResponse[]): ReadonlyMap<string, TagResponse> {
-  return new Map(tags.map((tag) => [tag.id, tag]));
-}
