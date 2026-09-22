@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Households;
 using JxFinance.Infrastructure.BackgroundJobs;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -76,12 +75,10 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
 
         Assert.Equal("household", Assert.Single(events).EntityKind);
         Assert.Equal("created", events[0].Action);
-        await using var scope = Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         Guid?[] personal = [account, category, tag, transaction.Id];
-        Assert.False(await db.AuditEvents.AnyAsync(
+        await WithDbAsync(async db => Assert.False(await db.AuditEvents.AnyAsync(
             e => personal.Contains(e.EntityId),
-            TestContext.Current.CancellationToken));
+            TestContext.Current.CancellationToken)));
     }
 
     [Fact]
@@ -347,12 +344,11 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             EntityId = household,
             Description = "Kept",
         };
-        await using (var scope = Services.CreateAsyncScope())
+        await WithDbAsync(async db =>
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             db.AuditEvents.AddRange(old, kept);
             await db.SaveChangesAsync(TestContext.Current.CancellationToken);
-        }
+        });
 
         await new AuditRetentionJob(
             Services.GetRequiredService<IServiceScopeFactory>(),

@@ -4,7 +4,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.BackgroundJobs;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -162,13 +161,10 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             .Where(n => n.RelatedType == NotificationRelated.Budget)
             .ToList();
 
-    private async Task<InstanceSettings> StoredSettingsAsync()
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync()
-            ?? Services.GetRequiredService<IInstanceSettingsStore>().Defaults();
-    }
+    private Task<InstanceSettings> StoredSettingsAsync() =>
+        WithDbAsync(async db =>
+            await db.InstanceSettings.AsNoTracking().FirstOrDefaultAsync(TestContext.Current.CancellationToken)
+            ?? Services.GetRequiredService<IInstanceSettingsStore>().Defaults());
 
     private Task MoveAlertsIntoThePreviousWindowAsync(BudgetSetup budget) =>
         ExecuteAsync(
