@@ -20,9 +20,9 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
         var source = services.GetRequiredService<AppDbContext>();
         var activeUsers = source.Users.Where(AppUser.IsActive);
         var connections = await source.BrokerConnections
-            .IgnoreQueryFilters()
-            .Where(c => !c.IsDeleted && c.IsEnabled
-                && source.Accounts.IgnoreQueryFilters().Any(a => a.Id == c.AccountId && !a.IsDeleted)
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(c => c.IsEnabled
+                && source.Accounts.IgnoreQueryFilters(QueryFilters.OwnerOnly).Any(a => a.Id == c.AccountId)
                 && activeUsers.Any(u => u.Id == c.UserId))
             .Select(c => new { c.UserId, c.AccountId })
             .ToListAsync(ct);

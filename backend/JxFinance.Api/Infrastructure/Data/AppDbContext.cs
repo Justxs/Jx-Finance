@@ -192,71 +192,90 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         foreach (var entityType in builder.Model.GetEntityTypes())
         {
             var clrType = entityType.ClrType;
-            if (typeof(IAccountScoped).IsAssignableFrom(clrType) && typeof(EntityBase).IsAssignableFrom(clrType))
+            if (!typeof(EntityBase).IsAssignableFrom(clrType))
             {
-                var filter = (LambdaExpression)accountScopedFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
-                entityType.SetQueryFilter(filter);
+                continue;
             }
-            else if (clrType == typeof(TransactionAttachment))
+
+            entityType.SetQueryFilter(QueryFilters.SoftDelete, NotDeletedFilter(clrType));
+            var owner = OwnerFilter(clrType, ownableFilterFactory, shareableFilterFactory, accountScopedFilterFactory);
+            if (owner is not null)
             {
-                entityType.SetQueryFilter(AttachmentFilter());
-            }
-            else if (clrType == typeof(Transfer))
-            {
-                entityType.SetQueryFilter(TransferFilter());
-            }
-            else if (clrType == typeof(Household))
-            {
-                entityType.SetQueryFilter(HouseholdFilter());
-            }
-            else if (clrType == typeof(HouseholdMembership))
-            {
-                entityType.SetQueryFilter(HouseholdMembershipFilter());
-            }
-            else if (typeof(IShareable).IsAssignableFrom(clrType) && typeof(OwnableEntity).IsAssignableFrom(clrType))
-            {
-                var filter = (LambdaExpression)shareableFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
-                entityType.SetQueryFilter(filter);
-            }
-            else if (typeof(OwnableEntity).IsAssignableFrom(clrType))
-            {
-                var filter = (LambdaExpression)ownableFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
-                entityType.SetQueryFilter(filter);
-            }
-            else if (typeof(EntityBase).IsAssignableFrom(clrType))
-            {
-                var parameter = Expression.Parameter(clrType, "entity");
-                var isDeleted = Expression.Property(parameter, nameof(EntityBase.IsDeleted));
-                var filter = Expression.Lambda(Expression.Equal(isDeleted, Expression.Constant(false)), parameter);
-                entityType.SetQueryFilter(filter);
+                entityType.SetQueryFilter(QueryFilters.Owner, owner);
             }
         }
     }
 
+    private LambdaExpression? OwnerFilter(
+        Type clrType,
+        MethodInfo ownableFilterFactory,
+        MethodInfo shareableFilterFactory,
+        MethodInfo accountScopedFilterFactory)
+    {
+        if (typeof(IAccountScoped).IsAssignableFrom(clrType))
+        {
+            return (LambdaExpression)accountScopedFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
+        }
+
+        if (clrType == typeof(TransactionAttachment))
+        {
+            return AttachmentFilter();
+        }
+
+        if (clrType == typeof(Transfer))
+        {
+            return TransferFilter();
+        }
+
+        if (clrType == typeof(Household))
+        {
+            return HouseholdFilter();
+        }
+
+        if (clrType == typeof(HouseholdMembership))
+        {
+            return HouseholdMembershipFilter();
+        }
+
+        if (typeof(IShareable).IsAssignableFrom(clrType) && typeof(OwnableEntity).IsAssignableFrom(clrType))
+        {
+            return (LambdaExpression)shareableFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!;
+        }
+
+        return typeof(OwnableEntity).IsAssignableFrom(clrType)
+            ? (LambdaExpression)ownableFilterFactory.MakeGenericMethod(clrType).Invoke(this, null)!
+            : null;
+    }
+
+    private static LambdaExpression NotDeletedFilter(Type clrType)
+    {
+        var parameter = Expression.Parameter(clrType, "entity");
+        var isDeleted = Expression.Property(parameter, nameof(EntityBase.IsDeleted));
+        return Expression.Lambda(Expression.Equal(isDeleted, Expression.Constant(false)), parameter);
+    }
+
     private Expression<Func<T, bool>> OwnableFilter<T>() where T : OwnableEntity =>
-        entity => !entity.IsDeleted && entity.UserId == CurrentUserId;
+        entity => entity.UserId == CurrentUserId;
 
     private Expression<Func<T, bool>> ShareableFilter<T>() where T : OwnableEntity, IShareable =>
-        entity => !entity.IsDeleted &&
+        entity =>
             (entity.UserId == CurrentUserId ||
                 (entity.Scope == Scope.Shared && entity.HouseholdId != null &&
                     HouseholdMemberships.Any(m => m.HouseholdId == entity.HouseholdId && m.UserId == CurrentUserId))) &&
             (!HasActiveHousehold || entity.Scope == Scope.Personal || entity.HouseholdId == ActiveHouseholdId);
 
     private Expression<Func<T, bool>> AccountScopedFilter<T>() where T : EntityBase, IAccountScoped =>
-        entity => !entity.IsDeleted &&
-            Accounts.Any(a => a.Id == entity.AccountId);
+        entity => Accounts.Any(a => a.Id == entity.AccountId);
 
     private Expression<Func<TransactionAttachment, bool>> AttachmentFilter() =>
-        a => !a.IsDeleted && Transactions.Any(t => t.Id == a.TransactionId);
+        a => Transactions.Any(t => t.Id == a.TransactionId);
 
     private Expression<Func<Transfer, bool>> TransferFilter() =>
-        t => !t.IsDeleted &&
-            Accounts.Any(a => a.Id == t.FromAccountId || a.Id == t.ToAccountId);
+        t => Accounts.Any(a => a.Id == t.FromAccountId || a.Id == t.ToAccountId);
 
     private Expression<Func<Household, bool>> HouseholdFilter() =>
-        h => !h.IsDeleted && HouseholdMemberships.Any(m => m.HouseholdId == h.Id && m.UserId == CurrentUserId);
+        h => HouseholdMemberships.Any(m => m.HouseholdId == h.Id && m.UserId == CurrentUserId);
 
     private Expression<Func<HouseholdMembership, bool>> HouseholdMembershipFilter() =>
-        m => !m.IsDeleted && HouseholdMemberships.Any(m2 => m2.HouseholdId == m.HouseholdId && m2.UserId == CurrentUserId);
+        m => HouseholdMemberships.Any(m2 => m2.HouseholdId == m.HouseholdId && m2.UserId == CurrentUserId);
 }

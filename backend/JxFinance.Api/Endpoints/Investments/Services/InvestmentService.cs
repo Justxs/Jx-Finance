@@ -407,7 +407,9 @@ public sealed class InvestmentService(
         }
 
         if (security.Currency != request.Currency
-            && await db.InvestmentTransactions.IgnoreQueryFilters().AnyAsync(t => t.SecurityId == id && !t.IsDeleted, cancellationToken))
+            && await db.InvestmentTransactions
+                .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+                .AnyAsync(t => t.SecurityId == id, cancellationToken))
         {
             return new DomainError(
                 ErrorCodes.ValueLocked,

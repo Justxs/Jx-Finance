@@ -45,8 +45,8 @@ public static class DemoDataCommand
             throw new InvalidOperationException("This user already has accounts. Demo data is only added to an empty user; run 'just db-reset' for a clean database.");
 
         await StarterCategories.SeedAsync(db, user.Id, CancellationToken.None);
-        var categories = await db.Categories.IgnoreQueryFilters()
-            .Where(c => c.UserId == user.Id && !c.IsDeleted)
+        var categories = await db.Categories.IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(c => c.UserId == user.Id)
             .ToDictionaryAsync(c => c.Name, c => c.Id);
 
         var today = scope.ServiceProvider.GetRequiredService<IClock>().Today;

@@ -37,8 +37,8 @@ public sealed class RecurringBillReminderJob(
         var todayStartUtc = clock.StartOfDay(today);
 
         var dueBills = await db.RecurringBills
-            .IgnoreQueryFilters()
-            .Where(b => !b.IsDeleted && b.IsActive && b.NextDueDate <= today.AddDays(b.RemindDaysBefore))
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(b => b.IsActive && b.NextDueDate <= today.AddDays(b.RemindDaysBefore))
             .ToListAsync(ct);
         if (dueBills.Count == 0)
         {
@@ -47,9 +47,8 @@ public sealed class RecurringBillReminderJob(
 
         var billIds = dueBills.Select(b => (Guid?)b.Id.Value).ToList();
         var remindedToday = await db.Notifications
-            .IgnoreQueryFilters()
-            .Where(n => !n.IsDeleted
-                && n.RelatedType == NotificationRelated.RecurringBill
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(n => n.RelatedType == NotificationRelated.RecurringBill
                 && billIds.Contains(n.RelatedId)
                 && n.CreatedAt >= todayStartUtc)
             .Select(n => n.RelatedId!.Value)

@@ -99,8 +99,8 @@ public sealed class CategoryService(
             .ToListAsync(cancellationToken);
         var lineParents = lines.Select(l => l.TransactionId).Distinct().ToList();
         var liveLineParents = await db.Transactions
-            .IgnoreQueryFilters()
-            .Where(t => lineParents.Contains(t.Id) && !t.IsDeleted)
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(t => lineParents.Contains(t.Id))
             .Select(t => t.Id)
             .ToListAsync(cancellationToken);
         var bills = await db.RecurringBills
@@ -109,8 +109,8 @@ public sealed class CategoryService(
             .Select(b => new { b.Id, b.IsDeleted })
             .ToListAsync(cancellationToken);
         var budgets = await db.Budgets
-            .IgnoreQueryFilters()
-            .Where(b => b.CategoryId == categoryId && !b.IsDeleted)
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(b => b.CategoryId == categoryId)
             .Select(b => b.Id)
             .ToListAsync(cancellationToken);
 
@@ -141,7 +141,7 @@ public sealed class CategoryService(
             .ExecuteUpdateAsync(s => s.SetProperty(l => l.CategoryId, (CategoryId?)null), cancellationToken);
         await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.CategoryId, (CategoryId?)null), cancellationToken);
-        await db.Budgets.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId && !b.IsDeleted)
+        await db.Budgets.IgnoreQueryFilters(QueryFilters.OwnerOnly).Where(b => b.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(b => b.IsDeleted, true), cancellationToken);
         db.Categories.Remove(category);
         await db.SaveChangesAsync(cancellationToken);
