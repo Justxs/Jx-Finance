@@ -29,6 +29,15 @@ public sealed class TransferAmountResolver(AppDbContext db, IExchangeRateService
             return new DomainError(ErrorCodes.ReferenceNotFound, "Destination account does not exist.");
         }
 
+        return Resolve(draft, fromCurrency, toCurrency, currenciesInUse);
+    }
+
+    public Result<TransferAmounts> Resolve(
+        TransferDraft draft,
+        Currency fromCurrency,
+        Currency toCurrency,
+        IReadOnlyCollection<Currency> currenciesInUse)
+    {
         var sent = new Money(draft.Amount, draft.Currency ?? fromCurrency);
         var receivedCurrency = draft.ReceivedCurrency ?? (draft.Currency is null ? toCurrency : sent.Currency);
         if (receivedCurrency != sent.Currency && draft.ReceivedAmount is null)

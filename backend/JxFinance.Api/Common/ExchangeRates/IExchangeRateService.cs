@@ -22,4 +22,6 @@ public interface IExchangeRateService
     Task<int> SyncAsync(bool force, CancellationToken cancellationToken);
 
     Task EnsureRangeAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
+
+    Task PreloadAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken);
 }
