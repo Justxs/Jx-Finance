@@ -7,6 +7,7 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Formats;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
@@ -31,7 +32,8 @@ namespace JxFinance.Endpoints.Imports.Services;
 [RegisterService<IImportService>(LifeTime.Scoped)]
 public sealed class ImportService(
     AppDbContext db,
-    IExchangeRateService rates,
+    ITransactionValuation valuations,
+    ITransferAmountResolver transferAmounts,
     IReferenceGuard references,
     ICategorizationRuleService rules,
     IInstanceSettingsStore settings) : IImportService
@@ -140,7 +142,8 @@ public sealed class ImportService(
                 continue;
             }
 
-            var amount = new Money(row.Amount, row.Currency ?? accountCurrency.Value);
+            var currency = row.Currency ?? accountCurrency.Value;
+            var amount = new Money(row.Amount, currency);
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
             if (categoryId is { } chosen && categoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
@@ -150,7 +153,11 @@ public sealed class ImportService(
             if (row.TransferAccountId is { } otherId)
             {
                 var otherAccountId = new AccountId(otherId);
-                if (otherAccountId == accountId || await references.AccountExistsAsync(otherAccountId, cancellationToken) is not null)
+                var otherCurrency = await db.Accounts
+                    .Where(a => a.Id == otherAccountId)
+                    .Select(a => (Currency?)a.StartingBalance.Currency)
+                    .FirstOrDefaultAsync(cancellationToken);
+                if (otherAccountId == accountId || otherCurrency is null)
                     return new DomainError(ErrorCodes.ReferenceNotFound, "Choose another accessible account for the transfer.");
                 var fromId = row.Type == FlowType.Expense ? accountId : otherAccountId;
                 var toId = row.Type == FlowType.Expense ? otherAccountId : accountId;
@@ -170,14 +177,27 @@ public sealed class ImportService(
                 }
                 else
                 {
+                    var draft = row.Type == FlowType.Expense
+                        ? new TransferDraft(fromId, toId, row.Amount, currency, null, otherCurrency)
+                        : new TransferDraft(fromId, toId, row.Amount, otherCurrency, null, currency);
+                    var amounts = await transferAmounts.ResolveAsync(draft, [], cancellationToken);
+                    if (!amounts.TryGetValue(out var resolved))
+                    {
+                        return amounts.Error.Code == ErrorCodes.TransferReceivedAmountRequired
+                            ? new DomainError(
+                                ErrorCodes.TransferReceivedAmountRequired,
+                                "The other account holds a different currency. Record this transfer under Transfers with the received amount.")
+                            : amounts.Error;
+                    }
+
                     transfer = new Transfer
                     {
                         FromAccountId = fromId,
                         ToAccountId = toId,
-                        Amount = amount,
-                        ReceivedAmount = amount,
+                        Amount = resolved.Sent,
+                        ReceivedAmount = resolved.Received,
                         Date = row.Date,
-                        Description = row.Description
+                        Description = OptionalText.Normalize(row.Description),
                     };
                     db.Transfers.Add(transfer);
                 }
@@ -188,10 +208,10 @@ public sealed class ImportService(
             if (row.ExistingTransferId is not null)
                 return new DomainError(ErrorCodes.Required, "Choose the other account before matching a transfer.");
 
-            var reporting = await rates.ToReportingAsync(amount, row.Date, cancellationToken);
-            if (reporting.IsFailure)
+            var value = await valuations.ValueAsync(accountId, row.Amount, currency, row.Date, [], cancellationToken);
+            if (!value.TryGetValue(out var valued))
             {
-                return reporting.Error;
+                return value.Error;
             }
 
             var created = new Transaction
@@ -199,8 +219,8 @@ public sealed class ImportService(
                 AccountId = accountId,
                 CategoryId = categoryId,
                 Type = row.Type,
-                Amount = amount,
-                ReportingAmount = reporting.Value,
+                Amount = valued.Amount,
+                ReportingAmount = valued.ReportingAmount,
                 Date = row.Date,
                 Description = OptionalText.Normalize(row.Description),
                 Source = TransactionSource.Imported,

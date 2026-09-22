@@ -24,7 +24,7 @@ namespace JxFinance.Endpoints.RecurringBills.Services;
 [RegisterService<IRecurringBillService>(LifeTime.Scoped)]
 public sealed class RecurringBillService(
     AppDbContext db,
-    IExchangeRateService rates,
+    ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions,
     ITransferService transfers) : IRecurringBillService
@@ -143,7 +143,7 @@ public sealed class RecurringBillService(
     {
         if (bill.Kind == RecurringBillKind.Fixed)
         {
-            return bill.Amount!.Value.Amount;
+            return bill.Amount!.Value;
         }
 
         if (request.Amount is not { } confirmed || confirmed <= 0 || !DecimalRules.FitsMoney(confirmed))
@@ -182,13 +182,19 @@ public sealed class RecurringBillService(
             return referenceError;
         }
 
+        var value = await valuations.ValueAsync(accountId.Value, amount, null, bill.NextDueDate, [], cancellationToken);
+        if (!value.TryGetValue(out var valued))
+        {
+            return value.Error;
+        }
+
         var transaction = new Transaction
         {
             AccountId = accountId.Value,
             CategoryId = bill.CategoryId,
             Type = flow,
-            Amount = new Money(amount, rates.ReportingCurrency),
-            ReportingAmount = amount,
+            Amount = valued.Amount,
+            ReportingAmount = valued.ReportingAmount,
             Date = bill.NextDueDate,
             Description = bill.Name,
             Source = TransactionSource.Manual,

@@ -33,7 +33,7 @@ public sealed class TransactionService(
     AppDbContext db,
     ICurrentUser currentUser,
     TransactionMapper mapper,
-    IExchangeRateService rates,
+    ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions,
     IOptions<AppOptions> options) : ITransactionService
@@ -473,21 +473,16 @@ public sealed class TransactionService(
         DateOnly date,
         CancellationToken cancellationToken)
     {
-        var typedAccountId = new AccountId(accountId);
-        var currency = requested ?? await db.Accounts
-            .Where(a => a.Id == typedAccountId)
-            .Select(a => a.StartingBalance.Currency)
-            .FirstAsync(cancellationToken);
-
-        if (currency != existing && rates.UnusableReason(currency) is { } currencyError)
-        {
-            return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
-        }
-
-        var reporting = await rates.ToReportingAsync(new Money(amount, currency), date, cancellationToken);
-        return reporting.IsSuccess
-            ? (currency, reporting.Value)
-            : reporting.Error;
+        var value = await valuations.ValueAsync(
+            new AccountId(accountId),
+            amount,
+            requested,
+            date,
+            existing is { } inUse ? [inUse] : [],
+            cancellationToken);
+        return value.TryGetValue(out var valued)
+            ? (valued.Amount.Currency, valued.ReportingAmount)
+            : value.Error;
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(

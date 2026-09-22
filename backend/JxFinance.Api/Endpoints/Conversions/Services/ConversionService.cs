@@ -26,6 +26,7 @@ public sealed class ConversionService(
     AppDbContext db,
     ConversionMapper mapper,
     IExchangeRateService rates,
+    ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions) : IConversionService
 {
@@ -75,9 +76,11 @@ public sealed class ConversionService(
         if (request.FeeAmount is { } requestedFee)
         {
             var terms = await ResolveFeeAsync(
+                accountId,
                 new Money(requestedFee, request.FeeCurrency ?? request.FromCurrency),
                 request.FeeCategoryId,
                 request.Date,
+                [],
                 cancellationToken);
             if (terms.IsFailure)
             {
@@ -138,7 +141,13 @@ public sealed class ConversionService(
         var description = FeeDescription(request.FromCurrency, request.ToCurrency);
         if (requestedFee is { } feeAmount)
         {
-            var terms = await ResolveFeeAsync(feeAmount, request.FeeCategoryId, request.Date, cancellationToken);
+            var terms = await ResolveFeeAsync(
+                conversion.AccountId,
+                feeAmount,
+                request.FeeCategoryId,
+                request.Date,
+                [conversion.FromAmount.Currency, conversion.ToAmount.Currency],
+                cancellationToken);
             if (terms.IsFailure)
             {
                 return terms.Error;
@@ -227,9 +236,11 @@ public sealed class ConversionService(
     };
 
     private async Task<Result<FeeTerms>> ResolveFeeAsync(
+        AccountId accountId,
         Money amount,
         Guid? categoryId,
         DateOnly date,
+        IReadOnlyCollection<Currency> currenciesInUse,
         CancellationToken cancellationToken)
     {
         CategoryId? feeCategoryId = categoryId is { } id ? new CategoryId(id) : null;
@@ -239,10 +250,10 @@ public sealed class ConversionService(
             return categoryError;
         }
 
-        var reporting = await rates.ToReportingAsync(amount, date, cancellationToken);
-        return reporting.IsFailure
-            ? reporting.Error
-            : new FeeTerms(amount, feeCategoryId, reporting.Value);
+        var value = await valuations.ValueAsync(accountId, amount.Amount, amount.Currency, date, currenciesInUse, cancellationToken);
+        return value.TryGetValue(out var valued)
+            ? new FeeTerms(valued.Amount, feeCategoryId, valued.ReportingAmount)
+            : value.Error;
     }
 
     private sealed record FeeTerms(Money Amount, CategoryId? CategoryId, decimal ReportingAmount);

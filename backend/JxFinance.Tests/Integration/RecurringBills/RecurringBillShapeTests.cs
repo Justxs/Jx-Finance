@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using System.Text.Json.Nodes;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
@@ -29,6 +30,46 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal("250.00", transaction.Amount);
         Assert.Equal(category, transaction.CategoryId);
         Assert.Equal("350.00", await CurrentBalanceAsync(account));
+    }
+
+    [Fact]
+    public async Task Confirming_an_entry_books_it_in_the_currency_of_the_paying_account()
+    {
+        var dollars = await CreateAccountAsync("500.00", currency: "usd");
+        var entry = await CreateEntryAsync("expense", "110.00", accountId: dollars);
+
+        var confirmed = await ConfirmOkAsync(entry);
+
+        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}");
+        Assert.Equal("usd", transaction!.Currency);
+        Assert.Equal("110.00", transaction.Amount);
+        Assert.Equal("100.00", transaction.ReportingAmount);
+        Assert.Equal("390.00", await CurrentBalanceAsync(dollars));
+    }
+
+    [Fact]
+    public async Task Confirming_an_entry_on_an_account_in_a_disabled_currency_is_refused()
+    {
+        var pounds = await CreateAccountAsync("500.00", currency: "gbp");
+        var entry = await CreateEntryAsync("expense", "40.00", accountId: pounds);
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var restricted = original.DeepClone().AsObject();
+        restricted["enabledCurrencies"] = new JsonArray("usd");
+
+        try
+        {
+            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
+
+            var response = await ConfirmAsync(entry.Id, new { expectedDueDate = entry.NextDueDate });
+
+            await AssertRejectedAsync(response, "currency.disabled");
+        }
+        finally
+        {
+            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+        }
+
+        Assert.Equal("500.00", await CurrentBalanceAsync(pounds));
     }
 
     [Fact]

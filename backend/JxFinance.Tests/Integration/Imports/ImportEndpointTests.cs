@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
+using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
@@ -148,6 +149,64 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("90.00", await CurrentBalanceAsync(source));
     }
 
+    [Theory]
+    [InlineData("expense")]
+    [InlineData("income")]
+    public async Task A_transfer_row_to_an_account_in_another_currency_is_refused(string type)
+    {
+        var euros = await CreateAccountAsync("100.00");
+        var dollars = await CreateAccountAsync("100.00", currency: "usd");
+
+        var response = await Client.PostAsJsonAsync(
+            "/api/import/swedbank/confirm",
+            new { accountId = euros, rows = new[] { Row("cross-currency", type: type, transferAccountId: dollars) } });
+
+        await AssertRejectedAsync(response, "transfer.receivedAmountRequired");
+        Assert.Equal("100.00", await CurrentBalanceAsync(euros));
+        Assert.Equal("100.00", await CurrentBalanceAsync(dollars));
+    }
+
+    [Fact]
+    public async Task A_transfer_row_keeps_the_description_trimmed()
+    {
+        var source = await CreateAccountAsync("100.00");
+        var destination = await CreateAccountAsync("100.00");
+
+        await ConfirmAsync(source, Row("trimmed", description: "  Savings  ", transferAccountId: destination));
+
+        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        Assert.Equal("Savings", transfers!.Items.Single(t => t.FromAccountId == source).Description);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task A_row_in_a_disabled_currency_is_refused(bool asTransfer)
+    {
+        var account = await CreateAccountAsync("100.00");
+        Guid? destination = asTransfer ? await CreateAccountAsync("0.00", currency: "gbp") : null;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var restricted = original.DeepClone().AsObject();
+        restricted["enabledCurrencies"] = new JsonArray("usd");
+
+        try
+        {
+            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
+
+            var response = await Client.PostAsJsonAsync(
+                "/api/import/swedbank/confirm",
+                new { accountId = account, rows = new[] { Row("pounds", currency: "gbp", transferAccountId: destination) } });
+
+            await AssertRejectedAsync(response, "currency.disabled");
+        }
+        finally
+        {
+            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+        }
+
+        Assert.Equal("100.00", await CurrentBalanceAsync(account));
+    }
+
     private async Task<Guid> CreateTransferAsync(Guid source, Guid destination) =>
         (await PostAsync<IdDto>(
             Client,
@@ -182,8 +241,9 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         DateOnly? date = null,
         string? description = null,
         Guid? transferAccountId = null,
-        Guid? existingTransferId = null) =>
-        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId };
+        Guid? existingTransferId = null,
+        string? currency = null) =>
+        new { importRef, amount, type, date = date ?? new DateOnly(2026, 9, 1), description, transferAccountId, existingTransferId, currency };
 
     private sealed record PreviewRowDto(
         string ImportRef,

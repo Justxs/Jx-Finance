@@ -58,6 +58,25 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
     }
 
     [Fact]
+    public async Task Payments_in_another_currency_than_the_account_are_not_mixed_into_the_amount()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync(client: member);
+        var name = UniqueName();
+        foreach (var date in MonthlyDates(3))
+        {
+            await SpendAsync(member, account, "9.99", date, name);
+            await RecordTransactionAsync(
+                member,
+                new { accountId = account, type = "expense", amount = "50.00", currency = "usd", date, description = name });
+        }
+
+        var candidate = await CandidateAsync(member, name);
+
+        Assert.Equal("9.99", candidate.TypicalAmount);
+    }
+
+    [Fact]
     public async Task An_amount_that_swings_wildly_is_not_a_subscription()
     {
         using var member = await CreateUserClientAsync();

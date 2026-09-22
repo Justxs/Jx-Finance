@@ -1,7 +1,6 @@
 using FastEndpoints;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
-using JxFinance.Domain.Common;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -29,7 +28,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
         bill.Name = input.Name.Trim();
         bill.Shape = input.Shape;
         bill.Kind = input.Kind;
-        bill.Amount = input.Amount is { } amount ? new Money(amount) : null;
+        bill.Amount = input.Amount;
         bill.CategoryId = input.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
         bill.AccountId = input.AccountId is { } accountId ? new AccountId(accountId) : null;
         bill.ToAccountId = input.ToAccountId is { } toAccountId ? new AccountId(toAccountId) : null;
@@ -47,7 +46,7 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
         bill.Name,
         bill.Shape,
         bill.Kind,
-        bill.Amount?.Amount,
+        bill.Amount,
         bill.CategoryId?.Value,
         bill.AccountId?.Value,
         bill.ToAccountId?.Value,
