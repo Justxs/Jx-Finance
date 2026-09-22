@@ -148,7 +148,7 @@ export async function customFetch<T>(url: string, options?: RequestInit): Promis
   return readBody(response);
 }
 
-export interface DownloadedFile {
+interface DownloadedFile {
   blob: Blob;
   filename: string | undefined;
 }

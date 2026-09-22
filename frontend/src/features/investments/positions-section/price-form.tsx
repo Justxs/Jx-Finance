@@ -7,7 +7,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { quantity, requiredValue } from "@/lib/validation";
 
-export interface PriceFormValues {
+interface PriceFormValues {
   lastPrice: string;
   lastPriceDate: string;
 }

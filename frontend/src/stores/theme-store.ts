@@ -13,8 +13,8 @@ export { fonts, palettes, textSizes };
 
 export type Theme = NonNullable<Preferences["theme"]>;
 export type Palette = Preferences["palette"];
-export type Font = Preferences["font"];
-export type TextSize = Preferences["textSize"];
+type Font = Preferences["font"];
+type TextSize = Preferences["textSize"];
 
 function systemTheme(): Theme {
   return globalThis.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";

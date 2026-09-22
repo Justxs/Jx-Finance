@@ -20,7 +20,7 @@ const DIALOG_SELECTOR = '[role="dialog"], [role="alertdialog"]';
 
 export const SEARCH_SHORTCUT_TARGET = "search";
 
-export const SEARCH_TARGET_SELECTOR = `[data-shortcut="${SEARCH_SHORTCUT_TARGET}"]`;
+const SEARCH_TARGET_SELECTOR = `[data-shortcut="${SEARCH_SHORTCUT_TARGET}"]`;
 
 type ShortcutAction =
   | { type: "navigate"; to: RoutePath; search?: Record<string, unknown> }
@@ -131,7 +131,7 @@ export interface ShortcutRouter {
   navigate: (options: { to: RoutePath; search?: Record<string, unknown> }) => unknown;
 }
 
-export interface ShortcutRuntime {
+interface ShortcutRuntime {
   toggleHelp: () => void;
   isHelpOpen: () => boolean;
   togglePalette: () => void;

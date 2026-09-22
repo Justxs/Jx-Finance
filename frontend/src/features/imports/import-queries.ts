@@ -1,6 +1,6 @@
 import type { TransactionsParams } from "@/api/generated/model";
 
-export const RECALL_PAGE_SIZE = 200;
+const RECALL_PAGE_SIZE = 200;
 
 export const recallParams: TransactionsParams = {
   page: 1,

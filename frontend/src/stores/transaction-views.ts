@@ -47,9 +47,9 @@ const templateSchema = z.object({
   }),
 });
 
-export type SavedFilter = z.output<typeof savedFilterSchema>;
-export type SavedFilterValue = SavedFilter["filter"];
-export type TransactionTemplate = z.output<typeof templateSchema>;
+type SavedFilter = z.output<typeof savedFilterSchema>;
+type SavedFilterValue = SavedFilter["filter"];
+type TransactionTemplate = z.output<typeof templateSchema>;
 export type TransactionTemplateValues = TransactionTemplate["values"];
 
 const storage = browserStorage();
@@ -62,7 +62,7 @@ const savedFilterOptions = localStorageCollectionOptions({
   getKey: (row) => row.id,
 });
 
-export const savedFiltersCollection = createCollection({
+const savedFiltersCollection = createCollection({
   ...savedFilterOptions,
   startSync: true,
   sync: {
@@ -79,7 +79,7 @@ const templateOptions = localStorageCollectionOptions({
   getKey: (row) => row.id,
 });
 
-export const transactionTemplatesCollection = createCollection({
+const transactionTemplatesCollection = createCollection({
   ...templateOptions,
   startSync: true,
   sync: {
@@ -138,7 +138,7 @@ export function useTransactionTemplates(): TransactionTemplate[] {
   return useSyncExternalStore(onTemplatesChange, readTransactionTemplates);
 }
 
-export function trimmedName(name: string) {
+function trimmedName(name: string) {
   return name.trim().slice(0, SAVED_NAME_MAX_LENGTH);
 }
 

@@ -1,9 +1,9 @@
 import type { Currency, FlowType, TransactionResponse } from "@/api/generated/model";
 import { normalizeMoney } from "@/lib/validation";
 import type { TransactionTemplateValues } from "@/stores/transaction-views";
-import type { TransactionFormValues } from "./transaction-form";
+import type { TransactionFormValues } from "./transaction-schema";
 
-export interface TransactionDraftLine {
+interface TransactionDraftLine {
   categoryId: string | null;
   amount: string;
   description: string | null;

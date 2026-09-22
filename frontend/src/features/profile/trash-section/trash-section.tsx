@@ -13,8 +13,8 @@ import { Tag } from "@/components/ui/tag/tag";
 import { useDateTime } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 
-export const TRASH_PAGE_SIZE = 10;
-export const TRASH_RETENTION_DAYS = 30;
+const TRASH_PAGE_SIZE = 10;
+const TRASH_RETENTION_DAYS = 30;
 
 interface RowProps {
   entry: TrashEntryResponse;

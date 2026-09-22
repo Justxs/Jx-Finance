@@ -52,7 +52,7 @@ interface Paged<TItem> {
   total: number;
 }
 
-export function withoutItem<TItem extends Identified>(
+function withoutItem<TItem extends Identified>(
   list: readonly TItem[],
   { id }: Identified,
 ): TItem[] {

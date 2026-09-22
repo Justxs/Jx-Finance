@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useExchangeRate } from "@/api/generated";
 import {
   type AccountResponse,
   type CategoryResponse,
@@ -11,52 +10,28 @@ import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/co
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import {
-  EMPTY_VALUE,
-  useIsoDate,
-  useRateFormat,
-  useUsableCurrencies,
-} from "@/hooks/use-formatters";
+import { useUsableCurrencies } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
-import { silentQuery } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {
-  isPositiveMoney,
-  normalizeMoney,
   optionalPositiveMoney,
   optionalText,
   positiveMoney,
   requiredValue,
 } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
+import { ConversionRate } from "./conversion-rate";
+import {
+  type ConversionFieldValues,
+  type ConversionFormValues,
+  buildValues,
+  otherCurrency,
+  valuesOf,
+} from "./conversion-values";
 
-export interface ConversionFormValues {
-  accountId: string;
-  fromAmount: string;
-  fromCurrency: Currency;
-  toAmount: string;
-  toCurrency: Currency;
-  date: string;
-  description: string | null;
-  feeAmount: string | null;
-  feeCurrency: Currency | null;
-  feeCategoryId: string | null;
-}
-
-interface FormValues {
-  accountId: string;
-  fromAmount: string;
-  fromCurrency: Currency;
-  toAmount: string;
-  toCurrency: Currency;
-  date: string;
-  description: string;
-  feeAmount: string;
-  feeCurrency: Currency;
-  feeCategoryId: string;
-}
+export type { ConversionFormValues } from "./conversion-values";
 
 interface Props {
   accounts: AccountResponse[];
@@ -67,100 +42,6 @@ interface Props {
   pending: boolean;
   onSubmit: (values: ConversionFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
-}
-
-interface RateProps {
-  fromAmount: string;
-  fromCurrency: Currency;
-  toAmount: string;
-  toCurrency: Currency;
-  date: string;
-}
-
-function otherCurrency(
-  account: AccountResponse | undefined,
-  sold: Currency,
-  usable: readonly Currency[],
-): Currency {
-  const held = heldCurrencies(account).find((currency) => currency !== sold);
-
-  return held ?? usable.find((currency) => currency !== sold) ?? sold;
-}
-
-function buildValues(value: FormValues): ConversionFormValues {
-  const hasFee = value.feeAmount.trim() !== "";
-
-  return {
-    accountId: value.accountId,
-    fromAmount: value.fromAmount,
-    fromCurrency: value.fromCurrency,
-    toAmount: value.toAmount,
-    toCurrency: value.toCurrency,
-    date: value.date,
-    description: value.description.trim() || null,
-    feeAmount: hasFee ? value.feeAmount : null,
-    feeCurrency: hasFee ? value.feeCurrency : null,
-    feeCategoryId: hasFee && value.feeCategoryId !== "" ? value.feeCategoryId : null,
-  };
-}
-
-function valuesOf(conversion: ConversionResponse): FormValues {
-  return {
-    accountId: conversion.accountId,
-    fromAmount: conversion.fromAmount,
-    fromCurrency: conversion.fromCurrency,
-    toAmount: conversion.toAmount,
-    toCurrency: conversion.toCurrency,
-    date: conversion.date,
-    description: conversion.description ?? "",
-    feeAmount: conversion.feeAmount ?? "",
-    feeCurrency: conversion.feeCurrency ?? conversion.fromCurrency,
-    feeCategoryId: conversion.feeCategoryId ?? "",
-  };
-}
-
-function ConversionRate({
-  fromAmount,
-  fromCurrency,
-  toAmount,
-  toCurrency,
-  date,
-}: Readonly<RateProps>) {
-  const { t } = useTranslation();
-  const formatDate = useIsoDate();
-  const rateFormat = useRateFormat();
-  const reference = useExchangeRate(
-    { from: fromCurrency, to: toCurrency, date },
-    {
-      query: { enabled: fromCurrency !== toCurrency && date !== "", ...silentQuery },
-    },
-  );
-
-  const from = fromCurrency.toUpperCase();
-  const to = toCurrency.toUpperCase();
-  const hasAmounts = isPositiveMoney(fromAmount) && isPositiveMoney(toAmount);
-  const yourRate = hasAmounts
-    ? Number(normalizeMoney(toAmount)) / Number(normalizeMoney(fromAmount))
-    : null;
-
-  return (
-    <dl className="col-span-full space-y-1 border-y border-rule py-2.5 text-sm">
-      <div className="flex justify-between gap-3">
-        <dt className="text-muted-foreground">{t("conversions.yourRate")}</dt>
-        <dd className="font-semibold tabular-nums">
-          {yourRate === null ? EMPTY_VALUE : `1 ${from} = ${rateFormat.format(yourRate)} ${to}`}
-        </dd>
-      </div>
-      <div className="flex justify-between gap-3">
-        <dt className="text-muted-foreground">{t("conversions.referenceRate")}</dt>
-        <dd className="tabular-nums" aria-busy={reference.isFetching}>
-          {reference.data
-            ? `1 ${from} = ${rateFormat.format(Number(reference.data.rate))} ${to} · ${formatDate(reference.data.asOf)}`
-            : EMPTY_VALUE}
-        </dd>
-      </div>
-    </dl>
-  );
 }
 
 export function ConversionForm({
@@ -198,7 +79,7 @@ export function ConversionForm({
   const initialAccount = accounts.find((account) => account.id === accountId) ?? accounts[0];
   const initialSold = initialAccount?.currency ?? DEFAULT_CURRENCY;
 
-  const defaultValues: FormValues = conversion
+  const defaultValues: ConversionFieldValues = conversion
     ? valuesOf(conversion)
     : {
         accountId: initialAccount?.id ?? "",

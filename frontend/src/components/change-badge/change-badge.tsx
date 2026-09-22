@@ -5,7 +5,7 @@ import type { Change, ChangeDirection } from "@/lib/comparison";
 import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
-export type ChangeGood = "up" | "down" | "neither";
+type ChangeGood = "up" | "down" | "neither";
 
 interface Props {
   change: Change | null;

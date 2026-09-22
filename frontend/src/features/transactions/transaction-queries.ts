@@ -1,6 +1,6 @@
 import type { FlowType, SortDirection, TransactionSortField } from "@/api/generated/model";
 
-export interface TransactionsView {
+interface TransactionsView {
   page: number;
   search?: string;
   accountId?: string;

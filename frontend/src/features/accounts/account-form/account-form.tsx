@@ -29,7 +29,7 @@ import {
 import { useSharingDefaults } from "@/stores/active-household-store";
 import { accountTypes } from "../account-types";
 
-export interface AccountFormValues {
+interface AccountFormValues {
   name: string;
   description: string | null;
   iban: string | null;

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/popover/popover";
 import { SAVED_NAME_MAX_LENGTH } from "@/stores/transaction-views";
 
-export interface SavedListItem {
+interface SavedListItem {
   id: string;
   name: string;
   note?: string;

@@ -36,7 +36,7 @@ interface FormValues {
   isActive: boolean;
 }
 
-export type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
+type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
 
 interface Props {
   bill?: RecurringBillResponse;

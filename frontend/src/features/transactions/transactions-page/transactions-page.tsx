@@ -4,22 +4,13 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
-  type CreateTransactionMutationVariables,
   getTransactionsQueryKey,
-  useBulkCategorizeTransactions,
-  useBulkTagTransactions,
-  useCreateTransaction,
-  useDeleteTransaction,
   useAccountsSuspense,
   useCategoriesSuspense,
   useTagsSuspense,
   useTransactionsSuspense,
-  useUpdateTransaction,
 } from "@/api/generated";
-import type {
-  PagedResponseOfTransactionResponse,
-  TransactionResponse,
-} from "@/api/generated/model";
+import type { TransactionResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
@@ -28,16 +19,13 @@ import { Panel } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
-import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
+import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
-import { silent } from "@/lib/mutations";
-import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { byId, nameById } from "@/lib/options";
-import { normalizeMoney } from "@/lib/validation";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
 import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
-import { optimisticId, transactionName } from "../transaction-amount";
+import { transactionName } from "../transaction-amount";
 import {
   type TransactionDraft,
   type TransactionFormValues,
@@ -56,19 +44,13 @@ import {
 } from "../transactions-table";
 import { TransactionsToolbar } from "../transactions-toolbar/transactions-toolbar";
 import { TransactionsTotals } from "../transactions-totals/transactions-totals";
-
-const NO_SELECTION: ReadonlySet<string> = new Set();
-
-interface SelectionState {
-  viewKey: string;
-  ids: ReadonlySet<string>;
-}
+import { useTransactionMutations } from "./use-transaction-mutations";
+import { useTransactionSelection } from "./use-transaction-selection";
 
 export function TransactionsPage() {
   const { t } = useTranslation();
   const { defaultPageSize: pageSize } = useSettingsSuspense();
   const money = useMoney();
-  const reportingCurrency = useReportingCurrency();
   const formatDate = useIsoDate();
 
   const { new: createOpen = false, ...view } = useSearch({ from: "/transactions" });
@@ -79,8 +61,7 @@ export function TransactionsPage() {
   const navigate = useNavigate({ from: "/transactions" });
   const [editing, setEditing] = useState<TransactionResponse | null>(null);
   const [prefill, setPrefill] = useState<{ key: string; draft: TransactionDraft } | null>(null);
-  const [selection, setSelection] = useState<SelectionState>({ viewKey, ids: NO_SELECTION });
-  const selectedIds = selection.viewKey === viewKey ? selection.ids : NO_SELECTION;
+  const selection = useTransactionSelection(viewKey);
 
   function setCreateOpen(open: boolean) {
     createMutation.reset();
@@ -108,10 +89,6 @@ export function TransactionsPage() {
     setEditing(transaction);
   }
 
-  function setSelectedIds(ids: ReadonlySet<string>) {
-    setSelection({ viewKey, ids });
-  }
-
   const listParams = transactionListParams(shown, pageSize);
   const listKey = getTransactionsQueryKey(listParams);
   const filterParams = transactionFilterParams(shown);
@@ -123,90 +100,16 @@ export function TransactionsPage() {
   const tags = useTagsSuspense();
   const transactions = useTransactionsSuspense(listParams);
 
-  function optimisticTransaction({ data }: CreateTransactionMutationVariables) {
-    const optimistic: TransactionResponse = {
-      id: optimisticId(crypto.randomUUID()),
-      accountId: data.accountId,
-      categoryId: data.categoryId,
-      type: data.type,
-      amount: normalizeMoney(data.amount),
-      currency: data.currency ?? reportingCurrency,
-      reportingAmount: normalizeMoney(data.amount),
-      date: data.date,
-      description: data.description,
-      source: "manual",
-      isSplit: (data.lines?.length ?? 0) > 0,
-      lines:
-        data.lines?.map((line, index) => ({
-          id: optimisticId(`line-${index}`),
-          categoryId: line.categoryId,
-          amount: normalizeMoney(line.amount),
-          description: line.description,
-        })) ?? null,
-      tagIds: data.tagIds ?? [],
-      createdAt: new Date().toISOString(),
-      attachmentCount: 0,
-    };
-    return optimistic;
-  }
-
-  function withOptimisticTransaction(
-    previous: PagedResponseOfTransactionResponse,
-    variables: CreateTransactionMutationVariables,
-  ) {
-    return {
-      ...previous,
-      items: [optimisticTransaction(variables), ...previous.items],
-      total: previous.total + 1,
-    };
-  }
-
-  const optimisticCreate = optimisticUpdate({
-    queryKey: listKey,
-    cancelKey: getTransactionsQueryKey(),
-    apply: withOptimisticTransaction,
-  });
-
-  const optimisticDelete = optimisticPagedRemoval<PagedResponseOfTransactionResponse>(
+  const {
+    create: createMutation,
+    update: updateMutation,
+    remove: deleteMutation,
+    bulkTag: bulkTagMutation,
+    bulkCategory: bulkCategoryMutation,
+  } = useTransactionMutations({
     listKey,
-    getTransactionsQueryKey(),
-  );
-
-  const createMutation = useCreateTransaction({
-    mutation: {
-      meta: { silent: true },
-      ...optimisticCreate,
-      onSuccess: () => toast.success(t("transactions.created")),
-    },
-  });
-
-  const updateMutation = useUpdateTransaction(
-    silent({
-      onSuccess: () => {
-        toast.success(t("transactions.updated"));
-        setEditing(null);
-      },
-    }),
-  );
-
-  const deleteMutation = useDeleteTransaction({ mutation: optimisticDelete });
-
-  const bulkTagMutation = useBulkTagTransactions({
-    mutation: {
-      onSuccess: (result) => {
-        toast.success(t("tags.retagged", { count: result.updated }));
-        setSelectedIds(NO_SELECTION);
-      },
-    },
-  });
-
-  const bulkCategoryMutation = useBulkCategorizeTransactions({
-    mutation: {
-      onSuccess: (result) => {
-        toast.success(t("transactions.recategorized", { count: result.updated }));
-        setSelectedIds(NO_SELECTION);
-      },
-    },
+    onUpdated: () => setEditing(null),
+    onBulkApplied: selection.clear,
   });
 
   const accountList = accounts.data;
@@ -218,7 +121,7 @@ export function TransactionsPage() {
 
   const items = transactions.data.items;
   const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);
-  const selectedItems = items.filter((item) => selectedIds.has(item.id));
+  const selectedItems = items.filter((item) => selection.selectedIds.has(item.id));
   const remove = useConfirmedDelete(
     deleteMutation,
     items,
@@ -231,18 +134,6 @@ export function TransactionsPage() {
     "transaction",
   );
   const deletingId = remove.pendingId;
-
-  function handleToggleRow(id: string, selected: boolean) {
-    setSelection((previous) => {
-      const next = new Set(previous.viewKey === viewKey ? previous.ids : NO_SELECTION);
-      if (selected) {
-        next.add(id);
-      } else {
-        next.delete(id);
-      }
-      return { viewKey, ids: next };
-    });
-  }
 
   const columnHeaders = useTransactionColumnHeaders({
     accounts: accountList,
@@ -350,7 +241,7 @@ export function TransactionsPage() {
                 },
               })
             }
-            onClear={() => setSelectedIds(NO_SELECTION)}
+            onClear={selection.clear}
           />
         ) : (
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
@@ -373,12 +264,11 @@ export function TransactionsPage() {
             columnAriaSort={columnHeaders.ariaSortByColumn}
             filtered={columnHeaders.active}
             selection={{
-              selectedIds,
+              selectedIds: selection.selectedIds,
               selectableIds,
               rowLabel: (row) => `${formatDate(row.date)} ${transactionName(row, categoryById, t)}`,
-              onToggle: handleToggleRow,
-              onTogglePage: (selected) =>
-                setSelectedIds(selected ? new Set(selectableIds) : NO_SELECTION),
+              onToggle: selection.toggle,
+              onTogglePage: (selected) => selection.togglePage(selectableIds, selected),
             }}
           />
         </div>

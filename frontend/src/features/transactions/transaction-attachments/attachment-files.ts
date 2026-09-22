@@ -17,14 +17,14 @@ const PREVIEWABLE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 export const ACCEPT_ATTRIBUTE = [...ACCEPTED_TYPES, ...ACCEPTED_EXTENSIONS].join(",");
 
-export type RefusalReason = "tooLarge" | "typeNotAllowed" | "tooMany";
+type RefusalReason = "tooLarge" | "typeNotAllowed" | "tooMany";
 
 export interface Refusal {
   name: string;
   reason: RefusalReason;
 }
 
-export interface SortedFiles {
+interface SortedFiles {
   accepted: File[];
   refused: Refusal[];
 }

@@ -6,14 +6,8 @@ import type {
   HouseholdResponse,
   TagResponse,
 } from "@/api/generated/model";
-import {
-  type CommandEntry,
-  type CommandSources,
-  buildCommandEntries,
-  filterCommandEntries,
-  foldText,
-  matchScore,
-} from "./command-entries";
+import { type CommandEntry, type CommandSources, buildCommandEntries } from "./command-entries";
+import { filterCommandEntries, foldText, matchScore } from "./command-search";
 
 function t(key: string) {
   return key;

@@ -1,4 +1,4 @@
-export const ACTIVE_HOUSEHOLD_PARAM = "activeHousehold";
+const ACTIVE_HOUSEHOLD_PARAM = "activeHousehold";
 
 export const TRANSACTIONS_EXPORT_CSV_PATH = "/api/transactions/export";
 

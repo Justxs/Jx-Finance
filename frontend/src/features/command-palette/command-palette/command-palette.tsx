@@ -32,12 +32,8 @@ import {
   useCommandRecents,
 } from "@/stores/command-palette-store";
 import { setTheme, useTheme } from "@/stores/theme-store";
-import {
-  type CommandEntry,
-  type CommandTarget,
-  buildCommandEntries,
-  filterCommandEntries,
-} from "../command-entries";
+import { type CommandEntry, type CommandTarget, buildCommandEntries } from "../command-entries";
+import { filterCommandEntries } from "../command-search";
 
 const PALETTE_STALE_MS = 5 * 60 * 1000;
 
