@@ -6,11 +6,19 @@ import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
+import type { TranslationKey } from "@/lib/i18n";
 import { namedOptions } from "@/lib/options";
+import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 import { BrokerImportResult } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
+
+const uploadProblemKeys = {
+  required: "investments.import.fileRequired",
+  empty: "investments.import.fileEmpty",
+  tooLarge: "investments.import.fileTooLarge",
+} as const satisfies Record<UploadProblem, TranslationKey>;
 
 export const BROKER_UPLOAD_FILE_INPUT_ID = "broker-upload-file";
 
@@ -42,16 +50,9 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
 
   function handleImport() {
     const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      setFileError(t("investments.import.fileRequired"));
-      return;
-    }
-    if (file.size === 0) {
-      setFileError(t("investments.import.fileEmpty"));
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      setFileError(t("investments.import.fileTooLarge"));
+    const problem = validateUpload(file, MAX_FILE_BYTES);
+    if (!file || problem) {
+      setFileError(t(uploadProblemKeys[problem ?? "required"]));
       return;
     }
     setFileError(undefined);

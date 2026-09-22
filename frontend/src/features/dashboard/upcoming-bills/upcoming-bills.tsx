@@ -18,7 +18,7 @@ export function UpcomingBills() {
   const formatDay = useShortDayIso();
   const bills = useRecurringBillsSuspense();
 
-  const rows = (bills.data ?? [])
+  const rows = bills.data
     .filter((bill) => bill.isActive)
     .toSorted((a, b) => a.nextDueDate.localeCompare(b.nextDueDate))
     .slice(0, MAX_ROWS);

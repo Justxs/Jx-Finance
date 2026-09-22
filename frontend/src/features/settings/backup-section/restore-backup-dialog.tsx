@@ -1,21 +1,19 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { restoreBackupBodyPasswordMax } from "@/api/schemas/backups/backups.zod";
+import { ConfirmDialogHeader } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import {
   AlertDialog,
   AlertDialogCancel,
   AlertDialogContent,
-  AlertDialogDescription,
   AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
 } from "@/components/ui/alert-dialog/alert-dialog";
 import { Button } from "@/components/ui/button/button";
 import { useRetained } from "@/hooks/use-retained";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
-import { requiredValue } from "@/lib/validation";
+import { requiredMax } from "@/lib/validation";
 
 interface FormProps {
   error: unknown;
@@ -35,10 +33,7 @@ function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
 
   const schema = z.object({
     confirmation: z.string(),
-    password: requiredValue(t).max(
-      restoreBackupBodyPasswordMax,
-      t("validation.maxLength", { max: restoreBackupBodyPasswordMax }),
-    ),
+    password: requiredMax(t, restoreBackupBodyPasswordMax),
   });
 
   const form = useServerForm({
@@ -123,15 +118,11 @@ export function RestoreBackupDialog({
       }}
     >
       <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t("backup.confirmTitle")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            <span className="mb-1 block font-medium wrap-break-word text-foreground">
-              {shownLabel}
-            </span>
-            {t("backup.confirmDescription")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+        <ConfirmDialogHeader
+          title={t("backup.confirmTitle")}
+          label={shownLabel}
+          description={t("backup.confirmDescription")}
+        />
         {backupId === null ? null : (
           <RestoreBackupForm key={backupId} error={error} pending={pending} onRestore={onRestore} />
         )}

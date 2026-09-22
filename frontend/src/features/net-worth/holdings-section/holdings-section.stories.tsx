@@ -26,7 +26,6 @@ function holding(id: string, name: string, details: string, amount: number): Hol
       name,
       type: "other",
       amount: amount.toFixed(2),
-      interestRate: "",
       asOf: "2026-09-01",
     },
   };
@@ -51,8 +50,7 @@ const meta = {
     addLabel: "Add asset",
     emptyLabel: "No assets yet.",
     items,
-    deleteDisabled: false,
-    onDelete: fn(),
+    deleteMutation: { mutate: fn(), isPending: false },
     undoKind: "asset",
     form: StubForm,
   },
@@ -70,7 +68,9 @@ export const ExpenseTone: Story = {
 
 export const Empty: Story = { args: { items: [] } };
 
-export const DeletePending: Story = { args: { deletingId: "2", deleteDisabled: true } };
+export const DeletePending: Story = {
+  args: { deleteMutation: { mutate: fn(), isPending: true, variables: { id: "2" } } },
+};
 
 export const AddDialogOpen: Story = {
   play: async ({ canvasElement }) => {

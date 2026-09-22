@@ -8,7 +8,7 @@ import type { BackupResponse, RestoreBackupResponse } from "@/api/generated/mode
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
@@ -113,9 +113,7 @@ export function BackupSection() {
   const { t } = useTranslation();
 
   return (
-    <Section aria-labelledby="backup-title">
-      <SectionTitle id="backup-title">{t("backup.title")}</SectionTitle>
-      <p className="mt-1 max-w-prose text-sm text-muted-foreground">{t("backup.description")}</p>
+    <TitledSection title={t("backup.title")} description={t("backup.description")}>
       <div className="mt-4 space-y-4">
         <CreateBackupForm />
         <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
@@ -125,6 +123,6 @@ export function BackupSection() {
       <div className="mt-8">
         <BackupUploadForm />
       </div>
-    </Section>
+    </TitledSection>
   );
 }

@@ -138,7 +138,11 @@ export function ConversionsSection({
       </SectionHeader>
       <Modal
         open={convertAccountId !== null}
-        onClose={closeConvert}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeConvert();
+          }
+        }}
         title={t("conversions.title")}
         description={t("conversions.description")}
       >

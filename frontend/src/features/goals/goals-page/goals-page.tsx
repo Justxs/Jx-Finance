@@ -31,9 +31,9 @@ export function GoalsPage() {
     mutation: optimisticRemoval<GoalResponse>(getGoalsQueryKey()),
   });
 
-  const accountList = accounts.data ?? [];
+  const accountList = accounts.data;
   const accountNames = nameById(accountList);
-  const goalList = useDeferredValue(goals.data) ?? [];
+  const goalList = useDeferredValue(goals.data);
   const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name, "goal");
 
   let content: ReactNode;

@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import { type ComponentProps, type ReactNode, useId } from "react";
 import { type PolymorphicProps, splitAs } from "@/lib/polymorphic";
 import { cn } from "@/lib/utils";
 import type { Rows } from "../rows/rows";
@@ -52,5 +52,25 @@ export function SectionHeader({ title, titleClassName, children }: Readonly<Sect
       <SectionTitle className={titleClassName}>{title}</SectionTitle>
       {children}
     </div>
+  );
+}
+
+interface TitledSectionProps {
+  title: ReactNode;
+  description?: ReactNode;
+  children: ReactNode;
+}
+
+export function TitledSection({ title, description, children }: Readonly<TitledSectionProps>) {
+  const titleId = useId();
+
+  return (
+    <Section aria-labelledby={titleId}>
+      <SectionTitle id={titleId}>{title}</SectionTitle>
+      {description ? (
+        <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
+      ) : null}
+      {children}
+    </Section>
   );
 }

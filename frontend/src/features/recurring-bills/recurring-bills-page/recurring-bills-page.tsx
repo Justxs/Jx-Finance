@@ -37,10 +37,10 @@ export function RecurringBillsPage() {
     mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
   });
 
-  const accountList = accounts.data ?? [];
-  const categoryList = categories.data ?? [];
-  const billList = useDeferredValue(bills.data) ?? [];
-  const candidateList = useDeferredValue(candidates.data) ?? [];
+  const accountList = accounts.data;
+  const categoryList = categories.data;
+  const billList = useDeferredValue(bills.data);
+  const candidateList = useDeferredValue(candidates.data);
   const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name, "recurringBill");
 
   let content: ReactNode;

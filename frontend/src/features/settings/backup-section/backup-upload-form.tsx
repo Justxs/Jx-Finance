@@ -6,9 +6,17 @@ import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
+import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
+import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
+
+const uploadProblemKeys = {
+  required: "backup.fileRequired",
+  empty: "backup.fileEmpty",
+  tooLarge: "backup.fileTooLarge",
+} as const satisfies Record<UploadProblem, TranslationKey>;
 
 export function BackupUploadForm() {
   const { t } = useTranslation();
@@ -27,16 +35,9 @@ export function BackupUploadForm() {
 
   function handleUpload() {
     const file = fileInputRef.current?.files?.[0];
-    if (!file) {
-      setFileError(t("backup.fileRequired"));
-      return;
-    }
-    if (file.size === 0) {
-      setFileError(t("backup.fileEmpty"));
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      setFileError(t("backup.fileTooLarge"));
+    const problem = validateUpload(file, MAX_FILE_BYTES);
+    if (!file || problem) {
+      setFileError(t(uploadProblemKeys[problem ?? "required"]));
       return;
     }
     setFileError(undefined);

@@ -36,7 +36,7 @@ export function CategoriesPage() {
     mutation: optimisticRemoval<CategoryResponse>(getCategoriesQueryKey()),
   });
 
-  const categoryList = useDeferredValue(categories.data) ?? [];
+  const categoryList = useDeferredValue(categories.data);
   const remove = useConfirmedDelete(
     deleteMutation,
     categoryList,

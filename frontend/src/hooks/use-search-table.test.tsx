@@ -14,14 +14,6 @@ function setup(search: Search) {
   return { table: result.current, patch };
 }
 
-test("passes filter patches through", () => {
-  const { table, patch } = setup({});
-
-  table.setFilter({ search: "rent" });
-
-  expect(patch).toHaveBeenCalledWith({ search: "rent" });
-});
-
 test("sorts ascending first and flips the active column", () => {
   const fresh = setup({});
   fresh.table.toggleSort("name");

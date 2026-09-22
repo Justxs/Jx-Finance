@@ -27,10 +27,10 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   const { t } = useTranslation();
   const search = useSearch({ from: "/transactions" });
   const navigate = useNavigate({ from: "/transactions" });
-  const table = useSearchTable(search, (patch) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) }),
-  );
-  const { setFilter } = table;
+  function patchSearch(patch: Partial<typeof search>) {
+    void navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
+  }
+  const table = useSearchTable(search, patchSearch);
 
   const activeCount = [
     search.search,
@@ -49,27 +49,27 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   const sortValue: TransactionSortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
 
   function setSearchText(next: string) {
-    setFilter({ search: next || undefined });
+    patchSearch({ search: next || undefined });
   }
 
   function setType(next: TransactionTypeFilter) {
-    setFilter({ type: next || undefined });
+    patchSearch({ type: next || undefined });
   }
 
   function setDateRange(range: { from: string; to: string }) {
-    setFilter({ dateFrom: range.from || undefined, dateTo: range.to || undefined });
+    patchSearch({ dateFrom: range.from || undefined, dateTo: range.to || undefined });
   }
 
   function setCategoryId(next: string) {
-    setFilter({ categoryId: next || undefined });
+    patchSearch({ categoryId: next || undefined });
   }
 
   function setAccountId(next: string) {
-    setFilter({ accountId: next || undefined });
+    patchSearch({ accountId: next || undefined });
   }
 
   function setTagIds(next: string[]) {
-    setFilter({ tagIds: formatTagIds(next) });
+    patchSearch({ tagIds: formatTagIds(next) });
   }
 
   function setSortValue(next: TransactionSortValue) {
@@ -93,14 +93,14 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       options: typeOptions(t),
       active: Boolean(search.type),
       set: setType,
-      clear: () => setFilter({ type: undefined }),
+      clear: () => patchSearch({ type: undefined }),
     },
     date: {
       label: columnLabels.date,
       value: dateRange,
       active: Boolean(search.dateFrom) || Boolean(search.dateTo),
       set: setDateRange,
-      clear: () => setFilter({ dateFrom: undefined, dateTo: undefined }),
+      clear: () => patchSearch({ dateFrom: undefined, dateTo: undefined }),
     },
     category: {
       label: columnLabels.category,
@@ -108,7 +108,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       options: namedOptions(categories, t("transactions.allCategories")),
       active: Boolean(search.categoryId),
       set: setCategoryId,
-      clear: () => setFilter({ categoryId: undefined }),
+      clear: () => patchSearch({ categoryId: undefined }),
     },
     account: {
       label: columnLabels.account,
@@ -116,7 +116,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       options: namedOptions(accounts, t("transactions.allAccounts")),
       active: Boolean(search.accountId),
       set: setAccountId,
-      clear: () => setFilter({ accountId: undefined }),
+      clear: () => patchSearch({ accountId: undefined }),
     },
     tags: {
       label: t("tags.field"),

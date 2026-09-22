@@ -7,7 +7,7 @@ import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useDateTime } from "@/hooks/use-formatters";
@@ -90,16 +90,15 @@ export function TrashSection() {
   const { t } = useTranslation();
 
   return (
-    <Section aria-labelledby="trash-title">
-      <SectionTitle id="trash-title">{t("trash.title")}</SectionTitle>
-      <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-        {t("trash.description", { days: TRASH_RETENTION_DAYS })}
-      </p>
+    <TitledSection
+      title={t("trash.title")}
+      description={t("trash.description", { days: TRASH_RETENTION_DAYS })}
+    >
       <div className="mt-4">
         <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
           <TrashList />
         </QueryBoundary>
       </div>
-    </Section>
+    </TitledSection>
   );
 }

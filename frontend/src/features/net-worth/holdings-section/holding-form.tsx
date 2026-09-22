@@ -8,13 +8,12 @@ import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import type { FieldAliases } from "@/lib/form-server-errors";
-import { isRate, money, requiredText, requiredValue } from "@/lib/validation";
+import { money, requiredText, requiredValue } from "@/lib/validation";
 
 export interface HoldingFormValues {
   name: string;
   type: string;
   amount: string;
-  interestRate: string;
   asOf: string;
 }
 
@@ -24,7 +23,6 @@ interface Props {
   defaultType: string;
   initialValues?: HoldingFormValues;
   amountLabel: string;
-  withInterestRate?: boolean;
   withAsOf?: boolean;
   pending: boolean;
   error?: unknown;
@@ -39,7 +37,6 @@ export function HoldingForm({
   defaultType,
   initialValues,
   amountLabel,
-  withInterestRate = false,
   withAsOf = false,
   pending,
   error,
@@ -54,7 +51,6 @@ export function HoldingForm({
     name: requiredText(t, createAssetBodyNameMax),
     type: z.string(),
     amount: money(t),
-    interestRate: z.string().refine(isRate, t("validation.rate")),
     asOf: requiredValue(t),
   });
 
@@ -62,7 +58,6 @@ export function HoldingForm({
     name: "",
     type: defaultType,
     amount: "",
-    interestRate: "",
     asOf: today,
   };
 
@@ -93,18 +88,6 @@ export function HoldingForm({
         <form.Field name="amount">
           {(field) => <field.MoneyInputField id={`${idPrefix}-amount`} label={amountLabel} />}
         </form.Field>
-
-        {withInterestRate ? (
-          <form.Field name="interestRate">
-            {(field) => (
-              <field.MoneyInputField
-                id={`${idPrefix}-rate`}
-                label={t("netWorth.interestRate")}
-                placeholder="0.0"
-              />
-            )}
-          </form.Field>
-        ) : null}
 
         {withAsOf ? (
           <form.Field name="asOf">

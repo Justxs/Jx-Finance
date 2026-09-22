@@ -98,7 +98,7 @@ export function InvestmentsPage() {
   const search = useSearch({ from: "/investments" });
   const navigate = useNavigate({ from: "/investments" });
   const accounts = useAccountsSuspense();
-  const accountList = accounts.data ?? [];
+  const accountList = accounts.data;
   const accountId = accountList.find((account) => account.id === search.accountId)?.id;
 
   const [entryOpen, setEntryOpen] = useState(false);

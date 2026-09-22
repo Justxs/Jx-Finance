@@ -6,7 +6,6 @@ import { getDebtsQueryKey, useDeleteDebt, useDebtsSuspense } from "@/api/generat
 import type { DebtResponse } from "@/api/generated/model";
 import { buttonVariants } from "@/components/ui/button/button";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
-import { pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
 import { DebtForm, type DebtFormValues, debtFormValues } from "./debt-form";
@@ -65,9 +64,7 @@ export function DebtsSection() {
         values: debtFormValues(debt),
         action: scheduleLink(debt),
       }))}
-      deletingId={pendingId(deleteMutation)}
-      deleteDisabled={deleteMutation.isPending}
-      onDelete={(id, options) => deleteMutation.mutate({ id }, options)}
+      deleteMutation={deleteMutation}
       undoKind="debt"
       form={DebtForm}
     />

@@ -91,7 +91,7 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
       section={section}
       key={JSON.stringify(editable)}
       settings={settings}
-      accounts={accounts.data ?? []}
+      accounts={accounts.data}
       pending={updateMutation.isPending}
       exchangeRates={exchangeRates}
       onSubmit={(values, onSaved) =>

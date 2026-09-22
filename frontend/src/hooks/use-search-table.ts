@@ -16,10 +16,6 @@ export function useSearchTable<TSearch extends SortSearch>(
 ) {
   type SortKey = NonNullable<TSearch["sort"]>;
 
-  function setFilter(patch: Partial<TSearch>) {
-    patchSearch(patch);
-  }
-
   function setSort(sort: SortKey, direction: SortDirection) {
     patchSearch({ sort, direction });
   }
@@ -37,5 +33,5 @@ export function useSearchTable<TSearch extends SortSearch>(
     };
   }
 
-  return { search, setFilter, setSort, toggleSort, sortProps };
+  return { search, setSort, toggleSort, sortProps };
 }

@@ -49,7 +49,7 @@ export function RulesPage() {
     ),
   );
 
-  const ruleList = useDeferredValue(rules.data) ?? [];
+  const ruleList = useDeferredValue(rules.data);
   const remove = useConfirmedDelete(
     deleteMutation,
     ruleList,

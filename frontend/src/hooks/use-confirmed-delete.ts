@@ -8,7 +8,7 @@ interface DeleteOptions {
   onSuccess?: () => void;
 }
 
-interface DeleteMutation {
+export interface DeleteMutation {
   mutate: (variables: { id: string }, options?: DeleteOptions) => void;
   isPending: boolean;
   variables?: { id: string };

@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { getAssetsQueryKey, useDeleteAsset, useAssetsSuspense } from "@/api/generated";
 import type { AssetResponse } from "@/api/generated/model";
 import { useIsoDate } from "@/hooks/use-formatters";
-import { pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
 import { AssetForm } from "./asset-form";
@@ -16,7 +15,7 @@ export function AssetsSection() {
   const deleteMutation = useDeleteAsset({
     mutation: optimisticRemoval<AssetResponse>(getAssetsQueryKey()),
   });
-  const assetList = useDeferredValue(assets.data) ?? [];
+  const assetList = useDeferredValue(assets.data);
 
   return (
     <HoldingsSection
@@ -32,13 +31,10 @@ export function AssetsSection() {
           name: asset.name ?? "",
           type: asset.type,
           amount: asset.currentValue,
-          interestRate: "",
           asOf: asset.asOf,
         },
       }))}
-      deletingId={pendingId(deleteMutation)}
-      deleteDisabled={deleteMutation.isPending}
-      onDelete={(id, options) => deleteMutation.mutate({ id }, options)}
+      deleteMutation={deleteMutation}
       undoKind="asset"
       form={AssetForm}
     />

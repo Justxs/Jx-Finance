@@ -23,10 +23,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
   const { t } = useTranslation();
 
   const schema = z.object({
-    email: requiredEmail(t).max(
-      addMemberBodyEmailMax,
-      t("validation.maxLength", { max: addMemberBodyEmailMax }),
-    ),
+    email: requiredEmail(t, addMemberBodyEmailMax),
     role: z.enum(HouseholdRole),
   });
 

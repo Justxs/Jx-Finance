@@ -58,10 +58,10 @@ export function AccountsTable({
   const search = useSearch({ from: "/accounts" });
   const navigate = useNavigate({ from: "/accounts" });
 
-  const table = useSearchTable(search, (patch) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) }),
-  );
-  const { setFilter } = table;
+  function patchSearch(patch: Partial<typeof search>) {
+    void navigate({ search: (prev) => ({ ...prev, ...patch }) });
+  }
+  const table = useSearchTable(search, patchSearch);
 
   const filtered = Boolean(search.search) || Boolean(search.iban) || Boolean(search.type);
   const canConvert = useUsableCurrencies().length >= 2;
@@ -223,7 +223,7 @@ export function AccountsTable({
                         label={t("accounts.name")}
                         value={search.search ?? ""}
                         debounceMs={300}
-                        onChange={(value) => setFilter({ search: value || undefined })}
+                        onChange={(value) => patchSearch({ search: value || undefined })}
                       />
                     }
                   />
@@ -235,7 +235,7 @@ export function AccountsTable({
                         label={t("accounts.iban")}
                         value={search.iban ?? ""}
                         debounceMs={300}
-                        onChange={(value) => setFilter({ iban: value || undefined })}
+                        onChange={(value) => patchSearch({ iban: value || undefined })}
                       />
                     }
                   />
@@ -246,12 +246,12 @@ export function AccountsTable({
                       <ColumnFilter
                         label={t("accounts.type")}
                         active={Boolean(search.type)}
-                        onClear={() => setFilter({ type: undefined })}
+                        onClear={() => patchSearch({ type: undefined })}
                       >
                         <SelectField
                           aria-label={t("accounts.type")}
                           value={search.type ?? ""}
-                          onChange={(value) => setFilter({ type: value || undefined })}
+                          onChange={(value) => patchSearch({ type: value || undefined })}
                           options={[
                             { value: "", label: t("accounts.allTypes") },
                             ...accountTypes.map((type) => ({

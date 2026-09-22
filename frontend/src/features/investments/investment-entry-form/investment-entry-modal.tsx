@@ -44,7 +44,7 @@ function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Reado
   return (
     <InvestmentEntryForm
       accounts={accounts}
-      securities={securities.data ?? []}
+      securities={securities.data}
       accountId={accountId}
       editing={editing}
       pending={pending}

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../button/button";
-import { Panel, Section, SectionHeader, SectionTitle } from "./section";
+import { Panel, Section, SectionHeader, SectionTitle, TitledSection } from "./section";
 
 const meta = {
   title: "UI/Section",
@@ -60,6 +60,16 @@ export const InsideDialog: Story = {
         <SectionTitle>Inside a dialog</SectionTitle>
         <p className="mt-2 text-sm text-muted-foreground">The dialog is already the surface.</p>
       </Section>
+    </div>
+  ),
+};
+
+export const Titled: Story = {
+  render: () => (
+    <div className="w-[min(90vw,32rem)]">
+      <TitledSection title="Signed-in devices" description="Sign out a device you no longer use.">
+        <p className="mt-4 text-sm">Firefox on Windows, active now</p>
+      </TitledSection>
     </div>
   ),
 };

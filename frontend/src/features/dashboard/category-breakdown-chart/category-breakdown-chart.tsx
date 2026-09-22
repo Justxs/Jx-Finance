@@ -7,7 +7,5 @@ export function CategoryBreakdownChart() {
   const breakdown = useCategoryBreakdownSuspense();
   const { dateFrom, dateTo } = monthBounds(useTodayDate());
 
-  return (
-    <CategoryBreakdown items={breakdown.data?.items ?? []} dateFrom={dateFrom} dateTo={dateTo} />
-  );
+  return <CategoryBreakdown items={breakdown.data.items} dateFrom={dateFrom} dateTo={dateTo} />;
 }

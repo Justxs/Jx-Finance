@@ -8,28 +8,39 @@ import type { TwoFactorSetupResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetup } from "./two-factor-setup";
 
+type PromptMode = "enable" | "disable";
+
+const promptCopy = {
+  enable: {
+    subtitle: "profile.twoFactorDisabledSubtitle",
+    submitLabel: "profile.enableTwoFactor",
+    variant: "default",
+  },
+  disable: {
+    subtitle: "profile.twoFactorEnabledSubtitle",
+    submitLabel: "profile.disableTwoFactor",
+    variant: "destructive",
+  },
+} as const satisfies Record<
+  PromptMode,
+  { subtitle: TranslationKey; submitLabel: TranslationKey; variant: "default" | "destructive" }
+>;
+
 interface PasswordPromptProps {
-  subtitle: string;
-  submitLabel: string;
-  destructive?: boolean;
+  mode: PromptMode;
   pending: boolean;
   error: unknown;
   onSubmit: (password: string) => Promise<unknown>;
 }
 
-function PasswordPrompt({
-  subtitle,
-  submitLabel,
-  destructive = false,
-  pending,
-  error,
-  onSubmit,
-}: Readonly<PasswordPromptProps>) {
+function PasswordPrompt({ mode, pending, error, onSubmit }: Readonly<PasswordPromptProps>) {
   const { t } = useTranslation();
+  const copy = promptCopy[mode];
 
   const form = useServerForm({
     defaultValues: { password: "" },
@@ -47,7 +58,7 @@ function PasswordPrompt({
     <form.AppForm>
       <form.FormShell as={Section} className="space-y-4 *:max-w-md">
         <SectionTitle>{t("profile.twoFactorTitle")}</SectionTitle>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
+        <p className="text-sm text-muted-foreground">{t(copy.subtitle)}</p>
 
         <form.Field name="password">
           {(field) => (
@@ -64,12 +75,8 @@ function PasswordPrompt({
 
         <form.Subscribe selector={(state) => state.values.password !== ""}>
           {(ready) => (
-            <form.SubmitButton
-              variant={destructive ? "destructive" : "default"}
-              pending={pending}
-              disabled={!ready}
-            >
-              {submitLabel}
+            <form.SubmitButton variant={copy.variant} pending={pending} disabled={!ready}>
+              {t(copy.submitLabel)}
             </form.SubmitButton>
           )}
         </form.Subscribe>
@@ -117,20 +124,10 @@ export function TwoFactorSettings() {
     return <TwoFactorRecoveryCodes codes={recoveryCodes} onDone={() => setRecoveryCodes(null)} />;
   }
 
-  if (me.data?.twoFactorEnabled) {
-    return (
-      <PasswordPrompt
-        subtitle={t("profile.twoFactorEnabledSubtitle")}
-        submitLabel={t("profile.disableTwoFactor")}
-        destructive
-        pending={disableMutation.isPending}
-        error={disableMutation.error}
-        onSubmit={(password) => disableMutation.mutateAsync({ data: { password } })}
-      />
-    );
-  }
+  const mode: PromptMode = me.data?.twoFactorEnabled ? "disable" : "enable";
+  const promptMutation = mode === "disable" ? disableMutation : setupMutation;
 
-  if (qrDataUrl && sharedKey) {
+  if (mode === "enable" && qrDataUrl && sharedKey) {
     return (
       <TwoFactorSetup
         qrDataUrl={qrDataUrl}
@@ -143,11 +140,10 @@ export function TwoFactorSettings() {
 
   return (
     <PasswordPrompt
-      subtitle={t("profile.twoFactorDisabledSubtitle")}
-      submitLabel={t("profile.enableTwoFactor")}
-      pending={setupMutation.isPending}
-      error={setupMutation.error}
-      onSubmit={(password) => setupMutation.mutateAsync({ data: { password } })}
+      mode={mode}
+      pending={promptMutation.isPending}
+      error={promptMutation.error}
+      onSubmit={(password) => promptMutation.mutateAsync({ data: { password } })}
     />
   );
 }

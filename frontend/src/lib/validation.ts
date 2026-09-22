@@ -43,6 +43,10 @@ export function requiredValue(t: Translate) {
   return z.string().min(1, t("validation.required"));
 }
 
+export function requiredMax(t: Translate, max: number) {
+  return requiredValue(t).max(max, t("validation.maxLength", { max }));
+}
+
 export function optionalText(t: Translate, max: number) {
   return z.string().max(max, t("validation.maxLength", { max }));
 }
@@ -54,11 +58,12 @@ export function requiredText(t: Translate, max: number) {
     .refine((value) => value.trim().length <= max, t("validation.maxLength", { max }));
 }
 
-export function requiredEmail(t: Translate) {
-  return z
+export function requiredEmail(t: Translate, max?: number) {
+  const schema = z
     .string()
     .refine((value) => value.trim().length > 0, t("validation.required"))
     .refine((value) => isEmail(value.trim()), t("validation.email"));
+  return max === undefined ? schema : schema.max(max, t("validation.maxLength", { max }));
 }
 
 export function password(t: Translate, min: number, max: number) {
@@ -68,27 +73,38 @@ export function password(t: Translate, min: number, max: number) {
     .max(max, t("validation.maxLength", { max }));
 }
 
-export function money(t: Translate) {
-  return z.string().refine(isMoney, t("validation.money"));
-}
+type MoneySign = "any" | "nonNegative" | "positive";
 
-export function positiveMoney(t: Translate) {
-  return z.string().refine(isPositiveMoney, t("validation.positiveMoney"));
-}
+const moneyChecks = {
+  any: isMoney,
+  nonNegative: isNonNegativeMoney,
+  positive: isPositiveMoney,
+} as const satisfies Record<MoneySign, (value: string) => boolean>;
 
-export function optionalPositiveMoney(t: Translate) {
+function moneyRule(t: Translate, sign: MoneySign, optional: boolean) {
+  const check = moneyChecks[sign];
   return z
     .string()
     .refine(
-      (value) => value.trim() === "" || isPositiveMoney(value),
-      t("validation.positiveMoney"),
+      (value) => (optional && value.trim() === "") || check(value),
+      t(sign === "positive" ? "validation.positiveMoney" : "validation.money"),
     );
 }
 
+export function money(t: Translate) {
+  return moneyRule(t, "any", false);
+}
+
+export function positiveMoney(t: Translate) {
+  return moneyRule(t, "positive", false);
+}
+
+export function optionalPositiveMoney(t: Translate) {
+  return moneyRule(t, "positive", true);
+}
+
 export function optionalNonNegativeMoney(t: Translate) {
-  return z
-    .string()
-    .refine((value) => value.trim() === "" || isNonNegativeMoney(value), t("validation.money"));
+  return moneyRule(t, "nonNegative", true);
 }
 
 export function quantity(t: Translate, messageKey: TranslationKey) {

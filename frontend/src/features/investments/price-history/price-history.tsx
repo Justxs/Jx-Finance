@@ -22,7 +22,7 @@ export function PriceHistory({ security }: Readonly<Props>) {
   const prices = useSecurityPricesSuspense(security.id);
   const deleteMutation = useDeleteSecurityPrice(silent());
 
-  const points = (prices.data ?? []).map((point) => ({ ...point, id: point.date }));
+  const points = prices.data.map((point) => ({ ...point, id: point.date }));
 
   function label(point: { date: string; price: string }) {
     return `${formatPrice(Number(point.price), security.currency)}, ${formatDate(point.date)}`;
