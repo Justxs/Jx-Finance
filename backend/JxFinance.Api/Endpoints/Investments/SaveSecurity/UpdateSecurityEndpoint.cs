@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -18,5 +17,5 @@ public sealed class UpdateSecurityEndpoint(IInvestmentService investmentService)
     }
 
     public override async Task HandleAsync(SaveSecurityRequest req, CancellationToken ct) =>
-        await Send.OkAsync((await investmentService.UpdateSecurityAsync(req, ct)).ValueOrThrow(), ct);
+        await Send.OkOrProblemAsync(await investmentService.UpdateSecurityAsync(req, ct), ct);
 }

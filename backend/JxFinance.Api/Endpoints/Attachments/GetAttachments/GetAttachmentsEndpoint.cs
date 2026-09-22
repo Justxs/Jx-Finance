@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Attachments.Interfaces;
 using JxFinance.Endpoints.Attachments.Shared;
 
@@ -18,7 +17,6 @@ public sealed class GetAttachmentsEndpoint(IAttachmentService attachmentService)
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var attachments = (await attachmentService.GetAllAsync(Route<Guid>("transactionId"), ct)).ValueOrThrow();
-        await Send.OkAsync(attachments, ct);
+        await Send.OkOrProblemAsync(await attachmentService.GetAllAsync(Route<Guid>("transactionId"), ct), ct);
     }
 }

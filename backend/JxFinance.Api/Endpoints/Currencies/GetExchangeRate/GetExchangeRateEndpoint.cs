@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Currencies.Interfaces;
 using JxFinance.Endpoints.Currencies.Shared;
 
@@ -18,7 +17,6 @@ public sealed class GetExchangeRateEndpoint(ICurrencyService currencyService)
 
     public override async Task HandleAsync(GetExchangeRateRequest req, CancellationToken ct)
     {
-        var rate = (await currencyService.GetRateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(rate, ct);
+        await Send.OkOrProblemAsync(await currencyService.GetRateAsync(req, ct), ct);
     }
 }

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transfers.Interfaces;
 using JxFinance.Endpoints.Transfers.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateTransferEndpoint(ITransferService transferService)
 
     public override async Task HandleAsync(UpdateTransferRequest req, CancellationToken ct)
     {
-        var transfer = (await transferService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(transfer, ct);
+        await Send.OkOrProblemAsync(await transferService.UpdateAsync(req, ct), ct);
     }
 }

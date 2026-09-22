@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
@@ -20,16 +19,19 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
         AllowFileUploads();
         MaxRequestBodySize(MaxFileBytes + (1024 * 1024));
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, MediaTypeNames.Application.Json).ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ProducesCreated<BackupResponse>().ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(UploadBackupRequest req, CancellationToken ct)
     {
         if (req.File is null || req.File.Length is <= 0 or > MaxFileBytes)
-            ThrowError(r => r.File, "Choose a non-empty backup file no larger than 2 GB.", ErrorCodes.BackupInvalidFile);
+        {
+            AddError(r => r.File, "Choose a non-empty backup file no larger than 2 GB.", ErrorCodes.BackupInvalidFile);
+            await Send.ErrorsAsync(cancellation: ct);
+            return;
+        }
 
         await using var stream = req.File.OpenReadStream();
-        var backup = (await backupService.UploadAsync(stream, req.Note, ct)).ValueOrThrow();
-        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.BackupsPath}/{backup.Id}", backup));
+        await Send.CreatedOrProblemAsync(await backupService.UploadAsync(stream, req.Note, ct), backup => $"{ApiRoutes.BackupsPath}/{backup.Id}", ct);
     }
 }

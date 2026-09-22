@@ -1,7 +1,5 @@
-using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -16,12 +14,11 @@ public sealed class CreateUserEndpoint(IUserService userService) : Endpoint<Crea
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));
-        Description(d => d.ClearDefaultProduces(200).Produces<UserProfileResponse>(201, MediaTypeNames.Application.Json));
+        Description(d => d.ProducesCreated<UserProfileResponse>());
     }
 
     public override async Task HandleAsync(CreateUserRequest req, CancellationToken ct)
     {
-        var user = (await userService.CreateAsync(req, ct)).ValueOrThrow();
-        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.UsersPath}/{user.Id}", user));
+        await Send.CreatedOrProblemAsync(await userService.CreateAsync(req, ct), user => $"{ApiRoutes.UsersPath}/{user.Id}", ct);
     }
 }

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
@@ -22,7 +21,12 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUs
 
     public override async Task HandleAsync(UpdateMyProfileRequest req, CancellationToken ct)
     {
-        var profile = (await userService.UpdateOwnProfileAsync(currentUser.Id, req, ct)).ValueOrThrow();
+        var result = await userService.UpdateOwnProfileAsync(currentUser.Id, req, ct);
+        if (!result.TryGetValue(out var profile))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
 
         if (req.NewPassword is not null)
         {

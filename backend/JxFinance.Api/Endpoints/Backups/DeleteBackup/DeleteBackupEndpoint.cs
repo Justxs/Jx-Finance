@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
@@ -18,7 +17,6 @@ public sealed class DeleteBackupEndpoint(IBackupService backupService) : Endpoin
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        (await backupService.DeleteAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await backupService.DeleteAsync(Route<Guid>("id"), ct), ct);
     }
 }

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
@@ -25,7 +24,13 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
             return;
         }
 
-        var recoveryCodes = (await authService.EnableTwoFactorAsync(user, req.Code)).ValueOrThrow();
+        var enabled = await authService.EnableTwoFactorAsync(user, req.Code);
+        if (!enabled.TryGetValue(out var recoveryCodes))
+        {
+            await Send.ProblemAsync(enabled.Error, ct);
+            return;
+        }
+
         await sessions.RenewAsync(user, ct);
         await Send.OkAsync(new EnableTwoFactorResponse(recoveryCodes), ct);
     }

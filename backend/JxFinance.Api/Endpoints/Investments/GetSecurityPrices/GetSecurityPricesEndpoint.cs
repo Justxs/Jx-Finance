@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 
@@ -17,5 +16,5 @@ public sealed class GetSecurityPricesEndpoint(ISecurityPriceService priceService
     }
 
     public override async Task HandleAsync(GetSecurityPricesRequest req, CancellationToken ct) =>
-        await Send.OkAsync((await priceService.GetPricesAsync(req, ct)).ValueOrThrow(), ct);
+        await Send.OkOrProblemAsync(await priceService.GetPricesAsync(req, ct), ct);
 }

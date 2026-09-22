@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 
@@ -18,7 +17,6 @@ public sealed class MoveCategorizationRuleEndpoint(ICategorizationRuleService ru
 
     public override async Task HandleAsync(MoveCategorizationRuleRequest req, CancellationToken ct)
     {
-        var rules = (await ruleService.MoveAsync(req.Id, req.Direction, ct)).ValueOrThrow();
-        await Send.OkAsync(rules, ct);
+        await Send.OkOrProblemAsync(await ruleService.MoveAsync(req.Id, req.Direction, ct), ct);
     }
 }

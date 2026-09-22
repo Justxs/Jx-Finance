@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
@@ -30,10 +29,17 @@ public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUse
 
         if (user.TwoFactorEnabled)
         {
-            ThrowError("The password could not be confirmed.", ErrorCodes.CredentialsInvalid, Severity.Error, StatusCodes.Status401Unauthorized);
+            await Send.ProblemAsync(new DomainError(ErrorCodes.CredentialsInvalid, "The password could not be confirmed."), ct);
+            return;
         }
 
-        (await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid)).EnsureSuccess();
+        var confirmed = await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid);
+        if (confirmed.IsFailure)
+        {
+            await Send.ProblemAsync(confirmed.Error, ct);
+            return;
+        }
+
         var setup = await authService.BeginTwoFactorSetupAsync(user);
         await sessions.RenewAsync(user, ct);
         await Send.OkAsync(setup, ct);

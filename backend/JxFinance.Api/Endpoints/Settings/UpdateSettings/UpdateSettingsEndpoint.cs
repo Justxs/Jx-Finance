@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -20,7 +19,6 @@ public sealed class UpdateSettingsEndpoint(ISettingsService settingsService)
 
     public override async Task HandleAsync(UpdateSettingsRequest req, CancellationToken ct)
     {
-        var settings = (await settingsService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(settings, ct);
+        await Send.OkOrProblemAsync(await settingsService.UpdateAsync(req, ct), ct);
     }
 }

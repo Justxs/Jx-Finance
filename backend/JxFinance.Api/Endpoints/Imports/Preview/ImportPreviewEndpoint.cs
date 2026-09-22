@@ -18,10 +18,13 @@ public sealed class ImportPreviewEndpoint(IImportService importService)
     public override async Task HandleAsync(ImportPreviewRequest req, CancellationToken ct)
     {
         if (req.File is null || req.File.Length is <= 0 or > 5 * 1024 * 1024)
-            ThrowError(r => r.File, "Choose a non-empty CSV file no larger than 5 MB.", ErrorCodes.ImportInvalidFile);
+        {
+            AddError(r => r.File, "Choose a non-empty CSV file no larger than 5 MB.", ErrorCodes.ImportInvalidFile);
+            await Send.ErrorsAsync(cancellation: ct);
+            return;
+        }
 
         await using var stream = req.File.OpenReadStream();
-        var preview = (await importService.PreviewSwedbankCsvAsync(req.AccountId, stream, ct)).ValueOrThrow();
-        await Send.OkAsync(preview, ct);
+        await Send.OkOrProblemAsync(await importService.PreviewSwedbankCsvAsync(req.AccountId, stream, ct), ct);
     }
 }

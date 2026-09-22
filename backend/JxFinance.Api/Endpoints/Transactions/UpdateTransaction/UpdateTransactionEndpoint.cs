@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateTransactionEndpoint(ITransactionService transactionSer
 
     public override async Task HandleAsync(UpdateTransactionRequest req, CancellationToken ct)
     {
-        var transaction = (await transactionService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(transaction, ct);
+        await Send.OkOrProblemAsync(await transactionService.UpdateAsync(req, ct), ct);
     }
 }

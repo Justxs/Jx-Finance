@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
 
@@ -17,8 +16,6 @@ public sealed class RemoveMemberEndpoint(IHouseholdService householdService) : E
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var household = (await householdService.RemoveMemberAsync(Route<Guid>("id"), Route<Guid>("userId"), ct))
-            .ValueOrThrow();
-        await Send.OkAsync(household, ct);
+        await Send.OkOrProblemAsync(await householdService.RemoveMemberAsync(Route<Guid>("id"), Route<Guid>("userId"), ct), ct);
     }
 }

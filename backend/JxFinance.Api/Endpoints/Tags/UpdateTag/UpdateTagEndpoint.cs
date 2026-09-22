@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Tags.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateTagEndpoint(ITagService tagService)
 
     public override async Task HandleAsync(UpdateTagRequest req, CancellationToken ct)
     {
-        var tag = (await tagService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(tag, ct);
+        await Send.OkOrProblemAsync(await tagService.UpdateAsync(req, ct), ct);
     }
 }

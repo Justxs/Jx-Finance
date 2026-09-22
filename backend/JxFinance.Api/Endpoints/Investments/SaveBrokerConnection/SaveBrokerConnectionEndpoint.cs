@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 
@@ -16,5 +15,5 @@ public sealed class SaveBrokerConnectionEndpoint(IBrokerImportService importServ
     }
 
     public override async Task HandleAsync(SaveBrokerConnectionRequest req, CancellationToken ct) =>
-        await Send.OkAsync((await importService.SaveConnectionAsync(req, ct)).ValueOrThrow(), ct);
+        await Send.OkOrProblemAsync(await importService.SaveConnectionAsync(req, ct), ct);
 }

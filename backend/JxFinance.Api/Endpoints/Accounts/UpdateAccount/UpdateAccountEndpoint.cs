@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateAccountEndpoint(IAccountService accountService)
 
     public override async Task HandleAsync(UpdateAccountRequest req, CancellationToken ct)
     {
-        var account = (await accountService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(account, ct);
+        await Send.OkOrProblemAsync(await accountService.UpdateAsync(req, ct), ct);
     }
 }

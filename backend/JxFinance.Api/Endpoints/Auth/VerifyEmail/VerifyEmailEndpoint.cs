@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.VerifyEmail;
@@ -18,7 +17,6 @@ public sealed class VerifyEmailEndpoint(IAccountEmailService accountEmails) : En
 
     public override async Task HandleAsync(VerifyEmailRequest req, CancellationToken ct)
     {
-        (await accountEmails.ConfirmEmailAsync(req.Email.Trim(), req.Token, ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await accountEmails.ConfirmEmailAsync(req.Email.Trim(), req.Token, ct), ct);
     }
 }

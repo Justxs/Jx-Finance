@@ -1,7 +1,6 @@
 using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
@@ -27,7 +26,13 @@ public sealed class ExportTransactionsPdfEndpoint(
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
     {
-        var transactions = (await transactionService.ExportForPdfAsync(req, ct)).ValueOrThrow();
+        var result = await transactionService.ExportForPdfAsync(req, ct);
+        if (!result.TryGetValue(out var transactions))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         var names = await ExportTransactionsEndpoint.LoadNamesAsync(accountService, categoryService, tagService, ct);
 
         var pdf = new TransactionsPdfDocument(

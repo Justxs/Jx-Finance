@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateRecurringBillEndpoint(IRecurringBillService recurringB
 
     public override async Task HandleAsync(UpdateRecurringBillRequest req, CancellationToken ct)
     {
-        var bill = (await recurringBillService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(bill, ct);
+        await Send.OkOrProblemAsync(await recurringBillService.UpdateAsync(req, ct), ct);
     }
 }

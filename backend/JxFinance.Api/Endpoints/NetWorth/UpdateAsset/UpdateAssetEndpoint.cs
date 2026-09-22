@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
 
@@ -17,7 +16,6 @@ public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endp
 
     public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct)
     {
-        var asset = (await netWorthService.UpdateAssetAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(asset, ct);
+        await Send.OkOrProblemAsync(await netWorthService.UpdateAssetAsync(req, ct), ct);
     }
 }

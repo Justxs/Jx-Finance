@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
@@ -21,7 +20,6 @@ public sealed class UpdateUserRoleEndpoint(IUserService userService, ICurrentUse
 
     public override async Task HandleAsync(UpdateUserRoleRequest req, CancellationToken ct)
     {
-        var user = (await userService.ChangeRoleAsync(req.Id, req, currentUser.Id, ct)).ValueOrThrow();
-        await Send.OkAsync(user, ct);
+        await Send.OkOrProblemAsync(await userService.ChangeRoleAsync(req.Id, req, currentUser.Id, ct), ct);
     }
 }

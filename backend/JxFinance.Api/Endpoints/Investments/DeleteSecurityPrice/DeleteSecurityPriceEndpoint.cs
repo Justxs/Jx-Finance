@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
@@ -17,7 +16,6 @@ public sealed class DeleteSecurityPriceEndpoint(ISecurityPriceService priceServi
 
     public override async Task HandleAsync(DeleteSecurityPriceRequest req, CancellationToken ct)
     {
-        (await priceService.DeletePriceAsync(req, User.IsInRole(AppRoles.Admin), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await priceService.DeletePriceAsync(req, User.IsInRole(AppRoles.Admin), ct), ct);
     }
 }

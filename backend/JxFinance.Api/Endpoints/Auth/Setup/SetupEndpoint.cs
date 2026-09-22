@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
 
@@ -19,8 +18,12 @@ public sealed class SetupEndpoint(IAuthService authService) : Endpoint<SetupRequ
 
     public override async Task HandleAsync(SetupRequest req, CancellationToken ct)
     {
-        var user = (await authService.ProvisionAdminAsync(req.Email.Trim(), req.Password, req.DisplayName.Trim(), ct))
-            .ValueOrThrow();
+        var provisioned = await authService.ProvisionAdminAsync(req.Email.Trim(), req.Password, req.DisplayName.Trim(), ct);
+        if (!provisioned.TryGetValue(out var user))
+        {
+            await Send.ProblemAsync(provisioned.Error, ct);
+            return;
+        }
 
         var profile = await authService.ToProfileAsync(user);
         await Send.OkAsync(profile, ct);
