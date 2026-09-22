@@ -1,4 +1,5 @@
 using System.Reflection;
+using FastEndpoints;
 using NetArchTest.Rules;
 
 namespace JxFinance.Tests.Architecture;
@@ -64,6 +65,40 @@ public class LayeringTests
 
         Assert.True(result.IsSuccessful, FailureMessage(result));
     }
+
+    [Fact]
+    public void No_type_derives_from_a_FastEndpoints_mapper()
+    {
+        var failing = ApiAssembly.GetTypes()
+            .Where(type => BaseTypes(type).Any(IsFastEndpointsMapper))
+            .Select(type => type.FullName)
+            .ToList();
+
+        Assert.True(failing.Count == 0, $"Layering violation in: {string.Join(", ", failing)}");
+    }
+
+    [Fact]
+    public void Feature_mappers_are_static_classes()
+    {
+        var result = Types.InAssembly(ApiAssembly)
+            .That().ResideInNamespaceEndingWith(".Mappers")
+            .And().AreNotNested()
+            .Should().BeStatic()
+            .GetResult();
+
+        Assert.True(result.IsSuccessful, FailureMessage(result));
+    }
+
+    private static IEnumerable<Type> BaseTypes(Type type)
+    {
+        for (var baseType = type.BaseType; baseType is not null; baseType = baseType.BaseType)
+        {
+            yield return baseType;
+        }
+    }
+
+    private static bool IsFastEndpointsMapper(Type type) =>
+        type.Namespace == typeof(IMapper).Namespace && type.Name.Contains("Mapper", StringComparison.Ordinal);
 
     private static string FailureMessage(NetArchTest.Rules.TestResult result)
     {
