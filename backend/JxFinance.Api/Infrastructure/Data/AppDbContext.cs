@@ -128,17 +128,23 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     private static void ConfigureOwnership(ModelBuilder builder)
     {
-        var ownableTypes = builder.Model.GetEntityTypes()
-            .Select(entityType => entityType.ClrType)
-            .Where(clrType => typeof(OwnableEntity).IsAssignableFrom(clrType))
-            .ToList();
+        var clrTypes = builder.Model.GetEntityTypes().Select(entityType => entityType.ClrType).ToList();
 
-        foreach (var clrType in ownableTypes)
+        foreach (var clrType in clrTypes.Where(typeof(OwnableEntity).IsAssignableFrom))
         {
             builder.Entity(clrType)
                 .HasOne(typeof(AppUser))
                 .WithMany()
                 .HasForeignKey(nameof(OwnableEntity.UserId))
+                .OnDelete(DeleteBehavior.Restrict);
+        }
+
+        foreach (var clrType in clrTypes.Where(typeof(IShareable).IsAssignableFrom))
+        {
+            builder.Entity(clrType)
+                .HasOne(typeof(Household))
+                .WithMany()
+                .HasForeignKey(nameof(IShareable.HouseholdId))
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

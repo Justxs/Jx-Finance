@@ -15,7 +15,6 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.Property(t => t.ImportRef).HasMaxLength(64);
         builder.HasIndex(t => new { t.UserId, t.Date });
         builder.HasIndex(t => new { t.AccountId, t.Date });
-        builder.HasIndex(t => t.CategoryId);
         builder.HasIndex(t => new { t.AccountId, t.ImportRef })
             .IsUnique()
             .HasFilter("\"ImportRef\" IS NOT NULL");

@@ -40,6 +40,22 @@ public sealed class ModelMappingTests
         Assert.Equal("numeric(5,2)", ColumnType<Debt>(capture.Db, "InterestRate"));
     }
 
+    [Fact]
+    public async Task Every_foreign_key_is_covered_by_an_index()
+    {
+        await using var capture = new SqlCapture();
+
+        var keys = capture.Db.Model.GetEntityTypes().SelectMany(entity => entity.GetForeignKeys()).ToList();
+
+        Assert.NotEmpty(keys);
+        Assert.All(keys, key => Assert.Contains(Lookups(key.DeclaringEntityType), properties =>
+            properties.Take(key.Properties.Count).SequenceEqual(key.Properties)));
+    }
+
+    private static IEnumerable<IReadOnlyList<IProperty>> Lookups(IEntityType entity) =>
+        entity.GetIndexes().Select(index => index.Properties)
+            .Concat(entity.GetKeys().Select(key => key.Properties));
+
     private static string? ColumnType<TEntity>(DbContext db, string columnName) =>
         Decimals(db.Model)
             .Single(property => property.DeclaringType.ContainingEntityType.ClrType == typeof(TEntity) &&

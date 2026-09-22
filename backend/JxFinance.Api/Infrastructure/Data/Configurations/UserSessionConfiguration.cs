@@ -12,7 +12,6 @@ public sealed class UserSessionConfiguration : IEntityTypeConfiguration<UserSess
         builder.Property(s => s.PreviousTokenHash).HasMaxLength(64);
         builder.Property(s => s.SecurityStamp).HasMaxLength(256);
         builder.Property(s => s.UserAgent).HasMaxLength(UserSession.UserAgentMaxLength);
-        builder.HasIndex(s => s.UserId);
         builder.HasOne<AppUser>().WithMany().HasForeignKey(s => s.UserId).OnDelete(DeleteBehavior.Cascade);
     }
 }

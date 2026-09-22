@@ -1,5 +1,4 @@
 using JxFinance.Domain.Accounts;
-using JxFinance.Domain.Households;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -14,8 +13,5 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Iban).HasMaxLength(34);
         builder.ComplexProperty(a => a.StartingBalance, money => money.HasColumns("StartingBalance", DbSchema.CurrencyColumn));
         builder.Ignore(a => a.Currency);
-        builder.HasIndex(a => a.UserId);
-        builder.HasIndex(a => a.HouseholdId);
-        builder.HasOne<Household>().WithMany().HasForeignKey(a => a.HouseholdId).OnDelete(DeleteBehavior.Restrict);
     }
 }
