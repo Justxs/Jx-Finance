@@ -1,4 +1,3 @@
-import { Pencil, Trash2 } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteInvestmentTransaction, useInvestmentTransactionsSuspense } from "@/api/generated";
@@ -9,9 +8,9 @@ import type {
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Pagination } from "@/components/pagination/pagination";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
-import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
@@ -148,30 +147,18 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                 >
                   {entry.type === "split" ? t("investments.activity.noCash") : cash(entry)}
                 </span>
-                {entry.source === "manual" ? (
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    className="shrink-0"
-                    onClick={() => setEditing(entry)}
-                    aria-label={`${t("actions.edit")}: ${label}`}
-                  >
-                    <Pencil />
-                  </Button>
-                ) : (
-                  <span className="size-8 shrink-0 max-sm:hidden" aria-hidden="true" />
-                )}
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className="-mr-2 shrink-0"
-                  pending={remove.pendingId === entry.id}
-                  disabled={remove.busy}
-                  onClick={() => remove.request(entry.id)}
-                  aria-label={`${t("actions.delete")}: ${label}`}
+                <RowActions
+                  label={label}
+                  className="-mr-2 gap-3"
+                  onEdit={entry.source === "manual" ? () => setEditing(entry) : undefined}
+                  onDelete={() => remove.request(entry.id)}
+                  deletePending={remove.pendingId === entry.id}
+                  deleteDisabled={remove.busy}
                 >
-                  <Trash2 />
-                </Button>
+                  {entry.source === "manual" ? null : (
+                    <span className="size-8 shrink-0 max-sm:hidden" aria-hidden="true" />
+                  )}
+                </RowActions>
               </li>
             </RowTransition>
           );

@@ -14,7 +14,7 @@ function AccountRows() {
           <TableCell className="font-medium">{account.name}</TableCell>
           <TableCell>{account.type}</TableCell>
           <TableCell>{account.scope}</TableCell>
-          <TableCell className="text-right tabular-nums">{account.currentBalance}</TableCell>
+          <TableCell numeric>{account.currentBalance}</TableCell>
         </TableRow>
       ))}
     </>
@@ -28,7 +28,7 @@ function AccountHeader() {
         <TableHead>Account</TableHead>
         <TableHead>Type</TableHead>
         <TableHead>Scope</TableHead>
-        <TableHead className="text-right">Balance</TableHead>
+        <TableHead numeric>Balance</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -51,7 +51,7 @@ function SelectableExample() {
             <TableCell className="font-medium">{account.name}</TableCell>
             <TableCell>{account.type}</TableCell>
             <TableCell>{account.scope}</TableCell>
-            <TableCell className="text-right tabular-nums">{account.currentBalance}</TableCell>
+            <TableCell numeric>{account.currentBalance}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -109,7 +109,7 @@ export const LongCellContent: Story = {
       <TableHeader>
         <TableRow>
           <TableHead>Description</TableHead>
-          <TableHead className="text-right">Amount</TableHead>
+          <TableHead numeric>Amount</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -118,13 +118,13 @@ export const LongCellContent: Story = {
             A very long description that wraps onto several lines instead of pushing the amount
             column off screen, because the cell opts out of the default nowrap behaviour
           </TableCell>
-          <TableCell className="text-right tabular-nums">-129.99</TableCell>
+          <TableCell numeric>-129.99</TableCell>
         </TableRow>
         <TableRow>
           <TableCell>
             A long description that keeps the default nowrap and scrolls sideways
           </TableCell>
-          <TableCell className="text-right tabular-nums">2450.00</TableCell>
+          <TableCell numeric>2450.00</TableCell>
         </TableRow>
       </TableBody>
     </Table>
@@ -138,7 +138,7 @@ export const WideScrolling: Story = {
         <TableRow>
           <TableHead>Category</TableHead>
           {wideColumns.map((column) => (
-            <TableHead key={column} className="text-right">
+            <TableHead key={column} numeric>
               {column}
             </TableHead>
           ))}
@@ -149,12 +149,37 @@ export const WideScrolling: Story = {
           <TableRow key={category}>
             <TableCell className="font-medium">{category}</TableCell>
             {wideColumns.map((column, columnIndex) => (
-              <TableCell key={column} className="text-right tabular-nums">
+              <TableCell key={column} numeric>
                 {(rowIndex + 1) * 100 + columnIndex * 7}.00
               </TableCell>
             ))}
           </TableRow>
         ))}
+      </TableBody>
+    </Table>
+  ),
+};
+
+export const WrappingNumericHeaders: Story = {
+  render: () => (
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="align-bottom">Security</TableHead>
+          <TableHead numeric wrap>
+            Average cost per share
+          </TableHead>
+          <TableHead numeric wrap>
+            Unrealized gain
+          </TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        <TableRow>
+          <TableCell className="font-medium">VWCE</TableCell>
+          <TableCell numeric>98.40</TableCell>
+          <TableCell numeric>+1,240.12</TableCell>
+        </TableRow>
       </TableBody>
     </Table>
   ),

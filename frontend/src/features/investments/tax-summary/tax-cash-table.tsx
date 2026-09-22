@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, TaxCashEntryResponse } from "@/api/generated/model";
+import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currency-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import {
@@ -12,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/table";
-import { useIsoDate, useMoney } from "@/hooks/use-formatters";
+import { useIsoDate } from "@/hooks/use-formatters";
 
 interface Props {
   label: string;
@@ -30,19 +31,17 @@ export function TaxCashTable({
   accountNames,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const money = useMoney();
   const formatDate = useIsoDate();
 
   function amount(entry: TaxCashEntryResponse) {
     return (
-      <span className="font-semibold whitespace-nowrap tabular-nums">
-        {money.format(Number(entry.reportingAmount), reportingCurrency)}
-        {entry.currency === reportingCurrency ? null : (
-          <span className="block text-xs font-normal text-muted-foreground">
-            {money.format(Number(entry.amount), entry.currency)}
-          </span>
-        )}
-      </span>
+      <DualCurrencyAmount
+        value={Number(entry.reportingAmount)}
+        currency={reportingCurrency}
+        secondaryValue={Number(entry.amount)}
+        secondaryCurrency={entry.currency}
+        strong
+      />
     );
   }
 
@@ -61,7 +60,7 @@ export function TaxCashTable({
               <TableHead>{t("investments.tax.date")}</TableHead>
               <TableHead>{t("investments.tax.kind")}</TableHead>
               <TableHead>{t("investments.tax.source")}</TableHead>
-              <TableHead className="text-right">{t("investments.tax.amount")}</TableHead>
+              <TableHead numeric>{t("investments.tax.amount")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -75,7 +74,7 @@ export function TaxCashTable({
                   <TableCell className="max-w-72 truncate" title={source(entry)}>
                     {source(entry)}
                   </TableCell>
-                  <TableCell className="text-right">{amount(entry)}</TableCell>
+                  <TableCell numeric>{amount(entry)}</TableCell>
                 </TableRow>
               ))
             )}

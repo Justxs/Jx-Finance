@@ -1,9 +1,7 @@
-import { Copy, Pencil, Trash2 } from "lucide-react";
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
-import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
@@ -16,6 +14,7 @@ import {
   transactionCategoryLabel,
   transactionName,
 } from "../transaction-amount";
+import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
 
 interface Props {
   data: TransactionResponse[];
@@ -91,36 +90,15 @@ export function TransactionsList({
                 >
                   {meta}
                 </p>
-                <div className="-mr-2 flex shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={optimistic}
-                    onClick={() => onDuplicate(row)}
-                    aria-label={`${t("transactions.duplicate")}: ${name}`}
-                  >
-                    <Copy />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={optimistic}
-                    onClick={() => onEdit(row)}
-                    aria-label={`${t("actions.edit")}: ${name}`}
-                  >
-                    <Pencil />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    pending={deletingId === row.id}
-                    disabled={optimistic || deletingId !== null}
-                    onClick={() => onDelete(row.id)}
-                    aria-label={`${t("actions.delete")}: ${name}`}
-                  >
-                    <Trash2 />
-                  </Button>
-                </div>
+                <TransactionRowActions
+                  transaction={row}
+                  label={name}
+                  deletingId={deletingId}
+                  onEdit={onEdit}
+                  onDuplicate={onDuplicate}
+                  onDelete={onDelete}
+                  className="-mr-2 gap-0"
+                />
               </div>
             </li>
           </RowTransition>

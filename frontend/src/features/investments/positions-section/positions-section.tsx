@@ -7,6 +7,7 @@ import type {
   HoldingResponse,
   SecurityResponse,
 } from "@/api/generated/model";
+import { Disclosure } from "@/components/disclosure/disclosure";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -83,22 +84,20 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
       )}
 
       {closed.length > 0 ? (
-        <details className="group mt-4">
-          <summary className="w-fit cursor-pointer rounded-sm py-1 text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
-            {t("investments.holdings.closed", { count: closed.length })}
-          </summary>
-          <div className="mt-2">
-            <PositionsTable
-              label={t("investments.holdings.closedLabel")}
-              holdings={closed}
-              reportingCurrency={reportingCurrency}
-              accountNames={accountNames}
-              sharedSecurityIds={shared}
-              closed
-              onEditPrice={editPrice}
-            />
-          </div>
-        </details>
+        <Disclosure
+          className="mt-4"
+          summary={t("investments.holdings.closed", { count: closed.length })}
+        >
+          <PositionsTable
+            label={t("investments.holdings.closedLabel")}
+            holdings={closed}
+            reportingCurrency={reportingCurrency}
+            accountNames={accountNames}
+            sharedSecurityIds={shared}
+            closed
+            onEditPrice={editPrice}
+          />
+        </Disclosure>
       ) : null}
 
       <Modal

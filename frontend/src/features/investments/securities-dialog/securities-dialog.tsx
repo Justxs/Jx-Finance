@@ -10,10 +10,9 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Input } from "@/components/ui/input/input";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { Tag } from "@/components/ui/tag/tag";
-import { useIsoDate, usePriceFormat } from "@/hooks/use-formatters";
 import { UserRole } from "@/lib/user-role";
 import { SecurityModal } from "../security-form";
+import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
 interface Props {
   open: boolean;
@@ -38,8 +37,6 @@ function matches(security: SecurityResponse, search: string) {
 
 function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const { t } = useTranslation();
-  const formatDate = useIsoDate();
-  const formatPrice = usePriceFormat();
   const securities = useSecuritiesSuspense();
   const canEdit = useMeSuspense().data.role === UserRole.admin;
   const all = securities.data ?? [];
@@ -57,16 +54,16 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
         return (
           <li key={security.id} className="flex items-center gap-3 py-2 text-sm">
             <div className="min-w-0 flex-1">
-              <p className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold">{security.symbol}</span>
-                <Tag>{t(`investments.securityTypes.${security.type}`)}</Tag>
-                <span className="text-xs text-muted-foreground">
-                  {security.currency.toUpperCase()}
-                </span>
-              </p>
-              <p className="truncate text-xs text-muted-foreground" title={meta}>
-                {meta}
-              </p>
+              <SecurityIdentity
+                security={security}
+                meta={meta}
+                wrap
+                suffix={
+                  <span className="text-xs text-muted-foreground">
+                    {security.currency.toUpperCase()}
+                  </span>
+                }
+              />
             </div>
             <div className="shrink-0 text-right">
               {security.lastPrice === null ? (
@@ -74,14 +71,11 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
                   {t("investments.securities.noPrice")}
                 </span>
               ) : (
-                <>
-                  <span className="block whitespace-nowrap tabular-nums">
-                    {formatPrice(Number(security.lastPrice), security.currency)}
-                  </span>
-                  <span className="block text-xs whitespace-nowrap text-muted-foreground tabular-nums">
-                    {formatDate(security.lastPriceDate)}
-                  </span>
-                </>
+                <PriceWithDate
+                  price={Number(security.lastPrice)}
+                  currency={security.currency}
+                  date={security.lastPriceDate}
+                />
               )}
             </div>
             {canEdit ? (

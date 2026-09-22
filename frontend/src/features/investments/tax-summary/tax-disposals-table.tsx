@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, TaxDisposalResponse } from "@/api/generated/model";
+import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currency-amount";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import {
@@ -13,16 +14,12 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { useIsoDate, useMoney, useQuantityFormat } from "@/hooks/use-formatters";
-import { gainTone } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 
 interface Props {
   disposals: readonly TaxDisposalResponse[];
   reportingCurrency: Currency;
   accountNames: ReadonlyMap<string, string>;
 }
-
-const numericHead = "h-auto py-2 text-right align-bottom whitespace-normal";
 
 export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -32,29 +29,25 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
 
   function amount(reporting: string, original: string, currency: Currency) {
     return (
-      <span className="whitespace-nowrap tabular-nums">
-        {money.format(Number(reporting), reportingCurrency)}
-        {currency === reportingCurrency ? null : (
-          <span className="block text-xs font-normal text-muted-foreground">
-            {money.format(Number(original), currency)}
-          </span>
-        )}
-      </span>
+      <DualCurrencyAmount
+        value={Number(reporting)}
+        currency={reportingCurrency}
+        secondaryValue={Number(original)}
+        secondaryCurrency={currency}
+      />
     );
   }
 
   function gain(disposal: TaxDisposalResponse) {
-    const value = Number(disposal.reportingGain);
-
     return (
-      <span className={cn("font-semibold whitespace-nowrap tabular-nums", gainTone(value))}>
-        {money.formatSigned(value, "auto", reportingCurrency)}
-        {disposal.currency === reportingCurrency ? null : (
-          <span className="block text-xs font-normal text-muted-foreground">
-            {money.formatSigned(Number(disposal.gain), "auto", disposal.currency)}
-          </span>
-        )}
-      </span>
+      <DualCurrencyAmount
+        value={Number(disposal.reportingGain)}
+        currency={reportingCurrency}
+        secondaryValue={Number(disposal.gain)}
+        secondaryCurrency={disposal.currency}
+        signed
+        strong
+      />
     );
   }
 
@@ -82,10 +75,18 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
             <TableRow>
               <TableHead className="align-bottom">{t("investments.tax.soldOn")}</TableHead>
               <TableHead className="align-bottom">{t("investments.tax.security")}</TableHead>
-              <TableHead className={numericHead}>{t("investments.tax.quantity")}</TableHead>
-              <TableHead className={numericHead}>{t("investments.tax.proceeds")}</TableHead>
-              <TableHead className={numericHead}>{t("investments.tax.costBasis")}</TableHead>
-              <TableHead className={numericHead}>{t("investments.tax.gain")}</TableHead>
+              <TableHead numeric wrap>
+                {t("investments.tax.quantity")}
+              </TableHead>
+              <TableHead numeric wrap>
+                {t("investments.tax.proceeds")}
+              </TableHead>
+              <TableHead numeric wrap>
+                {t("investments.tax.costBasis")}
+              </TableHead>
+              <TableHead numeric wrap>
+                {t("investments.tax.gain")}
+              </TableHead>
               <TableHead className="align-bottom">{t("investments.tax.lots")}</TableHead>
             </TableRow>
           </TableHeader>
@@ -105,16 +106,14 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
                       {accountNames.get(disposal.accountId) ?? ""}
                     </p>
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {quantity.format(Number(disposal.quantity))}
-                  </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell numeric>{quantity.format(Number(disposal.quantity))}</TableCell>
+                  <TableCell numeric>
                     {amount(disposal.reportingProceeds, disposal.proceeds, disposal.currency)}
                   </TableCell>
-                  <TableCell className="text-right">
+                  <TableCell numeric>
                     {amount(disposal.reportingCostBasis, disposal.costBasis, disposal.currency)}
                   </TableCell>
-                  <TableCell className="text-right">{gain(disposal)}</TableCell>
+                  <TableCell numeric>{gain(disposal)}</TableCell>
                   <TableCell className="text-xs whitespace-normal text-muted-foreground">
                     {lotList(disposal)}
                   </TableCell>

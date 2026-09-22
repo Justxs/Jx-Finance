@@ -350,12 +350,7 @@ export function ConversionForm({
         </form.Field>
 
         {hasServerErrorCode(error, "transaction.splitNotAllowed") ? (
-          <p
-            role="alert"
-            className="col-span-full border-t border-expense pt-2 text-sm text-expense"
-          >
-            {t("conversions.feeSplitError")}
-          </p>
+          <FormError message={t("conversions.feeSplitError")} />
         ) : (
           <FormError error={error} />
         )}

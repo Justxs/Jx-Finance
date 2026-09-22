@@ -47,12 +47,19 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
   );
 }
 
-function TableHead({ className, ...props }: React.ComponentProps<"th">) {
+interface TableHeadProps extends React.ComponentProps<"th"> {
+  numeric?: boolean;
+  wrap?: boolean;
+}
+
+function TableHead({ className, numeric = false, wrap = false, ...props }: TableHeadProps) {
   return (
     <th
       data-slot="table-head"
       className={cn(
         "h-9 px-3 text-left align-middle text-xs font-medium whitespace-nowrap text-muted-foreground has-[[role=checkbox]]:pr-0",
+        numeric && "text-right",
+        wrap && "h-auto py-2 align-bottom whitespace-normal",
         className,
       )}
       {...props}
@@ -60,12 +67,17 @@ function TableHead({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
-function TableCell({ className, ...props }: React.ComponentProps<"td">) {
+interface TableCellProps extends React.ComponentProps<"td"> {
+  numeric?: boolean;
+}
+
+function TableCell({ className, numeric = false, ...props }: TableCellProps) {
   return (
     <td
       data-slot="table-cell"
       className={cn(
         "px-3 py-2.5 align-middle whitespace-nowrap has-[[role=checkbox]]:pr-0",
+        numeric && "text-right tabular-nums",
         className,
       )}
       {...props}

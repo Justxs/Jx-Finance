@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Plus, Trash2, Pencil } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -12,11 +12,10 @@ import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
-import { RowTransition } from "@/components/row-transition/row-transition";
+import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Meter } from "@/components/ui/meter/meter";
 import { Rows } from "@/components/ui/rows/rows";
 import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
@@ -73,94 +72,72 @@ export function BudgetsPage() {
           const spent = Number(budget.spent);
           const overBudget = spent > limit;
           return (
-            <RowTransition key={budget.id}>
-              <li className="py-3">
-                <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-                  <div className="min-w-0">
-                    <p className="min-w-0 font-medium wrap-break-word">
-                      <Tooltip
-                        content={t("dashboard.showTransactions", { category: budget.categoryName })}
-                      >
-                        <Link
-                          to="/transactions"
-                          search={{
-                            page: 1,
-                            categoryId: budget.categoryId,
-                            type: "expense",
-                            dateFrom: budget.windowStart,
-                            dateTo: budget.windowEnd,
-                          }}
-                          className="underline-offset-4 hover:underline"
-                        >
-                          {budget.categoryName}
-                        </Link>
-                      </Tooltip>
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {t("budgets.windowLabel", {
-                        period: budgetPeriodLabel(t, budget.period),
-                        from: isoDate(budget.windowStart),
-                        to: isoDate(budget.windowEnd),
+            <ProgressRow
+              key={budget.id}
+              label={budget.categoryName}
+              title={
+                <Tooltip
+                  content={t("dashboard.showTransactions", { category: budget.categoryName })}
+                >
+                  <Link
+                    to="/transactions"
+                    search={{
+                      page: 1,
+                      categoryId: budget.categoryId,
+                      type: "expense",
+                      dateFrom: budget.windowStart,
+                      dateTo: budget.windowEnd,
+                    }}
+                    className="underline-offset-4 hover:underline"
+                  >
+                    {budget.categoryName}
+                  </Link>
+                </Tooltip>
+              }
+              meta={
+                <p className="text-xs text-muted-foreground">
+                  {t("budgets.windowLabel", {
+                    period: budgetPeriodLabel(t, budget.period),
+                    from: isoDate(budget.windowStart),
+                    to: isoDate(budget.windowEnd),
+                  })}
+                </p>
+              }
+              primary={
+                <ProgressAmount
+                  amount={money.format(spent)}
+                  of={t("budgets.ofLimit", { amount: money.format(limit) })}
+                />
+              }
+              secondary={
+                <>
+                  <p
+                    className={cn(
+                      "text-xs tabular-nums",
+                      overBudget ? EXPENSE_TONE : "text-muted-foreground",
+                    )}
+                  >
+                    {overBudget
+                      ? t("budgets.over", { amount: money.format(spent - limit) })
+                      : t("budgets.left", { amount: money.format(limit - spent) })}
+                  </p>
+                  {budget.rolloverEnabled ? (
+                    <p className="text-xs text-muted-foreground tabular-nums">
+                      {t("budgets.carryLabel", {
+                        base: money.format(Number(budget.limitAmount)),
+                        carried: money.formatSigned(Number(budget.carriedAmount)),
+                        effective: money.format(limit),
                       })}
                     </p>
-                  </div>
-                  <div className="col-span-2 row-start-2 min-w-0 text-sm sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:text-right">
-                    <p className="whitespace-nowrap tabular-nums">
-                      <span className="font-semibold">{money.format(spent)}</span>{" "}
-                      <span className="text-muted-foreground">
-                        {t("budgets.ofLimit", { amount: money.format(limit) })}
-                      </span>
-                    </p>
-                    <p
-                      className={cn(
-                        "text-xs tabular-nums",
-                        overBudget ? EXPENSE_TONE : "text-muted-foreground",
-                      )}
-                    >
-                      {overBudget
-                        ? t("budgets.over", { amount: money.format(spent - limit) })
-                        : t("budgets.left", { amount: money.format(limit - spent) })}
-                    </p>
-                    {budget.rolloverEnabled ? (
-                      <p className="text-xs text-muted-foreground tabular-nums">
-                        {t("budgets.carryLabel", {
-                          base: money.format(Number(budget.limitAmount)),
-                          carried: money.formatSigned(Number(budget.carriedAmount)),
-                          effective: money.format(limit),
-                        })}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="col-start-2 row-start-1 flex items-center sm:col-start-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`${t("actions.edit")}: ${budget.categoryName}`}
-                      onClick={() => openForm(budget)}
-                    >
-                      <Pencil />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      pending={remove.pendingId === budget.id}
-                      disabled={remove.busy}
-                      onClick={() => remove.request(budget.id)}
-                      aria-label={`${t("actions.delete")}: ${budget.categoryName}`}
-                    >
-                      <Trash2 />
-                    </Button>
-                  </div>
-                </div>
-                <Meter
-                  value={spent}
-                  max={limit}
-                  tone={overBudget ? "negative" : "primary"}
-                  label={budget.categoryName ?? undefined}
-                  className="mt-2"
-                />
-              </li>
-            </RowTransition>
+                  ) : null}
+                </>
+              }
+              meter={{ value: spent, max: limit, tone: overBudget ? "negative" : "primary" }}
+              onEdit={() => openForm(budget)}
+              onDelete={() => remove.request(budget.id)}
+              deletePending={remove.pendingId === budget.id}
+              deleteDisabled={remove.busy}
+            />
           );
         })}
       </Panel>

@@ -5,6 +5,7 @@ import {
   useTransactionsSuspense,
 } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { TimelineRow } from "@/components/timeline-row/timeline-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
@@ -14,8 +15,7 @@ import {
   transactionCategoryLabel,
   transactionName,
 } from "@/features/transactions/transaction-amount";
-import { useShortDay } from "@/hooks/use-formatters";
-import { parseIso } from "@/lib/calendar";
+import { useShortDayIso } from "@/hooks/use-formatters";
 import { nameById } from "@/lib/options";
 import { recentTransactionsParams } from "../dashboard-queries";
 import { DashboardSection } from "../dashboard-section/dashboard-section";
@@ -53,7 +53,7 @@ function FirstRunSteps() {
 
 function RecentRows() {
   const { t } = useTranslation();
-  const dayFormat = useShortDay();
+  const formatDay = useShortDayIso();
 
   const recent = useTransactionsSuspense(recentTransactionsParams);
   const categories = useCategoriesSuspense();
@@ -62,11 +62,6 @@ function RecentRows() {
   const categoryById = new Map(categories.data.map((c) => [c.id, c]));
   const accountNames = nameById(accounts.data);
   const recentItems = recent.data.items;
-
-  function formatDay(value: string) {
-    const parsed = parseIso(value);
-    return parsed ? dayFormat.format(parsed) : "";
-  }
 
   if (recentItems.length === 0) {
     return accounts.data.length === 0 ? (
@@ -85,20 +80,13 @@ function RecentRows() {
           accountNames.get(transaction.accountId),
         ].filter(Boolean);
         return (
-          <li key={transaction.id} className="flex items-baseline gap-4 py-2.5 text-sm">
-            <span className="w-14 shrink-0 text-muted-foreground tabular-nums">
-              {formatDay(transaction.date)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium" title={name}>
-                {name}
-              </p>
-              <p className="truncate text-xs text-muted-foreground" title={meta.join(" · ")}>
-                {meta.join(" · ")}
-              </p>
-            </div>
-            <TransactionAmount transaction={transaction} className="shrink-0" />
-          </li>
+          <TimelineRow
+            key={transaction.id}
+            day={formatDay(transaction.date)}
+            title={name}
+            subtitle={meta.join(" · ")}
+            amount={<TransactionAmount transaction={transaction} className="shrink-0" />}
+          />
         );
       })}
     </Rows>

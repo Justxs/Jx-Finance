@@ -1,4 +1,4 @@
-import { Meter } from "@/components/ui/meter/meter";
+import { ShareRow } from "@/components/breakdown-list/share-row";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 
 interface ShareBarRow {
@@ -23,30 +23,25 @@ export function ShareBars({ rows, currency }: Readonly<Props>) {
   return (
     <ul className="space-y-3.5">
       {rows.map((row) => (
-        <li key={row.id}>
-          <div className="flex items-baseline gap-3 text-sm">
+        <ShareRow
+          key={row.id}
+          name={
             <span className="min-w-0 flex-1 truncate" title={row.name}>
               {row.name}
               {row.detail ? (
                 <span className="ml-2 text-xs text-muted-foreground">{row.detail}</span>
               ) : null}
             </span>
-            <span className="w-10 shrink-0 text-right text-xs text-muted-foreground tabular-nums">
-              {row.amount > 0 && positiveTotal > 0
-                ? percent.format(row.amount / positiveTotal)
-                : null}
-            </span>
-            <span className="w-28 shrink-0 text-right font-medium tabular-nums">
-              {money.format(row.amount, currency)}
-            </span>
-          </div>
-          <Meter
-            value={Math.abs(row.amount)}
-            max={maximum}
-            tone={row.amount < 0 ? "negative" : "primary"}
-            className="mt-1.5"
-          />
-        </li>
+          }
+          share={
+            row.amount > 0 && positiveTotal > 0 ? percent.format(row.amount / positiveTotal) : null
+          }
+          amount={money.format(row.amount, currency)}
+          wideAmount
+          value={Math.abs(row.amount)}
+          max={maximum}
+          tone={row.amount < 0 ? "negative" : "primary"}
+        />
       ))}
     </ul>
   );

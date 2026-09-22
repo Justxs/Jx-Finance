@@ -83,6 +83,20 @@ export const Saving: Story = {
   },
 };
 
+export const RenamingWithEnter: Story = {
+  args: { defaultOpen: true },
+  play: async ({ args }) => {
+    const body = within(document.body);
+
+    await userEvent.click(await body.findByRole("button", { name: "Rename: Renovation" }));
+    const field = await body.findByRole("textbox", { name: "Name" });
+    await userEvent.clear(field);
+    await userEvent.type(field, "Kitchen{Enter}");
+
+    await expect(args.onRename).toHaveBeenCalledWith("2", "Kitchen");
+  },
+};
+
 export const NothingToSave: Story = {
   args: { defaultOpen: true, canSave: false },
   play: async () => {

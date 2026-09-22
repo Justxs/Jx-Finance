@@ -1,14 +1,13 @@
 import { createColumnHelper } from "@tanstack/react-table";
-import { Copy, Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
-import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
+import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
 import type { transactionTableFeatures } from "./table-features";
 
 const columnHelper = createColumnHelper<typeof transactionTableFeatures, TransactionResponse>();
@@ -142,42 +141,17 @@ export function useTransactionColumns({
     columnHelper.display({
       id: "actions",
       header: () => <span className="sr-only">{t("common.actions")}</span>,
-      cell: (info) => {
-        const row = info.row.original;
-        const optimistic = isOptimistic(row);
-        return (
-          <div className="flex justify-end gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={optimistic}
-              onClick={() => onDuplicate(row)}
-              aria-label={`${t("transactions.duplicate")}: ${rowName(row)}`}
-            >
-              <Copy />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              disabled={optimistic}
-              onClick={() => onEdit(row)}
-              aria-label={`${t("actions.edit")}: ${rowName(row)}`}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              pending={deletingId === row.id}
-              disabled={optimistic || deletingId !== null}
-              onClick={() => onDelete(row.id)}
-              aria-label={`${t("actions.delete")}: ${rowName(row)}`}
-            >
-              <Trash2 />
-            </Button>
-          </div>
-        );
-      },
+      cell: (info) => (
+        <TransactionRowActions
+          transaction={info.row.original}
+          label={rowName(info.row.original)}
+          deletingId={deletingId}
+          onEdit={onEdit}
+          onDuplicate={onDuplicate}
+          onDelete={onDelete}
+          className="justify-end"
+        />
+      ),
     }),
   ]);
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
+import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
 import { Tag } from "@/components/ui/tag/tag";
@@ -95,14 +96,16 @@ export function ImportRow({
       onChange={(patch) => onRowChange(index, patch)}
     />
   ) : (
-    <button
+    <Button
       type="button"
+      variant="link-muted"
+      size="inline"
+      className="min-h-6"
       onClick={() => setTransferOpen(true)}
       aria-label={t("imports.markTransferFor", { row: rowName })}
-      className="inline-flex min-h-6 items-center rounded-sm text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11"
     >
       {t("imports.markTransfer")}
-    </button>
+    </Button>
   );
 
   const flags = hasFlags ? (
