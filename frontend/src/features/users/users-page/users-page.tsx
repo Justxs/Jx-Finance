@@ -1,5 +1,4 @@
 import { useSearch } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -11,9 +10,8 @@ import {
   useUpdateUserRole,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Button } from "@/components/ui/button/button";
 import { Panel } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -25,7 +23,6 @@ import { UsersTable } from "../users-table/users-table";
 
 export function UsersPage() {
   const { t } = useTranslation();
-  const [addOpen, setAddOpen] = useState(false);
   const [resetId, setResetId] = useState<string | null>(null);
 
   const me = useMeSuspense();
@@ -54,15 +51,10 @@ export function UsersPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("users.title")}>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus />
-          {t("users.add")}
-        </Button>
+        <CreateDialog label={t("users.add")} title={t("users.add")}>
+          {(close) => <CreateUserForm onCreated={close} onCancel={close} />}
+        </CreateDialog>
       </PageHeader>
-
-      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("users.add")}>
-        <CreateUserForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
-      </Modal>
 
       <Panel>
         <UsersTable

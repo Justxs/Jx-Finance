@@ -1,14 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateCategory, useHouseholdsSuspense } from "@/api/generated";
-import { FlowType, type Scope } from "@/api/generated/model";
+import { useCreateCategory, useHouseholdsSuspense, useUpdateCategory } from "@/api/generated";
+import { type CategoryResponse, FlowType, type Scope } from "@/api/generated/model";
 import { createCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
-import { silent } from "@/lib/mutations";
+import { silent, upsert } from "@/lib/mutations";
 import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 import { IconPicker } from "../icon-picker/icon-picker";
@@ -22,11 +22,12 @@ interface FormValues {
 }
 
 interface Props {
-  onCreated: () => void;
+  initial?: CategoryResponse;
+  onDone: () => void;
   onCancel: () => void;
 }
 
-export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
+export function CategoryForm({ initial, onDone, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
@@ -42,29 +43,33 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
     t,
   );
 
-  const createMutation = useCreateCategory(silent({ onSuccess: onCreated }));
+  const { create, update, pending, error } = upsert(
+    useCreateCategory(silent({ onSuccess: onDone })),
+    useUpdateCategory(silent({ onSuccess: onDone })),
+  );
 
   const defaultValues: FormValues = {
-    name: "",
-    type: "expense",
-    icon: null,
-    scope: sharing.scope,
-    householdId: sharing.householdId,
+    name: initial?.name ?? "",
+    type: initial?.type ?? "expense",
+    icon: initial?.icon ?? null,
+    scope: initial?.scope ?? sharing.scope,
+    householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
   };
 
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) =>
-      createMutation.mutateAsync({
-        data: {
-          name: value.name.trim(),
-          type: value.type,
-          icon: value.icon,
-          scope: value.scope,
-          householdId: sharedHouseholdId(value),
-        },
-      }),
+    submit: (value) => {
+      const data = {
+        name: value.name.trim(),
+        icon: value.icon,
+        scope: value.scope,
+        householdId: sharedHouseholdId(value),
+      };
+      return initial
+        ? update({ id: initial.id, data })
+        : create({ data: { ...data, type: value.type } });
+    },
   });
 
   return (
@@ -82,18 +87,20 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
             )}
           </form.Field>
 
-          <form.Field name="type">
-            {(field) => (
-              <field.SelectFieldControl
-                id="category-type"
-                label={t("transactions.type")}
-                options={[
-                  { value: "expense", label: t("categories.expense") },
-                  { value: "income", label: t("categories.income") },
-                ]}
-              />
-            )}
-          </form.Field>
+          {initial ? null : (
+            <form.Field name="type">
+              {(field) => (
+                <field.SelectFieldControl
+                  id="category-type"
+                  label={t("transactions.type")}
+                  options={[
+                    { value: "expense", label: t("categories.expense") },
+                    { value: "income", label: t("categories.income") },
+                  ]}
+                />
+              )}
+            </form.Field>
+          )}
         </FormGrid>
 
         {householdList.length > 0 ? (
@@ -116,11 +123,11 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
           )}
         </form.Field>
 
-        <FormError error={createMutation.error} />
+        <FormError error={error} />
 
         <form.FormActions
-          pending={createMutation.isPending}
-          submitLabel={t("actions.add")}
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("actions.add")}
           onCancel={onCancel}
         />
       </form.FormShell>

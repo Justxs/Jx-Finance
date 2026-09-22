@@ -99,3 +99,12 @@ export const DeleteOffersUndo: Story = {
     await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
+
+export const EditDialogOpen: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti)(:|$)/i });
+    await userEvent.click(editButtons[0]!);
+    await openedDialog();
+  },
+};

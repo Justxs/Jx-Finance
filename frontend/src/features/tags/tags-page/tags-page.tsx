@@ -1,25 +1,29 @@
-import { Plus } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { getTagsQueryKey, useDeleteTag, useTagsSuspense } from "@/api/generated";
+import {
+  getTagsQueryKey,
+  useDeleteTag,
+  useHouseholdsSuspense,
+  useTagsSuspense,
+} from "@/api/generated";
 import type { TagResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { ListSection } from "@/components/list-section/list-section";
+import { EditModal } from "@/components/modal";
+import { NamedRow } from "@/components/named-row/named-row";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Button } from "@/components/ui/button/button";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
-import { AddTagForm } from "../add-tag-form/add-tag-form";
-import { TagRow } from "../tag-row";
+import { nameById } from "@/lib/options";
+import { TagForm } from "../tag-form/tag-form";
 
 export function TagsPage() {
   const { t } = useTranslation();
-  const [addOpen, setAddOpen] = useState(false);
+  const [editing, setEditing] = useState<TagResponse | null>(null);
 
   const tags = useTagsSuspense();
+  const householdNames = nameById(useHouseholdsSuspense().data);
 
   const deleteMutation = useDeleteTag({
     mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()),
@@ -31,38 +35,41 @@ export function TagsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("tags.title")}>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus />
-          {t("tags.add")}
-        </Button>
+        <CreateDialog label={t("tags.add")} title={t("tags.addTitle")}>
+          {(close) => <TagForm onDone={close} onCancel={close} />}
+        </CreateDialog>
       </PageHeader>
 
-      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("tags.addTitle")}>
-        <AddTagForm onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
-      </Modal>
-
-      <Section>
-        <div className="mb-2 flex items-baseline justify-between gap-3">
-          <SectionTitle>{t("tags.title")}</SectionTitle>
-          <span className="text-sm text-muted-foreground tabular-nums">{tagList.length}</span>
-        </div>
-        <p className="mb-3 max-w-prose text-sm text-muted-foreground">{t("tags.explainer")}</p>
-        {tagList.length === 0 ? (
-          <EmptyText>{t("tags.empty")}</EmptyText>
-        ) : (
-          <Rows>
-            {tagList.map((tag) => (
-              <TagRow
-                key={tag.id}
-                tag={tag}
-                onDelete={() => remove.request(tag.id)}
-                deletePending={remove.pendingId === tag.id}
-                deleteDisabled={remove.busy}
-              />
-            ))}
-          </Rows>
+      <EditModal item={editing} title={t("tags.editTitle")} onClose={() => setEditing(null)}>
+        {(tag) => (
+          <TagForm
+            initial={tag}
+            onDone={() => setEditing(null)}
+            onCancel={() => setEditing(null)}
+          />
         )}
-      </Section>
+      </EditModal>
+
+      <ListSection
+        title={t("tags.title")}
+        count={tagList.length}
+        description={t("tags.explainer")}
+        emptyText={t("tags.empty")}
+      >
+        {tagList.map((tag) => (
+          <NamedRow
+            key={tag.id}
+            name={tag.name}
+            scope={tag.scope}
+            householdName={householdNames.get(tag.householdId ?? "")}
+            onEdit={() => setEditing(tag)}
+            onDelete={() => remove.request(tag.id)}
+            deletePending={remove.pendingId === tag.id}
+            deleteDisabled={remove.busy}
+          />
+        ))}
+      </ListSection>
+
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );

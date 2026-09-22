@@ -1,5 +1,4 @@
-import { Plus } from "lucide-react";
-import { type ReactNode, useState, useDeferredValue } from "react";
+import { type ReactNode, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getRecurringBillsQueryKey,
@@ -11,9 +10,8 @@ import {
 } from "@/api/generated";
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
@@ -26,7 +24,6 @@ import { SubscriptionSuggestions } from "../subscription-suggestions/subscriptio
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
-  const [addOpen, setAddOpen] = useState(false);
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
@@ -67,20 +64,17 @@ export function RecurringBillsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("recurringBills.title")}>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus />
-          {t("recurringBills.add")}
-        </Button>
+        <CreateDialog label={t("recurringBills.add")} title={t("recurringBills.add")}>
+          {(close) => (
+            <RecurringBillForm
+              accounts={accountList}
+              categories={categoryList}
+              onDone={close}
+              onCancel={close}
+            />
+          )}
+        </CreateDialog>
       </PageHeader>
-
-      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("recurringBills.add")}>
-        <RecurringBillForm
-          accounts={accountList}
-          categories={categoryList}
-          onDone={() => setAddOpen(false)}
-          onCancel={() => setAddOpen(false)}
-        />
-      </Modal>
 
       {billList.length > 0 ? (
         <Section>
