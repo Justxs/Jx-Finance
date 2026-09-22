@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { AssetType } from "./assetType";
+import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 
 export interface AssetResponse {
@@ -14,4 +15,5 @@ export interface AssetResponse {
   type: AssetType;
   currentValue: string;
   asOf: DateOnly;
+  currency: Currency;
 }

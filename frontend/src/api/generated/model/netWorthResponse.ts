@@ -11,4 +11,5 @@ export interface NetWorthResponse {
   assets: string;
   debts: string;
   netWorth: string;
+  isComplete: boolean;
 }

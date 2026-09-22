@@ -20,6 +20,7 @@ export const assets: AssetResponse[] = [
     type: "property",
     currentValue: "145000.00",
     asOf: "2026-06-30",
+    currency: "eur",
   },
   {
     id: ids.assets.car,
@@ -27,6 +28,7 @@ export const assets: AssetResponse[] = [
     type: "vehicle",
     currentValue: "14500.00",
     asOf: "2026-08-15",
+    currency: "eur",
   },
   {
     id: ids.assets.investments,
@@ -34,6 +36,7 @@ export const assets: AssetResponse[] = [
     type: "investment",
     currentValue: "8320.55",
     asOf: "2026-09-01",
+    currency: "eur",
   },
 ];
 
@@ -148,6 +151,7 @@ export const debts: DebtResponse[] = [
     outstandingAmount: "98450.32",
     interestRate: 3.85,
     asOf: "2026-09-05",
+    currency: "eur",
     loanAmount: "120000.00",
     firstPaymentDate: "2021-03-15",
     termMonths: 300,
@@ -161,6 +165,7 @@ export const debts: DebtResponse[] = [
     outstandingAmount: "6200.00",
     interestRate: null,
     asOf: "2026-09-01",
+    currency: "eur",
     ...noSchedule,
   }),
 ];
@@ -172,6 +177,7 @@ export const zeroRateDebt: DebtResponse = withPayoff({
   outstandingAmount: "4000.00",
   interestRate: 0,
   asOf: "2026-09-01",
+  currency: "eur",
   loanAmount: "6000.00",
   firstPaymentDate: "2026-01-10",
   termMonths: null,
@@ -186,6 +192,7 @@ export const linearDebt: DebtResponse = withPayoff({
   outstandingAmount: "7200.00",
   interestRate: 2.1,
   asOf: "2026-09-01",
+  currency: "eur",
   loanAmount: "9000.00",
   firstPaymentDate: "2025-01-20",
   termMonths: 60,
@@ -249,6 +256,7 @@ export const netWorth: NetWorthResponse = {
   assets: fromCents(assetsCents),
   debts: fromCents(debtsCents),
   netWorth: fromCents(accountsCents + assetsCents - debtsCents),
+  isComplete: true,
 };
 
 export const emptyNetWorth: NetWorthResponse = {
@@ -256,6 +264,7 @@ export const emptyNetWorth: NetWorthResponse = {
   assets: "0.00",
   debts: "0.00",
   netWorth: "0.00",
+  isComplete: true,
 };
 
 function snapshot(date: string, accountsValue: string, assetsValue: string, debtsValue: string) {
