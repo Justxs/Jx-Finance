@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -21,6 +20,6 @@ public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        await Send.OkAsync((await settingsService.SendTestEmailAsync(ct)).ValueOrThrow(), ct);
+        await Send.OkOrProblemAsync(await settingsService.SendTestEmailAsync(ct), ct);
     }
 }

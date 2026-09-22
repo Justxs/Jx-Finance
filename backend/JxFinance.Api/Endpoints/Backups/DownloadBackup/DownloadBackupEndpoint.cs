@@ -1,7 +1,6 @@
 using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
@@ -23,7 +22,13 @@ public sealed class DownloadBackupEndpoint(IBackupService backupService) : Endpo
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var download = (await backupService.OpenAsync(Route<Guid>("id"), ct)).ValueOrThrow();
+        var result = await backupService.OpenAsync(Route<Guid>("id"), ct);
+        if (!result.TryGetValue(out var download))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         await using var content = download.Content;
         HttpContext.Response.Headers.CacheControl = "no-store";
         await Send.StreamAsync(content, download.FileName, download.SizeBytes, download.ContentType, cancellation: ct);

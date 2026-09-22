@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
 
@@ -18,7 +17,6 @@ public sealed class GetHouseholdAuditEndpoint(IHouseholdAuditService auditServic
 
     public override async Task HandleAsync(GetHouseholdAuditRequest req, CancellationToken ct)
     {
-        var page = (await auditService.GetPageAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(page, ct);
+        await Send.OkOrProblemAsync(await auditService.GetPageAsync(req, ct), ct);
     }
 }

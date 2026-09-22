@@ -64,6 +64,13 @@ public sealed class ${name}Summary : Summary<${name}Endpoint>
 `,
 };
 
+const creates = verb === "Post" && name.startsWith("Create");
+const description = creates ? `\n        Description(d => d.ProducesCreated<${name}Response>());` : "";
+const send = creates
+  ? `await Send.CreatedOrProblemAsync(result, created => $"{ApiRoutes.Base}/${route}/{created.Id}", ct);`
+  : "await Send.OkOrProblemAsync(result, ct);";
+const success = creates ? `Responses[201] = "Created. The Location header points at it.";` : `Responses[200] = "Succeeded.";`;
+
 const requestFiles = {
   [`${name}Request.cs`]: `namespace ${namespace};
 
@@ -87,6 +94,8 @@ public sealed class ${name}Validator : Validator<${name}Request>
 }
 `,
   [`${name}Endpoint.cs`]: `using FastEndpoints;
+using JxFinance.Common;
+using JxFinance.Domain.Common;
 
 namespace ${namespace};
 
@@ -95,12 +104,13 @@ public sealed class ${name}Endpoint : Endpoint<${name}Request, ${name}Response>
     public override void Configure()
     {
         ${verb}("${route}");
-        Group<${tag}Group>();
+        Group<${tag}Group>();${description}
     }
 
     public override async Task HandleAsync(${name}Request req, CancellationToken ct)
     {
-        await Send.OkAsync(new ${name}Response(req.Id), ct);
+        Result<${name}Response> result = new ${name}Response(req.Id);
+        ${send}
     }
 }
 `,
@@ -114,7 +124,7 @@ public sealed class ${name}Summary : Summary<${name}Endpoint, ${name}Request>
     {
         Summary = "${name}";
         Description = "Describe what this does and when to call it.";
-        Responses[200] = "Succeeded.";
+        ${success}
         Responses[400] = "Validation failed.";
     }
 }

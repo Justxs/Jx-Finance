@@ -1,8 +1,5 @@
-using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
-using JxFinance.Endpoints.Households.GetHousehold;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
 
@@ -15,12 +12,11 @@ public sealed class CreateHouseholdEndpoint(IHouseholdService householdService)
     {
         Post(ApiRoutes.Households);
         Group<HouseholdsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<HouseholdResponse>(201, MediaTypeNames.Application.Json));
+        Description(d => d.ProducesCreated<HouseholdResponse>());
     }
 
     public override async Task HandleAsync(CreateHouseholdRequest req, CancellationToken ct)
     {
-        var household = (await householdService.CreateAsync(req, ct)).ValueOrThrow();
-        await Send.CreatedAtAsync<GetHouseholdEndpoint>(new { id = household.Id }, household, cancellation: ct);
+        await Send.CreatedOrProblemAsync(await householdService.CreateAsync(req, ct), household => $"{ApiRoutes.HouseholdsPath}/{household.Id}", ct);
     }
 }

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -21,7 +20,13 @@ public sealed class RestoreBackupEndpoint(IBackupService backupService, ISession
 
     public override async Task HandleAsync(RestoreBackupRequest req, CancellationToken ct)
     {
-        var restored = (await backupService.RestoreAsync(req.Id, req.Password, ct)).ValueOrThrow();
+        var result = await backupService.RestoreAsync(req.Id, req.Password, ct);
+        if (!result.TryGetValue(out var restored))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         await sessionService.SignOutAsync(ct);
         await Send.OkAsync(restored, ct);
     }

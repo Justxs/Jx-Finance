@@ -35,6 +35,7 @@ public static class ApiPipelineExtensions
             c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
             c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
             c.Serializer.SerializerErrorsField = ProblemResponses.SerializerErrorsField;
+            c.Errors.GeneralErrorsField = ProblemResponses.GeneralErrorsField;
             c.Binding.JsonExceptionTransformer = ProblemResponses.FromJsonException;
             c.Errors.UseProblemDetails(p =>
             {

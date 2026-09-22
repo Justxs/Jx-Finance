@@ -1,5 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -20,7 +19,12 @@ public sealed class LoginEndpoint(IAuthService authService, ISessionService sess
 
     public override async Task HandleAsync(LoginRequest req, CancellationToken ct)
     {
-        var user = (await authService.ValidateCredentialsAsync(req.Email.Trim(), req.Password, ct)).ValueOrThrow();
+        var credentials = await authService.ValidateCredentialsAsync(req.Email.Trim(), req.Password, ct);
+        if (!credentials.TryGetValue(out var user))
+        {
+            await Send.ProblemAsync(credentials.Error, ct);
+            return;
+        }
 
         if (user.TwoFactorEnabled)
         {
@@ -31,12 +35,14 @@ public sealed class LoginEndpoint(IAuthService authService, ISessionService sess
             }
 
             var consumed = await authService.ConsumeTwoFactorCodeAsync(user, req.TwoFactorCode);
-            if (consumed.ErrorCode == ErrorCodes.TwoFactorInvalidCode)
+            if (consumed.IsFailure)
             {
-                ThrowError(consumed.ErrorMessage!, consumed.ErrorCode, Severity.Error, StatusCodes.Status401Unauthorized);
+                var status = consumed.ErrorCode == ErrorCodes.TwoFactorInvalidCode
+                    ? StatusCodes.Status401Unauthorized
+                    : ErrorCodes.StatusCodeFor(consumed.ErrorCode);
+                await Send.ProblemAsync(consumed.Error, status, ct);
+                return;
             }
-
-            consumed.EnsureSuccess();
         }
 
         await sessionService.SignInAsync(user, req.RememberMe, ct);

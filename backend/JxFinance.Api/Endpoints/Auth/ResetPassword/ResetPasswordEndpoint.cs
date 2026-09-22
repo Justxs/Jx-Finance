@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.ResetPassword;
@@ -18,7 +17,6 @@ public sealed class ResetPasswordEndpoint(IAccountEmailService accountEmails) : 
 
     public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct)
     {
-        (await accountEmails.ResetPasswordAsync(req.Email.Trim(), req.Token, req.NewPassword, ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await accountEmails.ResetPasswordAsync(req.Email.Trim(), req.Token, req.NewPassword, ct), ct);
     }
 }

@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkTagTransactions;
@@ -17,7 +16,13 @@ public sealed class BulkTagTransactionsEndpoint(ITransactionService transactionS
 
     public override async Task HandleAsync(BulkTagTransactionsRequest req, CancellationToken ct)
     {
-        var updated = (await transactionService.BulkTagAsync(req, ct)).ValueOrThrow();
+        var result = await transactionService.BulkTagAsync(req, ct);
+        if (!result.TryGetValue(out var updated))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         await Send.OkAsync(new BulkTagTransactionsResponse(updated), ct);
     }
 }

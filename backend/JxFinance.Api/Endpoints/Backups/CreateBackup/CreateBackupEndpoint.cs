@@ -1,4 +1,3 @@
-using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
@@ -15,12 +14,12 @@ public sealed class CreateBackupEndpoint(IBackupService backupService) : Endpoin
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, MediaTypeNames.Application.Json).ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ProducesCreated<BackupResponse>().ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(CreateBackupRequest req, CancellationToken ct)
     {
         var backup = await backupService.CreateAsync(req.Note, ct);
-        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.BackupsPath}/{backup.Id}", backup));
+        await Send.CreatedAsync($"{ApiRoutes.BackupsPath}/{backup.Id}", backup, ct);
     }
 }

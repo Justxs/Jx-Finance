@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -19,7 +18,6 @@ public sealed class DeactivateUserEndpoint(IUserService userService, ICurrentUse
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        (await userService.DeactivateAsync(Route<Guid>("id"), currentUser.Id, ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await userService.DeactivateAsync(Route<Guid>("id"), currentUser.Id, ct), ct);
     }
 }

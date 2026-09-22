@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -19,7 +18,6 @@ public sealed class UpdateBackupEndpoint(IBackupService backupService) : Endpoin
 
     public override async Task HandleAsync(UpdateBackupRequest req, CancellationToken ct)
     {
-        var backup = (await backupService.UpdateAsync(req.Id, req.Note, ct)).ValueOrThrow();
-        await Send.OkAsync(backup, ct);
+        await Send.OkOrProblemAsync(await backupService.UpdateAsync(req.Id, req.Note, ct), ct);
     }
 }

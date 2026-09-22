@@ -1,8 +1,5 @@
-using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
-using JxFinance.Endpoints.RecurringBills.GetRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -15,12 +12,11 @@ public sealed class CreateRecurringBillEndpoint(IRecurringBillService recurringB
     {
         Post(ApiRoutes.RecurringBills);
         Group<RecurringBillsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<RecurringBillResponse>(201, MediaTypeNames.Application.Json));
+        Description(d => d.ProducesCreated<RecurringBillResponse>());
     }
 
     public override async Task HandleAsync(CreateRecurringBillRequest req, CancellationToken ct)
     {
-        var bill = (await recurringBillService.CreateAsync(req, ct)).ValueOrThrow();
-        await Send.CreatedAtAsync<GetRecurringBillEndpoint>(new { id = bill.Id }, bill, cancellation: ct);
+        await Send.CreatedOrProblemAsync(await recurringBillService.CreateAsync(req, ct), bill => $"{ApiRoutes.RecurringBillsPath}/{bill.Id}", ct);
     }
 }

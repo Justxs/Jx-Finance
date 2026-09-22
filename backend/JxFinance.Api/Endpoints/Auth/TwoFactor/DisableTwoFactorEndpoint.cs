@@ -27,7 +27,13 @@ public sealed class DisableTwoFactorEndpoint(IAuthService authService, ICurrentU
             return;
         }
 
-        (await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid)).EnsureSuccess();
+        var confirmed = await authService.ConfirmPasswordAsync(user, req.Password, ErrorCodes.CredentialsInvalid);
+        if (confirmed.IsFailure)
+        {
+            await Send.ProblemAsync(confirmed.Error, ct);
+            return;
+        }
+
         await authService.DisableTwoFactorAsync(user);
         await sessions.RenewAsync(user, ct);
         await Send.NoContentAsync(ct);

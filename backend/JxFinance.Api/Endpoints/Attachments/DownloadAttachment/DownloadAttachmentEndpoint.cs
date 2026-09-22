@@ -1,7 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Attachments;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Attachments.Interfaces;
 using Microsoft.Net.Http.Headers;
 
@@ -28,7 +27,13 @@ public sealed class DownloadAttachmentEndpoint(IAttachmentService attachmentServ
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var download = (await attachmentService.OpenAsync(Route<Guid>("id"), ct)).ValueOrThrow();
+        var result = await attachmentService.OpenAsync(Route<Guid>("id"), ct);
+        if (!result.TryGetValue(out var download))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         await using var content = download.Content;
         var headers = HttpContext.Response.Headers;
         var etag = new EntityTagHeaderValue($"\"{download.Sha256}\"");

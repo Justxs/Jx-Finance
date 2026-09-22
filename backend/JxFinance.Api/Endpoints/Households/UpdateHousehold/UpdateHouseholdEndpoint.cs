@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateHouseholdEndpoint(IHouseholdService householdService)
 
     public override async Task HandleAsync(UpdateHouseholdRequest req, CancellationToken ct)
     {
-        var household = (await householdService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(household, ct);
+        await Send.OkOrProblemAsync(await householdService.UpdateAsync(req, ct), ct);
     }
 }

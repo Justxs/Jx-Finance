@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Common;
@@ -12,7 +11,6 @@ public abstract class DeleteEndpoint : EndpointWithoutRequest
 
     public sealed override async Task HandleAsync(CancellationToken ct)
     {
-        (await DeleteAsync(Route<Guid>(IdParameter), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await DeleteAsync(Route<Guid>(IdParameter), ct), ct);
     }
 }

@@ -8,6 +8,7 @@ namespace JxFinance.Common.Errors;
 public static class ProblemResponses
 {
     public const string SerializerErrorsField = "serializerErrors";
+    public const string GeneralErrorsField = "GeneralErrors";
 
     private const string RootPath = "$";
     private const string RootArrayPrefix = "$[";

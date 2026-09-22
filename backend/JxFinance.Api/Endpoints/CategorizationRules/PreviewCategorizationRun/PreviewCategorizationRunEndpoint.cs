@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 
@@ -17,7 +16,6 @@ public sealed class PreviewCategorizationRunEndpoint(ICategorizationRuleService 
 
     public override async Task HandleAsync(RunRulesRequest req, CancellationToken ct)
     {
-        var preview = (await ruleService.PreviewRunAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(preview, ct);
+        await Send.OkOrProblemAsync(await ruleService.PreviewRunAsync(req, ct), ct);
     }
 }

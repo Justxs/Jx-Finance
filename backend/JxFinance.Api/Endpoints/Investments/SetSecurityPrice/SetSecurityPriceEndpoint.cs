@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -19,7 +18,6 @@ public sealed class SetSecurityPriceEndpoint(ISecurityPriceService priceService)
 
     public override async Task HandleAsync(SetSecurityPriceRequest req, CancellationToken ct)
     {
-        var updated = (await priceService.SetPriceAsync(req, User.IsInRole(AppRoles.Admin), ct)).ValueOrThrow();
-        await Send.OkAsync(updated, ct);
+        await Send.OkOrProblemAsync(await priceService.SetPriceAsync(req, User.IsInRole(AppRoles.Admin), ct), ct);
     }
 }

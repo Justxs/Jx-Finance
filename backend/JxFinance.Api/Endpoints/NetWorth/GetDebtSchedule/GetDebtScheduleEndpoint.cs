@@ -1,7 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Amortization;
-using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -23,7 +22,6 @@ public sealed class GetDebtScheduleEndpoint(INetWorthService netWorthService) : 
             DecimalRules.ParseMoneyText(req.ExtraMonthly) ?? 0,
             DecimalRules.ParseMoneyText(req.LumpSum) ?? 0,
             req.LumpSumDate);
-        var schedule = (await netWorthService.GetDebtScheduleAsync(req.Id, extra, ct)).ValueOrThrow();
-        await Send.OkAsync(schedule, ct);
+        await Send.OkOrProblemAsync(await netWorthService.GetDebtScheduleAsync(req.Id, extra, ct), ct);
     }
 }

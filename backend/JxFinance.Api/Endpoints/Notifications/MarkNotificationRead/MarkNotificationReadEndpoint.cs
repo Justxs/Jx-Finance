@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Notifications.Interfaces;
 
 namespace JxFinance.Endpoints.Notifications.MarkNotificationRead;
@@ -16,7 +15,6 @@ public sealed class MarkNotificationReadEndpoint(INotificationService notificati
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        (await notificationService.MarkReadAsync(Route<Guid>("id"), ct)).EnsureSuccess();
-        await Send.NoContentAsync(ct);
+        await Send.NoContentOrProblemAsync(await notificationService.MarkReadAsync(Route<Guid>("id"), ct), ct);
     }
 }

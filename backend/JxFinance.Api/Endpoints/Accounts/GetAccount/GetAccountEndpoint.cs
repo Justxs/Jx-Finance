@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
 
@@ -18,7 +17,6 @@ public sealed class GetAccountEndpoint(IAccountService accountService)
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var account = (await accountService.GetByIdAsync(Route<Guid>("id"), ct)).ValueOrThrow();
-        await Send.OkAsync(account, ct);
+        await Send.OkOrProblemAsync(await accountService.GetByIdAsync(Route<Guid>("id"), ct), ct);
     }
 }

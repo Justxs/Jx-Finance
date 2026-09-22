@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.BulkCategorizeTransactions;
@@ -17,7 +16,13 @@ public sealed class BulkCategorizeTransactionsEndpoint(ITransactionService trans
 
     public override async Task HandleAsync(BulkCategorizeTransactionsRequest req, CancellationToken ct)
     {
-        var updated = (await transactionService.BulkCategorizeAsync(req, ct)).ValueOrThrow();
+        var result = await transactionService.BulkCategorizeAsync(req, ct);
+        if (!result.TryGetValue(out var updated))
+        {
+            await Send.ProblemAsync(result.Error, ct);
+            return;
+        }
+
         await Send.OkAsync(new BulkCategorizeTransactionsResponse(updated), ct);
     }
 }

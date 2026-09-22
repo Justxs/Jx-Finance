@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Conversions.Interfaces;
 using JxFinance.Endpoints.Conversions.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateConversionEndpoint(IConversionService conversionServic
 
     public override async Task HandleAsync(UpdateConversionRequest req, CancellationToken ct)
     {
-        var conversion = (await conversionService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(conversion, ct);
+        await Send.OkOrProblemAsync(await conversionService.UpdateAsync(req, ct), ct);
     }
 }

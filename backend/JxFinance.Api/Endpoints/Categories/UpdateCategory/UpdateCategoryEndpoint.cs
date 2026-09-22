@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Categories.Shared;
 
@@ -18,7 +17,6 @@ public sealed class UpdateCategoryEndpoint(ICategoryService categoryService)
 
     public override async Task HandleAsync(UpdateCategoryRequest req, CancellationToken ct)
     {
-        var category = (await categoryService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(category, ct);
+        await Send.OkOrProblemAsync(await categoryService.UpdateAsync(req, ct), ct);
     }
 }

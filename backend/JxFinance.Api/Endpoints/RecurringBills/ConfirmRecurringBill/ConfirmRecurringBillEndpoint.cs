@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 
 namespace JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
@@ -17,7 +16,6 @@ public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurring
 
     public override async Task HandleAsync(ConfirmRecurringBillRequest req, CancellationToken ct)
     {
-        var confirmation = (await recurringBillService.ConfirmAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(confirmation, ct);
+        await Send.OkOrProblemAsync(await recurringBillService.ConfirmAsync(req, ct), ct);
     }
 }

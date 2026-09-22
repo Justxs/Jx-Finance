@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Budgets.Shared;
 
@@ -17,7 +16,6 @@ public sealed class UpdateBudgetEndpoint(IBudgetService budgetService) : Endpoin
 
     public override async Task HandleAsync(UpdateBudgetRequest req, CancellationToken ct)
     {
-        var budget = (await budgetService.UpdateAsync(req, ct)).ValueOrThrow();
-        await Send.OkAsync(budget, ct);
+        await Send.OkOrProblemAsync(await budgetService.UpdateAsync(req, ct), ct);
     }
 }
