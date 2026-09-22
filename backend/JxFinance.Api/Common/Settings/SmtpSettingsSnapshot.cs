@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using JxFinance.Domain.Email;
 using JxFinance.Domain.Settings;
 
@@ -29,4 +31,13 @@ public sealed record SmtpSettingsSnapshot(
         settings.SmtpProtectedPassword,
         OptionalText.Normalize(settings.SmtpFromAddress),
         OptionalText.Normalize(settings.SmtpFromName));
+
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append(
+            CultureInfo.InvariantCulture,
+            $"Enabled = {Enabled}, Host = {Host}, Port = {Port}, Encryption = {Encryption}, UserName = {UserName}, "
+            + $"HasPassword = {HasPassword}, FromAddress = {FromAddress}, FromName = {FromName}");
+        return true;
+    }
 }
