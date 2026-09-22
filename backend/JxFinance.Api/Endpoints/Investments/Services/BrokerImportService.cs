@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using FastEndpoints;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Transfers;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
@@ -66,20 +67,26 @@ public sealed class BrokerImportService(
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
+        var fundingCurrency = funding is { } fundingId
+            ? await db.Accounts.Where(a => a.Id == fundingId).Select(a => (Currency?)a.StartingBalance.Currency).FirstAsync(cancellationToken)
+            : null;
         var foreignDates = statement.Trades.Where(t => t.Instrument.Currency != rates.ReportingCurrency || t.CommissionCurrency != rates.ReportingCurrency)
             .Select(t => t.Date)
-            .Concat(statement.CashTransactions.Where(c => c.Currency != rates.ReportingCurrency).Select(c => c.Date))
+            .Concat(statement.CashTransactions
+                .Where(c => c.Currency != rates.ReportingCurrency || (fundingCurrency is not null && c.Currency != fundingCurrency))
+                .Select(c => c.Date))
             .ToList();
         if (foreignDates.Count > 0)
         {
             await rates.EnsureRangeAsync(foreignDates.Min(), foreignDates.Max(), cancellationToken);
         }
 
+        var transfers = new TransferAmountResolver(db, rates);
         for (var attempt = 1; ; attempt++)
         {
             try
             {
-                return await new StatementImport(db, rates, statement, account, funding).RunAsync(cancellationToken);
+                return await new StatementImport(db, rates, transfers, statement, account, funding).RunAsync(cancellationToken);
             }
             catch (DbUpdateException ex) when (IsSecurityCollision(ex))
             {
@@ -172,15 +179,7 @@ public sealed class BrokerImportService(
             return new DomainError(ErrorCodes.ResourceNotFound, "Connection not found.");
         }
 
-        Result<BrokerImportResponse> result;
-        try
-        {
-            result = await DownloadAndImportAsync(connection, cancellationToken);
-        }
-        catch (Exception ex) when (ex is DbUpdateException or InvalidOperationException)
-        {
-            result = new DomainError(ErrorCodes.BrokerUnavailable, "The report could not be imported.");
-        }
+        var result = await DownloadAndImportAsync(connection, cancellationToken);
 
         db.ChangeTracker.Clear();
         db.Attach(connection);
