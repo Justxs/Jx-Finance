@@ -32,6 +32,7 @@ namespace JxFinance.Endpoints.Imports.Services;
 [RegisterService<IImportService>(LifeTime.Scoped)]
 public sealed class ImportService(
     AppDbContext db,
+    IExchangeRateService rates,
     ITransactionValuation valuations,
     ITransferAmountResolver transferAmounts,
     IReferenceGuard references,
@@ -112,9 +113,47 @@ public sealed class ImportService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
         }
 
-        var existingRefSet = await ExistingRefsAsync(accountId, request.Rows.Select(r => r.ImportRef), cancellationToken);
+        var loaded = await LoadConfirmLookupsAsync(accountId, accountCurrency.Value, request.Rows, cancellationToken);
+        if (!loaded.TryGetValue(out var lookups))
+        {
+            return loaded.Error;
+        }
 
-        var wantedTagIds = request.Rows
+        var counted = await AddRowsAsync(accountId, accountCurrency.Value, request.Rows, lookups, cancellationToken);
+        if (!counted.TryGetValue(out var totals))
+        {
+            return counted.Error;
+        }
+
+        if (totals.Imported > 0)
+        {
+            db.Audit.Summarise(
+                AuditAction.Imported,
+                AuditEntityKind.Transaction,
+                TrashLabel.Counted(
+                    $"Swedbank CSV into {target.Name}",
+                    (totals.Imported, "entry", "entries"),
+                    (totals.Skipped, "duplicate skipped", "duplicates skipped")),
+                totals.Imported,
+                accountId.Value,
+                [accountId]);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+
+        await transaction.CommitAsync(cancellationToken);
+        return new ImportConfirmResponse(totals.Imported, totals.Skipped);
+    }
+
+    private async Task<Result<ConfirmLookups>> LoadConfirmLookupsAsync(
+        AccountId accountId,
+        Currency accountCurrency,
+        IReadOnlyList<ImportConfirmRow> rows,
+        CancellationToken cancellationToken)
+    {
+        var existingRefs = await ExistingRefsAsync(accountId, rows.Select(r => r.ImportRef), cancellationToken);
+
+        var wantedTagIds = rows
             .SelectMany(r => r.TagIds ?? [])
             .Distinct()
             .Select(id => new TagId(id))
@@ -125,88 +164,101 @@ public sealed class ImportService(
             return new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
         }
 
-        var categoryIds = request.Rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
+        var categoryIds = rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
         var categoryTypes = await db.Categories
             .Where(c => categoryIds.Contains(c.Id))
             .ToDictionaryAsync(c => c.Id, c => (FlowType?)c.Type, cancellationToken);
 
+        var otherAccountIds = rows
+            .Where(r => r.TransferAccountId is not null)
+            .Select(r => new AccountId(r.TransferAccountId!.Value))
+            .Distinct()
+            .ToList();
+        var otherCurrencies = otherAccountIds.Count == 0
+            ? []
+            : await db.Accounts
+                .Where(a => otherAccountIds.Contains(a.Id))
+                .ToDictionaryAsync(a => a.Id, a => a.StartingBalance.Currency, cancellationToken);
+
+        var wantedTransferIds = rows
+            .Where(r => r.ExistingTransferId is not null)
+            .Select(r => new TransferId(r.ExistingTransferId!.Value))
+            .Distinct()
+            .ToList();
+        var candidates = wantedTransferIds.Count == 0
+            ? []
+            : await db.Transfers
+                .Where(t => wantedTransferIds.Contains(t.Id))
+                .ToDictionaryAsync(t => t.Id, cancellationToken);
+        var alreadyImported = wantedTransferIds.Count == 0
+            ? []
+            : (await db.TransferImports
+                .Where(r => r.AccountId == accountId && wantedTransferIds.Contains(r.TransferId))
+                .Select(r => r.TransferId)
+                .ToListAsync(cancellationToken)).ToHashSet();
+
+        await PreloadRatesAsync(accountCurrency, rows, cancellationToken);
+
+        return new ConfirmLookups(existingRefs, categoryTypes, otherCurrencies, candidates, alreadyImported);
+    }
+
+    private async Task PreloadRatesAsync(
+        Currency accountCurrency,
+        IReadOnlyList<ImportConfirmRow> rows,
+        CancellationToken cancellationToken)
+    {
+        var converted = rows
+            .Where(r => r.TransferAccountId is null && (r.Currency ?? accountCurrency) != rates.ReportingCurrency)
+            .Select(r => r.Date)
+            .ToList();
+        if (converted.Count > 0)
+        {
+            await rates.PreloadAsync(converted.Min(), converted.Max(), cancellationToken);
+        }
+    }
+
+    private async Task<Result<ImportTotals>> AddRowsAsync(
+        AccountId accountId,
+        Currency accountCurrency,
+        IReadOnlyList<ImportConfirmRow> rows,
+        ConfirmLookups lookups,
+        CancellationToken cancellationToken)
+    {
         var imported = 0;
         var skipped = 0;
         var matchedTransfers = new HashSet<TransferId>();
 
-        foreach (var row in request.Rows)
+        foreach (var row in rows)
         {
-            if (!existingRefSet.Add(row.ImportRef))
+            if (!lookups.ExistingRefs.Add(row.ImportRef))
             {
                 skipped++;
                 continue;
             }
 
-            var currency = row.Currency ?? accountCurrency.Value;
-            var amount = new Money(row.Amount, currency);
+            var currency = row.Currency ?? accountCurrency;
             var categoryId = row.CategoryId is { } id ? new CategoryId(id) : (CategoryId?)null;
-            if (categoryId is { } chosen && categoryTypes.GetValueOrDefault(chosen) != row.Type)
+            if (categoryId is { } chosen && lookups.CategoryTypes.GetValueOrDefault(chosen) != row.Type)
             {
                 return new DomainError(ErrorCodes.CategoryWrongType, "Category does not exist or has the wrong type.");
             }
 
-            if (row.TransferAccountId is { } otherId)
+            if (row.TransferAccountId is not null)
             {
-                var otherAccountId = new AccountId(otherId);
-                var otherCurrency = await db.Accounts
-                    .Where(a => a.Id == otherAccountId)
-                    .Select(a => (Currency?)a.StartingBalance.Currency)
-                    .FirstOrDefaultAsync(cancellationToken);
-                if (otherAccountId == accountId || otherCurrency is null)
-                    return new DomainError(ErrorCodes.ReferenceNotFound, "Choose another accessible account for the transfer.");
-                var fromId = row.Type == FlowType.Expense ? accountId : otherAccountId;
-                var toId = row.Type == FlowType.Expense ? otherAccountId : accountId;
-                Transfer transfer;
-                if (row.ExistingTransferId is { } existingId)
+                var matched = AddTransfer(accountId, accountCurrency, row, currency, lookups, matchedTransfers);
+                if (matched is { } transferError)
                 {
-                    var match = await db.Transfers.FirstOrDefaultAsync(t => t.Id == new TransferId(existingId), cancellationToken);
-                    if (match is null || match.FromAccountId != fromId || match.ToAccountId != toId
-                        || (row.Type == FlowType.Expense ? match.Amount : match.ReceivedAmount) != amount || match.Date != row.Date)
-                        return new DomainError(ErrorCodes.ImportTransferMismatch, "The selected transfer does not match this bank entry.");
-                    if (!matchedTransfers.Add(match.Id)
-                        || await db.TransferImports.AnyAsync(r => r.AccountId == accountId && r.TransferId == match.Id, cancellationToken))
-                        return new DomainError(
-                            ErrorCodes.ImportTransferAlreadyMatched,
-                            "The selected transfer is already matched to another bank entry of this account.");
-                    transfer = match;
+                    return transferError;
                 }
-                else
-                {
-                    var draft = row.Type == FlowType.Expense
-                        ? new TransferDraft(fromId, toId, row.Amount, currency, null, otherCurrency)
-                        : new TransferDraft(fromId, toId, row.Amount, otherCurrency, null, currency);
-                    var amounts = await transferAmounts.ResolveAsync(draft, [], cancellationToken);
-                    if (!amounts.TryGetValue(out var resolved))
-                    {
-                        return amounts.Error.Code == ErrorCodes.TransferReceivedAmountRequired
-                            ? new DomainError(
-                                ErrorCodes.TransferReceivedAmountRequired,
-                                "The other account holds a different currency. Record this transfer under Transfers with the received amount.")
-                            : amounts.Error;
-                    }
 
-                    transfer = new Transfer
-                    {
-                        FromAccountId = fromId,
-                        ToAccountId = toId,
-                        Amount = resolved.Sent,
-                        ReceivedAmount = resolved.Received,
-                        Date = row.Date,
-                        Description = OptionalText.Normalize(row.Description),
-                    };
-                    db.Transfers.Add(transfer);
-                }
-                db.TransferImports.Add(new TransferImport { AccountId = accountId, ImportRef = row.ImportRef, TransferId = transfer.Id });
                 imported++;
                 continue;
             }
+
             if (row.ExistingTransferId is not null)
+            {
                 return new DomainError(ErrorCodes.Required, "Choose the other account before matching a transfer.");
+            }
 
             var value = await valuations.ValueAsync(accountId, row.Amount, currency, row.Date, [], cancellationToken);
             if (!value.TryGetValue(out var valued))
@@ -233,25 +285,89 @@ public sealed class ImportService(
             imported++;
         }
 
-        if (imported > 0)
+        return new ImportTotals(imported, skipped);
+    }
+
+    private DomainError? AddTransfer(
+        AccountId accountId,
+        Currency accountCurrency,
+        ImportConfirmRow row,
+        Currency currency,
+        ConfirmLookups lookups,
+        HashSet<TransferId> matchedTransfers)
+    {
+        var otherAccountId = new AccountId(row.TransferAccountId!.Value);
+        if (otherAccountId == accountId || !lookups.OtherCurrencies.TryGetValue(otherAccountId, out var otherCurrency))
         {
-            db.Audit.Summarise(
-                AuditAction.Imported,
-                AuditEntityKind.Transaction,
-                TrashLabel.Counted(
-                    $"Swedbank CSV into {target.Name}",
-                    (imported, "entry", "entries"),
-                    (skipped, "duplicate skipped", "duplicates skipped")),
-                imported,
-                accountId.Value,
-                [accountId]);
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Choose another accessible account for the transfer.");
         }
 
-        await db.SaveChangesAsync(cancellationToken);
+        var amount = new Money(row.Amount, currency);
+        var fromId = row.Type == FlowType.Expense ? accountId : otherAccountId;
+        var toId = row.Type == FlowType.Expense ? otherAccountId : accountId;
+        Transfer transfer;
+        if (row.ExistingTransferId is { } existingId)
+        {
+            var transferId = new TransferId(existingId);
+            if (!lookups.Candidates.TryGetValue(transferId, out var match)
+                || match.FromAccountId != fromId || match.ToAccountId != toId
+                || (row.Type == FlowType.Expense ? match.Amount : match.ReceivedAmount) != amount || match.Date != row.Date)
+            {
+                return new DomainError(ErrorCodes.ImportTransferMismatch, "The selected transfer does not match this bank entry.");
+            }
 
-        await transaction.CommitAsync(cancellationToken);
-        return new ImportConfirmResponse(imported, skipped);
+            if (!matchedTransfers.Add(match.Id) || lookups.AlreadyImported.Contains(match.Id))
+            {
+                return new DomainError(
+                    ErrorCodes.ImportTransferAlreadyMatched,
+                    "The selected transfer is already matched to another bank entry of this account.");
+            }
+
+            transfer = match;
+        }
+        else
+        {
+            var draft = row.Type == FlowType.Expense
+                ? new TransferDraft(fromId, toId, row.Amount, currency, null, otherCurrency)
+                : new TransferDraft(fromId, toId, row.Amount, otherCurrency, null, currency);
+            var amounts = transferAmounts.Resolve(
+                draft,
+                row.Type == FlowType.Expense ? accountCurrency : otherCurrency,
+                row.Type == FlowType.Expense ? otherCurrency : accountCurrency,
+                []);
+            if (!amounts.TryGetValue(out var resolved))
+            {
+                return amounts.Error.Code == ErrorCodes.TransferReceivedAmountRequired
+                    ? new DomainError(
+                        ErrorCodes.TransferReceivedAmountRequired,
+                        "The other account holds a different currency. Record this transfer under Transfers with the received amount.")
+                    : amounts.Error;
+            }
+
+            transfer = new Transfer
+            {
+                FromAccountId = fromId,
+                ToAccountId = toId,
+                Amount = resolved.Sent,
+                ReceivedAmount = resolved.Received,
+                Date = row.Date,
+                Description = OptionalText.Normalize(row.Description),
+            };
+            db.Transfers.Add(transfer);
+        }
+
+        db.TransferImports.Add(new TransferImport { AccountId = accountId, ImportRef = row.ImportRef, TransferId = transfer.Id });
+        return null;
     }
+
+    private sealed record ConfirmLookups(
+        HashSet<string> ExistingRefs,
+        IReadOnlyDictionary<CategoryId, FlowType?> CategoryTypes,
+        IReadOnlyDictionary<AccountId, Currency> OtherCurrencies,
+        IReadOnlyDictionary<TransferId, Transfer> Candidates,
+        IReadOnlySet<TransferId> AlreadyImported);
+
+    private sealed record ImportTotals(int Imported, int Skipped);
 
     private static List<ParsedRow> ParseCsv(Stream fileStream)
     {

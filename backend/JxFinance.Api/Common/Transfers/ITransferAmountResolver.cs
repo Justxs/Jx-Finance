@@ -8,4 +8,10 @@ public interface ITransferAmountResolver
         TransferDraft draft,
         IReadOnlyCollection<Currency> currenciesInUse,
         CancellationToken cancellationToken);
+
+    Result<TransferAmounts> Resolve(
+        TransferDraft draft,
+        Currency fromCurrency,
+        Currency toCurrency,
+        IReadOnlyCollection<Currency> currenciesInUse);
 }

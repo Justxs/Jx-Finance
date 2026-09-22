@@ -24,6 +24,9 @@ public sealed class ExchangeRateService(
 
     private readonly Dictionary<DateOnly, RateTable> tables = [];
 
+    private RateHistory? preloaded;
+    private (DateOnly From, DateOnly To) preloadedRange;
+
     public Currency ReportingCurrency => settings.Current.ReportingCurrency;
 
     public string? UnusableReason(params Currency[] currencies) =>
@@ -97,11 +100,45 @@ public sealed class ExchangeRateService(
     public async Task EnsureRangeAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
     {
         var end = to > Today ? Today : to;
-        for (var start = from.AddDays(-FetchWindowDays); start <= end; start = start.AddDays(RangeChunkDays))
+        var start = from.AddDays(-FetchWindowDays);
+        if (start > end)
         {
-            var chunkEnd = start.AddDays(RangeChunkDays - 1);
-            await FetchAsync(start, chunkEnd > end ? end : chunkEnd, true, cancellationToken);
+            return;
         }
+
+        foreach (var gap in await UncoveredRangesAsync(start, end, cancellationToken))
+        {
+            for (var chunk = gap.From; chunk <= gap.To; chunk = chunk.AddDays(RangeChunkDays))
+            {
+                var chunkEnd = chunk.AddDays(RangeChunkDays - 1);
+                await FetchAsync(chunk, chunkEnd > gap.To ? gap.To : chunkEnd, true, cancellationToken);
+            }
+        }
+    }
+
+    public async Task PreloadAsync(DateOnly from, DateOnly to, CancellationToken cancellationToken)
+    {
+        var end = to > Today ? Today : to;
+        var start = from > end ? end : from;
+        preloaded = await GetHistoryAsync(start, end, cancellationToken);
+        preloadedRange = (start, end);
+    }
+
+    private async Task<List<DateRange>> UncoveredRangesAsync(
+        DateOnly start,
+        DateOnly end,
+        CancellationToken cancellationToken)
+    {
+        var anchor = start.AddDays(-MaxGapDays);
+        var known = await db.ExchangeRates
+            .AsNoTracking()
+            .Where(r => r.Date >= anchor && r.Date <= end)
+            .Select(r => r.Date)
+            .Distinct()
+            .OrderBy(date => date)
+            .ToListAsync(cancellationToken);
+
+        return RateCoverage.Uncovered(known, start, end, MaxGapDays);
     }
 
     private bool IsStale(RateTable table, DateOnly date) =>
@@ -112,6 +149,11 @@ public sealed class ExchangeRateService(
 
     private async Task<RateTable> LoadAsync(DateOnly target, CancellationToken cancellationToken)
     {
+        if (preloaded is { } history && target >= preloadedRange.From && target <= preloadedRange.To)
+        {
+            return history.OnOrBefore(target);
+        }
+
         var rates = await db.ExchangeRates
             .AsNoTracking()
             .Where(r => r.Date == db.ExchangeRates.Where(x => x.Date <= target).Max(x => (DateOnly?)x.Date))
@@ -162,6 +204,7 @@ public sealed class ExchangeRateService(
         if (added > 0)
         {
             tables.Clear();
+            preloaded = null;
         }
 
         return added;
