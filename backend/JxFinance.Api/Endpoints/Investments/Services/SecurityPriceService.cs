@@ -129,7 +129,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
             query = query.Where(t => t.AccountId == typedAccountId);
         }
 
-        var entries = await query.OrderBy(t => t.Date).ToListAsync(cancellationToken);
+        var entries = Portfolio.InOrder(await query.ToListAsync(cancellationToken)).ToList();
         if (entries.Count == 0 || from > to)
         {
             return new ValueHistoryResponse(reporting, []);
@@ -150,32 +150,42 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
             .ToDictionary(g => g.Key, g => g.ToList());
         var rateHistory = await rates.GetHistoryAsync(start, to, cancellationToken);
 
+        var books = new Dictionary<AccountId, Dictionary<SecurityId, Position>>();
+        var replayed = 0;
         var points = new List<ValueHistoryPoint>();
         foreach (var date in Sample(start, to))
         {
+            while (replayed < entries.Count && entries[replayed].Date <= date)
+            {
+                var entry = entries[replayed++];
+                if (!books.TryGetValue(entry.AccountId, out var book))
+                {
+                    book = books[entry.AccountId] = [];
+                }
+
+                Portfolio.Apply(book, entry);
+            }
+
             var table = rateHistory.OnOrBefore(date);
             var (value, cost) = (0m, 0m);
             var isPartial = false;
-            foreach (var account in entries.TakeWhile(t => t.Date <= date).GroupBy(t => t.AccountId))
+            foreach (var position in books.Values.SelectMany(book => book.Values))
             {
-                foreach (var position in Portfolio.Positions(account).Values)
+                isPartial |= position.IsOversold;
+                if (position.Quantity == 0m)
                 {
-                    isPartial |= position.IsOversold;
-                    if (position.Quantity == 0m)
-                    {
-                        continue;
-                    }
-
-                    var price = PriceOnOrBefore(prices.GetValueOrDefault(position.SecurityId), date);
-                    if (position.Value(price, currencies[position.SecurityId], table, reporting).Reporting is not { } converted)
-                    {
-                        isPartial = true;
-                        continue;
-                    }
-
-                    value += converted;
-                    cost += position.ReportingCostBasis;
+                    continue;
                 }
+
+                var price = PriceOnOrBefore(prices.GetValueOrDefault(position.SecurityId), date);
+                if (position.Value(price, currencies[position.SecurityId], table, reporting).Reporting is not { } converted)
+                {
+                    isPartial = true;
+                    continue;
+                }
+
+                value += converted;
+                cost += position.ReportingCostBasis;
             }
 
             points.Add(new ValueHistoryPoint(date, value, Money.Round(cost), isPartial));
@@ -259,7 +269,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
     {
         var history = await db.InvestmentTransactions
             .AsNoTracking()
-            .Where(t => t.SecurityId == securityId)
+            .Where(t => t.SecurityId == securityId && ReplayedTypes.Contains(t.Type))
             .ToListAsync(cancellationToken);
 
         return history

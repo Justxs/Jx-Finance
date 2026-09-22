@@ -62,7 +62,7 @@ public sealed class AccountService(
 
     public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken)
     {
-        var accounts = await db.Accounts.ToListAsync(cancellationToken);
+        var accounts = await db.Accounts.AsNoTracking().ToListAsync(cancellationToken);
         var balances = (await BalancesAsync(accounts, cancellationToken)).Values;
         return (balances.Sum(b => b.Reporting.Amount), balances.All(b => b.IsComplete));
     }
@@ -77,7 +77,7 @@ public sealed class AccountService(
             return new Dictionary<AccountId, decimal>();
         }
 
-        var accounts = await db.Accounts.Where(a => wanted.Contains(a.Id)).ToListAsync(cancellationToken);
+        var accounts = await db.Accounts.AsNoTracking().Where(a => wanted.Contains(a.Id)).ToListAsync(cancellationToken);
         var balances = await BalancesAsync(accounts, cancellationToken);
 
         return balances.ToDictionary(entry => entry.Key, entry => entry.Value.Reporting.Amount);
@@ -274,52 +274,8 @@ public sealed class AccountService(
             Apply(account.Id, account.Currency, account.StartingBalance.Amount);
         }
 
-        var transactions = await db.Transactions
-            .Where(t => ids.Contains(t.AccountId))
-            .GroupBy(t => new { t.AccountId, t.Amount.Currency })
-            .Select(g => new
-            {
-                g.Key.AccountId,
-                g.Key.Currency,
-                Net = g.Sum(t => t.Type == FlowType.Income ? t.Amount.Amount : -t.Amount.Amount),
-            })
-            .ToListAsync(cancellationToken);
-        transactions.ForEach(m => Apply(m.AccountId, m.Currency, m.Net));
-
-        var outgoing = await db.Transfers
-            .Where(t => ids.Contains(t.FromAccountId))
-            .GroupBy(t => new { AccountId = t.FromAccountId, t.Amount.Currency })
-            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.Amount.Amount) })
-            .ToListAsync(cancellationToken);
-        outgoing.ForEach(m => Apply(m.AccountId, m.Currency, -m.Total));
-
-        var incoming = await db.Transfers
-            .Where(t => ids.Contains(t.ToAccountId))
-            .GroupBy(t => new { AccountId = t.ToAccountId, t.ReceivedAmount.Currency })
-            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.ReceivedAmount.Amount) })
-            .ToListAsync(cancellationToken);
-        incoming.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
-
-        var sold = await db.CurrencyConversions
-            .Where(c => ids.Contains(c.AccountId))
-            .GroupBy(c => new { c.AccountId, c.FromAmount.Currency })
-            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(c => c.FromAmount.Amount) })
-            .ToListAsync(cancellationToken);
-        sold.ForEach(m => Apply(m.AccountId, m.Currency, -m.Total));
-
-        var bought = await db.CurrencyConversions
-            .Where(c => ids.Contains(c.AccountId))
-            .GroupBy(c => new { c.AccountId, c.ToAmount.Currency })
-            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(c => c.ToAmount.Amount) })
-            .ToListAsync(cancellationToken);
-        bought.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
-
-        var invested = await db.InvestmentTransactions
-            .Where(t => ids.Contains(t.AccountId))
-            .GroupBy(t => new { t.AccountId, t.CashAmount.Currency })
-            .Select(g => new { g.Key.AccountId, g.Key.Currency, Total = g.Sum(t => t.CashAmount.Amount) })
-            .ToListAsync(cancellationToken);
-        invested.ForEach(m => Apply(m.AccountId, m.Currency, m.Total));
+        var moved = await AccountMovements.SumAsync(db, ids, cancellationToken);
+        moved.ForEach(m => Apply(m.AccountId, m.Currency, m.Amount));
 
         var holdingValues = await holdings.ValueAsync(ids, cancellationToken);
 
@@ -349,4 +305,5 @@ public sealed class AccountService(
                     holdingValue.IsComplete && held.All(m => In(m, reporting) is not null));
             });
     }
+
 }
