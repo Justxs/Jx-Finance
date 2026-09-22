@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
@@ -6,7 +5,6 @@ import type {
   RecurringBillResponse,
   RecurringBillShape,
 } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
@@ -14,8 +12,6 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { cn, metaLine } from "@/lib/utils";
 import { BillRowLayout } from "../bill-row-layout";
-import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
-import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 
 const shapeTone = {
   expense: "negative",
@@ -27,6 +23,8 @@ interface Props {
   bill: RecurringBillResponse;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  onEdit: () => void;
+  onConfirm: () => void;
   onDelete: () => void;
   deletePending: boolean;
   deleteDisabled: boolean;
@@ -36,6 +34,8 @@ export function RecurringBillRow({
   bill,
   accounts,
   categories,
+  onEdit,
+  onConfirm,
   onDelete,
   deletePending,
   deleteDisabled,
@@ -43,7 +43,6 @@ export function RecurringBillRow({
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
-  const [mode, setMode] = useState<"view" | "edit" | "confirm">("view");
 
   const category = categories.find((c) => c.id === bill.categoryId);
   const account = accounts.find((a) => a.id === bill.accountId);
@@ -105,7 +104,7 @@ export function RecurringBillRow({
         <RowActions
           label={bill.name}
           size="icon"
-          onEdit={() => setMode("edit")}
+          onEdit={onEdit}
           onDelete={onDelete}
           deletePending={deletePending}
           deleteDisabled={deleteDisabled}
@@ -116,35 +115,12 @@ export function RecurringBillRow({
             size="sm"
             className="mr-2"
             disabled={!bill.isActive}
-            onClick={() => setMode("confirm")}
+            onClick={onConfirm}
           >
             {t(`recurringBills.record.${bill.shape}`)}
           </Button>
         </RowActions>
       }
-    >
-      <Modal
-        open={mode === "edit"}
-        onClose={() => setMode("view")}
-        title={t("recurringBills.editTitle")}
-        description={bill.name}
-      >
-        <RecurringBillForm
-          bill={bill}
-          accounts={accounts}
-          categories={categories}
-          onDone={() => setMode("view")}
-          onCancel={() => setMode("view")}
-        />
-      </Modal>
-
-      <Modal
-        open={mode === "confirm"}
-        onClose={() => setMode("view")}
-        title={t("recurringBills.confirmTitle")}
-      >
-        <RecurringBillConfirmForm bill={bill} accounts={accounts} onDone={() => setMode("view")} />
-      </Modal>
-    </BillRowLayout>
+    />
   );
 }

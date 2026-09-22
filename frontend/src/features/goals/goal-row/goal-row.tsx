@@ -1,16 +1,13 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, GoalResponse } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
+import type { GoalResponse } from "@/api/generated/model";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
-import { CreateGoalForm } from "../create-goal-form/create-goal-form";
 
 interface Props {
   goal: GoalResponse;
-  accounts: AccountResponse[];
   accountNames: ReadonlyMap<string, string>;
+  onEdit: () => void;
   onDelete: () => void;
   deletePending: boolean;
   deleteDisabled: boolean;
@@ -18,8 +15,8 @@ interface Props {
 
 export function GoalRow({
   goal,
-  accounts,
   accountNames,
+  onEdit,
   onDelete,
   deletePending,
   deleteDisabled,
@@ -28,7 +25,6 @@ export function GoalRow({
   const money = useMoney();
   const formatDate = useIsoDate();
   const percent = usePercent();
-  const [editing, setEditing] = useState(false);
 
   const target = Number(goal.targetAmount);
   const current = goal.progressAmount === null ? null : Number(goal.progressAmount);
@@ -84,19 +80,10 @@ export function GoalRow({
         )
       }
       meter={current === null ? null : { value: current, max: target, tone: "positive" }}
-      onEdit={() => setEditing(true)}
+      onEdit={onEdit}
       onDelete={onDelete}
       deletePending={deletePending}
       deleteDisabled={deleteDisabled}
-    >
-      <Modal open={editing} onOpenChange={setEditing} title={t("actions.edit")}>
-        <CreateGoalForm
-          initial={goal}
-          accounts={accounts}
-          onCreated={() => setEditing(false)}
-          onCancel={() => setEditing(false)}
-        />
-      </Modal>
-    </ProgressRow>
+    />
   );
 }

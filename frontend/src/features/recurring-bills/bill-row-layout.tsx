@@ -6,10 +6,9 @@ interface Props {
   meta: ReactNode;
   amount: ReactNode;
   actions: ReactNode;
-  children?: ReactNode;
 }
 
-export function BillRowLayout({ heading, meta, amount, actions, children }: Readonly<Props>) {
+export function BillRowLayout({ heading, meta, amount, actions }: Readonly<Props>) {
   return (
     <RowTransition>
       <li className="py-3">
@@ -21,7 +20,6 @@ export function BillRowLayout({ heading, meta, amount, actions, children }: Read
           {amount}
           <div className="col-span-2 flex items-center justify-end sm:col-span-1">{actions}</div>
         </div>
-        {children}
       </li>
     </RowTransition>
   );

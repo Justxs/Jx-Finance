@@ -8,7 +8,7 @@ import type {
   SecurityResponse,
 } from "@/api/generated/model";
 import { Disclosure } from "@/components/disclosure/disclosure";
-import { Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
@@ -45,21 +45,21 @@ function sharedSecurities(holdings: readonly HoldingResponse[]) {
 export function PositionsSection({ holdings, reportingCurrency, accounts }: Readonly<Props>) {
   const { t } = useTranslation();
   const [priceTarget, setPriceTarget] = useState<SecurityResponse | null>(null);
-  const [priceOpen, setPriceOpen] = useState(false);
   const securities = useSecurities(undefined, { query: silentQuery });
   const priceSecurity =
-    securities.data?.find((security) => security.id === priceTarget?.id) ?? priceTarget;
+    priceTarget === null
+      ? null
+      : (securities.data?.find((security) => security.id === priceTarget.id) ?? priceTarget);
 
   const priceMutation = useSetSecurityPrice(
     silent({
-      onSuccess: () => setPriceOpen(false),
+      onSuccess: () => setPriceTarget(null),
     }),
   );
 
   function editPrice(security: SecurityResponse) {
     priceMutation.reset();
     setPriceTarget(security);
-    setPriceOpen(true);
   }
 
   const open = holdings.filter(isOpen);
@@ -100,33 +100,30 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
         </Disclosure>
       ) : null}
 
-      <Modal
-        open={priceOpen}
-        onOpenChange={setPriceOpen}
+      <EditModal
+        item={priceSecurity}
+        onClose={() => setPriceTarget(null)}
         title={t("investments.price.update")}
-        description={priceSecurity ? `${priceSecurity.symbol} · ${priceSecurity.name}` : undefined}
+        description={(security) => `${security.symbol} · ${security.name}`}
       >
-        {priceSecurity ? (
+        {(security) => (
           <>
             <PriceForm
-              key={priceSecurity.id}
-              security={priceSecurity}
+              security={security}
               pending={priceMutation.isPending}
               error={priceMutation.error}
-              onSubmit={(values) =>
-                priceMutation.mutateAsync({ id: priceSecurity.id, data: values })
-              }
-              onCancel={() => setPriceOpen(false)}
+              onSubmit={(values) => priceMutation.mutateAsync({ id: security.id, data: values })}
+              onCancel={() => setPriceTarget(null)}
             />
             <QueryBoundary
               fallback={<RowsSkeleton rows={3} />}
               errorSubject={t("investments.priceHistory.title")}
             >
-              <PriceHistory security={priceSecurity} />
+              <PriceHistory security={security} />
             </QueryBoundary>
           </>
-        ) : null}
-      </Modal>
+        )}
+      </EditModal>
     </Section>
   );
 }

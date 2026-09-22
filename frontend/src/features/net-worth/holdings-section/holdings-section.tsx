@@ -3,7 +3,7 @@ import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TrashKind } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { EditModal, Modal } from "@/components/modal";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
@@ -122,20 +122,19 @@ export function HoldingsSection<TValues = HoldingFormValues>({
       <Modal open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
         <Form onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
       </Modal>
-      <Modal
-        open={editItem !== undefined}
+      <EditModal
+        item={editItem ?? null}
+        title={(item) => `${t("actions.edit")}: ${item.name}`}
         onClose={() => setEditTarget(null)}
-        title={editItem ? `${t("actions.edit")}: ${editItem.name}` : ""}
       >
-        {editItem ? (
+        {(item) => (
           <Form
-            key={editItem.id}
-            editing={{ id: editItem.id, values: editItem.values }}
+            editing={{ id: item.id, values: item.values }}
             onCreated={() => setEditTarget(null)}
             onCancel={() => setEditTarget(null)}
           />
-        ) : null}
-      </Modal>
+        )}
+      </EditModal>
       {content}
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>

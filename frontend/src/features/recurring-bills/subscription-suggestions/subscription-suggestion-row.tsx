@@ -1,5 +1,4 @@
 import { Plus, X } from "lucide-react";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
@@ -7,17 +6,15 @@ import type {
   SubscriptionCandidateResponse,
 } from "@/api/generated/model";
 import { updateRecurringBillBodyNameMax } from "@/api/schemas/recurring-bills/recurring-bills.zod";
-import { Modal } from "@/components/modal";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { metaLine } from "@/lib/utils";
 import { BillRowLayout } from "../bill-row-layout";
-import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
 
 const MAX_LISTED_DATES = 4;
 
-function suggestedName(description: string) {
+export function suggestedName(description: string) {
   const trimmed = description.slice(0, updateRecurringBillBodyNameMax);
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
 }
@@ -26,6 +23,7 @@ interface Props {
   candidate: SubscriptionCandidateResponse;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
+  onCreate: () => void;
   onDismiss: () => void;
   dismissPending: boolean;
   dismissDisabled: boolean;
@@ -35,6 +33,7 @@ export function SubscriptionSuggestionRow({
   candidate,
   accounts,
   categories,
+  onCreate,
   onDismiss,
   dismissPending,
   dismissDisabled,
@@ -42,7 +41,6 @@ export function SubscriptionSuggestionRow({
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
-  const [addOpen, setAddOpen] = useState(false);
 
   const name = suggestedName(candidate.description);
   const account = accounts.find((item) => item.id === candidate.accountId);
@@ -79,7 +77,7 @@ export function SubscriptionSuggestionRow({
       }
       actions={
         <>
-          <Button variant="outline" size="sm" className="mr-2" onClick={() => setAddOpen(true)}>
+          <Button variant="outline" size="sm" className="mr-2" onClick={onCreate}>
             <Plus />
             {t("subscriptions.create")}
           </Button>
@@ -95,30 +93,6 @@ export function SubscriptionSuggestionRow({
           </Button>
         </>
       }
-    >
-      <Modal
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        title={t("subscriptions.createTitle")}
-        description={t("subscriptions.createDescription")}
-      >
-        <RecurringBillForm
-          draft={{
-            name,
-            shape: "expense",
-            kind: "fixed",
-            amount: candidate.typicalAmount,
-            categoryId: candidate.categoryId,
-            accountId: candidate.accountId,
-            cadence: candidate.cadence,
-            nextDueDate: candidate.nextExpectedDate,
-          }}
-          accounts={accounts}
-          categories={categories}
-          onDone={() => setAddOpen(false)}
-          onCancel={() => setAddOpen(false)}
-        />
-      </Modal>
-    </BillRowLayout>
+    />
   );
 }

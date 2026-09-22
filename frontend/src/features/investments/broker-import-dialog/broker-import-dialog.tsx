@@ -12,10 +12,7 @@ import { defaultInvestmentAccount } from "../investment-types";
 import { ConnectionPanel } from "./connection-panel";
 import { FlexQueryHelp } from "./flex-query-help";
 import { UploadPanel } from "./upload-panel";
-import {
-  type BrokerImportMutations,
-  useBrokerImportMutations,
-} from "./use-broker-import-mutations";
+import { useBrokerImportBusy, useBrokerImportMutations } from "./use-broker-import-mutations";
 
 export type BrokerImportTab = "upload" | "sync";
 
@@ -31,17 +28,15 @@ interface Props {
   initialTab?: BrokerImportTab;
 }
 
-interface ContentProps extends Pick<Props, "accounts" | "accountId" | "initialTab"> {
-  mutations: BrokerImportMutations;
-}
+type ContentProps = Pick<Props, "accounts" | "accountId" | "initialTab">;
 
 function BrokerImportContent({
   accounts,
   accountId,
   initialTab = "upload",
-  mutations,
 }: Readonly<ContentProps>) {
   const { t } = useTranslation();
+  const mutations = useBrokerImportMutations();
   const [selectedAccountId, setSelectedAccountId] = useState(
     () => defaultInvestmentAccount(accounts, accountId)?.id ?? "",
   );
@@ -109,7 +104,7 @@ function BrokerImportContent({
   );
 }
 
-function BrokerImportSession({
+export function BrokerImportDialog({
   open,
   onOpenChange,
   accounts,
@@ -117,13 +112,13 @@ function BrokerImportSession({
   initialTab,
 }: Readonly<Props>) {
   const { t } = useTranslation();
-  const mutations = useBrokerImportMutations();
+  const busy = useBrokerImportBusy();
 
   return (
     <Modal
       open={open}
       onOpenChange={(next) => {
-        if (next || !mutations.busy) {
+        if (next || !busy) {
           onOpenChange(next);
         }
       }}
@@ -131,26 +126,7 @@ function BrokerImportSession({
       description={t("investments.import.description")}
       className="sm:max-w-xl"
     >
-      <BrokerImportContent
-        accounts={accounts}
-        accountId={accountId}
-        initialTab={initialTab}
-        mutations={mutations}
-      />
+      <BrokerImportContent accounts={accounts} accountId={accountId} initialTab={initialTab} />
     </Modal>
   );
-}
-
-export function BrokerImportDialog(props: Readonly<Props>) {
-  const [session, setSession] = useState(0);
-  const [wasOpen, setWasOpen] = useState(props.open);
-
-  if (wasOpen !== props.open) {
-    setWasOpen(props.open);
-    if (props.open) {
-      setSession((current) => current + 1);
-    }
-  }
-
-  return <BrokerImportSession key={session} {...props} />;
 }

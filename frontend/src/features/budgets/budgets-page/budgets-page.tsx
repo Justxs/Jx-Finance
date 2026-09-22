@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { Plus } from "lucide-react";
 import { type ReactNode, useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -10,11 +9,11 @@ import {
 } from "@/api/generated";
 import type { BudgetResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
-import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
@@ -34,15 +33,9 @@ export function BudgetsPage() {
   const money = useMoney();
   const isoDate = useIsoDate();
   const [editing, setEditing] = useState<BudgetResponse | null>(null);
-  const [formOpen, setFormOpen] = useState(false);
 
   const categories = useCategoriesSuspense();
   const budgets = useBudgetsSuspense();
-
-  function openForm(budget: BudgetResponse | null) {
-    setEditing(budget);
-    setFormOpen(true);
-  }
 
   const deleteMutation = useDeleteBudget({
     mutation: optimisticRemoval<BudgetResponse>(getBudgetsQueryKey()),
@@ -133,7 +126,7 @@ export function BudgetsPage() {
                 </>
               }
               meter={{ value: spent, max: limit, tone: overBudget ? "negative" : "primary" }}
-              onEdit={() => openForm(budget)}
+              onEdit={() => setEditing(budget)}
               onDelete={() => remove.request(budget.id)}
               deletePending={remove.pendingId === budget.id}
               deleteDisabled={remove.busy}
@@ -147,25 +140,23 @@ export function BudgetsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
-        <Button onClick={() => openForm(null)}>
-          <Plus />
-          {t("budgets.add")}
-        </Button>
+        <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
+          {(close) => (
+            <CreateBudgetForm categories={categoryList} onCreated={close} onCancel={close} />
+          )}
+        </CreateDialog>
       </PageHeader>
 
-      <Modal
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        title={editing ? t("actions.edit") : t("budgets.add")}
-      >
-        <CreateBudgetForm
-          key={editing?.id ?? "new"}
-          initial={editing ?? undefined}
-          categories={categoryList}
-          onCreated={() => setFormOpen(false)}
-          onCancel={() => setFormOpen(false)}
-        />
-      </Modal>
+      <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
+        {(budget) => (
+          <CreateBudgetForm
+            initial={budget}
+            categories={categoryList}
+            onCreated={() => setEditing(null)}
+            onCancel={() => setEditing(null)}
+          />
+        )}
+      </EditModal>
       {budgetList.length > 0 ? (
         <SummaryStats
           items={[

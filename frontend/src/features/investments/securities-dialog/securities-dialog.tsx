@@ -96,25 +96,14 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   );
 }
 
-export function SecuritiesDialog({ open, onOpenChange }: Readonly<Props>) {
+function SecuritiesDialogContent() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<SecurityResponse | undefined>(undefined);
 
   return (
-    <Modal
-      open={open}
-      onOpenChange={(next) => {
-        if (!next) {
-          setSearch("");
-        }
-        onOpenChange(next);
-      }}
-      title={t("investments.securities.title")}
-      description={t("investments.securities.description")}
-      className="sm:max-w-2xl"
-    >
+    <>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Input
           type="search"
@@ -145,6 +134,22 @@ export function SecuritiesDialog({ open, onOpenChange }: Readonly<Props>) {
         />
       </QueryBoundary>
       <SecurityModal open={formOpen} security={editing} onOpenChange={setFormOpen} />
+    </>
+  );
+}
+
+export function SecuritiesDialog({ open, onOpenChange }: Readonly<Props>) {
+  const { t } = useTranslation();
+
+  return (
+    <Modal
+      open={open}
+      onOpenChange={onOpenChange}
+      title={t("investments.securities.title")}
+      description={t("investments.securities.description")}
+      className="sm:max-w-2xl"
+    >
+      <SecuritiesDialogContent />
     </Modal>
   );
 }

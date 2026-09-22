@@ -1,4 +1,4 @@
-import { type ReactNode, useDeferredValue } from "react";
+import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGoalsQueryKey,
@@ -9,6 +9,7 @@ import {
 import type { GoalResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
@@ -21,6 +22,7 @@ import { GoalRow } from "../goal-row/goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState<GoalResponse | null>(null);
 
   const accounts = useAccountsSuspense();
   const goals = useGoalsSuspense();
@@ -44,8 +46,8 @@ export function GoalsPage() {
           <GoalRow
             key={goal.id}
             goal={goal}
-            accounts={accountList}
             accountNames={accountNames}
+            onEdit={() => setEditing(goal)}
             onDelete={() => remove.request(goal.id)}
             deletePending={remove.pendingId === goal.id}
             deleteDisabled={remove.busy}
@@ -64,6 +66,16 @@ export function GoalsPage() {
       </PageHeader>
 
       {content}
+      <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
+        {(goal) => (
+          <CreateGoalForm
+            initial={goal}
+            accounts={accountList}
+            onCreated={() => setEditing(null)}
+            onCancel={() => setEditing(null)}
+          />
+        )}
+      </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );
