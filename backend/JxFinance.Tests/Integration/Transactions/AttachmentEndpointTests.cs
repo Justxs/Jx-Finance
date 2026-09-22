@@ -5,7 +5,6 @@ using System.Security.Cryptography;
 using System.Text;
 using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.BackgroundJobs;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -306,35 +305,35 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         File.Delete(Path.Combine(directory, newOrphan.ToString("N")));
     }
 
-    private async Task BackdateAsync(Guid attachmentId, Guid transactionId)
-    {
-        var old = DateTimeOffset.UtcNow.AddDays(-31);
-        await using var scope = Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var typedAttachment = new TransactionAttachmentId(attachmentId);
-        var typedTransaction = new TransactionId(transactionId);
-        await db.TransactionAttachments.IgnoreQueryFilters()
-            .Where(a => a.Id == typedAttachment)
-            .ExecuteUpdateAsync(s => s.SetProperty(a => a.UpdatedAt, old), TestContext.Current.CancellationToken);
-        await db.Transactions.IgnoreQueryFilters()
-            .Where(t => t.Id == typedTransaction)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.UpdatedAt, old), TestContext.Current.CancellationToken);
-        await db.DeletionEntries.IgnoreQueryFilters()
-            .Where(e => e.EntityId == attachmentId || e.EntityId == transactionId)
-            .ExecuteUpdateAsync(s => s.SetProperty(e => e.DeletedAt, old), TestContext.Current.CancellationToken);
-    }
+    private Task BackdateAsync(Guid attachmentId, Guid transactionId) =>
+        WithDbAsync(async db =>
+        {
+            var old = DateTimeOffset.UtcNow.AddDays(-31);
+            var typedAttachment = new TransactionAttachmentId(attachmentId);
+            var typedTransaction = new TransactionId(transactionId);
+            await db.TransactionAttachments.IgnoreQueryFilters()
+                .Where(a => a.Id == typedAttachment)
+                .ExecuteUpdateAsync(s => s.SetProperty(a => a.UpdatedAt, old), TestContext.Current.CancellationToken);
+            await db.Transactions.IgnoreQueryFilters()
+                .Where(t => t.Id == typedTransaction)
+                .ExecuteUpdateAsync(s => s.SetProperty(t => t.UpdatedAt, old), TestContext.Current.CancellationToken);
+            await db.DeletionEntries.IgnoreQueryFilters()
+                .Where(e => e.EntityId == attachmentId || e.EntityId == transactionId)
+                .ExecuteUpdateAsync(s => s.SetProperty(e => e.DeletedAt, old), TestContext.Current.CancellationToken);
+        });
 
-    private async Task<List<Guid>> StoredIdsAsync(Guid transactionId)
-    {
-        await using var scope = Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var typedId = new TransactionId(transactionId);
-        return [.. (await db.TransactionAttachments.IgnoreQueryFilters()
-            .Where(a => a.TransactionId == typedId)
-            .OrderBy(a => a.CreatedAt)
-            .Select(a => a.Id)
-            .ToListAsync(TestContext.Current.CancellationToken)).Select(id => id.Value)];
-    }
+    private Task<List<Guid>> StoredIdsAsync(Guid transactionId) =>
+        WithDbAsync(async db =>
+        {
+            var typedId = new TransactionId(transactionId);
+            var stored = await db.TransactionAttachments.IgnoreQueryFilters()
+                .Where(a => a.TransactionId == typedId)
+                .OrderBy(a => a.CreatedAt)
+                .Select(a => a.Id)
+                .ToListAsync(TestContext.Current.CancellationToken);
+            List<Guid> ids = [.. stored.Select(id => id.Value)];
+            return ids;
+        });
 
     private Guid WriteOrphan(TimeSpan age)
     {

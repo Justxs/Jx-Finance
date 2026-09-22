@@ -1,9 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Domain.Notifications;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
@@ -52,26 +50,24 @@ public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private async Task<Notification> SeedNotificationAsync(TestUser user)
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-        var notification = new Notification
+    private Task<Notification> SeedNotificationAsync(TestUser user) =>
+        WithDbAsync(async db =>
         {
-            UserId = user.Id,
-            Type = NotificationType.BillDue,
-            Title = $"Test bill due {Guid.NewGuid():N}",
-            Message = "A test bill is due soon.",
-            RelatedType = NotificationRelated.RecurringBill,
-            RelatedId = Guid.NewGuid(),
-            Channel = NotificationChannel.InApp,
-        };
-        db.Notifications.Add(notification);
-        await db.SaveChangesAsync();
+            var notification = new Notification
+            {
+                UserId = user.Id,
+                Type = NotificationType.BillDue,
+                Title = $"Test bill due {Guid.NewGuid():N}",
+                Message = "A test bill is due soon.",
+                RelatedType = NotificationRelated.RecurringBill,
+                RelatedId = Guid.NewGuid(),
+                Channel = NotificationChannel.InApp,
+            };
+            db.Notifications.Add(notification);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
 
-        return notification;
-    }
+            return notification;
+        });
 
     private sealed record NotificationDto(Guid Id, bool IsRead);
 }

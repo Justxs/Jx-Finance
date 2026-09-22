@@ -4,7 +4,6 @@ using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -93,34 +92,30 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
         }
     }
 
-    private async Task<List<IdentityUserRole<Guid>>> RemoveOtherAdministratorsAsync(params Guid[] keep)
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var adminRole = await db.Roles.Where(r => r.Name == AppRoles.Admin).Select(r => r.Id).SingleAsync();
-        var others = await db.UserRoles.Where(r => r.RoleId == adminRole && !keep.Contains(r.UserId)).ToListAsync();
-        db.UserRoles.RemoveRange(others);
-        await db.SaveChangesAsync();
-        return others;
-    }
+    private Task<List<IdentityUserRole<Guid>>> RemoveOtherAdministratorsAsync(params Guid[] keep) =>
+        WithDbAsync(async db =>
+        {
+            var adminRole = await db.Roles.Where(r => r.Name == AppRoles.Admin).Select(r => r.Id)
+                .SingleAsync(TestContext.Current.CancellationToken);
+            var others = await db.UserRoles.Where(r => r.RoleId == adminRole && !keep.Contains(r.UserId))
+                .ToListAsync(TestContext.Current.CancellationToken);
+            db.UserRoles.RemoveRange(others);
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+            return others;
+        });
 
-    private async Task RestoreAdministratorsAsync(List<IdentityUserRole<Guid>> removed)
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        db.UserRoles.AddRange(removed.Select(r => new IdentityUserRole<Guid> { UserId = r.UserId, RoleId = r.RoleId }));
-        await db.SaveChangesAsync();
-    }
+    private Task RestoreAdministratorsAsync(List<IdentityUserRole<Guid>> removed) =>
+        WithDbAsync(async db =>
+        {
+            db.UserRoles.AddRange(removed.Select(r => new IdentityUserRole<Guid> { UserId = r.UserId, RoleId = r.RoleId }));
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
 
-    private async Task<List<Guid>> ActiveAdministratorsAsync()
-    {
-        using var scope = Services.CreateScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        return await (
+    private Task<List<Guid>> ActiveAdministratorsAsync() =>
+        WithDbAsync(db => (
             from userRole in db.UserRoles
             join role in db.Roles on userRole.RoleId equals role.Id
             join user in db.Users on userRole.UserId equals user.Id
             where role.Name == AppRoles.Admin && (user.LockoutEnd == null || user.LockoutEnd < AppUser.DeactivatedUntil)
-            select user.Id).ToListAsync();
-    }
+            select user.Id).ToListAsync(TestContext.Current.CancellationToken));
 }

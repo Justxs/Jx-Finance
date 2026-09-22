@@ -3,7 +3,6 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using FastEndpoints.Security;
 using JxFinance.Infrastructure.Auth;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -95,14 +94,13 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
         var issued = SetCookies(login);
         var rotated = SetCookies(await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]));
 
-        using (var scope = Services.CreateScope())
+        await WithDbAsync(async db =>
         {
-            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var rotatedAt = DateTimeOffset.UtcNow.AddMinutes(-1);
             await db.UserSessions
                 .Where(s => s.UserId == user.Id)
                 .ExecuteUpdateAsync(setters => setters.SetProperty(s => s.RotatedAt, rotatedAt), TestContext.Current.CancellationToken);
-        }
+        });
 
         var replay = await SendAsync(client, HttpMethod.Post, "/api/auth/refresh", issued[AuthCookies.RefreshToken]);
         Assert.Equal(HttpStatusCode.Unauthorized, replay.StatusCode);
