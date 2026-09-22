@@ -109,8 +109,13 @@ export const transferForbiddenProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
   title: "Forbidden",
   status: 403,
-  code: "access.forbidden",
-  detail: "You need access to both accounts of a transfer.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "You need access to both accounts of a transfer.",
+      code: "access.forbidden",
+    },
+  ],
 };
 
 export const transfers: TransferResponse[] = [crossCurrencyTransfer, ...sameCurrencyTransfers];

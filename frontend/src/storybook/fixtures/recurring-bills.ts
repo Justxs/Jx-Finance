@@ -148,24 +148,39 @@ export const billStaleProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
   title: "Conflict",
   status: 409,
-  code: "conflict.stale",
-  detail: "The bill is no longer due on the expected date.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The bill is no longer due on the expected date.",
+      code: "conflict.stale",
+    },
+  ],
 };
 
 export const billInactiveProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
   title: "Conflict",
   status: 409,
-  code: "recurringBill.inactive",
-  detail: "An inactive recurring entry cannot be confirmed.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "An inactive recurring entry cannot be confirmed.",
+      code: "recurringBill.inactive",
+    },
+  ],
 };
 
 export const billReceivedAmountProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
   title: "Bad Request",
   status: 400,
-  code: "transfer.receivedAmountRequired",
-  detail: "A transfer between currencies needs the received amount.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "A transfer between currencies needs the received amount.",
+      code: "transfer.receivedAmountRequired",
+    },
+  ],
 };
 
 export const billCategoryProblem: ProblemDetails = {

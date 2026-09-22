@@ -582,8 +582,13 @@ export const duplicateSecurityProblem: ProblemDetails = {
   title: "Conflict",
   status: 409,
   instance: "/api/investments/securities",
-  code: "conflict.duplicate",
-  detail: "A security with this symbol and currency already exists.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "A security with this symbol and currency already exists.",
+      code: "conflict.duplicate",
+    },
+  ],
 };
 
 export const securityNotHeldProblem: ProblemDetails = {
@@ -591,8 +596,13 @@ export const securityNotHeldProblem: ProblemDetails = {
   title: "Forbidden",
   status: 403,
   instance: "/api/investments/securities/price",
-  code: "security.notHeld",
-  detail: "Only a holder of the security or an administrator can set its price.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "Only a holder of the security or an administrator can set its price.",
+      code: "security.notHeld",
+    },
+  ],
 };
 
 export const brokerSyncProblem: ProblemDetails = {

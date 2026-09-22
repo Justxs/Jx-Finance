@@ -91,6 +91,11 @@ export const conversionReadOnlyProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
   title: "Conflict",
   status: 409,
-  code: "resource.readOnly",
-  detail: "Imported conversions cannot be edited.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "Imported conversions cannot be edited.",
+      code: "resource.readOnly",
+    },
+  ],
 };

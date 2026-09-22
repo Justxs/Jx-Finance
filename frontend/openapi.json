@@ -16514,10 +16514,6 @@
               },
               "description": "the error details object"
             }
-          },
-          "code": {
-            "description": "Set when the problem has no errors entries, for example feature.disabled.",
-            "$ref": "#/components/schemas/ErrorCode"
           }
         },
         "description": "RFC9457 compatible problem details/ error response class. this can be used by configuring startup like so:\n```app.UseFastEndpoints(c =&gt; c.Errors.UseProblemDetails())```"

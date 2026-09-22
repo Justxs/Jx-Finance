@@ -59,8 +59,13 @@ export const duplicateTagProblem: ProblemDetails = {
   title: "Conflict",
   status: 409,
   instance: "/api/tags",
-  detail: 'You already have a tag named "Atostogos 2026".',
-  code: "conflict.duplicate",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: 'You already have a tag named "Atostogos 2026".',
+      code: "conflict.duplicate",
+    },
+  ],
 };
 
 export const debtPaymentTooSmallProblem: ProblemDetails = {

@@ -113,14 +113,24 @@ export const lockedOutProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc6585#section-4",
   title: "Too many failed attempts.",
   status: 429,
-  code: "credentials.lockedOut",
-  detail: "The account is locked for 15 minutes.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The account is locked for 15 minutes.",
+      code: "credentials.lockedOut",
+    },
+  ],
 };
 
 export const databaseBusyProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
   title: "The database was busy.",
   status: 409,
-  code: "conflict.busy",
-  detail: "Another operation held the database. Nothing was changed.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "Another operation held the database. Nothing was changed.",
+      code: "conflict.busy",
+    },
+  ],
 };
