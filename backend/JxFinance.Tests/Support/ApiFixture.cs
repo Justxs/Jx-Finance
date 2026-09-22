@@ -5,6 +5,7 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
@@ -59,6 +60,7 @@ public sealed class ApiFixture : AppFixture<Program>
 
     protected override void ConfigureServices(IServiceCollection services)
     {
+        services.Configure<PasswordHasherOptions>(options => options.IterationCount = 1);
         services.RemoveAll<IExchangeRateProvider>();
         services.AddSingleton<IExchangeRateProvider, FixedRateProvider>();
         services.RemoveAll<IFlexClient>();
