@@ -44,7 +44,7 @@ public sealed class RecurringBillService(
 
     public async Task<IReadOnlyList<RecurringBillResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var bills = await db.RecurringBills.OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
+        var bills = await db.RecurringBills.AsNoTracking().OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
         return bills.Select(b => b.ToResponse()).ToList();
     }
 

@@ -41,7 +41,9 @@ public sealed class TransactionService(
         GetTransactionsRequest request,
         CancellationToken cancellationToken)
     {
-        var page = await Filtered(request).ToPageAsync(request, query => Sorted(query, request), cancellationToken);
+        var page = await Filtered(request)
+            .AsNoTracking()
+            .ToPageAsync(request, query => Sorted(query, request), cancellationToken);
 
         var linesByTransaction = await LoadLinesAsync(page.Items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
