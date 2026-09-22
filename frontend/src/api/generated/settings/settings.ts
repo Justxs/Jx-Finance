@@ -732,7 +732,7 @@ export const getUpdateSmtpSettingsUrl = () => {
 };
 
 /**
- * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one; clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. Switching enabled on needs a host and a sender address. Administrators only.
+ * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one, but only while the host and the user name stay the same: changing either without a new password answers 400 email.passwordRequired, so a saved password is never sent to another server or account. Clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. A user name needs startTls or sslOnConnect: none with a user name answers 400 email.insecureConnection, because credentials are never sent in plain text. Switching enabled on needs a host and a sender address. Administrators only.
  * @summary Save the mail server of this installation
  */
 export const updateSmtpSettings = async (

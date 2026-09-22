@@ -322,8 +322,10 @@ export const SmtpSettingsResponse = zod.object({
   host: zod.string().nullable(),
   port: zod.int(),
   encryption: zod
-    .enum(["none", "startTls", "sslOnConnect"])
-    .describe("none, startTls or sslOnConnect."),
+    .enum(["startTls", "sslOnConnect", "none"])
+    .describe(
+      "startTls (the default, usually port 587; the server must offer STARTTLS), sslOnConnect (usually port 465) or none, which is only accepted without a user name.",
+    ),
   userName: zod.string().nullable(),
   hasPassword: zod.boolean(),
   fromAddress: zod.string().nullable(),
@@ -331,7 +333,7 @@ export const SmtpSettingsResponse = zod.object({
 });
 
 /**
- * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one; clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. Switching enabled on needs a host and a sender address. Administrators only.
+ * Stores the SMTP host, port, encryption mode, optional user name and password, and the sender address and name, on the single installation settings row. The password is encrypted with ASP.NET Data Protection before it is stored and is never returned: the response carries hasPassword instead. Leaving password empty keeps the stored one, but only while the host and the user name stay the same: changing either without a new password answers 400 email.passwordRequired, so a saved password is never sent to another server or account. Clearing the user name clears the stored password with it, because an anonymous relay has nothing to authenticate. A user name needs startTls or sslOnConnect: none with a user name answers 400 email.insecureConnection, because credentials are never sent in plain text. Switching enabled on needs a host and a sender address. Administrators only.
  * @summary Save the mail server of this installation
  */
 export const updateSmtpSettingsBodyHostMin = 0;
@@ -361,8 +363,10 @@ export const UpdateSmtpSettingsBody = zod.object({
     .nullable(),
   port: zod.int().min(1).max(updateSmtpSettingsBodyPortMax),
   encryption: zod
-    .enum(["none", "startTls", "sslOnConnect"])
-    .describe("none, startTls or sslOnConnect."),
+    .enum(["startTls", "sslOnConnect", "none"])
+    .describe(
+      "startTls (the default, usually port 587; the server must offer STARTTLS), sslOnConnect (usually port 465) or none, which is only accepted without a user name.",
+    ),
   userName: zod
     .string()
     .min(updateSmtpSettingsBodyUserNameMin)
@@ -373,7 +377,9 @@ export const UpdateSmtpSettingsBody = zod.object({
     .min(updateSmtpSettingsBodyPasswordMin)
     .max(updateSmtpSettingsBodyPasswordMax)
     .nullable()
-    .describe("Leave empty to keep the stored password."),
+    .describe(
+      "Leave empty to keep the stored password; required when the host or user name changes.",
+    ),
   fromAddress: zod
     .email()
     .min(updateSmtpSettingsBodyFromAddressMin)
@@ -392,8 +398,10 @@ export const UpdateSmtpSettingsResponse = zod.object({
   host: zod.string().nullable(),
   port: zod.int(),
   encryption: zod
-    .enum(["none", "startTls", "sslOnConnect"])
-    .describe("none, startTls or sslOnConnect."),
+    .enum(["startTls", "sslOnConnect", "none"])
+    .describe(
+      "startTls (the default, usually port 587; the server must offer STARTTLS), sslOnConnect (usually port 465) or none, which is only accepted without a user name.",
+    ),
   userName: zod.string().nullable(),
   hasPassword: zod.boolean(),
   fromAddress: zod.string().nullable(),

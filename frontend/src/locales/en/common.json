@@ -1651,8 +1651,10 @@
     },
     "email": {
       "alreadyVerified": "This address is already confirmed.",
+      "insecureConnection": "The mail server password is only sent over an encrypted connection. Choose STARTTLS or SSL/TLS, or clear the user name.",
       "invalid": "Enter a valid email address.",
       "notConfigured": "This installation cannot send email yet. Set the mail server up in Settings.",
+      "passwordRequired": "Enter the password again: the server or user name changed.",
       "passwordUnreadable": "The stored mail server password can no longer be read. Enter it again.",
       "sendFailed": "The mail server refused the message: {{reason}}",
       "taken": "This email is already in use.",
