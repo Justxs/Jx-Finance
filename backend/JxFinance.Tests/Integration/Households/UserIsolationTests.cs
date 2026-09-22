@@ -20,12 +20,12 @@ public sealed class UserIsolationTests(ApiFixture fixture) : IntegrationTestBase
         var id = await CreateAsAdminAsync(resource);
         using var stranger = await CreateUserClientAsync();
 
-        var listed = await stranger.GetStringAsync($"/api/{resource}?pageSize=200");
-        var delete = await stranger.DeleteAsync($"/api/{resource}/{id}");
+        var listed = await stranger.GetStringAsync($"/api/{resource}?pageSize=200", TestContext.Current.CancellationToken);
+        var delete = await stranger.DeleteAsync($"/api/{resource}/{id}", TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(id.ToString(), listed);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
-        Assert.Contains(id.ToString(), await Client.GetStringAsync($"/api/{resource}?pageSize=200"));
+        Assert.Contains(id.ToString(), await Client.GetStringAsync($"/api/{resource}?pageSize=200", TestContext.Current.CancellationToken));
     }
 
     private async Task<Guid> CreateAsAdminAsync(string resource)

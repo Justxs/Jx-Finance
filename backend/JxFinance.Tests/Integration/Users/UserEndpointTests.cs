@@ -18,18 +18,18 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
                 displayName = "Member One",
                 role = "Member",
                 password = "Member-Password-123!",
-            });
+            }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var created = await createResponse.Content.ReadFromJsonAsync<UserDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<UserDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Member", created!.Role);
         Assert.True(created.IsActive);
 
-        var users = await Client.GetFromJsonAsync<List<UserDto>>("/api/users");
+        var users = await Client.GetFromJsonAsync<List<UserDto>>("/api/users", TestContext.Current.CancellationToken);
         Assert.Contains(users!, u => u.Id == created.Id);
 
-        var roleResponse = await Client.PutAsJsonAsync($"/api/users/{created.Id}/role", new { role = "Admin" });
+        var roleResponse = await Client.PutAsJsonAsync($"/api/users/{created.Id}/role", new { role = "Admin" }, TestContext.Current.CancellationToken);
         roleResponse.EnsureSuccessStatusCode();
-        var updated = await roleResponse.Content.ReadFromJsonAsync<UserDto>();
+        var updated = await roleResponse.Content.ReadFromJsonAsync<UserDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Admin", updated!.Role);
     }
 
@@ -46,11 +46,11 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
                 new { email = $"{name}-{marker}@localhost", displayName = $"List {marker}", role, password = "List-Password-123!" });
             ids[name] = user.Id;
         }
-        (await Client.PostAsync($"/api/users/{ids["c"]}/deactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{ids["c"]}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var sorted = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&sort=email&direction=desc");
-        var admins = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&role=admin");
-        var inactive = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&isActive=false");
+        var sorted = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&sort=email&direction=desc", TestContext.Current.CancellationToken);
+        var admins = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&role=admin", TestContext.Current.CancellationToken);
+        var inactive = await Client.GetFromJsonAsync<List<UserDto>>($"/api/users?search={marker}&isActive=false", TestContext.Current.CancellationToken);
 
         Assert.Equal([ids["c"], ids["b"], ids["a"]], sorted!.Select(u => u.Id));
         Assert.Equal([ids["a"]], admins!.Select(u => u.Id));
@@ -63,7 +63,7 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
         var user = await CreateUserAsync();
         using var userClient = await LoginAsync(user);
 
-        var deactivateResponse = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null);
+        var deactivateResponse = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deactivateResponse.StatusCode);
 
         var loginAfter = await TryLoginAsync(userClient, user.Email, user.Password);
@@ -75,22 +75,22 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
     {
         var user = await CreateUserAsync("Admin");
         using var userClient = await LoginAsync(user);
-        Assert.Equal(HttpStatusCode.OK, (await userClient.GetAsync("/api/users")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await userClient.GetAsync("/api/users", TestContext.Current.CancellationToken)).StatusCode);
 
-        (await Client.PutAsJsonAsync($"/api/users/{user.Id}/role", new { role = "Member" })).EnsureSuccessStatusCode();
+        (await Client.PutAsJsonAsync($"/api/users/{user.Id}/role", new { role = "Member" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, (await userClient.GetAsync("/api/users")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await userClient.GetAsync("/api/users", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
     public async Task Admin_cannot_change_own_role_or_deactivate_self()
     {
-        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me");
+        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me", TestContext.Current.CancellationToken);
 
-        var roleResponse = await Client.PutAsJsonAsync($"/api/users/{me!.Id}/role", new { role = "Member" });
+        var roleResponse = await Client.PutAsJsonAsync($"/api/users/{me!.Id}/role", new { role = "Member" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, roleResponse.StatusCode);
 
-        var deactivateResponse = await Client.PostAsync($"/api/users/{me.Id}/deactivate", null);
+        var deactivateResponse = await Client.PostAsync($"/api/users/{me.Id}/deactivate", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, deactivateResponse.StatusCode);
     }
 
@@ -99,7 +99,7 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
     {
         using var memberClient = await CreateUserClientAsync();
 
-        var listResponse = await memberClient.GetAsync("/api/users");
+        var listResponse = await memberClient.GetAsync("/api/users", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, listResponse.StatusCode);
     }
@@ -113,9 +113,9 @@ public sealed class UserEndpointTests(ApiFixture fixture) : IntegrationTestBase(
 
         var updateResponse = await userClient.PutAsJsonAsync(
             "/api/users/me",
-            new { displayName = "New Name", currentPassword = user.Password, newPassword });
+            new { displayName = "New Name", currentPassword = user.Password, newPassword }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<UserDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<UserDto>(TestContext.Current.CancellationToken);
         Assert.Equal("New Name", updated!.DisplayName);
 
         var reloginOld = await TryLoginAsync(userClient, user.Email, user.Password);

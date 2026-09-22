@@ -16,16 +16,16 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
     {
         var user = await CreateUserAsync();
         using var before = await LoginAsync(user);
-        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var response = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null);
+        var response = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await before.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await before.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await before.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await before.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
         using var client = CreateClient();
         (await TryLoginAsync(client, user.Email, user.Password)).EnsureSuccessStatusCode();
-        var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=true");
+        var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=true", TestContext.Current.CancellationToken);
         Assert.Contains(users!, u => u.GetProperty("id").GetGuid() == user.Id);
     }
 
@@ -35,12 +35,12 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         var user = await CreateUserAsync();
         using var signedIn = await LoginAsync(user);
 
-        var first = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null);
-        var second = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null);
+        var first = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken);
+        var second = await Client.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await signedIn.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await signedIn.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -53,8 +53,8 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
             await TryLoginAsync(client, user.Email, WrongPassword);
         }
 
-        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
-        (await Client.PostAsync($"/api/users/{user.Id}/reactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         using var other = CreateClient();
         for (var attempt = 1; attempt <= 4; attempt++)
@@ -69,9 +69,9 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         var user = await CreateUserAsync();
         using var member = await CreateUserClientAsync();
 
-        Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync($"/api/users/{user.Id}/reactivate", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken)).StatusCode);
         await AssertProblemAsync(
-            await Client.PostAsync($"/api/users/{Guid.NewGuid()}/reactivate", null),
+            await Client.PostAsync($"/api/users/{Guid.NewGuid()}/reactivate", null, TestContext.Current.CancellationToken),
             HttpStatusCode.NotFound,
             "resource.notFound");
     }
@@ -87,14 +87,14 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         var response = await ResetAsync(adminClient, user.Id, admin.Password);
 
         response.EnsureSuccessStatusCode();
-        var profile = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var profile = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         Assert.Equal(user.Id, profile.GetProperty("id").GetGuid());
-        Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await signedIn.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
         using var client = CreateClient();
         await AssertProblemAsync(await TryLoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
         (await TryLoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
-        Assert.Equal(HttpStatusCode.OK, (await adminClient.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await adminClient.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -133,10 +133,10 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
     {
         var user = await CreateUserAsync();
 
-        var missing = await Client.PostAsJsonAsync($"/api/users/{user.Id}/reset-password", new { newPassword = TemporaryPassword });
+        var missing = await Client.PostAsJsonAsync($"/api/users/{user.Id}/reset-password", new { newPassword = TemporaryPassword }, TestContext.Current.CancellationToken);
         var tooShort = await Client.PostAsJsonAsync(
             $"/api/users/{user.Id}/reset-password",
-            new { newPassword = "Ab-1", currentPassword = ApiFixture.TestAdminPassword });
+            new { newPassword = "Ab-1", currentPassword = ApiFixture.TestAdminPassword }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(missing, "currentPassword");
         await AssertValidationErrorAsync(tooShort, "newPassword");
@@ -164,7 +164,7 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
 
         using var client = CreateClient();
         (await TryLoginAsync(client, other.Email, TemporaryPassword)).EnsureSuccessStatusCode();
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/users")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/users", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -193,18 +193,18 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         var kept = await ResetAsync(adminClient, user.Id, admin.Password);
 
         kept.EnsureSuccessStatusCode();
-        Assert.True((await kept.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("twoFactorEnabled").GetBoolean());
+        Assert.True((await kept.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("twoFactorEnabled").GetBoolean());
         using var client = CreateClient();
-        var challenged = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
+        var challenged = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         Assert.True(challenged.GetProperty("twoFactorRequired").GetBoolean());
 
         var cleared = await ResetAsync(adminClient, user.Id, admin.Password, resetTwoFactor: true);
 
         cleared.EnsureSuccessStatusCode();
-        Assert.False((await cleared.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("twoFactorEnabled").GetBoolean());
-        var signedIn = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False((await cleared.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("twoFactorEnabled").GetBoolean());
+        var signedIn = await (await TryLoginAsync(client, user.Email, TemporaryPassword)).Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         Assert.False(signedIn.GetProperty("twoFactorRequired").GetBoolean());
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
 
         var again = await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = TemporaryPassword });
         Assert.NotEqual(setup.SharedKey, again.SharedKey);
@@ -236,16 +236,16 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         var (admin, adminClient) = await CreateAdminAsync();
         using var owned = adminClient;
         var user = await CreateUserAsync();
-        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var response = await ResetAsync(adminClient, user.Id, admin.Password);
 
         response.EnsureSuccessStatusCode();
-        Assert.False((await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("isActive").GetBoolean());
+        Assert.False((await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken)).GetProperty("isActive").GetBoolean());
         using var client = CreateClient();
         await AssertProblemAsync(await TryLoginAsync(client, user.Email, TemporaryPassword), HttpStatusCode.Unauthorized, "credentials.invalid");
 
-        (await Client.PostAsync($"/api/users/{user.Id}/reactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/reactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await TryLoginAsync(client, user.Email, TemporaryPassword)).EnsureSuccessStatusCode();
     }
 

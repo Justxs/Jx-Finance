@@ -23,7 +23,7 @@ public sealed class SecurityPriceBackfillTests(ApiFixture fixture) : Integration
             var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
             await using var db = new AppDbContext(options, new TestCurrentUser(Guid.NewGuid()));
             var migrator = db.GetService<IMigrator>();
-            await migrator.MigrateAsync(MigrationBefore);
+            await migrator.MigrateAsync(MigrationBefore, TestContext.Current.CancellationToken);
             var (priced, undated, unpriced) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
             await ExecuteAsync(
                 connectionString,
@@ -35,13 +35,13 @@ public sealed class SecurityPriceBackfillTests(ApiFixture fixture) : Integration
                     ('{unpriced}', 'UNPRICED', 'Unpriced', 0, 'EUR', NULL, NULL, now(), now(), false)
                 """);
 
-            await migrator.MigrateAsync();
+            await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
 
-            var points = await db.SecurityPrices.AsNoTracking().OrderBy(p => p.Price).ToListAsync();
+            var points = await db.SecurityPrices.AsNoTracking().OrderBy(p => p.Price).ToListAsync(TestContext.Current.CancellationToken);
             Assert.Equal(
                 [(undated, new DateOnly(2026, 7, 1), 7m), (priced, new DateOnly(2026, 6, 5), 12.5m)],
                 points.Select(p => (p.SecurityId.Value, p.Date, p.Price)));
-            Assert.Equal(new DateOnly(2026, 7, 1), (await db.Securities.SingleAsync(s => s.Symbol == "UNDATED")).LastPriceDate);
+            Assert.Equal(new DateOnly(2026, 7, 1), (await db.Securities.SingleAsync(s => s.Symbol == "UNDATED", TestContext.Current.CancellationToken)).LastPriceDate);
         }
         finally
         {

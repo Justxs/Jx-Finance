@@ -20,10 +20,10 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await member.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = third, toAccountId = fourth, amount = "30.00", date = "2026-08-15", description = "  Moved  " });
+            new { fromAccountId = third, toAccountId = fourth, amount = "30.00", date = "2026-08-15", description = "  Moved  " }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<TransferDto>();
+        var updated = await response.Content.ReadFromJsonAsync<TransferDto>(TestContext.Current.CancellationToken);
         Assert.Equal(
             (transfer.Id, third, fourth, "30.00", new DateOnly(2026, 8, 15), "Moved"),
             (updated!.Id, updated.FromAccountId, updated.ToAccountId, updated.Amount, updated.Date, updated.Description));
@@ -33,7 +33,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal("100.00", await CurrentBalanceAsync(second, member));
         Assert.Equal("20.00", await CurrentBalanceAsync(third, member));
         Assert.Equal("30.00", await CurrentBalanceAsync(fourth, member));
-        var listed = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-08-15");
+        var listed = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-08-15", TestContext.Current.CancellationToken);
         Assert.Equal(transfer.Id, Assert.Single(listed!.Items).Id);
     }
 
@@ -48,10 +48,10 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var withoutReceived = await member.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = euros, toAccountId = dollars, amount = "120.00", date = "2026-09-01" });
+            new { fromAccountId = euros, toAccountId = dollars, amount = "120.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var repriced = await member.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = euros, toAccountId = dollars, amount = "120.00", receivedAmount = "130.20", date = "2026-09-01" });
+            new { fromAccountId = euros, toAccountId = dollars, amount = "120.00", receivedAmount = "130.20", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(withoutReceived, "transfer.receivedAmountRequired");
         repriced.EnsureSuccessStatusCode();
@@ -60,14 +60,14 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var mismatch = await member.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = euros, toAccountId = moreEuros, amount = "50.00", receivedAmount = "49.00", date = "2026-09-01" });
+            new { fromAccountId = euros, toAccountId = moreEuros, amount = "50.00", receivedAmount = "49.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var sameCurrency = await member.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = euros, toAccountId = moreEuros, amount = "50.00", receivedAmount = "50.00", date = "2026-09-01" });
+            new { fromAccountId = euros, toAccountId = moreEuros, amount = "50.00", receivedAmount = "50.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(mismatch, "transfer.amountMismatch");
         sameCurrency.EnsureSuccessStatusCode();
-        var updated = await sameCurrency.Content.ReadFromJsonAsync<TransferDto>();
+        var updated = await sameCurrency.Content.ReadFromJsonAsync<TransferDto>(TestContext.Current.CancellationToken);
         Assert.Equal(("50.00", "eur", "50.00", "eur"), (updated!.Amount, updated.Currency, updated.ReceivedAmount, updated.ReceivedCurrency));
         Assert.Equal("250.00", await CurrentBalanceAsync(euros, member));
         Assert.Equal("5.00", await CurrentBalanceAsync(dollars, member));
@@ -85,7 +85,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = from, toAccountId = to, amount, date = "2026-09-01" });
+            new { fromAccountId = from, toAccountId = to, amount, date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
         Assert.Equal("90.00", await CurrentBalanceAsync(from));
@@ -100,13 +100,13 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var sameAccount = await Client.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = from, toAccountId = from, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = from, toAccountId = from, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var longText = await Client.PutAsJsonAsync(
             $"/api/transfers/{transfer.Id}",
-            new { fromAccountId = from, toAccountId = to, amount = "10.00", date = "2026-09-01", description = new string('x', 501) });
+            new { fromAccountId = from, toAccountId = to, amount = "10.00", date = "2026-09-01", description = new string('x', 501) }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(sameAccount, "toAccountId");
-        Assert.Contains("transfer.sameAccount", await sameAccount.Content.ReadAsStringAsync());
+        Assert.Contains("transfer.sameAccount", await sameAccount.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         await AssertValidationErrorAsync(longText, "description");
     }
 
@@ -126,22 +126,22 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
 
         var oldAccountHidden = await partnerClient.PutAsJsonAsync(
             $"/api/transfers/{mixed.Id}",
-            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "20.00", date = "2026-09-01" });
+            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "20.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var newAccountHidden = await partnerClient.PutAsJsonAsync(
             $"/api/transfers/{visible.Id}",
-            new { fromAccountId = adminsPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = adminsPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var byStranger = await stranger.PutAsJsonAsync(
             $"/api/transfers/{visible.Id}",
-            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var betweenVisible = await partnerClient.PutAsJsonAsync(
             $"/api/transfers/{visible.Id}",
-            new { fromAccountId = partnersPersonal, toAccountId = otherShared, amount = "15.00", date = "2026-09-01" });
+            new { fromAccountId = partnersPersonal, toAccountId = otherShared, amount = "15.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var byOwner = await Client.PutAsJsonAsync(
             $"/api/transfers/{mixed.Id}",
-            new { fromAccountId = adminsPersonal, toAccountId = otherShared, amount = "25.00", date = "2026-09-01" });
+            new { fromAccountId = adminsPersonal, toAccountId = otherShared, amount = "25.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, oldAccountHidden.StatusCode);
-        Assert.Contains("access.forbidden", await oldAccountHidden.Content.ReadAsStringAsync());
+        Assert.Contains("access.forbidden", await oldAccountHidden.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         await AssertRejectedAsync(newAccountHidden, "reference.notFound");
         Assert.Equal(HttpStatusCode.NotFound, byStranger.StatusCode);
         Assert.Equal(HttpStatusCode.OK, betweenVisible.StatusCode);
@@ -154,7 +154,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
             HttpStatusCode.NotFound,
             (await Client.PutAsJsonAsync(
                 $"/api/transfers/{Guid.NewGuid()}",
-                new { fromAccountId = adminsPersonal, toAccountId = shared, amount = "1.00", date = "2026-09-01" })).StatusCode);
+                new { fromAccountId = adminsPersonal, toAccountId = shared, amount = "1.00", date = "2026-09-01" }, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -164,7 +164,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var destination = await CreateAccountAsync("100.00");
         var elsewhere = await CreateAccountAsync("0.00");
         await ConfirmImportAsync(source, new { importRef = "out-1", amount = "10.00", type = "expense", date = "2026-09-01", transferAccountId = destination });
-        var transfer = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200"))!.Items.Single(t => t.FromAccountId == source);
+        var transfer = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken))!.Items.Single(t => t.FromAccountId == source);
         Assert.Equal((true, false), (transfer.FromAccountImported, transfer.ToAccountImported));
 
         var newDate = await PutAsync(transfer.Id, source, destination, "10.00", "2026-09-02");
@@ -179,7 +179,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         }
 
         described.EnsureSuccessStatusCode();
-        var updated = await described.Content.ReadFromJsonAsync<TransferDto>();
+        var updated = await described.Content.ReadFromJsonAsync<TransferDto>(TestContext.Current.CancellationToken);
         Assert.Equal(("Rent share", elsewhere), (updated!.Description, updated.ToAccountId));
         Assert.Equal((true, false), (updated.FromAccountImported, updated.ToAccountImported));
         Assert.Equal("90.00", await CurrentBalanceAsync(source));
@@ -193,8 +193,8 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         await AssertRejectedAsync(bothMatched, "value.locked");
         var again = await Client.PostAsJsonAsync(
             "/api/import/swedbank/confirm",
-            new { accountId = source, rows = new[] { new { importRef = "out-1", amount = "10.00", type = "expense", date = "2026-09-01" } } });
-        Assert.Equal(1, (await again.Content.ReadFromJsonAsync<ConfirmDto>())!.SkippedDuplicates);
+            new { accountId = source, rows = new[] { new { importRef = "out-1", amount = "10.00", type = "expense", date = "2026-09-01" } } }, TestContext.Current.CancellationToken);
+        Assert.Equal(1, (await again.Content.ReadFromJsonAsync<ConfirmDto>(TestContext.Current.CancellationToken))!.SkippedDuplicates);
     }
 
     [Fact]
@@ -209,8 +209,8 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         form.Add(file, "file", "report.xml");
         form.Add(new StringContent(brokerage.ToString()), "accountId");
         form.Add(new StringContent(bank.ToString()), "fundingAccountId");
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form)).EnsureSuccessStatusCode();
-        var deposit = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200"))!.Items.Single(t => t.ToAccountId == brokerage);
+        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var deposit = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken))!.Items.Single(t => t.ToAccountId == brokerage);
         Assert.Equal((false, true), (deposit.FromAccountImported, deposit.ToAccountImported));
 
         var newAmount = await PutAsync(deposit.Id, bank, brokerage, "2500.00", "2026-06-01");
@@ -232,27 +232,27 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var moreEuros = await CreateAccountAsync("0.00", currency: "eur");
         var foreign = await CreateAsync(Client, euros, pounds, "100.00", receivedAmount: "80.00");
         var domestic = await CreateAsync(Client, euros, moreEuros, "10.00");
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var restricted = original.DeepClone().AsObject();
         restricted["enabledCurrencies"] = new JsonArray("usd");
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             var kept = await Client.PutAsJsonAsync(
                 $"/api/transfers/{foreign.Id}",
-                new { fromAccountId = euros, toAccountId = pounds, amount = "110.00", receivedAmount = "88.00", date = "2026-09-01" });
+                new { fromAccountId = euros, toAccountId = pounds, amount = "110.00", receivedAmount = "88.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
             var introduced = await Client.PutAsJsonAsync(
                 $"/api/transfers/{domestic.Id}",
-                new { fromAccountId = euros, toAccountId = pounds, amount = "10.00", receivedAmount = "8.00", date = "2026-09-01" });
+                new { fromAccountId = euros, toAccountId = pounds, amount = "10.00", receivedAmount = "8.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
             kept.EnsureSuccessStatusCode();
             await AssertRejectedAsync(introduced, "currency.disabled");
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
     }
 

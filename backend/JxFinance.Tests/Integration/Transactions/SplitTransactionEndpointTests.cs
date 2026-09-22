@@ -27,14 +27,14 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                     new { categoryId = food, amount = "30.00", description = "Food" },
                     new { categoryId = clothes, amount = "20.00", description = "Clothes" },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         Assert.True(created!.IsSplit);
         Assert.Null(created.CategoryId);
         Assert.Equal(2, created.Lines!.Count);
 
-        var fetched = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{created.Id}");
+        var fetched = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{created.Id}", TestContext.Current.CancellationToken);
         Assert.True(fetched!.IsSplit);
         Assert.Equal(2, fetched.Lines!.Count);
     }
@@ -57,7 +57,7 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                     new { amount = "10.00" },
                     new { amount = "10.00" },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -81,7 +81,7 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                     new { amount = "30.00" },
                     new { amount },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "lines[1].amount");
     }
@@ -102,8 +102,8 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                 amount = "40.00",
                 date = "2026-06-06",
                 lines = new object[] { new { categoryId = categoryA, amount = "40.00" } },
-            });
-        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+            }, TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         var firstLineId = created!.Lines![0].Id;
 
         var updateResponse = await Client.PutAsJsonAsync(
@@ -119,9 +119,9 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                     new { categoryId = categoryB, amount = "15.00" },
                     new { categoryId = categoryB, amount = "25.00" },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, updated!.Lines!.Count);
         Assert.DoesNotContain(updated.Lines, l => l.Id == firstLineId);
@@ -142,8 +142,8 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                 amount = "20.00",
                 date = "2026-06-07",
                 lines = new object[] { new { categoryId = category, amount = "20.00" } },
-            });
-        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+            }, TestContext.Current.CancellationToken);
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
         var updateResponse = await Client.PutAsJsonAsync(
             $"/api/transactions/{created!.Id}",
@@ -155,9 +155,9 @@ public sealed class SplitTransactionEndpointTests(ApiFixture fixture) : Integrat
                 amount = "20.00",
                 date = "2026-06-07",
                 lines = Array.Empty<object>(),
-            });
+            }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
         Assert.False(updated!.IsSplit);
         Assert.Null(updated.Lines);

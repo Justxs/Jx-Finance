@@ -22,7 +22,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
                 cadence = "monthly",
                 nextDueDate = "2026-08-01",
                 remindDaysBefore = 3,
-            });
+            }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(response, "amount");
     }
 
@@ -39,7 +39,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
                 cadence = "monthly",
                 nextDueDate = "2026-08-01",
                 remindDaysBefore = 3,
-            });
+            }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(response, "amount");
     }
 
@@ -51,10 +51,10 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
         Assert.Equal("monthly", created.Cadence);
         Assert.True(created.IsActive);
 
-        var fetched = await Client.GetFromJsonAsync<RecurringBillDto>($"/api/recurring-bills/{created.Id}");
+        var fetched = await Client.GetFromJsonAsync<RecurringBillDto>($"/api/recurring-bills/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(created.Id, fetched!.Id);
 
-        var listed = await Client.GetFromJsonAsync<List<RecurringBillDto>>("/api/recurring-bills");
+        var listed = await Client.GetFromJsonAsync<List<RecurringBillDto>>("/api/recurring-bills", TestContext.Current.CancellationToken);
         Assert.Contains(listed!, b => b.Id == created.Id);
 
         var updateResponse = await Client.PutAsJsonAsync(
@@ -69,17 +69,17 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
                 nextDueDate = "2026-08-01",
                 remindDaysBefore = 5,
                 isActive = false,
-            });
+            }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<RecurringBillDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<RecurringBillDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Internet & TV", updated!.Name);
         Assert.Equal("25.00", updated.Amount);
         Assert.False(updated.IsActive);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/recurring-bills/{created.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/recurring-bills/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var afterDelete = await Client.GetAsync($"/api/recurring-bills/{created.Id}");
+        var afterDelete = await Client.GetAsync($"/api/recurring-bills/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, afterDelete.StatusCode);
     }
 
@@ -91,13 +91,13 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
 
         var confirmResponse = await Client.PostAsJsonAsync(
             $"/api/recurring-bills/{created.Id}/confirm",
-            new { expectedDueDate = created.NextDueDate });
+            new { expectedDueDate = created.NextDueDate }, TestContext.Current.CancellationToken);
         confirmResponse.EnsureSuccessStatusCode();
-        var confirmed = await confirmResponse.Content.ReadFromJsonAsync<ConfirmDto>();
+        var confirmed = await confirmResponse.Content.ReadFromJsonAsync<ConfirmDto>(TestContext.Current.CancellationToken);
         Assert.NotEqual(Guid.Empty, confirmed!.TransactionId);
         Assert.Equal("2026-09-01", confirmed.Bill.NextDueDate.ToString("yyyy-MM-dd"));
 
-        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}");
+        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal("30.00", transaction!.Amount);
         Assert.Equal("expense", transaction.Type);
     }
@@ -107,7 +107,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
     {
         var created = await CreateVariableBillAsync("Groceries", "2026-08-01");
 
-        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{created.Id}/confirm", new { expectedDueDate = created.NextDueDate });
+        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{created.Id}/confirm", new { expectedDueDate = created.NextDueDate }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -119,7 +119,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
         var path = $"/api/recurring-bills/{bill.Id}/confirm";
         var body = new { expectedDueDate = bill.NextDueDate };
 
-        var responses = await Task.WhenAll(Client.PostAsJsonAsync(path, body), Client.PostAsJsonAsync(path, body));
+        var responses = await Task.WhenAll(Client.PostAsJsonAsync(path, body, TestContext.Current.CancellationToken), Client.PostAsJsonAsync(path, body, TestContext.Current.CancellationToken));
 
         Assert.Single(responses, r => r.StatusCode == HttpStatusCode.OK);
         Assert.Single(responses, r => r.StatusCode == HttpStatusCode.Conflict);
@@ -132,10 +132,10 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
         var bill = await CreateFixedBillAsync("Inactive", "5.00", "2026-09-01");
         var deactivate = await Client.PutAsJsonAsync(
             $"/api/recurring-bills/{bill.Id}",
-            new { name = bill.Name, kind = "fixed", amount = "5.00", cadence = "monthly", nextDueDate = bill.NextDueDate, isActive = false });
+            new { name = bill.Name, kind = "fixed", amount = "5.00", cadence = "monthly", nextDueDate = bill.NextDueDate, isActive = false }, TestContext.Current.CancellationToken);
         deactivate.EnsureSuccessStatusCode();
 
-        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{bill.Id}/confirm", new { expectedDueDate = bill.NextDueDate });
+        var response = await Client.PostAsJsonAsync($"/api/recurring-bills/{bill.Id}/confirm", new { expectedDueDate = bill.NextDueDate }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -145,7 +145,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
     {
         var response = await Client.PostAsJsonAsync(
             "/api/recurring-bills",
-            new { name = "Invalid", kind = "fixed", amount = "5.00", accountId = Guid.NewGuid(), cadence = "monthly", nextDueDate = "2026-09-01" });
+            new { name = "Invalid", kind = "fixed", amount = "5.00", accountId = Guid.NewGuid(), cadence = "monthly", nextDueDate = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -159,7 +159,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
             Services.GetRequiredService<IServiceScopeFactory>(),
             NullLogger<RecurringBillReminderJob>.Instance);
 
-        await Task.WhenAll(job.ScanAsync(default), job.ScanAsync(default));
+        await Task.WhenAll(job.ScanAsync(TestContext.Current.CancellationToken), job.ScanAsync(TestContext.Current.CancellationToken));
 
         Assert.Single(await UnreadRemindersAsync(bill.Id));
 
@@ -182,7 +182,7 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
             Services.GetRequiredService<IServiceScopeFactory>(),
             NullLogger<RecurringBillReminderJob>.Instance);
 
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(expected, (await UnreadRemindersAsync(bill.Id)).Count == 1);
     }

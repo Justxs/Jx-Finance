@@ -13,7 +13,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "100000.00", interestRate = 5m, firstPaymentDate = "2026-01-01", termMonths = 360 });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
 
         Assert.Equal(("100000.00", 5m, "annuity", "536.82"), (schedule!.LoanAmount, schedule.InterestRate, schedule.AmortizationType, schedule.RegularPayment));
         Assert.Equal(360, schedule.Plan.Payments);
@@ -35,7 +35,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "10000.00", interestRate = 0m, firstPaymentDate = "2026-01-10", monthlyPayment = "1000.00" });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
 
         Assert.Equal((10, "1000.00", "0.00"), (schedule!.Plan.Payments, schedule.RegularPayment, schedule.Plan.TotalInterest));
         Assert.Equal(new DateOnly(2026, 10, 10), debt.PayoffDate);
@@ -47,7 +47,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "1200.00", interestRate = 12m, firstPaymentDate = "2026-01-01", termMonths = 12, amortizationType = "linear" });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
 
         Assert.All(schedule!.Plan.Rows, row => Assert.Equal("100.00", row.Principal));
         Assert.Equal(("112.00", "78.00"), (schedule.RegularPayment, schedule.Plan.TotalInterest));
@@ -59,7 +59,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "100000.00", interestRate = 5m, firstPaymentDate = "2026-01-01", termMonths = 360 });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?extraMonthly=100.00");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?extraMonthly=100.00", TestContext.Current.CancellationToken);
 
         Assert.NotNull(schedule!.WithExtra);
         Assert.Equal(256, schedule.WithExtra.Payments);
@@ -77,7 +77,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "10000.00", interestRate = 0m, firstPaymentDate = "2026-01-15", termMonths = 10 });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?lumpSum=5000&lumpSumDate=2026-03-02");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule?lumpSum=5000&lumpSumDate=2026-03-02", TestContext.Current.CancellationToken);
 
         var paid = Assert.Single(schedule!.WithExtra!.Rows, row => row.Extra != "0.00");
         Assert.Equal((3, "5000.00"), (paid.Number, paid.Extra));
@@ -90,7 +90,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "2400.00", interestRate = 0m, firstPaymentDate = Today.AddMonths(-2), termMonths = 24 });
 
-        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule");
+        var schedule = await member.GetFromJsonAsync<ScheduleDto>($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
 
         Assert.Equal((Today, 3, "2100.00"), (schedule!.AsOf, schedule.PaymentsMade, schedule.ScheduledBalance));
     }
@@ -113,7 +113,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         body["outstandingAmount"] = "1000.00";
         body["asOf"] = Today.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture);
 
-        var response = await member.PostAsJsonAsync("/api/debts", body);
+        var response = await member.PostAsJsonAsync("/api/debts", body, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, code);
@@ -125,7 +125,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "1000.00", interestRate = 5m });
 
-        var response = await member.GetAsync($"/api/debts/{debt.Id}/schedule");
+        var response = await member.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
 
         Assert.Null(debt.PayoffDate);
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "debt.scheduleIncomplete");
@@ -141,7 +141,7 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var debt = await CreateDebtAsync(member, new { loanAmount = "1000.00", interestRate = 5m, firstPaymentDate = "2026-01-01", termMonths = 12 });
 
-        var response = await member.GetAsync($"/api/debts/{debt.Id}/schedule?{query}");
+        var response = await member.GetAsync($"/api/debts/{debt.Id}/schedule?{query}", TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
     }
@@ -156,12 +156,12 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
         using var partnerClient = await LoginAsync(partner);
         var debt = await CreateDebtAsync(ownerClient, new { loanAmount = "1000.00", interestRate = 5m, firstPaymentDate = "2026-01-01", termMonths = 12 });
 
-        var partnerResponse = await partnerClient.GetAsync($"/api/debts/{debt.Id}/schedule");
-        var unknown = await ownerClient.GetAsync($"/api/debts/{Guid.NewGuid()}/schedule");
+        var partnerResponse = await partnerClient.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
+        var unknown = await ownerClient.GetAsync($"/api/debts/{Guid.NewGuid()}/schedule", TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(partnerResponse, HttpStatusCode.NotFound, "resource.notFound");
         await AssertProblemAsync(unknown, HttpStatusCode.NotFound, "resource.notFound");
-        Assert.Equal(HttpStatusCode.OK, (await ownerClient.GetAsync($"/api/debts/{debt.Id}/schedule")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await ownerClient.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -172,12 +172,12 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
 
         var update = await member.PutAsJsonAsync(
             $"/api/debts/{debt.Id}",
-            new { name = "Loan", type = "loan", outstandingAmount = "900.00", interestRate = 5m, asOf = Today });
+            new { name = "Loan", type = "loan", outstandingAmount = "900.00", interestRate = 5m, asOf = Today }, TestContext.Current.CancellationToken);
 
         update.EnsureSuccessStatusCode();
-        var updated = await update.Content.ReadFromJsonAsync<DebtDto>();
+        var updated = await update.Content.ReadFromJsonAsync<DebtDto>(TestContext.Current.CancellationToken);
         Assert.Equal((null, null, "annuity"), (updated!.PayoffDate, updated.LoanAmount, updated.AmortizationType));
-        await AssertProblemAsync(await member.GetAsync($"/api/debts/{debt.Id}/schedule"), HttpStatusCode.BadRequest, "debt.scheduleIncomplete");
+        await AssertProblemAsync(await member.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken), HttpStatusCode.BadRequest, "debt.scheduleIncomplete");
     }
 
     private async Task<DebtDto> CreateDebtAsync(HttpClient client, object schedule)

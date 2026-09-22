@@ -31,13 +31,13 @@ public sealed class BrokerDepositCurrencyTests(ApiFixture fixture) : Integration
 
         var response = await UploadAsync(member, broker, bank, Report);
 
-        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-        var funding = await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{bank}");
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var funding = await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{bank}", TestContext.Current.CancellationToken);
         Assert.Equal(new BalanceDto("usd", "3350.00"), Assert.Single(funding!.Balances));
-        var account = await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{broker}");
+        var account = await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{broker}", TestContext.Current.CancellationToken);
         Assert.Equal(new BalanceDto("eur", "1500.00"), Assert.Single(account!.Balances));
 
-        var transfers = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=100");
+        var transfers = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=100", TestContext.Current.CancellationToken);
         Assert.Equal(
             [
                 new TransferDto(bank, broker, "2200.00", "usd", "2000.00", "eur"),

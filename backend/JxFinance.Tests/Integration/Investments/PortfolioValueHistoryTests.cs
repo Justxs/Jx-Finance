@@ -129,7 +129,7 @@ public sealed class PortfolioValueHistoryTests(ApiFixture fixture) : Integration
     {
         using var member = await CreateUserClientAsync();
 
-        var response = await member.GetAsync("/api/investments/value-history?from=2026-03-02&to=2026-03-01");
+        var response = await member.GetAsync("/api/investments/value-history?from=2026-03-02&to=2026-03-01", TestContext.Current.CancellationToken);
         var empty = await HistoryAsync(member, string.Empty);
 
         await AssertValidationErrorAsync(response, "from");

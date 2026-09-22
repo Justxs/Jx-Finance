@@ -18,13 +18,13 @@ public sealed class TransactionSortEndpointTests(ApiFixture fixture) : Integrati
 
         var query = $"/api/transactions?search={Uri.EscapeDataString(marker)}&pageSize=50";
 
-        var byAmountAsc = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=amount&direction=asc");
+        var byAmountAsc = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=amount&direction=asc", TestContext.Current.CancellationToken);
         Assert.Equal(["10.00", "20.00", "30.00"], byAmountAsc!.Items.Select(i => i.Amount));
 
-        var byAmountDesc = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=amount&direction=desc");
+        var byAmountDesc = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=amount&direction=desc", TestContext.Current.CancellationToken);
         Assert.Equal(["30.00", "20.00", "10.00"], byAmountDesc!.Items.Select(i => i.Amount));
 
-        var byDescription = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=description&direction=asc");
+        var byDescription = await Client.GetFromJsonAsync<PageDto<TransactionDto>>($"{query}&sort=description&direction=asc", TestContext.Current.CancellationToken);
         Assert.Equal(
             [$"Apple {marker}", $"Banana {marker}", $"Cherry {marker}"],
             byDescription!.Items.Select(i => i.Description));
@@ -40,7 +40,7 @@ public sealed class TransactionSortEndpointTests(ApiFixture fixture) : Integrati
         await CreateTransactionAsync(Client, account, null, "expense", "2.00", "2026-03-01", $"Newer {marker}");
 
         var results = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString(marker)}&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString(marker)}&pageSize=50", TestContext.Current.CancellationToken);
 
         Assert.Equal([$"Newer {marker}", $"Older {marker}"], results!.Items.Select(i => i.Description));
     }

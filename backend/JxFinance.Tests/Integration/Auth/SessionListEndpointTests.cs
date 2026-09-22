@@ -14,9 +14,9 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
         using var first = await LoginAsync(user, "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Firefox/140.0");
         using var second = await LoginAsync(user, new string('a', 300));
 
-        var response = await second.GetAsync("/api/auth/sessions");
-        var body = await response.Content.ReadAsStringAsync();
-        var sessions = await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions");
+        var response = await second.GetAsync("/api/auth/sessions", TestContext.Current.CancellationToken);
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+        var sessions = await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.DoesNotContain("hash", body, StringComparison.OrdinalIgnoreCase);
@@ -37,11 +37,11 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
     {
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user, "Refreshing browser");
-        var before = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        var before = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
 
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
 
-        var after = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        var after = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
         Assert.Equal(before.Id, after.Id);
         Assert.True(after.LastSeenAt > before.LastSeenAt);
     }
@@ -52,14 +52,14 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
         var user = await CreateUserAsync();
         using var first = await LoginAsync(user, "First browser");
         using var second = await LoginAsync(user, "Second browser");
-        var target = (await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!.Single(s => !s.IsCurrent);
+        var target = (await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!.Single(s => !s.IsCurrent);
 
-        var revoke = await second.DeleteAsync($"/api/auth/sessions/{target.Id}");
+        var revoke = await second.DeleteAsync($"/api/auth/sessions/{target.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, revoke.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await first.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await first.PostAsync("/api/auth/refresh", null)).StatusCode);
-        var left = Assert.Single((await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await first.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
+        var left = Assert.Single((await second.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
         Assert.True(left.IsCurrent);
     }
 
@@ -71,14 +71,14 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
         using var second = await LoginAsync(user, "Second browser");
         using var third = await LoginAsync(user, "Third browser");
 
-        var revoke = await third.PostAsync("/api/auth/sessions/revoke-others", null);
+        var revoke = await third.PostAsync("/api/auth/sessions/revoke-others", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, revoke.StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await first.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await second.GetAsync("/api/auth/me")).StatusCode);
-        var left = Assert.Single((await third.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await first.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await second.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        var left = Assert.Single((await third.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
         Assert.True(left.IsCurrent);
-        Assert.Equal(HttpStatusCode.NoContent, (await third.PostAsync("/api/auth/sessions/revoke-others", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await third.PostAsync("/api/auth/sessions/revoke-others", null, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -88,16 +88,16 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
         var stranger = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner, "Owner browser");
         using var strangerClient = await LoginAsync(stranger, "Stranger browser");
-        var ownerSession = Assert.Single((await ownerClient.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        var ownerSession = Assert.Single((await ownerClient.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
 
-        var revoke = await strangerClient.DeleteAsync($"/api/auth/sessions/{ownerSession.Id}");
-        var unknown = await strangerClient.DeleteAsync($"/api/auth/sessions/{Guid.NewGuid()}");
-        await strangerClient.PostAsync("/api/auth/sessions/revoke-others", null);
+        var revoke = await strangerClient.DeleteAsync($"/api/auth/sessions/{ownerSession.Id}", TestContext.Current.CancellationToken);
+        var unknown = await strangerClient.DeleteAsync($"/api/auth/sessions/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
+        await strangerClient.PostAsync("/api/auth/sessions/revoke-others", null, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(revoke, HttpStatusCode.NotFound, "resource.notFound");
         await AssertProblemAsync(unknown, HttpStatusCode.NotFound, "resource.notFound");
-        Assert.Equal(HttpStatusCode.OK, (await ownerClient.GetAsync("/api/auth/me")).StatusCode);
-        var strangerSessions = await strangerClient.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions");
+        Assert.Equal(HttpStatusCode.OK, (await ownerClient.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        var strangerSessions = await strangerClient.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(strangerSessions!, s => s.Id == ownerSession.Id);
     }
 
@@ -106,12 +106,12 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
     {
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user, "Only browser");
-        var current = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions"))!);
+        var current = Assert.Single((await client.GetFromJsonAsync<List<SessionDto>>("/api/auth/sessions", TestContext.Current.CancellationToken))!);
 
-        var revoke = await client.DeleteAsync($"/api/auth/sessions/{current.Id}");
+        var revoke = await client.DeleteAsync($"/api/auth/sessions/{current.Id}", TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(revoke, HttpStatusCode.Forbidden, "session.current");
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -119,9 +119,9 @@ public sealed class SessionListEndpointTests(ApiFixture fixture) : IntegrationTe
     {
         using var anonymous = CreateClient();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/auth/sessions")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.DeleteAsync($"/api/auth/sessions/{Guid.NewGuid()}")).StatusCode);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsync("/api/auth/sessions/revoke-others", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync("/api/auth/sessions", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.DeleteAsync($"/api/auth/sessions/{Guid.NewGuid()}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.PostAsync("/api/auth/sessions/revoke-others", null, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     private async Task<HttpClient> LoginAsync(TestUser user, string userAgent)

@@ -12,7 +12,7 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
     {
         using var member = await CreateUserClientAsync();
 
-        var tags = await member.GetFromJsonAsync<List<TagDto>>("/api/tags");
+        var tags = await member.GetFromJsonAsync<List<TagDto>>("/api/tags", TestContext.Current.CancellationToken);
 
         Assert.Empty(tags!);
     }
@@ -21,15 +21,15 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
     public async Task Create_and_rename_a_tag()
     {
         using var member = await CreateUserClientAsync();
-        var createResponse = await member.PostAsJsonAsync("/api/tags", new { name = "Holiday 2026" });
+        var createResponse = await member.PostAsJsonAsync("/api/tags", new { name = "Holiday 2026" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var created = await createResponse.Content.ReadFromJsonAsync<TagDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<TagDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Holiday 2026", created!.Name);
         Assert.Equal("personal", created.Scope);
 
-        var renameResponse = await member.PutAsJsonAsync($"/api/tags/{created.Id}", new { name = "Holiday" });
+        var renameResponse = await member.PutAsJsonAsync($"/api/tags/{created.Id}", new { name = "Holiday" }, TestContext.Current.CancellationToken);
         renameResponse.EnsureSuccessStatusCode();
-        var renamed = await renameResponse.Content.ReadFromJsonAsync<TagDto>();
+        var renamed = await renameResponse.Content.ReadFromJsonAsync<TagDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal("Holiday", renamed!.Name);
     }
@@ -40,7 +40,7 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         using var member = await CreateUserClientAsync();
         await PostAsync<IdDto>(member, "/api/tags", new { name = "Reimbursable" });
 
-        var again = await member.PostAsJsonAsync("/api/tags", new { name = "  reimbursable " });
+        var again = await member.PostAsJsonAsync("/api/tags", new { name = "  reimbursable " }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(again, HttpStatusCode.Conflict, "conflict.duplicate");
     }
@@ -52,7 +52,7 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         using var second = await CreateUserClientAsync();
         await PostAsync<IdDto>(first, "/api/tags", new { name = "Renovation" });
 
-        var theirs = await second.PostAsJsonAsync("/api/tags", new { name = "Renovation" });
+        var theirs = await second.PostAsJsonAsync("/api/tags", new { name = "Renovation" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Created, theirs.StatusCode);
     }
@@ -64,8 +64,8 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         var holiday = await CreateTagAsync("Holiday", client: member);
         await CreateTagAsync("Renovation", client: member);
 
-        var clash = await member.PutAsJsonAsync($"/api/tags/{holiday}", new { name = "Renovation" });
-        var unchanged = await member.PutAsJsonAsync($"/api/tags/{holiday}", new { name = "Holiday" });
+        var clash = await member.PutAsJsonAsync($"/api/tags/{holiday}", new { name = "Renovation" }, TestContext.Current.CancellationToken);
+        var unchanged = await member.PutAsJsonAsync($"/api/tags/{holiday}", new { name = "Holiday" }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(clash, HttpStatusCode.Conflict, "conflict.duplicate");
         unchanged.EnsureSuccessStatusCode();
@@ -77,8 +77,8 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         using var member = await CreateUserClientAsync();
         var tag = await CreateTagAsync("Wedding", client: member);
 
-        var deleted = await member.DeleteAsync($"/api/tags/{tag}");
-        var again = await member.PostAsJsonAsync("/api/tags", new { name = "Wedding" });
+        var deleted = await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
+        var again = await member.PostAsJsonAsync("/api/tags", new { name = "Wedding" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(HttpStatusCode.Created, again.StatusCode);
@@ -92,9 +92,9 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         var tag = await CreateTagAsync("Garden", household);
         using var member = await LoginAsync(other);
 
-        var theirTags = await member.GetFromJsonAsync<List<TagDto>>("/api/tags");
-        var theirDelete = await member.DeleteAsync($"/api/tags/{tag}");
-        var theirRename = await member.PutAsJsonAsync($"/api/tags/{tag}", new { name = "Garden work", scope = "shared", householdId = household });
+        var theirTags = await member.GetFromJsonAsync<List<TagDto>>("/api/tags", TestContext.Current.CancellationToken);
+        var theirDelete = await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
+        var theirRename = await member.PutAsJsonAsync($"/api/tags/{tag}", new { name = "Garden work", scope = "shared", householdId = household }, TestContext.Current.CancellationToken);
 
         Assert.Contains(theirTags!, t => t.Id == tag && t.Scope == "shared");
         await AssertProblemAsync(theirDelete, HttpStatusCode.Forbidden, "access.forbidden");
@@ -109,8 +109,8 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         var household = await CreateHouseholdAsync(other);
         var tag = await CreateTagAsync("Private matter", household);
 
-        var tags = await outsider.GetFromJsonAsync<List<TagDto>>("/api/tags");
-        var edit = await outsider.PutAsJsonAsync($"/api/tags/{tag}", new { name = "Mine now" });
+        var tags = await outsider.GetFromJsonAsync<List<TagDto>>("/api/tags", TestContext.Current.CancellationToken);
+        var edit = await outsider.PutAsJsonAsync($"/api/tags/{tag}", new { name = "Mine now" }, TestContext.Current.CancellationToken);
 
         Assert.DoesNotContain(tags!, t => t.Id == tag);
         Assert.Equal(HttpStatusCode.NotFound, edit.StatusCode);
@@ -141,11 +141,11 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
     {
         using var member = await CreateUserClientAsync();
 
-        var withoutHousehold = await member.PostAsJsonAsync("/api/tags", new { name = "Nowhere", scope = "shared" });
+        var withoutHousehold = await member.PostAsJsonAsync("/api/tags", new { name = "Nowhere", scope = "shared" }, TestContext.Current.CancellationToken);
         var foreignHousehold = await CreateHouseholdAsync();
         var notAMember = await member.PostAsJsonAsync(
             "/api/tags",
-            new { name = "Not mine", scope = "shared", householdId = foreignHousehold });
+            new { name = "Not mine", scope = "shared", householdId = foreignHousehold }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(withoutHousehold, HttpStatusCode.BadRequest, "household.required");
         await AssertProblemAsync(notAMember, HttpStatusCode.BadRequest, "household.notMember");

@@ -15,7 +15,7 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
         Assert.Equal("owner", household.MyRole);
         Assert.Equal("owner", Assert.Single(household.Members).Role);
 
-        var households = await Client.GetFromJsonAsync<List<HouseholdDto>>("/api/households");
+        var households = await Client.GetFromJsonAsync<List<HouseholdDto>>("/api/households", TestContext.Current.CancellationToken);
         Assert.Contains(households!, h => h.Id == household.Id);
     }
 
@@ -41,7 +41,7 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var response = await Client.PostAsJsonAsync(
             $"/api/households/{household}/members",
-            new { email = $"nobody-{Guid.NewGuid():N}@localhost", role = "member" });
+            new { email = $"nobody-{Guid.NewGuid():N}@localhost", role = "member" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -56,18 +56,18 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var renameResponse = await memberClient.PutAsJsonAsync(
             $"/api/households/{household}",
-            new { id = household, name = "Renamed by member" });
+            new { id = household, name = "Renamed by member" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, renameResponse.StatusCode);
 
         var addResponse = await memberClient.PostAsJsonAsync(
             $"/api/households/{household}/members",
-            new { email = other.Email, role = "member" });
+            new { email = other.Email, role = "member" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, addResponse.StatusCode);
 
-        var deleteResponse = await memberClient.DeleteAsync($"/api/households/{household}");
+        var deleteResponse = await memberClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, deleteResponse.StatusCode);
 
-        var getResponse = await memberClient.GetAsync($"/api/households/{household}");
+        var getResponse = await memberClient.GetAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, getResponse.StatusCode);
     }
 
@@ -77,19 +77,19 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
         var household = await CreateHouseholdAsync();
         var user = await CreateUserAsync();
 
-        var missingEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { role = "member" });
+        var missingEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { role = "member" }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(missingEmail, "email");
 
-        var malformedEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = "not-an-email", role = "member" });
+        var malformedEmail = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = "not-an-email", role = "member" }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(malformedEmail, "email");
 
-        var undefinedRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email, role = 7 });
+        var undefinedRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email, role = 7 }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(undefinedRole, "role");
 
-        var missingRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email });
+        var missingRole = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = user.Email }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, missingRole.StatusCode);
 
-        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}");
+        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}", TestContext.Current.CancellationToken);
         Assert.Single(unchanged!.Members);
     }
 
@@ -99,13 +99,13 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
         var member = await CreateUserAsync();
         var household = await CreateHouseholdAsync(member);
 
-        var undefinedRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = 7 });
+        var undefinedRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = 7 }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(undefinedRole, "role");
 
-        var missingRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { });
+        var missingRole = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, missingRole.StatusCode);
 
-        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}");
+        var unchanged = await Client.GetFromJsonAsync<HouseholdDto>($"/api/households/{household}", TestContext.Current.CancellationToken);
         Assert.Contains(unchanged!.Members, m => m.UserId == member.Id && m.Role == "member");
     }
 
@@ -113,9 +113,9 @@ public sealed class HouseholdEndpointTests(ApiFixture fixture) : IntegrationTest
     public async Task Cannot_remove_the_last_owner()
     {
         var household = await CreateHouseholdAsync();
-        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me");
+        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me", TestContext.Current.CancellationToken);
 
-        var response = await Client.DeleteAsync($"/api/households/{household}/members/{me!.Id}");
+        var response = await Client.DeleteAsync($"/api/households/{household}/members/{me!.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }

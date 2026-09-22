@@ -28,7 +28,7 @@ public sealed class ChartsEndpointTests(ApiFixture fixture) : IntegrationTestBas
                 lines = new object[] { new { categoryId = food, amount = "30.00" } },
             });
 
-        var breakdown = await Client.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={Today:yyyy-MM}");
+        var breakdown = await Client.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={Today:yyyy-MM}", TestContext.Current.CancellationToken);
         var foodItem = breakdown!.Items.Single(i => i.CategoryId == food);
         Assert.Equal("50.00", foodItem.Amount);
     }
@@ -36,7 +36,7 @@ public sealed class ChartsEndpointTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Monthly_trend_returns_the_requested_number_of_months()
     {
-        var trend = await Client.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=3");
+        var trend = await Client.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=3", TestContext.Current.CancellationToken);
         Assert.Equal(3, trend!.Items.Count);
     }
 

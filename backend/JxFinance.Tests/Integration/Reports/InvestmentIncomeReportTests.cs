@@ -88,20 +88,20 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
         await RecordTransactionAsync(member, new { accountId = broker, type = "expense", amount = "30.00", date = today });
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "dividend", date = today, amount = "40.00" });
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "withholdingTax", date = today, amount = "6.00" });
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["investments"] = false;
 
         var on = await ReportAsync(member, $"dateFrom={today}&dateTo={today}");
-        var dashboardOn = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary");
+        var dashboardOn = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             var off = await ReportAsync(member, $"dateFrom={today}&dateTo={today}");
-            var dashboardOff = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary");
-            var breakdownOff = await member.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}");
-            var trendOff = await member.GetFromJsonAsync<MonthlyTrendDto>("/api/dashboard/monthly-trend?months=1");
+            var dashboardOff = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+            var breakdownOff = await member.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
+            var trendOff = await member.GetFromJsonAsync<MonthlyTrendDto>("/api/dashboard/monthly-trend?months=1", TestContext.Current.CancellationToken);
 
             Assert.Equal(("100.00", "30.00", "70.00"), (off.TotalIncome, off.TotalExpense, off.Net));
             Assert.Equal([Row(null, "100.00")], off.IncomeByCategory.Select(c => (c.CategoryId, c.Amount, c.SyntheticGroup)));
@@ -113,7 +113,7 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal(("140.00", "36.00", "104.00"), (on.TotalIncome, on.TotalExpense, on.Net));
@@ -131,9 +131,9 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "dividend", date = today, amount = "40.00" });
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "withholdingTax", date = today, amount = "6.00" });
 
-        var summary = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary");
-        var breakdown = await member.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}");
-        var trend = await member.GetFromJsonAsync<MonthlyTrendDto>("/api/dashboard/monthly-trend?months=2");
+        var summary = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+        var breakdown = await member.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
+        var trend = await member.GetFromJsonAsync<MonthlyTrendDto>("/api/dashboard/monthly-trend?months=2", TestContext.Current.CancellationToken);
 
         Assert.Equal(("40.00", "6.00"), (summary!.MonthIncome, summary.MonthExpense));
         Assert.Equal(

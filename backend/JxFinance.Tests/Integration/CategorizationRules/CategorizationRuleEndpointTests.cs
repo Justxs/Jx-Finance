@@ -21,7 +21,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
     {
         using var member = await CreateUserClientAsync();
 
-        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules");
+        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
 
         Assert.Empty(rules!);
     }
@@ -33,7 +33,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
 
         var response = await member.PostAsJsonAsync(
             "/api/categorization-rules",
-            new { name = "Nothing", match = "contains", pattern = "x", tagIds = Array.Empty<Guid>() });
+            new { name = "Nothing", match = "contains", pattern = "x", tagIds = Array.Empty<Guid>() }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "categoryId");
     }
@@ -55,7 +55,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
                 categoryId = category,
                 minAmount = "50.00",
                 maxAmount = "10.00",
-            });
+            }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "range.invalid");
     }
@@ -189,8 +189,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var second = await CreateRuleAsync(member, "contains", "b", categoryId: category, name: "Second");
         var third = await CreateRuleAsync(member, "contains", "c", categoryId: category, name: "Third");
 
-        var deleted = await member.DeleteAsync($"/api/categorization-rules/{second}");
-        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules");
+        var deleted = await member.DeleteAsync($"/api/categorization-rules/{second}", TestContext.Current.CancellationToken);
+        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal([first, third], rules!.Select(r => r.Id));
@@ -307,7 +307,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         await CreateTransactionAsync(ownerClient, shared, null, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
         await CreateRuleAsync(housemateClient, "contains", "MAXIMA", categoryId: category);
 
-        var ownerSeesTheRules = await ownerClient.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules");
+        var ownerSeesTheRules = await ownerClient.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
         var ownerPreview = await PreviewAsync(ownerClient);
         var housematePreview = await PreviewAsync(housemateClient);
         await RunAsync(housemateClient);
@@ -327,8 +327,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var category = await CreateCategoryAsync(client: mine);
         var rule = await CreateRuleAsync(mine, "contains", "MAXIMA", categoryId: category);
 
-        var move = await theirs.PostAsJsonAsync($"/api/categorization-rules/{rule}/move", new { direction = "up" });
-        var delete = await theirs.DeleteAsync($"/api/categorization-rules/{rule}");
+        var move = await theirs.PostAsJsonAsync($"/api/categorization-rules/{rule}/move", new { direction = "up" }, TestContext.Current.CancellationToken);
+        var delete = await theirs.DeleteAsync($"/api/categorization-rules/{rule}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, move.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
@@ -343,7 +343,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
 
         var response = await mine.PostAsJsonAsync(
             "/api/categorization-rules",
-            new { name = "Not mine", match = "contains", pattern = "x", tagIds = new[] { theirTag } });
+            new { name = "Not mine", match = "contains", pattern = "x", tagIds = new[] { theirTag } }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "reference.notFound");
     }
@@ -397,16 +397,16 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var account = await CreateAccountAsync(client: member);
         var category = await CreateCategoryAsync(client: member);
         await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: category);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["categorizationRules"] = false;
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-            var list = await member.GetAsync("/api/categorization-rules");
-            var run = await member.PostAsJsonAsync("/api/categorization-rules/run", new { });
+            var list = await member.GetAsync("/api/categorization-rules", TestContext.Current.CancellationToken);
+            var run = await member.PostAsJsonAsync("/api/categorization-rules/run", new { }, TestContext.Current.CancellationToken);
             var preview = await ImportPreviewAsync(member, account);
 
             await AssertProblemAsync(list, HttpStatusCode.NotFound, "feature.disabled");
@@ -415,10 +415,10 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
-        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules");
+        var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
         Assert.Single(rules!);
     }
 

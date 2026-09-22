@@ -11,7 +11,7 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
     public async Task Summary_reflects_new_accounts_and_this_months_transactions()
     {
         using var member = await CreateUserClientAsync();
-        var before = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        var before = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
 
         var account = await CreateAccountAsync("10.00", client: member);
         await PostAsync<IdDto>(
@@ -19,7 +19,7 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
             "/api/transactions",
             new { accountId = account, type = "income", amount = "5.00", date = before!.MonthStart });
 
-        var after = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        var after = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
 
         Assert.Equal(15.00m, Parse(after!.TotalBalance) - Parse(before.TotalBalance));
         Assert.Equal(5.00m, Parse(after.MonthIncome) - Parse(before.MonthIncome));
@@ -32,12 +32,12 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
     {
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("5000.00", "investment", client: member);
-        Assert.True((await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary"))!.IsComplete);
+        Assert.True((await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken))!.IsComplete);
 
         var unpriced = await CreateSecurityAsync(member);
         await RecordInvestmentAsync(member, new { accountId = account, securityId = unpriced, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
 
-        var summary = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        var summary = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
         Assert.False(summary!.IsComplete);
         Assert.Equal("4900.00", summary.TotalBalance);
     }

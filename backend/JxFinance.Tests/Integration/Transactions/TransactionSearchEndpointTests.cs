@@ -19,19 +19,19 @@ public sealed class TransactionSearchEndpointTests(ApiFixture fixture) : Integra
         await CreateTransactionAsync(Client, account, category, "expense", "7.50", "2026-07-01", $"Pharmacy {marker}");
 
         var searchResults = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString(marker)}&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString(marker)}&pageSize=50", TestContext.Current.CancellationToken);
         Assert.Equal(3, searchResults!.Total);
 
         var typeResults = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString(marker)}&type=income&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString(marker)}&type=income&pageSize=50", TestContext.Current.CancellationToken);
         Assert.Equal(1, typeResults!.Total);
 
         var categoryResults = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString(marker)}&categoryId={category}&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString(marker)}&categoryId={category}&pageSize=50", TestContext.Current.CancellationToken);
         Assert.Equal(2, categoryResults!.Total);
 
         var dateRangeResults = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString(marker)}&dateFrom=2026-06-01&dateTo=2026-06-30&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString(marker)}&dateFrom=2026-06-01&dateTo=2026-06-30&pageSize=50", TestContext.Current.CancellationToken);
         Assert.Equal(1, dateRangeResults!.Total);
     }
 
@@ -43,7 +43,7 @@ public sealed class TransactionSearchEndpointTests(ApiFixture fixture) : Integra
         await CreateTransactionAsync(Client, account, null, "expense", "12.00", "2026-05-01", $"Maxima {marker} Vilnius");
 
         var results = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString($"MAXIMA {marker.ToUpperInvariant()} vil")}&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString($"MAXIMA {marker.ToUpperInvariant()} vil")}&pageSize=50", TestContext.Current.CancellationToken);
 
         Assert.Equal(1, results!.Total);
     }
@@ -60,7 +60,7 @@ public sealed class TransactionSearchEndpointTests(ApiFixture fixture) : Integra
         await CreateTransactionAsync(Client, account, null, "expense", "12.00", "2026-05-01", $"{marker}Xend");
 
         var results = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?search={Uri.EscapeDataString($"{marker}{special}end")}&pageSize=50");
+            $"/api/transactions?search={Uri.EscapeDataString($"{marker}{special}end")}&pageSize=50", TestContext.Current.CancellationToken);
 
         Assert.Equal(1, results!.Total);
     }

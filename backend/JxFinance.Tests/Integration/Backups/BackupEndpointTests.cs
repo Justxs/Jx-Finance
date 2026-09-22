@@ -34,10 +34,10 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             var response = await RestoreAsync(backup.Id, client: Client);
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            var restored = await response.Content.ReadFromJsonAsync<RestoredDto>();
+            var restored = await response.Content.ReadFromJsonAsync<RestoredDto>(TestContext.Current.CancellationToken);
             Assert.Equal(backup.Rows, restored!.Rows);
             Assert.Equal(backup.Tables, restored.Tables);
-            Assert.Equal(HttpStatusCode.Unauthorized, (await Client.GetAsync("/api/settings")).StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await Client.GetAsync("/api/settings", TestContext.Current.CancellationToken)).StatusCode);
         }
         finally
         {
@@ -45,8 +45,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         }
 
         Assert.Equal("123.45", await CurrentBalanceAsync(keptAccountId));
-        Assert.Contains(keptCategoryId.ToString(), await Client.GetStringAsync("/api/categories"));
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/accounts/{droppedAccountId}")).StatusCode);
+        Assert.Contains(keptCategoryId.ToString(), await Client.GetStringAsync("/api/categories", TestContext.Current.CancellationToken));
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/accounts/{droppedAccountId}", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Contains(await ListAsync(), b => b.Id == backup.Id);
 
         using var memberClient = await LoginAsync(member);
@@ -74,10 +74,10 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         (await Client.PutAsJsonAsync(
             $"/api/transactions/{edited.Id}",
-            new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" })).EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/transactions/{deleted.Id}")).EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/categories/{category}")).EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/goals/{goal.Id}")).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         Assert.Equal("400.01", await CurrentBalanceAsync(account));
 
         try
@@ -89,11 +89,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await SignInAgainAsync();
         }
 
-        var restored = await Client.GetFromJsonAsync<RestoredTransactionDto>($"/api/transactions/{edited.Id}");
+        var restored = await Client.GetFromJsonAsync<RestoredTransactionDto>($"/api/transactions/{edited.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(new RestoredTransactionDto(edited.Id, category, "42.10", new DateOnly(2026, 6, 5), "Before the backup"), restored);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{deleted.Id}")).StatusCode);
-        Assert.Contains(category.ToString(), await Client.GetStringAsync("/api/categories"));
-        Assert.Contains(goal.Id.ToString(), await Client.GetStringAsync("/api/goals"));
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Contains(category.ToString(), await Client.GetStringAsync("/api/categories", TestContext.Current.CancellationToken));
+        Assert.Contains(goal.Id.ToString(), await Client.GetStringAsync("/api/goals", TestContext.Current.CancellationToken));
         Assert.Equal("450.00", await CurrentBalanceAsync(account));
     }
 
@@ -103,7 +103,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var account = await CreateAccountAsync(startingBalance: "10.00");
         var category = await CreateCategoryAsync();
         var transaction = await CreateTransactionAsync(Client, account, category, "expense", "4.20", "2026-06-07");
-        (await Client.DeleteAsync($"/api/categories/{category}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
 
         try
@@ -115,8 +115,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await SignInAgainAsync();
         }
 
-        var undo = await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "category", entityId = category });
-        var back = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
+        var undo = await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "category", entityId = category }, TestContext.Current.CancellationToken);
+        var back = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, undo.StatusCode);
         Assert.Equal(category, back!.CategoryId);
@@ -139,7 +139,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await SignInAgainAsync();
         }
 
-        var log = await Client.GetFromJsonAsync<PageDto<AuditRowDto>>($"/api/households/{household}/audit");
+        var log = await Client.GetFromJsonAsync<PageDto<AuditRowDto>>($"/api/households/{household}/audit", TestContext.Current.CancellationToken);
 
         Assert.Equal(["account", "household"], log!.Items.Select(e => e.EntityKind));
         Assert.All(log.Items, e => Assert.Equal("created", e.Action));
@@ -158,7 +158,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var receipt = PdfBytes("kept");
         var kept = await UploadAttachmentAsync(transaction.Id, receipt, "kept.pdf");
         var trashed = await UploadAttachmentAsync(transaction.Id, PdfBytes("trashed"), "trashed.pdf");
-        (await Client.DeleteAsync($"/api/attachments/{trashed.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/attachments/{trashed.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
         var later = await UploadAttachmentAsync(transaction.Id, PdfBytes("later"), "later.pdf");
         File.Delete(AttachmentPath(kept.Id));
@@ -169,21 +169,21 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         {
             var response = await RestoreAsync(backup.Id);
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-            restored = (await response.Content.ReadFromJsonAsync<RestoredDto>())!;
+            restored = (await response.Content.ReadFromJsonAsync<RestoredDto>(TestContext.Current.CancellationToken))!;
         }
         finally
         {
             await SignInAgainAsync();
         }
 
-        var listed = await Client.GetFromJsonAsync<List<AttachmentRowDto>>($"/api/transactions/{transaction.Id}/attachments");
+        var listed = await Client.GetFromJsonAsync<List<AttachmentRowDto>>($"/api/transactions/{transaction.Id}/attachments", TestContext.Current.CancellationToken);
         Assert.Equal([kept.Id], listed!.Select(a => a.Id));
-        Assert.Equal(receipt, await Client.GetByteArrayAsync($"/api/attachments/{kept.Id}/content"));
+        Assert.Equal(receipt, await Client.GetByteArrayAsync($"/api/attachments/{kept.Id}/content", TestContext.Current.CancellationToken));
         Assert.True(File.Exists(AttachmentPath(trashed.Id)));
         Assert.Equal(
             HttpStatusCode.NoContent,
-            (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = trashed.Id })).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/attachments/{later.Id}/content")).StatusCode);
+            (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = trashed.Id }, TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/attachments/{later.Id}/content", TestContext.Current.CancellationToken)).StatusCode);
         Assert.True(restored.Attachments >= 2);
         Assert.True(backup.Attachments >= 2);
     }
@@ -225,7 +225,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var uploaded = await UploadAsync(tampered.ToArray());
         Assert.Equal(HttpStatusCode.Created, uploaded.StatusCode);
-        var stored = (await uploaded.Content.ReadFromJsonAsync<BackupDto>())!;
+        var stored = (await uploaded.Content.ReadFromJsonAsync<BackupDto>(TestContext.Current.CancellationToken))!;
         var afterwards = await CreateAccountAsync(startingBalance: "7.00");
 
         var response = await RestoreAsync(stored.Id);
@@ -273,7 +273,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await SetPriceAsync(security, "12", "2026-06-08");
         var backup = await CreateBackupAsync();
         await SetPriceAsync(security, "99", "2026-06-15");
-        (await Client.DeleteAsync($"/api/investments/securities/{security}/prices/2026-06-01")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/investments/securities/{security}/prices/2026-06-01", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -284,7 +284,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await SignInAgainAsync();
         }
 
-        var points = await Client.GetFromJsonAsync<List<RestoredPriceDto>>($"/api/investments/securities/{security}/prices");
+        var points = await Client.GetFromJsonAsync<List<RestoredPriceDto>>($"/api/investments/securities/{security}/prices", TestContext.Current.CancellationToken);
         Assert.Equal(
             [new RestoredPriceDto(new DateOnly(2026, 6, 8), "12"), new RestoredPriceDto(new DateOnly(2026, 6, 1), "10")],
             points);
@@ -300,7 +300,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var backup = await CreateBackupAsync();
         (await Client.PutAsJsonAsync(
             $"/api/debts/{debt.Id}",
-            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", asOf = Today, monthlyPayment = "10.00" })).EnsureSuccessStatusCode();
+            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", asOf = Today, monthlyPayment = "10.00" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -311,9 +311,9 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             await SignInAgainAsync();
         }
 
-        var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts"))!, d => d.Id == debt.Id);
+        var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
         Assert.Equal(debt, restored);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -322,10 +322,10 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         const string layoutUrl = "/api/users/me/dashboard-layout";
         var member = await CreateUserAsync();
         using var memberClient = await LoginAsync(member);
-        (await memberClient.PutAsJsonAsync(layoutUrl, new RestoredLayoutDto(["upcomingBills", "summary"], ["netWorth"], false)))
+        (await memberClient.PutAsJsonAsync(layoutUrl, new RestoredLayoutDto(["upcomingBills", "summary"], ["netWorth"], false), TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
-        (await memberClient.DeleteAsync(layoutUrl)).EnsureSuccessStatusCode();
+        (await memberClient.DeleteAsync(layoutUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -337,7 +337,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         }
 
         using var restoredClient = await LoginAsync(member);
-        var layout = await restoredClient.GetFromJsonAsync<RestoredLayoutDto>(layoutUrl);
+        var layout = await restoredClient.GetFromJsonAsync<RestoredLayoutDto>(layoutUrl, TestContext.Current.CancellationToken);
         Assert.False(layout!.IsDefault);
         Assert.Equal(["upcomingBills", "summary"], layout.Order.Take(2));
         Assert.Equal(["netWorth"], layout.Hidden);
@@ -392,7 +392,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     [Fact]
     public async Task Note_longer_than_200_characters_is_rejected()
     {
-        var response = await Client.PostAsJsonAsync("/api/backups", new { note = new string('x', 201) });
+        var response = await Client.PostAsJsonAsync("/api/backups", new { note = new string('x', 201) }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "note");
     }
@@ -402,13 +402,13 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var backup = await CreateBackupAsync();
 
-        var deleted = await Client.DeleteAsync($"/api/backups/{backup.Id}");
-        var again = await Client.DeleteAsync($"/api/backups/{backup.Id}");
+        var deleted = await Client.DeleteAsync($"/api/backups/{backup.Id}", TestContext.Current.CancellationToken);
+        var again = await Client.DeleteAsync($"/api/backups/{backup.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, again.StatusCode);
         Assert.DoesNotContain(await ListAsync(), b => b.Id == backup.Id);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/backups/{backup.Id}/download")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/backups/{backup.Id}/download", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, (await RestoreAsync(backup.Id)).StatusCode);
     }
 
@@ -417,12 +417,12 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var backup = await CreateBackupAsync();
 
-        var response = await Client.GetAsync($"/api/backups/{backup.Id}/download");
+        var response = await Client.GetAsync($"/api/backups/{backup.Id}/download", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("application/zip", response.Content.Headers.ContentType?.MediaType);
         Assert.EndsWith(".zip", response.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
-        var file = await response.Content.ReadAsByteArrayAsync();
+        var file = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
         Assert.Equal(backup.SizeBytes, file.Length);
 
         var document = Unzip(file);
@@ -447,7 +447,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var response = await UploadAsync(file, note: "from the old server");
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var uploaded = await response.Content.ReadFromJsonAsync<BackupDto>();
+        var uploaded = await response.Content.ReadFromJsonAsync<BackupDto>(TestContext.Current.CancellationToken);
         Assert.NotEqual(original.Id, uploaded!.Id);
         Assert.True(uploaded.Uploaded);
         Assert.True(uploaded.Restorable);
@@ -504,13 +504,13 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         HttpResponseMessage[] responses =
         [
-            await member.GetAsync("/api/backups"),
-            await member.PostAsJsonAsync("/api/backups", new { note = (string?)null }),
+            await member.GetAsync("/api/backups", TestContext.Current.CancellationToken),
+            await member.PostAsJsonAsync("/api/backups", new { note = (string?)null }, TestContext.Current.CancellationToken),
             await UploadAsync([1, 2, 3], member),
-            await member.PutAsJsonAsync($"/api/backups/{backup.Id}", new { note = "mine" }),
-            await member.GetAsync($"/api/backups/{backup.Id}/download"),
+            await member.PutAsJsonAsync($"/api/backups/{backup.Id}", new { note = "mine" }, TestContext.Current.CancellationToken),
+            await member.GetAsync($"/api/backups/{backup.Id}/download", TestContext.Current.CancellationToken),
             await RestoreAsync(backup.Id, client: member),
-            await member.DeleteAsync($"/api/backups/{backup.Id}"),
+            await member.DeleteAsync($"/api/backups/{backup.Id}", TestContext.Current.CancellationToken),
         ];
 
         Assert.All(responses, response => Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode));
@@ -523,12 +523,12 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var backup = await CreateBackupAsync();
         using var second = await CreateUserClientAsync("Admin");
 
-        var missing = await second.PostAsJsonAsync($"/api/backups/{backup.Id}/restore", new { });
+        var missing = await second.PostAsJsonAsync($"/api/backups/{backup.Id}/restore", new { }, TestContext.Current.CancellationToken);
         var wrong = await RestoreAsync(backup.Id, "Wrong-Password-123!", second);
 
         await AssertValidationErrorAsync(missing, "password");
         await AssertRejectedAsync(wrong, "password.incorrect");
-        Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await second.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
     }
 
@@ -547,7 +547,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var locked = await RestoreAsync(backup.Id, "Wrong-Password-123!", client);
 
         Assert.Equal(HttpStatusCode.TooManyRequests, locked.StatusCode);
-        Assert.Contains("credentials.lockedOut", await locked.Content.ReadAsStringAsync());
+        Assert.Contains("credentials.lockedOut", await locked.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -571,11 +571,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         for (var attempt = 1; attempt <= 10; attempt++)
         {
-            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/backups", new { note = new string('x', 201) })).StatusCode);
+            Assert.Equal(HttpStatusCode.BadRequest, (await client.PostAsJsonAsync("/api/backups", new { note = new string('x', 201) }, TestContext.Current.CancellationToken)).StatusCode);
             Assert.Equal(HttpStatusCode.BadRequest, (await UploadAsync([1, 2, 3], client)).StatusCode);
         }
 
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/backups", new { note = "one too many" })).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/backups", new { note = "one too many" }, TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.TooManyRequests, (await UploadAsync([1, 2, 3], client)).StatusCode);
     }
 
@@ -610,7 +610,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         await AssertRejectedAsync(response, "backup.tooLarge");
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
-        (await Client.DeleteAsync($"/api/backups/{id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/backups/{id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
     }
 
     [Fact]
@@ -630,7 +630,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await transaction.RollbackAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-        Assert.Contains("conflict.busy", await response.Content.ReadAsStringAsync());
+        Assert.Contains("conflict.busy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal("10.00", await CurrentBalanceAsync(accountId));
     }
 

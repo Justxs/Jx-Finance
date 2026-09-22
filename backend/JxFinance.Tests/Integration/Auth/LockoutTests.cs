@@ -59,9 +59,9 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
             await TryLoginAsync(attacker, user.Email, WrongPassword);
         }
 
-        Assert.Equal(HttpStatusCode.OK, (await signedIn.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await signedIn.PostAsync("/api/auth/refresh", null)).StatusCode);
-        var profile = await signedIn.GetFromJsonAsync<JsonElement>("/api/auth/me");
+        Assert.Equal(HttpStatusCode.OK, (await signedIn.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await signedIn.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
+        var profile = await signedIn.GetFromJsonAsync<JsonElement>("/api/auth/me", TestContext.Current.CancellationToken);
         Assert.True(profile.GetProperty("isActive").GetBoolean());
     }
 
@@ -105,18 +105,18 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
 
         for (var attempt = 1; attempt <= 4; attempt++)
         {
-            await AssertProblemAsync(await client.PutAsJsonAsync("/api/users/me", change), HttpStatusCode.BadRequest, "password.incorrect");
+            await AssertProblemAsync(await client.PutAsJsonAsync("/api/users/me", change, TestContext.Current.CancellationToken), HttpStatusCode.BadRequest, "password.incorrect");
         }
 
-        await AssertProblemAsync(await client.PutAsJsonAsync("/api/users/me", change), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        await AssertProblemAsync(await client.PutAsJsonAsync("/api/users/me", change, TestContext.Current.CancellationToken), HttpStatusCode.TooManyRequests, "credentials.lockedOut");
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
     public async Task A_deactivated_user_is_refused_without_revealing_a_lockout()
     {
         var user = await CreateUserAsync();
-        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         using var client = CreateClient();
 
         for (var attempt = 1; attempt <= 6; attempt++)
@@ -124,7 +124,7 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
             await AssertProblemAsync(await TryLoginAsync(client, user.Email, user.Password), HttpStatusCode.Unauthorized, "credentials.invalid");
         }
 
-        var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=false");
+        var users = await Client.GetFromJsonAsync<List<JsonElement>>("/api/users?isActive=false", TestContext.Current.CancellationToken);
         Assert.Contains(users!, u => u.GetProperty("id").GetGuid() == user.Id);
     }
 

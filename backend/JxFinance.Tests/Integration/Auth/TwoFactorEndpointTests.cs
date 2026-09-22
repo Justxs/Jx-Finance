@@ -24,7 +24,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         using var client = await LoginAsync(user);
         await PostAsync<SetupDto>(client, "/api/auth/2fa/setup", new { password = user.Password });
 
-        var response = await client.PostAsJsonAsync("/api/auth/2fa/enable", new { code = "000000" });
+        var response = await client.PostAsJsonAsync("/api/auth/2fa/enable", new { code = "000000" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -37,10 +37,10 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var login = await LoginAsync(client, enrolled.User);
 
-        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>(TestContext.Current.CancellationToken);
         Assert.True(body!.TwoFactorRequired);
         Assert.Null(body.Profile);
-        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -62,10 +62,10 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
         var login = await LoginAsync(client, enrolled.User, Totp.GenerateCode(enrolled.SharedKey));
 
-        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>(TestContext.Current.CancellationToken);
         Assert.False(body!.TwoFactorRequired);
         Assert.NotNull(body.Profile);
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         var recoveryCode = enrolled.RecoveryCodes[0];
 
         var first = await LoginAsync(client, enrolled.User, recoveryCode);
-        await client.PostAsync("/api/auth/logout", null);
+        await client.PostAsync("/api/auth/logout", null, TestContext.Current.CancellationToken);
         var second = await LoginAsync(client, enrolled.User, recoveryCode);
 
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
@@ -90,12 +90,12 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
         using var client = enrolled.Client;
         (await LoginAsync(client, enrolled.User, Totp.GenerateCode(enrolled.SharedKey))).EnsureSuccessStatusCode();
 
-        var disable = await client.PostAsJsonAsync("/api/auth/2fa/disable", new { password = enrolled.User.Password });
-        await client.PostAsync("/api/auth/logout", null);
+        var disable = await client.PostAsJsonAsync("/api/auth/2fa/disable", new { password = enrolled.User.Password }, TestContext.Current.CancellationToken);
+        await client.PostAsync("/api/auth/logout", null, TestContext.Current.CancellationToken);
         var login = await LoginAsync(client, enrolled.User);
 
         Assert.Equal(HttpStatusCode.NoContent, disable.StatusCode);
-        var body = await login.Content.ReadFromJsonAsync<LoginDto>();
+        var body = await login.Content.ReadFromJsonAsync<LoginDto>(TestContext.Current.CancellationToken);
         Assert.False(body!.TwoFactorRequired);
         Assert.NotNull(body.Profile);
     }
@@ -105,7 +105,7 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
     {
         using var client = await CreateUserClientAsync();
 
-        var response = await client.PostAsJsonAsync("/api/auth/2fa/setup", new { password = "incorrect" });
+        var response = await client.PostAsJsonAsync("/api/auth/2fa/setup", new { password = "incorrect" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
@@ -119,8 +119,8 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
         await PostAsync<EnableDto>(client, "/api/auth/2fa/enable", new { code = Totp.GenerateCode(setup.SharedKey) });
 
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me")).StatusCode);
-        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/refresh", null)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/api/auth/me", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await client.PostAsync("/api/auth/refresh", null, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     private async Task<Enrollment> EnrollAsync()

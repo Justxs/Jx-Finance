@@ -27,7 +27,7 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
         Assert.Contains("samesite=strict", cookies[AuthCookies.AccessToken].Attributes);
         Assert.Contains("httponly", cookies[AuthCookies.RefreshToken].Attributes);
         Assert.Contains($"path={AuthCookies.RefreshTokenPath}", cookies[AuthCookies.RefreshToken].Attributes);
-        Assert.DoesNotContain(cookies[AuthCookies.AccessToken].Value, await login.Content.ReadAsStringAsync());
+        Assert.DoesNotContain(cookies[AuthCookies.AccessToken].Value, await login.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -117,10 +117,10 @@ public sealed class SessionEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = CreateClient(handleCookies: false);
-        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = true });
+        var login = await client.PostAsJsonAsync("/api/auth/login", new { email = user.Email, password = user.Password, rememberMe = true }, TestContext.Current.CancellationToken);
         var issued = SetCookies(login);
 
-        var deactivate = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null);
+        var deactivate = await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deactivate.StatusCode);
 
         var me = await SendAsync(client, HttpMethod.Get, "/api/auth/me", issued[AuthCookies.AccessToken]);

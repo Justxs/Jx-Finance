@@ -59,7 +59,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = food, limitAmount = "300.00" });
         var before = await CategoryStateAsync(user.Id, food);
 
-        var deleted = await member.DeleteAsync($"/api/categories/{food}");
+        var deleted = await member.DeleteAsync($"/api/categories/{food}", TestContext.Current.CancellationToken);
         var cleared = await CategoryStateAsync(user.Id, food);
         var listed = await TrashAsync(member);
         var restore = await RestoreAsync(member, "category", food);
@@ -73,9 +73,9 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
         Assert.Equal(before, after);
         Assert.Equal(new CategoryState(false, 1, 1, 1, 1), after);
-        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets"))!, b => b.Id == budget.Id);
-        Assert.Equal(food, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{plain.Id}"))!.CategoryId);
-        var lines = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{split.Id}"))!.Lines!;
+        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
+        Assert.Equal(food, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{plain.Id}", TestContext.Current.CancellationToken))!.CategoryId);
+        var lines = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{split.Id}", TestContext.Current.CancellationToken))!.Lines!;
         Assert.Contains(lines, l => l.CategoryId == food && l.Amount == "20.00");
     }
 
@@ -89,15 +89,15 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var untouched = await CreateTransactionAsync(member, account, food, "expense", "5.00", Date);
         var moved = await CreateTransactionAsync(member, account, food, "expense", "6.00", Date);
 
-        await member.DeleteAsync($"/api/categories/{food}");
+        await member.DeleteAsync($"/api/categories/{food}", TestContext.Current.CancellationToken);
         (await member.PutAsJsonAsync(
             $"/api/transactions/{moved.Id}",
-            new { accountId = account, categoryId = travel, type = "expense", amount = "6.00", date = Date })).EnsureSuccessStatusCode();
+            new { accountId = account, categoryId = travel, type = "expense", amount = "6.00", date = Date }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(member, "category", food);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
-        Assert.Equal(food, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{untouched.Id}"))!.CategoryId);
-        Assert.Equal(travel, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{moved.Id}"))!.CategoryId);
+        Assert.Equal(food, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{untouched.Id}", TestContext.Current.CancellationToken))!.CategoryId);
+        Assert.Equal(travel, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{moved.Id}", TestContext.Current.CancellationToken))!.CategoryId);
     }
 
     [Fact]
@@ -108,13 +108,13 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var category = await CreateCategoryAsync(client: member);
         var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "80.00" });
 
-        await member.DeleteAsync($"/api/categories/{category}");
+        await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         await OccupyBudgetSlotAsync(user.Id, category);
         var restore = await RestoreAsync(member, "category", category);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
-        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/categories"))!, c => c.Id == category);
-        Assert.DoesNotContain((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets"))!, b => b.Id == budget.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/categories", TestContext.Current.CancellationToken))!, c => c.Id == category);
+        Assert.DoesNotContain((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
     }
 
     [Fact]
@@ -123,9 +123,9 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
         var older = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "80.00" });
-        await member.DeleteAsync($"/api/budgets/{older.Id}");
+        await member.DeleteAsync($"/api/budgets/{older.Id}", TestContext.Current.CancellationToken);
 
-        await member.DeleteAsync($"/api/categories/{category}");
+        await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         var refused = await RestoreAsync(member, "budget", older.Id);
         var categoryBack = await RestoreAsync(member, "category", category);
         var accepted = await RestoreAsync(member, "budget", older.Id);
@@ -150,8 +150,8 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var ownerBudget = await PostAsync<IdDto>(ownerClient, "/api/budgets", new { categoryId = shared.Id, limitAmount = "50.00" });
         var housemateBudget = await PostAsync<IdDto>(housemateClient, "/api/budgets", new { categoryId = shared.Id, limitAmount = "60.00" });
 
-        await ownerClient.DeleteAsync($"/api/categories/{shared.Id}");
-        (await ownerClient.DeleteAsync($"/api/households/{household}/members/{housemate.Id}")).EnsureSuccessStatusCode();
+        await ownerClient.DeleteAsync($"/api/categories/{shared.Id}", TestContext.Current.CancellationToken);
+        (await ownerClient.DeleteAsync($"/api/households/{household}/members/{housemate.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(ownerClient, "category", shared.Id);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
@@ -169,7 +169,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var category = await CreateCategoryAsync(client: member);
         var transaction = await CreateTransactionAsync(member, account, category, "expense", "3.00", Date);
 
-        await member.DeleteAsync($"/api/categories/{category}");
+        await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         var theirs = await RestoreAsync(stranger, "category", category);
         var first = await RestoreAsync(member, "category", category);
         var once = await CategoryStateAsync(user.Id, category);
@@ -179,7 +179,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
         Assert.Equal(once, await CategoryStateAsync(user.Id, category));
-        Assert.Equal(category, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}"))!.CategoryId);
+        Assert.Equal(category, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken))!.CategoryId);
     }
 
     [Fact]
@@ -191,10 +191,10 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var tag = await CreateTagAsync("Atostogos", client: member);
         var kept = await TaggedTransactionAsync(member, account, tag);
         var deletedEarlier = await TaggedTransactionAsync(member, account, tag);
-        await member.DeleteAsync($"/api/transactions/{deletedEarlier}");
+        await member.DeleteAsync($"/api/transactions/{deletedEarlier}", TestContext.Current.CancellationToken);
         var before = await TagLinksAsync(user.Id, tag);
 
-        await member.DeleteAsync($"/api/tags/{tag}");
+        await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
         var cleared = await TagLinksAsync(user.Id, tag);
         var listed = await TrashAsync(member);
         var restore = await RestoreAsync(member, "tag", tag);
@@ -206,7 +206,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
         Assert.Equal(before, await TagLinksAsync(user.Id, tag));
-        Assert.Equal([tag], (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{kept}"))!.TagIds);
+        Assert.Equal([tag], (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{kept}", TestContext.Current.CancellationToken))!.TagIds);
     }
 
     [Fact]
@@ -219,7 +219,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var kept = await TaggedTransactionAsync(member, account, tag);
         var erased = await TaggedTransactionAsync(member, account, tag);
 
-        await member.DeleteAsync($"/api/tags/{tag}");
+        await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
         await EraseTransactionAsync(user.Id, erased);
         var restore = await RestoreAsync(member, "tag", tag);
 
@@ -233,12 +233,12 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         using var member = await CreateUserClientAsync();
         var tag = await CreateTagAsync("Kelionės", client: member);
 
-        await member.DeleteAsync($"/api/tags/{tag}");
+        await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
         await CreateTagAsync("kelionės", client: member);
         var restore = await RestoreAsync(member, "tag", tag);
 
         await AssertProblemAsync(restore, HttpStatusCode.Conflict, "restore.nameTaken");
-        Assert.DoesNotContain((await member.GetFromJsonAsync<List<NamedRow>>("/api/tags"))!, t => t.Id == tag);
+        Assert.DoesNotContain((await member.GetFromJsonAsync<List<NamedRow>>("/api/tags", TestContext.Current.CancellationToken))!, t => t.Id == tag);
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var b = await CreateRuleAsync(member, "Antra", category, [first, second]);
         var c = await CreateRuleAsync(member, "Trečia", category, []);
 
-        await member.DeleteAsync($"/api/categorization-rules/{b}");
+        await member.DeleteAsync($"/api/categorization-rules/{b}", TestContext.Current.CancellationToken);
         var listed = await TrashAsync(member);
         var restore = await RestoreAsync(member, "categorizationRule", b);
         var again = await RestoreAsync(member, "categorizationRule", b);
@@ -275,8 +275,8 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var b = await CreateRuleAsync(member, "B", category, []);
         var c = await CreateRuleAsync(member, "C", category, []);
 
-        await member.DeleteAsync($"/api/categorization-rules/{c}");
-        await member.DeleteAsync($"/api/categorization-rules/{a}");
+        await member.DeleteAsync($"/api/categorization-rules/{c}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/categorization-rules/{a}", TestContext.Current.CancellationToken);
         await RestoreAsync(member, "categorizationRule", c);
         var rules = await RulesAsync(member);
 
@@ -292,7 +292,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var category = await CreateCategoryAsync(client: member);
         var rule = await CreateRuleAsync(member, "Paskutinė", category, []);
 
-        await member.DeleteAsync($"/api/categorization-rules/{rule}");
+        await member.DeleteAsync($"/api/categorization-rules/{rule}", TestContext.Current.CancellationToken);
         await FillRulesAsync(user.Id, category, 100);
         var restore = await RestoreAsync(member, "categorizationRule", rule);
 
@@ -316,7 +316,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var tag = await CreateTagAsync(householdId: household, client: housemateClient);
         var before = await SharingAsync(owner.Id, household);
 
-        var deleted = await ownerClient.DeleteAsync($"/api/households/{household}");
+        var deleted = await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         var cleared = await SharingAsync(owner.Id, household);
         var listed = await TrashAsync(ownerClient);
         var restore = await RestoreAsync(ownerClient, "household", household);
@@ -331,8 +331,8 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(
             new[] { ownerAccount, housemateAccount, category.Id, tag }.Order(),
             (await SharingAsync(owner.Id, household)).Order());
-        Assert.Contains((await housemateClient.GetFromJsonAsync<List<NamedRow>>("/api/households"))!, h => h.Id == household);
-        Assert.Equal(household, (await housemateClient.GetFromJsonAsync<AccountDto>($"/api/accounts/{ownerAccount}"))!.HouseholdId);
+        Assert.Contains((await housemateClient.GetFromJsonAsync<List<NamedRow>>("/api/households", TestContext.Current.CancellationToken))!, h => h.Id == household);
+        Assert.Equal(household, (await housemateClient.GetFromJsonAsync<AccountDto>($"/api/accounts/{ownerAccount}", TestContext.Current.CancellationToken))!.HouseholdId);
     }
 
     [Fact]
@@ -346,18 +346,18 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var archived = await CreateAccountAsync(householdId: household, client: ownerClient);
         var moved = await CreateAccountAsync(householdId: household, client: housemateClient);
 
-        await ownerClient.DeleteAsync($"/api/households/{household}");
-        await ownerClient.DeleteAsync($"/api/accounts/{archived}");
+        await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
+        await ownerClient.DeleteAsync($"/api/accounts/{archived}", TestContext.Current.CancellationToken);
         var elsewhere = await CreateOwnHouseholdAsync(housemateClient);
         (await housemateClient.PutAsJsonAsync(
             $"/api/accounts/{moved}",
-            new { name = "Kitur", type = "checking", startingBalance = "0.00", scope = "shared", householdId = elsewhere })).EnsureSuccessStatusCode();
+            new { name = "Kitur", type = "checking", startingBalance = "0.00", scope = "shared", householdId = elsewhere }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(ownerClient, "household", household);
         var sharing = await SharingAsync(owner.Id, household);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
         Assert.Equal([archived], sharing);
-        Assert.Equal(elsewhere, (await housemateClient.GetFromJsonAsync<AccountDto>($"/api/accounts/{moved}"))!.HouseholdId);
+        Assert.Equal(elsewhere, (await housemateClient.GetFromJsonAsync<AccountDto>($"/api/accounts/{moved}", TestContext.Current.CancellationToken))!.HouseholdId);
     }
 
     [Fact]
@@ -369,7 +369,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         using var housemateClient = await LoginAsync(housemate);
         var household = await CreateOwnHouseholdAsync(ownerClient, housemate);
 
-        await ownerClient.DeleteAsync($"/api/households/{household}");
+        await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         var byHousemate = await RestoreAsync(housemateClient, "household", household);
         await DemoteAsync(owner.Id, household);
         var byDemotedOwner = await RestoreAsync(ownerClient, "household", household);
@@ -389,11 +389,11 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
             "/api/categories",
             new { name = "Kita šeima", type = "expense", scope = "shared", householdId = kept });
 
-        await ownerClient.DeleteAsync($"/api/households/{deleted}");
+        await ownerClient.DeleteAsync($"/api/households/{deleted}", TestContext.Current.CancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/categories");
         request.Headers.Add("X-Active-Household", deleted.ToString());
-        var response = await ownerClient.SendAsync(request);
-        var categories = (await response.Content.ReadFromJsonAsync<List<NamedRow>>())!;
+        var response = await ownerClient.SendAsync(request, TestContext.Current.CancellationToken);
+        var categories = (await response.Content.ReadFromJsonAsync<List<NamedRow>>(TestContext.Current.CancellationToken))!;
 
         Assert.Contains(categories, c => c.Id == keptCategory.Id);
     }

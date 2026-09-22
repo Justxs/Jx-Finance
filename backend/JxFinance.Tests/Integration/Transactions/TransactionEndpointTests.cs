@@ -21,9 +21,9 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                 amount = "15.77",
                 date = "2026-06-02",
                 description = "Lidl",
-            });
+            }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         Assert.Equal("15.77", created!.Amount);
         Assert.Equal("expense", created.Type);
         Assert.Equal("manual", created.Source);
@@ -39,16 +39,16 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                 amount = "18.20",
                 date = "2026-06-03",
                 description = "Lidl fixed",
-            });
+            }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         Assert.Equal("18.20", updated!.Amount);
         Assert.Equal(new DateOnly(2026, 6, 3), updated.Date);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/transactions/{created.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/transactions/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var afterDelete = await Client.GetAsync($"/api/transactions/{created.Id}");
+        var afterDelete = await Client.GetAsync($"/api/transactions/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, afterDelete.StatusCode);
     }
 
@@ -66,12 +66,12 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                     type = "expense",
                     amount = $"{i}.00",
                     date = $"2026-06-0{i}",
-                });
+                }, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         }
 
         var page = await Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?accountId={account}&page=1&pageSize=2");
+            $"/api/transactions?accountId={account}&page=1&pageSize=2", TestContext.Current.CancellationToken);
 
         Assert.Equal(3, page!.Total);
         Assert.Equal(2, page.Items.Count);
@@ -84,7 +84,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     {
         var response = await Client.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = await CreateAccountAsync(), type = "expense", amount = "0", date = "2026-06-02" });
+            new { accountId = await CreateAccountAsync(), type = "expense", amount = "0", date = "2026-06-02" }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "amount");
     }
@@ -94,7 +94,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
     {
         var response = await Client.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = Guid.NewGuid(), type = "expense", amount = "5.00", date = "2026-06-02" });
+            new { accountId = Guid.NewGuid(), type = "expense", amount = "5.00", date = "2026-06-02" }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "Account does not exist.");
     }
@@ -111,7 +111,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                 type = "expense",
                 amount = "5.00",
                 date = "2026-06-02",
-            });
+            }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "Category type does not match the transaction type.");
     }
@@ -136,13 +136,13 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                 amount = "12.34",
                 date = "2026-06-05",
                 description = "Export me",
-            });
+            }, TestContext.Current.CancellationToken);
 
-        var response = await Client.GetAsync($"/api/transactions/export?accountId={account.Id}");
+        var response = await Client.GetAsync($"/api/transactions/export?accountId={account.Id}", TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
 
-        var csv = await response.Content.ReadAsStringAsync();
+        var csv = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.Contains("Date,Description,Account,Category,Tags,Type,Amount", csv);
         Assert.Contains(accountName, csv);
         Assert.Contains("Export me", csv);
@@ -166,7 +166,7 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
             "/api/transactions",
             new { accountId = account.Id, type = "expense", amount = "12.34", date = "2026-06-05", description });
 
-        var csv = await Client.GetStringAsync($"/api/transactions/export?accountId={account.Id}");
+        var csv = await Client.GetStringAsync($"/api/transactions/export?accountId={account.Id}", TestContext.Current.CancellationToken);
         var row = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)[1];
 
         Assert.StartsWith($"2026-06-05,{expectedCell},'=Formula account", row);
@@ -187,13 +187,13 @@ public sealed class TransactionEndpointTests(ApiFixture fixture) : IntegrationTe
                 amount = "56.78",
                 date = "2026-06-05",
                 description = "Pdf me — ąčęėįšųūž",
-            });
+            }, TestContext.Current.CancellationToken);
 
-        var response = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}");
+        var response = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}", TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
         Assert.Equal("application/pdf", response.Content.Headers.ContentType?.MediaType);
 
-        var pdf = await response.Content.ReadAsByteArrayAsync();
+        var pdf = await response.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken);
         Assert.Equal("%PDF-", System.Text.Encoding.ASCII.GetString(pdf, 0, 5));
     }
 }

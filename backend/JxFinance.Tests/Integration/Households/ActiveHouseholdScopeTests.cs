@@ -111,7 +111,7 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/accounts");
         request.Headers.Add(ScopeHeader, "not-a-guid");
-        var accounts = await ReadAsync<List<AccountDto>>(await world.Client.SendAsync(request));
+        var accounts = await ReadAsync<List<AccountDto>>(await world.Client.SendAsync(request, TestContext.Current.CancellationToken));
 
         Assert.Contains(accounts, a => a.Id == world.FirstAccount);
         Assert.Contains(accounts, a => a.Id == world.SecondAccount);

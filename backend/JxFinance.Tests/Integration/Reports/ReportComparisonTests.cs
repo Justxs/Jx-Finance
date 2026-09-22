@@ -113,8 +113,8 @@ public sealed class ReportComparisonTests(ApiFixture fixture) : IntegrationTestB
         await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "80.00", date = "2026-08-03" });
 
         var omitted = await ReportAsync(member, "2026-09-01", "2026-09-30", comparison: null);
-        var raw = await member.GetStringAsync("/api/reports/summary?dateFrom=2026-09-01&dateTo=2026-09-30");
-        var asked = await member.GetStringAsync("/api/reports/summary?dateFrom=2026-09-01&dateTo=2026-09-30&comparison=none");
+        var raw = await member.GetStringAsync("/api/reports/summary?dateFrom=2026-09-01&dateTo=2026-09-30", TestContext.Current.CancellationToken);
+        var asked = await member.GetStringAsync("/api/reports/summary?dateFrom=2026-09-01&dateTo=2026-09-30&comparison=none", TestContext.Current.CancellationToken);
 
         Assert.Null(omitted.Comparison);
         Assert.Equal("12.00", omitted.TotalExpense);

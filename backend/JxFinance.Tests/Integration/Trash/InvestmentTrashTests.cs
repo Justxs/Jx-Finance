@@ -31,7 +31,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         Guid[] deleteOrder = [sell, dividend, tax, interest, fee, split, buy];
         foreach (var id in deleteOrder)
         {
-            var delete = await member.DeleteAsync($"/api/investments/transactions/{id}");
+            var delete = await member.DeleteAsync($"/api/investments/transactions/{id}", TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
         }
 
@@ -71,7 +71,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var account = await CreateAccountAsync("100.00", "investment", client: member);
         var interest = await RecordInvestmentAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "4.00" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{interest}");
+        await member.DeleteAsync($"/api/investments/transactions/{interest}", TestContext.Current.CancellationToken);
         var row = Assert.Single((await TrashAsync(member)).Items);
         var restore = await RestoreAsync(member, row.EntityId, row.Kind);
 
@@ -88,7 +88,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "5", price = "10" });
         var sell = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-02", quantity = "5", price = "12" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{sell}");
+        await member.DeleteAsync($"/api/investments/transactions/{sell}", TestContext.Current.CancellationToken);
         var first = await RestoreAsync(member, sell);
         var second = await RestoreAsync(member, sell);
 
@@ -107,7 +107,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "10", price = "10" });
         var sell = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-03", quantity = "6", price = "10" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{sell}");
+        await member.DeleteAsync($"/api/investments/transactions/{sell}", TestContext.Current.CancellationToken);
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-05", quantity = "6", price = "10" });
         var restore = await RestoreAsync(member, sell);
 
@@ -126,8 +126,8 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var second = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-02", quantity = "5", price = "10" });
         var sell = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-04", quantity = "8", price = "11" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{sell}");
-        await member.DeleteAsync($"/api/investments/transactions/{second}");
+        await member.DeleteAsync($"/api/investments/transactions/{sell}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/investments/transactions/{second}", TestContext.Current.CancellationToken);
         var refused = await RestoreAsync(member, sell);
         var purchase = await RestoreAsync(member, second);
         var accepted = await RestoreAsync(member, sell);
@@ -147,10 +147,10 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "5", price = "10" });
         var sell = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-03", quantity = "5", price = "10" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{sell}");
+        await member.DeleteAsync($"/api/investments/transactions/{sell}", TestContext.Current.CancellationToken);
         var moved = await member.PutAsJsonAsync(
             $"/api/investments/transactions/{buy}",
-            new { accountId = account, securityId = fund, type = "buy", date = "2026-06-10", quantity = "5", price = "10" });
+            new { accountId = account, securityId = fund, type = "buy", date = "2026-06-10", quantity = "5", price = "10" }, TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, sell);
 
         Assert.Equal(HttpStatusCode.OK, moved.StatusCode);
@@ -166,7 +166,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "10", price = "10" });
         var split = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "split", date = "2026-06-02", quantity = "0.5" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{split}");
+        await member.DeleteAsync($"/api/investments/transactions/{split}", TestContext.Current.CancellationToken);
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-04", quantity = "8", price = "10" });
         var restore = await RestoreAsync(member, split);
 
@@ -180,8 +180,8 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var account = await CreateAccountAsync("100.00", "investment", client: member);
         var interest = await RecordInvestmentAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "2.00" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{interest}");
-        await member.DeleteAsync($"/api/accounts/{account}");
+        await member.DeleteAsync($"/api/investments/transactions/{interest}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/accounts/{account}", TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, interest);
 
         await AssertProblemAsync(restore, HttpStatusCode.BadRequest, "restore.referenceMissing");
@@ -196,10 +196,10 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var fund = await CreateSecurityAsync(member, symbol);
         var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "10" });
 
-        await member.DeleteAsync($"/api/investments/transactions/{buy}");
+        await member.DeleteAsync($"/api/investments/transactions/{buy}", TestContext.Current.CancellationToken);
         var changed = await Client.PutAsJsonAsync(
             $"/api/investments/securities/{fund}",
-            new { symbol, name = "Test fund", type = "etf", currency = "usd" });
+            new { symbol, name = "Test fund", type = "etf", currency = "usd" }, TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, buy);
 
         Assert.Equal(HttpStatusCode.OK, changed.StatusCode);
@@ -214,7 +214,7 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var imported = await LedgerAsync(Client, broker);
         var dividend = imported.Items.First(t => t.Type == "dividend").Id;
 
-        await Client.DeleteAsync($"/api/investments/transactions/{dividend}");
+        await Client.DeleteAsync($"/api/investments/transactions/{dividend}", TestContext.Current.CancellationToken);
         await UploadAsync(broker);
         var afterReimport = await LedgerAsync(Client, broker);
         var restore = await RestoreAsync(Client, dividend);
@@ -232,9 +232,9 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("100.00", "investment", client: member);
         var interest = await RecordInvestmentAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "1.00" });
-        await member.DeleteAsync($"/api/investments/transactions/{interest}");
+        await member.DeleteAsync($"/api/investments/transactions/{interest}", TestContext.Current.CancellationToken);
 
-        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings"))!;
+        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings", TestContext.Current.CancellationToken))!;
         try
         {
             await SwitchInvestmentsAsync(settings, false);

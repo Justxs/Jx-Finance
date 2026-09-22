@@ -51,8 +51,8 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
                 funding = "account",
                 fundingAccountId = accountId,
                 fundingSharePercent = 50,
-            });
-        var shared = await halved.Content.ReadFromJsonAsync<GoalDto>();
+            }, TestContext.Current.CancellationToken);
+        var shared = await halved.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal("1400.00", goal.ProgressAmount);
         Assert.Equal(accountId, goal.FundingAccountId);
@@ -90,8 +90,8 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
             "/api/goals",
             new { name = "Funded", targetAmount = "1000.00", funding = "account", fundingAccountId = accountId });
 
-        var archive = await member.DeleteAsync($"/api/accounts/{accountId}");
-        var listed = await member.GetFromJsonAsync<List<GoalDto>>("/api/goals");
+        var archive = await member.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
+        var listed = await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, archive.StatusCode);
         Assert.Equal("300.00", funded.ProgressAmount);
@@ -110,14 +110,14 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
 
         var response = await member.PostAsJsonAsync(
             "/api/goals",
-            new { name = "Borrowed", targetAmount = "100.00", funding = "account", fundingAccountId = strangerAccount });
+            new { name = "Borrowed", targetAmount = "100.00", funding = "account", fundingAccountId = strangerAccount }, TestContext.Current.CancellationToken);
         var unknown = await member.PostAsJsonAsync(
             "/api/goals",
-            new { name = "Ghost", targetAmount = "100.00", funding = "account", fundingAccountId = Guid.NewGuid() });
+            new { name = "Ghost", targetAmount = "100.00", funding = "account", fundingAccountId = Guid.NewGuid() }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "reference.notFound");
         await AssertProblemAsync(unknown, HttpStatusCode.BadRequest, "reference.notFound");
-        Assert.Empty((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals"))!);
+        Assert.Empty((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!);
     }
 
     [Fact]
@@ -132,13 +132,13 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
 
         var toAccount = await member.PutAsJsonAsync(
             $"/api/goals/{goal.Id}",
-            new { name = "Car", targetAmount = "9000.00", funding = "account", fundingAccountId = accountId });
-        var funded = await toAccount.Content.ReadFromJsonAsync<GoalDto>();
+            new { name = "Car", targetAmount = "9000.00", funding = "account", fundingAccountId = accountId }, TestContext.Current.CancellationToken);
+        var funded = await toAccount.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
         var backToManual = await member.PutAsJsonAsync(
             $"/api/goals/{goal.Id}",
-            new { name = "Car", targetAmount = "9000.00", currentAmount = funded!.CurrentAmount, funding = "manual" });
-        var manual = await backToManual.Content.ReadFromJsonAsync<GoalDto>();
+            new { name = "Car", targetAmount = "9000.00", currentAmount = funded!.CurrentAmount, funding = "manual" }, TestContext.Current.CancellationToken);
+        var manual = await backToManual.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal(("1750.00", "800.00"), (funded.CurrentAmount, funded.ProgressAmount));
         Assert.Equal(("manual", "1750.00", "1750.00"), (manual!.Funding, manual.CurrentAmount, manual.ProgressAmount));
@@ -168,10 +168,10 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
                 funding,
                 fundingAccountId = accountId,
                 fundingSharePercent = sharePercent,
-            });
+            }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
-        Assert.Empty((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals"))!);
+        Assert.Empty((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public sealed class GoalFundingTests(ApiFixture fixture) : IntegrationTestBase(f
                 });
         }
 
-        var listed = await member.GetFromJsonAsync<List<GoalDto>>("/api/goals");
+        var listed = await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
 
         Assert.Equal(20, listed!.Count);
         Assert.Equal(10, listed.Count(g => g.ProgressAmount == "100.00"));

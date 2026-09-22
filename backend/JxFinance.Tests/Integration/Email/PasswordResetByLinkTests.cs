@@ -59,8 +59,8 @@ public sealed class PasswordResetByLinkTests(ApiFixture fixture) : EmailTestBase
 
             Assert.Equal(HttpStatusCode.NoContent, known.StatusCode);
             Assert.Equal(HttpStatusCode.NoContent, missing.StatusCode);
-            Assert.Equal(string.Empty, await known.Content.ReadAsStringAsync());
-            Assert.Equal(string.Empty, await missing.Content.ReadAsStringAsync());
+            Assert.Equal(string.Empty, await known.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+            Assert.Equal(string.Empty, await missing.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             Assert.Empty(Transport.To(unknown));
             Assert.NotEmpty(Transport.To(user.Email));
         }
@@ -83,7 +83,7 @@ public sealed class PasswordResetByLinkTests(ApiFixture fixture) : EmailTestBase
             var token = TokenFrom(ResetMessageFor(user.Email), "reset-password");
             Transport.Reset();
 
-            (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null)).EnsureSuccessStatusCode();
+            (await Client.PostAsync($"/api/users/{user.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
             var asked = await AskAsync(anonymous, user.Email);
             await DrainAsync();
             var used = await ResetAsync(anonymous, user.Email, token, NewPassword);

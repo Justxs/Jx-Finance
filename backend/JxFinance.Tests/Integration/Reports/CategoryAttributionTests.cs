@@ -55,7 +55,7 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
             new TestCurrentUser(user.Id));
 
         var grouped = Totals(await new CategoryAttributionService(db)
-            .GetAttributionsAsync(new DateWindow(Start, End), null, FlowType.Expense, default));
+            .GetAttributionsAsync(new DateWindow(Start, End), null, FlowType.Expense, TestContext.Current.CancellationToken));
         var rowByRow = Totals(await RowByRowAsync(db));
 
         Assert.Equal(rowByRow, grouped);

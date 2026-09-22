@@ -17,14 +17,14 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
 
         using var response = await Client.GetAsync(
             $"/api/transactions/export?accountId={account}&sort=date&direction=asc",
-            HttpCompletionOption.ResponseHeadersRead);
+            HttpCompletionOption.ResponseHeadersRead, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         Assert.Equal("attachment", response.Content.Headers.ContentDisposition?.DispositionType);
         Assert.Equal("transactions.csv", response.Content.Headers.ContentDisposition?.FileName);
         Assert.Null(response.Content.Headers.ContentLength);
-        var lines = (await response.Content.ReadAsStringAsync())
+        var lines = (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency", lines[0]);
         Assert.Equal(13, lines.Length);
@@ -53,7 +53,7 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
                 lines = new object[] { new { categoryId = food, amount = "30.00" }, new { categoryId = clothes, amount = "20.00" } },
             });
 
-        var csv = await Client.GetStringAsync($"/api/transactions/export?accountId={account}");
+        var csv = await Client.GetStringAsync($"/api/transactions/export?accountId={account}", TestContext.Current.CancellationToken);
 
         var row = Assert.Single(csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Skip(1));
         Assert.StartsWith("2026-05-02,Split row,", row);
@@ -69,14 +69,14 @@ public sealed class TransactionExportTests(ApiFixture fixture) : IntegrationTest
             await RecordAsync(account, $"2026-05-{day:00}", "1.00", "Pdf row");
         }
 
-        var atTheLimit = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}");
+        var atTheLimit = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}", TestContext.Current.CancellationToken);
         await RecordAsync(account, "2026-05-20", "1.00", "One too many");
-        var overTheLimit = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}");
-        var narrowed = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}&dateFrom=2026-05-20");
+        var overTheLimit = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}", TestContext.Current.CancellationToken);
+        var narrowed = await Client.GetAsync($"/api/transactions/export/pdf?accountId={account}&dateFrom=2026-05-20", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, atTheLimit.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, overTheLimit.StatusCode);
-        Assert.Contains("export.tooManyRows", await overTheLimit.Content.ReadAsStringAsync());
+        Assert.Contains("export.tooManyRows", await overTheLimit.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.OK, narrowed.StatusCode);
         Assert.Equal("application/pdf", narrowed.Content.Headers.ContentType?.MediaType);
     }

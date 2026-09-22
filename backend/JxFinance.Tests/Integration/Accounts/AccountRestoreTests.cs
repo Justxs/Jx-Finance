@@ -26,7 +26,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
             "/api/goals",
             new { name = "Funded", targetAmount = "1000.00", funding = "account", fundingAccountId = accountId });
 
-        Assert.Equal(HttpStatusCode.NoContent, (await owner.DeleteAsync($"/api/accounts/{accountId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
 
         var archived = await ArchivedAsync(owner);
         var listed = Assert.Single(archived, a => a.Id == accountId);
@@ -35,15 +35,15 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         Assert.DoesNotContain(archived, a => a.Id == otherId);
         Assert.Null(await ProgressAsync(owner, goal.Id));
 
-        var restore = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var restore = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, restore.StatusCode);
-        var restored = await restore.Content.ReadFromJsonAsync<AccountDto>();
+        var restored = await restore.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken);
         Assert.Equal("120.00", restored!.CurrentBalance);
         Assert.DoesNotContain(await ArchivedAsync(owner), a => a.Id == accountId);
-        Assert.Contains(await owner.GetFromJsonAsync<List<AccountDto>>("/api/accounts") ?? [], a => a.Id == accountId);
-        Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync($"/api/transactions/{entry.Id}")).StatusCode);
-        var transfers = await owner.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        Assert.Contains(await owner.GetFromJsonAsync<List<AccountDto>>("/api/accounts", TestContext.Current.CancellationToken) ?? [], a => a.Id == accountId);
+        Assert.Equal(HttpStatusCode.OK, (await owner.GetAsync($"/api/transactions/{entry.Id}", TestContext.Current.CancellationToken)).StatusCode);
+        var transfers = await owner.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
         Assert.Contains(transfers!.Items, t => t.Id == transfer.Id);
         Assert.Equal("120.00", await ProgressAsync(owner, goal.Id));
     }
@@ -53,16 +53,16 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
     {
         using var owner = await CreateUserClientAsync();
         var accountId = await CreateAccountAsync("10.00", client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
-        var first = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
-        var second = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var first = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
+        var second = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
         var neverArchived = await CreateAccountAsync("5.00", client: owner);
-        var third = await owner.PostAsync($"/api/accounts/{neverArchived}/restore", null);
+        var third = await owner.PostAsync($"/api/accounts/{neverArchived}/restore", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, first.StatusCode);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
-        Assert.Equal("10.00", (await second.Content.ReadFromJsonAsync<AccountDto>())!.CurrentBalance);
+        Assert.Equal("10.00", (await second.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken))!.CurrentBalance);
         Assert.Equal(HttpStatusCode.OK, third.StatusCode);
     }
 
@@ -71,7 +71,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
     {
         using var owner = await CreateUserClientAsync();
 
-        var response = await owner.PostAsync($"/api/accounts/{Guid.NewGuid()}/restore", null);
+        var response = await owner.PostAsync($"/api/accounts/{Guid.NewGuid()}/restore", null, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.NotFound, "resource.notFound");
     }
@@ -82,9 +82,9 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         using var owner = await CreateUserClientAsync();
         using var stranger = await CreateUserClientAsync();
         var accountId = await CreateAccountAsync("10.00", client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
-        var response = await stranger.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var response = await stranger.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.NotFound, "resource.notFound");
         Assert.DoesNotContain(await ArchivedAsync(stranger), a => a.Id == accountId);
@@ -100,19 +100,19 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         using var member = await LoginAsync(memberUser);
         var household = await NewHouseholdAsync(owner, memberUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
         var seen = Assert.Single(await ArchivedAsync(member), a => a.Id == accountId);
-        var response = await member.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var response = await member.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
 
         Assert.False(seen.CanRestore);
         await AssertProblemAsync(response, HttpStatusCode.Forbidden, "access.forbidden");
         Assert.Contains(await ArchivedAsync(owner), a => a.Id == accountId);
 
-        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, restored.StatusCode);
-        Assert.Equal("shared", (await restored.Content.ReadFromJsonAsync<AccountDto>())!.Scope);
-        Assert.Equal(HttpStatusCode.OK, (await member.GetAsync($"/api/accounts/{accountId}")).StatusCode);
+        Assert.Equal("shared", (await restored.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken))!.Scope);
+        Assert.Equal(HttpStatusCode.OK, (await member.GetAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         var inSecond = await CreateAccountAsync("2.00", householdId: second, client: owner);
         var personal = await CreateAccountAsync("3.00", client: owner);
         foreach (var id in new[] { inFirst, inSecond, personal })
-            await owner.DeleteAsync($"/api/accounts/{id}");
+            await owner.DeleteAsync($"/api/accounts/{id}", TestContext.Current.CancellationToken);
 
         var listed = await ReadAsync<List<ArchivedAccountDto>>(
             await SendAsync(owner, HttpMethod.Get, "/api/accounts/archived", first));
@@ -148,10 +148,10 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         using var member = await LoginAsync(memberUser);
         var household = await NewHouseholdAsync(owner, memberUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
         var before = Assert.Single(await ArchivedAsync(owner), a => a.Id == accountId);
 
-        Assert.Equal(HttpStatusCode.NoContent, (await owner.DeleteAsync($"/api/households/{household}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await owner.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken)).StatusCode);
 
         var after = Assert.Single(await ArchivedAsync(owner), a => a.Id == accountId);
         Assert.Equal("personal", after.Scope);
@@ -159,9 +159,9 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(before.ArchivedAt, after.ArchivedAt);
         Assert.DoesNotContain(await ArchivedAsync(member), a => a.Id == accountId);
 
-        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
-        Assert.Equal("personal", (await restored.Content.ReadFromJsonAsync<AccountDto>())!.Scope);
-        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/accounts/{accountId}")).StatusCode);
+        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
+        Assert.Equal("personal", (await restored.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken))!.Scope);
+        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -172,16 +172,16 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         using var owner = await LoginAsync(ownerUser);
         var household = await NewHouseholdAsync(householdOwner, ownerUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
-        var removed = await householdOwner.DeleteAsync($"/api/households/{household}/members/{ownerUser.Id}");
+        var removed = await householdOwner.DeleteAsync($"/api/households/{household}/members/{ownerUser.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, removed.StatusCode);
         Assert.DoesNotContain(await ArchivedAsync(householdOwner), a => a.Id == accountId);
-        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, restored.StatusCode);
-        Assert.Equal("personal", (await restored.Content.ReadFromJsonAsync<AccountDto>())!.Scope);
-        Assert.Equal(HttpStatusCode.NotFound, (await householdOwner.GetAsync($"/api/accounts/{accountId}")).StatusCode);
+        Assert.Equal("personal", (await restored.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken))!.Scope);
+        Assert.Equal(HttpStatusCode.NotFound, (await householdOwner.GetAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -192,17 +192,17 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         using var owner = await LoginAsync(ownerUser);
         var left = await NewHouseholdAsync(householdOwner);
         var accountId = await CreateAccountAsync("10.00", client: owner);
-        await owner.DeleteAsync($"/api/accounts/{accountId}");
+        await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
         await ShareArchivedAsync(accountId, left);
 
         Assert.DoesNotContain(await ArchivedAsync(householdOwner), a => a.Id == accountId);
-        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null);
+        var restored = await owner.PostAsync($"/api/accounts/{accountId}/restore", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, restored.StatusCode);
-        var account = await restored.Content.ReadFromJsonAsync<AccountDto>();
+        var account = await restored.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken);
         Assert.Equal("personal", account!.Scope);
         Assert.Null(account.HouseholdId);
-        Assert.Equal(HttpStatusCode.NotFound, (await householdOwner.GetAsync($"/api/accounts/{accountId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await householdOwner.GetAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     private async Task ShareArchivedAsync(Guid accountId, Guid householdId)

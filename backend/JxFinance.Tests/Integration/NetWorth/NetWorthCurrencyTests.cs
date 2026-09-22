@@ -27,9 +27,9 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
             Assert.Equal(new NetWorthDto("550.00", "1100.00", "440.00", "1210.00", true), await NetWorthAsync(member));
 
             boat = await PostAsync<AssetDto>(member, "/api/assets", Asset("200.00"));
-            var revalued = await member.PutAsJsonAsync($"/api/assets/{car.Id}", Asset("2000.00"));
+            var revalued = await member.PutAsJsonAsync($"/api/assets/{car.Id}", Asset("2000.00"), TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, revalued.StatusCode);
-            Assert.Equal("eur", (await revalued.Content.ReadFromJsonAsync<AssetDto>())!.Currency);
+            Assert.Equal("eur", (await revalued.Content.ReadFromJsonAsync<AssetDto>(TestContext.Current.CancellationToken))!.Currency);
 
             Assert.Equal(new NetWorthDto("550.00", "2400.00", "440.00", "2510.00", true), await NetWorthAsync(member));
         }

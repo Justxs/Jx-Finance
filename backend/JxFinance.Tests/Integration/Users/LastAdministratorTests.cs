@@ -26,9 +26,9 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
             using var scope = Services.CreateScope();
             var users = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), actor.Id, default);
-            var deactivated = await users.DeactivateAsync(last.Id, actor.Id, default);
-            var kept = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Admin), actor.Id, default);
+            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), actor.Id, TestContext.Current.CancellationToken);
+            var deactivated = await users.DeactivateAsync(last.Id, actor.Id, TestContext.Current.CancellationToken);
+            var kept = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Admin), actor.Id, TestContext.Current.CancellationToken);
 
             Assert.Equal(ErrorCodes.UserLastAdministrator, demoted.ErrorCode);
             Assert.Equal(ErrorCodes.UserLastAdministrator, deactivated.ErrorCode);
@@ -46,14 +46,14 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
     {
         var last = await CreateUserAsync(AppRoles.Admin);
         var inactive = await CreateUserAsync(AppRoles.Admin);
-        (await Client.PostAsync($"/api/users/{inactive.Id}/deactivate", null)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/users/{inactive.Id}/deactivate", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var removed = await RemoveOtherAdministratorsAsync(last.Id, inactive.Id);
         try
         {
             using var scope = Services.CreateScope();
             var users = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), inactive.Id, default);
+            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), inactive.Id, TestContext.Current.CancellationToken);
 
             Assert.Equal(ErrorCodes.UserLastAdministrator, demoted.ErrorCode);
         }
@@ -76,15 +76,15 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
         try
         {
             var responses = await Task.WhenAll(
-                firstClient.PutAsJsonAsync($"/api/users/{second.Id}/role", new { role = AppRoles.Member }),
+                firstClient.PutAsJsonAsync($"/api/users/{second.Id}/role", new { role = AppRoles.Member }, TestContext.Current.CancellationToken),
                 deactivate
-                    ? secondClient.PostAsync($"/api/users/{first.Id}/deactivate", null)
-                    : secondClient.PutAsJsonAsync($"/api/users/{first.Id}/role", new { role = AppRoles.Member }));
+                    ? secondClient.PostAsync($"/api/users/{first.Id}/deactivate", null, TestContext.Current.CancellationToken)
+                    : secondClient.PutAsJsonAsync($"/api/users/{first.Id}/role", new { role = AppRoles.Member }, TestContext.Current.CancellationToken));
 
             Assert.Single(responses, r => r.IsSuccessStatusCode);
             var rejected = responses.Single(r => !r.IsSuccessStatusCode);
             Assert.Equal(HttpStatusCode.Forbidden, rejected.StatusCode);
-            Assert.Contains(ErrorCodes.UserLastAdministrator, await rejected.Content.ReadAsStringAsync());
+            Assert.Contains(ErrorCodes.UserLastAdministrator, await rejected.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
             Assert.Single(await ActiveAdministratorsAsync());
         }
         finally

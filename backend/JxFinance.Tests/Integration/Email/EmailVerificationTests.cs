@@ -65,7 +65,7 @@ public sealed class EmailVerificationTests(ApiFixture fixture) : EmailTestBase(f
             using var member = await LoginAsync(user);
 
             var account = await CreateAccountAsync(client: member);
-            var transactions = await member.GetAsync("/api/transactions");
+            var transactions = await member.GetAsync("/api/transactions", TestContext.Current.CancellationToken);
             var profile = await MeAsync(member);
 
             Assert.False(profile.EmailConfirmed);
@@ -91,11 +91,11 @@ public sealed class EmailVerificationTests(ApiFixture fixture) : EmailTestBase(f
             await DrainAsync();
             Transport.Reset();
 
-            var resent = await member.PostAsync("/api/auth/send-verification-email", null);
+            var resent = await member.PostAsync("/api/auth/send-verification-email", null, TestContext.Current.CancellationToken);
             await DrainAsync();
             var token = TokenFrom(Assert.Single(Transport.To(user.Email)).Email.Body, "verify-email");
             (await VerifyAsync(anonymous, user.Email, token)).EnsureSuccessStatusCode();
-            var pointless = await member.PostAsync("/api/auth/send-verification-email", null);
+            var pointless = await member.PostAsync("/api/auth/send-verification-email", null, TestContext.Current.CancellationToken);
 
             Assert.Equal(HttpStatusCode.NoContent, resent.StatusCode);
             await AssertProblemAsync(pointless, HttpStatusCode.BadRequest, "email.alreadyVerified");
@@ -113,7 +113,7 @@ public sealed class EmailVerificationTests(ApiFixture fixture) : EmailTestBase(f
         var user = await CreateUserAsync();
         using var member = await LoginAsync(user);
 
-        var response = await member.PostAsync("/api/auth/send-verification-email", null);
+        var response = await member.PostAsync("/api/auth/send-verification-email", null, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "email.notConfigured");
     }

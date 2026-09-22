@@ -38,7 +38,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = await CreateSecurityAsync(member), type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
         Assert.Equal("800.00", await CurrentBalanceAsync(account, member));
 
-        var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}");
+        var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
         Assert.Equal("1000.00", await CurrentBalanceAsync(account, member));
@@ -53,7 +53,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var buy = await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "buy", date = "2026-06-01", quantity = "2", price = "100" });
         await RecordInvestmentAsync(member, new { accountId = account, securityId = fund, type = "sell", date = "2026-06-02", quantity = "2", price = "100" });
 
-        var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}");
+        var delete = await member.DeleteAsync($"/api/investments/transactions/{buy}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, delete.StatusCode);
         Assert.Equal(2, (await ListAsync(member, $"accountId={account}")).Total);
@@ -67,8 +67,8 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var security = new { symbol, name = "Searchable fund", type = "etf", currency = "eur" };
         var created = await PostAsync<IdDto>(member, "/api/investments/securities", security);
 
-        var found = await member.GetFromJsonAsync<List<IdDto>>($"/api/investments/securities?search={symbol.ToLowerInvariant()}");
-        var duplicate = await member.PostAsJsonAsync("/api/investments/securities", security);
+        var found = await member.GetFromJsonAsync<List<IdDto>>($"/api/investments/securities?search={symbol.ToLowerInvariant()}", TestContext.Current.CancellationToken);
+        var duplicate = await member.PostAsJsonAsync("/api/investments/securities", security, TestContext.Current.CancellationToken);
 
         Assert.Equal(created.Id, Assert.Single(found!).Id);
         Assert.Equal(HttpStatusCode.Conflict, duplicate.StatusCode);
@@ -82,7 +82,7 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var fund = (await PostAsync<IdDto>(member, "/api/investments/securities", new { symbol, name = "Fund", type = "etf", currency = "eur" })).Id;
         await RecordInvestmentAsync(member, new { accountId = await CreateAccountAsync("1000.00", "investment", client: member), securityId = fund, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
 
-        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{fund}", new { symbol, name = "Fund", type = "etf", currency = "usd" });
+        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{fund}", new { symbol, name = "Fund", type = "etf", currency = "usd" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -94,12 +94,12 @@ public sealed class InvestmentLedgerTests(ApiFixture fixture) : IntegrationTestB
         var broker = await CreateAccountAsync(type: "investment", client: member);
         (await member.PutAsJsonAsync(
             $"/api/investments/connections/{broker}",
-            new { queryId = SampleFlexReport.QueryId, token = SampleFlexReport.Token })).EnsureSuccessStatusCode();
+            new { queryId = SampleFlexReport.QueryId, token = SampleFlexReport.Token }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var delete = await member.DeleteAsync($"/api/investments/connections/{broker}");
+        var delete = await member.DeleteAsync($"/api/investments/connections/{broker}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
-        var connections = await member.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections");
+        var connections = await member.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(connections!, c => c.AccountId == broker);
     }
 

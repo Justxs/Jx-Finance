@@ -93,10 +93,10 @@ public sealed class BudgetRolloverTests(ApiFixture fixture) : IntegrationTestBas
 
         var switchedOn = await Client.PutAsJsonAsync(
             $"/api/budgets/{budget.Id}",
-            new { categoryId = category, limitAmount = "100.00", period = "weekly", rolloverEnabled = true });
+            new { categoryId = category, limitAmount = "100.00", period = "weekly", rolloverEnabled = true }, TestContext.Current.CancellationToken);
         switchedOn.EnsureSuccessStatusCode();
 
-        var after = (await switchedOn.Content.ReadFromJsonAsync<BudgetDto>())!;
+        var after = (await switchedOn.Content.ReadFromJsonAsync<BudgetDto>(TestContext.Current.CancellationToken))!;
         Assert.Equal(("80.00", "180.00"), (after.CarriedAmount, after.EffectiveLimit));
     }
 

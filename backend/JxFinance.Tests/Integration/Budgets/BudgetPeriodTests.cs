@@ -104,7 +104,7 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
         await SplitSpendAsync(account, category, "20.00", "12.00", Today);
         await SpendAsync(account, category, "40.00", dayAfter);
 
-        var budgets = await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets");
+        var budgets = await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken);
         var inWeek = budgets!.Single(b => b.Id == weekly.Id);
         var inMonth = budgets!.Single(b => b.Id == monthly.Id);
 
@@ -130,7 +130,7 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
 
         var second = await Client.PostAsJsonAsync(
             "/api/budgets",
-            new { categoryId = category, limitAmount = "300.00", period = "monthly" });
+            new { categoryId = category, limitAmount = "300.00", period = "monthly" }, TestContext.Current.CancellationToken);
         await AssertProblemAsync(second, HttpStatusCode.Conflict, "conflict.duplicate");
 
         var weekly = await PostAsync<BudgetDto>(
@@ -141,17 +141,17 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
 
         var collide = await Client.PutAsJsonAsync(
             $"/api/budgets/{weekly.Id}",
-            new { categoryId = category, limitAmount = "60.00", period = "monthly" });
+            new { categoryId = category, limitAmount = "60.00", period = "monthly" }, TestContext.Current.CancellationToken);
         await AssertProblemAsync(collide, HttpStatusCode.Conflict, "conflict.duplicate");
 
         var moved = await Client.PutAsJsonAsync(
             $"/api/budgets/{weekly.Id}",
-            new { categoryId = category, limitAmount = "60.00", period = "yearly" });
+            new { categoryId = category, limitAmount = "60.00", period = "yearly" }, TestContext.Current.CancellationToken);
         moved.EnsureSuccessStatusCode();
 
         var unchanged = await Client.PutAsJsonAsync(
             $"/api/budgets/{monthly.Id}",
-            new { categoryId = category, limitAmount = "250.00", period = "monthly" });
+            new { categoryId = category, limitAmount = "250.00", period = "monthly" }, TestContext.Current.CancellationToken);
         unchanged.EnsureSuccessStatusCode();
     }
 

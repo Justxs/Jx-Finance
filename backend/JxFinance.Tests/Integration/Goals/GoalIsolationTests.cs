@@ -17,16 +17,16 @@ public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase
         using var partnerClient = await LoginAsync(partner);
         var goal = await PostAsync<GoalDto>(ownerClient, "/api/goals", new { name = "Private goal", targetAmount = "500.00", currentAmount = "50.00" });
 
-        var listed = await partnerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals");
-        var update = await partnerClient.PutAsJsonAsync($"/api/goals/{goal.Id}", new { name = "Taken over", targetAmount = "1.00", currentAmount = "1.00" });
-        var delete = await partnerClient.DeleteAsync($"/api/goals/{goal.Id}");
-        var administratorList = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals");
+        var listed = await partnerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
+        var update = await partnerClient.PutAsJsonAsync($"/api/goals/{goal.Id}", new { name = "Taken over", targetAmount = "1.00", currentAmount = "1.00" }, TestContext.Current.CancellationToken);
+        var delete = await partnerClient.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
+        var administratorList = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
 
         Assert.Empty(listed!);
         Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);
         Assert.DoesNotContain(administratorList!, g => g.Id == goal.Id);
-        Assert.Equal(goal, Assert.Single((await ownerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals"))!));
+        Assert.Equal(goal, Assert.Single((await ownerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!));
     }
 
     [Fact]
@@ -37,12 +37,12 @@ public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase
         var goal = await PostAsync<GoalDto>(member, "/api/goals", new { name = "Holiday", targetAmount = "100.00", targetDate = "2027-01-31" });
         var update = await member.PutAsJsonAsync(
             $"/api/goals/{goal.Id}",
-            new { name = "Overfunded", targetAmount = "100.00", currentAmount = "150.00" });
+            new { name = "Overfunded", targetAmount = "100.00", currentAmount = "150.00" }, TestContext.Current.CancellationToken);
 
         Assert.Equal("0.00", goal.CurrentAmount);
         Assert.Equal(new DateOnly(2027, 1, 31), goal.TargetDate);
         Assert.Equal(HttpStatusCode.OK, update.StatusCode);
-        var updated = await update.Content.ReadFromJsonAsync<GoalDto>();
+        var updated = await update.Content.ReadFromJsonAsync<GoalDto>(TestContext.Current.CancellationToken);
         Assert.Equal(("Overfunded", "150.00", null), (updated!.Name, updated.CurrentAmount, updated.TargetDate));
     }
 
@@ -62,10 +62,10 @@ public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase
         var body = new Dictionary<string, object?> { ["name"] = "Changed", ["targetAmount"] = "200.00", ["currentAmount"] = "20.00" };
         body[field] = value;
 
-        var response = await member.PutAsJsonAsync($"/api/goals/{goal.Id}", body);
+        var response = await member.PutAsJsonAsync($"/api/goals/{goal.Id}", body, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
-        Assert.Equal(goal, Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals"))!));
+        Assert.Equal(goal, Assert.Single((await member.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken))!));
     }
 
     [Fact]

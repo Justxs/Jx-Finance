@@ -25,14 +25,14 @@ public sealed class DashboardIsolationTests(ApiFixture fixture) : IntegrationTes
         await RecordTransactionAsync(ownerClient, new { accountId = personal, categoryId = food, type = "expense", amount = "30.00", date = firstOfMonth });
         await RecordTransactionAsync(ownerClient, new { accountId = personal, type = "income", amount = "5.00", date = firstOfMonth });
 
-        var ownerSummary = await ownerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
-        var partnerSummary = await partnerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
-        var strangerSummary = await stranger.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
-        var ownerBreakdown = await ownerClient.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}");
-        var partnerBreakdown = await partnerClient.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}");
-        var strangerBreakdown = await stranger.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}");
-        var partnerTrend = await partnerClient.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=1");
-        var strangerTrend = await stranger.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=1");
+        var ownerSummary = await ownerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+        var partnerSummary = await partnerClient.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+        var strangerSummary = await stranger.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
+        var ownerBreakdown = await ownerClient.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
+        var partnerBreakdown = await partnerClient.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
+        var strangerBreakdown = await stranger.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
+        var partnerTrend = await partnerClient.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=1", TestContext.Current.CancellationToken);
+        var strangerTrend = await stranger.GetFromJsonAsync<TrendDto>("/api/dashboard/monthly-trend?months=1", TestContext.Current.CancellationToken);
 
         Assert.Equal(new SummaryDto("113.00", "5.00", "42.00"), ownerSummary);
         Assert.Equal(new SummaryDto("88.00", "0.00", "12.00"), partnerSummary);

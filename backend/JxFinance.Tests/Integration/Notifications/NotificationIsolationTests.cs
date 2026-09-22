@@ -21,14 +21,14 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
         var bill = await CreateDueBillAsync(ownerClient);
         var partnerBill = await CreateDueBillAsync(partnerClient);
 
-        await NewJob().ScanAsync(default);
+        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
         var reminder = Assert.Single(await UnreadAsync(ownerClient));
         Assert.Equal(bill, reminder.RelatedId);
         Assert.Equal(partnerBill, Assert.Single(await UnreadAsync(partnerClient)).RelatedId);
 
-        var foreignMark = await partnerClient.PatchAsync($"/api/notifications/{reminder.Id}/read", null);
-        (await partnerClient.PostAsync("/api/notifications/read-all", null)).EnsureSuccessStatusCode();
+        var foreignMark = await partnerClient.PatchAsync($"/api/notifications/{reminder.Id}/read", null, TestContext.Current.CancellationToken);
+        (await partnerClient.PostAsync("/api/notifications/read-all", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.NotFound, foreignMark.StatusCode);
         Assert.Empty(await UnreadAsync(partnerClient));
@@ -43,12 +43,12 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
         var second = await CreateDueBillAsync(member);
         var job = NewJob();
 
-        await job.ScanAsync(default);
-        await job.ScanAsync(default);
-        (await member.PostAsync("/api/notifications/read-all", null)).EnsureSuccessStatusCode();
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
+        (await member.PostAsync("/api/notifications/read-all", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await job.ScanAsync(TestContext.Current.CancellationToken);
 
-        var all = await member.GetFromJsonAsync<List<NotificationDto>>("/api/notifications");
+        var all = await member.GetFromJsonAsync<List<NotificationDto>>("/api/notifications", TestContext.Current.CancellationToken);
         Assert.Equal(new[] { first, second }.Order(), all!.Select(n => n.RelatedId!.Value).Order());
         Assert.All(all!, n => Assert.True(n.IsRead));
     }

@@ -15,14 +15,14 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = from, toAccountId = to, amount = "40.00", date = "2026-06-10" });
+            new { fromAccountId = from, toAccountId = to, amount = "40.00", date = "2026-06-10" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var transfer = await createResponse.Content.ReadFromJsonAsync<TransferDto>();
+        var transfer = await createResponse.Content.ReadFromJsonAsync<TransferDto>(TestContext.Current.CancellationToken);
 
         Assert.Equal("110.00", await CurrentBalanceAsync(from));
         Assert.Equal("90.00", await CurrentBalanceAsync(to));
 
-        var deleteResponse = await Client.DeleteAsync($"/api/transfers/{transfer!.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/transfers/{transfer!.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
         Assert.Equal("150.00", await CurrentBalanceAsync(from));
@@ -36,7 +36,7 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
 
         var response = await Client.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = account, toAccountId = account, amount = "5.00", date = "2026-06-10" });
+            new { fromAccountId = account, toAccountId = account, amount = "5.00", date = "2026-06-10" }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(response, "toAccountId");
     }
 
@@ -54,8 +54,8 @@ public sealed class TransferEndpointTests(ApiFixture fixture) : IntegrationTestB
             "/api/transfers",
             new { fromAccountId = from, toAccountId = to, amount = "20.00", date = "2026-06-12" });
 
-        var page = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=1");
-        var all = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        var page = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=1", TestContext.Current.CancellationToken);
+        var all = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
 
         Assert.Single(page!.Items);
         Assert.Equal(1, page.PageSize);
