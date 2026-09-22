@@ -1,5 +1,3 @@
-using FastEndpoints;
-using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Goals;
@@ -8,35 +6,34 @@ using JxFinance.Endpoints.Goals.Shared;
 
 namespace JxFinance.Endpoints.Goals.Mappers;
 
-[RegisterService<GoalMapper>(LifeTime.Singleton)]
-public sealed class GoalMapper(IInstanceSettingsStore settings) : Mapper<CreateGoalRequest, GoalResponse, Goal>
+public static class GoalMapper
 {
-    public override Goal ToEntity(CreateGoalRequest request)
+    public static Goal ToEntity(this CreateGoalRequest request, Currency reportingCurrency)
     {
         var goal = new Goal { Name = request.Name };
-        Apply(request, goal);
+        request.ApplyTo(goal, reportingCurrency);
         return goal;
     }
 
-    public void Apply(IGoalInput input, Goal goal)
+    public static void ApplyTo(this IGoalInput input, Goal goal, Currency reportingCurrency)
     {
         goal.Name = input.Name.Trim();
-        goal.TargetAmount = new Money(input.TargetAmount, settings.Current.ReportingCurrency);
+        goal.TargetAmount = new Money(input.TargetAmount, reportingCurrency);
         goal.TargetDate = input.TargetDate;
         goal.Funding = input.Funding;
         goal.FundingSharePercent = input.FundingSharePercent ?? 100;
+        goal.FundingAccountId = input.FundingAccount();
 
-        if (input.Funding == GoalFunding.Account)
+        if (input.Funding != GoalFunding.Account)
         {
-            goal.FundingAccountId = new AccountId(input.FundingAccountId!.Value);
-            return;
+            goal.CurrentAmount = new Money(input.CurrentAmount ?? 0m, reportingCurrency);
         }
-
-        goal.FundingAccountId = null;
-        goal.CurrentAmount = new Money(input.CurrentAmount ?? 0m, settings.Current.ReportingCurrency);
     }
 
-    public GoalResponse FromEntity(Goal goal, decimal? progressAmount) => new(
+    public static AccountId? FundingAccount(this IGoalInput input) =>
+        input.Funding == GoalFunding.Account ? new AccountId(input.FundingAccountId!.Value) : null;
+
+    public static GoalResponse ToResponse(this Goal goal, decimal? progressAmount) => new(
         goal.Id.Value,
         goal.Name,
         goal.TargetAmount.Amount,

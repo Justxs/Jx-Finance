@@ -6,7 +6,11 @@ using JxFinance.Common.Trash;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Categories.CreateCategory;
 using JxFinance.Endpoints.Categories.Interfaces;
+using JxFinance.Endpoints.Categories.Mappers;
+using JxFinance.Endpoints.Categories.Shared;
+using JxFinance.Endpoints.Categories.UpdateCategory;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,45 +24,51 @@ public sealed class CategoryService(
     IClock clock,
     IDeletionRecorder deletions) : ICategoryService
 {
-    public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken) =>
-        await db.Categories
+    public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken)
+    {
+        var categories = await db.Categories
             .OrderBy(c => c.Type)
             .ThenBy(c => c.Name)
             .ToListAsync(cancellationToken);
+        return categories.Select(c => c.ToResponse()).ToList();
+    }
 
-    public async Task<Result<Category>> CreateAsync(Category category, CancellationToken cancellationToken)
+    public async Task<Result<CategoryResponse>> CreateAsync(
+        CreateCategoryRequest request,
+        CancellationToken cancellationToken)
     {
-        if (await sharing.CheckAsync(category, null, cancellationToken) is { } sharingError)
+        if (await sharing.CheckAsync(request, cancellationToken) is { } sharingError)
         {
             return sharingError;
         }
 
+        var category = request.ToEntity();
         db.Categories.Add(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return category;
+        return category.ToResponse();
     }
 
-    public async Task<Result<Category>> UpdateAsync(Guid id, Action<Category> apply, CancellationToken cancellationToken)
+    public async Task<Result<CategoryResponse>> UpdateAsync(
+        UpdateCategoryRequest request,
+        CancellationToken cancellationToken)
     {
-        var categoryId = new CategoryId(id);
+        var categoryId = new CategoryId(request.Id);
         var found = await db.Categories.FindOrNotFoundAsync(c => c.Id == categoryId, "Category not found.", cancellationToken);
         if (!found.TryGetValue(out var category))
         {
             return found.Error;
         }
 
-        var previous = SharingState.Of(category);
-        apply(category);
-
-        if (await sharing.CheckAsync(category, previous, cancellationToken) is { } sharingError)
+        if (await sharing.CheckAsync(category, request, cancellationToken) is { } sharingError)
         {
             return sharingError;
         }
 
+        request.ApplyTo(category);
         await db.SaveChangesAsync(cancellationToken);
 
-        return category;
+        return category.ToResponse();
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

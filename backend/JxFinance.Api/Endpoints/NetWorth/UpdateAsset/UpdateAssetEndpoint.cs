@@ -2,12 +2,11 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.NetWorth.Interfaces;
-using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.UpdateAsset;
 
-public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endpoint<UpdateAssetRequest, AssetResponse, AssetMapper>
+public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endpoint<UpdateAssetRequest, AssetResponse>
 {
     public override void Configure()
     {
@@ -18,7 +17,7 @@ public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endp
 
     public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct)
     {
-        var asset = (await netWorthService.UpdateAssetAsync(req.Id, entity => Map.Apply(req, entity), ct)).ValueOrThrow();
-        await Send.OkAsync(Map.FromEntity(asset), ct);
+        var asset = (await netWorthService.UpdateAssetAsync(req, ct)).ValueOrThrow();
+        await Send.OkAsync(asset, ct);
     }
 }

@@ -1,25 +1,28 @@
 using JxFinance.Common.Amortization;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.NetWorth;
+using JxFinance.Endpoints.NetWorth.CreateAsset;
+using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Shared;
+using JxFinance.Endpoints.NetWorth.UpdateAsset;
+using JxFinance.Endpoints.NetWorth.UpdateDebt;
 
 namespace JxFinance.Endpoints.NetWorth.Interfaces;
 
 public interface INetWorthService
 {
-    Task<IReadOnlyList<Asset>> GetAssetsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken);
 
-    Task<Asset> CreateAssetAsync(Asset asset, CancellationToken cancellationToken);
+    Task<Result<AssetResponse>> CreateAssetAsync(CreateAssetRequest request, CancellationToken cancellationToken);
 
-    Task<Result<Asset>> UpdateAssetAsync(Guid id, Action<Asset> apply, CancellationToken cancellationToken);
+    Task<Result<AssetResponse>> UpdateAssetAsync(UpdateAssetRequest request, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<Debt>> GetDebtsAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<DebtResponse>> GetDebtsAsync(CancellationToken cancellationToken);
 
-    Task<Debt> CreateDebtAsync(Debt debt, CancellationToken cancellationToken);
+    Task<Result<DebtResponse>> CreateDebtAsync(CreateDebtRequest request, CancellationToken cancellationToken);
 
-    Task<Result<Debt>> UpdateDebtAsync(Guid id, Action<Debt> apply, CancellationToken cancellationToken);
+    Task<Result<DebtResponse>> UpdateDebtAsync(UpdateDebtRequest request, CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken);
 

@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.RecurringBills;
@@ -8,22 +7,36 @@ using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 
 namespace JxFinance.Endpoints.RecurringBills.Mappers;
 
-public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, RecurringBillResponse, RecurringBill>
+public static class RecurringBillMapper
 {
-    public override RecurringBill ToEntity(CreateRecurringBillRequest request)
+    public static RecurringBill ToEntity(this CreateRecurringBillRequest request)
     {
         var bill = new RecurringBill { Name = request.Name };
-        Apply(request, bill);
+        ApplyShared(request, bill);
         return bill;
     }
 
-    public void Apply(UpdateRecurringBillRequest request, RecurringBill bill)
+    public static void ApplyTo(this UpdateRecurringBillRequest request, RecurringBill bill)
     {
-        Apply((IRecurringBillInput)request, bill);
+        ApplyShared(request, bill);
         bill.IsActive = request.IsActive;
     }
 
-    private static void Apply(IRecurringBillInput input, RecurringBill bill)
+    public static RecurringBillResponse ToResponse(this RecurringBill bill) => new(
+        bill.Id.Value,
+        bill.Name,
+        bill.Shape,
+        bill.Kind,
+        bill.Amount,
+        bill.CategoryId?.Value,
+        bill.AccountId?.Value,
+        bill.ToAccountId?.Value,
+        bill.Cadence,
+        bill.NextDueDate,
+        bill.RemindDaysBefore,
+        bill.IsActive);
+
+    private static void ApplyShared(IRecurringBillInput input, RecurringBill bill)
     {
         bill.Name = input.Name.Trim();
         bill.Shape = input.Shape;
@@ -40,18 +53,4 @@ public sealed class RecurringBillMapper : Mapper<CreateRecurringBillRequest, Rec
 
         bill.RemindDaysBefore = input.RemindDaysBefore;
     }
-
-    public override RecurringBillResponse FromEntity(RecurringBill bill) => new(
-        bill.Id.Value,
-        bill.Name,
-        bill.Shape,
-        bill.Kind,
-        bill.Amount,
-        bill.CategoryId?.Value,
-        bill.AccountId?.Value,
-        bill.ToAccountId?.Value,
-        bill.Cadence,
-        bill.NextDueDate,
-        bill.RemindDaysBefore,
-        bill.IsActive);
 }

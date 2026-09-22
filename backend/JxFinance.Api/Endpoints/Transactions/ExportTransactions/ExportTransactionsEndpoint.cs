@@ -60,8 +60,8 @@ public sealed class ExportTransactionsEndpoint(
 
         return new ExportNames(
             accounts.ToDictionary(a => a.Id, a => a.Name),
-            categories.ToDictionary(c => c.Id.Value, c => c.Name),
-            tags.ToDictionary(t => t.Id.Value, t => t.Name));
+            categories.ToDictionary(c => c.Id, c => c.Name),
+            tags.ToDictionary(t => t.Id, t => t.Name));
     }
 
     private static string Row(TransactionResponse transaction, ExportNames names)

@@ -1,12 +1,11 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
-using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.GetDebts;
 
-public sealed class GetDebtsEndpoint(INetWorthService netWorthService) : EndpointWithoutRequest<IReadOnlyList<DebtResponse>, DebtMapper>
+public sealed class GetDebtsEndpoint(INetWorthService netWorthService) : EndpointWithoutRequest<IReadOnlyList<DebtResponse>>
 {
     public override void Configure()
     {
@@ -16,7 +15,6 @@ public sealed class GetDebtsEndpoint(INetWorthService netWorthService) : Endpoin
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var debts = await netWorthService.GetDebtsAsync(ct);
-        await Send.OkAsync(debts.Select(Map.FromEntity).ToList(), ct);
+        await Send.OkAsync(await netWorthService.GetDebtsAsync(ct), ct);
     }
 }

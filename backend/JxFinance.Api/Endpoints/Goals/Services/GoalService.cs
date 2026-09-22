@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -20,7 +21,7 @@ namespace JxFinance.Endpoints.Goals.Services;
 [RegisterService<IGoalService>(LifeTime.Scoped)]
 public sealed class GoalService(
     AppDbContext db,
-    GoalMapper mapper,
+    IInstanceSettingsStore settings,
     IReferenceGuard references,
     IDeletionRecorder deletions,
     IAccountService accounts) : IGoalService
@@ -32,19 +33,19 @@ public sealed class GoalService(
         var goals = await db.Goals.OrderBy(g => g.CreatedAt).ToListAsync(cancellationToken);
         var balances = await BalancesAsync(goals, cancellationToken);
 
-        return goals.Select(g => mapper.FromEntity(g, Progress(g, balances))).ToList();
+        return goals.Select(g => g.ToResponse(Progress(g, balances))).ToList();
     }
 
     public async Task<Result<GoalResponse>> CreateAsync(
         CreateGoalRequest request,
         CancellationToken cancellationToken)
     {
-        var goal = mapper.ToEntity(request);
-        if (await FundingAccountErrorAsync(goal, cancellationToken) is { } error)
+        if (await FundingAccountErrorAsync(request, cancellationToken) is { } error)
         {
             return error;
         }
 
+        var goal = request.ToEntity(settings.Current.ReportingCurrency);
         db.Goals.Add(goal);
         await db.SaveChangesAsync(cancellationToken);
 
@@ -62,12 +63,12 @@ public sealed class GoalService(
             return found.Error;
         }
 
-        mapper.Apply(request, goal);
-        if (await FundingAccountErrorAsync(goal, cancellationToken) is { } error)
+        if (await FundingAccountErrorAsync(request, cancellationToken) is { } error)
         {
             return error;
         }
 
+        request.ApplyTo(goal, settings.Current.ReportingCurrency);
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(goal, cancellationToken);
@@ -84,13 +85,13 @@ public sealed class GoalService(
             cancellationToken);
     }
 
-    private Task<DomainError?> FundingAccountErrorAsync(Goal goal, CancellationToken cancellationToken) =>
-        goal.FundingAccountId is { } accountId
+    private Task<DomainError?> FundingAccountErrorAsync(IGoalInput input, CancellationToken cancellationToken) =>
+        input.FundingAccount() is { } accountId
             ? references.AccountExistsAsync(accountId, cancellationToken)
             : Task.FromResult<DomainError?>(null);
 
     private async Task<GoalResponse> ToResponseAsync(Goal goal, CancellationToken cancellationToken) =>
-        mapper.FromEntity(goal, Progress(goal, await BalancesAsync([goal], cancellationToken)));
+        goal.ToResponse(Progress(goal, await BalancesAsync([goal], cancellationToken)));
 
     private Task<IReadOnlyDictionary<AccountId, decimal>> BalancesAsync(
         IReadOnlyList<Goal> goals,

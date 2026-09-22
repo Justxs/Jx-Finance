@@ -26,7 +26,6 @@ namespace JxFinance.Endpoints.Investments.Services;
 [RegisterService<IInvestmentService>(LifeTime.Scoped)]
 public sealed class InvestmentService(
     AppDbContext db,
-    InvestmentMapper mapper,
     IExchangeRateService rates,
     IClock clock,
     IHoldingLedger ledger,
@@ -128,7 +127,7 @@ public sealed class InvestmentService(
                     costBasis += valueReporting is null ? 0m : Money.Round(position.ReportingCostBasis);
                 }
 
-                holdings.Add(mapper.ToHolding(account.Key, security, position, value, valueReporting, realized, received));
+                holdings.Add(position.ToHoldingResponse(account.Key, security, value, valueReporting, realized, received));
             }
         }
 
@@ -187,7 +186,7 @@ public sealed class InvestmentService(
             .Where(s => securityIds.Contains(s.Id))
             .ToDictionaryAsync(s => s.Id, s => s.Symbol, cancellationToken);
 
-        return page.Map(t => mapper.FromEntity(t, t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null));
+        return page.Map(t => t.ToResponse(t.SecurityId is { } id ? symbols.GetValueOrDefault(id) : null));
     }
 
     public async Task<Result<InvestmentTransactionResponse>> CreateTransactionAsync(
@@ -210,7 +209,7 @@ public sealed class InvestmentService(
         db.InvestmentTransactions.Add(transaction);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transaction, security?.Symbol);
+        return transaction.ToResponse(security?.Symbol);
     }
 
     public async Task<Result<InvestmentTransactionResponse>> UpdateTransactionAsync(
@@ -276,7 +275,7 @@ public sealed class InvestmentService(
         transaction.Description = corrected.Description;
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transaction, security?.Symbol);
+        return transaction.ToResponse(security?.Symbol);
     }
 
     private async Task<Result<(InvestmentTransaction Transaction, Security? Security)>> BuildTransactionAsync(
@@ -311,7 +310,7 @@ public sealed class InvestmentService(
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
-        var transaction = mapper.ToEntity(request, currency);
+        var transaction = request.ToEntity(currency);
         var reportingAmount = await rates.ToReportingAsync(transaction.CashAmount, transaction.Date, cancellationToken);
         if (reportingAmount.IsFailure)
         {
@@ -365,7 +364,7 @@ public sealed class InvestmentService(
         }
 
         var securities = await query.OrderBy(s => s.Symbol).ThenBy(s => s.Currency).ToListAsync(cancellationToken);
-        return securities.Select(mapper.FromEntity).ToList();
+        return securities.Select(s => s.ToResponse()).ToList();
     }
 
     public async Task<Result<SecurityResponse>> CreateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
@@ -378,7 +377,7 @@ public sealed class InvestmentService(
 
         var security = new Security();
         db.Securities.Add(security);
-        mapper.Apply(request, symbol, security);
+        request.ApplyTo(symbol, security);
         await RecordPriceAsync(request, security, cancellationToken);
         try
         {
@@ -389,7 +388,7 @@ public sealed class InvestmentService(
             return Duplicate(symbol, request.Currency);
         }
 
-        return mapper.FromEntity(security);
+        return security.ToResponse();
     }
 
     public async Task<Result<SecurityResponse>> UpdateSecurityAsync(SaveSecurityRequest request, CancellationToken cancellationToken)
@@ -415,11 +414,11 @@ public sealed class InvestmentService(
                 "The currency cannot change once the security has transactions.");
         }
 
-        mapper.Apply(request, symbol, security);
+        request.ApplyTo(symbol, security);
         await RecordPriceAsync(request, security, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(security);
+        return security.ToResponse();
     }
 
     private Task RecordPriceAsync(SaveSecurityRequest request, Security security, CancellationToken cancellationToken) =>

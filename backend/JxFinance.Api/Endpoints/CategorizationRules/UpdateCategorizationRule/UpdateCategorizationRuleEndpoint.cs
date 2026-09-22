@@ -2,13 +2,12 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
-using JxFinance.Endpoints.CategorizationRules.Mappers;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 
 namespace JxFinance.Endpoints.CategorizationRules.UpdateCategorizationRule;
 
 public sealed class UpdateCategorizationRuleEndpoint(ICategorizationRuleService ruleService)
-    : Endpoint<UpdateCategorizationRuleRequest, CategorizationRuleResponse, CategorizationRuleMapper>
+    : Endpoint<UpdateCategorizationRuleRequest, CategorizationRuleResponse>
 {
     public override void Configure()
     {
@@ -19,11 +18,7 @@ public sealed class UpdateCategorizationRuleEndpoint(ICategorizationRuleService 
 
     public override async Task HandleAsync(UpdateCategorizationRuleRequest req, CancellationToken ct)
     {
-        var updated = (await ruleService.UpdateAsync(
-            req.Id,
-            entity => Map.Apply(req, entity),
-            req.TagIds,
-            ct)).ValueOrThrow();
-        await Send.OkAsync(Map.FromEntity(updated), ct);
+        var rule = (await ruleService.UpdateAsync(req, ct)).ValueOrThrow();
+        await Send.OkAsync(rule, ct);
     }
 }

@@ -6,7 +6,11 @@ using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.Tags.CreateTag;
 using JxFinance.Endpoints.Tags.Interfaces;
+using JxFinance.Endpoints.Tags.Mappers;
+using JxFinance.Endpoints.Tags.Shared;
+using JxFinance.Endpoints.Tags.UpdateTag;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,44 +23,46 @@ public sealed class TagService(
     ISharingGuard sharing,
     IDeletionRecorder deletions) : ITagService
 {
-    public async Task<IReadOnlyList<Tag>> GetAllAsync(CancellationToken cancellationToken) =>
-        await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
-
-    public async Task<Result<Tag>> CreateAsync(Tag tag, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<TagResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(tag, null, null, cancellationToken);
+        var tags = await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
+        return tags.Select(t => t.ToResponse()).ToList();
+    }
+
+    public async Task<Result<TagResponse>> CreateAsync(CreateTagRequest request, CancellationToken cancellationToken)
+    {
+        var error = await ValidateAsync(request, null, cancellationToken);
         if (error is not null)
         {
             return error;
         }
 
+        var tag = request.ToEntity();
         db.Tags.Add(tag);
         await db.SaveChangesAsync(cancellationToken);
 
-        return tag;
+        return tag.ToResponse();
     }
 
-    public async Task<Result<Tag>> UpdateAsync(Guid id, Action<Tag> apply, CancellationToken cancellationToken)
+    public async Task<Result<TagResponse>> UpdateAsync(UpdateTagRequest request, CancellationToken cancellationToken)
     {
-        var tagId = new TagId(id);
+        var tagId = new TagId(request.Id);
         var found = await db.Tags.FindOrNotFoundAsync(t => t.Id == tagId, "Tag not found.", cancellationToken);
         if (!found.TryGetValue(out var tag))
         {
             return found.Error;
         }
 
-        var previous = SharingState.Of(tag);
-        apply(tag);
-
-        var error = await ValidateAsync(tag, previous, tagId, cancellationToken);
+        var error = await ValidateAsync(request, tag, cancellationToken);
         if (error is not null)
         {
             return error;
         }
 
+        request.ApplyTo(tag);
         await db.SaveChangesAsync(cancellationToken);
 
-        return tag;
+        return tag.ToResponse();
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -98,20 +104,23 @@ public sealed class TagService(
     }
 
     private async Task<DomainError?> ValidateAsync(
-        Tag tag,
-        SharingState? previous,
-        TagId? excluding,
+        ITagInput input,
+        Tag? existing,
         CancellationToken cancellationToken)
     {
-        if (await sharing.CheckAsync(tag, previous, cancellationToken) is { } sharingError)
+        var sharingError = existing is null
+            ? await sharing.CheckAsync(input, cancellationToken)
+            : await sharing.CheckAsync(existing, input, cancellationToken);
+        if (sharingError is not null)
         {
             return sharingError;
         }
 
-        var ownerId = tag.UserId == Guid.Empty ? currentUser.Id : tag.UserId;
-        var pattern = LikePattern.Exactly(tag.Name);
-        var excludedId = excluding ?? default;
-        var hasExcluded = excluding.HasValue;
+        var ownerId = existing?.UserId ?? currentUser.Id;
+        var name = input.NormalizedName();
+        var pattern = LikePattern.Exactly(name);
+        var excludedId = existing?.Id ?? default;
+        var hasExcluded = existing is not null;
         var taken = await db.Tags
             .IgnoreQueryFilters()
             .AnyAsync(
@@ -122,7 +131,7 @@ public sealed class TagService(
                 cancellationToken);
 
         return taken
-            ? new DomainError(ErrorCodes.ConflictDuplicate, $"You already have a tag named \"{tag.Name}\".")
+            ? new DomainError(ErrorCodes.ConflictDuplicate, $"You already have a tag named \"{name}\".")
             : null;
     }
 }

@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -8,22 +7,28 @@ using JxFinance.Endpoints.Transfers.Shared;
 
 namespace JxFinance.Endpoints.Transfers.Mappers;
 
-[RegisterService<TransferMapper>(LifeTime.Singleton)]
-public sealed class TransferMapper : Mapper<CreateTransferRequest, TransferResponse, Transfer>
+public static class TransferMapper
 {
-    public Transfer ToEntity(CreateTransferRequest request, Money sent, Money received) => new()
+    public static Transfer ToEntity(this CreateTransferRequest request, Money sent, Money received)
     {
-        FromAccountId = new AccountId(request.FromAccountId),
-        ToAccountId = new AccountId(request.ToAccountId),
-        Amount = sent,
-        ReceivedAmount = received,
-        Date = request.Date,
-        Description = OptionalText.Normalize(request.Description),
-    };
+        var transfer = new Transfer();
+        request.ApplyTo(transfer, sent, received);
+        return transfer;
+    }
 
-    public override TransferResponse FromEntity(Transfer transfer) => FromEntity(transfer, []);
+    public static void ApplyTo(this ITransferInput input, Transfer transfer, Money sent, Money received)
+    {
+        transfer.FromAccountId = new AccountId(input.FromAccountId);
+        transfer.ToAccountId = new AccountId(input.ToAccountId);
+        transfer.Amount = sent;
+        transfer.ReceivedAmount = received;
+        transfer.Date = input.Date;
+        transfer.Description = OptionalText.Normalize(input.Description);
+    }
 
-    public TransferResponse FromEntity(Transfer transfer, IReadOnlyCollection<AccountId> importedAccounts) => new(
+    public static TransferResponse ToResponse(this Transfer transfer) => transfer.ToResponse([]);
+
+    public static TransferResponse ToResponse(this Transfer transfer, IReadOnlyCollection<AccountId> importedAccounts) => new(
         transfer.Id.Value,
         transfer.FromAccountId.Value,
         transfer.ToAccountId.Value,

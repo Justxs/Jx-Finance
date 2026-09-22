@@ -2,13 +2,12 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
-using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
 namespace JxFinance.Endpoints.RecurringBills.GetRecurringBill;
 
 public sealed class GetRecurringBillEndpoint(IRecurringBillService recurringBillService)
-    : EndpointWithoutRequest<RecurringBillResponse, RecurringBillMapper>
+    : EndpointWithoutRequest<RecurringBillResponse>
 {
     public override void Configure()
     {
@@ -20,6 +19,6 @@ public sealed class GetRecurringBillEndpoint(IRecurringBillService recurringBill
     public override async Task HandleAsync(CancellationToken ct)
     {
         var bill = (await recurringBillService.GetByIdAsync(Route<Guid>("id"), ct)).ValueOrThrow();
-        await Send.OkAsync(Map.FromEntity(bill), ct);
+        await Send.OkAsync(bill, ct);
     }
 }

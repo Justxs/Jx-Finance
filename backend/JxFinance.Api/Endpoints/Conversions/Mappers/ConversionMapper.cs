@@ -1,5 +1,4 @@
 using System.Globalization;
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -7,13 +6,13 @@ using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Conversions.CreateConversion;
 using JxFinance.Endpoints.Conversions.Shared;
+using JxFinance.Endpoints.Conversions.UpdateConversion;
 
 namespace JxFinance.Endpoints.Conversions.Mappers;
 
-[RegisterService<ConversionMapper>(LifeTime.Singleton)]
-public sealed class ConversionMapper
+public static class ConversionMapper
 {
-    public CurrencyConversion ToEntity(CreateConversionRequest request, Transaction? fee) => new()
+    public static CurrencyConversion ToEntity(this CreateConversionRequest request, Transaction? fee) => new()
     {
         AccountId = new AccountId(request.AccountId),
         FromAmount = new Money(request.FromAmount, request.FromCurrency),
@@ -23,7 +22,16 @@ public sealed class ConversionMapper
         FeeTransactionId = fee?.Id,
     };
 
-    public ConversionResponse FromEntity(CurrencyConversion conversion, Transaction? fee) => new(
+    public static void ApplyTo(this UpdateConversionRequest request, CurrencyConversion conversion, Transaction? fee)
+    {
+        conversion.FromAmount = new Money(request.FromAmount, request.FromCurrency);
+        conversion.ToAmount = new Money(request.ToAmount, request.ToCurrency);
+        conversion.Date = request.Date;
+        conversion.Description = OptionalText.Normalize(request.Description);
+        conversion.FeeTransactionId = fee?.Id;
+    }
+
+    public static ConversionResponse ToResponse(this CurrencyConversion conversion, Transaction? fee) => new(
         conversion.Id.Value,
         conversion.AccountId.Value,
         conversion.FromAmount.Amount,

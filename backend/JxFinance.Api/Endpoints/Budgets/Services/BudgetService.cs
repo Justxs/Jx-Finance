@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
@@ -23,7 +24,7 @@ public sealed class BudgetService(
     IBudgetUsageCalculator usageCalculator,
     IReferenceGuard references,
     IDeletionRecorder deletions,
-    BudgetMapper mapper)
+    IInstanceSettingsStore settings)
     : IBudgetService
 {
     public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken)
@@ -38,7 +39,7 @@ public sealed class BudgetService(
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
         return budgets
-            .Select(b => mapper.FromEntity(b, categories.GetValueOrDefault(b.CategoryId)?.Name, usage[b.Id]))
+            .Select(b => b.ToResponse(categories.GetValueOrDefault(b.CategoryId)?.Name, usage[b.Id]))
             .ToList();
     }
 
@@ -52,7 +53,7 @@ public sealed class BudgetService(
             return error;
         }
 
-        var budget = mapper.ToEntity(request);
+        var budget = request.ToEntity(settings.Current.ReportingCurrency);
 
         db.Budgets.Add(budget);
         await db.SaveChangesAsync(cancellationToken);
@@ -77,7 +78,7 @@ public sealed class BudgetService(
             return error;
         }
 
-        mapper.Apply(request, budget);
+        request.ApplyTo(budget, settings.Current.ReportingCurrency);
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(budget, cancellationToken);
@@ -137,6 +138,6 @@ public sealed class BudgetService(
         var usage = await usageCalculator.CalculateAsync([budget], cancellationToken);
         var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == budget.CategoryId, cancellationToken);
 
-        return mapper.FromEntity(budget, category?.Name, usage[budget.Id]);
+        return budget.ToResponse(category?.Name, usage[budget.Id]);
     }
 }

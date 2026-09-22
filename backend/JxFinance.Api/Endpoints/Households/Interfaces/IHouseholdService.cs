@@ -13,7 +13,7 @@ public interface IHouseholdService
 
     Task<Result<HouseholdResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<HouseholdResponse> CreateAsync(CreateHouseholdRequest request, CancellationToken cancellationToken);
+    Task<Result<HouseholdResponse>> CreateAsync(CreateHouseholdRequest request, CancellationToken cancellationToken);
 
     Task<Result<HouseholdResponse>> UpdateAsync(UpdateHouseholdRequest request, CancellationToken cancellationToken);
 

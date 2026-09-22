@@ -19,7 +19,7 @@ using Npgsql;
 namespace JxFinance.Endpoints.Investments.Services;
 
 [RegisterService<ISecurityPriceService>(LifeTime.Scoped)]
-public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mapper, IExchangeRateService rates, IClock clock)
+public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService rates, IClock clock)
     : ISecurityPriceService
 {
     private const int DailyUpToDays = 92;
@@ -61,7 +61,7 @@ public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mappe
             return new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a price for that date just now. Try again.");
         }
 
-        return mapper.FromEntity(security);
+        return security.ToResponse();
     }
 
     public async Task<Result<IReadOnlyList<SecurityPriceResponse>>> GetPricesAsync(
@@ -86,7 +86,7 @@ public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mappe
         }
 
         var points = await query.OrderByDescending(p => p.Date).ToListAsync(cancellationToken);
-        return Result<IReadOnlyList<SecurityPriceResponse>>.Success(points.Select(mapper.FromEntity).ToList());
+        return Result<IReadOnlyList<SecurityPriceResponse>>.Success(points.Select(p => p.ToResponse()).ToList());
     }
 
     public async Task<Result> DeletePriceAsync(

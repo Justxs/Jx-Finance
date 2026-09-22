@@ -22,8 +22,7 @@ public sealed class TrashService(
     IClock clock,
     IInstanceSettingsStore settings,
     IHoldingLedger ledger,
-    AttachmentStore attachmentFiles,
-    TrashMapper mapper) : ITrashService
+    AttachmentStore attachmentFiles) : ITrashService
 {
     private static readonly DomainError Gone =
         EntityLookup.NotFound("That record is no longer stored and cannot be restored.");
@@ -44,7 +43,7 @@ public sealed class TrashService(
             sorted => sorted.OrderByDescending(e => e.DeletedAt).ThenByDescending(e => e.CreatedAt),
             cancellationToken);
 
-        return page.Map(mapper.FromEntity);
+        return page.Map(e => e.ToResponse());
     }
 
     public async Task<Result> RestoreAsync(RestoreDeletedRequest request, CancellationToken cancellationToken)
