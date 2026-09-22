@@ -27,13 +27,14 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
             .Select(c => new { c.UserId, c.AccountId })
             .ToListAsync(ct);
         var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();
+        var clock = services.GetRequiredService<IClock>();
 
         foreach (var connection in connections)
         {
             try
             {
                 var user = new SyncUser(connection.UserId);
-                await using var db = new AppDbContext(options, user);
+                await using var db = new AppDbContext(options, user, clock);
                 var importer = ActivatorUtilities.CreateInstance<BrokerImportService>(services, db, user);
                 var result = await importer.SyncAsync(connection.AccountId.Value, ct);
                 if (result.IsFailure)

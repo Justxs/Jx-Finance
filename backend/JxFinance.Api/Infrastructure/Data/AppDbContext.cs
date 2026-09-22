@@ -27,7 +27,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Infrastructure.Data;
 
-public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser)
+public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, IClock clock)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
     private Guid CurrentUserId => currentUser.Id;
@@ -72,12 +72,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     public AuditTrail Audit { get; } = new();
 
-    public override int SaveChanges(bool acceptAllChangesOnSuccess)
-    {
-        var now = ApplyEntityRules();
-        RecordAuditAsync(now, CancellationToken.None).GetAwaiter().GetResult();
-        return base.SaveChanges(acceptAllChangesOnSuccess);
-    }
+    public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
+        throw new NotSupportedException("Saving is asynchronous; call SaveChangesAsync instead.");
 
     public override async Task<int> SaveChangesAsync(
         bool acceptAllChangesOnSuccess,
@@ -148,7 +144,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     private DateTimeOffset ApplyEntityRules()
     {
-        var now = DateTimeOffset.UtcNow;
+        var now = clock.UtcNow;
         foreach (var entry in ChangeTracker.Entries<EntityBase>())
         {
             switch (entry.State)

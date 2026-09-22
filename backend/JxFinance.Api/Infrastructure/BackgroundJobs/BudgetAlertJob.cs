@@ -55,7 +55,7 @@ public sealed class BudgetAlertJob(
     {
         var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();
         var clock = services.GetRequiredService<IClock>();
-        await using var db = new AppDbContext(options, new AlertUser(userId));
+        await using var db = new AppDbContext(options, new AlertUser(userId), clock);
 
         var budgets = await db.Budgets.ToListAsync(ct);
         if (budgets.Count == 0)

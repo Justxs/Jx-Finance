@@ -3,6 +3,7 @@ using System.Data.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Infrastructure.Data;
+using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
@@ -19,7 +20,7 @@ public sealed class SqlCapture : IAsyncDisposable
             .UseNpgsql("Host=unused.invalid;Database=unused")
             .AddInterceptors(recorder, new NoConnection())
             .Options;
-        db = new AppDbContext(options, new SomeUser(userId ?? Guid.NewGuid(), householdId));
+        db = new AppDbContext(options, new SomeUser(userId ?? Guid.NewGuid(), householdId), new TestClock());
     }
 
     public AppDbContext Db => db;

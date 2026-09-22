@@ -190,7 +190,8 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     private static AppDbContext OpenAs(AsyncServiceScope scope, Guid userId) => new(
         scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
-        new TestCurrentUser(userId));
+        new TestCurrentUser(userId),
+        scope.ServiceProvider.GetRequiredService<IClock>());
 }
 
 public sealed record TestUser(Guid Id, string Email, string Password);

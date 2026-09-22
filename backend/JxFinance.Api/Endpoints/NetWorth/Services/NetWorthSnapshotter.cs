@@ -23,7 +23,7 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
         var rates = services.GetRequiredService<IExchangeRateService>();
         var user = new SnapshotUser(userId);
         var clock = services.GetRequiredService<IClock>();
-        await using var db = new AppDbContext(services.GetRequiredService<DbContextOptions<AppDbContext>>(), user);
+        await using var db = new AppDbContext(services.GetRequiredService<DbContextOptions<AppDbContext>>(), user, clock);
         var service = new NetWorthService(
             db,
             new AccountService(
