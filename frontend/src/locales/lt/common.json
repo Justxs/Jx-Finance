@@ -409,6 +409,7 @@
       "uploaded_other": "Pridėta {{count}} failų",
       "download": "Atsisiųsti",
       "remove": "Pašalinti",
+      "removeTitle": "Pašalinti šį failą?",
       "uploadedBy": "{{name}}, {{date}}",
       "preview": "{{name}} peržiūra",
       "loadError": "Nepavyko įkelti šios operacijos failų.",

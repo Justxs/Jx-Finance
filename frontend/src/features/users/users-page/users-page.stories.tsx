@@ -9,6 +9,7 @@ import {
 } from "@/api/generated/users/users.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { UserRole } from "@/lib/user-role";
 import {
   adminPassword,
   inactiveUser,
@@ -67,7 +68,7 @@ export const NoUsers: Story = {
 export const SignedInAsAnotherAdmin: Story = {
   parameters: {
     msw: {
-      handlers: [getMeMockHandler({ ...memberUser, role: "Admin" }), ...handlers],
+      handlers: [getMeMockHandler({ ...memberUser, role: UserRole.admin }), ...handlers],
     },
   },
 };
@@ -145,7 +146,7 @@ export const DeactivationFails: Story = {
   },
 };
 
-const secondAdmin = { ...memberUser, role: "Admin" };
+const secondAdmin = { ...memberUser, role: UserRole.admin };
 
 export const DeactivatingLastAdministratorRefused: Story = {
   parameters: {

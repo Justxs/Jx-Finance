@@ -9,7 +9,7 @@ public sealed class DeleteConversionEndpoint(IConversionService conversionServic
 {
     public override void Configure()
     {
-        Delete("conversions/{id}");
+        Delete(ApiRoutes.Conversions + "/{id}");
         Group<ConversionsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

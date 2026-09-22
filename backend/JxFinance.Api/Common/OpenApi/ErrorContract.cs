@@ -6,10 +6,10 @@ namespace JxFinance.Common.OpenApi;
 
 public static class ErrorContract
 {
+    public const string CodeProperty = "code";
     public const string ErrorCodeSchema = "ErrorCode";
 
     private const string ProblemDetailsSchema = "ProblemDetails";
-    private const string CodeProperty = "code";
     private const string ErrorsProperty = "errors";
 
     public static void Describe(OpenApiDocument document)

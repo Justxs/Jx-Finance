@@ -9,7 +9,7 @@ public sealed class DeleteGoalEndpoint(IGoalService goalService) : DeleteEndpoin
 {
     public override void Configure()
     {
-        Delete("goals/{id}");
+        Delete(ApiRoutes.Goals + "/{id}");
         Group<GoalsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

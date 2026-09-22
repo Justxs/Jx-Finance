@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -12,7 +13,7 @@ public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUse
 {
     public override void Configure()
     {
-        Post("auth/2fa/setup");
+        Post(ApiRoutes.Auth + "/2fa/setup");
         Group<AuthGroup>();
         Throttle(5, 300);
         Description(d => d.Produces(429).ProducesProblemDetails(404));

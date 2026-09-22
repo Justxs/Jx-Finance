@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -9,7 +10,7 @@ public sealed class GetBackupsEndpoint(IBackupService backupService) : EndpointW
 {
     public override void Configure()
     {
-        Get("backups");
+        Get(ApiRoutes.Backups);
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

@@ -1,4 +1,5 @@
 using System.Globalization;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
 
@@ -52,5 +53,5 @@ public static class TrashLabel
     private static string Name(string? description, DateOnly date) =>
         OptionalText.Normalize(description) ?? Iso(date);
 
-    private static string Iso(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string Iso(DateOnly date) => date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
 }

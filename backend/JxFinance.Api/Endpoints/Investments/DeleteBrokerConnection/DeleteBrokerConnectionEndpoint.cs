@@ -9,7 +9,7 @@ public sealed class DeleteBrokerConnectionEndpoint(IBrokerImportService importSe
 {
     public override void Configure()
     {
-        Delete("investments/connections/{accountId}");
+        Delete(ApiRoutes.Investments + "/connections/{accountId}");
         Group<InvestmentsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

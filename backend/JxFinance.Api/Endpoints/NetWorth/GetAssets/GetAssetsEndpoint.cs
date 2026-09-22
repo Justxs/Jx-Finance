@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -9,7 +10,7 @@ public sealed class GetAssetsEndpoint(INetWorthService netWorthService) : Endpoi
 {
     public override void Configure()
     {
-        Get("assets");
+        Get(ApiRoutes.Assets);
         Group<NetWorthGroup>();
     }
 

@@ -4,6 +4,7 @@ using FastEndpoints;
 using JxFinance.Api;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Middleware;
+using JxFinance.Infrastructure.Configuration;
 using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Events;
@@ -12,6 +13,10 @@ namespace JxFinance.Extensions;
 
 public static class ApiPipelineExtensions
 {
+    public const string HealthPath = "/health";
+
+    private const string DocsPath = "/scalar/" + OpenApiExtensions.DocumentName;
+
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
         app.UseExceptionHandler();
@@ -44,13 +49,13 @@ public static class ApiPipelineExtensions
             app.MapApiDocs();
         }
 
-        app.MapHealthChecks("/health");
+        app.MapHealthChecks(HealthPath);
 
         return app;
     }
 
     public static bool ServesApiDocs(IConfiguration configuration, IHostEnvironment environment) =>
-        configuration.GetValue("App:ApiDocs", environment.IsDevelopment());
+        configuration.GetValue(ConfigKeys.ApiDocs, environment.IsDevelopment());
 
     private static void MapApiDocs(this WebApplication app)
     {
@@ -58,11 +63,11 @@ public static class ApiPipelineExtensions
 
         app.MapScalarApiReference(options =>
         {
-            options.WithTitle("Jx Finance API")
+            options.WithTitle(OpenApiExtensions.Title)
                 .WithOpenApiRoutePattern("/openapi/{documentName}.json");
         });
 
-        app.MapGet("/", () => Results.Redirect("/scalar/v1")).ExcludeFromDescription();
+        app.MapGet("/", () => Results.Redirect(DocsPath)).ExcludeFromDescription();
     }
 
     private static LogEventLevel RequestLogLevel(HttpContext context, double elapsedMs, Exception? exception)

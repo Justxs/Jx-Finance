@@ -5,6 +5,7 @@ import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
@@ -103,7 +104,7 @@ export function TransferForm({
     );
 
   function currencyOf(accountId: string): Currency {
-    return accounts.find((account) => account.id === accountId)?.currency ?? "eur";
+    return accounts.find((account) => account.id === accountId)?.currency ?? DEFAULT_CURRENCY;
   }
 
   function heldBy(accountId: string) {
@@ -129,9 +130,9 @@ export function TransferForm({
         fromAccountId: accounts[0]?.id ?? "",
         toAccountId: accounts[1]?.id ?? accounts[0]?.id ?? "",
         amount: "",
-        currency: accounts[0]?.currency ?? "eur",
+        currency: accounts[0]?.currency ?? DEFAULT_CURRENCY,
         receivedAmount: "",
-        receivedCurrency: (accounts[1] ?? accounts[0])?.currency ?? "eur",
+        receivedCurrency: (accounts[1] ?? accounts[0])?.currency ?? DEFAULT_CURRENCY,
         date: today,
         description: "",
       };

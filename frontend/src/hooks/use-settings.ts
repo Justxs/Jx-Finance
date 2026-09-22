@@ -7,6 +7,7 @@ import {
 } from "@/api/generated";
 import type { FeatureFlags, SettingsResponse } from "@/api/generated/model";
 import { parseIso, todayInZone } from "@/lib/calendar";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 export type FeatureKey = keyof FeatureFlags;
 
@@ -39,8 +40,8 @@ const defaultSettings: SettingsResponse = {
     investments: true,
     categorizationRules: true,
   },
-  reportingCurrency: "eur",
-  enabledCurrencies: ["eur"],
+  reportingCurrency: DEFAULT_CURRENCY,
+  enabledCurrencies: [DEFAULT_CURRENCY],
   exchangeRateSyncEnabled: true,
   ratesAsOf: null,
   defaultLanguage: "en",

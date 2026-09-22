@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.ForgotPassword;
@@ -7,7 +8,7 @@ public sealed class ForgotPasswordEndpoint(IAccountEmailService accountEmails) :
 {
     public override void Configure()
     {
-        Post("auth/forgot-password");
+        Post(ApiRoutes.Auth + "/forgot-password");
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 5, durationSeconds: 300);

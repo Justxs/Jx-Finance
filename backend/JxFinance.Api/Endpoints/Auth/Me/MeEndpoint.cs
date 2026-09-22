@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
@@ -10,7 +11,7 @@ public sealed class MeEndpoint(IAuthService authService, ICurrentUser currentUse
 {
     public override void Configure()
     {
-        Get("auth/me");
+        Get(ApiRoutes.Auth + "/me");
         Group<AuthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

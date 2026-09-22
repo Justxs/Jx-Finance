@@ -10,7 +10,7 @@ public sealed class GetConversionsEndpoint(IConversionService conversionService)
 {
     public override void Configure()
     {
-        Get("conversions");
+        Get(ApiRoutes.Conversions);
         Group<ConversionsGroup>();
     }
 

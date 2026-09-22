@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
@@ -9,7 +10,7 @@ public sealed class BulkCategorizeTransactionsEndpoint(ITransactionService trans
 {
     public override void Configure()
     {
-        Post("transactions/bulk-category");
+        Post(ApiRoutes.Transactions + "/bulk-category");
         Group<TransactionsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetTaxSummaryEndpoint(ITaxSummaryService taxSummaryService)
 {
     public override void Configure()
     {
-        Get("investments/tax-summary");
+        Get(ApiRoutes.Investments + "/tax-summary");
         Group<InvestmentsGroup>();
     }
 

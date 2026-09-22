@@ -5,7 +5,7 @@ import {
   type AccountResponse,
   type CategoryResponse,
   Currency,
-  type FlowType,
+  FlowType,
   type TagResponse,
   type TransactionResponse,
 } from "@/api/generated/model";
@@ -18,6 +18,7 @@ import { heldCurrencies } from "@/features/accounts/held-currencies";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useToday } from "@/hooks/use-settings";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { submitToServer } from "@/lib/form-server-errors";
 import { toCents } from "@/lib/money";
 import { namedOptions } from "@/lib/options";
@@ -124,7 +125,7 @@ function useTransactionForm({
 
   const schema = z
     .object({
-      type: z.enum(["income", "expense"]),
+      type: z.enum(FlowType),
       accountId: requiredValue(t),
       categoryId: z.string(),
       amount: positiveMoney(t),
@@ -177,7 +178,7 @@ function useTransactionForm({
     accountId: source.accountId ?? defaultAccount?.id ?? "",
     categoryId: source.categoryId ?? "",
     amount: source.amount ?? "",
-    currency: source.currency ?? defaultAccount?.currency ?? "eur",
+    currency: source.currency ?? defaultAccount?.currency ?? DEFAULT_CURRENCY,
     date: source.date ?? today,
     description: source.description ?? "",
     isSplit: source.isSplit ?? false,

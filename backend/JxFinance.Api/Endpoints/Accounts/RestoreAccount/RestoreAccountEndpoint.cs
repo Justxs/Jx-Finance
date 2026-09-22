@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
@@ -10,7 +11,7 @@ public sealed class RestoreAccountEndpoint(IAccountService accountService)
 {
     public override void Configure()
     {
-        Post("accounts/{id}/restore");
+        Post(ApiRoutes.Accounts + "/{id}/restore");
         Group<AccountsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

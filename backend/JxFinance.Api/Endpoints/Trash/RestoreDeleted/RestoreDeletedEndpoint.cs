@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Trash.Interfaces;
 
@@ -8,7 +9,7 @@ public sealed class RestoreDeletedEndpoint(ITrashService trashService) : Endpoin
 {
     public override void Configure()
     {
-        Post("trash/restore");
+        Post(ApiRoutes.Trash + "/restore");
         Group<TrashGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }

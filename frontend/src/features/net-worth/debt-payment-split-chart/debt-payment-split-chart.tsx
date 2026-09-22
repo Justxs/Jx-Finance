@@ -2,6 +2,9 @@ import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { DebtSchedulePlan } from "@/api/generated/model";
 import {
+  CHART_COLOR_NEGATIVE,
+  CHART_COLOR_POSITIVE,
+  CHART_COLOR_PRIMARY,
   type ChartSeries,
   ChartLegend,
   ChartTooltip,
@@ -48,11 +51,11 @@ export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
   const withExtra = data.some((year) => year.extra > 0);
 
   const series: ChartSeries[] = [
-    { key: "interest", label: t("netWorth.schedule.interest"), color: "var(--chart-3)" },
-    { key: "principal", label: t("netWorth.schedule.principal"), color: "var(--chart-1)" },
+    { key: "interest", label: t("netWorth.schedule.interest"), color: CHART_COLOR_NEGATIVE },
+    { key: "principal", label: t("netWorth.schedule.principal"), color: CHART_COLOR_PRIMARY },
     ...(withExtra
       ? ([
-          { key: "extra", label: t("netWorth.schedule.extra"), color: "var(--chart-2)" },
+          { key: "extra", label: t("netWorth.schedule.extra"), color: CHART_COLOR_POSITIVE },
         ] satisfies ChartSeries[])
       : []),
   ];

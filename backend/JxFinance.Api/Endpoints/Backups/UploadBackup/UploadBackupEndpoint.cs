@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
@@ -12,13 +14,13 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
 
     public override void Configure()
     {
-        Post("backups/upload");
+        Post(ApiRoutes.Backups + "/upload");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         AllowFileUploads();
         MaxRequestBodySize(MaxFileBytes + (1024 * 1024));
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, MediaTypeNames.Application.Json).ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(UploadBackupRequest req, CancellationToken ct)
@@ -28,6 +30,6 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
 
         await using var stream = req.File.OpenReadStream();
         var backup = (await backupService.UploadAsync(stream, req.Note, ct)).ValueOrThrow();
-        await Send.ResultAsync(TypedResults.Created($"/api/backups/{backup.Id}", backup));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.BackupsPath}/{backup.Id}", backup));
     }
 }

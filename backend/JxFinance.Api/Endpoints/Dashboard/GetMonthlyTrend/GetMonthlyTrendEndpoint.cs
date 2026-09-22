@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetMonthlyTrendEndpoint(IDashboardService dashboardService)
 {
     public override void Configure()
     {
-        Get("dashboard/monthly-trend");
+        Get(ApiRoutes.Dashboard + "/monthly-trend");
         Group<DashboardGroup>();
     }
 

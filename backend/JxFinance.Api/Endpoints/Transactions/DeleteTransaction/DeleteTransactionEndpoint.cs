@@ -9,7 +9,7 @@ public sealed class DeleteTransactionEndpoint(ITransactionService transactionSer
 {
     public override void Configure()
     {
-        Delete("transactions/{id}");
+        Delete(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

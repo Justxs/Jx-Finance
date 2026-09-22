@@ -4,6 +4,7 @@ import { useCurrencies } from "@/api/generated";
 import { Currency } from "@/api/generated/model";
 import { useSettings } from "@/hooks/use-settings";
 import { parseIso, safeTimeZone } from "@/lib/calendar";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 const currenciesQuery = {
   staleTime: 5 * 60 * 1000,
@@ -16,7 +17,7 @@ const allCurrencies = Object.values(Currency);
 export function useReportingCurrency(): Currency {
   const currencies = useCurrencies({ query: currenciesQuery });
 
-  return currencies.data?.reportingCurrency ?? "eur";
+  return currencies.data?.reportingCurrency ?? DEFAULT_CURRENCY;
 }
 
 export function useUsableCurrencies(): readonly Currency[] {

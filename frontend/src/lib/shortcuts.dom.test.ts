@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
 import {
   PREFIX_TIMEOUT_MS,
+  SEARCH_SHORTCUT_TARGET,
   isModifierShortcut,
   registerShortcuts,
   type ShortcutFeature,
@@ -241,7 +242,7 @@ describe("registerShortcuts", () => {
 
   test("/ focuses the search input of the page", async () => {
     const { navigate, user } = setup();
-    document.body.innerHTML = '<div><input data-shortcut="search" /></div>';
+    document.body.innerHTML = `<div><input data-shortcut="${SEARCH_SHORTCUT_TARGET}" /></div>`;
 
     await user.keyboard("/");
 
@@ -251,7 +252,7 @@ describe("registerShortcuts", () => {
 
   test("/ clicks a non-input search target", async () => {
     const { navigate, user } = setup();
-    document.body.innerHTML = '<button type="button" data-shortcut="search">Filters</button>';
+    document.body.innerHTML = `<button type="button" data-shortcut="${SEARCH_SHORTCUT_TARGET}">Filters</button>`;
     const onClick = vi.fn();
     document.querySelector("button")?.addEventListener("click", onClick);
 

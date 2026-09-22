@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
+using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
@@ -257,7 +258,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
     }
 
     private static NotificationDto Reminder(List<NotificationDto> unread, Guid entryId) =>
-        unread.Single(n => n.RelatedType == "RecurringBill" && n.RelatedId == entryId);
+        unread.Single(n => n.RelatedType == NotificationRelated.RecurringBill && n.RelatedId == entryId);
 
     private static decimal Money(string value) => decimal.Parse(value, CultureInfo.InvariantCulture);
 

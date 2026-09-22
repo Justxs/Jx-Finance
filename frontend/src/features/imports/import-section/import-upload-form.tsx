@@ -9,6 +9,8 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { SectionTitle } from "@/components/ui/section/section";
 import { namedOptions } from "@/lib/options";
 
+export const IMPORT_FILE_INPUT_ID = "import-file";
+
 interface Props {
   accounts: AccountResponse[];
   accountId: string;
@@ -78,11 +80,11 @@ export function ImportUploadForm({
           />
         </div>
         <div className="col-span-full space-y-1.5">
-          <label className="text-sm font-medium" htmlFor="import-file">
+          <label className="text-sm font-medium" htmlFor={IMPORT_FILE_INPUT_ID}>
             {t("imports.file")}
           </label>
           <FileInput
-            id="import-file"
+            id={IMPORT_FILE_INPUT_ID}
             ref={fileInputRef}
             accept=".csv,text/csv"
             disabled={locked}
@@ -92,10 +94,14 @@ export function ImportUploadForm({
             }}
             placeholder={t("imports.chooseFile")}
             aria-invalid={fileError ? true : undefined}
-            aria-describedby={fileError ? "import-file-hint import-file-error" : "import-file-hint"}
+            aria-describedby={
+              fileError
+                ? `${IMPORT_FILE_INPUT_ID}-hint ${IMPORT_FILE_INPUT_ID}-error`
+                : `${IMPORT_FILE_INPUT_ID}-hint`
+            }
           />
-          <Hint id="import-file-hint">{t("imports.fileHint")}</Hint>
-          <FieldError id="import-file-error" message={fileError} />
+          <Hint id={`${IMPORT_FILE_INPUT_ID}-hint`}>{t("imports.fileHint")}</Hint>
+          <FieldError id={`${IMPORT_FILE_INPUT_ID}-error`} message={fileError} />
         </div>
       </FormGrid>
       <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -10,7 +11,7 @@ public sealed class GetUsersEndpoint(IUserService userService)
 {
     public override void Configure()
     {
-        Get("users");
+        Get(ApiRoutes.Users);
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

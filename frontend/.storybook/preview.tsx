@@ -50,9 +50,6 @@ const preview: Preview = {
       defaultTheme: "light",
     }),
     function withLocale(Story, context) {
-      if (i18n.language !== context.globals.locale) {
-        void i18n.changeLanguage(context.globals.locale);
-      }
       return (
         <I18nextProvider i18n={i18n}>
           <div

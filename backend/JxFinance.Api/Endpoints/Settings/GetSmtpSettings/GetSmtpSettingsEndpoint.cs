@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -10,7 +11,7 @@ public sealed class GetSmtpSettingsEndpoint(ISettingsService settingsService)
 {
     public override void Configure()
     {
-        Get("settings/smtp");
+        Get(ApiRoutes.Settings + "/smtp");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

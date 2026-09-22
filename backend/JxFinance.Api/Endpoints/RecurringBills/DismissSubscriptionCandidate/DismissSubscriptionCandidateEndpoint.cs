@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 
@@ -9,7 +10,7 @@ public sealed class DismissSubscriptionCandidateEndpoint(ISubscriptionDetectionS
 {
     public override void Configure()
     {
-        Post("recurring-bills/suggestions/dismiss");
+        Post(ApiRoutes.RecurringBills + "/suggestions/dismiss");
         Group<RecurringBillsGroup>();
     }
 

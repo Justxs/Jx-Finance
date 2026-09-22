@@ -26,7 +26,7 @@ public sealed class NotificationConfiguration : IEntityTypeConfiguration<Notific
         builder.Property(n => n.Message).HasMaxLength(1000);
         builder.Property(n => n.RelatedType).HasMaxLength(50);
         builder.Property(n => n.Payload)
-            .HasColumnType("jsonb")
+            .HasColumnType(DbSchema.Json)
             .HasConversion(
                 payload => JsonSerializer.Serialize(payload, PayloadJson),
                 text => JsonSerializer.Deserialize<NotificationPayload>(text, PayloadJson),

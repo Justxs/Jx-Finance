@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -10,7 +11,7 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
 {
     public override void Configure()
     {
-        Post("auth/2fa/enable");
+        Post(ApiRoutes.Auth + "/2fa/enable");
         Group<AuthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

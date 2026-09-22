@@ -1,18 +1,19 @@
 using System.Globalization;
+using JxFinance.Common.Formats;
+using JxFinance.Common.Localization;
 using JxFinance.Domain.RecurringBills;
 
 namespace JxFinance.Common.Email;
 
 public static class EmailTexts
 {
-    public const string Fallback = "en";
     public const string DefaultProduct = "Jx Finance";
 
     public static string Product(string? instanceName) =>
         string.IsNullOrWhiteSpace(instanceName) ? DefaultProduct : instanceName.Trim();
 
     public static bool IsLithuanian(string? language) =>
-        language?.StartsWith("lt", StringComparison.OrdinalIgnoreCase) == true;
+        language?.StartsWith(AppLanguages.Lt, StringComparison.OrdinalIgnoreCase) == true;
 
     public static OutgoingEmail PasswordReset(
         string language,
@@ -111,7 +112,7 @@ public static class EmailTexts
         string product)
     {
         var name = Greeting(toName, toAddress);
-        var date = dueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        var date = dueDate.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
         if (IsLithuanian(language))
         {
             var sentence = shape switch

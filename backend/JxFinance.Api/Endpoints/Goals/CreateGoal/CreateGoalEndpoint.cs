@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Goals.Interfaces;
 using JxFinance.Endpoints.Goals.Shared;
@@ -9,14 +11,14 @@ public sealed class CreateGoalEndpoint(IGoalService goalService) : Endpoint<Crea
 {
     public override void Configure()
     {
-        Post("goals");
+        Post(ApiRoutes.Goals);
         Group<GoalsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<GoalResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<GoalResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateGoalRequest req, CancellationToken ct)
     {
         var goal = (await goalService.CreateAsync(req, ct)).ValueOrThrow();
-        await Send.ResultAsync(TypedResults.Created($"/api/goals/{goal.Id}", goal));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.GoalsPath}/{goal.Id}", goal));
     }
 }

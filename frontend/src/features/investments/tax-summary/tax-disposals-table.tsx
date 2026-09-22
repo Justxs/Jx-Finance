@@ -13,8 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { useIsoDate, useMoney, useQuantityFormat } from "@/hooks/use-formatters";
+import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { gainTone } from "../gain-tone";
 
 interface Props {
   disposals: readonly TaxDisposalResponse[];

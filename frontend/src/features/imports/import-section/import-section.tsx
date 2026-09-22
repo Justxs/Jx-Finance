@@ -8,8 +8,9 @@ import {
   useImportConfirm,
   useImportPreview,
 } from "@/api/generated";
-import type { AccountResponse } from "@/api/generated/model";
+import type { AccountResponse, ImportPreviewResponse } from "@/api/generated/model";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import { silent } from "@/lib/mutations";
 import {
   importDateRange,
   ImportPreviewTable,
@@ -46,13 +47,13 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const tagList = tags.data ?? [];
   const history = useTransactionsSuspense(recallParams);
 
-  const previewMutation = useImportPreview({
-    mutation: {
-      onSuccess: (data) => {
+  const previewMutation = useImportPreview(
+    silent({
+      onSuccess: (data: ImportPreviewResponse) => {
         setRows(toPreviewRows(data.rows ?? [], history.data?.items ?? [], categoryList));
       },
-    },
-  });
+    }),
+  );
 
   const confirmMutation = useImportConfirm({
     mutation: {

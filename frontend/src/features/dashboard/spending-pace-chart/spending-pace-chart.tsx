@@ -11,6 +11,7 @@ import {
 import { useReportSummarySuspense } from "@/api/generated";
 import type { ReportTrendPoint } from "@/api/generated/model";
 import {
+  CHART_COLOR_PRIMARY,
   axisProps,
   chartCursor,
   ChartLegend,
@@ -55,7 +56,12 @@ export function SpendingPaceChart() {
   const previousTotals = cumulativeByDay(previous.data.trend, daysInPrevious);
 
   const series: ChartSeries[] = [
-    { key: "current", label: t("dashboard.pace.current"), color: "var(--chart-1)", shape: "line" },
+    {
+      key: "current",
+      label: t("dashboard.pace.current"),
+      color: CHART_COLOR_PRIMARY,
+      shape: "line",
+    },
     {
       key: "previous",
       label: t("dashboard.pace.previous"),
@@ -123,12 +129,12 @@ export function SpendingPaceChart() {
               isAnimationActive={false}
               type="stepAfter"
               dataKey="current"
-              stroke="var(--chart-1)"
+              stroke={CHART_COLOR_PRIMARY}
               strokeWidth={2}
               dot={false}
               activeDot={{
                 r: 4,
-                fill: "var(--chart-1)",
+                fill: CHART_COLOR_PRIMARY,
                 stroke: "var(--background)",
                 strokeWidth: 2,
               }}

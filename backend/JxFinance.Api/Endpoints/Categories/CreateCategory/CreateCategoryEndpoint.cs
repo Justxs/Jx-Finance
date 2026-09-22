@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Categories.Mappers;
@@ -11,14 +13,14 @@ public sealed class CreateCategoryEndpoint(ICategoryService categoryService)
 {
     public override void Configure()
     {
-        Post("categories");
+        Post(ApiRoutes.Categories);
         Group<CategoriesGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<CategoryResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<CategoryResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateCategoryRequest req, CancellationToken ct)
     {
         var category = Map.FromEntity((await categoryService.CreateAsync(Map.ToEntity(req), ct)).ValueOrThrow());
-        await Send.ResultAsync(TypedResults.Created($"/api/categories/{category.Id}", category));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.CategoriesPath}/{category.Id}", category));
     }
 }

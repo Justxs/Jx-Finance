@@ -13,7 +13,7 @@ public sealed class SecurityConfiguration : IEntityTypeConfiguration<Security>
         builder.Property(s => s.Isin).HasMaxLength(12);
         builder.Property(s => s.Exchange).HasMaxLength(32);
         builder.Property(s => s.LastPrice).HasPrecision(18, 8);
-        builder.HasIndex(s => new { s.Symbol, s.Currency }).IsUnique().HasFilter("\"IsDeleted\" = false");
+        builder.HasIndex(s => new { s.Symbol, s.Currency }).IsUnique().HasFilter(DbSchema.NotDeletedFilter);
         builder.HasIndex(s => s.BrokerContractId);
     }
 }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Email;
+using JxFinance.Common.Formats;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
@@ -15,8 +16,6 @@ public sealed class RecurringBillReminderJob(
     IServiceScopeFactory scopeFactory,
     ILogger<RecurringBillReminderJob> logger) : PeriodicJob(scopeFactory, logger)
 {
-    private const string RelatedType = "RecurringBill";
-
     protected override string Name => "Recurring bill reminder scan";
 
     protected override TimeSpan Interval => TimeSpan.FromMinutes(15);
@@ -50,7 +49,7 @@ public sealed class RecurringBillReminderJob(
         var remindedToday = await db.Notifications
             .IgnoreQueryFilters()
             .Where(n => !n.IsDeleted
-                && n.RelatedType == RelatedType
+                && n.RelatedType == NotificationRelated.RecurringBill
                 && billIds.Contains(n.RelatedId)
                 && n.CreatedAt >= todayStartUtc)
             .Select(n => n.RelatedId!.Value)
@@ -78,9 +77,9 @@ public sealed class RecurringBillReminderJob(
                 UserId = bill.UserId,
                 Type = NotificationType.BillDue,
                 Title = bill.Name,
-                Message = bill.NextDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+                Message = bill.NextDueDate.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture),
                 Payload = new NotificationPayload { DueDate = bill.NextDueDate, Shape = bill.Shape },
-                RelatedType = RelatedType,
+                RelatedType = NotificationRelated.RecurringBill,
                 RelatedId = bill.Id.Value,
                 Channel = NotificationChannel.InApp,
             });

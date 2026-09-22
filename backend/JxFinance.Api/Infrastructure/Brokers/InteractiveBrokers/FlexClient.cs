@@ -29,7 +29,7 @@ public sealed class FlexClient(HttpClient http) : IFlexClient
                     $"GetStatement?t={Uri.EscapeDataString(token)}&q={Uri.EscapeDataString(reference)}&v=3",
                     cancellationToken);
                 var response = Load(body);
-                if (response.Root?.Name.LocalName == "FlexQueryResponse")
+                if (response.Root?.Name.LocalName == FlexParser.ResponseRoot)
                 {
                     return new MemoryStream(body);
                 }

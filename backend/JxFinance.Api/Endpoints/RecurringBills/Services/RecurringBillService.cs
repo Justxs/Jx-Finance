@@ -7,6 +7,7 @@ using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
@@ -129,7 +130,7 @@ public sealed class RecurringBillService(
 
         bill.Advance();
 
-        await db.Notifications.Where(n => n.RelatedType == "RecurringBill" && n.RelatedId == request.Id && !n.IsRead)
+        await db.Notifications.Where(n => n.RelatedType == NotificationRelated.RecurringBill && n.RelatedId == request.Id && !n.IsRead)
             .ExecuteUpdateAsync(s => s.SetProperty(n => n.IsRead, true), cancellationToken);
 
         await db.SaveChangesAsync(cancellationToken);

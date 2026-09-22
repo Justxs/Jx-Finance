@@ -12,6 +12,10 @@ import {
   expect,
 } from "@playwright/test";
 import { z } from "zod";
+import type { AccountType } from "../src/api/generated/model/accountType";
+import type { Currency } from "../src/api/generated/model/currency";
+import type { FeatureFlags } from "../src/api/generated/model/featureFlags";
+import { UserRole } from "../src/lib/user-role";
 
 export const admin = {
   displayName: "E2E Admin",
@@ -79,7 +83,7 @@ async function created(response: JsonResponse) {
 export async function createAccount(
   request: APIRequestContext,
   name: string,
-  options: { currency?: string; startingBalance?: string; type?: string } = {},
+  options: { currency?: Currency; startingBalance?: string; type?: AccountType } = {},
 ) {
   return created(
     await request.post("/api/accounts", {
@@ -100,12 +104,16 @@ export async function createAccount(
 export async function createMember(request: APIRequestContext, email: string, password: string) {
   return created(
     await request.post("/api/users", {
-      data: { email, displayName: email.split("@")[0], role: "Member", password },
+      data: { email, displayName: email.split("@")[0], role: UserRole.member, password },
     }),
   );
 }
 
-export async function setFeature(request: APIRequestContext, feature: string, enabled: boolean) {
+export async function setFeature(
+  request: APIRequestContext,
+  feature: keyof FeatureFlags,
+  enabled: boolean,
+) {
   const current = await request.get("/api/settings");
   expect(current.ok()).toBe(true);
   const settings = await readJson(current, settingsBody);

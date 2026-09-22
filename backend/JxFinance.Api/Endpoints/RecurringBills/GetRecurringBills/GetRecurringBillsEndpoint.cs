@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -10,7 +11,7 @@ public sealed class GetRecurringBillsEndpoint(IRecurringBillService recurringBil
 {
     public override void Configure()
     {
-        Get("recurring-bills");
+        Get(ApiRoutes.RecurringBills);
         Group<RecurringBillsGroup>();
     }
 

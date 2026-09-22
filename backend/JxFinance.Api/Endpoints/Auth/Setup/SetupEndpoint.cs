@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Shared;
@@ -9,7 +10,7 @@ public sealed class SetupEndpoint(IAuthService authService) : Endpoint<SetupRequ
 {
     public override void Configure()
     {
-        Post("setup");
+        Post(ApiRoutes.Setup);
         Group<SetupGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 5, durationSeconds: 300);

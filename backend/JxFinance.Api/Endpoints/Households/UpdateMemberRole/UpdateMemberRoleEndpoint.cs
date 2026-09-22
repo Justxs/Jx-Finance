@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateMemberRoleEndpoint(IHouseholdService householdService)
 {
     public override void Configure()
     {
-        Put("households/{id}/members/{userId}");
+        Put(ApiRoutes.Households + "/{id}/members/{userId}");
         Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

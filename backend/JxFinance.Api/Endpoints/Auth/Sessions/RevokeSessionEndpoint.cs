@@ -9,7 +9,7 @@ public sealed class RevokeSessionEndpoint(ISessionService sessionService) : Dele
 {
     public override void Configure()
     {
-        Delete("auth/sessions/{id}");
+        Delete(ApiRoutes.Auth + "/sessions/{id}");
         Group<AuthGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

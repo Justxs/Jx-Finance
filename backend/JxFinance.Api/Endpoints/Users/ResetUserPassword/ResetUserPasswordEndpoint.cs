@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
@@ -12,7 +13,7 @@ public sealed class ResetUserPasswordEndpoint(IUserService userService, ICurrent
 {
     public override void Configure()
     {
-        Post("users/{id}/reset-password");
+        Post(ApiRoutes.Users + "/{id}/reset-password");
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);

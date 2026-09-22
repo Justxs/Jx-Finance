@@ -8,6 +8,7 @@ import {
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
 } from "@/api/generated/users/users.msw";
+import { UserRole } from "@/lib/user-role";
 import { adminPassword, currentUser, users, wrongAdminPasswordProblem } from "@/storybook/fixtures";
 import { found, problem, readBody, text } from "./http";
 import type { Body } from "./http";
@@ -59,7 +60,7 @@ export const userHandlers = [
       id: NEW_USER_ID,
       email: "",
       displayName: "",
-      role: "Member",
+      role: UserRole.member,
       twoFactorEnabled: false,
       isActive: true,
       emailConfirmed: false,

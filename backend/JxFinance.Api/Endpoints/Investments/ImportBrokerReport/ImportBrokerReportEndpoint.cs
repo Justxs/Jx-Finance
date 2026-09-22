@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -10,7 +11,7 @@ public sealed class ImportBrokerReportEndpoint(IBrokerImportService importServic
 {
     public override void Configure()
     {
-        Post("investments/import/interactive-brokers");
+        Post(ApiRoutes.Investments + "/import/interactive-brokers");
         Group<InvestmentsGroup>();
         AllowFileUploads();
         Description(d => d.ProducesProblemDetails(409));

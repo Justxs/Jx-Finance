@@ -8,6 +8,7 @@ import {
   getHouseholdsSuspenseQueryOptions,
   getTransfersSuspenseQueryOptions,
 } from "@/api/generated";
+import { AccountSortField, SortDirection } from "@/api/generated/model";
 import {
   accountListParams,
   conversionsPageParams,
@@ -21,11 +22,8 @@ export const accountsSearchSchema = z.object({
   search: z.string().optional().catch(undefined),
   iban: z.string().optional().catch(undefined),
   type: z.enum(accountTypes).optional().catch(undefined),
-  sort: z
-    .enum(["created", "name", "iban", "type", "startingBalance", "currentBalance"])
-    .optional()
-    .catch(undefined),
-  direction: z.enum(["asc", "desc"]).optional().catch(undefined),
+  sort: z.enum(AccountSortField).optional().catch(undefined),
+  direction: z.enum(SortDirection).optional().catch(undefined),
   new: z.enum(["account", "transfer"]).optional().catch(undefined),
 });
 

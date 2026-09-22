@@ -31,6 +31,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate, useMoney, useReportingCurrency } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
+import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
@@ -115,8 +116,8 @@ export function TransactionsPage() {
   const listParams = transactionListParams(shown, pageSize);
   const listKey = getTransactionsQueryKey(listParams);
   const filterParams = transactionFilterParams(shown);
-  const exportCsvUrl = useExportUrl("/api/transactions/export", filterParams);
-  const exportPdfUrl = useExportUrl("/api/transactions/export/pdf", filterParams);
+  const exportCsvUrl = useExportUrl(TRANSACTIONS_EXPORT_CSV_PATH, filterParams);
+  const exportPdfUrl = useExportUrl(TRANSACTIONS_EXPORT_PDF_PATH, filterParams);
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();

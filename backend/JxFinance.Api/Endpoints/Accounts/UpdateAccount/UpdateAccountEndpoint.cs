@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateAccountEndpoint(IAccountService accountService)
 {
     public override void Configure()
     {
-        Put("accounts/{id}");
+        Put(ApiRoutes.Accounts + "/{id}");
         Group<AccountsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

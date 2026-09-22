@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Sessions;
@@ -7,7 +8,7 @@ public sealed class RevokeOtherSessionsEndpoint(ISessionService sessionService) 
 {
     public override void Configure()
     {
-        Post("auth/sessions/revoke-others");
+        Post(ApiRoutes.Auth + "/sessions/revoke-others");
         Group<AuthGroup>();
     }
 

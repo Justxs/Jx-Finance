@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
@@ -12,7 +13,7 @@ public sealed class UpdateUserRoleEndpoint(IUserService userService, ICurrentUse
 {
     public override void Configure()
     {
-        Put("users/{id}/role");
+        Put(ApiRoutes.Users + "/{id}/role");
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));

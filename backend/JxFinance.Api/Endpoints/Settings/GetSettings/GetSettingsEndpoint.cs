@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetSettingsEndpoint(ISettingsService settingsService) : Endp
 {
     public override void Configure()
     {
-        Get("settings");
+        Get(ApiRoutes.Settings);
         Group<SettingsGroup>();
     }
 

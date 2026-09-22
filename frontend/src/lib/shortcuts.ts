@@ -6,22 +6,26 @@ import {
   normalizeRegisterableHotkey,
   type RegisterableHotkey,
 } from "@tanstack/react-hotkeys";
-import type { RegisteredRouter } from "@tanstack/react-router";
+import type { LinkProps, RegisteredRouter } from "@tanstack/react-router";
 import type { FeatureFlags } from "@/api/generated/model";
 import type { TranslationKey } from "@/lib/i18n";
 
 export const PREFIX_TIMEOUT_MS = 1200;
+
+export type RoutePath = NonNullable<LinkProps["to"]>;
 
 const EDITABLE_SELECTOR =
   'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="combobox"], [role="textbox"]';
 
 const DIALOG_SELECTOR = '[role="dialog"], [role="alertdialog"]';
 
-const SEARCH_TARGET_SELECTOR = '[data-shortcut="search"]';
+export const SEARCH_SHORTCUT_TARGET = "search";
+
+export const SEARCH_TARGET_SELECTOR = `[data-shortcut="${SEARCH_SHORTCUT_TARGET}"]`;
 
 export type ShortcutFeature = keyof FeatureFlags;
 
-const DISABLED_PATHS = new Set([
+const DISABLED_PATHS: ReadonlySet<string> = new Set<RoutePath>([
   "/login",
   "/setup",
   "/forgot-password",
@@ -30,7 +34,7 @@ const DISABLED_PATHS = new Set([
 ]);
 
 type ShortcutAction =
-  | { type: "navigate"; to: string; search?: Record<string, unknown> }
+  | { type: "navigate"; to: RoutePath; search?: Record<string, unknown> }
   | { type: "search" }
   | { type: "help" }
   | { type: "palette" };
@@ -46,7 +50,7 @@ export interface Shortcut {
 
 function goTo(
   key: string,
-  to: string,
+  to: RoutePath,
   labelKey: TranslationKey,
   feature?: ShortcutFeature,
 ): Shortcut {
@@ -142,7 +146,7 @@ export function toHotkeySteps(shortcut: Shortcut): RegisterableHotkey[] {
 
 export interface ShortcutRouter {
   state: { location: { pathname: string } };
-  navigate: (options: { to: string; search?: Record<string, unknown> }) => unknown;
+  navigate: (options: { to: RoutePath; search?: Record<string, unknown> }) => unknown;
 }
 
 export interface ShortcutRuntime {

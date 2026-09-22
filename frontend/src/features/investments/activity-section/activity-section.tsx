@@ -23,6 +23,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { nameById } from "@/lib/options";
+import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
 import { ACTIVITY_PAGE_SIZE, activityParams } from "../investment-queries";
@@ -141,7 +142,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                 <span
                   className={cn(
                     "shrink-0 text-right font-semibold whitespace-nowrap tabular-nums",
-                    amount > 0 && "text-income",
+                    amount > 0 && INCOME_TONE,
                     entry.type === "split" && "font-normal text-muted-foreground",
                   )}
                 >

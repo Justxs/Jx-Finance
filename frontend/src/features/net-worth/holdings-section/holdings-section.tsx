@@ -11,6 +11,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useMoney } from "@/hooks/use-formatters";
+import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import type { HoldingFormValues } from "./holding-form";
 
@@ -73,7 +74,7 @@ export function HoldingsSection<TValues = HoldingFormValues>({
   const total = items.reduce((sum, item) => sum + item.amount, 0);
   const amountClass = cn(
     "font-semibold whitespace-nowrap tabular-nums",
-    tone === "expense" && "text-expense",
+    tone === "expense" && EXPENSE_TONE,
   );
 
   let content: ReactNode;

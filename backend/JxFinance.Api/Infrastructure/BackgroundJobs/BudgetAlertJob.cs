@@ -15,8 +15,6 @@ public sealed class BudgetAlertJob(
     IServiceScopeFactory scopeFactory,
     ILogger<BudgetAlertJob> logger) : PeriodicJob(scopeFactory, logger)
 {
-    private const string RelatedType = "Budget";
-
     private static readonly (int Percent, NotificationType Type)[] Thresholds =
     [
         (80, NotificationType.BudgetWarning),
@@ -76,7 +74,7 @@ public sealed class BudgetAlertJob(
 
         var since = clock.StartOfDay(usage.Values.Min(u => u.Window.Start));
         var sent = await db.Notifications
-            .Where(n => n.RelatedType == RelatedType && n.CreatedAt >= since)
+            .Where(n => n.RelatedType == NotificationRelated.Budget && n.CreatedAt >= since)
             .Select(n => new { n.Type, n.RelatedId, n.CreatedAt })
             .ToListAsync(ct);
 
@@ -103,7 +101,7 @@ public sealed class BudgetAlertJob(
                         CultureInfo.InvariantCulture,
                         $"{percent}% of the {budget.Period.ToString().ToLowerInvariant()} limit"),
                     Payload = new NotificationPayload { ThresholdPercent = percent, Period = budget.Period },
-                    RelatedType = RelatedType,
+                    RelatedType = NotificationRelated.Budget,
                     RelatedId = budget.Id.Value,
                     Channel = NotificationChannel.InApp,
                 });

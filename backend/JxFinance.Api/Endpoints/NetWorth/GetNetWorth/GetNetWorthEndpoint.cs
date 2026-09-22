@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetNetWorthEndpoint(INetWorthService netWorthService) : Endp
 {
     public override void Configure()
     {
-        Get("networth");
+        Get(ApiRoutes.NetWorth);
         Group<NetWorthGroup>();
     }
 

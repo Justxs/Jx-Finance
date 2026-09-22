@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Households.GetHousehold;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
@@ -10,9 +12,9 @@ public sealed class CreateHouseholdEndpoint(IHouseholdService householdService)
 {
     public override void Configure()
     {
-        Post("households");
+        Post(ApiRoutes.Households);
         Group<HouseholdsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<HouseholdResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<HouseholdResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateHouseholdRequest req, CancellationToken ct)

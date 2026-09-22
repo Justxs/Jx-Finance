@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
@@ -10,7 +11,7 @@ public sealed class GetHouseholdEndpoint(IHouseholdService householdService)
 {
     public override void Configure()
     {
-        Get("households/{id}");
+        Get(ApiRoutes.Households + "/{id}");
         Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

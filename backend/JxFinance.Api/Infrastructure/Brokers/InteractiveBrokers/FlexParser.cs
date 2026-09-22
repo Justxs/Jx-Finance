@@ -3,16 +3,18 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 
 public static partial class FlexParser
 {
+    public const string ResponseRoot = "FlexQueryResponse";
     public const string ForwardSplit = "FS";
     public const string ReverseSplit = "RS";
 
-    private static readonly string[] DateFormats = ["yyyyMMdd", "yyyy-MM-dd"];
+    private static readonly string[] DateInputFormats = ["yyyyMMdd", DateFormats.IsoDate];
     private static readonly string[] SummaryTradeRows = ["ORDER", "CLOSED_LOT", "SYMBOL_SUMMARY", "ASSET_SUMMARY", "WASH_SALE"];
     private static readonly string[] SummaryCashRows = ["SUMMARY"];
     private static readonly string[] SummaryPositionRows = ["LOT"];
@@ -31,7 +33,7 @@ public static partial class FlexParser
             return Invalid();
         }
 
-        var statements = document.Root?.Name.LocalName == "FlexQueryResponse"
+        var statements = document.Root?.Name.LocalName == ResponseRoot
             ? document.Root.Descendants("FlexStatement").ToList()
             : [];
         if (statements.Count == 0)
@@ -202,7 +204,7 @@ public static partial class FlexParser
                 text = text[..8];
             }
 
-            if (DateOnly.TryParseExact(text, DateFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            if (DateOnly.TryParseExact(text, DateInputFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
             {
                 return date;
             }

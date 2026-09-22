@@ -1,5 +1,6 @@
 using System.Data;
 using System.IO.Compression;
+using System.Net.Mime;
 using System.Text.Json;
 using FastEndpoints;
 using JxFinance.Common;
@@ -157,7 +158,7 @@ public sealed class BackupService(
             return NotFound;
         }
 
-        var (extension, contentType) = stored.IsArchive ? (".zip", "application/zip") : (".json.gz", "application/gzip");
+        var (extension, contentType) = stored.IsArchive ? (".zip", MediaTypeNames.Application.Zip) : (".json.gz", MediaTypeNames.Application.GZip);
         return new BackupDownload(
             backups.OpenRead(id),
             $"jx-finance-backup-{stored.CreatedAt.UtcDateTime:yyyyMMdd-HHmmss}{extension}",
@@ -244,20 +245,20 @@ public sealed class BackupService(
         await using var json = new Utf8JsonWriter(output);
 
         json.WriteStartObject();
-        json.WriteString("format", Format);
-        json.WriteNumber("version", Version);
-        json.WriteString("createdAt", createdAt);
-        json.WriteString("migration", migration);
-        json.WriteStartArray("tables");
+        json.WriteString(BackupJsonNames.Format, Format);
+        json.WriteNumber(BackupJsonNames.Version, Version);
+        json.WriteString(BackupJsonNames.CreatedAt, createdAt);
+        json.WriteString(BackupJsonNames.Migration, migration);
+        json.WriteStartArray(BackupJsonNames.Tables);
 
         foreach (var table in tables)
         {
             json.WriteStartObject();
-            json.WriteString("name", table.Name);
-            json.WriteStartArray("columns");
+            json.WriteString(BackupJsonNames.Name, table.Name);
+            json.WriteStartArray(BackupJsonNames.Columns);
             foreach (var column in table.Columns) json.WriteStringValue(column.Name);
             json.WriteEndArray();
-            json.WriteStartArray("rows");
+            json.WriteStartArray(BackupJsonNames.Rows);
             rows += await WriteRowsAsync(connection, table, json, cancellationToken);
             json.WriteEndArray();
             json.WriteEndObject();

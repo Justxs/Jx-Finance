@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
+import { UserRole } from "@/lib/user-role";
 import { withWidth } from "@/storybook/decorators";
 import { currentUser, inactiveUser, longNameUser, memberUser, users } from "@/storybook/fixtures";
 import { first } from "@/storybook/interactions";
@@ -37,7 +38,9 @@ export const ViewedByAnotherAdmin: Story = { args: { currentUserId: memberUser.i
 export const InactiveUser: Story = { args: { users: [inactiveUser] } };
 
 export const LongNameAndEmail: Story = {
-  args: { users: [longNameUser, { ...longNameUser, id: "long-name-admin", role: "Admin" }] },
+  args: {
+    users: [longNameUser, { ...longNameUser, id: "long-name-admin", role: UserRole.admin }],
+  },
 };
 
 export const Empty: Story = { args: { users: [] } };

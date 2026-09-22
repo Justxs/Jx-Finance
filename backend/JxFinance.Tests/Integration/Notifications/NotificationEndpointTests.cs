@@ -63,7 +63,7 @@ public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationT
             Type = NotificationType.BillDue,
             Title = $"Test bill due {Guid.NewGuid():N}",
             Message = "A test bill is due soon.",
-            RelatedType = "RecurringBill",
+            RelatedType = NotificationRelated.RecurringBill,
             RelatedId = Guid.NewGuid(),
             Channel = NotificationChannel.InApp,
         };

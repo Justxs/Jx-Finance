@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetNetWorthHistoryEndpoint(INetWorthService netWorthService)
 {
     public override void Configure()
     {
-        Get("networth/history");
+        Get(ApiRoutes.NetWorth + "/history");
         Group<NetWorthGroup>();
     }
 

@@ -8,7 +8,8 @@ namespace JxFinance.Extensions;
 
 public static class OpenApiExtensions
 {
-    private const string DocumentName = "v1";
+    public const string DocumentName = "v1";
+    public const string Title = "Jx Finance API";
 
     private const string DocumentDescription =
         "Personal and household finance ledger. Every route lives under /api and answers JSON. "
@@ -24,7 +25,7 @@ public static class OpenApiExtensions
         services.OpenApiDocument(options =>
         {
             options.DocumentName = DocumentName;
-            options.Title = "Jx Finance API";
+            options.Title = Title;
             options.Version = DocumentName;
             options.ShortSchemaNames = true;
             options.EnableJWTBearerAuth = false;
@@ -88,25 +89,31 @@ public static class OpenApiExtensions
 
     private static void AddTagDescriptions(IDictionary<string, string> tags)
     {
-        tags["Accounts"] = "Bank, cash, and card accounts that transactions post to.";
-        tags["Auth"] = "Sign in, sign out, the current profile, and two-factor enrolment.";
-        tags["Budgets"] = "Per-category spending limits for a month or a year.";
-        tags["Categories"] = "The income and expense categories transactions are attributed to.";
-        tags["Dashboard"] = "Aggregates for the home screen: balances, trends, category splits.";
-        tags["Diagnostics"] = "Unauthenticated liveness probes.";
-        tags["Goals"] = "Savings goals and their progress.";
-        tags["Households"] = "Households and their members; the unit that shared data belongs to.";
-        tags["Imports"] = "Bank statement import: preview a CSV, then confirm the rows to keep.";
-        tags["NetWorth"] = "Assets, debts, and the resulting net worth over time.";
-        tags["Notifications"] = "In-app notifications raised by background jobs: bill reminders and budget alerts.";
-        tags["RecurringBills"] = "Recurring entries — scheduled expenses, income and transfers — and confirming a due occurrence.";
-        tags["Reports"] = "Income and expense summaries over an arbitrary date range.";
-        tags["Setup"] = "First-run provisioning of the administrator account.";
-        tags["Transactions"] = "The ledger: single and split transactions, plus CSV and PDF exports.";
-        tags["Transfers"] = "Money moved between two of your own accounts, in one currency or across two.";
-        tags["Investments"] = "Securities, trades, dividends and holdings on investment accounts, with Interactive Brokers import.";
-        tags["Conversions"] = "One currency exchanged for another inside a single account.";
-        tags["Currencies"] = "Supported currencies, the reporting currency, and reference exchange rates.";
-        tags["Users"] = "Administration of user accounts and roles.";
+        tags[ApiTags.Accounts] = "Bank, cash, and card accounts that transactions post to.";
+        tags[ApiTags.Auth] = "Sign in, sign out, the current profile, and two-factor enrolment.";
+        tags[ApiTags.Budgets] = "Per-category spending limits for a month or a year.";
+        tags[ApiTags.Categories] = "The income and expense categories transactions are attributed to.";
+        tags[ApiTags.Dashboard] = "Aggregates for the home screen: balances, trends, category splits.";
+        tags[ApiTags.Diagnostics] = "Unauthenticated liveness probes.";
+        tags[ApiTags.Goals] = "Savings goals and their progress.";
+        tags[ApiTags.Households] = "Households and their members; the unit that shared data belongs to.";
+        tags[ApiTags.Imports] = "Bank statement import: preview a CSV, then confirm the rows to keep.";
+        tags[ApiTags.NetWorth] = "Assets, debts, and the resulting net worth over time.";
+        tags[ApiTags.Notifications] = "In-app notifications raised by background jobs: bill reminders and budget alerts.";
+        tags[ApiTags.RecurringBills] = "Recurring entries — scheduled expenses, income and transfers — and confirming a due occurrence.";
+        tags[ApiTags.Reports] = "Income and expense summaries over an arbitrary date range.";
+        tags[ApiTags.Setup] = "First-run provisioning of the administrator account.";
+        tags[ApiTags.Transactions] = "The ledger: single and split transactions, plus CSV and PDF exports.";
+        tags[ApiTags.Transfers] = "Money moved between two of your own accounts, in one currency or across two.";
+        tags[ApiTags.Investments] = "Securities, trades, dividends and holdings on investment accounts, with Interactive Brokers import.";
+        tags[ApiTags.Conversions] = "One currency exchanged for another inside a single account.";
+        tags[ApiTags.Currencies] = "Supported currencies, the reporting currency, and reference exchange rates.";
+        tags[ApiTags.Users] = "Administration of user accounts and roles.";
+        tags[ApiTags.Attachments] = "Receipts and other files kept alongside a transaction.";
+        tags[ApiTags.Backups] = "Snapshots of the whole instance: create, download, upload, and restore one.";
+        tags[ApiTags.CategorizationRules] = "Ordered rules that pick a category for matching transactions, plus a dry run over existing ones.";
+        tags[ApiTags.Settings] = "Instance-wide preferences: language, time zone, reporting currency, features, and outgoing mail.";
+        tags[ApiTags.Tags] = "Free-form labels that transactions can be marked with.";
+        tags[ApiTags.Trash] = "Records that were deleted but can still be restored.";
     }
 }

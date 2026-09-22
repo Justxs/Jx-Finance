@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -9,7 +10,7 @@ public sealed class DeleteBackupEndpoint(IBackupService backupService) : Endpoin
 {
     public override void Configure()
     {
-        Delete("backups/{id}");
+        Delete(ApiRoutes.Backups + "/{id}");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));

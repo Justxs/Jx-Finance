@@ -1,3 +1,4 @@
+using JxFinance.Infrastructure.Configuration;
 using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -25,11 +26,11 @@ public static class TelemetryExtensions
 
         builder.Services.AddOpenTelemetry()
             .ConfigureResource(resource => resource.AddService(
-                serviceName: builder.Configuration["OTEL_SERVICE_NAME"] ?? ServiceName,
+                serviceName: builder.Configuration[ConfigKeys.OtelServiceName] ?? ServiceName,
                 serviceVersion: typeof(TelemetryExtensions).Assembly.GetName().Version?.ToString()))
             .WithTracing(tracing => tracing
                 .AddAspNetCoreInstrumentation(options =>
-                    options.Filter = context => !context.Request.Path.StartsWithSegments("/health"))
+                    options.Filter = context => !context.Request.Path.StartsWithSegments(ApiPipelineExtensions.HealthPath))
                 .AddHttpClientInstrumentation()
                 .AddNpgsql())
             .WithMetrics(metrics => metrics
@@ -53,7 +54,7 @@ public static class TelemetryExtensions
         {
             options.ResourceAttributes = new Dictionary<string, object>
             {
-                ["service.name"] = configuration["OTEL_SERVICE_NAME"] ?? ServiceName
+                ["service.name"] = configuration[ConfigKeys.OtelServiceName] ?? ServiceName
             };
             options.IncludedData |= IncludedData.TraceIdField | IncludedData.SpanIdField;
         });

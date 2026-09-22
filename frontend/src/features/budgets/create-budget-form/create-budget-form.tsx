@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateBudget, useUpdateBudget } from "@/api/generated";
-import type { BudgetPeriod, CategoryResponse, BudgetResponse } from "@/api/generated/model";
+import { BudgetPeriod, type CategoryResponse, type BudgetResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
@@ -29,7 +29,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   const schema = z.object({
     categoryId: requiredValue(t),
     limitAmount: positiveMoney(t),
-    period: z.enum(["weekly", "monthly", "quarterly", "yearly"]),
+    period: z.enum(BudgetPeriod),
     rolloverEnabled: z.boolean(),
   });
 

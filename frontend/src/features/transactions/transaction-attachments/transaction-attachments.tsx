@@ -9,6 +9,7 @@ import {
   useUploadAttachment,
 } from "@/api/generated";
 import type { AttachmentResponse } from "@/api/generated/model";
+import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { FormError } from "@/components/form-error/form-error";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
@@ -17,8 +18,8 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useBytes } from "@/features/settings/backup-section/use-bytes";
+import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
-import { useUndoToast } from "@/hooks/use-undo-toast";
 import { silent } from "@/lib/mutations";
 import { cn } from "@/lib/utils";
 import {
@@ -132,7 +133,6 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
   const { t } = useTranslation();
   const inputId = useId();
   const refusalText = useRefusalText();
-  const showUndoToast = useUndoToast();
   const attachments = useAttachmentsSuspense(transactionId).data;
   const uploadMutation = useUploadAttachment(silent());
   const removeMutation = useDeleteAttachment();
@@ -147,7 +147,12 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
   const free = Math.max(0, MAX_ATTACHMENTS - attachments.length);
   const uploading = waiting > 0;
   const full = free === 0;
-  const removingId = removeMutation.isPending ? removeMutation.variables?.id : undefined;
+  const remove = useConfirmedDelete(
+    removeMutation,
+    attachments,
+    (attachment) => attachment.fileName,
+    "attachment",
+  );
 
   async function attach(files: File[]) {
     if (files.length === 0 || uploading) {
@@ -174,13 +179,6 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
     }
   }
 
-  function remove(attachment: AttachmentResponse) {
-    removeMutation.mutate(
-      { id: attachment.id },
-      { onSuccess: () => showUndoToast("attachment", attachment.id, attachment.fileName) },
-    );
-  }
-
   return (
     <div className="space-y-3">
       {attachments.length === 0 ? (
@@ -191,9 +189,9 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
             <AttachmentRow
               key={attachment.id}
               attachment={attachment}
-              removing={removingId === attachment.id}
-              disabled={removeMutation.isPending}
-              onRemove={() => remove(attachment)}
+              removing={remove.pendingId === attachment.id}
+              disabled={remove.busy}
+              onRemove={() => remove.request(attachment.id)}
             />
           ))}
         </Rows>
@@ -249,6 +247,12 @@ function AttachmentList({ transactionId }: Readonly<{ transactionId: string }>) 
       ) : null}
 
       <FormError error={failure} />
+
+      <ConfirmDeleteDialog
+        {...remove.dialogProps}
+        title={t("transactions.attachments.removeTitle")}
+        confirmLabel={t("transactions.attachments.remove")}
+      />
     </div>
   );
 }

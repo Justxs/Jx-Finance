@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
-import type { ChartSeries } from "@/components/chart";
+import { CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 
@@ -14,7 +14,7 @@ export function NetWorthHistoryChart() {
   }
 
   const series: ChartSeries[] = [
-    { key: "netWorth", label: t("charts.netWorth"), color: "var(--chart-1)", shape: "line" },
+    { key: "netWorth", label: t("charts.netWorth"), color: CHART_COLOR_PRIMARY, shape: "line" },
   ];
 
   return (

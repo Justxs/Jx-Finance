@@ -13,6 +13,7 @@ import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useFeature, useTodayDate } from "@/hooks/use-settings";
+import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { NetWorthChangeCard } from "../net-worth-change-card/net-worth-change-card";
 import { detectPreset, ReportFilters } from "../report-filters";
 import { reportComparison, reportParams, reportRange } from "../report-queries";
@@ -32,8 +33,8 @@ export function ReportsPage() {
   const comparison = reportComparison(search);
   const preset = detectPreset(dateFrom, dateTo, today);
 
-  const csvUrl = useExportUrl("/api/transactions/export", { dateFrom, dateTo });
-  const pdfUrl = useExportUrl("/api/transactions/export/pdf", { dateFrom, dateTo });
+  const csvUrl = useExportUrl(TRANSACTIONS_EXPORT_CSV_PATH, { dateFrom, dateTo });
+  const pdfUrl = useExportUrl(TRANSACTIONS_EXPORT_PDF_PATH, { dateFrom, dateTo });
 
   const [shown, stale] = useDeferredParams(reportParams(search, today));
   const summary = useReportSummarySuspense(shown);

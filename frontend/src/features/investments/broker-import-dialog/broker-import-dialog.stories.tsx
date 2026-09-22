@@ -16,6 +16,7 @@ import {
 } from "@/storybook/fixtures";
 import { failWith, handlers, pending } from "@/storybook/handlers";
 import { BrokerImportDialog } from "./broker-import-dialog";
+import { BROKER_UPLOAD_FILE_INPUT_ID } from "./upload-panel";
 
 const sampleReport =
   '<FlexQueryResponse queryName="Jx Finance" type="AF"><FlexStatements count="1" /></FlexQueryResponse>';
@@ -33,7 +34,7 @@ type Story = StoryObj<typeof meta>;
 async function uploadReport() {
   const body = within(document.body);
   const submit = await body.findByRole("button", { name: "Import" });
-  const fileInput = document.querySelector<HTMLInputElement>("#broker-upload-file");
+  const fileInput = document.querySelector<HTMLInputElement>(`#${BROKER_UPLOAD_FILE_INPUT_ID}`);
   if (!fileInput) {
     throw new Error("The report file input is missing.");
   }

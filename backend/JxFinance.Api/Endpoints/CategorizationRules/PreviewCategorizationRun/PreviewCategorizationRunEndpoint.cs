@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Shared;
@@ -10,7 +11,7 @@ public sealed class PreviewCategorizationRunEndpoint(ICategorizationRuleService 
 {
     public override void Configure()
     {
-        Post("categorization-rules/run/preview");
+        Post(ApiRoutes.CategorizationRules + "/run/preview");
         Group<CategorizationRulesGroup>();
     }
 

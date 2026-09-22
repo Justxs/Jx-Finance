@@ -36,6 +36,7 @@ import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useSettings } from "@/hooks/use-settings";
+import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 import { useSidebarCollapsed } from "@/stores/sidebar-store";
 
@@ -109,7 +110,7 @@ export function AppSidebar() {
   const me = useMeSuspense();
 
   const settings = useSettings();
-  const visibleNavItems = visibleNav(settings.features, me.data?.role === "Admin");
+  const visibleNavItems = visibleNav(settings.features, me.data?.role === UserRole.admin);
 
   return (
     <aside

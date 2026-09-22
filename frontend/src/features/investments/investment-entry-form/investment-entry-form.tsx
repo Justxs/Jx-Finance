@@ -20,7 +20,9 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { namedOptions } from "@/lib/options";
+import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import {
   isNonNegativeMoney,
@@ -88,10 +90,7 @@ function CashEffectLine({ input, currency }: Readonly<CashEffectProps>) {
       <div className="flex justify-between gap-3">
         <dt className="text-muted-foreground">{t("investments.entry.cashEffect")}</dt>
         <dd
-          className={cn(
-            "font-semibold tabular-nums",
-            effect !== null && effect > 0 && "text-income",
-          )}
+          className={cn("font-semibold tabular-nums", effect !== null && effect > 0 && INCOME_TONE)}
         >
           {text}
         </dd>
@@ -183,7 +182,7 @@ export function InvestmentEntryForm({
         price: "",
         fee: "",
         amount: "",
-        currency: initialAccount?.currency ?? "eur",
+        currency: initialAccount?.currency ?? DEFAULT_CURRENCY,
         description: "",
       };
 

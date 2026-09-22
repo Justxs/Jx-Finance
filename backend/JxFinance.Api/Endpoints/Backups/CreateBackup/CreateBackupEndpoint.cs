@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -9,16 +11,16 @@ public sealed class CreateBackupEndpoint(IBackupService backupService) : Endpoin
 {
     public override void Configure()
     {
-        Post("backups");
+        Post(ApiRoutes.Backups);
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, "application/json").ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ClearDefaultProduces(200).Produces<BackupResponse>(201, MediaTypeNames.Application.Json).ProducesProblemDetails(403).Produces(429));
     }
 
     public override async Task HandleAsync(CreateBackupRequest req, CancellationToken ct)
     {
         var backup = await backupService.CreateAsync(req.Note, ct);
-        await Send.ResultAsync(TypedResults.Created($"/api/backups/{backup.Id}", backup));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.BackupsPath}/{backup.Id}", backup));
     }
 }

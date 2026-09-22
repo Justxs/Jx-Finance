@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Data;
@@ -158,7 +159,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
 
     private static async Task<List<AlertDto>> AlertsAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<List<AlertDto>>("/api/notifications"))!
-            .Where(n => n.RelatedType == "Budget")
+            .Where(n => n.RelatedType == NotificationRelated.Budget)
             .ToList();
 
     private async Task<InstanceSettings> StoredSettingsAsync()

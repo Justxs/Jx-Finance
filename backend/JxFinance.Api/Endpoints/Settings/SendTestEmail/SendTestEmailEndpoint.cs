@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
@@ -11,7 +12,7 @@ public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
 {
     public override void Configure()
     {
-        Post("settings/smtp/test");
+        Post(ApiRoutes.Settings + "/smtp/test");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);

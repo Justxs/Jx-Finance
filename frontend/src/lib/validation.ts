@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Scope } from "@/api/generated/model";
 import type { Translate, TranslationKey } from "@/lib/i18n";
 
 export function normalizeMoney(value: string): string {
@@ -104,12 +105,12 @@ export function wholeNumberBetween(t: Translate, min: number, max: number) {
 }
 
 interface SharingValues {
-  scope: "personal" | "shared";
+  scope: Scope;
   householdId: string;
 }
 
 export function sharingShape() {
-  return { scope: z.enum(["personal", "shared"]), householdId: z.string() };
+  return { scope: z.enum(Scope), householdId: z.string() };
 }
 
 export function refineSharing<TSchema extends z.ZodType<SharingValues>>(

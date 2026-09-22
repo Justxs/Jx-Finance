@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateRecurringBill, useUpdateRecurringBill } from "@/api/generated";
-import type {
-  AccountResponse,
-  CategoryResponse,
+import {
+  type AccountResponse,
+  type CategoryResponse,
   RecurringBillCadence,
   RecurringBillKind,
-  RecurringBillResponse,
+  type RecurringBillResponse,
   RecurringBillShape,
 } from "@/api/generated/model";
 import {
@@ -62,13 +62,13 @@ export function RecurringBillForm({
   const schema = z
     .object({
       name: requiredText(t, updateRecurringBillBodyNameMax),
-      shape: z.enum(["expense", "income", "transfer"]),
-      kind: z.enum(["fixed", "variable"]),
+      shape: z.enum(RecurringBillShape),
+      kind: z.enum(RecurringBillKind),
       amount: z.string(),
       categoryId: z.string(),
       accountId: z.string(),
       toAccountId: z.string(),
-      cadence: z.enum(["weekly", "monthly", "quarterly", "yearly"]),
+      cadence: z.enum(RecurringBillCadence),
       nextDueDate: requiredValue(t),
       remindDaysBefore: wholeNumberBetween(
         t,

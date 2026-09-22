@@ -9,7 +9,9 @@ namespace JxFinance.Tests.Unit;
 
 public sealed class BackupReaderTests
 {
-    private const string Header = "\"format\":\"jx-finance-backup\",\"version\":1,\"createdAt\":\"2026-09-19T08:00:00+00:00\",\"migration\":\"m1\"";
+    private const string Header = "\"" + BackupJsonNames.Format + "\":\"" + BackupService.Format
+        + "\",\"" + BackupJsonNames.Version + "\":1,\"" + BackupJsonNames.CreatedAt + "\":\"2026-09-19T08:00:00+00:00\",\""
+        + BackupJsonNames.Migration + "\":\"m1\"";
 
     [Fact]
     public async Task Tables_and_rows_are_published_in_order_across_buffer_boundaries()
@@ -22,7 +24,7 @@ public sealed class BackupReaderTests
 
         await new BackupReader(recorder).ReadAsync(new TrickleStream(Encoding.UTF8.GetBytes(json)), TestContext.Current.CancellationToken);
 
-        Assert.Equal(new BackupHeader("jx-finance-backup", 1, new DateTimeOffset(2026, 9, 19, 8, 0, 0, TimeSpan.Zero), "m1"), recorder.Header);
+        Assert.Equal(new BackupHeader(BackupService.Format, 1, new DateTimeOffset(2026, 9, 19, 8, 0, 0, TimeSpan.Zero), "m1"), recorder.Header);
         Assert.Equal(["begin A Id,Note", "end", "begin B Id", "end"], recorder.Events);
         Assert.Equal(5_001, recorder.Rows.Count);
         Assert.Equal(["4999", null], recorder.Rows[4_999]);
@@ -32,7 +34,7 @@ public sealed class BackupReaderTests
     [Theory]
     [InlineData("[]")]
     [InlineData("{}")]
-    [InlineData("{\"format\":\"jx-finance-backup\"}")]
+    [InlineData("{\"" + BackupJsonNames.Format + "\":\"" + BackupService.Format + "\"}")]
     [InlineData("{\"tables\":[]}")]
     [InlineData("{" + Header + ",\"tables\":[{\"name\":\"A\",\"rows\":[]}]}")]
     [InlineData("{" + Header + ",\"tables\":[{\"name\":\"A\",\"columns\":[\"Id\"]}]}")]

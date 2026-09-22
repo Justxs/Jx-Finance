@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetTransactionsSummaryEndpoint(ITransactionService transacti
 {
     public override void Configure()
     {
-        Get("transactions/summary");
+        Get(ApiRoutes.Transactions + "/summary");
         Group<TransactionsGroup>();
     }
 

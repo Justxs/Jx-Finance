@@ -1,6 +1,7 @@
 import type { TransactionResponse } from "@/api/generated/model";
 import { ApproximateAmount } from "@/components/approximate-amount/approximate-amount";
 import { useMoney, useReportingCurrency } from "@/hooks/use-formatters";
+import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { isOptimistic } from "./transaction-row";
 
@@ -25,7 +26,7 @@ export function TransactionAmount({
     <span
       className={cn(
         "font-semibold whitespace-nowrap tabular-nums",
-        isIncome ? "text-income" : "text-foreground",
+        isIncome ? INCOME_TONE : "text-foreground",
         className,
       )}
     >

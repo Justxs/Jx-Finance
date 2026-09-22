@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -10,7 +11,7 @@ public sealed class SyncBrokerConnectionEndpoint(IBrokerImportService importServ
 {
     public override void Configure()
     {
-        Post("investments/connections/{accountId}/sync");
+        Post(ApiRoutes.Investments + "/connections/{accountId}/sync");
         Group<InvestmentsGroup>();
         Description(d => d.ProducesProblemDetails(409));
     }

@@ -3,7 +3,9 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
+using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Infrastructure.Backups;
+using JxFinance.Infrastructure.Configuration;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -250,7 +252,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     private static byte[] PdfBytes(string text) => Encoding.ASCII.GetBytes($"%PDF-1.7\n% {text} {Guid.NewGuid():N}\n%%EOF");
 
     private string AttachmentPath(Guid id) =>
-        Path.Combine(Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()["App:AttachmentDirectory"]!, id.ToString("N"));
+        Path.Combine(Services.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>()[ConfigKeys.AttachmentDirectory]!, id.ToString("N"));
 
     private async Task<AttachmentRowDto> UploadAttachmentAsync(Guid transactionId, byte[] file, string name)
     {
@@ -424,8 +426,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(backup.SizeBytes, file.Length);
 
         var document = Unzip(file);
-        Assert.Equal("jx-finance-backup", document["format"]!.GetValue<string>());
-        var tables = document["tables"]!.AsArray().Select(t => t!["name"]!.GetValue<string>()).ToList();
+        Assert.Equal(BackupService.Format, document[BackupJsonNames.Format]!.GetValue<string>());
+        var tables = document[BackupJsonNames.Tables]!.AsArray().Select(t => t![BackupJsonNames.Name]!.GetValue<string>()).ToList();
         Assert.Contains("Accounts", tables);
         Assert.Contains("AspNetUsers", tables);
         Assert.Contains("DeletionEntries", tables);
@@ -470,9 +472,9 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var accountId = await CreateAccountAsync(startingBalance: "10.00");
         var document = Unzip(await DownloadAsync((await CreateBackupAsync()).Id));
-        var accounts = document["tables"]!.AsArray().Single(t => t!["name"]!.GetValue<string>() == "Accounts")!;
-        var userColumn = accounts["columns"]!.AsArray().Select(c => c!.GetValue<string>()).ToList().IndexOf("UserId");
-        accounts["rows"]![0]![userColumn] = Guid.NewGuid().ToString();
+        var accounts = document[BackupJsonNames.Tables]!.AsArray().Single(t => t![BackupJsonNames.Name]!.GetValue<string>() == "Accounts")!;
+        var userColumn = accounts[BackupJsonNames.Columns]!.AsArray().Select(c => c!.GetValue<string>()).ToList().IndexOf("UserId");
+        accounts[BackupJsonNames.Rows]![0]![userColumn] = Guid.NewGuid().ToString();
         var damaged = await StoreAsync(document);
 
         var response = await RestoreAsync(damaged.Id);
@@ -485,7 +487,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     public async Task Backup_from_another_database_version_is_listed_but_not_restorable()
     {
         var document = Unzip(await DownloadAsync((await CreateBackupAsync()).Id));
-        document["migration"] = "20000101000000_Older";
+        document[BackupJsonNames.Migration] = "20000101000000_Older";
 
         var older = await StoreAsync(document);
         var response = await RestoreAsync(older.Id);
@@ -592,7 +594,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     public async Task Stored_backup_that_decompresses_beyond_the_limit_is_not_restored()
     {
         var accountId = await CreateAccountAsync(startingBalance: "10.00");
-        var migration = Unzip(await DownloadAsync((await CreateBackupAsync()).Id))["migration"]!.GetValue<string>();
+        var migration = Unzip(await DownloadAsync((await CreateBackupAsync()).Id))[BackupJsonNames.Migration]!.GetValue<string>();
         var file = await OversizedBackupAsync(migration);
         var id = Guid.NewGuid();
         await Services.GetRequiredService<BackupStore>().AddAsync(
@@ -638,7 +640,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await using (var gzip = new GZipStream(file, CompressionLevel.Fastest, leaveOpen: true))
         {
             await gzip.WriteAsync(Encoding.UTF8.GetBytes(
-                $"{{\"format\":\"jx-finance-backup\",\"version\":1,\"createdAt\":\"2026-09-19T00:00:00+00:00\",\"migration\":\"{migration}\",\"tables\":["));
+                $"{{\"{BackupJsonNames.Format}\":\"{BackupService.Format}\",\"{BackupJsonNames.Version}\":1,"
+                + $"\"{BackupJsonNames.CreatedAt}\":\"2026-09-19T00:00:00+00:00\",\"{BackupJsonNames.Migration}\":\"{migration}\",\"{BackupJsonNames.Tables}\":["));
             var padding = Encoding.UTF8.GetBytes(new string(' ', 1024 * 1024));
             for (long written = 0; written <= ApiFixture.BackupMaxDecompressedBytes; written += padding.Length)
             {

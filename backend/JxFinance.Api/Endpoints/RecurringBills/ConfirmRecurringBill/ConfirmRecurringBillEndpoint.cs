@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
@@ -10,7 +11,7 @@ public sealed class ConfirmRecurringBillEndpoint(IRecurringBillService recurring
 {
     public override void Configure()
     {
-        Post("recurring-bills/{id}/confirm");
+        Post(ApiRoutes.RecurringBills + "/{id}/confirm");
         Group<RecurringBillsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

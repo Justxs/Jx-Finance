@@ -9,7 +9,7 @@ public sealed class DeleteRecurringBillEndpoint(IRecurringBillService recurringB
 {
     public override void Configure()
     {
-        Delete("recurring-bills/{id}");
+        Delete(ApiRoutes.RecurringBills + "/{id}");
         Group<RecurringBillsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

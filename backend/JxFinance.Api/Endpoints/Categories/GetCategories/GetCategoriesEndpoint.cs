@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Categories.Mappers;
 using JxFinance.Endpoints.Categories.Shared;
@@ -10,7 +11,7 @@ public sealed class GetCategoriesEndpoint(ICategoryService categoryService)
 {
     public override void Configure()
     {
-        Get("categories");
+        Get(ApiRoutes.Categories);
         Group<CategoriesGroup>();
     }
 

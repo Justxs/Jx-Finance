@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Attachments;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Attachments.Interfaces;
@@ -10,7 +11,7 @@ public sealed class DownloadAttachmentEndpoint(IAttachmentService attachmentServ
 {
     public override void Configure()
     {
-        Get("attachments/{id}/content");
+        Get(ApiRoutes.Attachments + "/{id}/content");
         Group<AttachmentsGroup>();
         Description(d => d
             .ClearDefaultProduces(200)

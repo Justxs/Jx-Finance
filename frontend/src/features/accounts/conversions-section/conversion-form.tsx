@@ -18,6 +18,7 @@ import {
   useUsableCurrencies,
 } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {
@@ -199,7 +200,7 @@ export function ConversionForm({
     });
 
   const initialAccount = accounts.find((account) => account.id === accountId) ?? accounts[0];
-  const initialSold = initialAccount?.currency ?? "eur";
+  const initialSold = initialAccount?.currency ?? DEFAULT_CURRENCY;
 
   const defaultValues: FormValues = conversion
     ? valuesOf(conversion)

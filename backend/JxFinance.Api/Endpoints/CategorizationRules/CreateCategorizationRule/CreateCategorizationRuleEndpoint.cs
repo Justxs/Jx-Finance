@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Mappers;
@@ -11,17 +13,17 @@ public sealed class CreateCategorizationRuleEndpoint(ICategorizationRuleService 
 {
     public override void Configure()
     {
-        Post("categorization-rules");
+        Post(ApiRoutes.CategorizationRules);
         Group<CategorizationRulesGroup>();
         Description(d => d
             .ClearDefaultProduces(200)
-            .Produces<CategorizationRuleResponse>(201, "application/json"));
+            .Produces<CategorizationRuleResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateCategorizationRuleRequest req, CancellationToken ct)
     {
         var created = (await ruleService.CreateAsync(Map.ToEntity(req), req.TagIds, ct)).ValueOrThrow();
         var rule = Map.FromEntity(created);
-        await Send.ResultAsync(TypedResults.Created($"/api/categorization-rules/{rule.Id}", rule));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.CategorizationRulesPath}/{rule.Id}", rule));
     }
 }

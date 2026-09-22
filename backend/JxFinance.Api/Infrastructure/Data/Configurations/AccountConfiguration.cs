@@ -12,7 +12,7 @@ public sealed class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Name).HasMaxLength(100);
         builder.Property(a => a.Description).HasMaxLength(500);
         builder.Property(a => a.Iban).HasMaxLength(34);
-        builder.ComplexProperty(a => a.StartingBalance, money => money.HasColumns("StartingBalance", "Currency"));
+        builder.ComplexProperty(a => a.StartingBalance, money => money.HasColumns("StartingBalance", DbSchema.CurrencyColumn));
         builder.Ignore(a => a.Currency);
         builder.HasIndex(a => a.UserId);
         builder.HasIndex(a => a.HouseholdId);

@@ -5,6 +5,8 @@ import { readActiveHouseholdId } from "@/stores/active-household-store";
 
 const ACTIVE_HOUSEHOLD_HEADER = "X-Active-Household";
 
+export const SESSION_EXPIRED_EVENT = "jx:session-expired";
+
 interface ApiErrorDetail {
   name: string;
   reason: string;
@@ -119,7 +121,7 @@ async function request(url: string, options?: RequestInit): Promise<Response> {
   await refreshSession();
   const retried = await send();
   if (retried.status === 401) {
-    window.dispatchEvent(new Event("jx:session-expired"));
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
   return retried;
 }

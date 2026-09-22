@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateCategory, useHouseholdsSuspense } from "@/api/generated";
-import type { FlowType, Scope } from "@/api/generated/model";
+import { FlowType, type Scope } from "@/api/generated/model";
 import { createCategoryBodyNameMax } from "@/api/schemas/categories/categories.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
@@ -35,7 +35,7 @@ export function AddCategoryForm({ onCreated, onCancel }: Readonly<Props>) {
   const schema = refineSharing(
     z.object({
       name: requiredText(t, createCategoryBodyNameMax),
-      type: z.enum(["income", "expense"]),
+      type: z.enum(FlowType),
       icon: z.string().nullable(),
       ...sharingShape(),
     }),

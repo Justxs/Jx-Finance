@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 
@@ -8,7 +9,7 @@ public sealed class VerifyEmailEndpoint(IAccountEmailService accountEmails) : En
 {
     public override void Configure()
     {
-        Post("auth/verify-email");
+        Post(ApiRoutes.Auth + "/verify-email");
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 10, durationSeconds: 300);

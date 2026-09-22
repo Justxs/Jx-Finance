@@ -10,7 +10,7 @@ public sealed class GetTransfersEndpoint(ITransferService transferService)
 {
     public override void Configure()
     {
-        Get("transfers");
+        Get(ApiRoutes.Transfers);
         Group<TransfersGroup>();
     }
 

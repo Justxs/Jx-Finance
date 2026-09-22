@@ -1,3 +1,4 @@
+using JxFinance.Common.Localization;
 using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.Configuration;
@@ -6,9 +7,9 @@ public sealed class AppOptions
 {
     public const string SectionName = "App";
 
-    public string TimeZone { get; set; } = "UTC";
+    public string TimeZone { get; set; } = TimeZoneInfo.Utc.Id;
 
-    public string DefaultCulture { get; set; } = "en";
+    public string DefaultCulture { get; set; } = AppLanguages.En;
 
     public Currency ReportingCurrency { get; set; } = Currency.Eur;
 

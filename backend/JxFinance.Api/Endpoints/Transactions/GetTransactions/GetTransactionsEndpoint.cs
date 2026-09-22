@@ -10,7 +10,7 @@ public sealed class GetTransactionsEndpoint(ITransactionService transactionServi
 {
     public override void Configure()
     {
-        Get("transactions");
+        Get(ApiRoutes.Transactions);
         Group<TransactionsGroup>();
     }
 

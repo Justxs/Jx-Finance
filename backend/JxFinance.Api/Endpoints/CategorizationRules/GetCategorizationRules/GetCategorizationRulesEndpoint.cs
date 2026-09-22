@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Mappers;
 using JxFinance.Endpoints.CategorizationRules.Shared;
@@ -10,7 +11,7 @@ public sealed class GetCategorizationRulesEndpoint(ICategorizationRuleService ru
 {
     public override void Configure()
     {
-        Get("categorization-rules");
+        Get(ApiRoutes.CategorizationRules);
         Group<CategorizationRulesGroup>();
     }
 

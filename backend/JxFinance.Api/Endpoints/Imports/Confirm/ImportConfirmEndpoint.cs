@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Imports.Interfaces;
 
@@ -9,7 +10,7 @@ public sealed class ImportConfirmEndpoint(IImportService importService)
 {
     public override void Configure()
     {
-        Post("import/swedbank/confirm");
+        Post(ApiRoutes.Import + "/swedbank/confirm");
         Group<ImportsGroup>();
     }
 

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transfers.Interfaces;
 using JxFinance.Endpoints.Transfers.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateTransferEndpoint(ITransferService transferService)
 {
     public override void Configure()
     {
-        Put("transfers/{id}");
+        Put(ApiRoutes.Transfers + "/{id}");
         Group<TransfersGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

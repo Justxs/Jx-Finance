@@ -38,6 +38,7 @@ import { EmailVerificationBanner } from "@/features/profile/email-verification-b
 import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { type RouterContext, warm } from "@/lib/route-prefetch";
+import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 
 const UNAUTHENTICATED_PATHS = new Set([
@@ -49,7 +50,7 @@ const UNAUTHENTICATED_PATHS = new Set([
 ]);
 
 export const Route = createRootRouteWithContext<RouterContext>()({
-  beforeLoad: async ({ location }) => {
+  beforeLoad: async ({ context: { queryClient }, location }) => {
     const needsSetup = await checkSetupNeeded();
     if (needsSetup) {
       if (location.pathname !== "/setup") {
@@ -62,7 +63,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       throw redirect({ to: "/login" });
     }
 
-    const isAuthenticated = await checkIsAuthenticated();
+    const isAuthenticated = await checkIsAuthenticated(queryClient);
     if (isAuthenticated) {
       if (location.pathname === "/login") {
         throw redirect({ to: "/" });
@@ -102,7 +103,7 @@ function RootLayout() {
   const instanceName = usePublicSettings()?.instanceName;
 
   const mobileNavItems: readonly MobileNavItem[] = [
-    ...visibleNav(settings.features, me.data?.role === "Admin"),
+    ...visibleNav(settings.features, me.data?.role === UserRole.admin),
     { to: "/profile", key: "nav.profile" },
   ];
 

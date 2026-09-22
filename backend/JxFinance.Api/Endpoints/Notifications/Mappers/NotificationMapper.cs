@@ -1,5 +1,6 @@
 using System.Globalization;
 using FastEndpoints;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Notifications.Shared;
 
@@ -25,7 +26,7 @@ public sealed class NotificationMapper : Mapper<EmptyRequest, NotificationRespon
         notification.Type == NotificationType.BillDue
             && DateOnly.TryParseExact(
                 notification.Message,
-                "yyyy-MM-dd",
+                DateFormats.IsoDate,
                 CultureInfo.InvariantCulture,
                 DateTimeStyles.None,
                 out var dueDate)

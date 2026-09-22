@@ -3,7 +3,8 @@ import { useSyncExternalStore } from "react";
 import { z } from "zod";
 import { browserStorage } from "@/lib/browser-storage";
 
-const PREFERENCES_STORAGE_KEY = "jx-preferences";
+export const PREFERENCES_STORAGE_KEY = "jx-preferences";
+
 const ROW_ID = "browser";
 
 export const themes = ["light", "dark"] as const;
@@ -21,14 +22,18 @@ export const fonts = [
 export const textSizes = ["small", "default", "large"] as const;
 export const locales = ["en", "lt"] as const;
 
+export const DEFAULT_PALETTE = "ledger";
+export const DEFAULT_FONT = "ledger";
+export const DEFAULT_TEXT_SIZE = "default";
+
 export const COMMAND_RECENTS_MAX = 8;
 
 const preferencesSchema = z.object({
   id: z.literal(ROW_ID),
   theme: z.enum(themes).optional().catch(undefined),
-  palette: z.enum(palettes).catch("ledger"),
-  font: z.enum(fonts).catch("ledger"),
-  textSize: z.enum(textSizes).catch("default"),
+  palette: z.enum(palettes).catch(DEFAULT_PALETTE),
+  font: z.enum(fonts).catch(DEFAULT_FONT),
+  textSize: z.enum(textSizes).catch(DEFAULT_TEXT_SIZE),
   sidebarCollapsed: z.boolean().catch(false),
   locale: z.enum(locales).optional().catch(undefined),
   activeHouseholdId: z.uuid().optional().catch(undefined),
@@ -38,7 +43,7 @@ const preferencesSchema = z.object({
 export type Preferences = z.output<typeof preferencesSchema>;
 export type PreferencesPatch = Partial<Omit<Preferences, "id">>;
 
-const legacyKeys = {
+export const LEGACY_PREFERENCE_KEYS = {
   theme: "jx-theme",
   palette: "jx-palette",
   font: "jx-font",
@@ -64,7 +69,7 @@ export const preferencesCollection = createCollection({
 });
 
 function legacyPreferences(): PreferencesPatch | null {
-  const stored = Object.entries(legacyKeys).flatMap(([name, key]) => {
+  const stored = Object.entries(LEGACY_PREFERENCE_KEYS).flatMap(([name, key]) => {
     const value = storage.getItem(key);
     return value === null ? [] : [[name, name === "sidebarCollapsed" ? value === "true" : value]];
   });
@@ -81,7 +86,7 @@ function migrateLegacyKeys() {
     return;
   }
   preferencesCollection.insert(preferencesSchema.parse({ ...legacy, id: ROW_ID }));
-  for (const key of Object.values(legacyKeys)) {
+  for (const key of Object.values(LEGACY_PREFERENCE_KEYS)) {
     storage.removeItem(key);
   }
 }

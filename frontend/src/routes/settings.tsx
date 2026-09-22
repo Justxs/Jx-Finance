@@ -17,8 +17,8 @@ export const settingsSearchSchema = z.object({
 
 export const Route = createFileRoute("/settings")({
   validateSearch: settingsSearchSchema,
-  beforeLoad: async () => {
-    if (!(await checkIsAdmin())) {
+  beforeLoad: async ({ context: { queryClient } }) => {
+    if (!(await checkIsAdmin(queryClient))) {
       throw redirect({ to: "/" });
     }
   },

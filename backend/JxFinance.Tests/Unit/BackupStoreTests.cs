@@ -1,6 +1,7 @@
 using System.Text;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Backups;
+using JxFinance.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting.Internal;
 
@@ -14,7 +15,7 @@ public sealed class BackupStoreTests : IDisposable
     public BackupStoreTests()
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["App:BackupDirectory"] = directory })
+            .AddInMemoryCollection(new Dictionary<string, string?> { [ConfigKeys.BackupDirectory] = directory })
             .Build();
         store = new BackupStore(configuration, new HostingEnvironment { ContentRootPath = directory }, new UtcClock());
     }

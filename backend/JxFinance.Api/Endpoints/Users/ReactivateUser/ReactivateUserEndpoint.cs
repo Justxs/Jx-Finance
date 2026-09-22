@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -9,7 +10,7 @@ public sealed class ReactivateUserEndpoint(IUserService userService) : EndpointW
 {
     public override void Configure()
     {
-        Post("users/{id}/reactivate");
+        Post(ApiRoutes.Users + "/{id}/reactivate");
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));

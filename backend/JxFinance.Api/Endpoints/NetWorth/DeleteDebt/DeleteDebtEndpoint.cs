@@ -9,7 +9,7 @@ public sealed class DeleteDebtEndpoint(INetWorthService netWorthService) : Delet
 {
     public override void Configure()
     {
-        Delete("debts/{id}");
+        Delete(ApiRoutes.Debts + "/{id}");
         Group<NetWorthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

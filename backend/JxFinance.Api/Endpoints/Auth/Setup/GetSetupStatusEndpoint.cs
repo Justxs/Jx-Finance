@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Setup;
@@ -7,7 +8,7 @@ public sealed class GetSetupStatusEndpoint(IAuthService authService) : EndpointW
 {
     public override void Configure()
     {
-        Get("setup/status");
+        Get(ApiRoutes.Setup + "/status");
         Group<SetupGroup>();
         AllowAnonymous();
     }

@@ -1,9 +1,10 @@
-import { MeResponse } from "@/api/schemas/auth/auth.zod";
+import type { QueryClient } from "@tanstack/react-query";
+import { getMeQueryOptions } from "@/api/generated";
+import type { UserProfileResponse } from "@/api/generated/model";
 import { SetupStatusResponse } from "@/api/schemas/setup/setup.zod";
+import { UserRole } from "@/lib/user-role";
 
 const baseUrl = import.meta.env.VITE_API_BASE_URL ?? "";
-
-const roleResponse = MeResponse.pick({ role: true });
 
 let setupNeededCache: boolean | null = null;
 let authenticatedCache: boolean | null = null;
@@ -31,30 +32,24 @@ export async function checkSetupNeeded(): Promise<boolean> {
   }
 }
 
-export async function checkIsAuthenticated(): Promise<boolean> {
+async function loadMe(queryClient: QueryClient): Promise<UserProfileResponse | null> {
+  try {
+    return await queryClient.query({ ...getMeQueryOptions(), staleTime: "static" });
+  } catch {
+    return null;
+  }
+}
+
+export async function checkIsAuthenticated(queryClient: QueryClient): Promise<boolean> {
   if (authenticatedCache !== null) {
     return authenticatedCache;
   }
 
-  try {
-    const response = await fetch(`${baseUrl}/api/auth/me`, { credentials: "include" });
-    authenticatedCache = response.ok;
-    return authenticatedCache;
-  } catch {
-    authenticatedCache = false;
-    return false;
-  }
+  authenticatedCache = (await loadMe(queryClient)) !== null;
+  return authenticatedCache;
 }
 
-export async function checkIsAdmin(): Promise<boolean> {
-  try {
-    const response = await fetch(`${baseUrl}/api/auth/me`, { credentials: "include" });
-    if (!response.ok) {
-      return false;
-    }
-    const body = roleResponse.parse(await response.json());
-    return body.role === "Admin";
-  } catch {
-    return false;
-  }
+export async function checkIsAdmin(queryClient: QueryClient): Promise<boolean> {
+  const me = await loadMe(queryClient);
+  return me?.role === UserRole.admin;
 }

@@ -1,5 +1,6 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 
@@ -10,7 +11,7 @@ public sealed class LoginEndpoint(IAuthService authService, ISessionService sess
 {
     public override void Configure()
     {
-        Post("auth/login");
+        Post(ApiRoutes.Auth + "/login");
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 10, durationSeconds: 300);

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Configuration;
 
 namespace JxFinance.Infrastructure.Backups;
 
@@ -14,9 +15,9 @@ public sealed class BackupStore(IConfiguration configuration, IHostEnvironment e
 
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly string directory = string.IsNullOrWhiteSpace(configuration["App:BackupDirectory"])
+    private readonly string directory = string.IsNullOrWhiteSpace(configuration[ConfigKeys.BackupDirectory])
         ? Path.Combine(environment.ContentRootPath, "backups")
-        : configuration["App:BackupDirectory"]!;
+        : configuration[ConfigKeys.BackupDirectory]!;
 
     public async Task<IReadOnlyList<StoredBackup>> ListAsync(CancellationToken cancellationToken)
     {

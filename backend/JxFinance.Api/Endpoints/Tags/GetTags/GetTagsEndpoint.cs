@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Tags.Mappers;
 using JxFinance.Endpoints.Tags.Shared;
@@ -10,7 +11,7 @@ public sealed class GetTagsEndpoint(ITagService tagService)
 {
     public override void Configure()
     {
-        Get("tags");
+        Get(ApiRoutes.Tags);
         Group<TagsGroup>();
     }
 

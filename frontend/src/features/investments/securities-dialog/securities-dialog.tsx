@@ -12,6 +12,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, usePriceFormat } from "@/hooks/use-formatters";
+import { UserRole } from "@/lib/user-role";
 import { SecurityModal } from "../security-form";
 
 interface Props {
@@ -40,7 +41,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const securities = useSecuritiesSuspense();
-  const canEdit = useMeSuspense().data.role === "Admin";
+  const canEdit = useMeSuspense().data.role === UserRole.admin;
   const all = securities.data ?? [];
   const shown = all.filter((security) => matches(security, search));
 

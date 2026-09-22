@@ -8,6 +8,7 @@ import { Tag } from "@/components/ui/tag/tag";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
+import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { ImportTagPicker } from "./import-tag-picker";
 import { ImportTransferPicker } from "./import-transfer-picker";
@@ -59,7 +60,7 @@ export function ImportRow({
     <span
       className={cn(
         "font-semibold whitespace-nowrap tabular-nums",
-        row.type === "income" ? "text-income" : "text-foreground",
+        row.type === "income" ? INCOME_TONE : "text-foreground",
       )}
     >
       {row.type === "income" ? "+" : "−"}

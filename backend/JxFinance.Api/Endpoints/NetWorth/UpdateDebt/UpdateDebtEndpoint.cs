@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Mappers;
@@ -10,7 +11,7 @@ public sealed class UpdateDebtEndpoint(INetWorthService netWorthService) : Endpo
 {
     public override void Configure()
     {
-        Put("debts/{id}");
+        Put(ApiRoutes.Debts + "/{id}");
         Group<NetWorthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

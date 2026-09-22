@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using JxFinance.Common.Errors;
+using JxFinance.Common.OpenApi;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Settings;
 using Microsoft.AspNetCore.Mvc;
@@ -7,22 +9,22 @@ namespace JxFinance.Common.Middleware;
 
 public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSettingsStore settings)
 {
-    private const string EmptyWhenDisabled = "/api/households";
+    private const string EmptyWhenDisabled = ApiRoutes.HouseholdsPath;
 
     private static readonly (string Prefix, Feature Feature)[] Gates =
     [
-        ("/api/budgets", Feature.Budgets),
-        ("/api/goals", Feature.Goals),
-        ("/api/recurring-bills", Feature.RecurringBills),
-        ("/api/networth", Feature.NetWorth),
-        ("/api/assets", Feature.NetWorth),
-        ("/api/debts", Feature.NetWorth),
-        ("/api/reports", Feature.Reports),
-        ("/api/import", Feature.Import),
-        ("/api/households", Feature.Households),
-        ("/api/conversions", Feature.MultiCurrency),
-        ("/api/investments", Feature.Investments),
-        ("/api/categorization-rules", Feature.CategorizationRules),
+        (ApiRoutes.BudgetsPath, Feature.Budgets),
+        (ApiRoutes.GoalsPath, Feature.Goals),
+        (ApiRoutes.RecurringBillsPath, Feature.RecurringBills),
+        (ApiRoutes.NetWorthPath, Feature.NetWorth),
+        (ApiRoutes.AssetsPath, Feature.NetWorth),
+        (ApiRoutes.DebtsPath, Feature.NetWorth),
+        (ApiRoutes.ReportsPath, Feature.Reports),
+        (ApiRoutes.ImportPath, Feature.Import),
+        (ApiRoutes.HouseholdsPath, Feature.Households),
+        (ApiRoutes.ConversionsPath, Feature.MultiCurrency),
+        (ApiRoutes.InvestmentsPath, Feature.Investments),
+        (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),
     ];
 
     public async Task InvokeAsync(HttpContext context)
@@ -49,10 +51,10 @@ public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSetting
                     Title = "Feature disabled",
                     Detail = $"The {feature} feature is turned off for this installation.",
                     Instance = path,
-                    Extensions = { ["code"] = ErrorCodes.FeatureDisabled },
+                    Extensions = { [ErrorContract.CodeProperty] = ErrorCodes.FeatureDisabled },
                 },
                 options: null,
-                contentType: "application/problem+json",
+                contentType: MediaTypeNames.Application.ProblemJson,
                 context.RequestAborted);
             return;
         }

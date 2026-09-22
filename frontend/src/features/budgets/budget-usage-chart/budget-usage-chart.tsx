@@ -11,7 +11,14 @@ import {
 } from "recharts";
 import type { BarShapeProps } from "recharts";
 import type { BudgetResponse } from "@/api/generated/model";
-import { axisProps, ChartLegend, type ChartSeries, ChartTooltip } from "@/components/chart";
+import {
+  CHART_COLOR_NEGATIVE,
+  CHART_COLOR_PRIMARY,
+  axisProps,
+  ChartLegend,
+  type ChartSeries,
+  ChartTooltip,
+} from "@/components/chart";
 import { useAxisMoney } from "@/hooks/use-formatters";
 
 const ROW_HEIGHT = 44;
@@ -31,7 +38,7 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
 
   const series: ChartSeries[] = [
     { key: "limit", label: t("budgets.limitSeries"), color: "var(--input)" },
-    { key: "spent", label: t("budgets.spent"), color: "var(--chart-1)" },
+    { key: "spent", label: t("budgets.spent"), color: CHART_COLOR_PRIMARY },
   ];
 
   const chartData = budgets
@@ -45,7 +52,7 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
   function spentShape(props: BarShapeProps) {
     const row = chartData[props.index];
     const over = row !== undefined && row.spent > row.limit;
-    return <Rectangle {...props} fill={over ? "var(--chart-3)" : "var(--chart-1)"} />;
+    return <Rectangle {...props} fill={over ? CHART_COLOR_NEGATIVE : CHART_COLOR_PRIMARY} />;
   }
 
   return (

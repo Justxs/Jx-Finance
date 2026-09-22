@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Goals.Interfaces;
 using JxFinance.Endpoints.Goals.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithout
 {
     public override void Configure()
     {
-        Get("goals");
+        Get(ApiRoutes.Goals);
         Group<GoalsGroup>();
     }
 

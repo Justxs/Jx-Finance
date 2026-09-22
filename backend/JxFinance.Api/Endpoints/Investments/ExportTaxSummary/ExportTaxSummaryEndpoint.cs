@@ -1,7 +1,9 @@
 using System.Globalization;
+using System.Net.Mime;
 using System.Text;
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Investments.GetTaxSummary;
 using JxFinance.Endpoints.Investments.Interfaces;
@@ -19,9 +21,9 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
 
     public override void Configure()
     {
-        Get("investments/tax-summary/export");
+        Get(ApiRoutes.Investments + "/tax-summary/export");
         Group<InvestmentsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, "text/csv"));
+        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, MediaTypeNames.Text.Csv));
     }
 
     public override async Task HandleAsync(GetTaxSummaryRequest req, CancellationToken ct)
@@ -32,7 +34,7 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
 
         HttpContext.MarkResponseStart();
         HttpContext.Response.StatusCode = StatusCodes.Status200OK;
-        HttpContext.Response.ContentType = "text/csv";
+        HttpContext.Response.ContentType = MediaTypeNames.Text.Csv;
         HttpContext.Response.Headers.ContentDisposition =
             $"attachment; filename=investment-tax-summary-{summary.Year}.csv";
 
@@ -119,7 +121,7 @@ public sealed class ExportTaxSummaryEndpoint(ITaxSummaryService taxSummaryServic
             CsvCell.Value(string.Empty),
             CsvCell.Text(entry.Description));
 
-    private static string Day(DateOnly date) => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+    private static string Day(DateOnly date) => date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
 
     private static string Amount(decimal value) =>
         Money.Round(value).ToString("0.00", CultureInfo.InvariantCulture);

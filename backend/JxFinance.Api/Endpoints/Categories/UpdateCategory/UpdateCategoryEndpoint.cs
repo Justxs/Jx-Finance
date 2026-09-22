@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Endpoints.Categories.Mappers;
@@ -11,7 +12,7 @@ public sealed class UpdateCategoryEndpoint(ICategoryService categoryService)
 {
     public override void Configure()
     {
-        Put("categories/{id}");
+        Put(ApiRoutes.Categories + "/{id}");
         Group<CategoriesGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

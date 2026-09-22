@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Accounts.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetAccountsEndpoint(IAccountService accountService)
 {
     public override void Configure()
     {
-        Get("accounts");
+        Get(ApiRoutes.Accounts);
         Group<AccountsGroup>();
     }
 

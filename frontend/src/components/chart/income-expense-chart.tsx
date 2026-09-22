@@ -12,8 +12,9 @@ import {
 } from "recharts";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useAxisMoney } from "@/hooks/use-formatters";
+import { INCOME_TONE } from "@/lib/tone";
 import { ChartLegend } from "./chart-legend";
-import { axisProps, chartCursor } from "./chart-theme";
+import { CHART_COLOR_EXPENSE, CHART_COLOR_INCOME, axisProps, chartCursor } from "./chart-theme";
 import { type ChartSeries, ChartTooltip } from "./chart-tooltip";
 
 interface IncomeExpensePoint {
@@ -39,24 +40,24 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
     {
       key: "income",
       label: t("charts.income"),
-      color: "var(--chart-2)",
+      color: CHART_COLOR_INCOME,
       sign: "+",
-      tone: "text-income",
+      tone: INCOME_TONE,
     },
-    { key: "expense", label: t("charts.expense"), color: "var(--chart-3)", sign: "−" },
+    { key: "expense", label: t("charts.expense"), color: CHART_COLOR_EXPENSE, sign: "−" },
     ...(compared
       ? ([
           {
             key: "comparisonIncome",
             label: t("charts.earlierIncome"),
-            color: "var(--chart-2)",
+            color: CHART_COLOR_INCOME,
             sign: "+",
             shape: "dashed",
           },
           {
             key: "comparisonExpense",
             label: t("charts.earlierExpense"),
-            color: "var(--chart-3)",
+            color: CHART_COLOR_EXPENSE,
             sign: "−",
             shape: "dashed",
           },
@@ -123,14 +124,14 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
               isAnimationActive={false}
               maxBarSize={14}
               dataKey="income"
-              fill="var(--chart-2)"
+              fill={CHART_COLOR_INCOME}
               radius={[1, 1, 0, 0]}
             />
             <Bar
               isAnimationActive={false}
               maxBarSize={14}
               dataKey="expense"
-              fill="var(--chart-3)"
+              fill={CHART_COLOR_EXPENSE}
               radius={[1, 1, 0, 0]}
             />
             {compared ? (
@@ -138,11 +139,11 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
                 isAnimationActive={false}
                 type="linear"
                 dataKey="comparisonIncome"
-                stroke="var(--chart-2)"
+                stroke={CHART_COLOR_INCOME}
                 strokeWidth={1.5}
                 strokeDasharray="4 3"
                 dot={false}
-                activeDot={{ r: 3, fill: "var(--chart-2)" }}
+                activeDot={{ r: 3, fill: CHART_COLOR_INCOME }}
               />
             ) : null}
             {compared ? (
@@ -150,11 +151,11 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
                 isAnimationActive={false}
                 type="linear"
                 dataKey="comparisonExpense"
-                stroke="var(--chart-3)"
+                stroke={CHART_COLOR_EXPENSE}
                 strokeWidth={1.5}
                 strokeDasharray="4 3"
                 dot={false}
-                activeDot={{ r: 3, fill: "var(--chart-3)" }}
+                activeDot={{ r: 3, fill: CHART_COLOR_EXPENSE }}
               />
             ) : null}
             <Line

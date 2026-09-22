@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { setActiveHousehold } from "@/stores/active-household-store";
-import { ApiError, customFetch } from "./client";
+import { ApiError, SESSION_EXPIRED_EVENT, customFetch } from "./client";
 
 const fetchMock = vi.fn<typeof fetch>();
 
@@ -173,10 +173,10 @@ describe("session renewal", () => {
       Promise.resolve(json({ title: "Unauthorized" }, { status: 401 })),
     );
     const onExpired = vi.fn();
-    window.addEventListener("jx:session-expired", onExpired);
+    window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
 
     const error = await rejection(customFetch("/api/accounts"));
-    window.removeEventListener("jx:session-expired", onExpired);
+    window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
 
     expect(error).toMatchObject({ status: 401, title: "Unauthorized" });
     expect(onExpired).toHaveBeenCalledOnce();
@@ -196,10 +196,10 @@ describe("session renewal", () => {
     async (url) => {
       fetchMock.mockResolvedValueOnce(json({ title: "Nope" }, { status: 401 }));
       const onExpired = vi.fn();
-      window.addEventListener("jx:session-expired", onExpired);
+      window.addEventListener(SESSION_EXPIRED_EVENT, onExpired);
 
       const error = await rejection(customFetch(url, { method: "POST" }));
-      window.removeEventListener("jx:session-expired", onExpired);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, onExpired);
 
       expect(error.status).toBe(401);
       expect(fetchMock).toHaveBeenCalledOnce();

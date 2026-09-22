@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage } from "@/test/preferences";
+import { SAVED_FILTERS_STORAGE_KEY, TEMPLATES_STORAGE_KEY } from "./transaction-views";
 
 const loadStore = await freshModuleLoader(() => import("./transaction-views"));
 
@@ -24,7 +25,7 @@ describe("saved filters", () => {
     const store = await loadStore();
 
     expect(store.readSavedFilters()).toEqual([]);
-    expect(localStorage.getItem("jx-saved-filters")).toBeNull();
+    expect(localStorage.getItem(SAVED_FILTERS_STORAGE_KEY)).toBeNull();
   });
 
   test("a saved filter comes back with its name and filter", async () => {
@@ -36,7 +37,7 @@ describe("saved filters", () => {
     expect(store.readSavedFilters()).toEqual([
       { id: saved.id, name: "Groceries", filter: groceries },
     ]);
-    expect(storedKeys("jx-saved-filters")).toEqual([`s:${saved.id}`]);
+    expect(storedKeys(SAVED_FILTERS_STORAGE_KEY)).toEqual([`s:${saved.id}`]);
   });
 
   test("the list is ordered by name and the snapshot keeps its identity", async () => {
@@ -70,11 +71,11 @@ describe("saved filters", () => {
     store.deleteSavedFilter(saved.id);
 
     expect(store.readSavedFilters()).toEqual([]);
-    expect(storedKeys("jx-saved-filters")).toEqual([]);
+    expect(storedKeys(SAVED_FILTERS_STORAGE_KEY)).toEqual([]);
   });
 
   test("a stored filter outside the schema falls back field by field", async () => {
-    seedRows("jx-saved-filters", [
+    seedRows(SAVED_FILTERS_STORAGE_KEY, [
       {
         id: "stored-1",
         name: "Odd",
@@ -138,7 +139,7 @@ describe("transaction templates", () => {
   });
 
   test("a stored template outside the schema falls back field by field", async () => {
-    seedRows("jx-transaction-templates", [
+    seedRows(TEMPLATES_STORAGE_KEY, [
       {
         id: "stored-1",
         name: "Odd",

@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import type { RecurringBillResponse } from "@/api/generated/model";
-import { axisProps, type ChartSeries, ChartTooltip } from "@/components/chart";
+import { CHART_COLOR_PRIMARY, axisProps, type ChartSeries, ChartTooltip } from "@/components/chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { useAxisMoney, useShortMonth } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
@@ -56,7 +56,7 @@ export function BillsForecastChart({ bills }: Readonly<Props>) {
   }
 
   const series: ChartSeries[] = [
-    { key: "total", label: t("recurringBills.forecastSeries"), color: "var(--chart-1)" },
+    { key: "total", label: t("recurringBills.forecastSeries"), color: CHART_COLOR_PRIMARY },
   ];
 
   const chartData = totals.map((total, index) => ({
@@ -94,7 +94,7 @@ export function BillsForecastChart({ bills }: Readonly<Props>) {
           <Bar
             isAnimationActive={false}
             dataKey="total"
-            fill="var(--chart-1)"
+            fill={CHART_COLOR_PRIMARY}
             maxBarSize={22}
             radius={[1, 1, 0, 0]}
           />

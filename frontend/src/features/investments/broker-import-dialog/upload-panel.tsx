@@ -14,6 +14,8 @@ import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
 
+export const BROKER_UPLOAD_FILE_INPUT_ID = "broker-upload-file";
+
 interface Props {
   accounts: readonly AccountResponse[];
   accountId: string;
@@ -84,10 +86,10 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
       </FieldShell>
 
       <div className="space-y-1.5">
-        <Label htmlFor="broker-upload-file">{t("investments.import.file")}</Label>
+        <Label htmlFor={BROKER_UPLOAD_FILE_INPUT_ID}>{t("investments.import.file")}</Label>
         <FileInput
           key={uploadKey}
-          id="broker-upload-file"
+          id={BROKER_UPLOAD_FILE_INPUT_ID}
           ref={fileInputRef}
           accept=".xml,text/xml,application/xml"
           disabled={mutations.busy}
@@ -96,12 +98,12 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
           aria-invalid={fileError ? true : undefined}
           aria-describedby={
             fileError
-              ? "broker-upload-file-hint broker-upload-file-error"
-              : "broker-upload-file-hint"
+              ? `${BROKER_UPLOAD_FILE_INPUT_ID}-hint ${BROKER_UPLOAD_FILE_INPUT_ID}-error`
+              : `${BROKER_UPLOAD_FILE_INPUT_ID}-hint`
           }
         />
-        <Hint id="broker-upload-file-hint">{t("investments.import.fileHint")}</Hint>
-        <FieldError id="broker-upload-file-error" message={fileError} />
+        <Hint id={`${BROKER_UPLOAD_FILE_INPUT_ID}-hint`}>{t("investments.import.fileHint")}</Hint>
+        <FieldError id={`${BROKER_UPLOAD_FILE_INPUT_ID}-error`} message={fileError} />
       </div>
 
       <div role="status" aria-live="polite">

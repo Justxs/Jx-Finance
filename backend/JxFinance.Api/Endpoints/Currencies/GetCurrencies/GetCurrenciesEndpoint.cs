@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Currencies.Interfaces;
 using JxFinance.Endpoints.Currencies.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetCurrenciesEndpoint(ICurrencyService currencyService) : En
 {
     public override void Configure()
     {
-        Get("currencies");
+        Get(ApiRoutes.Currencies);
         Group<CurrenciesGroup>();
     }
 

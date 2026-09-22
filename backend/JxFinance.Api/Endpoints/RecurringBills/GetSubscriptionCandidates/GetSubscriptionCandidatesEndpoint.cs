@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetSubscriptionCandidatesEndpoint(ISubscriptionDetectionServ
 {
     public override void Configure()
     {
-        Get("recurring-bills/suggestions");
+        Get(ApiRoutes.RecurringBills + "/suggestions");
         Group<RecurringBillsGroup>();
     }
 
