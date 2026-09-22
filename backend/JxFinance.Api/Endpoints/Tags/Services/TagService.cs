@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
@@ -12,14 +13,18 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Tags.Services;
 
 [RegisterService<ITagService>(LifeTime.Scoped)]
-public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDeletionRecorder deletions) : ITagService
+public sealed class TagService(
+    AppDbContext db,
+    ICurrentUser currentUser,
+    ISharingGuard sharing,
+    IDeletionRecorder deletions) : ITagService
 {
     public async Task<IReadOnlyList<Tag>> GetAllAsync(CancellationToken cancellationToken) =>
         await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
 
     public async Task<Result<Tag>> CreateAsync(Tag tag, CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(tag, null, cancellationToken);
+        var error = await ValidateAsync(tag, null, null, cancellationToken);
         if (error is not null)
         {
             return error;
@@ -40,19 +45,13 @@ public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDelet
             return found.Error;
         }
 
-        var (previousScope, previousHouseholdId) = (tag.Scope, tag.HouseholdId);
+        var previous = SharingState.Of(tag);
         apply(tag);
 
-        var error = await ValidateAsync(tag, tagId, cancellationToken);
+        var error = await ValidateAsync(tag, previous, tagId, cancellationToken);
         if (error is not null)
         {
             return error;
-        }
-
-        if (tag.UserId != currentUser.Id &&
-            (tag.Scope != previousScope || tag.HouseholdId != previousHouseholdId))
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -98,17 +97,15 @@ public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDelet
         return id;
     }
 
-    private async Task<DomainError?> ValidateAsync(Tag tag, TagId? excluding, CancellationToken cancellationToken)
+    private async Task<DomainError?> ValidateAsync(
+        Tag tag,
+        SharingState? previous,
+        TagId? excluding,
+        CancellationToken cancellationToken)
     {
-        if (tag.Scope == Scope.Shared && tag.HouseholdId is { } householdId)
+        if (await sharing.CheckAsync(tag, previous, cancellationToken) is { } sharingError)
         {
-            var isMember = await db.HouseholdMemberships.AnyAsync(
-                m => m.HouseholdId == householdId && m.UserId == currentUser.Id,
-                cancellationToken);
-            if (!isMember)
-            {
-                return new DomainError(ErrorCodes.HouseholdNotMember, "You are not a member of that household.");
-            }
+            return sharingError;
         }
 
         var ownerId = tag.UserId == Guid.Empty ? currentUser.Id : tag.UserId;

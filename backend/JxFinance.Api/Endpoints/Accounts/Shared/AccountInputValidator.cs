@@ -1,8 +1,8 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Validation;
-using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Accounts.Shared;
 
@@ -22,10 +22,6 @@ public abstract class AccountInputValidator<TRequest> : Validator<TRequest>
             .WithMessage("Starting balance is required.")
             .IsMoney()
             .WithMessage("Starting balance must be a decimal with at most 2 decimal places.");
-        RuleFor(r => r.HouseholdId)
-            .NotNull()
-            .WithErrorCode(ErrorCodes.HouseholdRequired)
-            .WithMessage("A shared account needs a household.")
-            .When(r => r.Scope == Scope.Shared);
+        RuleFor(r => r.HouseholdId).RequiresHouseholdWhenShared("account");
     }
 }
