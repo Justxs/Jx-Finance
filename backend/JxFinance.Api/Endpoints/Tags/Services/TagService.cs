@@ -86,8 +86,8 @@ public sealed class TagService(
             .Select(t => t.TransactionId)
             .ToListAsync(cancellationToken);
         var live = await db.Transactions
-            .IgnoreQueryFilters()
-            .CountAsync(t => linked.Contains(t.Id) && !t.IsDeleted, cancellationToken);
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .CountAsync(t => linked.Contains(t.Id), cancellationToken);
         var entry = deletions.Record(
             TrashKind.Tag,
             id,
@@ -122,10 +122,9 @@ public sealed class TagService(
         var excludedId = existing?.Id ?? default;
         var hasExcluded = existing is not null;
         var taken = await db.Tags
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(
-                t => !t.IsDeleted
-                    && t.UserId == ownerId
+                t => t.UserId == ownerId
                     && EF.Functions.ILike(t.Name, pattern, LikePattern.Escape)
                     && (!hasExcluded || t.Id != excludedId),
                 cancellationToken);

@@ -24,16 +24,15 @@ public sealed record TrashRestore(
 
     public Task<bool> CategoryLivesAsync(CategoryId categoryId) =>
         Db.Categories
-            .IgnoreQueryFilters()
-            .AnyAsync(c => c.Id == categoryId && !c.IsDeleted, CancellationToken);
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .AnyAsync(c => c.Id == categoryId, CancellationToken);
 
     public Task<bool> IsLiveMemberAsync(HouseholdId householdId, Guid userId) =>
         Db.HouseholdMemberships
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(
                 m => m.HouseholdId == householdId
                     && m.UserId == userId
-                    && !m.IsDeleted
-                    && Db.Households.IgnoreQueryFilters().Any(h => h.Id == householdId && !h.IsDeleted),
+                    && Db.Households.IgnoreQueryFilters(QueryFilters.OwnerOnly).Any(h => h.Id == householdId),
                 CancellationToken);
 }

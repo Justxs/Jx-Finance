@@ -368,10 +368,9 @@ public static class TrashRestorers
     private static async Task<bool> BudgetMayReturnAsync(TrashRestore r, Budget budget, Category category)
     {
         var taken = await r.Db.Budgets
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(
-                b => !b.IsDeleted
-                    && b.Id != budget.Id
+                b => b.Id != budget.Id
                     && b.UserId == budget.UserId
                     && b.CategoryId == budget.CategoryId
                     && b.Period == budget.Period,
@@ -392,10 +391,9 @@ public static class TrashRestorers
         var tagId = tag.Id;
         var pattern = LikePattern.Exactly(tag.Name);
         var nameTaken = await db.Tags
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(
-                t => !t.IsDeleted
-                    && t.UserId == tag.UserId
+                t => t.UserId == tag.UserId
                     && t.Id != tagId
                     && EF.Functions.ILike(t.Name, pattern, LikePattern.Escape),
                 r.CancellationToken);
@@ -460,10 +458,9 @@ public static class TrashRestorers
     {
         var householdId = household.Id;
         var isOwner = await r.Db.HouseholdMemberships
-            .IgnoreQueryFilters()
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
             .AnyAsync(
                 m => m.HouseholdId == householdId
-                    && !m.IsDeleted
                     && m.UserId == r.UserId
                     && m.Role == HouseholdRole.Owner,
                 r.CancellationToken);
@@ -476,8 +473,8 @@ public static class TrashRestorers
         var db = r.Db;
         var householdId = household.Id;
         var members = await db.HouseholdMemberships
-            .IgnoreQueryFilters()
-            .Where(m => m.HouseholdId == householdId && !m.IsDeleted)
+            .IgnoreQueryFilters(QueryFilters.OwnerOnly)
+            .Where(m => m.HouseholdId == householdId)
             .Select(m => m.UserId)
             .ToListAsync(r.CancellationToken);
         var now = r.Clock.UtcNow;

@@ -51,8 +51,8 @@ public sealed class SettingsService(
         if (request.DefaultAccountId is { } accountId && accountId != store.Current.DefaultAccountId)
         {
             var typedAccountId = new AccountId(accountId);
-            var exists = await db.Accounts.IgnoreQueryFilters()
-                .AnyAsync(a => a.Id == typedAccountId && !a.IsDeleted, cancellationToken);
+            var exists = await db.Accounts.IgnoreQueryFilters(QueryFilters.OwnerOnly)
+                .AnyAsync(a => a.Id == typedAccountId, cancellationToken);
             if (!exists)
             {
                 return new DomainError(ErrorCodes.ReferenceNotFound, "The default account does not exist.");
