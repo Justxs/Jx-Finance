@@ -276,8 +276,6 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         return (await response.Content.ReadFromJsonAsync<PageDto<TransactionDto>>())!;
     }
 
-    private sealed record BulkDto(int Updated);
-
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
 
     private sealed record TagAmountDto(Guid? TagId, string TagName, string Amount);

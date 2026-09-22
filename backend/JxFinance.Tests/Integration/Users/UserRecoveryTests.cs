@@ -277,5 +277,4 @@ public sealed class UserRecoveryTests(ApiFixture fixture) : IntegrationTestBase(
         bool resetTwoFactor = false) =>
         client.PostAsJsonAsync($"/api/users/{userId}/reset-password", new { newPassword, currentPassword, resetTwoFactor });
 
-    private sealed record SetupDto(string SharedKey);
 }

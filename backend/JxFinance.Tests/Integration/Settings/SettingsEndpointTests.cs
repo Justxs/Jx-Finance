@@ -297,7 +297,5 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         Guid? DefaultAccountId,
         int DefaultPageSize);
 
-    private sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
-
     private sealed record SyncDto(int Added, DateOnly? RatesAsOf);
 }

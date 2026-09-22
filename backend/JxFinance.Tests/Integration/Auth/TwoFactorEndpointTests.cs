@@ -142,7 +142,5 @@ public sealed class TwoFactorEndpointTests(ApiFixture fixture) : IntegrationTest
 
     private sealed record ProfileDto(Guid Id);
 
-    private sealed record SetupDto(string SharedKey);
-
     private sealed record EnableDto(List<string> RecoveryCodes);
 }

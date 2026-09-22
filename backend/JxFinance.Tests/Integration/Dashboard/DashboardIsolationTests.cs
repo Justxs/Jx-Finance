@@ -10,11 +10,8 @@ public sealed class DashboardIsolationTests(ApiFixture fixture) : IntegrationTes
     [Fact]
     public async Task Summary_breakdown_and_trend_count_only_what_the_caller_can_see()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        var household = await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, household) = pair;
         using var stranger = await CreateUserClientAsync();
         var month = Today.ToString("yyyy-MM", CultureInfo.InvariantCulture);
         var firstOfMonth = new DateOnly(Today.Year, Today.Month, 1);

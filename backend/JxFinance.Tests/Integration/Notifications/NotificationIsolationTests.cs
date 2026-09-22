@@ -13,26 +13,23 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
     [Fact]
     public async Task A_reminder_reaches_only_the_owner_of_the_bill_and_only_the_owner_can_mark_it_read()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, _) = pair;
         var bill = await CreateDueBillAsync(ownerClient);
         var partnerBill = await CreateDueBillAsync(partnerClient);
 
         await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
-        var reminder = Assert.Single(await UnreadAsync(ownerClient));
+        var reminder = Assert.Single(await Seed.UnreadNotificationsAsync(ownerClient));
         Assert.Equal(bill, reminder.RelatedId);
-        Assert.Equal(partnerBill, Assert.Single(await UnreadAsync(partnerClient)).RelatedId);
+        Assert.Equal(partnerBill, Assert.Single(await Seed.UnreadNotificationsAsync(partnerClient)).RelatedId);
 
         var foreignMark = await partnerClient.PatchAsync($"/api/notifications/{reminder.Id}/read", null, TestContext.Current.CancellationToken);
         (await partnerClient.PostAsync("/api/notifications/read-all", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.NotFound, foreignMark.StatusCode);
-        Assert.Empty(await UnreadAsync(partnerClient));
-        Assert.Equal(reminder.Id, Assert.Single(await UnreadAsync(ownerClient)).Id);
+        Assert.Empty(await Seed.UnreadNotificationsAsync(partnerClient));
+        Assert.Equal(reminder.Id, Assert.Single(await Seed.UnreadNotificationsAsync(ownerClient)).Id);
     }
 
     [Fact]
@@ -56,14 +53,5 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
     private RecurringBillReminderJob NewJob() =>
         new(Services.GetRequiredService<IServiceScopeFactory>(), NullLogger<RecurringBillReminderJob>.Instance);
 
-    private async Task<Guid> CreateDueBillAsync(HttpClient client) =>
-        (await PostAsync<IdDto>(
-            client,
-            "/api/recurring-bills",
-            new { name = $"Due {Guid.NewGuid():N}", kind = "fixed", amount = "5.00", cadence = "monthly", nextDueDate = Today, remindDaysBefore = 0 })).Id;
-
-    private static async Task<List<NotificationDto>> UnreadAsync(HttpClient client) =>
-        (await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true"))!;
-
-    private sealed record NotificationDto(Guid Id, Guid? RelatedId, bool IsRead);
+    private Task<Guid> CreateDueBillAsync(HttpClient client) => Seed.RecurringBillAsync(client, Today);
 }

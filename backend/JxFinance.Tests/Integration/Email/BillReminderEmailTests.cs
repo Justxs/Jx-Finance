@@ -21,7 +21,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
             await DrainAsync();
 
             Assert.Empty(Transport.To(user.Email));
-            Assert.Single(await UnreadAsync(member));
+            Assert.Single(await Seed.UnreadNotificationsAsync(member));
         }
         finally
         {
@@ -46,7 +46,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
             await DrainAsync();
 
             var mail = Assert.Single(Transport.To(user.Email));
-            Assert.Single(await UnreadAsync(member));
+            Assert.Single(await Seed.UnreadNotificationsAsync(member));
             Assert.Contains("Rent", mail.Email.Subject, StringComparison.Ordinal);
             Assert.Contains("due to be paid", mail.Email.Body, StringComparison.Ordinal);
         }
@@ -67,20 +67,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
             await ConfirmAddressAsync(user.Email);
             await SubscribeAsync(member);
             var account = await CreateAccountAsync(client: member);
-            await PostAsync<IdDto>(
-                member,
-                "/api/recurring-bills",
-                new
-                {
-                    name = "Salary",
-                    shape = "income",
-                    kind = "fixed",
-                    amount = "1200.00",
-                    accountId = account,
-                    cadence = "monthly",
-                    nextDueDate = Today,
-                    remindDaysBefore = 0,
-                });
+            await Seed.RecurringBillAsync(member, Today, "Salary", shape: "income", amount: "1200.00", accountId: account);
 
             await ScanBillsAsync();
             await DrainAsync();
@@ -112,7 +99,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
             await ScanBillsAsync();
             await DrainAsync();
 
-            Assert.Single(await UnreadAsync(member));
+            Assert.Single(await Seed.UnreadNotificationsAsync(member));
             Assert.Empty(Transport.To(user.Email));
         }
         finally
@@ -138,7 +125,7 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
             await ScanBillsAsync();
             await DrainAsync();
 
-            Assert.Single(await UnreadAsync(member));
+            Assert.Single(await Seed.UnreadNotificationsAsync(member));
             Assert.Empty(Transport.To(user.Email));
         }
         finally
@@ -164,22 +151,6 @@ public sealed class BillReminderEmailTests(ApiFixture fixture) : EmailTestBase(f
         response.EnsureSuccessStatusCode();
     }
 
-    private async Task<Guid> CreateDueBillAsync(HttpClient client, string? name = null) =>
-        (await PostAsync<IdDto>(
-            client,
-            "/api/recurring-bills",
-            new
-            {
-                name = name ?? $"Due {Guid.NewGuid():N}",
-                kind = "fixed",
-                amount = "5.00",
-                cadence = "monthly",
-                nextDueDate = Today,
-                remindDaysBefore = 0,
-            })).Id;
-
-    private static async Task<List<NotificationDto>> UnreadAsync(HttpClient client) =>
-        (await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true"))!;
-
-    private sealed record NotificationDto(Guid Id, Guid? RelatedId, bool IsRead);
+    private Task<Guid> CreateDueBillAsync(HttpClient client, string? name = null) =>
+        Seed.RecurringBillAsync(client, Today, name);
 }

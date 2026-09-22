@@ -3,6 +3,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FastEndpoints.Testing;
 using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Support;
@@ -49,7 +51,10 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         string email,
         string password,
         string? twoFactorCode = null) =>
-        client.PostAsJsonAsync("/api/auth/login", new { email, password, rememberMe = false, twoFactorCode });
+        client.PostAsJsonAsync(
+            "/api/auth/login",
+            new { email, password, rememberMe = false, twoFactorCode },
+            TestContext.Current.CancellationToken);
 
     protected async Task<HttpClient> CreateUserClientAsync(string role = "Member") =>
         await LoginAsync(await CreateUserAsync(role));
@@ -76,14 +81,8 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         return created.Id;
     }
 
-    protected async Task<Guid> CreateCategoryAsync(string type = "expense", HttpClient? client = null)
-    {
-        var created = await PostAsync<IdDto>(
-            client ?? Client,
-            "/api/categories",
-            new { name = $"Category {Guid.NewGuid():N}", type });
-        return created.Id;
-    }
+    protected async Task<Guid> CreateCategoryAsync(string type = "expense", HttpClient? client = null) =>
+        await Seed.CategoryAsync(client ?? Client, $"Category {Guid.NewGuid():N}", type);
 
     protected async Task<Guid> CreateTagAsync(string? name = null, Guid? householdId = null, HttpClient? client = null)
     {
@@ -99,16 +98,21 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         return created.Id;
     }
 
-    protected async Task<Guid> CreateHouseholdAsync(params TestUser[] members)
+    protected Task<Guid> CreateHouseholdAsync(params TestUser[] members) =>
+        Seed.HouseholdAsync(Client, null, members);
+
+    protected async Task<HouseholdPair> CreateHouseholdPairAsync()
     {
-        var household = await PostAsync<IdDto>(Client, "/api/households", new { name = $"Household {Guid.NewGuid():N}" });
-        foreach (var member in members)
-            await PostAsync<IdDto>(Client, $"/api/households/{household.Id}/members", new { email = member.Email, role = "member" });
-        return household.Id;
+        var owner = await CreateUserAsync();
+        var partner = await CreateUserAsync();
+        var household = await CreateHouseholdAsync(owner, partner);
+        return new HouseholdPair(owner, partner, await LoginAsync(owner), await LoginAsync(partner), household);
     }
 
     protected async Task<string> CurrentBalanceAsync(Guid accountId, HttpClient? client = null) =>
-        (await (client ?? Client).GetFromJsonAsync<AccountDto>($"/api/accounts/{accountId}"))!.CurrentBalance;
+        (await (client ?? Client).GetFromJsonAsync<AccountDto>(
+            $"/api/accounts/{accountId}",
+            TestContext.Current.CancellationToken))!.CurrentBalance;
 
     protected static Task<TransactionDto> RecordTransactionAsync(HttpClient client, object transaction) =>
         PostAsync<TransactionDto>(client, "/api/transactions", transaction);
@@ -134,19 +138,39 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected static async Task<Guid> RecordInvestmentAsync(HttpClient client, object entry) =>
         (await PostAsync<IdDto>(client, "/api/investments/transactions", entry)).Id;
 
-    protected static async Task<T> PostAsync<T>(HttpClient client, string url, object body)
+    protected static Task<T> PostAsync<T>(HttpClient client, string url, object body) =>
+        Seed.PostAsync<T>(client, url, body);
+
+    protected async Task WithDbAsync(Func<AppDbContext, Task> work)
     {
-        var response = await client.PostAsJsonAsync(url, body);
-        Assert.True(
-            response.IsSuccessStatusCode,
-            $"POST {url}: {(int)response.StatusCode} {await response.Content.ReadAsStringAsync()}");
-        return (await response.Content.ReadFromJsonAsync<T>())!;
+        await using var scope = Services.CreateAsyncScope();
+        await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+    }
+
+    protected async Task<T> WithDbAsync<T>(Func<AppDbContext, Task<T>> work)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        return await work(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+    }
+
+    protected async Task WithDbAsync(Guid userId, Func<AppDbContext, Task> work)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        await using var db = OpenAs(scope, userId);
+        await work(db);
+    }
+
+    protected async Task<T> WithDbAsync<T>(Guid userId, Func<AppDbContext, Task<T>> work)
+    {
+        await using var scope = Services.CreateAsyncScope();
+        await using var db = OpenAs(scope, userId);
+        return await work(db);
     }
 
     protected static async Task AssertValidationErrorAsync(HttpResponseMessage response, string field)
     {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
+        var problem = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
         var fields = problem.GetProperty("errors").EnumerateArray().Select(e => e.GetProperty("name").GetString()).ToList();
         Assert.Contains(field, fields);
     }
@@ -154,19 +178,35 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected static async Task AssertRejectedAsync(HttpResponseMessage response, string reason)
     {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains(reason, await response.Content.ReadAsStringAsync());
+        Assert.Contains(reason, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     protected static async Task AssertProblemAsync(HttpResponseMessage response, HttpStatusCode status, string code)
     {
-        var body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.True(response.StatusCode == status, $"Expected {(int)status}, got {(int)response.StatusCode}: {body}");
         Assert.Contains($"\"{code}\"", body);
     }
 
-    protected sealed record IdDto(Guid Id);
-
-    protected sealed record TestCurrentUser(Guid Id) : ICurrentUser;
+    private static AppDbContext OpenAs(AsyncServiceScope scope, Guid userId) => new(
+        scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
+        new TestCurrentUser(userId));
 }
 
 public sealed record TestUser(Guid Id, string Email, string Password);
+
+public sealed record TestCurrentUser(Guid Id) : ICurrentUser;
+
+public sealed record HouseholdPair(
+    TestUser Owner,
+    TestUser Partner,
+    HttpClient OwnerClient,
+    HttpClient PartnerClient,
+    Guid HouseholdId) : IDisposable
+{
+    public void Dispose()
+    {
+        OwnerClient.Dispose();
+        PartnerClient.Dispose();
+    }
+}

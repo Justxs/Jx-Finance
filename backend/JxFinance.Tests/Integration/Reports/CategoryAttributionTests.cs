@@ -4,7 +4,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace JxFinance.Tests.Integration.Reports;
 
@@ -49,19 +48,17 @@ public sealed class CategoryAttributionTests(ApiFixture fixture) : IntegrationTe
                 },
             });
 
-        using var scope = Services.CreateScope();
-        await using var db = new AppDbContext(
-            scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
-            new TestCurrentUser(user.Id));
+        await WithDbAsync(user.Id, async db =>
+        {
+            var grouped = Totals(await new CategoryAttributionService(db)
+                .GetAttributionsAsync(new DateWindow(Start, End), null, FlowType.Expense, TestContext.Current.CancellationToken));
+            var rowByRow = Totals(await RowByRowAsync(db));
 
-        var grouped = Totals(await new CategoryAttributionService(db)
-            .GetAttributionsAsync(new DateWindow(Start, End), null, FlowType.Expense, TestContext.Current.CancellationToken));
-        var rowByRow = Totals(await RowByRowAsync(db));
-
-        Assert.Equal(rowByRow, grouped);
-        Assert.Equal(
-            new Dictionary<Guid, decimal> { [food] = 33.01m, [travel] = 33.30m, [Guid.Empty] = 9.55m },
-            grouped);
+            Assert.Equal(rowByRow, grouped);
+            Assert.Equal(
+                new Dictionary<Guid, decimal> { [food] = 33.01m, [travel] = 33.30m, [Guid.Empty] = 9.55m },
+                grouped);
+        });
     }
 
     private static async Task<List<CategoryAttribution>> RowByRowAsync(AppDbContext db)

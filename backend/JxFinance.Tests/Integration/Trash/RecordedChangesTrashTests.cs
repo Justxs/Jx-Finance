@@ -6,7 +6,6 @@ using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Transactions;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,7 +23,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var user = await CreateUserAsync();
         using var member = await LoginAsync(user);
         var account = await CreateAccountAsync(client: member);
-        var food = await CreateNamedCategoryAsync(member, "Groceries");
+        var food = await Seed.CategoryAsync(member, "Groceries");
         var other = await CreateCategoryAsync(client: member);
         var plain = await CreateTransactionAsync(member, account, food, "expense", "12.00", Date, "Maxima");
         var split = await RecordTransactionAsync(
@@ -56,7 +55,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
                 nextDueDate = Date,
                 remindDaysBefore = 3,
             });
-        var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = food, limitAmount = "300.00" });
+        var budget = await Seed.BudgetAsync(member, food, "300.00");
         var before = await CategoryStateAsync(user.Id, food);
 
         var deleted = await member.DeleteAsync($"/api/categories/{food}", TestContext.Current.CancellationToken);
@@ -73,7 +72,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
         Assert.Equal(before, after);
         Assert.Equal(new CategoryState(false, 1, 1, 1, 1), after);
-        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget);
         Assert.Equal(food, (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{plain.Id}", TestContext.Current.CancellationToken))!.CategoryId);
         var lines = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{split.Id}", TestContext.Current.CancellationToken))!.Lines!;
         Assert.Contains(lines, l => l.CategoryId == food && l.Amount == "20.00");
@@ -106,7 +105,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var user = await CreateUserAsync();
         using var member = await LoginAsync(user);
         var category = await CreateCategoryAsync(client: member);
-        var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "80.00" });
+        var budget = await Seed.BudgetAsync(member, category, "80.00");
 
         await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         await OccupyBudgetSlotAsync(user.Id, category);
@@ -114,7 +113,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
         Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/categories", TestContext.Current.CancellationToken))!, c => c.Id == category);
-        Assert.DoesNotContain((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
+        Assert.DoesNotContain((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget);
     }
 
     [Fact]
@@ -122,13 +121,13 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var older = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "80.00" });
-        await member.DeleteAsync($"/api/budgets/{older.Id}", TestContext.Current.CancellationToken);
+        var older = await Seed.BudgetAsync(member, category, "80.00");
+        await member.DeleteAsync($"/api/budgets/{older}", TestContext.Current.CancellationToken);
 
         await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
-        var refused = await RestoreAsync(member, "budget", older.Id);
+        var refused = await RestoreAsync(member, "budget", older);
         var categoryBack = await RestoreAsync(member, "category", category);
-        var accepted = await RestoreAsync(member, "budget", older.Id);
+        var accepted = await RestoreAsync(member, "budget", older);
 
         await AssertProblemAsync(refused, HttpStatusCode.BadRequest, "restore.referenceMissing");
         Assert.Equal(HttpStatusCode.NoContent, categoryBack.StatusCode);
@@ -147,16 +146,16 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
             ownerClient,
             "/api/categories",
             new { name = "Bendra", type = "expense", scope = "shared", householdId = household });
-        var ownerBudget = await PostAsync<IdDto>(ownerClient, "/api/budgets", new { categoryId = shared.Id, limitAmount = "50.00" });
-        var housemateBudget = await PostAsync<IdDto>(housemateClient, "/api/budgets", new { categoryId = shared.Id, limitAmount = "60.00" });
+        var ownerBudget = await Seed.BudgetAsync(ownerClient, shared.Id, "50.00");
+        var housemateBudget = await Seed.BudgetAsync(housemateClient, shared.Id, "60.00");
 
         await ownerClient.DeleteAsync($"/api/categories/{shared.Id}", TestContext.Current.CancellationToken);
         (await ownerClient.DeleteAsync($"/api/households/{household}/members/{housemate.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var restore = await RestoreAsync(ownerClient, "category", shared.Id);
 
         Assert.Equal(HttpStatusCode.NoContent, restore.StatusCode);
-        Assert.False(await BudgetDeletedAsync(owner.Id, ownerBudget.Id));
-        Assert.True(await BudgetDeletedAsync(owner.Id, housemateBudget.Id));
+        Assert.False(await BudgetDeletedAsync(owner.Id, ownerBudget));
+        Assert.True(await BudgetDeletedAsync(owner.Id, housemateBudget));
     }
 
     [Fact]
@@ -398,9 +397,6 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         Assert.Contains(categories, c => c.Id == keptCategory.Id);
     }
 
-    private static async Task<Guid> CreateNamedCategoryAsync(HttpClient client, string name) =>
-        (await PostAsync<IdDto>(client, "/api/categories", new { name, type = "expense" })).Id;
-
     private static async Task<Guid> CreateOwnHouseholdAsync(HttpClient owner, TestUser? member = null, string? name = null)
     {
         var household = await PostAsync<IdDto>(owner, "/api/households", new { name = name ?? $"Household {Guid.NewGuid():N}" });
@@ -417,11 +413,8 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
             client,
             new { accountId = account, type = "expense", amount = "4.00", date = Date, tagIds = new[] { tag } })).Id;
 
-    private static async Task<Guid> CreateRuleAsync(HttpClient client, string name, Guid category, Guid[] tagIds) =>
-        (await PostAsync<IdDto>(
-            client,
-            "/api/categorization-rules",
-            new { name, match = "contains", pattern = name, categoryId = category, tagIds })).Id;
+    private static Task<Guid> CreateRuleAsync(HttpClient client, string name, Guid category, Guid[] tagIds) =>
+        Seed.RuleAsync(client, "contains", name, category, tagIds, name: name);
 
     private static async Task<List<RuleRow>> RulesAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<List<RuleRow>>("/api/categorization-rules"))!;
@@ -432,113 +425,100 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
     private static async Task<PageDto<TrashRow>> TrashAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<PageDto<TrashRow>>("/api/trash"))!;
 
-    private async Task<CategoryState> CategoryStateAsync(Guid userId, Guid id)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var categoryId = new CategoryId(id);
-        return new CategoryState(
-            await db.Categories.IgnoreQueryFilters().Where(c => c.Id == categoryId).Select(c => c.IsDeleted).SingleAsync(),
-            await db.Transactions.IgnoreQueryFilters().CountAsync(t => t.CategoryId == categoryId),
-            await db.TransactionLines.CountAsync(l => l.CategoryId == categoryId),
-            await db.RecurringBills.IgnoreQueryFilters().CountAsync(b => b.CategoryId == categoryId),
-            await db.Budgets.IgnoreQueryFilters().CountAsync(b => b.CategoryId == categoryId && !b.IsDeleted));
-    }
-
-    private async Task<bool> BudgetDeletedAsync(Guid userId, Guid id)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var budgetId = new BudgetId(id);
-        return await db.Budgets.IgnoreQueryFilters().Where(b => b.Id == budgetId).Select(b => b.IsDeleted).SingleAsync();
-    }
-
-    private async Task OccupyBudgetSlotAsync(Guid userId, Guid category)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        db.Budgets.Add(new Budget
+    private Task<CategoryState> CategoryStateAsync(Guid userId, Guid id) =>
+        WithDbAsync(userId, async db =>
         {
-            UserId = userId,
-            CategoryId = new CategoryId(category),
-            LimitAmount = new Money(99m, Currency.Eur),
-            Period = BudgetPeriod.Monthly,
+            var categoryId = new CategoryId(id);
+            return new CategoryState(
+                await db.Categories.IgnoreQueryFilters().Where(c => c.Id == categoryId).Select(c => c.IsDeleted).SingleAsync(),
+                await db.Transactions.IgnoreQueryFilters().CountAsync(t => t.CategoryId == categoryId),
+                await db.TransactionLines.CountAsync(l => l.CategoryId == categoryId),
+                await db.RecurringBills.IgnoreQueryFilters().CountAsync(b => b.CategoryId == categoryId),
+                await db.Budgets.IgnoreQueryFilters().CountAsync(b => b.CategoryId == categoryId && !b.IsDeleted));
         });
-        await db.SaveChangesAsync();
-    }
 
-    private async Task<List<Guid>> TagLinksAsync(Guid userId, Guid tag)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var tagId = new Domain.Tags.TagId(tag);
-        var links = await db.TransactionTags.Where(t => t.TagId == tagId).Select(t => t.TransactionId).ToListAsync();
-        return [.. links.Select(l => l.Value).Order()];
-    }
-
-    private async Task EraseTransactionAsync(Guid userId, Guid id)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var transactionId = new TransactionId(id);
-        await db.Transactions.IgnoreQueryFilters().Where(t => t.Id == transactionId).ExecuteDeleteAsync();
-    }
-
-    private async Task FillRulesAsync(Guid userId, Guid category, int count)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        db.CategorizationRules.AddRange(Enumerable.Range(0, count).Select(index => new CategorizationRule
+    private Task<bool> BudgetDeletedAsync(Guid userId, Guid id) =>
+        WithDbAsync(userId, async db =>
         {
-            UserId = userId,
-            Name = $"Rule {index}",
-            Position = index,
-            Match = DescriptionMatch.Contains,
-            Pattern = $"p{index}",
-            CategoryId = new CategoryId(category),
-        }));
-        await db.SaveChangesAsync();
-    }
+            var budgetId = new BudgetId(id);
+            return await db.Budgets.IgnoreQueryFilters().Where(b => b.Id == budgetId).Select(b => b.IsDeleted).SingleAsync();
+        });
 
-    private async Task<List<Guid>> SharingAsync(Guid userId, Guid household)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var householdId = new HouseholdId(household);
-        var accounts = await db.Accounts.IgnoreQueryFilters()
-            .Where(a => a.HouseholdId == householdId && a.Scope == Scope.Shared)
-            .Select(a => a.Id)
-            .ToListAsync();
-        var categories = await db.Categories.IgnoreQueryFilters()
-            .Where(c => c.HouseholdId == householdId && c.Scope == Scope.Shared)
-            .Select(c => c.Id)
-            .ToListAsync();
-        var tags = await db.Tags.IgnoreQueryFilters()
-            .Where(t => t.HouseholdId == householdId && t.Scope == Scope.Shared)
-            .Select(t => t.Id)
-            .ToListAsync();
-        return [.. accounts.Select(a => a.Value).Concat(categories.Select(c => c.Value)).Concat(tags.Select(t => t.Value)).Order()];
-    }
+    private Task OccupyBudgetSlotAsync(Guid userId, Guid category) =>
+        WithDbAsync(userId, async db =>
+        {
+            db.Budgets.Add(new Budget
+            {
+                UserId = userId,
+                CategoryId = new CategoryId(category),
+                LimitAmount = new Money(99m, Currency.Eur),
+                Period = BudgetPeriod.Monthly,
+            });
+            await db.SaveChangesAsync();
+        });
 
-    private async Task DemoteAsync(Guid userId, Guid household)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var householdId = new HouseholdId(household);
-        await db.HouseholdMemberships.IgnoreQueryFilters()
-            .Where(m => m.HouseholdId == householdId && m.UserId == userId)
-            .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, HouseholdRole.Member));
-    }
+    private Task<List<Guid>> TagLinksAsync(Guid userId, Guid tag) =>
+        WithDbAsync(userId, async db =>
+        {
+            var tagId = new Domain.Tags.TagId(tag);
+            var links = await db.TransactionTags.Where(t => t.TagId == tagId).Select(t => t.TransactionId).ToListAsync();
+            List<Guid> ordered = [.. links.Select(l => l.Value).Order()];
+            return ordered;
+        });
 
-    private static AppDbContext OpenAs(IServiceScope scope, Guid userId) => new(
-        scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
-        new TestCurrentUser(userId));
+    private Task EraseTransactionAsync(Guid userId, Guid id) =>
+        WithDbAsync(userId, async db =>
+        {
+            var transactionId = new TransactionId(id);
+            await db.Transactions.IgnoreQueryFilters().Where(t => t.Id == transactionId).ExecuteDeleteAsync();
+        });
+
+    private Task FillRulesAsync(Guid userId, Guid category, int count) =>
+        WithDbAsync(userId, async db =>
+        {
+            db.CategorizationRules.AddRange(Enumerable.Range(0, count).Select(index => new CategorizationRule
+            {
+                UserId = userId,
+                Name = $"Rule {index}",
+                Position = index,
+                Match = DescriptionMatch.Contains,
+                Pattern = $"p{index}",
+                CategoryId = new CategoryId(category),
+            }));
+            await db.SaveChangesAsync();
+        });
+
+    private Task<List<Guid>> SharingAsync(Guid userId, Guid household) =>
+        WithDbAsync(userId, async db =>
+        {
+            var householdId = new HouseholdId(household);
+            var accounts = await db.Accounts.IgnoreQueryFilters()
+                .Where(a => a.HouseholdId == householdId && a.Scope == Scope.Shared)
+                .Select(a => a.Id)
+                .ToListAsync();
+            var categories = await db.Categories.IgnoreQueryFilters()
+                .Where(c => c.HouseholdId == householdId && c.Scope == Scope.Shared)
+                .Select(c => c.Id)
+                .ToListAsync();
+            var tags = await db.Tags.IgnoreQueryFilters()
+                .Where(t => t.HouseholdId == householdId && t.Scope == Scope.Shared)
+                .Select(t => t.Id)
+                .ToListAsync();
+            List<Guid> shared =
+                [.. accounts.Select(a => a.Value).Concat(categories.Select(c => c.Value)).Concat(tags.Select(t => t.Value)).Order()];
+            return shared;
+        });
+
+    private Task DemoteAsync(Guid userId, Guid household) =>
+        WithDbAsync(userId, async db =>
+        {
+            var householdId = new HouseholdId(household);
+            await db.HouseholdMemberships.IgnoreQueryFilters()
+                .Where(m => m.HouseholdId == householdId && m.UserId == userId)
+                .ExecuteUpdateAsync(s => s.SetProperty(m => m.Role, HouseholdRole.Member));
+        });
 
     private sealed record CategoryState(bool IsDeleted, int Transactions, int Lines, int Bills, int LiveBudgets);
-
-    private sealed record TrashRow(Guid Id, string Kind, Guid EntityId, string Description, DateTimeOffset DeletedAt);
-
-    private sealed record NamedRow(Guid Id, string Name);
 
     private sealed record RuleRow(Guid Id, string Name, int Position, List<Guid> TagIds);
 }
