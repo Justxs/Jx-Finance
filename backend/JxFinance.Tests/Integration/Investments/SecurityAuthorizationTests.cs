@@ -15,7 +15,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
 
         var response = await member.PutAsJsonAsync(
             $"/api/investments/securities/{id}",
-            new { symbol, name = "Renamed by a member", type = "stock", currency = "eur", lastPrice = "1" });
+            new { symbol, name = "Renamed by a member", type = "stock", currency = "eur", lastPrice = "1" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         var security = await FindAsync(symbol);
@@ -31,7 +31,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
 
         var response = await member.PutAsJsonAsync(
             $"/api/investments/securities/{id}/price",
-            new { lastPrice = "123.45", lastPriceDate = "2026-06-05" });
+            new { lastPrice = "123.45", lastPriceDate = "2026-06-05" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var security = await FindAsync(symbol);
@@ -45,7 +45,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
         var (id, symbol) = await CreateSharedSecurityAsync(member);
         await BuyAsync(member, id);
 
-        (await member.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "7" })).EnsureSuccessStatusCode();
+        (await member.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "7" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(Today, (await FindAsync(symbol)).LastPriceDate);
     }
@@ -58,10 +58,10 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
         var (id, symbol) = await CreateSharedSecurityAsync(holder);
         await BuyAsync(holder, id);
 
-        var response = await stranger.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "0.01" });
+        var response = await stranger.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "0.01" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
-        Assert.Contains("security.notHeld", await response.Content.ReadAsStringAsync());
+        Assert.Contains("security.notHeld", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Null((await FindAsync(symbol)).LastPrice);
     }
 
@@ -73,7 +73,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
         var account = await BuyAsync(member, id);
         await RecordInvestmentAsync(member, new { accountId = account, securityId = id, type = "sell", date = "2026-06-02", quantity = "2", price = "100" });
 
-        var response = await member.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "5" });
+        var response = await member.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "5" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -90,7 +90,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
         var (id, _) = await CreateSharedSecurityAsync(ownerClient);
         await BuyAsync(ownerClient, id, household.Id);
 
-        var response = await partnerClient.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "5" });
+        var response = await partnerClient.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "5" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
@@ -103,10 +103,10 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
 
         var details = await Client.PutAsJsonAsync(
             $"/api/investments/securities/{id}",
-            new { symbol, name = "Renamed by the administrator", type = "fund", currency = "eur" });
+            new { symbol, name = "Renamed by the administrator", type = "fund", currency = "eur" }, TestContext.Current.CancellationToken);
         var price = await Client.PutAsJsonAsync(
             $"/api/investments/securities/{id}/price",
-            new { lastPrice = "9.5", lastPriceDate = "2026-06-05" });
+            new { lastPrice = "9.5", lastPriceDate = "2026-06-05" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, details.StatusCode);
         Assert.Equal(HttpStatusCode.OK, price.StatusCode);
@@ -122,7 +122,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
     {
         var (id, _) = await CreateSharedSecurityAsync(Client);
 
-        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice });
+        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "lastPrice");
     }
@@ -130,7 +130,7 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
     [Fact]
     public async Task Pricing_an_unknown_security_is_not_found()
     {
-        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{Guid.NewGuid()}/price", new { lastPrice = "1" });
+        var response = await Client.PutAsJsonAsync($"/api/investments/securities/{Guid.NewGuid()}/price", new { lastPrice = "1" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
@@ -143,10 +143,10 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
 
         var response = await member.PostAsJsonAsync(
             $"/api/investments/securities?id={id}",
-            new { id, symbol = NewSymbol(), name = "Overwrite attempt", type = "stock", currency = "eur" });
+            new { id, symbol = NewSymbol(), name = "Overwrite attempt", type = "stock", currency = "eur" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.NotEqual(id, (await response.Content.ReadFromJsonAsync<SecurityDto>())!.Id);
+        Assert.NotEqual(id, (await response.Content.ReadFromJsonAsync<SecurityDto>(TestContext.Current.CancellationToken))!.Id);
         var original = await FindAsync(symbol);
         Assert.Equal((id, "Shared fund"), (original.Id, original.Name));
     }

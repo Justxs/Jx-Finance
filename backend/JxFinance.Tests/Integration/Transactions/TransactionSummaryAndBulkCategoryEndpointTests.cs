@@ -35,7 +35,7 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
                     new { categoryId = food, amount = "30.00" },
                     new { categoryId = clothes, amount = "20.00" },
                 },
-            });
+            }, TestContext.Current.CancellationToken);
         splitResponse.EnsureSuccessStatusCode();
 
         var foreignAccount = await CreateAccountAsync("1000.00");
@@ -61,21 +61,21 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         foreach (var filter in filters)
         {
-            var page = await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?pageSize=200&{filter}");
-            var summary = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?{filter}");
+            var page = await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?pageSize=200&{filter}", TestContext.Current.CancellationToken);
+            var summary = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?{filter}", TestContext.Current.CancellationToken);
 
             Assert.Equal(page!.Total, summary!.Count);
             Assert.Equal(Total(page.Items, "income"), summary.TotalIncome);
             Assert.Equal(Total(page.Items, "expense"), summary.TotalExpense);
         }
 
-        var everything = await member.GetFromJsonAsync<SummaryDto>("/api/transactions/summary");
+        var everything = await member.GetFromJsonAsync<SummaryDto>("/api/transactions/summary", TestContext.Current.CancellationToken);
         Assert.Equal(new SummaryDto(4, "1000.00", "85.50"), everything);
 
-        var foodOnly = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?categoryId={food}");
+        var foodOnly = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?categoryId={food}", TestContext.Current.CancellationToken);
         Assert.Equal(new SummaryDto(2, "0.00", "60.00"), foodOnly);
 
-        var nothing = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?accountId={foreignAccount}");
+        var nothing = await member.GetFromJsonAsync<SummaryDto>($"/api/transactions/summary?accountId={foreignAccount}", TestContext.Current.CancellationToken);
         Assert.Equal(new SummaryDto(0, "0.00", "0.00"), nothing);
     }
 
@@ -87,10 +87,10 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
         var to = await CreateAccountAsync("1000.00", client: member);
         var transfer = await member.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = from, toAccountId = to, amount = "40.00", date = "2026-05-01" });
+            new { fromAccountId = from, toAccountId = to, amount = "40.00", date = "2026-05-01" }, TestContext.Current.CancellationToken);
         transfer.EnsureSuccessStatusCode();
 
-        var summary = await member.GetFromJsonAsync<SummaryDto>("/api/transactions/summary");
+        var summary = await member.GetFromJsonAsync<SummaryDto>("/api/transactions/summary", TestContext.Current.CancellationToken);
 
         Assert.Equal(new SummaryDto(0, "0.00", "0.00"), summary);
     }
@@ -105,17 +105,17 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         var setResponse = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { first.Id, second.Id }, categoryId = category });
+            new { transactionIds = new[] { first.Id, second.Id }, categoryId = category }, TestContext.Current.CancellationToken);
         setResponse.EnsureSuccessStatusCode();
-        Assert.Equal(2, (await setResponse.Content.ReadFromJsonAsync<BulkDto>())!.Updated);
+        Assert.Equal(2, (await setResponse.Content.ReadFromJsonAsync<BulkDto>(TestContext.Current.CancellationToken))!.Updated);
         Assert.Equal(category, (await GetTransactionAsync(first.Id)).CategoryId);
         Assert.Equal(category, (await GetTransactionAsync(second.Id)).CategoryId);
 
         var clearResponse = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { first.Id }, categoryId = (Guid?)null });
+            new { transactionIds = new[] { first.Id }, categoryId = (Guid?)null }, TestContext.Current.CancellationToken);
         clearResponse.EnsureSuccessStatusCode();
-        Assert.Equal(1, (await clearResponse.Content.ReadFromJsonAsync<BulkDto>())!.Updated);
+        Assert.Equal(1, (await clearResponse.Content.ReadFromJsonAsync<BulkDto>(TestContext.Current.CancellationToken))!.Updated);
         Assert.Null((await GetTransactionAsync(first.Id)).CategoryId);
         Assert.Equal(category, (await GetTransactionAsync(second.Id)).CategoryId);
     }
@@ -129,10 +129,10 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         var response = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { transaction.Id, transaction.Id, transaction.Id }, categoryId = category });
+            new { transactionIds = new[] { transaction.Id, transaction.Id, transaction.Id }, categoryId = category }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        Assert.Equal(1, (await response.Content.ReadFromJsonAsync<BulkDto>())!.Updated);
+        Assert.Equal(1, (await response.Content.ReadFromJsonAsync<BulkDto>(TestContext.Current.CancellationToken))!.Updated);
         Assert.Equal(category, (await GetTransactionAsync(transaction.Id)).CategoryId);
     }
 
@@ -148,15 +148,15 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         var invisible = await member.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { own.Id, foreign.Id }, categoryId = memberCategory });
+            new { transactionIds = new[] { own.Id, foreign.Id }, categoryId = memberCategory }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, invisible.StatusCode);
 
         var missing = await member.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { own.Id, Guid.NewGuid() }, categoryId = memberCategory });
+            new { transactionIds = new[] { own.Id, Guid.NewGuid() }, categoryId = memberCategory }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
 
-        var ownAfter = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{own.Id}");
+        var ownAfter = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{own.Id}", TestContext.Current.CancellationToken);
         Assert.Null(ownAfter!.CategoryId);
         Assert.Null((await GetTransactionAsync(foreign.Id)).CategoryId);
     }
@@ -171,7 +171,7 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         var response = await member.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { own.Id }, categoryId = adminCategory });
+            new { transactionIds = new[] { own.Id }, categoryId = adminCategory }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -191,16 +191,16 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
                 amount = "20.00",
                 date = "2026-06-06",
                 lines = new object[] { new { categoryId = category, amount = "20.00" } },
-            });
+            }, TestContext.Current.CancellationToken);
         splitResponse.EnsureSuccessStatusCode();
-        var split = await splitResponse.Content.ReadFromJsonAsync<TransactionDto>();
+        var split = await splitResponse.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
 
         var response = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { plain.Id, split!.Id }, categoryId = category });
+            new { transactionIds = new[] { plain.Id, split!.Id }, categoryId = category }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("Split transactions cannot be bulk-recategorized", await response.Content.ReadAsStringAsync());
+        Assert.Contains("Split transactions cannot be bulk-recategorized", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Null((await GetTransactionAsync(plain.Id)).CategoryId);
     }
 
@@ -214,7 +214,7 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
         var response = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = new[] { expense.Id, income.Id }, categoryId = expenseCategory });
+            new { transactionIds = new[] { expense.Id, income.Id }, categoryId = expenseCategory }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Null((await GetTransactionAsync(expense.Id)).CategoryId);
@@ -226,12 +226,12 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
     {
         var empty = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = Array.Empty<Guid>(), categoryId = (Guid?)null });
+            new { transactionIds = Array.Empty<Guid>(), categoryId = (Guid?)null }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, empty.StatusCode);
 
         var oversized = await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = Enumerable.Range(0, 201).Select(_ => Guid.NewGuid()).ToArray(), categoryId = (Guid?)null });
+            new { transactionIds = Enumerable.Range(0, 201).Select(_ => Guid.NewGuid()).ToArray(), categoryId = (Guid?)null }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, oversized.StatusCode);
     }
 

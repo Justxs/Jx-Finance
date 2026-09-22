@@ -12,10 +12,10 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
     {
         var household = await CreateHouseholdAsync();
 
-        var response = await Client.PutAsJsonAsync($"/api/households/{household}", new { name = "Renamed" });
+        var response = await Client.PutAsJsonAsync($"/api/households/{household}", new { name = "Renamed" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        Assert.Equal("Renamed", (await response.Content.ReadFromJsonAsync<HouseholdDto>())!.Name);
+        Assert.Equal("Renamed", (await response.Content.ReadFromJsonAsync<HouseholdDto>(TestContext.Current.CancellationToken))!.Name);
     }
 
     [Fact]
@@ -25,10 +25,10 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
         var household = await CreateHouseholdAsync(member);
         using var memberClient = await LoginAsync(member);
 
-        var promote = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" });
+        var promote = await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" }, TestContext.Current.CancellationToken);
         promote.EnsureSuccessStatusCode();
 
-        var rename = await memberClient.PutAsJsonAsync($"/api/households/{household}", new { name = "Renamed by new owner" });
+        var rename = await memberClient.PutAsJsonAsync($"/api/households/{household}", new { name = "Renamed by new owner" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, rename.StatusCode);
     }
 
@@ -36,9 +36,9 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
     public async Task The_last_owner_cannot_be_demoted()
     {
         var household = await CreateHouseholdAsync();
-        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me");
+        var me = await Client.GetFromJsonAsync<IdDto>("/api/auth/me", TestContext.Current.CancellationToken);
 
-        var response = await Client.PutAsJsonAsync($"/api/households/{household}/members/{me!.Id}", new { role = "member" });
+        var response = await Client.PutAsJsonAsync($"/api/households/{household}/members/{me!.Id}", new { role = "member" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -50,7 +50,7 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
         var household = await CreateHouseholdAsync(member);
         using var memberClient = await LoginAsync(member);
 
-        var response = await memberClient.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" });
+        var response = await memberClient.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -61,7 +61,7 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
         var member = await CreateUserAsync();
         var household = await CreateHouseholdAsync(member);
 
-        var response = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = member.Email, role = "member" });
+        var response = await Client.PostAsJsonAsync($"/api/households/{household}/members", new { email = member.Email, role = "member" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -74,12 +74,12 @@ public sealed class HouseholdOwnershipTests(ApiFixture fixture) : IntegrationTes
         var account = await CreateAccountAsync("100.00", householdId: household);
         using var memberClient = await LoginAsync(member);
 
-        var delete = await Client.DeleteAsync($"/api/households/{household}");
+        var delete = await Client.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
-        Assert.Equal("personal", (await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}"))!.Scope);
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/accounts/{account}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/households/{household}")).StatusCode);
+        Assert.Equal("personal", (await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}", TestContext.Current.CancellationToken))!.Scope);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/accounts/{account}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/households/{household}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     private sealed record HouseholdDto(Guid Id, string Name);

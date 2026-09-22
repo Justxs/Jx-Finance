@@ -38,10 +38,10 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
                 amount = "42.18",
                 date = "2026-09-01",
                 description = "Maxima",
-            });
+            }, TestContext.Current.CancellationToken);
         update.EnsureSuccessStatusCode();
-        (await memberClient.DeleteAsync($"/api/transactions/{transaction.Id}")).EnsureSuccessStatusCode();
-        (await memberClient.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction.Id }))
+        (await memberClient.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction.Id }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items.Where(e => e.EntityId == transaction.Id).ToList();
@@ -70,7 +70,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
         var category = await CreateCategoryAsync();
         var tag = await CreateTagAsync();
         var transaction = await CreateTransactionAsync(Client, account, category, "expense", "4.00", "2026-09-02", "Personal");
-        (await Client.DeleteAsync($"/api/transactions/{transaction.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items;
 
@@ -94,17 +94,17 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
 
         (await Client.PutAsJsonAsync(
             $"/api/accounts/{account}",
-            new { name, type = "checking", startingBalance = "5.00", scope = "shared", householdId = household }))
+            new { name, type = "checking", startingBalance = "5.00", scope = "shared", householdId = household }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
         (await Client.PutAsJsonAsync(
             $"/api/accounts/{account}",
-            new { name, type = "checking", startingBalance = "5.00", scope = "personal" }))
+            new { name, type = "checking", startingBalance = "5.00", scope = "personal" }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
-        (await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" }))
+        (await Client.PutAsJsonAsync($"/api/households/{household}/members/{member.Id}", new { role = "owner" }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
-        (await Client.PutAsJsonAsync($"/api/households/{household}", new { id = household, name = "Renamed home" }))
+        (await Client.PutAsJsonAsync($"/api/households/{household}", new { id = household, name = "Renamed home" }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items;
 
@@ -134,12 +134,12 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
         var household = await CreateHouseholdAsync(member);
         var other = await CreateHouseholdAsync(member);
 
-        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/households/{household}/audit")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/households/{household}/audit", TestContext.Current.CancellationToken)).StatusCode);
         await AssertProblemAsync(
-            await outsider.GetAsync($"/api/households/{household}/audit"),
+            await outsider.GetAsync($"/api/households/{household}/audit", TestContext.Current.CancellationToken),
             HttpStatusCode.NotFound,
             "resource.notFound");
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/households/{Guid.NewGuid()}/audit")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/households/{Guid.NewGuid()}/audit", TestContext.Current.CancellationToken)).StatusCode);
 
         Assert.Equal(HttpStatusCode.OK, (await SendScopedAsync(memberClient, household, household)).StatusCode);
         await AssertProblemAsync(
@@ -208,7 +208,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
         Assert.Equal(6, todayOnly.Total);
 
         await AssertProblemAsync(
-            await Client.GetAsync($"/api/households/{household}/audit?dateFrom={tomorrow}&dateTo={yesterday}"),
+            await Client.GetAsync($"/api/households/{household}/audit?dateFrom={tomorrow}&dateTo={yesterday}", TestContext.Current.CancellationToken),
             HttpStatusCode.BadRequest,
             "range.invalid");
     }
@@ -230,11 +230,11 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             })
             .ToArray();
         await PostAsync<IdDto>(Client, "/api/import/swedbank/confirm", new { accountId = account, rows });
-        var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}");
+        var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
         var category = await CreateCategoryAsync();
         (await Client.PostAsJsonAsync(
             "/api/transactions/bulk-category",
-            new { transactionIds = imported!.Items.Select(t => t.Id), categoryId = category }))
+            new { transactionIds = imported!.Items.Select(t => t.Id), categoryId = category }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items.Where(e => e.EntityKind == "transaction").ToList();
@@ -278,7 +278,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             { file, "file", "flex.xml" },
             { new StringContent(account.ToString()), "accountId" },
         };
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form)).EnsureSuccessStatusCode();
+        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items
             .Where(e => e.EntityKind == "investmentTransaction")
@@ -302,11 +302,11 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             new { name = "Shared food", type = "expense", scope = "shared", householdId = household });
         var tag = await CreateTagAsync($"Shared {Guid.NewGuid():N}"[..15], household);
         var account = await CreateAccountAsync("1.00", householdId: household);
-        (await Client.DeleteAsync($"/api/accounts/{account}")).EnsureSuccessStatusCode();
-        (await Client.PostAsync($"/api/accounts/{account}/restore", null)).EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/households/{household}")).EnsureSuccessStatusCode();
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/households/{household}/audit")).StatusCode);
-        (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "household", entityId = household }))
+        (await Client.DeleteAsync($"/api/accounts/{account}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.PostAsync($"/api/accounts/{account}/restore", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/households/{household}/audit", TestContext.Current.CancellationToken)).StatusCode);
+        (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "household", entityId = household }, TestContext.Current.CancellationToken))
             .EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items;

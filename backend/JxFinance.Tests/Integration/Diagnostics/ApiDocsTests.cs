@@ -15,7 +15,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task Root_redirects_to_scalar_docs()
     {
-        var response = await Client.GetAsync("/");
+        var response = await Client.GetAsync("/", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.Equal("/scalar/v1", response.Headers.Location?.OriginalString);
@@ -26,8 +26,8 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     {
         var path = SnapshotPath();
         Assert.True(File.Exists(path), "No approved contract. Run 'just gen'.");
-        var actual = WithoutServers(JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!);
-        var approved = WithoutServers(JsonNode.Parse(await File.ReadAllTextAsync(path))!);
+        var actual = WithoutServers(JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!);
+        var approved = WithoutServers(JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!);
 
         Assert.True(
             JsonNode.DeepEquals(approved, actual),
@@ -37,7 +37,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task OpenApi_schema_names_do_not_leak_implementation_details()
     {
-        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
+        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!;
         var names = document["components"]!["schemas"]!.AsObject().Select(schema => schema.Key).ToList();
 
         Assert.NotEmpty(names);
@@ -48,7 +48,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task OpenApi_document_publishes_the_closed_set_of_error_codes()
     {
-        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json"))!;
+        var document = JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!;
         var schemas = document["components"]!["schemas"]!;
         var published = schemas["ErrorCode"]!["enum"]!.AsArray().Select(code => code!.GetValue<string>()).ToList();
 
@@ -62,7 +62,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     public async Task OpenApi_document_is_valid_according_to_hidi()
     {
         var file = Path.Combine(Path.GetTempPath(), $"jx-openapi-{Guid.NewGuid():N}.json");
-        await File.WriteAllTextAsync(file, await Client.GetStringAsync("/openapi/v1.json"));
+        await File.WriteAllTextAsync(file, await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken), TestContext.Current.CancellationToken);
         try
         {
             var (exitCode, output) = await RunHidiAsync("validate", "-d", file, "--ll", "Warning");

@@ -17,7 +17,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     {
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
-            new { name = "", type = "checking", startingBalance = "0.00", scope = "personal" });
+            new { name = "", type = "checking", startingBalance = "0.00", scope = "personal" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -42,7 +42,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     {
         var body = $$"""{"name":"Everyday","type":"checking","startingBalance":{{token}},"scope":"personal"}""";
 
-        var response = await Client.PostAsync("/api/accounts", new StringContent(body, Encoding.UTF8, "application/json"));
+        var response = await Client.PostAsync("/api/accounts", new StringContent(body, Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -56,7 +56,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     [Fact]
     public async Task Unreadable_json_answers_the_generic_malformed_code()
     {
-        var response = await Client.PostAsync("/api/accounts", new StringContent("{\"name\":", Encoding.UTF8, "application/json"));
+        var response = await Client.PostAsync("/api/accounts", new StringContent("{\"name\":", Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await ReadProblemAsync(response);
@@ -71,7 +71,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     {
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
-            new { name = "Everyday", type = "checking", startingBalance = value, scope = "personal" });
+            new { name = "Everyday", type = "checking", startingBalance = value, scope = "personal" }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "startingBalance");
     }
@@ -81,7 +81,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     [InlineData("""{"name":"Everyday","type":"checking","startingBalance":null,"scope":"personal"}""")]
     public async Task Money_that_may_be_zero_is_still_refused_when_missing(string body)
     {
-        var response = await Client.PostAsync("/api/accounts", new StringContent(body, Encoding.UTF8, "application/json"));
+        var response = await Client.PostAsync("/api/accounts", new StringContent(body, Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -99,7 +99,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     {
         var response = await Client.PutAsync(
             string.Format(CultureInfo.InvariantCulture, route, Guid.NewGuid()),
-            new StringContent(body, Encoding.UTF8, "application/json"));
+            new StringContent(body, Encoding.UTF8, "application/json"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await ReadProblemAsync(response);
@@ -112,7 +112,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     [Fact]
     public async Task Service_failures_answer_problem_json_carrying_the_error_code()
     {
-        var response = await Client.GetAsync($"/api/accounts/{Guid.NewGuid()}");
+        var response = await Client.GetAsync($"/api/accounts/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
@@ -132,7 +132,7 @@ public sealed class ProblemDetailsContractTests(ApiFixture fixture) : Integratio
     {
         var response = await Client.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = Guid.NewGuid(), type = "expense", amount = "10.00", date = "2026-01-15" });
+            new { accountId = Guid.NewGuid(), type = "expense", amount = "10.00", date = "2026-01-15" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         var problem = await ReadProblemAsync(response);

@@ -15,25 +15,25 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
         Assert.Equal("1200.00", created.CurrentBalance);
         Assert.Equal("checking", created.Type);
 
-        var listed = await Client.GetFromJsonAsync<List<AccountDto>>("/api/accounts");
+        var listed = await Client.GetFromJsonAsync<List<AccountDto>>("/api/accounts", TestContext.Current.CancellationToken);
         Assert.Contains(listed!, a => a.Id == created.Id);
 
         var updateResponse = await Client.PutAsJsonAsync(
             $"/api/accounts/{created.Id}",
-            new { name = "Renamed", type = "savings", startingBalance = "900.50" });
+            new { name = "Renamed", type = "savings", startingBalance = "900.50" }, TestContext.Current.CancellationToken);
         updateResponse.EnsureSuccessStatusCode();
-        var updated = await updateResponse.Content.ReadFromJsonAsync<AccountDto>();
+        var updated = await updateResponse.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Renamed", updated!.Name);
         Assert.Equal("savings", updated.Type);
         Assert.Equal("900.50", updated.CurrentBalance);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/accounts/{created.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/accounts/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var afterDelete = await Client.GetAsync($"/api/accounts/{created.Id}");
+        var afterDelete = await Client.GetAsync($"/api/accounts/{created.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, afterDelete.StatusCode);
 
-        var listAfterDelete = await Client.GetFromJsonAsync<List<AccountDto>>("/api/accounts");
+        var listAfterDelete = await Client.GetFromJsonAsync<List<AccountDto>>("/api/accounts", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(listAfterDelete!, a => a.Id == created.Id);
     }
 
@@ -45,7 +45,7 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
         await CreateTransactionAsync(Client, account.Id, null, "income", "50.00", "2026-06-01");
         await CreateTransactionAsync(Client, account.Id, null, "expense", "20.00", "2026-06-01");
 
-        var fetched = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account.Id}");
+        var fetched = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account.Id}", TestContext.Current.CancellationToken);
         Assert.Equal("130.00", fetched!.CurrentBalance);
         Assert.Equal("100.00", fetched.StartingBalance);
     }
@@ -55,7 +55,7 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
-            new { name = "Bad", type = "cash", startingBalance = "12.345" });
+            new { name = "Bad", type = "cash", startingBalance = "12.345" }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(response, "startingBalance");
     }
 
@@ -71,9 +71,9 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
                 iban = "lt12 1000 0111 0100 1000",
                 type = "checking",
                 startingBalance = "0.00",
-            });
+            }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var created = await response.Content.ReadFromJsonAsync<AccountDto>();
+        var created = await response.Content.ReadFromJsonAsync<AccountDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Main salary account", created!.Description);
         Assert.Equal("LT121000011101001000", created.Iban);
     }
@@ -83,7 +83,7 @@ public sealed class AccountEndpointTests(ApiFixture fixture) : IntegrationTestBa
     {
         var response = await Client.PostAsJsonAsync(
             "/api/accounts",
-            new { name = "Bad iban", iban = "NOT-AN-IBAN", type = "cash", startingBalance = "0.00" });
+            new { name = "Bad iban", iban = "NOT-AN-IBAN", type = "cash", startingBalance = "0.00" }, TestContext.Current.CancellationToken);
         await AssertValidationErrorAsync(response, "iban");
     }
 

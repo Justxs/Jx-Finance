@@ -33,8 +33,8 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
             await CreateTransactionAsync(world.Client, world.SecondAccount, null, "expense", "1.00", $"2026-07-{day:00}", $"Bulk {day}");
         }
 
-        var everything = await world.Client.GetAsync("/api/transactions/export/pdf");
-        var scoped = await world.Client.GetAsync($"/api/transactions/export/pdf?{ScopeQuery}={world.First}");
+        var everything = await world.Client.GetAsync("/api/transactions/export/pdf", TestContext.Current.CancellationToken);
+        var scoped = await world.Client.GetAsync($"/api/transactions/export/pdf?{ScopeQuery}={world.First}", TestContext.Current.CancellationToken);
         var headed = await SendAsync(world.Client, "/api/transactions/export/pdf", world.First);
 
         await AssertProblemAsync(everything, HttpStatusCode.BadRequest, "export.tooManyRows");
@@ -97,7 +97,7 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
         Assert.Equal(HttpStatusCode.OK, agreeing.StatusCode);
         Assert.Equal(
             ["First one", "First two", "Personal one"],
-            Descriptions(await agreeing.Content.ReadAsStringAsync()));
+            Descriptions(await agreeing.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)));
         await AssertProblemAsync(differing, HttpStatusCode.BadRequest, "household.scopeMismatch");
         await AssertProblemAsync(bothUnknown, HttpStatusCode.BadRequest, "household.scopeMismatch");
     }
@@ -107,9 +107,9 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     {
         var world = await LedgerAsync();
 
-        var accounts = await world.Client.GetFromJsonAsync<List<AccountDto>>($"/api/accounts?{ScopeQuery}={world.First}");
+        var accounts = await world.Client.GetFromJsonAsync<List<AccountDto>>($"/api/accounts?{ScopeQuery}={world.First}", TestContext.Current.CancellationToken);
         var page = await world.Client.GetFromJsonAsync<PageDto<TransactionDto>>(
-            $"/api/transactions?pageSize=200&{ScopeQuery}={world.First}");
+            $"/api/transactions?pageSize=200&{ScopeQuery}={world.First}", TestContext.Current.CancellationToken);
 
         Assert.Contains(accounts!, a => a.Id == world.SecondAccount);
         Assert.Contains(page!.Items, t => t.Description == "Second one");

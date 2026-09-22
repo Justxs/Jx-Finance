@@ -10,7 +10,7 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Starter_categories_are_seeded_with_icons()
     {
-        var categories = await Client.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+        var categories = await Client.GetFromJsonAsync<List<CategoryDto>>("/api/categories", TestContext.Current.CancellationToken);
 
         Assert.Contains(
             categories!,
@@ -25,7 +25,7 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     {
         using var member = await CreateUserClientAsync();
 
-        var categories = await member.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+        var categories = await member.GetFromJsonAsync<List<CategoryDto>>("/api/categories", TestContext.Current.CancellationToken);
 
         Assert.Equal(10, categories!.Count);
         Assert.All(categories, c => Assert.True(c.IsDefault));
@@ -36,17 +36,17 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
     {
         var createResponse = await Client.PostAsJsonAsync(
             "/api/categories",
-            new { name = $"Pets {Guid.NewGuid():N}", type = "expense", icon = "paw-print" });
+            new { name = $"Pets {Guid.NewGuid():N}", type = "expense", icon = "paw-print" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var created = await createResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        var created = await createResponse.Content.ReadFromJsonAsync<CategoryDto>(TestContext.Current.CancellationToken);
         Assert.False(created!.IsDefault);
         Assert.Equal("paw-print", created.Icon);
 
         var renameResponse = await Client.PutAsJsonAsync(
             $"/api/categories/{created.Id}",
-            new { name = "Pets & vet", icon = "dog" });
+            new { name = "Pets & vet", icon = "dog" }, TestContext.Current.CancellationToken);
         renameResponse.EnsureSuccessStatusCode();
-        var renamed = await renameResponse.Content.ReadFromJsonAsync<CategoryDto>();
+        var renamed = await renameResponse.Content.ReadFromJsonAsync<CategoryDto>(TestContext.Current.CancellationToken);
         Assert.Equal("Pets & vet", renamed!.Name);
         Assert.Equal("dog", renamed.Icon);
         Assert.Equal("expense", renamed.Type);
@@ -63,13 +63,13 @@ public sealed class CategoryEndpointTests(ApiFixture fixture) : IntegrationTestB
             new { accountId = account, categoryId = category, type = "expense", amount = "9.99", date = "2026-06-02" });
         Assert.Equal(category, transaction.CategoryId);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/categories/{category}");
+        var deleteResponse = await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
 
-        var afterDelete = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
+        var afterDelete = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         Assert.Null(afterDelete!.CategoryId);
 
-        var categories = await Client.GetFromJsonAsync<List<CategoryDto>>("/api/categories");
+        var categories = await Client.GetFromJsonAsync<List<CategoryDto>>("/api/categories", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(categories!, c => c.Id == category);
     }
 

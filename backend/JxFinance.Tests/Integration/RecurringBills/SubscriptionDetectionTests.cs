@@ -150,7 +150,7 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
                 nextDueDate = Iso(Today.AddDays(7)),
                 remindDaysBefore = 3,
                 isActive = false,
-            });
+            }, TestContext.Current.CancellationToken);
         deactivated.EnsureSuccessStatusCode();
 
         Assert.NotNull(await FindAsync(member, name));
@@ -171,7 +171,7 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
         var candidate = await CandidateAsync(member, name);
         var dismissal = await member.PostAsJsonAsync(
             "/api/recurring-bills/suggestions/dismiss",
-            new { accountId = candidate.AccountId, description = candidate.Description });
+            new { accountId = candidate.AccountId, description = candidate.Description }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, dismissal.StatusCode);
 
         Assert.Null(await FindAsync(member, name));
@@ -181,7 +181,7 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
 
         var again = await member.PostAsJsonAsync(
             "/api/recurring-bills/suggestions/dismiss",
-            new { accountId = candidate.AccountId, description = candidate.Description });
+            new { accountId = candidate.AccountId, description = candidate.Description }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, again.StatusCode);
     }
 
@@ -236,7 +236,7 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
         var candidate = await CandidateAsync(partnerClient, name);
         var dismissal = await partnerClient.PostAsJsonAsync(
             "/api/recurring-bills/suggestions/dismiss",
-            new { accountId = candidate.AccountId, description = candidate.Description });
+            new { accountId = candidate.AccountId, description = candidate.Description }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, dismissal.StatusCode);
 
         Assert.Null(await FindAsync(partnerClient, name));
@@ -253,7 +253,7 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
 
         var response = await stranger.PostAsJsonAsync(
             "/api/recurring-bills/suggestions/dismiss",
-            new { accountId = account, description = "netflix com" });
+            new { accountId = account, description = "netflix com" }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "reference.notFound");
     }
@@ -262,28 +262,28 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
     public async Task Suggestions_follow_the_recurring_entries_switch()
     {
         using var member = await CreateUserClientAsync();
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["recurringBills"] = false;
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-            var list = await member.GetAsync("/api/recurring-bills/suggestions");
+            var list = await member.GetAsync("/api/recurring-bills/suggestions", TestContext.Current.CancellationToken);
             var dismissal = await member.PostAsJsonAsync(
                 "/api/recurring-bills/suggestions/dismiss",
-                new { accountId = Guid.NewGuid(), description = "netflix com" });
+                new { accountId = Guid.NewGuid(), description = "netflix com" }, TestContext.Current.CancellationToken);
 
             await AssertProblemAsync(list, HttpStatusCode.NotFound, "feature.disabled");
             await AssertProblemAsync(dismissal, HttpStatusCode.NotFound, "feature.disabled");
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
-        (await member.GetAsync("/api/recurring-bills/suggestions")).EnsureSuccessStatusCode();
+        (await member.GetAsync("/api/recurring-bills/suggestions", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
     }
 
     private static string UniqueName() => "Subscription " + new string(

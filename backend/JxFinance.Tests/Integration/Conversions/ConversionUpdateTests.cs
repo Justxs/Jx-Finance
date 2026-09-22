@@ -20,15 +20,15 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
 
         var response = await member.PutAsJsonAsync(
             $"/api/conversions/{conversion.Id}",
-            Body("400.00", "eur", "300.00", "gbp", "2026-07-01", description: "  Pounds for the trip  "));
+            Body("400.00", "eur", "300.00", "gbp", "2026-07-01", description: "  Pounds for the trip  "), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>();
+        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>(TestContext.Current.CancellationToken);
         Assert.Equal(
             new ConversionDto(conversion.Id, account, "400.00", "eur", "300.00", "gbp", "0.750000", new DateOnly(2026, 7, 1), "Pounds for the trip", null, null, null, null, false),
             updated);
         Assert.Equal([new BalanceDto("eur", "600.00"), new BalanceDto("gbp", "300.00")], await BalancesAsync(member, account));
-        var listed = await member.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}");
+        var listed = await member.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}", TestContext.Current.CancellationToken);
         Assert.Equal(updated, Assert.Single(listed!.Items));
     }
 
@@ -42,12 +42,12 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
 
         var response = await member.PutAsJsonAsync(
             $"/api/conversions/{conversion.Id}",
-            Body("500.00", "eur", "550.00", "usd", "2026-06-20", "2.50", "usd", category));
+            Body("500.00", "eur", "550.00", "usd", "2026-06-20", "2.50", "usd", category), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>();
+        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>(TestContext.Current.CancellationToken);
         Assert.Equal(("2.50", "usd", category), (updated!.FeeAmount, updated.FeeCurrency, updated.FeeCategoryId));
-        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{updated.FeeTransactionId}");
+        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{updated.FeeTransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal(
             new TransactionDto(updated.FeeTransactionId!.Value, account, category, "expense", "2.50", "usd", "2.27", new DateOnly(2026, 6, 20), "Conversion fee EUR to USD"),
             fee);
@@ -63,16 +63,16 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
 
         var response = await member.PutAsJsonAsync(
             $"/api/conversions/{conversion.Id}",
-            Body("500.00", "eur", "400.00", "gbp", "2026-07-01", "0.80", "gbp"));
+            Body("500.00", "eur", "400.00", "gbp", "2026-07-01", "0.80", "gbp"), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>();
+        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>(TestContext.Current.CancellationToken);
         Assert.Equal(conversion.FeeTransactionId, updated!.FeeTransactionId);
-        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{updated.FeeTransactionId}");
+        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{updated.FeeTransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal(
             new TransactionDto(conversion.FeeTransactionId!.Value, account, null, "expense", "0.80", "gbp", "1.00", new DateOnly(2026, 7, 1), "Conversion fee EUR to GBP"),
             fee);
-        Assert.Equal(1, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}"))!.Total);
+        Assert.Equal(1, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken))!.Total);
         Assert.Equal([new BalanceDto("eur", "500.00"), new BalanceDto("gbp", "399.20")], await BalancesAsync(member, account));
     }
 
@@ -83,15 +83,15 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var account = await CreateAccountAsync("1000.00", currency: "eur", client: member);
         var conversion = await CreateAsync(member, account, "3.00", "usd");
 
-        var response = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05"));
+        var response = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05"), TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>();
+        var updated = await response.Content.ReadFromJsonAsync<ConversionDto>(TestContext.Current.CancellationToken);
         Assert.Null(updated!.FeeAmount);
         Assert.Null(updated.FeeCurrency);
         Assert.Null(updated.FeeTransactionId);
-        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}")).StatusCode);
-        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}"))!.Total);
+        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken))!.Total);
         Assert.Equal([new BalanceDto("eur", "500.00"), new BalanceDto("usd", "550.00")], await BalancesAsync(member, account));
     }
 
@@ -102,18 +102,18 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var account = await CreateAccountAsync("1000.00", currency: "eur", client: member);
         var deleted = await CreateAsync(member, account, "2.00", "eur");
         var renamed = await CreateAsync(member, account, "2.00", "eur");
-        (await member.DeleteAsync($"/api/transactions/{deleted.FeeTransactionId}")).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/transactions/{deleted.FeeTransactionId}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await member.PutAsJsonAsync(
             $"/api/transactions/{renamed.FeeTransactionId}",
-            new { accountId = account, type = "expense", amount = "2.00", date = "2026-06-05", description = "Bank charge" })).EnsureSuccessStatusCode();
+            new { accountId = account, type = "expense", amount = "2.00", date = "2026-06-05", description = "Bank charge" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var rebooked = await PutAsync(member, deleted.Id, Body("500.00", "eur", "400.00", "gbp", "2026-06-05", "1.00", "eur"));
         var kept = await PutAsync(member, renamed.Id, Body("500.00", "eur", "400.00", "gbp", "2026-06-05", "1.00", "eur"));
 
         Assert.NotEqual(deleted.FeeTransactionId, rebooked.FeeTransactionId);
-        Assert.Equal("1.00", (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{rebooked.FeeTransactionId}"))!.Amount);
+        Assert.Equal("1.00", (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{rebooked.FeeTransactionId}", TestContext.Current.CancellationToken))!.Amount);
         Assert.Equal(renamed.FeeTransactionId, kept.FeeTransactionId);
-        Assert.Equal("Bank charge", (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{kept.FeeTransactionId}"))!.Description);
+        Assert.Equal("Bank charge", (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{kept.FeeTransactionId}", TestContext.Current.CancellationToken))!.Description);
     }
 
     [Fact]
@@ -133,12 +133,12 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
                 amount = "2.00",
                 date = "2026-06-05",
                 lines = new[] { new { categoryId = first, amount = "1.50" }, new { categoryId = second, amount = "0.50" } },
-            })).EnsureSuccessStatusCode();
+            }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var newFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "3.00", "eur"));
-        var newDate = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-06", "2.00", "eur"));
-        var noFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05"));
-        var amountsOnly = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "560.00", "usd", "2026-06-05", "2.00", "eur"));
+        var newFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "3.00", "eur"), TestContext.Current.CancellationToken);
+        var newDate = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-06", "2.00", "eur"), TestContext.Current.CancellationToken);
+        var noFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05"), TestContext.Current.CancellationToken);
+        var amountsOnly = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "560.00", "usd", "2026-06-05", "2.00", "eur"), TestContext.Current.CancellationToken);
 
         foreach (var refused in new[] { newFee, newDate, noFee })
         {
@@ -146,13 +146,13 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         }
 
         amountsOnly.EnsureSuccessStatusCode();
-        var fee = await member.GetFromJsonAsync<JsonElement>($"/api/transactions/{conversion.FeeTransactionId}");
+        var fee = await member.GetFromJsonAsync<JsonElement>($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken);
         Assert.True(fee.GetProperty("isSplit").GetBoolean());
         Assert.Equal(2, fee.GetProperty("lines").GetArrayLength());
         Assert.Equal([new BalanceDto("eur", "498.00"), new BalanceDto("usd", "560.00")], await BalancesAsync(member, account));
 
-        (await member.DeleteAsync($"/api/conversions/{conversion.Id}")).EnsureSuccessStatusCode();
-        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}")).StatusCode);
+        (await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -162,14 +162,14 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var file = new ByteArrayContent(Encoding.UTF8.GetBytes(SampleFlexReport.Xml));
         file.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
         using var form = new MultipartFormDataContent { { file, "file", "flex.xml" }, { new StringContent(broker.ToString()), "accountId" } };
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form)).EnsureSuccessStatusCode();
-        var imported = Assert.Single((await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={broker}"))!.Items);
+        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var imported = Assert.Single((await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={broker}", TestContext.Current.CancellationToken))!.Items);
         Assert.True(imported.IsImported);
 
-        var response = await Client.PutAsJsonAsync($"/api/conversions/{imported.Id}", Body("400.00", "eur", "440.00", "usd", "2026-06-03"));
+        var response = await Client.PutAsJsonAsync($"/api/conversions/{imported.Id}", Body("400.00", "eur", "440.00", "usd", "2026-06-03"), TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "resource.readOnly");
-        var unchanged = Assert.Single((await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={broker}"))!.Items);
+        var unchanged = Assert.Single((await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={broker}", TestContext.Current.CancellationToken))!.Items);
         Assert.Equal(imported, unchanged);
     }
 
@@ -186,17 +186,17 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var onPersonal = await CreateAsync(Client, personal);
         var body = Body("100.00", "eur", "110.00", "usd", "2026-06-05", "1.00", "eur");
 
-        var byStranger = await stranger.PutAsJsonAsync($"/api/conversions/{onShared.Id}", body);
-        var hiddenFromPartner = await partnerClient.PutAsJsonAsync($"/api/conversions/{onPersonal.Id}", body);
-        var byPartner = await partnerClient.PutAsJsonAsync($"/api/conversions/{onShared.Id}", body);
-        var unknown = await Client.PutAsJsonAsync($"/api/conversions/{Guid.NewGuid()}", body);
+        var byStranger = await stranger.PutAsJsonAsync($"/api/conversions/{onShared.Id}", body, TestContext.Current.CancellationToken);
+        var hiddenFromPartner = await partnerClient.PutAsJsonAsync($"/api/conversions/{onPersonal.Id}", body, TestContext.Current.CancellationToken);
+        var byPartner = await partnerClient.PutAsJsonAsync($"/api/conversions/{onShared.Id}", body, TestContext.Current.CancellationToken);
+        var unknown = await Client.PutAsJsonAsync($"/api/conversions/{Guid.NewGuid()}", body, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, byStranger.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, hiddenFromPartner.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, unknown.StatusCode);
         byPartner.EnsureSuccessStatusCode();
-        var fee = (await byPartner.Content.ReadFromJsonAsync<ConversionDto>())!.FeeTransactionId;
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{fee}")).StatusCode);
+        var fee = (await byPartner.Content.ReadFromJsonAsync<ConversionDto>(TestContext.Current.CancellationToken))!.FeeTransactionId;
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{fee}", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal([new BalanceDto("eur", "899.00"), new BalanceDto("usd", "110.00")], await BalancesAsync(Client, shared));
     }
 
@@ -208,11 +208,11 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var income = await CreateCategoryAsync("income", member);
         var conversion = await CreateAsync(member, account, "2.00", "eur");
 
-        var sameCurrency = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "eur", "2026-06-05"));
-        var zeroAmount = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("0.00", "eur", "550.00", "usd", "2026-06-05"));
-        var zeroFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "0.00", "eur"));
-        var foreignFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "1.00", "gbp"));
-        var wrongCategory = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "1.00", "eur", income));
+        var sameCurrency = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "eur", "2026-06-05"), TestContext.Current.CancellationToken);
+        var zeroAmount = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("0.00", "eur", "550.00", "usd", "2026-06-05"), TestContext.Current.CancellationToken);
+        var zeroFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "0.00", "eur"), TestContext.Current.CancellationToken);
+        var foreignFee = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "1.00", "gbp"), TestContext.Current.CancellationToken);
+        var wrongCategory = await member.PutAsJsonAsync($"/api/conversions/{conversion.Id}", Body("500.00", "eur", "550.00", "usd", "2026-06-05", "1.00", "eur", income), TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(sameCurrency, "toCurrency");
         await AssertValidationErrorAsync(zeroAmount, "fromAmount");
@@ -228,7 +228,7 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var account = await CreateAccountAsync("1000.00", currency: "eur");
         var pounds = await CreateAsync(Client, account, body: Body("100.00", "eur", "80.00", "gbp", "2026-06-05"));
         var dollars = await CreateAsync(Client, account);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var restricted = original.DeepClone().AsObject();
         restricted["enabledCurrencies"] = new JsonArray("usd");
         var switchedOff = original.DeepClone().AsObject();
@@ -236,19 +236,19 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
-            var kept = await Client.PutAsJsonAsync($"/api/conversions/{pounds.Id}", Body("200.00", "eur", "160.00", "gbp", "2026-06-05"));
-            var introduced = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "80.00", "gbp", "2026-06-05"));
+            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            var kept = await Client.PutAsJsonAsync($"/api/conversions/{pounds.Id}", Body("200.00", "eur", "160.00", "gbp", "2026-06-05"), TestContext.Current.CancellationToken);
+            var introduced = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "80.00", "gbp", "2026-06-05"), TestContext.Current.CancellationToken);
             kept.EnsureSuccessStatusCode();
             await AssertRejectedAsync(introduced, "currency.disabled");
 
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
-            var gated = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "110.00", "usd", "2026-06-05"));
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+            var gated = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "110.00", "usd", "2026-06-05"), TestContext.Current.CancellationToken);
             await AssertProblemAsync(gated, HttpStatusCode.NotFound, "feature.disabled");
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
     }
 

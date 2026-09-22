@@ -28,7 +28,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     {
         using var client = await CreateUserClientAsync();
 
-        var layout = await client.GetFromJsonAsync<LayoutDto>(Url);
+        var layout = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
         Assert.Equal(new LayoutDto(DefaultOrder, [], true), layout, LayoutComparer.Instance);
     }
@@ -39,7 +39,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
         using var client = await CreateUserClientAsync();
 
         var saved = await SaveAsync(client, ["accounts", "summary"], ["netWorth", "summary"]);
-        var read = await client.GetFromJsonAsync<LayoutDto>(Url);
+        var read = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
         string[] expected = ["accounts", "summary", .. DefaultOrder.Where(c => c is not "accounts" and not "summary")];
         Assert.Equal(new LayoutDto(expected, ["summary", "netWorth"], false), saved, LayoutComparer.Instance);
@@ -52,12 +52,12 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
         using var client = await CreateUserClientAsync();
         await SaveAsync(client, ["upcomingBills"], ["budgets"]);
 
-        var response = await client.DeleteAsync(Url);
-        var read = await client.GetFromJsonAsync<LayoutDto>(Url);
+        var response = await client.DeleteAsync(Url, TestContext.Current.CancellationToken);
+        var read = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal(new LayoutDto(DefaultOrder, [], true), read, LayoutComparer.Instance);
-        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync(Url)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.DeleteAsync(Url, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     {
         using var client = await CreateUserClientAsync();
 
-        var response = await client.PutAsJsonAsync(Url, new OrderOnlyBody(["summary"]));
+        var response = await client.PutAsJsonAsync(Url, new OrderOnlyBody(["summary"]), TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "required");
     }
@@ -106,10 +106,10 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
         using var partnerClient = await LoginAsync(partner);
 
         await SaveAsync(ownerClient, ["upcomingBills"], ["summary"]);
-        var partnerLayout = await partnerClient.GetFromJsonAsync<LayoutDto>(Url);
+        var partnerLayout = await partnerClient.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
         await SaveAsync(partnerClient, ["budgets"], []);
-        (await partnerClient.DeleteAsync(Url)).EnsureSuccessStatusCode();
-        var ownerLayout = await ownerClient.GetFromJsonAsync<LayoutDto>(Url);
+        (await partnerClient.DeleteAsync(Url, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var ownerLayout = await ownerClient.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
         Assert.True(partnerLayout!.IsDefault);
         Assert.False(ownerLayout!.IsDefault);
@@ -135,7 +135,7 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
             Assert.Equal(1, await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken));
         }
 
-        var layout = await client.GetFromJsonAsync<LayoutDto>(Url);
+        var layout = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
         string[] expected = ["accounts", "summary", .. DefaultOrder.Where(c => c is not "accounts" and not "summary")];
         Assert.Equal(new LayoutDto(expected, ["accounts"], false), layout, LayoutComparer.Instance);
@@ -146,10 +146,10 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     {
         using var anonymous = CreateClient();
 
-        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync(Url)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync(Url, TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(
             HttpStatusCode.Unauthorized,
-            (await anonymous.PutAsJsonAsync(Url, new { order = Array.Empty<string>(), hidden = Array.Empty<string>() })).StatusCode);
+            (await anonymous.PutAsJsonAsync(Url, new { order = Array.Empty<string>(), hidden = Array.Empty<string>() }, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     private static Task<HttpResponseMessage> PutAsync(HttpClient client, string[] order, string[] hidden) =>

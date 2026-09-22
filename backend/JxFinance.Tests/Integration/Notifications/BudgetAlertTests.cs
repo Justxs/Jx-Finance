@@ -27,7 +27,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         var budget = await WeeklyBudgetAsync(member, "100.00");
         await SpendAsync(member, budget, "79.00");
 
-        await NewJob().ScanAsync(default);
+        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(await AlertsAsync(member));
     }
@@ -40,13 +40,13 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         await SpendAsync(member, budget, "80.00");
         var job = NewJob();
 
-        await job.ScanAsync(default);
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
         var warned = await AlertsAsync(member);
 
         await SpendAsync(member, budget, "20.00");
-        await job.ScanAsync(default);
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
         var both = await AlertsAsync(member);
 
         var warning = Assert.Single(warned);
@@ -66,9 +66,9 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         await SpendAsync(member, budget, "100.00");
         var job = NewJob();
 
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
         await MoveAlertsIntoThePreviousWindowAsync(budget);
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(4, (await AlertsAsync(member)).Count);
     }
@@ -83,7 +83,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         await SpendAsync(spender, overspent, "100.00");
         await SpendAsync(saver, within, "10.00");
 
-        await NewJob().ScanAsync(default);
+        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, (await AlertsAsync(spender)).Count);
         Assert.Empty(await AlertsAsync(saver));
@@ -103,7 +103,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             disabled.Features = disabled.Features with { Budgets = false };
             store.Set(disabled);
 
-            await NewJob().ScanAsync(default);
+            await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
             Assert.Empty(await AlertsAsync(member));
         }
@@ -112,7 +112,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             store.Set(await StoredSettingsAsync());
         }
 
-        await NewJob().ScanAsync(default);
+        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, (await AlertsAsync(member)).Count);
     }
@@ -126,11 +126,11 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         await SpendAsync(member, budget, "90.00");
         var job = NewJob();
 
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
         var quiet = await AlertsAsync(member);
 
         await SpendAsync(member, budget, "80.00");
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
         var alerts = await AlertsAsync(member);
 
         Assert.Empty(quiet);

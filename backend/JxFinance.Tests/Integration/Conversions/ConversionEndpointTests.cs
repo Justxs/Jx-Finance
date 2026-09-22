@@ -40,10 +40,10 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
             });
 
         Assert.Equal(("2.50", bookedCurrency), (conversion.FeeAmount, conversion.FeeCurrency));
-        var balances = (await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}"))!.Balances;
+        var balances = (await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}", TestContext.Current.CancellationToken))!.Balances;
         Assert.Equal(eurosLeft, balances.Single(b => b.Currency == "eur").Amount);
         Assert.Equal(dollarsHeld, balances.Single(b => b.Currency == "usd").Amount);
-        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{conversion.FeeTransactionId}");
+        var fee = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal(
             new TransactionDto(conversion.FeeTransactionId!.Value, account, category, "expense", "2.50", bookedCurrency, feeInReportingCurrency),
             fee);
@@ -59,7 +59,7 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
 
         Assert.Null(conversion.FeeTransactionId);
         Assert.Null(conversion.FeeAmount);
-        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}"))!.Total);
+        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken))!.Total);
     }
 
     [Fact]
@@ -69,15 +69,15 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
         var account = await CreateAccountAsync("1000.00", currency: "eur", client: member);
         var conversion = await CreateAsync(member, account, feeAmount: "3.00", feeCurrency: "usd");
 
-        var delete = await member.DeleteAsync($"/api/conversions/{conversion.Id}");
+        var delete = await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}")).StatusCode);
-        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}"))!.Total);
-        Assert.Empty((await member.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}"))!.Items);
-        var balance = Assert.Single((await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}"))!.Balances);
+        Assert.Equal(HttpStatusCode.NotFound, (await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(0, (await member.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken))!.Total);
+        Assert.Empty((await member.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}", TestContext.Current.CancellationToken))!.Items);
+        var balance = Assert.Single((await member.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}", TestContext.Current.CancellationToken))!.Balances);
         Assert.Equal(new BalanceDto("eur", "1000.00"), balance);
-        Assert.Equal(HttpStatusCode.NotFound, (await member.DeleteAsync($"/api/conversions/{conversion.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -92,19 +92,19 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
         var onShared = await CreateAsync(Client, shared, feeAmount: "1.00");
         var onPersonal = await CreateAsync(Client, personal, feeAmount: "1.00");
 
-        var partnerSees = (await partnerClient.GetFromJsonAsync<PageDto<ConversionDto>>("/api/conversions?pageSize=200"))!.Items;
-        var strangerSees = (await stranger.GetFromJsonAsync<PageDto<ConversionDto>>("/api/conversions?pageSize=200"))!.Items;
-        var strangerCreates = await stranger.PostAsJsonAsync("/api/conversions", Body(personal, null, null));
-        var strangerDeletes = await stranger.DeleteAsync($"/api/conversions/{onShared.Id}");
-        var partnerDeletesHidden = await partnerClient.DeleteAsync($"/api/conversions/{onPersonal.Id}");
+        var partnerSees = (await partnerClient.GetFromJsonAsync<PageDto<ConversionDto>>("/api/conversions?pageSize=200", TestContext.Current.CancellationToken))!.Items;
+        var strangerSees = (await stranger.GetFromJsonAsync<PageDto<ConversionDto>>("/api/conversions?pageSize=200", TestContext.Current.CancellationToken))!.Items;
+        var strangerCreates = await stranger.PostAsJsonAsync("/api/conversions", Body(personal, null, null), TestContext.Current.CancellationToken);
+        var strangerDeletes = await stranger.DeleteAsync($"/api/conversions/{onShared.Id}", TestContext.Current.CancellationToken);
+        var partnerDeletesHidden = await partnerClient.DeleteAsync($"/api/conversions/{onPersonal.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal([onShared.Id], partnerSees.Select(c => c.Id));
         Assert.Empty(strangerSees);
         Assert.Equal(HttpStatusCode.BadRequest, strangerCreates.StatusCode);
-        Assert.Contains("reference.notFound", await strangerCreates.Content.ReadAsStringAsync());
+        Assert.Contains("reference.notFound", await strangerCreates.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.NotFound, strangerDeletes.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, partnerDeletesHidden.StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{onPersonal.FeeTransactionId}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{onPersonal.FeeTransactionId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -112,17 +112,17 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         var account = await CreateAccountAsync("1000.00", currency: "eur");
         var existing = await CreateAsync(Client, account);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["multiCurrency"] = false;
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-            var list = await Client.GetAsync("/api/conversions");
-            var create = await Client.PostAsJsonAsync("/api/conversions", Body(account, null, null));
-            var delete = await Client.DeleteAsync($"/api/conversions/{existing.Id}");
+            var list = await Client.GetAsync("/api/conversions", TestContext.Current.CancellationToken);
+            var create = await Client.PostAsJsonAsync("/api/conversions", Body(account, null, null), TestContext.Current.CancellationToken);
+            var delete = await Client.DeleteAsync($"/api/conversions/{existing.Id}", TestContext.Current.CancellationToken);
 
             foreach (var response in new[] { list, create, delete })
             {
@@ -131,10 +131,10 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
-        var listed = await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}");
+        var listed = await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}", TestContext.Current.CancellationToken);
         Assert.Equal(existing.Id, Assert.Single(listed!.Items).Id);
     }
 

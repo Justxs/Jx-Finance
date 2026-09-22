@@ -25,7 +25,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         Assert.Null(confirmed.TransferId);
         Assert.Equal("2026-09-01", confirmed.Bill.NextDueDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture));
 
-        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}");
+        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal("income", transaction!.Type);
         Assert.Equal("250.00", transaction.Amount);
         Assert.Equal(category, transaction.CategoryId);
@@ -40,7 +40,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
 
         var confirmed = await ConfirmOkAsync(entry);
 
-        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}");
+        var transaction = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{confirmed.TransactionId}", TestContext.Current.CancellationToken);
         Assert.Equal("usd", transaction!.Currency);
         Assert.Equal("110.00", transaction.Amount);
         Assert.Equal("100.00", transaction.ReportingAmount);
@@ -52,13 +52,13 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
     {
         var pounds = await CreateAccountAsync("500.00", currency: "gbp");
         var entry = await CreateEntryAsync("expense", "40.00", accountId: pounds);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var restricted = original.DeepClone().AsObject();
         restricted["enabledCurrencies"] = new JsonArray("usd");
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             var response = await ConfirmAsync(entry.Id, new { expectedDueDate = entry.NextDueDate });
 
@@ -66,7 +66,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal("500.00", await CurrentBalanceAsync(pounds));
@@ -78,7 +78,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         var account = await CreateAccountAsync("100.00");
         var category = await CreateCategoryAsync();
 
-        var response = await Client.PostAsJsonAsync("/api/recurring-bills", Body("income", "10.00", account, null, category));
+        var response = await Client.PostAsJsonAsync("/api/recurring-bills", Body("income", "10.00", account, null, category), TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "category.wrongType");
     }
@@ -133,7 +133,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
 
         await AssertRejectedAsync(response, "transfer.receivedAmountRequired");
         Assert.Equal("500.00", await CurrentBalanceAsync(euros));
-        var unchanged = await Client.GetFromJsonAsync<EntryDto>($"/api/recurring-bills/{entry.Id}");
+        var unchanged = await Client.GetFromJsonAsync<EntryDto>($"/api/recurring-bills/{entry.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(entry.NextDueDate, unchanged!.NextDueDate);
     }
 
@@ -148,7 +148,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         var stale = await ConfirmAsync(entry.Id, new { expectedDueDate = entry.NextDueDate.AddDays(-1) });
 
         await AssertProblemAsync(stale, HttpStatusCode.Conflict, "conflict.stale");
-        var unchanged = await Client.GetFromJsonAsync<EntryDto>($"/api/recurring-bills/{entry.Id}");
+        var unchanged = await Client.GetFromJsonAsync<EntryDto>($"/api/recurring-bills/{entry.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(entry.NextDueDate, unchanged!.NextDueDate);
     }
 
@@ -175,7 +175,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
                 nextDueDate = entry.NextDueDate,
                 remindDaysBefore = 3,
                 isActive = false,
-            });
+            }, TestContext.Current.CancellationToken);
         deactivate.EnsureSuccessStatusCode();
 
         var response = await ConfirmAsync(entry.Id, new { expectedDueDate = entry.NextDueDate });
@@ -190,16 +190,16 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         var category = await CreateCategoryAsync();
 
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, null, null)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, null, null), TestContext.Current.CancellationToken),
             "toAccountId");
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", null, from, null)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", null, from, null), TestContext.Current.CancellationToken),
             "accountId");
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, from, null)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, from, null), TestContext.Current.CancellationToken),
             "toAccountId");
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, await CreateAccountAsync(), category)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("transfer", "10.00", from, await CreateAccountAsync(), category), TestContext.Current.CancellationToken),
             "categoryId");
     }
 
@@ -210,10 +210,10 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         var other = await CreateAccountAsync();
 
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("expense", "10.00", account, other, null)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("expense", "10.00", account, other, null), TestContext.Current.CancellationToken),
             "toAccountId");
         await AssertValidationErrorAsync(
-            await Client.PostAsJsonAsync("/api/recurring-bills", Body("income", "10.00", account, other, null)),
+            await Client.PostAsJsonAsync("/api/recurring-bills", Body("income", "10.00", account, other, null), TestContext.Current.CancellationToken),
             "toAccountId");
     }
 
@@ -228,7 +228,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
 
         var switched = await UpdateAsync(entry, "transfer", toAccountId: destination);
         switched.EnsureSuccessStatusCode();
-        var asTransfer = (await switched.Content.ReadFromJsonAsync<EntryDto>())!;
+        var asTransfer = (await switched.Content.ReadFromJsonAsync<EntryDto>(TestContext.Current.CancellationToken))!;
         Assert.Equal("transfer", asTransfer.Shape);
         Assert.Equal(destination, asTransfer.ToAccountId);
 
@@ -236,7 +236,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
 
         var back = await UpdateAsync(asTransfer, "income", toAccountId: null);
         back.EnsureSuccessStatusCode();
-        Assert.Equal("income", (await back.Content.ReadFromJsonAsync<EntryDto>())!.Shape);
+        Assert.Equal("income", (await back.Content.ReadFromJsonAsync<EntryDto>(TestContext.Current.CancellationToken))!.Shape);
     }
 
     [Fact]
@@ -259,7 +259,7 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         await ConfirmOkAsync(await CreateEntryAsync("income", "80.00", accountId: account, categoryId: incomeCategory, nextDueDate: today));
         await ConfirmOkAsync(await CreateEntryAsync("transfer", "200.00", accountId: account, toAccountId: destination, nextDueDate: today));
 
-        var budget = (await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets"))!
+        var budget = (await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!
             .Single(b => b.CategoryId == expenseCategory);
         Assert.Equal("30.00", budget.Spent);
 
@@ -288,9 +288,9 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
             Services.GetRequiredService<IServiceScopeFactory>(),
             NullLogger<RecurringBillReminderJob>.Instance);
 
-        await job.ScanAsync(default);
+        await job.ScanAsync(TestContext.Current.CancellationToken);
 
-        var unread = (await Client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true"))!;
+        var unread = (await Client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true", TestContext.Current.CancellationToken))!;
         Assert.Equal("expense", Reminder(unread, expense.Id).Payload.Shape);
         Assert.Equal("income", Reminder(unread, income.Id).Payload.Shape);
         Assert.Equal("transfer", Reminder(unread, transfer.Id).Payload.Shape);

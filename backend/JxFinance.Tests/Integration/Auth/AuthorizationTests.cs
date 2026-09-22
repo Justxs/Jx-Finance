@@ -25,7 +25,7 @@ public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase
     public async Task Every_documented_route_outside_the_anonymous_list_rejects_a_request_without_a_session()
     {
         using var anonymous = CreateClient(handleCookies: false);
-        var document = await Client.GetFromJsonAsync<JsonElement>("/openapi/v1.json");
+        var document = await Client.GetFromJsonAsync<JsonElement>("/openapi/v1.json", TestContext.Current.CancellationToken);
         var open = new List<string>();
         var checkedRoutes = 0;
 
@@ -39,7 +39,7 @@ public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase
 
                 var url = System.Text.RegularExpressions.Regex.Replace(path.Name, "{[^}]+}", Guid.NewGuid().ToString());
                 using var request = new HttpRequestMessage(new HttpMethod(operation.Name), url) { Content = EmptyBodyFor(operation.Value) };
-                var response = await anonymous.SendAsync(request);
+                var response = await anonymous.SendAsync(request, TestContext.Current.CancellationToken);
                 checkedRoutes++;
                 if (response.StatusCode != HttpStatusCode.Unauthorized)
                     open.Add($"{route}: {(int)response.StatusCode}");
@@ -66,7 +66,7 @@ public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase
 
         var response = await anonymous.PostAsJsonAsync(
             "/api/setup",
-            new { email = $"second-{Guid.NewGuid():N}@localhost", password = "Second-Admin-123!", displayName = "Second" });
+            new { email = $"second-{Guid.NewGuid():N}@localhost", password = "Second-Admin-123!", displayName = "Second" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -78,8 +78,8 @@ public sealed class AuthorizationTests(ApiFixture fixture) : IntegrationTestBase
         var attempt = new { email = $"nobody-{Guid.NewGuid():N}@localhost", password = "Wrong-Password-123!", rememberMe = false };
 
         for (var i = 0; i < 10; i++)
-            Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", attempt)).StatusCode);
+            Assert.Equal(HttpStatusCode.Unauthorized, (await client.PostAsJsonAsync("/api/auth/login", attempt, TestContext.Current.CancellationToken)).StatusCode);
 
-        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/auth/login", attempt)).StatusCode);
+        Assert.Equal(HttpStatusCode.TooManyRequests, (await client.PostAsJsonAsync("/api/auth/login", attempt, TestContext.Current.CancellationToken)).StatusCode);
     }
 }

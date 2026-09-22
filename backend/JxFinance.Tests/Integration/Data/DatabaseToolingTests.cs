@@ -29,8 +29,8 @@ public sealed class DatabaseToolingTests(ApiFixture fixture) : IntegrationTestBa
         await DemoDataCommand.RunAsync(Services, user.Email);
 
         var client = await LoginAsync(user);
-        var accounts = await client.GetFromJsonAsync<JsonElement>("/api/accounts");
-        var transactions = await client.GetFromJsonAsync<JsonElement>("/api/transactions?page=1&pageSize=5");
+        var accounts = await client.GetFromJsonAsync<JsonElement>("/api/accounts", TestContext.Current.CancellationToken);
+        var transactions = await client.GetFromJsonAsync<JsonElement>("/api/transactions?page=1&pageSize=5", TestContext.Current.CancellationToken);
         Assert.Equal(3, accounts.GetArrayLength());
         Assert.True(transactions.GetProperty("total").GetInt32() > 50);
         await Assert.ThrowsAsync<InvalidOperationException>(() => DemoDataCommand.RunAsync(Services, user.Email));

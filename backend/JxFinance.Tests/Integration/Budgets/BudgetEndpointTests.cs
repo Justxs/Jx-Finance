@@ -15,9 +15,9 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var createResponse = await Client.PostAsJsonAsync(
             "/api/budgets",
-            new { categoryId = category, limitAmount = "200.00" });
+            new { categoryId = category, limitAmount = "200.00" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Created, createResponse.StatusCode);
-        var budget = await createResponse.Content.ReadFromJsonAsync<BudgetDto>();
+        var budget = await createResponse.Content.ReadFromJsonAsync<BudgetDto>(TestContext.Current.CancellationToken);
         Assert.Equal("200.00", budget!.LimitAmount);
 
         await PostAsync<IdDto>(
@@ -36,12 +36,12 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
                 lines = new object[] { new { categoryId = category, amount = "20.00" } },
             });
 
-        var budgets = await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets");
+        var budgets = await Client.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken);
         var updated = budgets!.Single(b => b.Id == budget.Id);
         Assert.Equal("50.00", updated.Spent);
         Assert.Equal("150.00", updated.Remaining);
 
-        var deleteResponse = await Client.DeleteAsync($"/api/budgets/{budget.Id}");
+        var deleteResponse = await Client.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, deleteResponse.StatusCode);
     }
 
@@ -61,7 +61,7 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(("0.00", "200.00", "200.00"), (budget.CarriedAmount, budget.EffectiveLimit, budget.Remaining));
         Assert.Equal((monthStart, monthStart.AddMonths(1).AddDays(-1)), (budget.WindowStart, budget.WindowEnd));
 
-        await Client.DeleteAsync($"/api/budgets/{budget.Id}");
+        await Client.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PostAsJsonAsync(
             "/api/budgets",
-            new { categoryId = category, limitAmount = "100.00" });
+            new { categoryId = category, limitAmount = "100.00" }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
@@ -81,18 +81,18 @@ public sealed class BudgetEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var budget = await PostAsync<BudgetDto>(Client, "/api/budgets", new { categoryId = await CreateCategoryAsync(), limitAmount = "200.00" });
         var otherCategory = await CreateCategoryAsync();
 
-        var response = await Client.PutAsJsonAsync($"/api/budgets/{budget.Id}", new { categoryId = otherCategory, limitAmount = "350.00" });
+        var response = await Client.PutAsJsonAsync($"/api/budgets/{budget.Id}", new { categoryId = otherCategory, limitAmount = "350.00" }, TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<BudgetDto>();
+        var updated = await response.Content.ReadFromJsonAsync<BudgetDto>(TestContext.Current.CancellationToken);
         Assert.Equal((otherCategory, "350.00", "350.00"), (updated!.CategoryId, updated.LimitAmount, updated.Remaining));
     }
 
     [Fact]
     public async Task Updating_or_deleting_an_unknown_budget_answers_not_found()
     {
-        var update = await Client.PutAsJsonAsync($"/api/budgets/{Guid.NewGuid()}", new { categoryId = await CreateCategoryAsync(), limitAmount = "1.00" });
-        var delete = await Client.DeleteAsync($"/api/budgets/{Guid.NewGuid()}");
+        var update = await Client.PutAsJsonAsync($"/api/budgets/{Guid.NewGuid()}", new { categoryId = await CreateCategoryAsync(), limitAmount = "1.00" }, TestContext.Current.CancellationToken);
+        var delete = await Client.DeleteAsync($"/api/budgets/{Guid.NewGuid()}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, update.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, delete.StatusCode);

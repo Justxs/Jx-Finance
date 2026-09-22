@@ -18,7 +18,7 @@ public sealed class GoalValidationTests(ApiFixture fixture) : IntegrationTestBas
         var body = new Dictionary<string, object> { ["name"] = "Goal", ["targetAmount"] = "100.00", ["currentAmount"] = "0.00" };
         body[field] = value;
 
-        var response = await Client.PostAsJsonAsync("/api/goals", body);
+        var response = await Client.PostAsJsonAsync("/api/goals", body, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, field);
     }
@@ -30,11 +30,11 @@ public sealed class GoalValidationTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PutAsJsonAsync(
             $"/api/goals/{goal.Id}",
-            new { name = "Goal", targetAmount = "100.00", currentAmount = "-5.00" });
+            new { name = "Goal", targetAmount = "100.00", currentAmount = "-5.00" }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "currentAmount");
-        Assert.Contains("money.nonNegative", await response.Content.ReadAsStringAsync());
-        var goals = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals");
+        Assert.Contains("money.nonNegative", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+        var goals = await Client.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);
         Assert.Equal("40.00", goals!.Single(g => g.Id == goal.Id).CurrentAmount);
     }
 

@@ -14,10 +14,10 @@ public sealed class MigrationTests(ApiFixture fixture) : IntegrationTestBase(fix
         using var scope = Services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var applied = await db.Database.GetAppliedMigrationsAsync();
+        var applied = await db.Database.GetAppliedMigrationsAsync(TestContext.Current.CancellationToken);
         Assert.Contains(applied, name => name.EndsWith("InitialCreate", StringComparison.Ordinal));
 
-        var pending = await db.Database.GetPendingMigrationsAsync();
+        var pending = await db.Database.GetPendingMigrationsAsync(TestContext.Current.CancellationToken);
         Assert.Empty(pending);
     }
 }

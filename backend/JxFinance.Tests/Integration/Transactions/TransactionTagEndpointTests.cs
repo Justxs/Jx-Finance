@@ -24,15 +24,15 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
 
         var edited = await member.PutAsJsonAsync(
             $"/api/transactions/{created.Id}",
-            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = new[] { holiday } });
+            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = new[] { holiday } }, TestContext.Current.CancellationToken);
         edited.EnsureSuccessStatusCode();
-        var afterEdit = (await edited.Content.ReadFromJsonAsync<TransactionDto>())!;
+        var afterEdit = (await edited.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken))!;
 
         var cleared = await member.PutAsJsonAsync(
             $"/api/transactions/{created.Id}",
-            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = Array.Empty<Guid>() });
+            new { accountId = account, type = "expense", amount = "20.00", date = "2026-06-01", tagIds = Array.Empty<Guid>() }, TestContext.Current.CancellationToken);
         cleared.EnsureSuccessStatusCode();
-        var reread = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{created.Id}");
+        var reread = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{created.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal([holiday], afterEdit.TagIds);
         Assert.Empty(reread!.TagIds);
@@ -47,7 +47,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
 
         var response = await member.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = account, type = "expense", amount = "5.00", date = "2026-06-02", tagIds = new[] { foreignTag } });
+            new { accountId = account, type = "expense", amount = "5.00", date = "2026-06-02", tagIds = new[] { foreignTag } }, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "reference.notFound");
     }
@@ -67,7 +67,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         var byHoliday = await ListAsync(member, $"accountId={account}&tagIds={holiday}");
         var byBoth = await ListAsync(member, $"accountId={account}&tagIds={holiday},{reimbursable}");
         var summary = await member.GetFromJsonAsync<SummaryDto>(
-            $"/api/transactions/summary?accountId={account}&tagIds={holiday},{reimbursable}");
+            $"/api/transactions/summary?accountId={account}&tagIds={holiday},{reimbursable}", TestContext.Current.CancellationToken);
 
         Assert.Equal(
             new[] { both.Id, onlyHoliday.Id }.OrderBy(id => id),
@@ -83,7 +83,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
     [Fact]
     public async Task A_malformed_tag_filter_is_refused()
     {
-        var response = await Client.GetAsync("/api/transactions?tagIds=not-a-guid");
+        var response = await Client.GetAsync("/api/transactions?tagIds=not-a-guid", TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "tagIds");
     }
@@ -141,8 +141,8 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
             "/api/transactions",
             new { accountId = account, categoryId = category, type = "expense", amount = "31.00", date = "2026-07-07", tagIds = new[] { tag } });
 
-        var deleted = await member.DeleteAsync($"/api/tags/{tag}");
-        var afterDelete = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{entry.Id}");
+        var deleted = await member.DeleteAsync($"/api/tags/{tag}", TestContext.Current.CancellationToken);
+        var afterDelete = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{entry.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Empty(afterDelete!.TagIds);
@@ -174,12 +174,12 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
 
         var response = await member.PostAsJsonAsync(
             "/api/transactions/bulk-tags",
-            new { transactionIds = new[] { plain.Id, split.Id }, tagIds = new[] { reimbursable } });
+            new { transactionIds = new[] { plain.Id, split.Id }, tagIds = new[] { reimbursable } }, TestContext.Current.CancellationToken);
         response.EnsureSuccessStatusCode();
-        var updated = await response.Content.ReadFromJsonAsync<BulkDto>();
+        var updated = await response.Content.ReadFromJsonAsync<BulkDto>(TestContext.Current.CancellationToken);
 
-        var afterPlain = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{plain.Id}");
-        var afterSplit = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{split.Id}");
+        var afterPlain = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{plain.Id}", TestContext.Current.CancellationToken);
+        var afterSplit = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{split.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(2, updated!.Updated);
         Assert.Equal([reimbursable], afterPlain!.TagIds);
@@ -200,12 +200,12 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
 
         var missing = await member.PostAsJsonAsync(
             "/api/transactions/bulk-tags",
-            new { transactionIds = new[] { mine.Id, theirs.Id }, tagIds = Array.Empty<Guid>() });
+            new { transactionIds = new[] { mine.Id, theirs.Id }, tagIds = Array.Empty<Guid>() }, TestContext.Current.CancellationToken);
         var foreignTag = await CreateTagAsync();
         var invisibleTag = await member.PostAsJsonAsync(
             "/api/transactions/bulk-tags",
-            new { transactionIds = new[] { mine.Id }, tagIds = new[] { foreignTag } });
-        var unchanged = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{mine.Id}");
+            new { transactionIds = new[] { mine.Id }, tagIds = new[] { foreignTag } }, TestContext.Current.CancellationToken);
+        var unchanged = await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{mine.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, missing.StatusCode);
         await AssertProblemAsync(invisibleTag, HttpStatusCode.BadRequest, "reference.notFound");
@@ -222,7 +222,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         await TaggedAsync(member, account, "2026-08-10", [holiday, reimbursable]);
         await TaggedAsync(member, account, "2026-08-11", []);
 
-        var csv = await member.GetStringAsync($"/api/transactions/export?accountId={account}&sort=date&direction=asc");
+        var csv = await member.GetStringAsync($"/api/transactions/export?accountId={account}&sort=date&direction=asc", TestContext.Current.CancellationToken);
         var lines = csv.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
         Assert.Equal("Date,Description,Account,Category,Tags,Type,Amount,Currency", lines[0]);
@@ -242,7 +242,7 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         await TaggedAsync(member, account, "2026-05-04", [], "5.00");
         await TaggedAsync(member, account, "2026-09-09", [holiday], "99.00");
 
-        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-05-01&dateTo=2026-05-31");
+        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-05-01&dateTo=2026-05-31", TestContext.Current.CancellationToken);
 
         Assert.Equal("50.00", report!.ExpenseByTag.Single(t => t.TagId == holiday).Amount);
         Assert.Equal("30.00", report.ExpenseByTag.Single(t => t.TagId == reimbursable).Amount);

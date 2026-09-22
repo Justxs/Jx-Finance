@@ -9,7 +9,7 @@ public sealed class CorrelationIdTests(ApiFixture fixture) : IntegrationTestBase
     [Fact]
     public async Task Response_carries_a_generated_correlation_id()
     {
-        var response = await Client.GetAsync("/api/ping");
+        var response = await Client.GetAsync("/api/ping", TestContext.Current.CancellationToken);
 
         var values = response.Headers.GetValues(CorrelationIdMiddleware.HeaderName).ToList();
         var correlationId = Assert.Single(values);
@@ -22,7 +22,7 @@ public sealed class CorrelationIdTests(ApiFixture fixture) : IntegrationTestBase
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/ping");
         request.Headers.Add(CorrelationIdMiddleware.HeaderName, "test-correlation-id");
 
-        var response = await Client.SendAsync(request);
+        var response = await Client.SendAsync(request, TestContext.Current.CancellationToken);
 
         var correlationId = Assert.Single(response.Headers.GetValues(CorrelationIdMiddleware.HeaderName));
         Assert.Equal("test-correlation-id", correlationId);

@@ -17,16 +17,16 @@ public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationT
         using var client = await LoginAsync(user);
         var notification = await SeedNotificationAsync(user);
 
-        var unread = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true");
+        var unread = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true", TestContext.Current.CancellationToken);
         Assert.Contains(unread!, n => n.Id == notification.Id.Value);
 
-        var markResponse = await client.PatchAsync($"/api/notifications/{notification.Id.Value}/read", null);
+        var markResponse = await client.PatchAsync($"/api/notifications/{notification.Id.Value}/read", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, markResponse.StatusCode);
 
-        var unreadAfter = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true");
+        var unreadAfter = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(unreadAfter!, n => n.Id == notification.Id.Value);
 
-        var all = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications");
+        var all = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications", TestContext.Current.CancellationToken);
         Assert.Contains(all!, n => n.Id == notification.Id.Value && n.IsRead);
     }
 
@@ -38,17 +38,17 @@ public sealed class NotificationEndpointTests(ApiFixture fixture) : IntegrationT
         await SeedNotificationAsync(user);
         await SeedNotificationAsync(user);
 
-        var markAllResponse = await client.PostAsync("/api/notifications/read-all", null);
+        var markAllResponse = await client.PostAsync("/api/notifications/read-all", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NoContent, markAllResponse.StatusCode);
 
-        var unread = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true");
+        var unread = await client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true", TestContext.Current.CancellationToken);
         Assert.Empty(unread!);
     }
 
     [Fact]
     public async Task Mark_read_on_an_unknown_notification_returns_not_found()
     {
-        var response = await Client.PatchAsync($"/api/notifications/{Guid.NewGuid()}/read", null);
+        var response = await Client.PatchAsync($"/api/notifications/{Guid.NewGuid()}/read", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 

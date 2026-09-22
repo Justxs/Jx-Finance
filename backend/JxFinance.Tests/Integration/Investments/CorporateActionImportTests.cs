@@ -22,14 +22,14 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         Assert.Equal([new SkippedDto("SD", 1), new SkippedDto("TC", 1)], first.SkippedCorporateActions);
         Assert.Equal([new MismatchDto(report.Merged, "0", "10")], first.PositionMismatches);
 
-        var holdings = (await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}"))!.Holdings
+        var holdings = (await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}", TestContext.Current.CancellationToken))!.Holdings
             .ToDictionary(h => h.Security.Symbol, h => (h.Quantity, h.CostBasis));
         Assert.Equal(("25", "1250.00"), holdings[report.Forward]);
         Assert.Equal(("6", "60.00"), holdings[report.Reverse]);
         Assert.Equal(("15", "300.00"), holdings[report.Fractional]);
         Assert.Equal(("10", "200.00"), holdings[report.Merged]);
 
-        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
+        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50", TestContext.Current.CancellationToken))!.Items;
         Assert.Equal(
             [(report.Forward, "2", new DateOnly(2026, 6, 10)), (report.Reverse, "0.1", new DateOnly(2026, 6, 15)), (report.Fractional, "1.5", new DateOnly(2026, 6, 16))],
             splits.OrderBy(s => s.Date).Select(s => (s.Symbol, s.Quantity, s.Date)));
@@ -48,10 +48,10 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         var report = NewReport();
         var broker = await CreateAccountAsync("10000.00", "investment", "eur");
         await UploadAsync(broker, report.Xml);
-        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items;
+        var splits = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50", TestContext.Current.CancellationToken))!.Items;
         var fractional = splits.Single(s => s.Symbol == report.Fractional);
 
-        Assert.Equal(HttpStatusCode.NoContent, (await Client.DeleteAsync($"/api/investments/transactions/{fractional.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NoContent, (await Client.DeleteAsync($"/api/investments/transactions/{fractional.Id}", TestContext.Current.CancellationToken)).StatusCode);
         var again = await UploadAsync(broker, report.Xml);
 
         Assert.Equal((0, 9), (again.Splits, again.Duplicates));
@@ -66,11 +66,11 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         var report = NewReport();
         var broker = await CreateAccountAsync("10000.00", "investment", "eur");
         await UploadAsync(broker, report.Xml);
-        var split = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50"))!.Items[0];
+        var split = (await Client.GetFromJsonAsync<PageDto<EntryDto>>($"/api/investments/transactions?accountId={broker}&type=split&pageSize=50", TestContext.Current.CancellationToken))!.Items[0];
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{split.Id}",
-            new { accountId = broker, securityId = split.SecurityId, type = "split", date = "2026-06-10", quantity = "3" });
+            new { accountId = broker, securityId = split.SecurityId, type = "split", date = "2026-06-10", quantity = "3" }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "resource.readOnly");
     }
@@ -99,7 +99,7 @@ public sealed class CorporateActionImportTests(ApiFixture fixture) : Integration
         var older = await UploadAsync(broker, report.BeforeReverseSplitXml);
 
         Assert.Equal((1, 0, 0), (older.Trades, older.Duplicates, older.SecuritiesCreated));
-        var holdings = (await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}"))!.Holdings
+        var holdings = (await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}", TestContext.Current.CancellationToken))!.Holdings
             .ToDictionary(h => h.Security.Symbol, h => (h.Quantity, h.CostBasis));
         Assert.Equal(("11", "120.00"), holdings[report.Reverse]);
 

@@ -66,7 +66,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PostAsJsonAsync(
             "/api/import/swedbank/confirm",
-            new { accountId = account, rows = new[] { Row("invalid", amount) } });
+            new { accountId = account, rows = new[] { Row("invalid", amount) } }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         Assert.Equal("100.00", await CurrentBalanceAsync(account));
@@ -77,8 +77,8 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var account = await CreateAccountAsync("100.00");
         await ConfirmAsync(account, Row("deleted"));
-        var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}");
-        (await Client.DeleteAsync($"/api/transactions/{imported!.Items.Single().Id}")).EnsureSuccessStatusCode();
+        var imported = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={account}", TestContext.Current.CancellationToken);
+        (await Client.DeleteAsync($"/api/transactions/{imported!.Items.Single().Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         var retry = await ConfirmAsync(account, Row("deleted"));
 
@@ -93,13 +93,13 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var destination = await CreateAccountAsync("100.00");
 
         await ConfirmAsync(source, Row("outgoing", transferAccountId: destination));
-        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
         var transfer = transfers!.Items.Single(t => t.FromAccountId == source);
         await ConfirmAsync(destination, Row("incoming", type: "income", transferAccountId: source, existingTransferId: transfer.Id));
 
         Assert.Equal("90.00", await CurrentBalanceAsync(source));
         Assert.Equal("110.00", await CurrentBalanceAsync(destination));
-        var transactions = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={source}");
+        var transactions = await Client.GetFromJsonAsync<PageDto<IdDto>>($"/api/transactions?accountId={source}", TestContext.Current.CancellationToken);
         Assert.Equal(0, transactions!.Total);
     }
 
@@ -120,10 +120,10 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
                     Row("same-file-1", transferAccountId: destination, existingTransferId: transfer),
                     Row("same-file-2", transferAccountId: destination, existingTransferId: transfer),
                 },
-            });
+            }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync());
+        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var retry = await ConfirmAsync(source, Row("same-file-1", transferAccountId: destination, existingTransferId: transfer));
         Assert.Equal(1, retry.Imported);
     }
@@ -138,10 +138,10 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PostAsJsonAsync(
             "/api/import/swedbank/confirm",
-            new { accountId = source, rows = new[] { Row("second-import", transferAccountId: destination, existingTransferId: transfer) } });
+            new { accountId = source, rows = new[] { Row("second-import", transferAccountId: destination, existingTransferId: transfer) } }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync());
+        Assert.Contains("import.transferAlreadyMatched", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         var other = await ConfirmAsync(
             destination,
             Row("other-side", type: "income", transferAccountId: source, existingTransferId: transfer));
@@ -159,7 +159,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await Client.PostAsJsonAsync(
             "/api/import/swedbank/confirm",
-            new { accountId = euros, rows = new[] { Row("cross-currency", type: type, transferAccountId: dollars) } });
+            new { accountId = euros, rows = new[] { Row("cross-currency", type: type, transferAccountId: dollars) } }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(response, "transfer.receivedAmountRequired");
         Assert.Equal("100.00", await CurrentBalanceAsync(euros));
@@ -174,7 +174,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
         await ConfirmAsync(source, Row("trimmed", description: "  Savings  ", transferAccountId: destination));
 
-        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        var transfers = await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
         Assert.Equal("Savings", transfers!.Items.Single(t => t.FromAccountId == source).Description);
     }
 
@@ -185,23 +185,23 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var account = await CreateAccountAsync("100.00");
         Guid? destination = asTransfer ? await CreateAccountAsync("0.00", currency: "gbp") : null;
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var restricted = original.DeepClone().AsObject();
         restricted["enabledCurrencies"] = new JsonArray("usd");
 
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             var response = await Client.PostAsJsonAsync(
                 "/api/import/swedbank/confirm",
-                new { accountId = account, rows = new[] { Row("pounds", currency: "gbp", transferAccountId: destination) } });
+                new { accountId = account, rows = new[] { Row("pounds", currency: "gbp", transferAccountId: destination) } }, TestContext.Current.CancellationToken);
 
             await AssertRejectedAsync(response, "currency.disabled");
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal("100.00", await CurrentBalanceAsync(account));

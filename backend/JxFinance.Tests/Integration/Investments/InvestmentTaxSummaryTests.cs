@@ -141,7 +141,7 @@ public sealed class InvestmentTaxSummaryTests(ApiFixture fixture) : IntegrationT
         var everything = await SummaryAsync(member, "year=2026");
         var oneAccount = await SummaryAsync(member, $"year=2026&accountIds={kept}");
         var both = await SummaryAsync(member, $"year=2026&accountIds={kept},{other}");
-        var malformed = await member.GetAsync("/api/investments/tax-summary?accountIds=not-an-id");
+        var malformed = await member.GetAsync("/api/investments/tax-summary?accountIds=not-an-id", TestContext.Current.CancellationToken);
 
         Assert.Equal("35.00", everything.Totals.Interest);
         Assert.Equal("10.00", oneAccount.Totals.Interest);
@@ -182,13 +182,13 @@ public sealed class InvestmentTaxSummaryTests(ApiFixture fixture) : IntegrationT
 
         using var response = await member.GetAsync(
             $"/api/investments/tax-summary/export?year=2026&accountIds={account}",
-            HttpCompletionOption.ResponseHeadersRead);
+            HttpCompletionOption.ResponseHeadersRead, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/csv", response.Content.Headers.ContentType?.MediaType);
         Assert.Equal("investment-tax-summary-2026.csv", response.Content.Headers.ContentDisposition?.FileName);
         Assert.Null(response.Content.Headers.ContentLength);
-        var lines = (await response.Content.ReadAsStringAsync())
+        var lines = (await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken))
             .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         Assert.Equal(
             "Section,Date,Account,Security,Currency,Quantity,Amount,CostBasis,Gain,"

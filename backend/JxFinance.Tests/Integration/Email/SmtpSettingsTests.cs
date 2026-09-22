@@ -12,13 +12,13 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
     {
         try
         {
-            var saved = await Client.PutAsJsonAsync("/api/settings/smtp", EnabledSmtp());
+            var saved = await Client.PutAsJsonAsync("/api/settings/smtp", EnabledSmtp(), TestContext.Current.CancellationToken);
             saved.EnsureSuccessStatusCode();
-            var body = await saved.Content.ReadAsStringAsync();
+            var body = await saved.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
 
-            var read = await Client.GetAsync("/api/settings/smtp");
-            var readBody = await read.Content.ReadAsStringAsync();
-            var settings = await read.Content.ReadFromJsonAsync<SmtpDto>();
+            var read = await Client.GetAsync("/api/settings/smtp", TestContext.Current.CancellationToken);
+            var readBody = await read.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
+            var settings = await read.Content.ReadFromJsonAsync<SmtpDto>(TestContext.Current.CancellationToken);
 
             Assert.DoesNotContain("relay-secret", body, StringComparison.Ordinal);
             Assert.DoesNotContain("relay-secret", readBody, StringComparison.Ordinal);
@@ -42,7 +42,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
     {
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings/smtp", EnabledSmtp())).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings/smtp", EnabledSmtp(), TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
             var kept = await SaveAsync(EnabledSmtp(password: ""));
             Assert.True(kept.HasPassword);
@@ -78,10 +78,10 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
         {
             await EnableEmailAsync();
 
-            var refused = await Client.PutAsJsonAsync("/api/settings/smtp", Smtp(host, userName, password: null));
+            var refused = await Client.PutAsJsonAsync("/api/settings/smtp", Smtp(host, userName, password: null), TestContext.Current.CancellationToken);
             await AssertProblemAsync(refused, HttpStatusCode.BadRequest, "email.passwordRequired");
 
-            var stored = await Client.GetFromJsonAsync<SmtpDto>("/api/settings/smtp");
+            var stored = await Client.GetFromJsonAsync<SmtpDto>("/api/settings/smtp", TestContext.Current.CancellationToken);
             Assert.Equal(SmtpHost, stored!.Host);
             Assert.Equal("relay", stored.UserName);
 
@@ -89,7 +89,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
             Assert.Equal(host, moved.Host);
             Assert.True(moved.HasPassword);
 
-            await Client.PostAsync("/api/settings/smtp/test", null);
+            await Client.PostAsync("/api/settings/smtp/test", null, TestContext.Current.CancellationToken);
             Assert.Equal("new-secret", Assert.Single(Transport.Sent).Delivery.Password);
         }
         finally
@@ -128,7 +128,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
             password = "relay-secret",
             fromAddress = SenderAddress,
             fromName = (string?)null,
-        });
+        }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "encryption");
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "email.insecureConnection");
@@ -147,7 +147,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
             password = (string?)null,
             fromAddress = (string?)null,
             fromName = (string?)null,
-        });
+        }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "host");
     }
@@ -165,7 +165,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
             password = (string?)null,
             fromAddress = SenderAddress,
             fromName = (string?)null,
-        });
+        }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "port");
     }
@@ -175,11 +175,11 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
     {
         using var member = await CreateUserClientAsync();
 
-        Assert.Equal(HttpStatusCode.Forbidden, (await member.GetAsync("/api/settings/smtp")).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.GetAsync("/api/settings/smtp", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(
             HttpStatusCode.Forbidden,
-            (await member.PutAsJsonAsync("/api/settings/smtp", DisabledSmtp())).StatusCode);
-        Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync("/api/settings/smtp/test", null)).StatusCode);
+            (await member.PutAsJsonAsync("/api/settings/smtp", DisabledSmtp(), TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await member.PostAsync("/api/settings/smtp/test", null, TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -189,20 +189,20 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
         {
             await EnableEmailAsync();
 
-            var accepted = await Client.PostAsync("/api/settings/smtp/test", null);
+            var accepted = await Client.PostAsync("/api/settings/smtp/test", null, TestContext.Current.CancellationToken);
             var sent = Assert.Single(Transport.To(ApiFixture.TestAdminEmail));
 
             Assert.Equal(HttpStatusCode.OK, accepted.StatusCode);
-            Assert.Equal(ApiFixture.TestAdminEmail, (await accepted.Content.ReadFromJsonAsync<TestDto>())!.SentTo);
+            Assert.Equal(ApiFixture.TestAdminEmail, (await accepted.Content.ReadFromJsonAsync<TestDto>(TestContext.Current.CancellationToken))!.SentTo);
             Assert.Equal(SenderAddress, sent.Delivery.FromAddress);
             Assert.Equal("relay-secret", sent.Delivery.Password);
             Assert.Contains("test message", sent.Email.Subject, StringComparison.OrdinalIgnoreCase);
 
             Transport.FailWith = "535 5.7.8 Authentication credentials invalid";
-            var refused = await Client.PostAsync("/api/settings/smtp/test", null);
+            var refused = await Client.PostAsync("/api/settings/smtp/test", null, TestContext.Current.CancellationToken);
 
             await AssertProblemAsync(refused, HttpStatusCode.BadRequest, "email.sendFailed");
-            Assert.Contains("535 5.7.8", await refused.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+            Assert.Contains("535 5.7.8", await refused.Content.ReadAsStringAsync(TestContext.Current.CancellationToken), StringComparison.Ordinal);
         }
         finally
         {
@@ -215,7 +215,7 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
     {
         await DisableEmailAsync();
 
-        var response = await Client.PostAsync("/api/settings/smtp/test", null);
+        var response = await Client.PostAsync("/api/settings/smtp/test", null, TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(response, HttpStatusCode.BadRequest, "email.notConfigured");
         Assert.Empty(Transport.Sent);
@@ -230,14 +230,14 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
         try
         {
             await EnableEmailAsync();
-            Assert.True((await anonymous.GetFromJsonAsync<PublicDto>("/api/settings/public"))!.EmailEnabled);
+            Assert.True((await anonymous.GetFromJsonAsync<PublicDto>("/api/settings/public", TestContext.Current.CancellationToken))!.EmailEnabled);
         }
         finally
         {
             await DisableEmailAsync();
         }
 
-        Assert.False((await anonymous.GetFromJsonAsync<PublicDto>("/api/settings/public"))!.EmailEnabled);
+        Assert.False((await anonymous.GetFromJsonAsync<PublicDto>("/api/settings/public", TestContext.Current.CancellationToken))!.EmailEnabled);
     }
 
     private static object Smtp(string host, string userName, string? password) => new

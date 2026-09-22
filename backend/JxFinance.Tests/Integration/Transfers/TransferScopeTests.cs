@@ -21,7 +21,7 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
         Assert.Equal("200.00", await CurrentBalanceAsync(euros, member));
         Assert.Equal("113.50", await CurrentBalanceAsync(dollars, member));
 
-        var delete = await member.DeleteAsync($"/api/transfers/{transfer.Id}");
+        var delete = await member.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, delete.StatusCode);
         Assert.Equal("300.00", await CurrentBalanceAsync(euros, member));
@@ -39,7 +39,7 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
 
         var response = await Client.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = euros, toAccountId = dollars, amount = "100.00", receivedAmount, date = "2026-06-06" });
+            new { fromAccountId = euros, toAccountId = dollars, amount = "100.00", receivedAmount, date = "2026-06-06" }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "receivedAmount");
         Assert.Equal("300.00", await CurrentBalanceAsync(euros));
@@ -59,14 +59,14 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
             "/api/transfers",
             new { fromAccountId = personal, toAccountId = shared, amount = "20.00", date = "2026-09-01" });
 
-        var partnerList = await partnerClient.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
-        var strangerList = await stranger.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200");
+        var partnerList = await partnerClient.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
+        var strangerList = await stranger.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken);
 
         Assert.Contains(partnerList!.Items, t => t.Id == transfer.Id);
         Assert.DoesNotContain(strangerList!.Items, t => t.Id == transfer.Id);
         Assert.Equal("120.00", await CurrentBalanceAsync(shared, partnerClient));
-        Assert.Equal(HttpStatusCode.NotFound, (await partnerClient.GetAsync($"/api/accounts/{personal}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await stranger.DeleteAsync($"/api/transfers/{transfer.Id}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await partnerClient.GetAsync($"/api/accounts/{personal}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await stranger.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -81,16 +81,16 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
 
         var intoHidden = await partnerClient.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = shared, toAccountId = adminsPersonal, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = shared, toAccountId = adminsPersonal, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var fromHidden = await partnerClient.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = adminsPersonal, toAccountId = partnersPersonal, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = adminsPersonal, toAccountId = partnersPersonal, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
         var betweenVisible = await partnerClient.PostAsJsonAsync(
             "/api/transfers",
-            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" });
+            new { fromAccountId = partnersPersonal, toAccountId = shared, amount = "10.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, intoHidden.StatusCode);
-        Assert.Contains("reference.notFound", await intoHidden.Content.ReadAsStringAsync());
+        Assert.Contains("reference.notFound", await intoHidden.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
         Assert.Equal(HttpStatusCode.BadRequest, fromHidden.StatusCode);
         Assert.Equal(HttpStatusCode.Created, betweenVisible.StatusCode);
         Assert.Equal("100.00", await CurrentBalanceAsync(adminsPersonal));
@@ -110,9 +110,9 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
             "/api/transfers",
             new { fromAccountId = shared, toAccountId = personal, amount = "20.00", date = "2026-09-01" });
 
-        var byPartner = await partnerClient.DeleteAsync($"/api/transfers/{transfer.Id}");
+        var byPartner = await partnerClient.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken);
         Assert.Equal("80.00", await CurrentBalanceAsync(shared, partnerClient));
-        var byOwner = await Client.DeleteAsync($"/api/transfers/{transfer.Id}");
+        var byOwner = await Client.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, byPartner.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, byOwner.StatusCode);
@@ -134,12 +134,12 @@ public sealed class TransferScopeTests(ApiFixture fixture) : IntegrationTestBase
                 new { fromAccountId = from, toAccountId = to, amount = "1.00", date = $"2026-06-{day:00}" })).Id);
         }
 
-        var first = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=2");
-        var second = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=2&pageSize=2");
-        var third = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=3&pageSize=2");
-        var beyond = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=4&pageSize=2");
-        var byDate = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-06-03");
-        var clamped = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=0&pageSize=1000");
+        var first = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=1&pageSize=2", TestContext.Current.CancellationToken);
+        var second = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=2&pageSize=2", TestContext.Current.CancellationToken);
+        var third = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=3&pageSize=2", TestContext.Current.CancellationToken);
+        var beyond = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=4&pageSize=2", TestContext.Current.CancellationToken);
+        var byDate = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?date=2026-06-03", TestContext.Current.CancellationToken);
+        var clamped = await member.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?page=0&pageSize=1000", TestContext.Current.CancellationToken);
 
         created.Reverse();
         Assert.Equal(created, first!.Items.Concat(second!.Items).Concat(third!.Items).Select(t => t.Id));

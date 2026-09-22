@@ -16,19 +16,19 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{entry}",
-            new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "8", price = "90", fee = "2.00" });
+            new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "8", price = "90", fee = "2.00" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var corrected = await response.Content.ReadFromJsonAsync<EntryDto>();
+        var corrected = await response.Content.ReadFromJsonAsync<EntryDto>(TestContext.Current.CancellationToken);
         Assert.Equal(entry, corrected!.Id);
         Assert.Equal("8", corrected.Quantity);
 
-        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}");
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}", TestContext.Current.CancellationToken);
         var holding = Assert.Single(portfolio!.Holdings);
         Assert.Equal("8", holding.Quantity);
         Assert.Equal("722.00", holding.CostBasis);
 
-        var reloaded = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}");
+        var reloaded = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}", TestContext.Current.CancellationToken);
         Assert.Equal("4278.00", Assert.Single(reloaded!.Balances).Amount);
     }
 
@@ -42,7 +42,7 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{buy}",
-            new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "5", price = "100" });
+            new { accountId = account, securityId = security, type = "buy", date = "2026-06-01", quantity = "5", price = "100" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -54,7 +54,7 @@ public sealed class InvestmentCorrectionTests(ApiFixture fixture) : IntegrationT
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/transactions/{Guid.NewGuid()}",
-            new { accountId = account, type = "interest", date = "2026-06-01", amount = "1.00" });
+            new { accountId = account, type = "interest", date = "2026-06-01", amount = "1.00" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }

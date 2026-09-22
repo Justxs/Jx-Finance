@@ -15,20 +15,20 @@ public sealed class AccountFilterEndpointTests(ApiFixture fixture) : Integration
         await CreateAsync($"Beta {marker}", "cash", "200.00");
 
         var byName = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString(marker)}");
+            $"/api/accounts?search={Uri.EscapeDataString(marker)}", TestContext.Current.CancellationToken);
         Assert.Equal(3, byName!.Count);
 
         var byType = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString(marker)}&type=cash");
+            $"/api/accounts?search={Uri.EscapeDataString(marker)}&type=cash", TestContext.Current.CancellationToken);
         Assert.Equal(2, byType!.Count);
         Assert.All(byType, a => Assert.Equal("cash", a.Type));
 
         var byBalanceDesc = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString(marker)}&sort=currentBalance&direction=desc");
+            $"/api/accounts?search={Uri.EscapeDataString(marker)}&sort=currentBalance&direction=desc", TestContext.Current.CancellationToken);
         Assert.Equal(["300.00", "200.00", "100.00"], byBalanceDesc!.Select(a => a.CurrentBalance));
 
         var byNameAsc = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString(marker)}&sort=name&direction=asc");
+            $"/api/accounts?search={Uri.EscapeDataString(marker)}&sort=name&direction=asc", TestContext.Current.CancellationToken);
         Assert.Equal(
             [$"Alpha {marker}", $"Beta {marker}", $"Zeta {marker}"],
             byNameAsc!.Select(a => a.Name));
@@ -42,9 +42,9 @@ public sealed class AccountFilterEndpointTests(ApiFixture fixture) : Integration
         await CreateAsync($"{marker} 100 percent done", "cash", "1.00");
 
         var literal = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString($"{marker} 100%_DONE")}");
+            $"/api/accounts?search={Uri.EscapeDataString($"{marker} 100%_DONE")}", TestContext.Current.CancellationToken);
         var wildcard = await Client.GetFromJsonAsync<List<AccountDto>>(
-            $"/api/accounts?search={Uri.EscapeDataString($"{marker}%done")}");
+            $"/api/accounts?search={Uri.EscapeDataString($"{marker}%done")}", TestContext.Current.CancellationToken);
 
         Assert.Equal($"{marker} 100%_done", Assert.Single(literal!).Name);
         Assert.Empty(wildcard!);

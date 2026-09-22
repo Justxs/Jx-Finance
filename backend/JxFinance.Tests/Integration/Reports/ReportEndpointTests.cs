@@ -29,7 +29,7 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "999.00", date = "2026-04-01" });
         await RecordTransactionAsync(Client, new { accountId = await CreateAccountAsync(), type = "expense", amount = "777.00", date = "2026-03-02" });
 
-        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-03-01&dateTo=2026-03-03");
+        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-03-01&dateTo=2026-03-03", TestContext.Current.CancellationToken);
 
         Assert.Equal("1000.00", report!.TotalIncome);
         Assert.Equal("65.00", report.TotalExpense);
@@ -51,7 +51,7 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
         await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "10.00", date = "2026-01-15" });
         await RecordTransactionAsync(member, new { accountId = account, type = "expense", amount = "20.00", date = "2026-03-20" });
 
-        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-01-10&dateTo=2026-03-31");
+        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary?dateFrom=2026-01-10&dateTo=2026-03-31", TestContext.Current.CancellationToken);
 
         Assert.Equal("month", report!.TrendBucket);
         Assert.Equal(
@@ -64,7 +64,7 @@ public sealed class ReportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         using var member = await CreateUserClientAsync();
 
-        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary");
+        var report = await member.GetFromJsonAsync<ReportDto>("/api/reports/summary", TestContext.Current.CancellationToken);
 
         Assert.Equal(new DateOnly(Today.Year, Today.Month, 1), report!.PeriodStart);
         Assert.Equal(Today, report.PeriodEnd);

@@ -25,10 +25,10 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     {
         using var anonymous = CreateClient();
 
-        var response = await anonymous.GetAsync("/api/settings/public");
+        var response = await anonymous.GetAsync("/api/settings/public", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var full = await anonymous.GetAsync("/api/settings");
+        var full = await anonymous.GetAsync("/api/settings", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Unauthorized, full.StatusCode);
     }
 
@@ -40,17 +40,17 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         {
             await SaveAsync(original with { Features = original.Features with { Budgets = false } });
 
-            var blocked = await Client.GetAsync("/api/budgets");
+            var blocked = await Client.GetAsync("/api/budgets", TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.NotFound, blocked.StatusCode);
             Assert.Equal("application/problem+json", blocked.Content.Headers.ContentType?.MediaType);
-            var problem = await blocked.Content.ReadFromJsonAsync<JsonElement>();
+            var problem = await blocked.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
             Assert.Equal(404, problem.GetProperty("status").GetInt32());
             Assert.Equal("/api/budgets", problem.GetProperty("instance").GetString());
             var error = Assert.Single(problem.GetProperty("errors").EnumerateArray());
             Assert.Equal("generalErrors", error.GetProperty("name").GetString());
             Assert.Equal("feature.disabled", error.GetProperty("code").GetString());
 
-            var untouched = await Client.GetAsync("/api/goals");
+            var untouched = await Client.GetAsync("/api/goals", TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, untouched.StatusCode);
         }
         finally
@@ -58,7 +58,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             await SaveAsync(original);
         }
 
-        var restored = await Client.GetAsync("/api/budgets");
+        var restored = await Client.GetAsync("/api/budgets", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, restored.StatusCode);
     }
 
@@ -70,11 +70,11 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         {
             await SaveAsync(original with { Features = original.Features with { Households = false } });
 
-            var list = await Client.GetAsync("/api/households");
+            var list = await Client.GetAsync("/api/households", TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.OK, list.StatusCode);
-            Assert.Equal("[]", await list.Content.ReadAsStringAsync());
+            Assert.Equal("[]", await list.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
-            var create = await Client.PostAsJsonAsync("/api/households", new { name = "Blocked" });
+            var create = await Client.PostAsJsonAsync("/api/households", new { name = "Blocked" }, TestContext.Current.CancellationToken);
             Assert.Equal(HttpStatusCode.NotFound, create.StatusCode);
         }
         finally
@@ -91,7 +91,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         {
             await SaveAsync(original with { EnabledCurrencies = ["usd"] });
 
-            var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies");
+            var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies", TestContext.Current.CancellationToken);
             Assert.Equal(["eur", "usd"], currencies!.Currencies);
 
             var rejected = await CreateAccountInAsync("Pounds refused", "gbp");
@@ -113,9 +113,9 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         {
             await SaveAsync(original with { Features = original.Features with { MultiCurrency = false } });
 
-            var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies");
+            var currencies = await Client.GetFromJsonAsync<CurrenciesDto>("/api/currencies", TestContext.Current.CancellationToken);
             Assert.Equal(["eur"], currencies!.Currencies);
-            Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync("/api/conversions")).StatusCode);
+            Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync("/api/conversions", TestContext.Current.CancellationToken)).StatusCode);
             Assert.Equal(HttpStatusCode.BadRequest, (await CreateAccountInAsync("Dollars refused", "usd")).StatusCode);
         }
         finally
@@ -129,18 +129,18 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     {
         var original = await ReadAsync();
         var accountResponse = await CreateAccountInAsync("Revalue dollars", "usd");
-        var account = await accountResponse.Content.ReadFromJsonAsync<IdDto>();
+        var account = await accountResponse.Content.ReadFromJsonAsync<IdDto>(TestContext.Current.CancellationToken);
         var created = await Client.PostAsJsonAsync(
             "/api/transactions",
-            new { accountId = account!.Id, type = "income", amount = "110.00", date = "2026-06-10" });
-        var transaction = await created.Content.ReadFromJsonAsync<TransactionDto>();
+            new { accountId = account!.Id, type = "income", amount = "110.00", date = "2026-06-10" }, TestContext.Current.CancellationToken);
+        var transaction = await created.Content.ReadFromJsonAsync<TransactionDto>(TestContext.Current.CancellationToken);
         Assert.Equal("100.00", transaction!.ReportingAmount);
 
         try
         {
             await SaveAsync(original with { ReportingCurrency = "usd" });
 
-            var inDollars = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
+            var inDollars = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
             Assert.Equal("110.00", inDollars!.ReportingAmount);
         }
         finally
@@ -148,7 +148,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             await SaveAsync(original);
         }
 
-        var inEuros = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}");
+        var inEuros = await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         Assert.Equal("100.00", inEuros!.ReportingAmount);
     }
 
@@ -156,8 +156,8 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     public async Task Revaluation_covers_every_row_when_history_spans_several_batches()
     {
         var original = await ReadAsync();
-        var dollars = (await (await CreateAccountInAsync("Batch dollars", "usd")).Content.ReadFromJsonAsync<IdDto>())!.Id;
-        var euros = (await (await CreateAccountInAsync("Batch euros", "eur")).Content.ReadFromJsonAsync<IdDto>())!.Id;
+        var dollars = (await (await CreateAccountInAsync("Batch dollars", "usd")).Content.ReadFromJsonAsync<IdDto>(TestContext.Current.CancellationToken))!.Id;
+        var euros = (await (await CreateAccountInAsync("Batch euros", "eur")).Content.ReadFromJsonAsync<IdDto>(TestContext.Current.CancellationToken))!.Id;
         var inDollars = new List<Guid>();
         for (var i = 1; i <= 8; i++)
         {
@@ -172,7 +172,7 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
             "/api/transactions",
             new { accountId = euros, type = "expense", amount = "10.00", date = "2026-06-10" })).Id;
         var deleted = inDollars[0];
-        (await Client.DeleteAsync($"/api/transactions/{deleted}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/transactions/{deleted}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -217,9 +217,9 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     {
         var original = await ReadAsync();
 
-        var badZone = await Client.PutAsJsonAsync("/api/settings", original with { TimeZone = "Mars/Olympus" });
-        var badPageSize = await Client.PutAsJsonAsync("/api/settings", original with { DefaultPageSize = 7 });
-        var badAccount = await Client.PutAsJsonAsync("/api/settings", original with { DefaultAccountId = Guid.NewGuid() });
+        var badZone = await Client.PutAsJsonAsync("/api/settings", original with { TimeZone = "Mars/Olympus" }, TestContext.Current.CancellationToken);
+        var badPageSize = await Client.PutAsJsonAsync("/api/settings", original with { DefaultPageSize = 7 }, TestContext.Current.CancellationToken);
+        var badAccount = await Client.PutAsJsonAsync("/api/settings", original with { DefaultAccountId = Guid.NewGuid() }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, badZone.StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, badPageSize.StatusCode);
@@ -254,10 +254,10 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     [Fact]
     public async Task Manual_sync_reports_the_newest_rate_date()
     {
-        var response = await Client.PostAsync("/api/settings/exchange-rates/sync", null);
+        var response = await Client.PostAsync("/api/settings/exchange-rates/sync", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        var result = await response.Content.ReadFromJsonAsync<SyncDto>();
+        var result = await response.Content.ReadFromJsonAsync<SyncDto>(TestContext.Current.CancellationToken);
         Assert.NotNull(result!.RatesAsOf);
     }
 

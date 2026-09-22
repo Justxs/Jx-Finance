@@ -16,18 +16,18 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         var transaction = (await CreateTransactionAsync(Client, account, null, "expense", "42.00", "2026-09-01")).Id;
 
         using var memberClient = await LoginAsync(member);
-        var memberAccounts = await memberClient.GetFromJsonAsync<List<IdDto>>("/api/accounts");
+        var memberAccounts = await memberClient.GetFromJsonAsync<List<IdDto>>("/api/accounts", TestContext.Current.CancellationToken);
         Assert.Contains(memberAccounts!, a => a.Id == account);
-        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/transactions/{transaction}")).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/households/{household}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync($"/api/households/{household}", TestContext.Current.CancellationToken)).StatusCode);
 
         using var outsiderClient = await CreateUserClientAsync();
-        var outsiderAccounts = await outsiderClient.GetFromJsonAsync<List<IdDto>>("/api/accounts");
+        var outsiderAccounts = await outsiderClient.GetFromJsonAsync<List<IdDto>>("/api/accounts", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(outsiderAccounts!, a => a.Id == account);
-        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/transactions/{transaction}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/accounts/{account}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/households/{household}")).StatusCode);
-        var outsiderHouseholds = await outsiderClient.GetFromJsonAsync<List<IdDto>>("/api/households");
+        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/accounts/{account}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await outsiderClient.GetAsync($"/api/households/{household}", TestContext.Current.CancellationToken)).StatusCode);
+        var outsiderHouseholds = await outsiderClient.GetFromJsonAsync<List<IdDto>>("/api/households", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(outsiderHouseholds!, h => h.Id == household);
     }
 
@@ -39,7 +39,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
 
         var response = await outsiderClient.PostAsJsonAsync(
             "/api/accounts",
-            new { name = "Should fail", type = "checking", startingBalance = "0.00", scope = "shared", householdId = household });
+            new { name = "Should fail", type = "checking", startingBalance = "0.00", scope = "shared", householdId = household }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -54,14 +54,14 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         var transaction = (await CreateTransactionAsync(memberClient, account, null, "expense", "10.00", "2026-09-01")).Id;
         var makePersonal = new { name = "Now personal", type = "checking", startingBalance = "100.00", scope = "personal" };
 
-        var byMember = await memberClient.PutAsJsonAsync($"/api/accounts/{account}", makePersonal);
+        var byMember = await memberClient.PutAsJsonAsync($"/api/accounts/{account}", makePersonal, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Forbidden, byMember.StatusCode);
 
-        (await Client.PutAsJsonAsync($"/api/accounts/{account}", makePersonal)).EnsureSuccessStatusCode();
+        (await Client.PutAsJsonAsync($"/api/accounts/{account}", makePersonal, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/transactions/{transaction}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.DeleteAsync($"/api/transactions/{transaction}")).StatusCode);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{transaction}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -77,7 +77,7 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
             "/api/transfers",
             new { fromAccountId = personal, toAccountId = shared, amount = "20.00", date = "2026-09-01" });
 
-        var response = await memberClient.DeleteAsync($"/api/transfers/{transfer.Id}");
+        var response = await memberClient.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
@@ -91,10 +91,10 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
         var shared = await CreateAccountAsync("100.00", householdId: household);
         var transaction = (await CreateTransactionAsync(memberClient, shared, null, "expense", "5.00", "2026-09-01")).Id;
 
-        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/accounts/{shared}")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/transactions/{transaction}")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/accounts/{shared}", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal("95.00", await CurrentBalanceAsync(shared));
     }
 
@@ -110,19 +110,19 @@ public sealed class SharingLeakageTests(ApiFixture fixture) : IntegrationTestBas
             "/api/categories",
             new { name = $"Shared {Guid.NewGuid():N}", type = "expense", scope = "shared", householdId = household })).Id;
         var ownersAccount = await CreateAccountAsync("10.00", householdId: household);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{membersAccount}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{membersAccount}", TestContext.Current.CancellationToken)).StatusCode);
 
-        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/households/{household}/members/{member.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/accounts/{membersAccount}")).StatusCode);
-        var ownersCategories = await Client.GetFromJsonAsync<List<IdDto>>("/api/categories");
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/accounts/{membersAccount}", TestContext.Current.CancellationToken)).StatusCode);
+        var ownersCategories = await Client.GetFromJsonAsync<List<IdDto>>("/api/categories", TestContext.Current.CancellationToken);
         Assert.DoesNotContain(ownersCategories!, c => c.Id == membersCategory);
-        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{ownersAccount}")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/accounts/{ownersAccount}", TestContext.Current.CancellationToken)).StatusCode);
 
-        var kept = await memberClient.GetFromJsonAsync<ScopeDto>($"/api/accounts/{membersAccount}");
+        var kept = await memberClient.GetFromJsonAsync<ScopeDto>($"/api/accounts/{membersAccount}", TestContext.Current.CancellationToken);
         Assert.Equal("personal", kept!.Scope);
         Assert.Null(kept.HouseholdId);
-        var membersCategories = await memberClient.GetFromJsonAsync<List<ScopeDto>>("/api/categories");
+        var membersCategories = await memberClient.GetFromJsonAsync<List<ScopeDto>>("/api/categories", TestContext.Current.CancellationToken);
         var keptCategory = Assert.Single(membersCategories!, c => c.Id == membersCategory);
         Assert.Equal("personal", keptCategory.Scope);
     }

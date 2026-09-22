@@ -36,12 +36,12 @@ public sealed class BrokerImportConcurrencyTests(ApiFixture fixture) : Integrati
         var results = new List<ImportDto>();
         foreach (var response in responses)
         {
-            results.Add((await response.Content.ReadFromJsonAsync<ImportDto>())!);
+            results.Add((await response.Content.ReadFromJsonAsync<ImportDto>(TestContext.Current.CancellationToken))!);
         }
 
         Assert.All(results, result => Assert.Equal(1, result.Trades));
         Assert.Equal(1, results.Sum(result => result.SecuritiesCreated));
-        Assert.Single((await Client.GetFromJsonAsync<List<IdDto>>($"/api/investments/securities?search={symbol}"))!);
+        Assert.Single((await Client.GetFromJsonAsync<List<IdDto>>($"/api/investments/securities?search={symbol}", TestContext.Current.CancellationToken))!);
         foreach (var account in accounts)
         {
             Assert.Equal("899.00", await CurrentBalanceAsync(account));

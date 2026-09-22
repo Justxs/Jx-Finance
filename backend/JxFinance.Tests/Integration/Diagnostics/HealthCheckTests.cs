@@ -9,9 +9,9 @@ public sealed class HealthCheckTests(ApiFixture fixture) : IntegrationTestBase(f
     [Fact]
     public async Task Health_reports_healthy_when_database_is_reachable()
     {
-        var response = await Client.GetAsync("/health");
+        var response = await Client.GetAsync("/health", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
+        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 }

@@ -52,7 +52,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
     {
         var id = await CreateSecurityAsync(Client);
 
-        (await Client.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "7" })).EnsureSuccessStatusCode();
+        (await Client.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "7" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal([new PriceDto(Today, "7")], await PricesAsync(Client, id));
     }
@@ -64,7 +64,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
 
         var response = await Client.PutAsJsonAsync(
             $"/api/investments/securities/{id}/price",
-            new { lastPrice = "7", lastPriceDate = Today.AddDays(1).ToString("yyyy-MM-dd") });
+            new { lastPrice = "7", lastPriceDate = Today.AddDays(1).ToString("yyyy-MM-dd") }, TestContext.Current.CancellationToken);
 
         await AssertValidationErrorAsync(response, "lastPriceDate");
         Assert.Empty(await PricesAsync(Client, id));
@@ -81,7 +81,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
 
         (await Client.PutAsJsonAsync(
             $"/api/investments/securities/{created.Id}",
-            new { symbol, name = "Priced at creation", type = "etf", currency = "eur", lastPrice = "40", lastPriceDate = "2026-05-01" })).EnsureSuccessStatusCode();
+            new { symbol, name = "Priced at creation", type = "etf", currency = "eur", lastPrice = "40", lastPriceDate = "2026-05-01" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(("50", new DateOnly(2026, 6, 1)), await LastPriceAsync(created.Id));
         Assert.Equal(
@@ -97,7 +97,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await SetPriceAsync(Client, id, "2", "2026-05-01");
         await SetPriceAsync(Client, id, "3", "2026-06-01");
 
-        var points = await Client.GetFromJsonAsync<List<PriceDto>>($"/api/investments/securities/{id}/prices?from=2026-04-15&to=2026-05-15");
+        var points = await Client.GetFromJsonAsync<List<PriceDto>>($"/api/investments/securities/{id}/prices?from=2026-04-15&to=2026-05-15", TestContext.Current.CancellationToken);
 
         Assert.Equal([new PriceDto(new DateOnly(2026, 5, 1), "2")], points);
     }
@@ -109,7 +109,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await SetPriceAsync(Client, id, "15", "2026-05-01");
         await SetPriceAsync(Client, id, "20", "2026-06-10");
 
-        var response = await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-10");
+        var response = await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-10", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
         Assert.Equal(("15", new DateOnly(2026, 5, 1)), await LastPriceAsync(id));
@@ -122,7 +122,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await SetPriceAsync(Client, id, "15", "2026-05-01");
         await SetPriceAsync(Client, id, "20", "2026-06-10");
 
-        (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(("20", new DateOnly(2026, 6, 10)), await LastPriceAsync(id));
         Assert.Single(await PricesAsync(Client, id));
@@ -134,7 +134,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         var id = await CreateSecurityAsync(Client);
         await SetPriceAsync(Client, id, "15", "2026-05-01");
 
-        (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01")).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal((null, null), await LastPriceAsync(id));
     }
@@ -144,9 +144,9 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
     {
         var id = await CreateSecurityAsync(Client);
 
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.DeleteAsync($"/api/investments/securities/{Guid.NewGuid()}/prices/2026-05-01")).StatusCode);
-        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/investments/securities/{Guid.NewGuid()}/prices")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-05-01", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.DeleteAsync($"/api/investments/securities/{Guid.NewGuid()}/prices/2026-05-01", TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await Client.GetAsync($"/api/investments/securities/{Guid.NewGuid()}/prices", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -160,10 +160,10 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await SetPriceAsync(holder, id, "101", "2026-06-02");
         await SetPriceAsync(holder, id, "102", "2026-06-03");
 
-        var refused = await stranger.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-02");
+        var refused = await stranger.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-02", TestContext.Current.CancellationToken);
         var readable = await PricesAsync(stranger, id);
-        var byHolder = await holder.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-02");
-        var byAdministrator = await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-03");
+        var byHolder = await holder.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-02", TestContext.Current.CancellationToken);
+        var byAdministrator = await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-03", TestContext.Current.CancellationToken);
 
         await AssertProblemAsync(refused, HttpStatusCode.Forbidden, "security.notHeld");
         Assert.Equal(2, readable.Count);
@@ -184,7 +184,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
         await UploadAsync(newer, SampleFlexReport.Xml);
         await UploadAsync(older, olderReport);
 
-        var fund = (await Client.GetFromJsonAsync<List<SecurityDto>>("/api/investments/securities?search=IE00BK5BQT80"))!.Single();
+        var fund = (await Client.GetFromJsonAsync<List<SecurityDto>>("/api/investments/securities?search=IE00BK5BQT80", TestContext.Current.CancellationToken))!.Single();
         var points = await PricesAsync(Client, fund.Id);
         Assert.Contains(new PriceDto(new DateOnly(2026, 6, 30), "120"), points);
         Assert.Contains(new PriceDto(new DateOnly(2026, 5, 31), "90"), points);
@@ -196,23 +196,23 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
     public async Task With_the_investments_feature_off_the_price_and_value_history_routes_answer_not_found()
     {
         var id = await CreateSecurityAsync(Client);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["investments"] = false;
         try
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-            await AssertProblemAsync(await Client.GetAsync($"/api/investments/securities/{id}/prices"), HttpStatusCode.NotFound, "feature.disabled");
-            await AssertProblemAsync(await Client.GetAsync("/api/investments/value-history"), HttpStatusCode.NotFound, "feature.disabled");
+            await AssertProblemAsync(await Client.GetAsync($"/api/investments/securities/{id}/prices", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+            await AssertProblemAsync(await Client.GetAsync("/api/investments/value-history", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
             await AssertProblemAsync(
-                await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-01"),
+                await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-01", TestContext.Current.CancellationToken),
                 HttpStatusCode.NotFound,
                 "feature.disabled");
         }
         finally
         {
-            (await Client.PutAsJsonAsync("/api/settings", original)).EnsureSuccessStatusCode();
+            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
     }
 

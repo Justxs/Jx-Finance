@@ -21,9 +21,9 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "dividend", date = "2026-06-04", amount = "12.50" });
         await Client.PutAsJsonAsync(
             $"/api/investments/securities/{security}",
-            new { symbol = "MANUAL1", name = "Manual fund", type = "etf", currency = "eur", lastPrice = "125", lastPriceDate = "2026-06-05" });
+            new { symbol = "MANUAL1", name = "Manual fund", type = "etf", currency = "eur", lastPrice = "125", lastPriceDate = "2026-06-05" }, TestContext.Current.CancellationToken);
 
-        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}");
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}", TestContext.Current.CancellationToken);
         var holding = Assert.Single(portfolio!.Holdings);
         Assert.Equal("5", holding.Quantity);
         Assert.Equal("600.00", holding.CostBasis);
@@ -34,7 +34,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal("0.00", portfolio.Fees);
         Assert.True(portfolio.IsComplete);
 
-        var reloaded = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}");
+        var reloaded = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{account}", TestContext.Current.CancellationToken);
         Assert.Equal("4760.50", Assert.Single(reloaded!.Balances).Amount);
         Assert.Equal("625.00", reloaded.HoldingsValue);
         Assert.Equal("5385.50", reloaded.ReportingBalance);
@@ -50,7 +50,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         await RecordInvestmentAsync(Client, new { accountId = account, securityId = security, type = "sell", date = "2026-03-10", quantity = "10", price = "110", fee = "4.00" });
         await RecordInvestmentAsync(Client, new { accountId = account, type = "fee", date = "2026-03-11", amount = "3.00" });
 
-        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}");
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={account}", TestContext.Current.CancellationToken);
 
         Assert.Equal("91.00", portfolio!.RealizedGain);
         Assert.Equal("3.00", portfolio.Fees);
@@ -67,7 +67,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var response = await Client.PostAsJsonAsync(
             "/api/investments/transactions",
-            new { accountId = account, securityId = security, type = "sell", date = "2026-06-03", quantity = "1", price = "10" });
+            new { accountId = account, securityId = security, type = "sell", date = "2026-06-03", quantity = "1", price = "10" }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -81,16 +81,16 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var first = await UploadAsync(broker, bank, SampleFlexReport.Xml);
         Assert.Equal(new ImportDto(3, 3, 1, 1, 0, 1, 0, 0), first with { SecuritiesCreated = 0, PricesUpdated = 0 });
 
-        var account = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{broker}");
+        var account = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{broker}", TestContext.Current.CancellationToken);
         Assert.Equal("935.90", account!.Balances.Single(b => b.Currency == "eur").Amount);
         Assert.Equal("109.88", account.Balances.Single(b => b.Currency == "usd").Amount);
         Assert.Equal("1140.00", account.HoldingsValue);
         Assert.Equal("2175.79", account.ReportingBalance);
 
-        var funding = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{bank}");
+        var funding = await Client.GetFromJsonAsync<AccountDto>($"/api/accounts/{bank}", TestContext.Current.CancellationToken);
         Assert.Equal("3000.00", Assert.Single(funding!.Balances).Amount);
 
-        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}");
+        var portfolio = await Client.GetFromJsonAsync<PortfolioDto>($"/api/investments/portfolio?accountId={broker}", TestContext.Current.CancellationToken);
         var fund = portfolio!.Holdings.Single(h => h.Security.Symbol == "VWCE");
         Assert.Equal("etf", fund.Security.Type);
         Assert.Equal("6", fund.Quantity);
@@ -121,17 +121,17 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var saved = await Client.PutAsJsonAsync(
             $"/api/investments/connections/{broker}",
-            new { queryId = SampleFlexReport.QueryId, token = SampleFlexReport.Token });
+            new { queryId = SampleFlexReport.QueryId, token = SampleFlexReport.Token }, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
-        Assert.DoesNotContain(SampleFlexReport.Token, await saved.Content.ReadAsStringAsync());
+        Assert.DoesNotContain(SampleFlexReport.Token, await saved.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
 
-        var sync = await Client.PostAsync($"/api/investments/connections/{broker}/sync", null);
+        var sync = await Client.PostAsync($"/api/investments/connections/{broker}/sync", null, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, sync.StatusCode);
-        var result = await sync.Content.ReadFromJsonAsync<ImportDto>();
+        var result = await sync.Content.ReadFromJsonAsync<ImportDto>(TestContext.Current.CancellationToken);
         Assert.Equal(3, result!.Trades);
         Assert.Equal(2, result.Skipped);
 
-        var connections = await Client.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections");
+        var connections = await Client.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections", TestContext.Current.CancellationToken);
         var connection = connections!.Single(c => c.AccountId == broker);
         Assert.NotNull(connection.LastSyncAt);
         Assert.Null(connection.LastError);
@@ -143,12 +143,12 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var broker = await CreateBrokerAccountAsync();
         await Client.PutAsJsonAsync(
             $"/api/investments/connections/{broker}",
-            new { queryId = SampleFlexReport.QueryId, token = "000000" });
+            new { queryId = SampleFlexReport.QueryId, token = "000000" }, TestContext.Current.CancellationToken);
 
-        var sync = await Client.PostAsync($"/api/investments/connections/{broker}/sync", null);
+        var sync = await Client.PostAsync($"/api/investments/connections/{broker}/sync", null, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.BadRequest, sync.StatusCode);
-        var connections = await Client.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections");
+        var connections = await Client.GetFromJsonAsync<List<ConnectionDto>>("/api/investments/connections", TestContext.Current.CancellationToken);
         Assert.Contains("Token is invalid", connections!.Single(c => c.AccountId == broker).LastError);
     }
 

@@ -25,10 +25,10 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
             "/api/debts",
             new { name = $"Car loan {Guid.NewGuid():N}", type = "loan", outstandingAmount = "4000.00", asOf = Today });
 
-        var after = await member.GetFromJsonAsync<NetWorthDto>("/api/networth");
+        var after = await member.GetFromJsonAsync<NetWorthDto>("/api/networth", TestContext.Current.CancellationToken);
         Assert.Equal(new NetWorthDto("500.00", "10000.00", "4000.00", "6500.00"), after);
 
-        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
+        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken);
         Assert.Contains(history!.Items, i => i.Date == Today);
     }
 
@@ -40,12 +40,12 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
             Services.GetRequiredService<IServiceScopeFactory>(),
             Services.GetRequiredService<INetWorthSnapshotter>(),
             NullLogger<NetWorthSnapshotJob>.Instance);
-        await job.RunOnceAsync(default);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
-        var responses = await Task.WhenAll(member.GetAsync("/api/networth"), member.GetAsync("/api/networth"));
+        var responses = await Task.WhenAll(member.GetAsync("/api/networth", TestContext.Current.CancellationToken), member.GetAsync("/api/networth", TestContext.Current.CancellationToken));
         Assert.All(responses, r => r.EnsureSuccessStatusCode());
 
-        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
+        var history = await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken);
         Assert.NotEmpty(history!.Items);
         Assert.All(history.Items.GroupBy(i => i.Date), day => Assert.Single(day));
     }
@@ -77,12 +77,12 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
                 snapshotter,
                 NullLogger<NetWorthSnapshotJob>.Instance);
 
-            await job.RunOnceAsync(default);
+            await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
             Assert.True(snapshotter.Failed);
             foreach (var client in healthy)
             {
-                var history = await client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history");
+                var history = await client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken);
                 Assert.Equal("25.00", Assert.Single(history!.Items).NetWorth);
             }
         }
@@ -104,29 +104,29 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
                 new { name = $"Oversized {i}", type = "other", currentValue = "9999999999999999.99", asOf = Today });
         }
 
-        var response = await member.GetAsync("/api/networth");
+        var response = await member.GetAsync("/api/networth", TestContext.Current.CancellationToken);
 
         response.EnsureSuccessStatusCode();
         Assert.Equal(
             new NetWorthDto("0.00", "19999999999999999.98", "0.00", "19999999999999999.98"),
-            await response.Content.ReadFromJsonAsync<NetWorthDto>());
-        Assert.Empty((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history"))!.Items);
+            await response.Content.ReadFromJsonAsync<NetWorthDto>(TestContext.Current.CancellationToken));
+        Assert.Empty((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken))!.Items);
 
         var debt = await PostAsync<IdDto>(
             member,
             "/api/debts",
             new { name = "Offsetting", type = "loan", outstandingAmount = "9999999999999999.99", asOf = Today });
-        Assert.Equal("9999999999999999.99", (await member.GetFromJsonAsync<NetWorthDto>("/api/networth"))!.NetWorth);
-        Assert.Empty((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history"))!.Items);
+        Assert.Equal("9999999999999999.99", (await member.GetFromJsonAsync<NetWorthDto>("/api/networth", TestContext.Current.CancellationToken))!.NetWorth);
+        Assert.Empty((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken))!.Items);
 
-        (await member.DeleteAsync($"/api/debts/{debt.Id}")).EnsureSuccessStatusCode();
-        foreach (var asset in (await member.GetFromJsonAsync<List<IdDto>>("/api/assets"))!.Skip(1))
+        (await member.DeleteAsync($"/api/debts/{debt.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        foreach (var asset in (await member.GetFromJsonAsync<List<IdDto>>("/api/assets", TestContext.Current.CancellationToken))!.Skip(1))
         {
-            (await member.DeleteAsync($"/api/assets/{asset.Id}")).EnsureSuccessStatusCode();
+            (await member.DeleteAsync($"/api/assets/{asset.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
-        Assert.Equal("9999999999999999.99", (await member.GetFromJsonAsync<NetWorthDto>("/api/networth"))!.NetWorth);
-        Assert.Equal("9999999999999999.99", Assert.Single((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history"))!.Items).NetWorth);
+        Assert.Equal("9999999999999999.99", (await member.GetFromJsonAsync<NetWorthDto>("/api/networth", TestContext.Current.CancellationToken))!.NetWorth);
+        Assert.Equal("9999999999999999.99", Assert.Single((await member.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history", TestContext.Current.CancellationToken))!.Items).NetWorth);
     }
 
     private sealed class FailingSnapshotter(Guid failingUserId, INetWorthSnapshotter inner) : INetWorthSnapshotter

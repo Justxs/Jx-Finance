@@ -32,7 +32,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var response = await UploadAsync(Client, transaction, png, "receipt.png", "image/png");
 
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
-        var attachment = (await response.Content.ReadFromJsonAsync<AttachmentDto>())!;
+        var attachment = (await response.Content.ReadFromJsonAsync<AttachmentDto>(TestContext.Current.CancellationToken))!;
         Assert.Equal("receipt.png", attachment.FileName);
         Assert.Equal("image/png", attachment.ContentType);
         Assert.Equal(png.Length, attachment.SizeBytes);
@@ -41,19 +41,19 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var listed = await ListAsync(Client, transaction);
         Assert.Equal([attachment.Id], listed.Select(a => a.Id));
-        Assert.Equal(1, (await Client.GetFromJsonAsync<CountDto>($"/api/transactions/{transaction}"))!.AttachmentCount);
-        var description = (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction}"))!.Description;
-        var page = await Client.GetFromJsonAsync<PageDto<CountDto>>($"/api/transactions?search={description}");
+        Assert.Equal(1, (await Client.GetFromJsonAsync<CountDto>($"/api/transactions/{transaction}", TestContext.Current.CancellationToken))!.AttachmentCount);
+        var description = (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction}", TestContext.Current.CancellationToken))!.Description;
+        var page = await Client.GetFromJsonAsync<PageDto<CountDto>>($"/api/transactions?search={description}", TestContext.Current.CancellationToken);
         Assert.Equal(1, Assert.Single(page!.Items).AttachmentCount);
 
-        var download = await Client.GetAsync($"/api/attachments/{attachment.Id}/content");
+        var download = await Client.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, download.StatusCode);
         Assert.Equal("image/png", download.Content.Headers.ContentType?.MediaType);
         Assert.Equal("attachment", download.Content.Headers.ContentDisposition?.DispositionType);
         Assert.Equal("receipt.png", download.Content.Headers.ContentDisposition?.FileName?.Trim('"'));
         Assert.Equal("nosniff", download.Headers.GetValues("X-Content-Type-Options").Single());
         Assert.Contains("sandbox", download.Headers.GetValues("Content-Security-Policy").Single());
-        Assert.Equal(png, await download.Content.ReadAsByteArrayAsync());
+        Assert.Equal(png, await download.Content.ReadAsByteArrayAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -64,7 +64,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/attachments/{attachment.Id}/content");
         request.Headers.IfNoneMatch.Add(new EntityTagHeaderValue($"\"{attachment.Sha256}\""));
-        var response = await Client.SendAsync(request);
+        var response = await Client.SendAsync(request, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotModified, response.StatusCode);
     }
@@ -125,7 +125,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var empty = await UploadAsync(Client, transaction, [], "empty.png", "image/png");
         using var nothing = new MultipartFormDataContent { { new StringContent("x"), "note" } };
-        var missing = await Client.PostAsync($"/api/transactions/{transaction}/attachments", nothing);
+        var missing = await Client.PostAsync($"/api/transactions/{transaction}/attachments", nothing, TestContext.Current.CancellationToken);
         var oversized = await UploadAsync(Client, transaction, Png((int)TransactionAttachment.MaxFileBytes + 1), "big.png", "image/png");
 
         await AssertRejectedAsync(empty, "attachment.empty");
@@ -155,11 +155,11 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var transaction = await NewTransactionAsync(member, "Maxima");
         var attachment = await UploadOkAsync(member, transaction, Png(128), "receipt.png", "image/png");
 
-        var deleted = await member.DeleteAsync($"/api/attachments/{attachment.Id}");
+        var deleted = await member.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken);
         var afterDelete = await ListAsync(member, transaction);
-        var download = await member.GetAsync($"/api/attachments/{attachment.Id}/content");
-        var trash = await member.GetFromJsonAsync<PageDto<TrashRowDto>>("/api/trash");
-        var restore = await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id });
+        var download = await member.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken);
+        var trash = await member.GetFromJsonAsync<PageDto<TrashRowDto>>("/api/trash", TestContext.Current.CancellationToken);
+        var restore = await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NoContent, deleted.StatusCode);
         Assert.Empty(afterDelete);
@@ -179,15 +179,15 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var transaction = await NewTransactionAsync(member);
         var attachment = await UploadOkAsync(member, transaction, Png(64), "a.png", "image/png");
 
-        (await member.DeleteAsync($"/api/transactions/{transaction}")).EnsureSuccessStatusCode();
-        var whileDeleted = await member.GetAsync($"/api/transactions/{transaction}/attachments");
-        var downloadWhileDeleted = await member.GetAsync($"/api/attachments/{attachment.Id}/content");
-        (await member.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction })).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var whileDeleted = await member.GetAsync($"/api/transactions/{transaction}/attachments", TestContext.Current.CancellationToken);
+        var downloadWhileDeleted = await member.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken);
+        (await member.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         Assert.Equal(HttpStatusCode.NotFound, whileDeleted.StatusCode);
         Assert.Equal(HttpStatusCode.NotFound, downloadWhileDeleted.StatusCode);
         Assert.Equal([attachment.Id], (await ListAsync(member, transaction)).Select(a => a.Id));
-        Assert.Equal(HttpStatusCode.OK, (await member.GetAsync($"/api/attachments/{attachment.Id}/content")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await member.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken)).StatusCode);
     }
 
     [Fact]
@@ -196,10 +196,10 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         using var member = await CreateUserClientAsync();
         var transaction = await NewTransactionAsync(member);
         var attachment = await UploadOkAsync(member, transaction, Png(64), "a.png", "image/png");
-        (await member.DeleteAsync($"/api/attachments/{attachment.Id}")).EnsureSuccessStatusCode();
-        (await member.DeleteAsync($"/api/transactions/{transaction}")).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/transactions/{transaction}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var restore = await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id });
+        var restore = await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken);
 
         await AssertRejectedAsync(restore, "restore.referenceMissing");
     }
@@ -213,11 +213,11 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         HttpResponseMessage[] responses =
         [
-            await stranger.GetAsync($"/api/transactions/{transaction}/attachments"),
+            await stranger.GetAsync($"/api/transactions/{transaction}/attachments", TestContext.Current.CancellationToken),
             await UploadAsync(stranger, transaction, Png(16), "b.png", "image/png"),
-            await stranger.GetAsync($"/api/attachments/{attachment.Id}/content"),
-            await stranger.DeleteAsync($"/api/attachments/{attachment.Id}"),
-            await stranger.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }),
+            await stranger.GetAsync($"/api/attachments/{attachment.Id}/content", TestContext.Current.CancellationToken),
+            await stranger.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken),
+            await stranger.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken),
         ];
 
         Assert.All(responses, r => Assert.Equal(HttpStatusCode.NotFound, r.StatusCode));
@@ -237,10 +237,10 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var theirs = await UploadOkAsync(memberClient, transaction, Png(64), "member.png", "image/png");
         var listed = await ListAsync(memberClient, transaction);
-        var download = await memberClient.GetAsync($"/api/attachments/{mine.Id}/content");
+        var download = await memberClient.GetAsync($"/api/attachments/{mine.Id}/content", TestContext.Current.CancellationToken);
         using var scoped = new HttpRequestMessage(HttpMethod.Get, $"/api/attachments/{mine.Id}/content");
         scoped.Headers.Add(ScopeHeader, elsewhere.ToString());
-        var outOfScope = await memberClient.SendAsync(scoped);
+        var outOfScope = await memberClient.SendAsync(scoped, TestContext.Current.CancellationToken);
 
         Assert.Equal([mine.Id, theirs.Id], listed.Select(a => a.Id));
         Assert.Equal(member.Id, theirs.UploadedById);
@@ -258,10 +258,10 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
         var attachment = await UploadOkAsync(Client, transaction, Png(64), "rimi.png", "image/png");
         await UploadOkAsync(Client, personal, Png(64), "private.png", "image/png");
-        (await Client.DeleteAsync($"/api/attachments/{attachment.Id}")).EnsureSuccessStatusCode();
-        (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id })).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/attachments/{attachment.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = attachment.Id }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
-        var log = (await Client.GetFromJsonAsync<PageDto<AuditRowDto>>($"/api/households/{household}/audit?pageSize=50"))!;
+        var log = (await Client.GetFromJsonAsync<PageDto<AuditRowDto>>($"/api/households/{household}/audit?pageSize=50", TestContext.Current.CancellationToken))!;
         var rows = log.Items.Where(e => e.EntityKind == "attachment").ToList();
 
         Assert.Equal(["restored", "deleted", "created"], rows.Select(r => r.Action));
@@ -280,9 +280,9 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var expired = await UploadOkAsync(member, transaction, Png(64), "expired.png", "image/png");
         var gone = await NewTransactionAsync(member);
         var withGone = await UploadOkAsync(member, gone, Png(64), "gone.png", "image/png");
-        (await member.DeleteAsync($"/api/attachments/{recent.Id}")).EnsureSuccessStatusCode();
-        (await member.DeleteAsync($"/api/attachments/{expired.Id}")).EnsureSuccessStatusCode();
-        (await member.DeleteAsync($"/api/transactions/{gone}")).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/attachments/{recent.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/attachments/{expired.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await member.DeleteAsync($"/api/transactions/{gone}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         await BackdateAsync(expired.Id, gone);
         var oldOrphan = WriteOrphan(TimeSpan.FromHours(2));
         var newOrphan = WriteOrphan(TimeSpan.Zero);
@@ -300,7 +300,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         Assert.Equal([kept.Id, recent.Id], await StoredIdsAsync(transaction));
         Assert.Empty(await StoredIdsAsync(gone));
         await AssertProblemAsync(
-            await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = expired.Id }),
+            await member.PostAsJsonAsync("/api/trash/restore", new { kind = "attachment", entityId = expired.Id }, TestContext.Current.CancellationToken),
             HttpStatusCode.BadRequest,
             "restore.expired");
         File.Delete(Path.Combine(directory, newOrphan.ToString("N")));

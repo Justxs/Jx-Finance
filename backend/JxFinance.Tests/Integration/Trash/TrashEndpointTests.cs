@@ -32,10 +32,10 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var account = await CreateAccountAsync(client: member);
         var transaction = await CreateTransactionAsync(member, account, null, "expense", "12.30", Date, "Maistas");
 
-        await member.DeleteAsync($"/api/transactions/{transaction.Id}");
+        await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         var listed = await TrashAsync(member);
         var restore = await RestoreAsync(member, "transaction", transaction.Id);
-        var back = await member.GetAsync($"/api/transactions/{transaction.Id}");
+        var back = await member.GetAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
 
         var row = Assert.Single(listed.Items);
         Assert.Equal("transaction", row.Kind);
@@ -55,10 +55,10 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             "/api/goals",
             new { name = "Atostogos", targetAmount = "500.00", currentAmount = "10.00" });
 
-        await member.DeleteAsync($"/api/goals/{goal.Id}");
+        await member.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
         var first = await RestoreAsync(member, "goal", goal.Id);
         var second = await RestoreAsync(member, "goal", goal.Id);
-        var goals = (await member.GetFromJsonAsync<List<NamedRow>>("/api/goals"))!;
+        var goals = (await member.GetFromJsonAsync<List<NamedRow>>("/api/goals", TestContext.Current.CancellationToken))!;
 
         Assert.Equal(HttpStatusCode.NoContent, first.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, second.StatusCode);
@@ -84,9 +84,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             "/api/recurring-bills",
             new { name = "Internetas", kind = "fixed", amount = "20.00", accountId = from, cadence = "monthly", nextDueDate = Date });
 
-        await member.DeleteAsync($"/api/transfers/{transfer.Id}");
-        await member.DeleteAsync($"/api/conversions/{conversion.Id}");
-        await member.DeleteAsync($"/api/recurring-bills/{bill.Id}");
+        await member.DeleteAsync($"/api/transfers/{transfer.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/recurring-bills/{bill.Id}", TestContext.Current.CancellationToken);
         var listed = await TrashAsync(member);
         var restoredTransfer = await RestoreAsync(member, "transfer", transfer.Id);
         var restoredConversion = await RestoreAsync(member, "conversion", conversion.Id);
@@ -96,9 +96,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         Assert.Equal(HttpStatusCode.NoContent, restoredTransfer.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredConversion.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredBill.StatusCode);
-        Assert.Contains((await member.GetFromJsonAsync<PageDto<IdDto>>("/api/transfers"))!.Items, t => t.Id == transfer.Id);
-        Assert.Contains((await member.GetFromJsonAsync<PageDto<IdDto>>("/api/conversions"))!.Items, c => c.Id == conversion.Id);
-        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/recurring-bills"))!, b => b.Id == bill.Id);
+        Assert.Contains((await member.GetFromJsonAsync<PageDto<IdDto>>("/api/transfers", TestContext.Current.CancellationToken))!.Items, t => t.Id == transfer.Id);
+        Assert.Contains((await member.GetFromJsonAsync<PageDto<IdDto>>("/api/conversions", TestContext.Current.CancellationToken))!.Items, c => c.Id == conversion.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/recurring-bills", TestContext.Current.CancellationToken))!, b => b.Id == bill.Id);
     }
 
     [Fact]
@@ -116,9 +116,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             "/api/debts",
             new { name = "Paskola", type = "loan", outstandingAmount = "500.00", asOf = Date });
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}");
-        await member.DeleteAsync($"/api/assets/{asset.Id}");
-        await member.DeleteAsync($"/api/debts/{debt.Id}");
+        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/assets/{asset.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/debts/{debt.Id}", TestContext.Current.CancellationToken);
         var restoredBudget = await RestoreAsync(member, "budget", budget.Id);
         var restoredAsset = await RestoreAsync(member, "asset", asset.Id);
         var restoredDebt = await RestoreAsync(member, "debt", debt.Id);
@@ -126,9 +126,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         Assert.Equal(HttpStatusCode.NoContent, restoredBudget.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredAsset.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredDebt.StatusCode);
-        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets"))!, b => b.Id == budget.Id);
-        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/assets"))!, a => a.Id == asset.Id);
-        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/debts"))!, d => d.Id == debt.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/assets", TestContext.Current.CancellationToken))!, a => a.Id == asset.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
     }
 
     [Fact]
@@ -155,9 +155,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
                 },
             });
 
-        await member.DeleteAsync($"/api/transactions/{transaction.Id}");
+        await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         await RestoreAsync(member, "transaction", transaction.Id);
-        var back = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}"))!;
+        var back = (await member.GetFromJsonAsync<TransactionDto>($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken))!;
 
         Assert.True(back.IsSplit);
         Assert.Equal(["10.00", "20.00"], back.Lines!.Select(l => l.Amount).Order());
@@ -171,8 +171,8 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var account = await CreateAccountAsync(client: member);
         var transaction = await CreateTransactionAsync(member, account, null, "expense", "5.00", Date);
 
-        await member.DeleteAsync($"/api/transactions/{transaction.Id}");
-        await member.DeleteAsync($"/api/accounts/{account}");
+        await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/accounts/{account}", TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, "transaction", transaction.Id);
 
         await AssertProblemAsync(restore, HttpStatusCode.BadRequest, "restore.referenceMissing");
@@ -185,8 +185,8 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var category = await CreateCategoryAsync(client: member);
         var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "40.00" });
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}");
-        await member.DeleteAsync($"/api/categories/{category}");
+        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, "budget", budget.Id);
 
         await AssertProblemAsync(restore, HttpStatusCode.BadRequest, "restore.referenceMissing");
@@ -199,7 +199,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var category = await CreateCategoryAsync(client: member);
         var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "40.00" });
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}");
+        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
         await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "90.00" });
         var restore = await RestoreAsync(member, "budget", budget.Id);
 
@@ -212,8 +212,8 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         using var member = await CreateUserClientAsync();
         var conversion = await CreateConversionWithFeeAsync(member);
 
-        await member.DeleteAsync($"/api/transactions/{conversion.FeeTransactionId}");
-        await member.DeleteAsync($"/api/conversions/{conversion.Id}");
+        await member.DeleteAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken);
         var refused = await RestoreAsync(member, "conversion", conversion.Id);
         await RestoreAsync(member, "transaction", conversion.FeeTransactionId!.Value);
         var accepted = await RestoreAsync(member, "conversion", conversion.Id);
@@ -228,11 +228,11 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         using var member = await CreateUserClientAsync();
         var conversion = await CreateConversionWithFeeAsync(member);
 
-        await member.DeleteAsync($"/api/conversions/{conversion.Id}");
+        await member.DeleteAsync($"/api/conversions/{conversion.Id}", TestContext.Current.CancellationToken);
         var listed = await TrashAsync(member);
-        var gone = await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}");
+        var gone = await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken);
         var restore = await RestoreAsync(member, "conversion", conversion.Id);
-        var fee = await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}");
+        var fee = await member.GetAsync($"/api/transactions/{conversion.FeeTransactionId}", TestContext.Current.CancellationToken);
 
         var row = Assert.Single(listed.Items);
         Assert.Equal("conversion", row.Kind);
@@ -259,7 +259,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
                 lines = new[] { new { categoryId = category, amount = "9.00" } },
             });
 
-        await member.DeleteAsync($"/api/transactions/{transaction.Id}");
+        await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         await ForgetLinesAsync(user.Id, transaction.Id);
         var restore = await RestoreAsync(member, "transaction", transaction.Id);
 
@@ -276,7 +276,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             "/api/goals",
             new { name = "Senas", targetAmount = "100.00", currentAmount = "0.00" });
 
-        await member.DeleteAsync($"/api/goals/{goal.Id}");
+        await member.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
         await BackdateAsync(user.Id, goal.Id, TimeSpan.FromDays(40));
         var listed = await TrashAsync(member);
         var restore = await RestoreAsync(member, "goal", goal.Id);
@@ -293,7 +293,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var account = await CreateAccountAsync(client: mine);
         var transaction = await CreateTransactionAsync(mine, account, null, "expense", "7.00", Date);
 
-        await mine.DeleteAsync($"/api/transactions/{transaction.Id}");
+        await mine.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         var theirTrash = await TrashAsync(theirs);
         var theirRestore = await RestoreAsync(theirs, "transaction", transaction.Id);
 
@@ -311,8 +311,8 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
         var mine = await CreateTransactionAsync(Client, account, null, "expense", "3.00", Date, "Mano");
         var theirs = await CreateTransactionAsync(housemate, account, null, "expense", "4.00", Date, "Ju");
 
-        await Client.DeleteAsync($"/api/transactions/{mine.Id}");
-        await housemate.DeleteAsync($"/api/transactions/{theirs.Id}");
+        await Client.DeleteAsync($"/api/transactions/{mine.Id}", TestContext.Current.CancellationToken);
+        await housemate.DeleteAsync($"/api/transactions/{theirs.Id}", TestContext.Current.CancellationToken);
         var housemateTrash = await TrashAsync(housemate);
         var housemateRestoresMine = await RestoreAsync(housemate, "transaction", mine.Id);
 
@@ -329,9 +329,9 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             member,
             "/api/goals",
             new { name = "Isjungta", targetAmount = "100.00", currentAmount = "0.00" });
-        await member.DeleteAsync($"/api/goals/{goal.Id}");
+        await member.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
 
-        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings"))!;
+        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings", TestContext.Current.CancellationToken))!;
         try
         {
             await SwitchGoalsAsync(settings, false);

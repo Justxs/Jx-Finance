@@ -18,9 +18,9 @@ public sealed class RestoredTransactionLedgerTests(ApiFixture fixture) : Integra
         var transaction = await CreateTransactionAsync(member, account, category, "expense", "40.00", today, "Maistas");
 
         var withIt = await ReadAsync(member, account);
-        await member.DeleteAsync($"/api/transactions/{transaction.Id}");
+        await member.DeleteAsync($"/api/transactions/{transaction.Id}", TestContext.Current.CancellationToken);
         var withoutIt = await ReadAsync(member, account);
-        await member.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction.Id });
+        await member.PostAsJsonAsync("/api/trash/restore", new { kind = "transaction", entityId = transaction.Id }, TestContext.Current.CancellationToken);
         var again = await ReadAsync(member, account);
 
         Assert.Equal(new Ledger("960.00", "40.00", "40.00"), withIt);
