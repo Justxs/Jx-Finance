@@ -7,6 +7,7 @@ using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Households.GetHouseholdAudit;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -67,9 +68,7 @@ public sealed class HouseholdAuditService(AppDbContext db, ICurrentUser currentU
             .Where(u => actorIds.Contains(u.Id))
             .Select(u => new { u.Id, u.DisplayName, u.Email })
             .ToListAsync(cancellationToken);
-        var names = actors.ToDictionary(
-            u => u.Id,
-            u => string.IsNullOrWhiteSpace(u.DisplayName) ? u.Email ?? "" : u.DisplayName);
+        var names = actors.ToDictionary(u => u.Id, u => AppUser.DisplayNameOrEmail(u.DisplayName, u.Email));
 
         return page.Map(e => ToResponse(e, names.GetValueOrDefault(e.ActorUserId) ?? ""));
     }

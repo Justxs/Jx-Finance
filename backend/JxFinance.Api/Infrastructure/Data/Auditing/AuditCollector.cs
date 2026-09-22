@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using JxFinance.Common;
 using JxFinance.Common.Formats;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
@@ -12,6 +13,7 @@ using JxFinance.Domain.Investments;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
+using JxFinance.Infrastructure.Auth;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
@@ -21,38 +23,60 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 {
     private const string TagsField = "tags";
     private const string SplitField = "split";
+    private const string IdProperty = "Id";
 
-    private static readonly Dictionary<Type, string[]> Fields = new()
+    private static readonly Dictionary<Type, Audited> Registry = new[]
     {
-        [typeof(Transaction)] =
-        [
+        Audited.Of<Transaction>(
+            AuditEntityKind.Transaction,
+            Route.Scoped,
+            (_, t) => TrashLabel.Dated(t.Description, t.Date, t.Amount),
             nameof(Transaction.Date), nameof(Transaction.Amount), nameof(Transaction.Type),
-            nameof(Transaction.Description), nameof(Transaction.CategoryId), nameof(Transaction.AccountId),
-        ],
-        [typeof(Transfer)] =
-        [
+            nameof(Transaction.Description), nameof(Transaction.CategoryId), nameof(Transaction.AccountId)),
+        Audited.Of<Transfer>(
+            AuditEntityKind.Transfer,
+            Route.Scoped,
+            (_, t) => TrashLabel.Dated(t.Description, t.Date, t.Amount),
             nameof(Transfer.Date), nameof(Transfer.Amount), nameof(Transfer.ReceivedAmount),
-            nameof(Transfer.FromAccountId), nameof(Transfer.ToAccountId), nameof(Transfer.Description),
-        ],
-        [typeof(CurrencyConversion)] =
-        [
+            nameof(Transfer.FromAccountId), nameof(Transfer.ToAccountId), nameof(Transfer.Description)),
+        Audited.Of<CurrencyConversion>(
+            AuditEntityKind.Conversion,
+            Route.Scoped,
+            (_, c) => TrashLabel.Exchanged(c.FromAmount, c.ToAmount, c.Date),
             nameof(CurrencyConversion.Date), nameof(CurrencyConversion.FromAmount), nameof(CurrencyConversion.ToAmount),
-            nameof(CurrencyConversion.Description), nameof(CurrencyConversion.AccountId),
-        ],
-        [typeof(InvestmentTransaction)] =
-        [
+            nameof(CurrencyConversion.Description), nameof(CurrencyConversion.AccountId)),
+        Audited.Of<InvestmentTransaction>(
+            AuditEntityKind.InvestmentTransaction,
+            Route.Scoped,
+            (collector, i) => TrashLabel.Investment(i, i.SecurityId is { } id ? collector.securities.GetValueOrDefault(id) : null),
             nameof(InvestmentTransaction.Date), nameof(InvestmentTransaction.Type), nameof(InvestmentTransaction.SecurityId),
             nameof(InvestmentTransaction.Quantity), nameof(InvestmentTransaction.Price), nameof(InvestmentTransaction.Fee),
             nameof(InvestmentTransaction.CashAmount), nameof(InvestmentTransaction.Description),
-            nameof(InvestmentTransaction.AccountId),
-        ],
-        [typeof(Account)] =
-        [
-            nameof(Account.Name), nameof(Account.Description), nameof(Account.Type), nameof(Account.StartingBalance),
-        ],
-        [typeof(Category)] = [nameof(Category.Name), nameof(Category.Type), nameof(Category.Icon)],
-        [typeof(Tag)] = [nameof(Tag.Name)],
-    };
+            nameof(InvestmentTransaction.AccountId)),
+        Audited.Of<Account>(
+            AuditEntityKind.Account,
+            Route.Shareable,
+            (_, a) => a.Name,
+            nameof(Account.Name), nameof(Account.Description), nameof(Account.Type), nameof(Account.StartingBalance)),
+        Audited.Of<Category>(
+            AuditEntityKind.Category,
+            Route.Shareable,
+            (_, c) => c.Name,
+            nameof(Category.Name), nameof(Category.Type), nameof(Category.Icon)),
+        Audited.Of<Tag>(AuditEntityKind.Tag, Route.Shareable, (_, t) => t.Name, nameof(Tag.Name)),
+        Audited.Of<Household>(AuditEntityKind.Household, Route.Household, (_, h) => h.Name, nameof(Household.Name)),
+        Audited.Of<HouseholdMembership>(
+            AuditEntityKind.Member,
+            Route.Member,
+            (collector, m) => collector.users.GetValueOrDefault(m.UserId) ?? "",
+            nameof(HouseholdMembership.Role)),
+        Audited.Of<TransactionAttachment>(
+            AuditEntityKind.Attachment,
+            Route.Attachment,
+            (collector, a) => collector.attachedTo.TryGetValue(a.TransactionId, out var transaction)
+                ? $"{a.FileName}, {transaction.Description}"
+                : a.FileName),
+    }.ToDictionary(a => a.Type);
 
     private readonly Dictionary<AccountId, AccountInfo> accounts = [];
     private readonly Dictionary<CategoryId, string> categories = [];
@@ -66,6 +90,17 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
     private ILookup<TransactionId, EntityEntry> tagChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
     private ILookup<TransactionId, EntityEntry> lineChanges = Array.Empty<EntityEntry>().ToLookup(_ => default(TransactionId));
+
+    private enum Route
+    {
+        Scoped,
+        Shareable,
+        Household,
+        Member,
+        Attachment,
+    }
+
+    internal static IReadOnlyCollection<Type> AuditedTypes => Registry.Keys;
 
     public async Task<IReadOnlyList<AuditEvent>> CollectAsync(AuditSummary? summary, CancellationToken cancellationToken)
     {
@@ -81,27 +116,21 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         lineChanges = entries.Where(e => e.Entity is TransactionLine).ToLookup(e => ((TransactionLine)e.Entity).TransactionId);
 
         var scoped = ScopedEntries(entries);
-        var attachments = entries.Where(e => e.Entity is TransactionAttachment).ToList();
+        var attachments = entries.Where(e => RouteOf(e) == Route.Attachment).ToList();
         await LoadAttachedToAsync(attachments, cancellationToken);
         await LoadAccountsAsync(scoped, summary, cancellationToken);
 
         foreach (var entry in entries)
         {
-            switch (entry.Entity)
+            switch (RouteOf(entry))
             {
-                case Account:
-                    AddShareable(entry, AuditEntityKind.Account);
+                case Route.Shareable:
+                    AddShareable(entry);
                     break;
-                case Category:
-                    AddShareable(entry, AuditEntityKind.Category);
-                    break;
-                case Tag:
-                    AddShareable(entry, AuditEntityKind.Tag);
-                    break;
-                case Household:
+                case Route.Household:
                     AddHousehold(entry);
                     break;
-                case HouseholdMembership:
+                case Route.Member:
                     AddMember(entry, entries);
                     break;
             }
@@ -139,7 +168,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         return
         [
             .. entries
-                .Where(e => e.Entity is Transaction or Transfer or CurrencyConversion or InvestmentTransaction)
+                .Where(e => RouteOf(e) == Route.Scoped)
                 .Concat(touchedByChildren)
                 .DistinctBy(e => e.Entity, ReferenceEqualityComparer.Instance)
                 .Where(e => e.Entity is not Transaction transaction || !feeIds.Contains(transaction.Id)),
@@ -241,10 +270,10 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             return;
         }
 
-        drafts.Add(new Draft(household, action, AuditEntityKind.Attachment, attachment.Id.Value, entry));
+        drafts.Add(new Draft(household, action, KindOf(entry), IdOf(entry), entry));
     }
 
-    private void AddShareable(EntityEntry entry, AuditEntityKind kind)
+    private void AddShareable(EntityEntry entry)
     {
         if (Lifecycle(entry) is not { } action)
         {
@@ -253,6 +282,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         var before = SharedHousehold(entry, true);
         var after = SharedHousehold(entry, false);
+        var kind = KindOf(entry);
         var id = IdOf(entry);
         switch (action)
         {
@@ -287,12 +317,11 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             return;
         }
 
-        var household = ((Household)entry.Entity).Id;
         drafts.Add(new Draft(
-            household,
+            ((Household)entry.Entity).Id,
             action == AuditAction.Updated ? AuditAction.Renamed : action,
-            AuditEntityKind.Household,
-            household.Value,
+            KindOf(entry),
+            IdOf(entry),
             entry));
     }
 
@@ -311,7 +340,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         if (action is { } memberAction)
         {
-            drafts.Add(new Draft(membership.HouseholdId, memberAction, AuditEntityKind.Member, membership.UserId, entry));
+            drafts.Add(new Draft(membership.HouseholdId, memberAction, KindOf(entry), membership.UserId, entry));
         }
     }
 
@@ -350,16 +379,20 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
                 described[draft.Entry.Entity] = detail;
             }
 
-            if (draft.Action is AuditAction.Updated or AuditAction.Renamed or AuditAction.MemberRoleChanged
-                && detail.Changes.Count == 0)
+            var carriesChanges = CarriesChanges(draft.Action);
+            if (carriesChanges && detail.Changes.Count == 0)
             {
                 continue;
             }
 
-            var changes = draft.Action is AuditAction.Updated or AuditAction.Renamed or AuditAction.MemberRoleChanged
-                ? detail.Changes
-                : [];
-            events.Add(NewEvent(draft.Household, draft.Action, draft.Kind, draft.EntityId, detail.Description, null, changes));
+            events.Add(NewEvent(
+                draft.Household,
+                draft.Action,
+                draft.Kind,
+                draft.EntityId,
+                detail.Description,
+                null,
+                carriesChanges ? detail.Changes : []));
         }
 
         return events;
@@ -380,14 +413,14 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             Action = action,
             EntityKind = kind,
             EntityId = entityId,
-            Description = Shorten(description, AuditEvent.DescriptionMaxLength) ?? "",
+            Description = TextLimit.Ellipsize(description, AuditEvent.DescriptionMaxLength),
             Count = count,
             Changes =
             [
                 .. changes.Take(AuditEvent.MaxChanges).Select(c => c with
                 {
-                    From = Shorten(c.From, AuditEvent.ValueMaxLength),
-                    To = Shorten(c.To, AuditEvent.ValueMaxLength),
+                    From = TextLimit.Ellipsize(c.From, AuditEvent.ValueMaxLength),
+                    To = TextLimit.Ellipsize(c.To, AuditEvent.ValueMaxLength),
                 }),
             ],
         };
@@ -402,31 +435,30 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         var withTags = transactionIds.Where(id => tagChanges.Contains(id)).ToList();
         if (withTags.Count > 0)
         {
-            var pairs = await db.TransactionTags
+            var pairs = (await db.TransactionTags
                 .AsNoTracking()
                 .Where(x => withTags.Contains(x.TransactionId))
                 .Select(x => new { x.TransactionId, x.TagId })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken))
+                .ToLookup(p => p.TransactionId, p => p.TagId);
             foreach (var id in withTags)
             {
-                storedTags[id] = [.. pairs.Where(p => p.TransactionId == id).Select(p => p.TagId)];
+                storedTags[id] = [.. pairs[id]];
             }
         }
 
         var withLines = transactionIds.Where(id => lineChanges.Contains(id)).ToList();
         if (withLines.Count > 0)
         {
-            var lines = await db.TransactionLines
+            var lines = (await db.TransactionLines
                 .AsNoTracking()
                 .Where(l => withLines.Contains(l.TransactionId))
                 .Select(l => new { l.TransactionId, l.Id, l.CategoryId, l.Amount })
-                .ToListAsync(cancellationToken);
+                .ToListAsync(cancellationToken))
+                .ToLookup(l => l.TransactionId, l => new LineInfo(l.Id, l.CategoryId, l.Amount.Amount));
             foreach (var id in withLines)
             {
-                storedLines[id] =
-                [
-                    .. lines.Where(l => l.TransactionId == id).Select(l => new LineInfo(l.Id, l.CategoryId, l.Amount.Amount)),
-                ];
+                storedLines[id] = [.. lines[id]];
             }
         }
     }
@@ -447,31 +479,27 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             .OfType<CategoryId>()
             .Distinct()
             .ToList();
-        if (categoryIds.Count > 0)
-        {
-            foreach (var category in await db.Categories.IgnoreQueryFilters().AsNoTracking()
-                .Where(c => categoryIds.Contains(c.Id))
-                .Select(c => new { c.Id, c.Name })
-                .ToListAsync(cancellationToken))
-            {
-                categories[category.Id] = category.Name;
-            }
-        }
+        await FillNamesAsync(
+            categories,
+            categoryIds,
+            ids => db.Categories.IgnoreQueryFilters().AsNoTracking()
+                .Where(c => ids.Contains(c.Id))
+                .Select(c => new Named<CategoryId>(c.Id, c.Name)),
+            db.ChangeTracker.Entries<Category>().Select(e => new Named<CategoryId>(e.Entity.Id, e.Entity.Name)),
+            cancellationToken);
 
         var tagIds = storedTags.Values.SelectMany(ids => ids)
             .Concat(tagChanges.SelectMany(g => g).Select(e => ((TransactionTag)e.Entity).TagId))
             .Distinct()
             .ToList();
-        if (tagIds.Count > 0)
-        {
-            foreach (var tag in await db.Tags.IgnoreQueryFilters().AsNoTracking()
-                .Where(t => tagIds.Contains(t.Id))
-                .Select(t => new { t.Id, t.Name })
-                .ToListAsync(cancellationToken))
-            {
-                tags[tag.Id] = tag.Name;
-            }
-        }
+        await FillNamesAsync(
+            tags,
+            tagIds,
+            ids => db.Tags.IgnoreQueryFilters().AsNoTracking()
+                .Where(t => ids.Contains(t.Id))
+                .Select(t => new Named<TagId>(t.Id, t.Name)),
+            db.ChangeTracker.Entries<Tag>().Select(e => new Named<TagId>(e.Entity.Id, e.Entity.Name)),
+            cancellationToken);
 
         var securityIds = entries
             .Where(e => e.Entity is InvestmentTransaction)
@@ -483,83 +511,63 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             .OfType<SecurityId>()
             .Distinct()
             .ToList();
-        if (securityIds.Count > 0)
-        {
-            foreach (var security in await db.Securities.IgnoreQueryFilters().AsNoTracking()
-                .Where(s => securityIds.Contains(s.Id))
-                .Select(s => new { s.Id, s.Symbol })
-                .ToListAsync(cancellationToken))
-            {
-                securities[security.Id] = security.Symbol;
-            }
-        }
+        await FillNamesAsync(
+            securities,
+            securityIds,
+            ids => db.Securities.IgnoreQueryFilters().AsNoTracking()
+                .Where(s => ids.Contains(s.Id))
+                .Select(s => new Named<SecurityId>(s.Id, s.Symbol)),
+            db.ChangeTracker.Entries<Security>().Select(e => new Named<SecurityId>(e.Entity.Id, e.Entity.Symbol)),
+            cancellationToken);
 
         var userIds = entries
             .Where(e => e.Entity is HouseholdMembership)
             .Select(e => ((HouseholdMembership)e.Entity).UserId)
             .Distinct()
             .ToList();
-        if (userIds.Count > 0)
+        await FillNamesAsync(
+            users,
+            userIds,
+            ids => db.Users.AsNoTracking()
+                .Where(u => ids.Contains(u.Id))
+                .Select(u => new Named<Guid>(u.Id, AppUser.DisplayNameOrEmail(u.DisplayName, u.Email))),
+            [],
+            cancellationToken);
+    }
+
+    private static async Task FillNamesAsync<TKey>(
+        Dictionary<TKey, string> names,
+        List<TKey> ids,
+        Func<List<TKey>, IQueryable<Named<TKey>>> stored,
+        IEnumerable<Named<TKey>> tracked,
+        CancellationToken cancellationToken)
+        where TKey : notnull
+    {
+        if (ids.Count > 0)
         {
-            foreach (var user in await db.Users.AsNoTracking()
-                .Where(u => userIds.Contains(u.Id))
-                .Select(u => new { u.Id, u.DisplayName, u.Email })
-                .ToListAsync(cancellationToken))
+            foreach (var item in await stored(ids).ToListAsync(cancellationToken))
             {
-                users[user.Id] = string.IsNullOrWhiteSpace(user.DisplayName) ? user.Email ?? "" : user.DisplayName;
+                names[item.Id] = item.Name;
             }
         }
 
-        foreach (var entry in db.ChangeTracker.Entries<Category>())
+        foreach (var item in tracked)
         {
-            categories[entry.Entity.Id] = entry.Entity.Name;
-        }
-
-        foreach (var entry in db.ChangeTracker.Entries<Tag>())
-        {
-            tags[entry.Entity.Id] = entry.Entity.Name;
-        }
-
-        foreach (var entry in db.ChangeTracker.Entries<Security>())
-        {
-            securities[entry.Entity.Id] = entry.Entity.Symbol;
+            names[item.Id] = item.Name;
         }
     }
 
-    private string Describe(EntityEntry entry) => entry.Entity switch
-    {
-        Transaction t => TrashLabel.Dated(t.Description, t.Date, t.Amount),
-        Transfer t => TrashLabel.Dated(t.Description, t.Date, t.Amount),
-        CurrencyConversion c => TrashLabel.Exchanged(c.FromAmount, c.ToAmount, c.Date),
-        InvestmentTransaction i => TrashLabel.Investment(i, i.SecurityId is { } id ? securities.GetValueOrDefault(id) : null),
-        Account a => a.Name,
-        Category c => c.Name,
-        Tag t => t.Name,
-        Household h => h.Name,
-        TransactionAttachment a => attachedTo.TryGetValue(a.TransactionId, out var transaction)
-            ? $"{a.FileName}, {transaction.Description}"
-            : a.FileName,
-        HouseholdMembership m => users.GetValueOrDefault(m.UserId) ?? "",
-        _ => "",
-    };
+    private string Describe(EntityEntry entry) => AuditedOf(entry)?.Describe(this, entry.Entity) ?? "";
 
     private List<AuditChange> ChangesOf(Draft draft)
     {
         var entry = draft.Entry;
-        switch (entry.Entity)
-        {
-            case Household:
-                return Diff(entry, [nameof(Household.Name)]);
-            case HouseholdMembership:
-                return Diff(entry, [nameof(HouseholdMembership.Role)]);
-        }
-
-        if (draft.Action != AuditAction.Updated || !Fields.TryGetValue(entry.Entity.GetType(), out var fields))
+        if (!CarriesChanges(draft.Action) || AuditedOf(entry) is not { } audited)
         {
             return [];
         }
 
-        var changes = Diff(entry, fields);
+        var changes = Diff(entry, audited.Fields);
         if (entry.Entity is Transaction transaction)
         {
             if (TagChange(transaction.Id) is { } tagChange)
@@ -674,16 +682,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         return JsonNamingPolicy.CamelCase.ConvertName(name);
     }
 
-    private static string? Shorten(string? text, int maxLength)
-    {
-        if (text is null)
-        {
-            return null;
-        }
-
-        var trimmed = text.Trim();
-        return trimmed.Length <= maxLength ? trimmed : trimmed[..(maxLength - 1)] + "…";
-    }
+    private static bool CarriesChanges(AuditAction action) =>
+        action is AuditAction.Updated or AuditAction.Renamed or AuditAction.MemberRoleChanged;
 
     private static AuditAction? Lifecycle(EntityEntry entry)
     {
@@ -725,25 +725,30 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private static object? Pick(PropertyEntry property, bool original) =>
         original ? property.OriginalValue : property.CurrentValue;
 
-    private static AuditEntityKind KindOf(EntityEntry entry) => entry.Entity switch
-    {
-        Transfer => AuditEntityKind.Transfer,
-        CurrencyConversion => AuditEntityKind.Conversion,
-        InvestmentTransaction => AuditEntityKind.InvestmentTransaction,
-        _ => AuditEntityKind.Transaction,
-    };
+    private static Audited? AuditedOf(EntityEntry entry) => Registry.GetValueOrDefault(entry.Entity.GetType());
 
-    private static Guid IdOf(EntityEntry entry) => entry.Entity switch
+    private static Route? RouteOf(EntityEntry entry) => AuditedOf(entry)?.Route;
+
+    private static AuditEntityKind KindOf(EntityEntry entry) => Registry[entry.Entity.GetType()].Kind;
+
+    private static Guid IdOf(EntityEntry entry) => ((IStronglyTypedId)entry.Property(IdProperty).CurrentValue!).Value;
+
+    private sealed record Audited(
+        Type Type,
+        AuditEntityKind Kind,
+        Route Route,
+        Func<AuditCollector, object, string> Describe,
+        string[] Fields)
     {
-        Transaction t => t.Id.Value,
-        Transfer t => t.Id.Value,
-        CurrencyConversion c => c.Id.Value,
-        InvestmentTransaction i => i.Id.Value,
-        Account a => a.Id.Value,
-        Category c => c.Id.Value,
-        Tag t => t.Id.Value,
-        _ => Guid.Empty,
-    };
+        public static Audited Of<TEntity>(
+            AuditEntityKind kind,
+            Route route,
+            Func<AuditCollector, TEntity, string> describe,
+            params string[] fields) =>
+            new(typeof(TEntity), kind, route, (collector, entity) => describe(collector, (TEntity)entity), fields);
+    }
+
+    private sealed record Named<TKey>(TKey Id, string Name);
 
     private sealed record Draft(HouseholdId Household, AuditAction Action, AuditEntityKind Kind, Guid EntityId, EntityEntry Entry);
 

@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using FastEndpoints;
 using FastEndpoints.Security;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -185,11 +186,8 @@ public sealed class SessionService(
 
     private string? ReadUserAgent()
     {
-        var userAgent = Http.Request.Headers.UserAgent.ToString().Trim();
-        if (userAgent.Length == 0)
-            return null;
-
-        return userAgent.Length > UserSession.UserAgentMaxLength ? userAgent[..UserSession.UserAgentMaxLength] : userAgent;
+        var userAgent = TextLimit.Cut(Http.Request.Headers.UserAgent.ToString(), UserSession.UserAgentMaxLength);
+        return userAgent.Length == 0 ? null : userAgent;
     }
 
     private async Task IssueAsync(UserSession session, AppUser user, CancellationToken cancellationToken)
