@@ -1,7 +1,6 @@
 import { Play } from "lucide-react";
 import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   getCategorizationRulesQueryKey,
   useAccountsSuspense,
@@ -20,9 +19,10 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { Button } from "@/components/ui/button/button";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { silent } from "@/lib/mutations";
-import { optimisticRemoval } from "@/lib/optimistic";
+import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { RuleForm } from "../rule-form/rule-form";
+import { movedRules } from "../rule-order";
 import { RuleRow } from "../rule-row/rule-row";
 import { RunRulesDialog } from "../run-rules-dialog/run-rules-dialog";
 
@@ -40,7 +40,14 @@ export function RulesPage() {
     mutation: optimisticRemoval<CategorizationRuleResponse>(getCategorizationRulesQueryKey()),
   });
 
-  const moveMutation = useMoveCategorizationRule(silent());
+  const moveMutation = useMoveCategorizationRule(
+    silent(
+      optimisticUpdate({
+        queryKey: getCategorizationRulesQueryKey(),
+        apply: movedRules,
+      }),
+    ),
+  );
 
   const ruleList = useDeferredValue(rules.data) ?? [];
   const remove = useConfirmedDelete(
@@ -74,10 +81,7 @@ export function RulesPage() {
               accounts={accounts.data}
               categories={categories.data}
               tags={tags.data}
-              onSaved={() => {
-                close();
-                toast.success(t("categorizationRules.created"));
-              }}
+              onSaved={close}
               onCancel={close}
             />
           )}
@@ -95,10 +99,7 @@ export function RulesPage() {
             categories={categories.data}
             tags={tags.data}
             initial={rule}
-            onSaved={() => {
-              setEditing(null);
-              toast.success(t("categorizationRules.updated"));
-            }}
+            onSaved={() => setEditing(null)}
             onCancel={() => setEditing(null)}
           />
         )}
