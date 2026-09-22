@@ -26,6 +26,7 @@ public sealed class SubscriptionDetectionService(
 
         var occurrences = await db.Transactions
             .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Date >= from && t.Description != null)
+            .Where(t => db.Accounts.Any(a => a.Id == t.AccountId && a.StartingBalance.Currency == t.Amount.Currency))
             .OrderByDescending(t => t.Date)
             .Select(t => new Occurrence(t.AccountId, t.CategoryId, t.Date, t.Amount.Amount, t.Description!))
             .Take(SubscriptionDetection.MaxScannedTransactions)

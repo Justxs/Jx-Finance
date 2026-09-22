@@ -10,7 +10,7 @@ public sealed class RecurringBill : OwnableEntity
     public required string Name { get; set; }
     public RecurringBillShape Shape { get; set; }
     public RecurringBillKind Kind { get; set; }
-    public Money? Amount { get; set; }
+    public decimal? Amount { get; set; }
     public CategoryId? CategoryId { get; set; }
     public AccountId? AccountId { get; set; }
     public AccountId? ToAccountId { get; set; }

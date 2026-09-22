@@ -1,7 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
-using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -22,7 +22,7 @@ namespace JxFinance.Endpoints.Transfers.Services;
 public sealed class TransferService(
     AppDbContext db,
     TransferMapper mapper,
-    IExchangeRateService rates,
+    ITransferAmountResolver amountResolver,
     IDeletionRecorder deletions) : ITransferService
 {
     public async Task<PagedResponse<TransferResponse>> GetPageAsync(
@@ -57,13 +57,13 @@ public sealed class TransferService(
             request.Currency,
             request.ReceivedAmount,
             request.ReceivedCurrency);
-        var amounts = await ResolveAmountsAsync(draft, [], cancellationToken);
-        if (amounts.IsFailure)
+        var amounts = await amountResolver.ResolveAsync(draft, [], cancellationToken);
+        if (!amounts.TryGetValue(out var resolved))
         {
             return amounts.Error;
         }
 
-        var transfer = mapper.ToEntity(request, amounts.Value.Sent, amounts.Value.Received);
+        var transfer = mapper.ToEntity(request, resolved.Sent, resolved.Received);
 
         db.Transfers.Add(transfer);
         await db.SaveChangesAsync(cancellationToken);
@@ -94,16 +94,16 @@ public sealed class TransferService(
             request.Currency,
             request.ReceivedAmount,
             request.ReceivedCurrency);
-        var amounts = await ResolveAmountsAsync(
+        var amounts = await amountResolver.ResolveAsync(
             draft,
             [transfer.Amount.Currency, transfer.ReceivedAmount.Currency],
             cancellationToken);
-        if (amounts.IsFailure)
+        if (!amounts.TryGetValue(out var resolved))
         {
             return amounts.Error;
         }
 
-        var (sent, received) = amounts.Value;
+        var (sent, received) = resolved;
         var receiptAccounts = await db.TransferImports
             .Where(r => r.TransferId == transferId)
             .Select(r => r.AccountId)
@@ -188,57 +188,4 @@ public sealed class TransferService(
         await db.Accounts.CountAsync(
             a => a.Id == transfer.FromAccountId || a.Id == transfer.ToAccountId,
             cancellationToken) == 2;
-
-    private async Task<Result<(Money Sent, Money Received)>> ResolveAmountsAsync(
-        TransferDraft draft,
-        Currency[] currenciesInUse,
-        CancellationToken cancellationToken)
-    {
-        var currencies = await db.Accounts
-            .Where(a => a.Id == draft.FromAccountId || a.Id == draft.ToAccountId)
-            .Select(a => new { a.Id, a.StartingBalance.Currency })
-            .ToDictionaryAsync(a => a.Id, a => a.Currency, cancellationToken);
-        if (!currencies.TryGetValue(draft.FromAccountId, out var fromCurrency))
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Source account does not exist.");
-        }
-
-        if (!currencies.TryGetValue(draft.ToAccountId, out var toCurrency))
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Destination account does not exist.");
-        }
-
-        var sent = new Money(draft.Amount, draft.Currency ?? fromCurrency);
-        var receivedCurrency = draft.ReceivedCurrency ?? (draft.Currency is null ? toCurrency : sent.Currency);
-        if (receivedCurrency != sent.Currency && draft.ReceivedAmount is null)
-        {
-            return new DomainError(
-                ErrorCodes.TransferReceivedAmountRequired,
-                "A transfer between currencies needs the received amount.");
-        }
-
-        var received = draft.ReceivedAmount is { } receivedAmount ? new Money(receivedAmount, receivedCurrency) : sent;
-        if (received.Currency == sent.Currency && received.Amount != sent.Amount)
-        {
-            return new DomainError(
-                ErrorCodes.TransferAmountMismatch,
-                "Sent and received amounts must match when the currency is the same.");
-        }
-
-        var newCurrencies = new[] { sent.Currency, received.Currency }.Except(currenciesInUse).ToArray();
-        if (rates.UnusableReason(newCurrencies) is { } currencyError)
-        {
-            return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
-        }
-
-        return (sent, received);
-    }
-
-    private sealed record TransferDraft(
-        AccountId FromAccountId,
-        AccountId ToAccountId,
-        decimal Amount,
-        Currency? Currency,
-        decimal? ReceivedAmount,
-        Currency? ReceivedCurrency);
 }
