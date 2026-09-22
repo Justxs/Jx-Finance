@@ -95,6 +95,11 @@ export const lastAdministratorProblem: ProblemDetails = {
   type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
   title: "Forbidden",
   status: 403,
-  code: "user.lastAdministrator",
-  detail: "The installation must keep one active administrator.",
+  errors: [
+    {
+      name: "generalErrors",
+      reason: "The installation must keep one active administrator.",
+      code: "user.lastAdministrator",
+    },
+  ],
 };

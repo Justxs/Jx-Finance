@@ -61,7 +61,13 @@ export const SymbolAlreadyExists: Story = {
     error: new ApiError({
       status: 409,
       title: duplicateSecurityProblem.title ?? undefined,
-      code: duplicateSecurityProblem.code,
+      errors: [
+        {
+          name: "generalErrors",
+          reason: "A security with this symbol and currency already exists.",
+          code: "conflict.duplicate",
+        },
+      ],
     }),
   },
   play: async ({ canvasElement }) => {
