@@ -6,6 +6,7 @@ import {
   getTransactionsSummarySuspenseQueryOptions,
   getTransactionsSuspenseQueryOptions,
 } from "@/api/generated";
+import { FlowType, SortDirection, TransactionSortField } from "@/api/generated/model";
 import {
   transactionFilterParams,
   transactionListParams,
@@ -24,14 +25,11 @@ export const transactionsSearchSchema = z.object({
     .refine((value) => value.split(",").every((id) => z.uuid().safeParse(id).success))
     .optional()
     .catch(undefined),
-  type: z.enum(["income", "expense"]).optional().catch(undefined),
+  type: z.enum(FlowType).optional().catch(undefined),
   dateFrom: z.string().optional().catch(undefined),
   dateTo: z.string().optional().catch(undefined),
-  sort: z
-    .enum(["date", "description", "category", "account", "amount"])
-    .optional()
-    .catch(undefined),
-  direction: z.enum(["asc", "desc"]).optional().catch(undefined),
+  sort: z.enum(TransactionSortField).optional().catch(undefined),
+  direction: z.enum(SortDirection).optional().catch(undefined),
   new: z.boolean().optional().catch(undefined),
 });
 

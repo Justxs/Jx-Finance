@@ -19,7 +19,7 @@ public sealed class AuditEventConfiguration : IEntityTypeConfiguration<AuditEven
         builder.Property(e => e.EntityKind).HasConversion<string>().HasMaxLength(30);
         builder.Property(e => e.Description).HasMaxLength(AuditEvent.DescriptionMaxLength);
         builder.Property(e => e.Changes)
-            .HasColumnType("jsonb")
+            .HasColumnType(DbSchema.Json)
             .HasConversion(
                 changes => JsonSerializer.Serialize(changes, Json),
                 json => JsonSerializer.Deserialize<List<AuditChange>>(json, Json) ?? new List<AuditChange>(),

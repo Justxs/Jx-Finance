@@ -17,7 +17,7 @@ public static class DependencyInjection
     {
         PdfFontResolver.Register();
 
-        var connectionString = configuration.GetConnectionString("Default")
+        var connectionString = configuration.GetConnectionString(ConfigKeys.DefaultConnectionName)
             ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
 
         services.AddOptions<AppOptions>()
@@ -56,7 +56,7 @@ public static class DependencyInjection
         services.Configure<DataProtectionTokenProviderOptions>(
             tokens => tokens.TokenLifespan = TimeSpan.FromMinutes(Math.Max(passwordResetMinutes, 1)));
 
-        var keyDirectory = configuration["App:DataProtectionDirectory"];
+        var keyDirectory = configuration[ConfigKeys.DataProtectionDirectory];
         var protection = services.AddDataProtection().SetApplicationName("JxFinance");
         if (!string.IsNullOrWhiteSpace(keyDirectory))
             protection.PersistKeysToFileSystem(new DirectoryInfo(keyDirectory));

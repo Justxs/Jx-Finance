@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using JxFinance.Common.Errors;
+using JxFinance.Common.OpenApi;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -73,10 +75,10 @@ public sealed class ActiveHouseholdMiddleware(RequestDelegate next, IInstanceSet
                 Detail =
                     $"The {ActiveHousehold.HeaderName} header and the {ActiveHousehold.QueryName} query parameter name two different households.",
                 Instance = context.Request.Path,
-                Extensions = { ["code"] = ErrorCodes.HouseholdScopeMismatch },
+                Extensions = { [ErrorContract.CodeProperty] = ErrorCodes.HouseholdScopeMismatch },
             },
             options: null,
-            contentType: "application/problem+json",
+            contentType: MediaTypeNames.Application.ProblemJson,
             context.RequestAborted);
     }
 }

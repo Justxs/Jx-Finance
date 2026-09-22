@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -14,7 +15,7 @@ public sealed class UpdateMyProfileEndpoint(IUserService userService, ICurrentUs
 {
     public override void Configure()
     {
-        Put("users/me");
+        Put(ApiRoutes.Users + "/me");
         Group<UsersGroup>();
         Throttle(hitLimit: 10, durationSeconds: 300);
     }

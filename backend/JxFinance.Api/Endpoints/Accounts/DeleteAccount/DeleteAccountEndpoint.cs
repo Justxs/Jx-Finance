@@ -9,7 +9,7 @@ public sealed class DeleteAccountEndpoint(IAccountService accountService) : Dele
 {
     public override void Configure()
     {
-        Delete("accounts/{id}");
+        Delete(ApiRoutes.Accounts + "/{id}");
         Group<AccountsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

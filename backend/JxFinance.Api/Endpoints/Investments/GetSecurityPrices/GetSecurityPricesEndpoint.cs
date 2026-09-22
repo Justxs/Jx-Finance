@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -10,7 +11,7 @@ public sealed class GetSecurityPricesEndpoint(ISecurityPriceService priceService
 {
     public override void Configure()
     {
-        Get("investments/securities/{id:guid}/prices");
+        Get(ApiRoutes.Investments + "/securities/{id:guid}/prices");
         Group<InvestmentsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

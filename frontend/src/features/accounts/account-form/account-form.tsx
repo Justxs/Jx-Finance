@@ -12,6 +12,7 @@ import {
   createAccountBodyNameMax,
 } from "@/api/schemas/accounts/accounts.zod";
 import { useServerForm } from "@/components/form";
+import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
@@ -52,6 +53,7 @@ interface FormValues {
 
 interface Props {
   initial?: AccountResponse;
+  error?: unknown;
   pending: boolean;
   onSubmit: (values: AccountFormValues) => Promise<unknown> | void;
   onCancel?: () => void;
@@ -70,7 +72,7 @@ function buildValues(value: FormValues): AccountFormValues {
   };
 }
 
-export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<Props>) {
+export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
@@ -184,6 +186,8 @@ export function AccountForm({ initial, pending, onSubmit, onCancel }: Readonly<P
             households={householdList}
           />
         ) : null}
+
+        <FormError error={error} />
 
         <form.FormActions
           span

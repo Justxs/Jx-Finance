@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Currencies.Interfaces;
 using JxFinance.Endpoints.Currencies.Shared;
@@ -10,7 +11,7 @@ public sealed class GetExchangeRateEndpoint(ICurrencyService currencyService)
 {
     public override void Configure()
     {
-        Get("exchange-rates");
+        Get(ApiRoutes.ExchangeRates);
         Group<CurrenciesGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

@@ -3,6 +3,7 @@ import { useNetWorthHistorySuspense } from "@/api/generated";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useMoney } from "@/hooks/use-formatters";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 
 interface Props {
   dateFrom: string;
@@ -36,7 +37,7 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
       <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
         <SectionTitle>{t("reports.netWorthChange")}</SectionTitle>
         <p
-          className={`text-xl font-semibold whitespace-nowrap tabular-nums ${change >= 0 ? "text-income" : "text-expense"}`}
+          className={`text-xl font-semibold whitespace-nowrap tabular-nums ${change >= 0 ? INCOME_TONE : EXPENSE_TONE}`}
         >
           {money.formatSigned(change)}
         </p>

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Notifications.Interfaces;
 using JxFinance.Endpoints.Notifications.Mappers;
 using JxFinance.Endpoints.Notifications.Shared;
@@ -10,7 +11,7 @@ public sealed class GetNotificationsEndpoint(INotificationService notificationSe
 {
     public override void Configure()
     {
-        Get("notifications");
+        Get(ApiRoutes.Notifications);
         Group<NotificationsGroup>();
     }
 

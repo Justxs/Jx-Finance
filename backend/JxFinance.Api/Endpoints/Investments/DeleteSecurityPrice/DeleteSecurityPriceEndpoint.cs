@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -9,7 +10,7 @@ public sealed class DeleteSecurityPriceEndpoint(ISecurityPriceService priceServi
 {
     public override void Configure()
     {
-        Delete("investments/securities/{id:guid}/prices/{date}");
+        Delete(ApiRoutes.Investments + "/securities/{id:guid}/prices/{date}");
         Group<InvestmentsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

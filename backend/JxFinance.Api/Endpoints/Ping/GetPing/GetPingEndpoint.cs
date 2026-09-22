@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Ping.Interfaces;
 
 namespace JxFinance.Endpoints.Ping.GetPing;
@@ -8,7 +9,7 @@ public sealed class GetPingEndpoint(IPingService pingService)
 {
     public override void Configure()
     {
-        Get("ping");
+        Get(ApiRoutes.Ping);
         Group<DiagnosticsGroup>();
         AllowAnonymous();
     }

@@ -4,6 +4,7 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Meter } from "@/components/ui/meter/meter";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useMoney } from "@/hooks/use-formatters";
+import { EXPENSE_TONE } from "@/lib/tone";
 
 const MAX_ROWS = 5;
 
@@ -40,7 +41,7 @@ export function BudgetSnapshot() {
             <div className="flex items-baseline gap-3 text-sm">
               <span className="min-w-0 flex-1 wrap-break-word">{budget.categoryName}</span>
               <span
-                className={`shrink-0 text-right text-xs tabular-nums ${overBudget ? "text-expense" : "text-muted-foreground"}`}
+                className={`shrink-0 text-right text-xs tabular-nums ${overBudget ? EXPENSE_TONE : "text-muted-foreground"}`}
               >
                 {overBudget
                   ? t("budgets.over", { amount: money.format(spent - limit) })

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.CategorizationRules;
 
 namespace JxFinance.Endpoints.CategorizationRules.TestCategorizationRule;
@@ -8,7 +9,7 @@ public sealed class TestCategorizationRuleEndpoint
 {
     public override void Configure()
     {
-        Post("categorization-rules/test");
+        Post(ApiRoutes.CategorizationRules + "/test");
         Group<CategorizationRulesGroup>();
     }
 

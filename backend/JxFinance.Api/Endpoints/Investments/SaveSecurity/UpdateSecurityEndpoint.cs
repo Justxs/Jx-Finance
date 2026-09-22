@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateSecurityEndpoint(IInvestmentService investmentService)
 {
     public override void Configure()
     {
-        Put("investments/securities/{id:guid}");
+        Put(ApiRoutes.Investments + "/securities/{id:guid}");
         Group<InvestmentsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));

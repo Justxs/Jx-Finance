@@ -2,6 +2,7 @@ import { ArrowDownRight, ArrowUpRight, Equal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
 import type { Change, ChangeDirection } from "@/lib/comparison";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 export type ChangeGood = "up" | "down" | "neither";
@@ -20,8 +21,8 @@ const icons = {
 } as const;
 
 const tones = {
-  better: "text-income",
-  worse: "text-expense",
+  better: INCOME_TONE,
+  worse: EXPENSE_TONE,
   same: "text-muted-foreground",
 } as const;
 

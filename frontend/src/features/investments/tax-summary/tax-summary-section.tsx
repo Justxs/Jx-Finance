@@ -10,8 +10,9 @@ import { Section, SectionHeader } from "@/components/ui/section/section";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
+import { TAX_SUMMARY_EXPORT_PATH } from "@/lib/export-url";
 import { nameById } from "@/lib/options";
-import { gainTone } from "../gain-tone";
+import { gainTone } from "@/lib/tone";
 import { taxAccountIds, taxSummaryParams, taxYearOptions } from "../investment-queries";
 import { TaxAccountPicker } from "./tax-account-picker";
 import { TaxCashTable } from "./tax-cash-table";
@@ -36,7 +37,7 @@ export function TaxSummarySection({ accounts }: Readonly<Props>) {
   const year = search.taxYear ?? summary.year;
   const years = taxYearOptions(summary.availableYears, year);
   const accountNames = nameById(accounts);
-  const exportUrl = useExportUrl("/api/investments/tax-summary/export", {
+  const exportUrl = useExportUrl(TAX_SUMMARY_EXPORT_PATH, {
     year: shown.year ?? summary.year,
     accountIds: shown.accountIds ?? undefined,
   });

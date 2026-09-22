@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.Localization;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
@@ -21,7 +22,7 @@ public sealed class InstanceSettingsStore(
     {
         ReportingCurrency = options.Value.ReportingCurrency,
         ExchangeRateSyncEnabled = options.Value.ExchangeRates.Enabled,
-        DefaultLanguage = options.Value.DefaultCulture.StartsWith("lt", StringComparison.OrdinalIgnoreCase) ? "lt" : "en",
+        DefaultLanguage = options.Value.DefaultCulture.StartsWith(AppLanguages.Lt, StringComparison.OrdinalIgnoreCase) ? AppLanguages.Lt : AppLanguages.En,
         TimeZone = options.Value.TimeZone,
     };
 

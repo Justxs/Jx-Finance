@@ -4,6 +4,7 @@ import type { CategoryResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { useMoney } from "@/hooks/use-formatters";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { categoryTargetCount, type PreviewRowState, summarizeSelection } from "./preview-rows";
 
@@ -60,8 +61,8 @@ export function ImportSummaryBar({
               key={net.currency ?? ""}
               className={cn(
                 "border-b-3 border-double border-rule pb-0.5 text-base font-semibold whitespace-nowrap tabular-nums",
-                net.cents > 0 && "text-income",
-                net.cents < 0 && "text-expense",
+                net.cents > 0 && INCOME_TONE,
+                net.cents < 0 && EXPENSE_TONE,
               )}
             >
               {money.formatSigned(net.cents / 100, "auto", net.currency)}

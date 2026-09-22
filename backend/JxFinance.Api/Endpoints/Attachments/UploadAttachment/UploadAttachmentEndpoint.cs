@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Attachments.Interfaces;
@@ -13,13 +15,13 @@ public sealed class UploadAttachmentEndpoint(IAttachmentService attachmentServic
 
     public override void Configure()
     {
-        Post("transactions/{transactionId}/attachments");
+        Post(ApiRoutes.Transactions + "/{transactionId}/attachments");
         Group<AttachmentsGroup>();
         AllowFileUploads();
         MaxRequestBodySize(MaxRequestBytes);
         Description(d => d
             .ClearDefaultProduces(200)
-            .Produces<AttachmentResponse>(201, "application/json")
+            .Produces<AttachmentResponse>(201, MediaTypeNames.Application.Json)
             .ProducesProblemDetails(404)
             .ProducesProblemDetails(409)
             .Produces(413));
@@ -32,6 +34,6 @@ public sealed class UploadAttachmentEndpoint(IAttachmentService attachmentServic
             req.TransactionId,
             new AttachmentUpload(stream, req.File.FileName, req.File.ContentType, req.File.Length),
             ct)).ValueOrThrow();
-        await Send.ResultAsync(TypedResults.Created($"/api/attachments/{attachment.Id}/content", attachment));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.AttachmentsPath}/{attachment.Id}/content", attachment));
     }
 }

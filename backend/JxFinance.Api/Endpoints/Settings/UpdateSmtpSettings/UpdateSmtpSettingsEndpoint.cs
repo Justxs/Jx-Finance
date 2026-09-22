@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
@@ -11,7 +12,7 @@ public sealed class UpdateSmtpSettingsEndpoint(ISettingsService settingsService)
 {
     public override void Configure()
     {
-        Put("settings/smtp");
+        Put(ApiRoutes.Settings + "/smtp");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

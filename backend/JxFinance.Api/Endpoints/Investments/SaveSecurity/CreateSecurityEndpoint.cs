@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
@@ -9,7 +10,7 @@ public sealed class CreateSecurityEndpoint(IInvestmentService investmentService)
 {
     public override void Configure()
     {
-        Post("investments/securities");
+        Post(ApiRoutes.Investments + "/securities");
         Group<InvestmentsGroup>();
     }
 

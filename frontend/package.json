@@ -91,5 +91,10 @@
   "allowScripts": {
     "esbuild": true,
     "lefthook": true
+  },
+  "msw": {
+    "workerDirectory": [
+      ".storybook/public"
+    ]
   }
 }

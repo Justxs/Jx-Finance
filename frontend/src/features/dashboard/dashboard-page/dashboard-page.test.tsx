@@ -7,6 +7,7 @@ import type {
 } from "@/api/generated/model";
 import { DashboardLayoutResponse as layoutSchema } from "@/api/schemas/dashboard/dashboard.zod";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { UserRole } from "@/lib/user-role";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
 
@@ -18,7 +19,7 @@ const me: UserProfileResponse = {
   id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
   email: "ruta@example.lt",
   displayName: "Ruta",
-  role: "Member",
+  role: UserRole.member,
   twoFactorEnabled: false,
   isActive: true,
   emailConfirmed: true,

@@ -19622,7 +19622,8 @@
       "description": "Bank, cash, and card accounts that transactions post to."
     },
     {
-      "name": "Attachments"
+      "name": "Attachments",
+      "description": "Receipts and other files kept alongside a transaction."
     },
     {
       "name": "Auth",
@@ -19633,7 +19634,8 @@
       "description": "First-run provisioning of the administrator account."
     },
     {
-      "name": "Backups"
+      "name": "Backups",
+      "description": "Snapshots of the whole instance: create, download, upload, and restore one."
     },
     {
       "name": "Budgets",
@@ -19644,7 +19646,8 @@
       "description": "The income and expense categories transactions are attributed to."
     },
     {
-      "name": "CategorizationRules"
+      "name": "CategorizationRules",
+      "description": "Ordered rules that pick a category for matching transactions, plus a dry run over existing ones."
     },
     {
       "name": "Conversions",
@@ -19695,10 +19698,12 @@
       "description": "Income and expense summaries over an arbitrary date range."
     },
     {
-      "name": "Settings"
+      "name": "Settings",
+      "description": "Instance-wide preferences: language, time zone, reporting currency, features, and outgoing mail."
     },
     {
-      "name": "Tags"
+      "name": "Tags",
+      "description": "Free-form labels that transactions can be marked with."
     },
     {
       "name": "Transactions",
@@ -19709,7 +19714,8 @@
       "description": "Money moved between two of your own accounts, in one currency or across two."
     },
     {
-      "name": "Trash"
+      "name": "Trash",
+      "description": "Records that were deleted but can still be restored."
     },
     {
       "name": "Users",

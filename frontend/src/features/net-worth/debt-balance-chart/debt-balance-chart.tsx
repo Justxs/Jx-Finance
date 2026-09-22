@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { DebtSchedulePlan } from "@/api/generated/model";
-import type { ChartSeries } from "@/components/chart";
+import { CHART_COLOR_POSITIVE, CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 
 interface Props {
@@ -23,7 +23,7 @@ export function DebtBalanceChart({ plan, withExtra }: Readonly<Props>) {
     {
       key: "balance",
       label: t("netWorth.schedule.balance"),
-      color: "var(--chart-1)",
+      color: CHART_COLOR_PRIMARY,
       shape: "line",
     },
     ...(withExtra
@@ -31,7 +31,7 @@ export function DebtBalanceChart({ plan, withExtra }: Readonly<Props>) {
           {
             key: "withExtra",
             label: t("netWorth.schedule.balanceWithExtra"),
-            color: "var(--chart-2)",
+            color: CHART_COLOR_POSITIVE,
             shape: "line",
           },
         ] satisfies ChartSeries[])

@@ -1,21 +1,20 @@
 using System.Security.Cryptography;
 using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Configuration;
 
 namespace JxFinance.Infrastructure.Attachments;
 
 public sealed class AttachmentStore(IConfiguration configuration, IHostEnvironment environment, IClock clock)
 {
-    public const string ConfigurationKey = "App:AttachmentDirectory";
-
     private const string TemporarySuffix = ".tmp";
     private const string StagingPrefix = ".restore-";
     private const int CopyBufferBytes = 81920;
 
     private static readonly TimeSpan OrphanAge = TimeSpan.FromHours(1);
 
-    private readonly string directory = string.IsNullOrWhiteSpace(configuration[ConfigurationKey])
+    private readonly string directory = string.IsNullOrWhiteSpace(configuration[ConfigKeys.AttachmentDirectory])
         ? Path.Combine(environment.ContentRootPath, "attachments")
-        : configuration[ConfigurationKey]!;
+        : configuration[ConfigKeys.AttachmentDirectory]!;
 
     public async Task<StoredAttachment> WriteTemporaryAsync(Stream content, long maximumBytes, CancellationToken cancellationToken)
     {

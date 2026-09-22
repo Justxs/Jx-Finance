@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Net;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.ExchangeRates;
 
@@ -27,7 +28,7 @@ public sealed class FrankfurterRateProvider(HttpClient http) : IExchangeRateProv
         var rates = new List<ExchangeRate>();
         foreach (var (day, quotes) in body.Rates)
         {
-            if (!DateOnly.TryParseExact(day, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+            if (!DateOnly.TryParseExact(day, DateFormats.IsoDate, CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
             {
                 continue;
             }

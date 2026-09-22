@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Sessions;
@@ -8,7 +9,7 @@ public sealed class GetSessionsEndpoint(ISessionService sessionService)
 {
     public override void Configure()
     {
-        Get("auth/sessions");
+        Get(ApiRoutes.Auth + "/sessions");
         Group<AuthGroup>();
     }
 

@@ -9,7 +9,7 @@ public sealed class DeleteTransferEndpoint(ITransferService transferService) : D
 {
     public override void Configure()
     {
-        Delete("transfers/{id}");
+        Delete(ApiRoutes.Transfers + "/{id}");
         Group<TransfersGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

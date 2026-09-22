@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { PortfolioResponse } from "@/api/generated/model";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
-import { gainTone } from "../gain-tone";
+import { gainTone } from "@/lib/tone";
 
 interface Props {
   portfolio: PortfolioResponse;

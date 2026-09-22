@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateGoal, useUpdateGoal } from "@/api/generated";
-import type { AccountResponse, GoalFunding, GoalResponse } from "@/api/generated/model";
+import { type AccountResponse, GoalFunding, type GoalResponse } from "@/api/generated/model";
 import {
   createGoalBodyFundingSharePercentMax,
   createGoalBodyNameMax,
@@ -46,7 +46,7 @@ export function CreateGoalForm({ initial, accounts, onCreated, onCancel }: Reado
       targetAmount: positiveMoney(t),
       currentAmount: optionalNonNegativeMoney(t),
       targetDate: z.string(),
-      funding: z.enum(["manual", "account"]),
+      funding: z.enum(GoalFunding),
       fundingAccountId: z.string(),
       fundingSharePercent: wholeNumberBetween(t, SHARE_MIN, createGoalBodyFundingSharePercentMax),
     })

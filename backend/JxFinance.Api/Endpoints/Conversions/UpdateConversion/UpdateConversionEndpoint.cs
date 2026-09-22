@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Conversions.Interfaces;
 using JxFinance.Endpoints.Conversions.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateConversionEndpoint(IConversionService conversionServic
 {
     public override void Configure()
     {
-        Put("conversions/{id}");
+        Put(ApiRoutes.Conversions + "/{id}");
         Group<ConversionsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

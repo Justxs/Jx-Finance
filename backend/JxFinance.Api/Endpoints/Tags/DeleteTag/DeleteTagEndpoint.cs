@@ -9,7 +9,7 @@ public sealed class DeleteTagEndpoint(ITagService tagService) : DeleteEndpoint
 {
     public override void Configure()
     {
-        Delete("tags/{id}");
+        Delete(ApiRoutes.Tags + "/{id}");
         Group<TagsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

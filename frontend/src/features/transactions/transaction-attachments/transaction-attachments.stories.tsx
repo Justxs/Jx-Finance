@@ -141,6 +141,10 @@ export const UploadThenRemoveWithUndo: Story = {
 
     await userEvent.click(canvas.getByRole("button", { name: "Remove: saskaita.pdf" }));
 
+    const dialog = within(await screen.findByRole("alertdialog"));
+    await expect(dialog.getByText("saskaita.pdf")).toBeVisible();
+    await userEvent.click(dialog.getByRole("button", { name: "Remove" }));
+
     await expect(await screen.findByText("Deleted saskaita.pdf")).toBeInTheDocument();
     await expect(screen.getByRole("button", { name: "Undo" })).toBeInTheDocument();
     await waitFor(() => expect(canvas.queryByText("saskaita.pdf")).toBeNull());

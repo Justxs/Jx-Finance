@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
@@ -11,7 +12,7 @@ public sealed class UpdateSettingsEndpoint(ISettingsService settingsService)
 {
     public override void Configure()
     {
-        Put("settings");
+        Put(ApiRoutes.Settings);
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

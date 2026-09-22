@@ -9,7 +9,7 @@ public sealed class DeleteBudgetEndpoint(IBudgetService budgetService) : DeleteE
 {
     public override void Configure()
     {
-        Delete("budgets/{id}");
+        Delete(ApiRoutes.Budgets + "/{id}");
         Group<BudgetsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

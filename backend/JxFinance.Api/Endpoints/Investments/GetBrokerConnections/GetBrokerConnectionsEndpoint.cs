@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Investments.Interfaces;
 using JxFinance.Endpoints.Investments.Shared;
 
@@ -9,7 +10,7 @@ public sealed class GetBrokerConnectionsEndpoint(IBrokerImportService importServ
 {
     public override void Configure()
     {
-        Get("investments/connections");
+        Get(ApiRoutes.Investments + "/connections");
         Group<InvestmentsGroup>();
     }
 

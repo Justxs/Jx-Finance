@@ -1,4 +1,5 @@
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 
 namespace JxFinance.Tests.Unit;
@@ -82,8 +83,8 @@ public sealed class JwtSigningKeyTests : IDisposable
         new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["App:DataProtectionDirectory"] = keyDirectory,
-                ["App:Jwt:SigningKey"] = configuredKey,
+                [ConfigKeys.DataProtectionDirectory] = keyDirectory,
+                [ConfigKeys.JwtSigningKey] = configuredKey,
             })
             .Build();
 }

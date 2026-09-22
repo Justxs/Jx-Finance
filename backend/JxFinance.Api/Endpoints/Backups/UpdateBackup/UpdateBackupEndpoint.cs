@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
@@ -10,7 +11,7 @@ public sealed class UpdateBackupEndpoint(IBackupService backupService) : Endpoin
 {
     public override void Configure()
     {
-        Put("backups/{id}");
+        Put(ApiRoutes.Backups + "/{id}");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));

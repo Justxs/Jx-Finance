@@ -1,3 +1,5 @@
+using JxFinance.Common;
+
 namespace JxFinance.Infrastructure.Auth;
 
 public static class ActiveHousehold
@@ -10,9 +12,9 @@ public static class ActiveHousehold
 
     private static readonly string[] DownloadRoutes =
     [
-        "/api/transactions/export",
-        "/api/transactions/export/pdf",
-        "/api/investments/tax-summary/export",
+        ApiRoutes.TransactionsPath + "/export",
+        ApiRoutes.TransactionsPath + "/export/pdf",
+        ApiRoutes.InvestmentsPath + "/tax-summary/export",
     ];
 
     public static bool TakesQueryScope(PathString path) =>

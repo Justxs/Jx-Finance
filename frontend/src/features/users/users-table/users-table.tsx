@@ -22,9 +22,10 @@ import {
 } from "@/components/ui/table/table";
 import { Tag } from "@/components/ui/tag/tag";
 import { useSearchTable } from "@/hooks/use-search-table";
+import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 
-const roles = ["Member", "Admin"] as const;
+const roles = [UserRole.member, UserRole.admin] as const;
 
 interface Props {
   users: UserProfileResponse[];

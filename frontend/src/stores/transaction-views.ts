@@ -1,15 +1,16 @@
 import { createCollection, localStorageCollectionOptions } from "@tanstack/react-db";
 import { useSyncExternalStore } from "react";
 import { z } from "zod";
-import { Currency } from "@/api/generated/model";
+import { Currency, FlowType } from "@/api/generated/model";
 import { browserStorage } from "@/lib/browser-storage";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
-const SAVED_FILTERS_STORAGE_KEY = "jx-saved-filters";
-const TEMPLATES_STORAGE_KEY = "jx-transaction-templates";
+export const SAVED_FILTERS_STORAGE_KEY = "jx-saved-filters";
+export const TEMPLATES_STORAGE_KEY = "jx-transaction-templates";
 
 export const SAVED_NAME_MAX_LENGTH = 60;
 
-const flowType = z.enum(["income", "expense"]);
+const flowType = z.enum(FlowType);
 
 const savedFilterSchema = z.object({
   id: z.string(),
@@ -39,7 +40,7 @@ const templateSchema = z.object({
     categoryId: z.string().nullable().catch(null),
     type: flowType.catch("expense"),
     amount: z.string().catch(""),
-    currency: z.enum(Currency).catch("eur"),
+    currency: z.enum(Currency).catch(DEFAULT_CURRENCY),
     description: z.string().nullable().catch(null),
     tagIds: z.array(z.string()).catch([]),
     lines: z.array(templateLineSchema).nullable().catch(null),

@@ -3,6 +3,7 @@ import type { ReportComparisonTotals } from "@/api/generated/model";
 import { ChangeBadge } from "@/components/change-badge/change-badge";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { changeOf } from "@/lib/comparison";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 
 interface Props {
   totalIncome: string;
@@ -20,7 +21,7 @@ export function ReportStats({ totalIncome, totalExpense, net, comparison }: Read
       value: totalIncome,
       earlier: comparison?.totalIncome,
       good: "up",
-      tone: "text-income",
+      tone: INCOME_TONE,
       sign: "+",
     },
     {
@@ -28,7 +29,7 @@ export function ReportStats({ totalIncome, totalExpense, net, comparison }: Read
       value: totalExpense,
       earlier: comparison?.totalExpense,
       good: "down",
-      tone: "text-expense",
+      tone: EXPENSE_TONE,
       sign: "−",
     },
     {

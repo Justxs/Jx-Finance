@@ -1,11 +1,12 @@
 import type { ProblemDetails, UserProfileResponse } from "@/api/generated/model";
+import { UserRole } from "@/lib/user-role";
 import { ids } from "./base";
 
 export const currentUser: UserProfileResponse = {
   id: ids.users.ruta,
   email: "ruta.kazlauskiene@example.lt",
   displayName: "Rūta Kazlauskienė",
-  role: "Admin",
+  role: UserRole.admin,
   twoFactorEnabled: false,
   isActive: true,
   emailConfirmed: true,
@@ -21,7 +22,7 @@ export const memberUser: UserProfileResponse = {
   id: ids.users.sarunas,
   email: "sarunas.kazlauskas@example.lt",
   displayName: "Šarūnas Kazlauskas",
-  role: "Member",
+  role: UserRole.member,
   twoFactorEnabled: true,
   isActive: true,
   emailConfirmed: true,
@@ -32,7 +33,7 @@ export const longNameUser: UserProfileResponse = {
   id: ids.users.zygimantas,
   email: "zygimantas.ciurlionis-zemaitaitis.labai.ilgas.adresas@pavyzdine-imone.example.lt",
   displayName: "Žygimantas Augustinas Čiurlionis-Žemaitaitis",
-  role: "Member",
+  role: UserRole.member,
   twoFactorEnabled: false,
   isActive: true,
   emailConfirmed: true,
@@ -43,7 +44,7 @@ export const inactiveUser: UserProfileResponse = {
   id: ids.users.egle,
   email: "egle.butkute@example.lt",
   displayName: "Eglė Butkutė",
-  role: "Member",
+  role: UserRole.member,
   twoFactorEnabled: false,
   isActive: false,
   emailConfirmed: true,

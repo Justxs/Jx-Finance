@@ -13,7 +13,7 @@ public sealed class SubscriptionDismissalConfiguration : IEntityTypeConfiguratio
         builder.Property(d => d.Description).HasMaxLength(SubscriptionDescription.MaxLength);
         builder.HasIndex(d => new { d.UserId, d.AccountId, d.Description })
             .IsUnique()
-            .HasFilter("\"IsDeleted\" = false");
+            .HasFilter(DbSchema.NotDeletedFilter);
         builder.HasOne<Account>().WithMany().HasForeignKey(d => d.AccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

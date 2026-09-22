@@ -24,6 +24,7 @@ import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { EXPENSE_TONE } from "@/lib/tone";
 import { BudgetUsageChart } from "../budget-usage-chart";
 import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
@@ -116,7 +117,7 @@ export function BudgetsPage() {
                       </span>
                     </p>
                     <p
-                      className={`text-xs tabular-nums ${overBudget ? "text-expense" : "text-muted-foreground"}`}
+                      className={`text-xs tabular-nums ${overBudget ? EXPENSE_TONE : "text-muted-foreground"}`}
                     >
                       {overBudget
                         ? t("budgets.over", { amount: money.format(spent - limit) })
@@ -199,7 +200,7 @@ export function BudgetsPage() {
               ? {
                   label: t("budgets.overBy"),
                   value: fromCents(-remainingCents),
-                  tone: "text-expense",
+                  tone: EXPENSE_TONE,
                 }
               : { label: t("budgets.remaining"), value: fromCents(remainingCents) },
           ]}

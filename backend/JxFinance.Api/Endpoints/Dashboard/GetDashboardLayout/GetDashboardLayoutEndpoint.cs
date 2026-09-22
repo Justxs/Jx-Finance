@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Dashboard.Interfaces;
 using JxFinance.Endpoints.Dashboard.Shared;
@@ -10,7 +11,7 @@ public sealed class GetDashboardLayoutEndpoint(IDashboardLayoutService layouts, 
 {
     public override void Configure()
     {
-        Get("users/me/dashboard-layout");
+        Get(ApiRoutes.Users + "/me/dashboard-layout");
         Group<DashboardGroup>();
     }
 

@@ -9,7 +9,7 @@ public sealed class DeleteInvestmentTransactionEndpoint(IInvestmentService inves
 {
     public override void Configure()
     {
-        Delete("investments/transactions/{id}");
+        Delete(ApiRoutes.Investments + "/transactions/{id}");
         Group<InvestmentsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

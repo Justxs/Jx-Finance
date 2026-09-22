@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Auth.Interfaces;
 
@@ -8,7 +9,7 @@ public sealed class ResetPasswordEndpoint(IAccountEmailService accountEmails) : 
 {
     public override void Configure()
     {
-        Post("auth/reset-password");
+        Post(ApiRoutes.Auth + "/reset-password");
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 10, durationSeconds: 300);

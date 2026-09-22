@@ -7,7 +7,7 @@ public abstract class ApiGroup : Group
     protected ApiGroup(string tag, bool requiresAuthentication = true)
     {
         Configure(
-            "api",
+            ApiRoutes.Prefix,
             ep => ep.Description(d =>
             {
                 d.WithTags(tag).ProducesProblemDetails(400);

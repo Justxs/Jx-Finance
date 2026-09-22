@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Users.Interfaces;
@@ -10,7 +11,7 @@ public sealed class DeactivateUserEndpoint(IUserService userService, ICurrentUse
 {
     public override void Configure()
     {
-        Post("users/{id}/deactivate");
+        Post(ApiRoutes.Users + "/{id}/deactivate");
         Group<UsersGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));

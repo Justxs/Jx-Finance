@@ -9,7 +9,7 @@ public sealed class DeleteCategorizationRuleEndpoint(ICategorizationRuleService 
 {
     public override void Configure()
     {
-        Delete("categorization-rules/{id}");
+        Delete(ApiRoutes.CategorizationRules + "/{id}");
         Group<CategorizationRulesGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

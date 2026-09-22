@@ -8,6 +8,7 @@ import type {
   UserProfileResponse,
 } from "@/api/generated/model";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
+import { UserRole } from "@/lib/user-role";
 import { setCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
 import { preferencesCollection } from "@/stores/preferences";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
@@ -24,7 +25,7 @@ const admin: UserProfileResponse = {
   id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
   email: "ruta@example.lt",
   displayName: "Ruta",
-  role: "Admin",
+  role: UserRole.admin,
   twoFactorEnabled: false,
   isActive: true,
   emailConfirmed: true,
@@ -71,7 +72,7 @@ const tags: TagResponse[] = [
   },
 ];
 
-let role: UserProfileResponse["role"] = "Admin";
+let role: UserProfileResponse["role"] = UserRole.admin;
 let features = settingsFixture().features;
 let requested: string[] = [];
 
@@ -126,7 +127,7 @@ function optionNames() {
 
 beforeEach(() => {
   requested = [];
-  role = "Admin";
+  role = UserRole.admin;
   features = settingsFixture().features;
   setSetupNeeded(false);
   setAuthenticated(true);
@@ -252,7 +253,7 @@ test("an administrator is offered the settings sections and a backup", async () 
 });
 
 test("a member is offered neither, and a switched-off feature keeps its pages out", async () => {
-  role = "Member";
+  role = UserRole.member;
   features = { ...features, investments: false };
   const { queryClient } = mount();
   await settled(queryClient);

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.Interfaces;
 using JxFinance.Endpoints.Transactions.Shared;
@@ -10,7 +11,7 @@ public sealed class GetTransactionEndpoint(ITransactionService transactionServic
 {
     public override void Configure()
     {
-        Get("transactions/{id}");
+        Get(ApiRoutes.Transactions + "/{id}");
         Group<TransactionsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

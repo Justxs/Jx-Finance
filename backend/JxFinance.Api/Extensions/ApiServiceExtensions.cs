@@ -33,7 +33,7 @@ public static class ApiServiceExtensions
         builder.Services.RegisterServicesFromJxFinanceApi();
         builder.Services.AddApiOpenApiDocument();
 
-        var connectionString = builder.Configuration.GetConnectionString("Default");
+        var connectionString = builder.Configuration.GetConnectionString(ConfigKeys.DefaultConnectionName);
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException("Connection string 'Default' is not configured.");
@@ -59,7 +59,7 @@ public static class ApiServiceExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
 
-        if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue("App:BackgroundJobs", true))
+        if (!builder.Configuration.GetValue<bool>("export-openapi-docs") && builder.Configuration.GetValue(ConfigKeys.BackgroundJobs, true))
         {
             builder.Services.AddHostedService<RecurringBillReminderJob>();
             builder.Services.AddHostedService<BudgetAlertJob>();

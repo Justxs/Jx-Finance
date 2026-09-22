@@ -14,7 +14,7 @@ public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
         builder.HasIndex(t => t.HouseholdId);
         builder.HasIndex(t => new { t.UserId, t.Name })
             .IsUnique()
-            .HasFilter("\"IsDeleted\" = false");
+            .HasFilter(DbSchema.NotDeletedFilter);
         builder.HasOne<Household>().WithMany().HasForeignKey(t => t.HouseholdId).OnDelete(DeleteBehavior.Restrict);
     }
 }

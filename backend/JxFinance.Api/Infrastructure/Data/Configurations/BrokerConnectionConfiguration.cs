@@ -12,7 +12,7 @@ public sealed class BrokerConnectionConfiguration : IEntityTypeConfiguration<Bro
         builder.Property(c => c.QueryId).HasMaxLength(20);
         builder.Property(c => c.ProtectedToken).HasMaxLength(1000);
         builder.Property(c => c.LastError).HasMaxLength(500);
-        builder.HasIndex(c => c.AccountId).IsUnique().HasFilter("\"IsDeleted\" = false");
+        builder.HasIndex(c => c.AccountId).IsUnique().HasFilter(DbSchema.NotDeletedFilter);
         builder.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

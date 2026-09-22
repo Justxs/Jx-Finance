@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Attachments.Interfaces;
 using JxFinance.Endpoints.Attachments.Shared;
@@ -10,7 +11,7 @@ public sealed class GetAttachmentsEndpoint(IAttachmentService attachmentService)
 {
     public override void Configure()
     {
-        Get("transactions/{transactionId}/attachments");
+        Get(ApiRoutes.Transactions + "/{transactionId}/attachments");
         Group<AttachmentsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

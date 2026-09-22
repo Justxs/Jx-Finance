@@ -22,6 +22,7 @@ import {
 import { useSettings } from "@/hooks/use-settings";
 import { setAuthenticated } from "@/lib/auth-gate";
 import type { ShortcutRouter } from "@/lib/shortcuts";
+import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 import { setLocale, useLocale } from "@/stores/app-store";
@@ -96,7 +97,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
   const entries = buildCommandEntries({
     t,
     features,
-    isAdmin: me.data?.role === "Admin",
+    isAdmin: me.data?.role === UserRole.admin,
     theme,
     locale,
     activeHouseholdId,

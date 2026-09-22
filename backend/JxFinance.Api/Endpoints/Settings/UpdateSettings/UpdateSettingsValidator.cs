@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Localization;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Validation;
 
@@ -8,7 +9,6 @@ namespace JxFinance.Endpoints.Settings.UpdateSettings;
 
 public sealed class UpdateSettingsValidator : Validator<UpdateSettingsRequest>
 {
-    private static readonly string[] Languages = ["en", "lt"];
     private static readonly int[] PageSizes = [10, 20, 50, 100];
 
     public UpdateSettingsValidator()
@@ -19,7 +19,7 @@ public sealed class UpdateSettingsValidator : Validator<UpdateSettingsRequest>
         RuleFor(r => r.EnabledCurrencies).IsPresent();
         RuleForEach(r => r.EnabledCurrencies).IsKnownEnum();
         RuleFor(r => r.DefaultLanguage)
-            .Must(language => Languages.Contains(language))
+            .Must(language => AppLanguages.All.Contains(language))
             .WithErrorCode(ErrorCodes.EnumInvalid)
             .WithMessage("Default language must be en or lt.");
         RuleFor(r => r.TimeZone)

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Logout;
@@ -7,7 +8,7 @@ public sealed class LogoutEndpoint(ISessionService sessionService) : EndpointWit
 {
     public override void Configure()
     {
-        Post("auth/logout");
+        Post(ApiRoutes.Auth + "/logout");
         Group<AuthGroup>();
     }
 

@@ -8,6 +8,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Auth.Sessions;
 using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.WebUtilities;
@@ -240,7 +241,7 @@ public sealed class SessionService(
     {
         HttpOnly = true,
         SameSite = SameSiteMode.Strict,
-        Secure = configuration.GetValue<bool>("App:SecureCookies") || Http.Request.IsHttps,
+        Secure = configuration.GetValue<bool>(ConfigKeys.SecureCookies) || Http.Request.IsHttps,
         Path = path,
         Expires = expires,
         IsEssential = true,

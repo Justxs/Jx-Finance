@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Goals.Interfaces;
 using JxFinance.Endpoints.Goals.Shared;
@@ -9,7 +10,7 @@ public sealed class UpdateGoalEndpoint(IGoalService goalService) : Endpoint<Upda
 {
     public override void Configure()
     {
-        Put("goals/{id}");
+        Put(ApiRoutes.Goals + "/{id}");
         Group<GoalsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

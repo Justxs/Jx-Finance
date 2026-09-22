@@ -1,6 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { useNetWorthHistorySuspense } from "@/api/generated";
-import type { ChartSeries } from "@/components/chart";
+import {
+  CHART_COLOR_NEGATIVE,
+  CHART_COLOR_POSITIVE,
+  CHART_COLOR_PRIMARY,
+  type ChartSeries,
+} from "@/components/chart";
 import { TimeSeriesLineChart } from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 
@@ -14,9 +19,9 @@ export function NetWorthCompositionChart() {
   }
 
   const series: ChartSeries[] = [
-    { key: "accounts", label: t("netWorth.accounts"), color: "var(--chart-1)", shape: "line" },
-    { key: "assets", label: t("netWorth.assets"), color: "var(--chart-2)", shape: "line" },
-    { key: "debts", label: t("netWorth.debts"), color: "var(--chart-3)", shape: "line" },
+    { key: "accounts", label: t("netWorth.accounts"), color: CHART_COLOR_PRIMARY, shape: "line" },
+    { key: "assets", label: t("netWorth.assets"), color: CHART_COLOR_POSITIVE, shape: "line" },
+    { key: "debts", label: t("netWorth.debts"), color: CHART_COLOR_NEGATIVE, shape: "line" },
   ];
 
   return (

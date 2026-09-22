@@ -9,7 +9,7 @@ public sealed class DeleteHouseholdEndpoint(IHouseholdService householdService) 
 {
     public override void Configure()
     {
-        Delete("households/{id}");
+        Delete(ApiRoutes.Households + "/{id}");
         Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

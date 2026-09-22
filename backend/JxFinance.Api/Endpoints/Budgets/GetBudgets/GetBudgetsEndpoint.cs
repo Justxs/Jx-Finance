@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Budgets.Interfaces;
 using JxFinance.Endpoints.Budgets.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetBudgetsEndpoint(IBudgetService budgetService) : EndpointW
 {
     public override void Configure()
     {
-        Get("budgets");
+        Get(ApiRoutes.Budgets);
         Group<BudgetsGroup>();
     }
 

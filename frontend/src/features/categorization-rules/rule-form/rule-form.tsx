@@ -3,12 +3,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useCreateCategorizationRule, useUpdateCategorizationRule } from "@/api/generated";
-import type {
-  AccountResponse,
-  CategorizationRuleResponse,
-  CategoryResponse,
+import {
+  type AccountResponse,
+  type CategorizationRuleResponse,
+  type CategoryResponse,
   DescriptionMatch,
-  TagResponse,
+  type TagResponse,
 } from "@/api/generated/model";
 import { createCategorizationRuleBodyNameMax } from "@/api/schemas/categorization-rules/categorization-rules.zod";
 import { useServerForm } from "@/components/form";
@@ -68,7 +68,7 @@ export function RuleForm({
   const schema = z
     .object({
       name: requiredText(t, createCategorizationRuleBodyNameMax),
-      match: z.enum(["contains", "startsWith", "exact"]),
+      match: z.enum(DescriptionMatch),
       pattern: requiredText(t, PATTERN_MAX),
       accountId: z.string(),
       minAmount: optionalNonNegativeMoney(t),

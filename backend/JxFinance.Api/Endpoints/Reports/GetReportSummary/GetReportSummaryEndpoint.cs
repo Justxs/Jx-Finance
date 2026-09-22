@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Reports.Interfaces;
 using JxFinance.Endpoints.Reports.Shared;
 
@@ -8,7 +9,7 @@ public sealed class GetReportSummaryEndpoint(IReportService reportService) : End
 {
     public override void Configure()
     {
-        Get("reports/summary");
+        Get(ApiRoutes.Reports + "/summary");
         Group<ReportsGroup>();
     }
 

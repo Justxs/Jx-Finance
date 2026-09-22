@@ -12,8 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { useMoney } from "@/hooks/use-formatters";
+import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { gainTone } from "../gain-tone";
 
 interface Props {
   years: readonly PortfolioYear[];

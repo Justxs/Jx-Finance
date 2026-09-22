@@ -6,6 +6,7 @@ import type {
   TagResponse,
 } from "@/api/generated/model";
 import type { Translate, TranslationKey } from "@/lib/i18n";
+import type { RoutePath } from "@/lib/shortcuts";
 
 export const commandGroups = ["actions", "pages", "accounts", "categories", "tags"] as const;
 
@@ -16,7 +17,7 @@ export type CommandTheme = "light" | "dark";
 export type CommandLocale = "en" | "lt";
 
 export type CommandTarget =
-  | { kind: "navigate"; to: string; search?: Record<string, unknown> }
+  | { kind: "navigate"; to: RoutePath; search?: Record<string, unknown> }
   | { kind: "theme"; theme: CommandTheme }
   | { kind: "locale"; locale: CommandLocale }
   | { kind: "household"; householdId: string | undefined }
@@ -36,7 +37,7 @@ type FeatureKey = keyof FeatureFlags;
 
 interface PageCommand {
   id: string;
-  to: string;
+  to: RoutePath;
   search?: Record<string, unknown>;
   labelKey: TranslationKey;
   parentKey?: TranslationKey;
@@ -285,7 +286,7 @@ function recordEntries({ t, accounts, categories, tags }: CommandSources): Comma
   const open = t("commandPalette.openTransactions");
 
   return [
-    ...accounts.map((account) => ({
+    ...accounts.map((account): CommandEntry => ({
       id: `account-${account.id}`,
       group: "accounts" as const,
       label: account.name,
@@ -297,7 +298,7 @@ function recordEntries({ t, accounts, categories, tags }: CommandSources): Comma
         search: { accountId: account.id },
       },
     })),
-    ...categories.map((category) => ({
+    ...categories.map((category): CommandEntry => ({
       id: `category-${category.id}`,
       group: "categories" as const,
       label: category.name,
@@ -309,7 +310,7 @@ function recordEntries({ t, accounts, categories, tags }: CommandSources): Comma
         search: { categoryId: category.id },
       },
     })),
-    ...tags.map((tag) => ({
+    ...tags.map((tag): CommandEntry => ({
       id: `tag-${tag.id}`,
       group: "tags" as const,
       label: tag.name,

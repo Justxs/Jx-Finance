@@ -26,6 +26,7 @@ import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatte
 import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { nameById } from "@/lib/options";
+import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { accountTypes } from "../account-types";
 
@@ -41,7 +42,7 @@ interface Props {
 function balanceClass(account: AccountResponse) {
   return cn(
     "text-right font-semibold tabular-nums",
-    Number(account.currentBalance) < 0 && "text-expense",
+    Number(account.currentBalance) < 0 && EXPENSE_TONE,
   );
 }
 

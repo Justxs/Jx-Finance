@@ -9,7 +9,7 @@ public sealed class DeleteAttachmentEndpoint(IAttachmentService attachmentServic
 {
     public override void Configure()
     {
-        Delete("attachments/{id}");
+        Delete(ApiRoutes.Attachments + "/{id}");
         Group<AttachmentsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

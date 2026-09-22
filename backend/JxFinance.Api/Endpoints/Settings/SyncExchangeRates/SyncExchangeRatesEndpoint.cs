@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
 using JxFinance.Infrastructure.Auth;
@@ -10,7 +11,7 @@ public sealed class SyncExchangeRatesEndpoint(ISettingsService settingsService)
 {
     public override void Configure()
     {
-        Post("settings/exchange-rates/sync");
+        Post(ApiRoutes.Settings + "/exchange-rates/sync");
         Group<SettingsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d.ProducesProblemDetails(403));

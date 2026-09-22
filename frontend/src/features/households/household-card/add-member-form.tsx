@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useAddMember } from "@/api/generated";
-import type { HouseholdRole } from "@/api/generated/model";
+import { HouseholdRole } from "@/api/generated/model";
 import { addMemberBodyEmailMax } from "@/api/schemas/households/households.zod";
 import { useServerForm } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
@@ -26,7 +26,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
       addMemberBodyEmailMax,
       t("validation.maxLength", { max: addMemberBodyEmailMax }),
     ),
-    role: z.enum(["owner", "member"]),
+    role: z.enum(HouseholdRole),
   });
 
   const addMutation = useAddMember({ mutation: { onSuccess: onAdded } });

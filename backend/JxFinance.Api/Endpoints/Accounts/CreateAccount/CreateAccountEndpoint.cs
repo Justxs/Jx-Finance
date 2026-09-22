@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Accounts.GetAccount;
 using JxFinance.Endpoints.Accounts.Interfaces;
@@ -11,9 +13,9 @@ public sealed class CreateAccountEndpoint(IAccountService accountService)
 {
     public override void Configure()
     {
-        Post("accounts");
+        Post(ApiRoutes.Accounts);
         Group<AccountsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<AccountResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<AccountResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateAccountRequest req, CancellationToken ct)

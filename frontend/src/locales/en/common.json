@@ -393,6 +393,7 @@
       "uploaded_other": "{{count}} files attached",
       "download": "Download",
       "remove": "Remove",
+      "removeTitle": "Remove this file?",
       "uploadedBy": "{{name}}, {{date}}",
       "preview": "Preview of {{name}}",
       "loadError": "The files of this transaction could not be loaded.",

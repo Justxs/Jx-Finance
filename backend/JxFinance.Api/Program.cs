@@ -30,7 +30,7 @@ if (demoIndex >= 0)
 }
 
 app.UseApiPipeline();
-await app.ExportOpenApiDocsAndExitAsync("v1");
+await app.ExportOpenApiDocsAndExitAsync(OpenApiExtensions.DocumentName);
 await app.ApplyMigrationsAsync();
 
 await app.RunAsync();

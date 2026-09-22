@@ -9,7 +9,7 @@ public sealed class DeleteCategoryEndpoint(ICategoryService categoryService) : D
 {
     public override void Configure()
     {
-        Delete("categories/{id}");
+        Delete(ApiRoutes.Categories + "/{id}");
         Group<CategoriesGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

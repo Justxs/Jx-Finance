@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text.Json;
+using JxFinance.Common.Formats;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
@@ -657,7 +658,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     {
         null => null,
         Money money => TrashLabel.Amount(money),
-        DateOnly date => date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+        DateOnly date => date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture),
         decimal number => number.ToString("0.########", CultureInfo.InvariantCulture),
         AccountId id => accounts.TryGetValue(id, out var account) ? account.Name : null,
         CategoryId id => categories.GetValueOrDefault(id),

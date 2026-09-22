@@ -10,7 +10,7 @@ public sealed class GetTrashEndpoint(ITrashService trashService)
 {
     public override void Configure()
     {
-        Get("trash");
+        Get(ApiRoutes.Trash);
         Group<TrashGroup>();
     }
 

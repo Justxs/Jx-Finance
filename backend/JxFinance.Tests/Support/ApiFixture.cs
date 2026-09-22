@@ -3,6 +3,7 @@ using FastEndpoints.Testing;
 using JxFinance.Common.Email;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
+using JxFinance.Infrastructure.Configuration;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -43,16 +44,16 @@ public sealed class ApiFixture : AppFixture<Program>
 
     protected override void ConfigureApp(IWebHostBuilder builder)
     {
-        builder.UseSetting("ConnectionStrings:Default", ConnectionString);
-        builder.UseSetting("App:BackgroundJobs", "false");
-        builder.UseSetting("App:DataProtectionDirectory", _keyDirectory);
-        builder.UseSetting("App:BackupDirectory", Path.Combine(_keyDirectory, "backups"));
-        builder.UseSetting("App:AttachmentDirectory", AttachmentDirectory);
+        builder.UseSetting(ConfigKeys.DefaultConnectionSetting, ConnectionString);
+        builder.UseSetting(ConfigKeys.BackgroundJobs, "false");
+        builder.UseSetting(ConfigKeys.DataProtectionDirectory, _keyDirectory);
+        builder.UseSetting(ConfigKeys.BackupDirectory, Path.Combine(_keyDirectory, "backups"));
+        builder.UseSetting(ConfigKeys.AttachmentDirectory, AttachmentDirectory);
         builder.UseSetting("App:BackupMaxDecompressedBytes", BackupMaxDecompressedBytes.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("App:BackupLockTimeoutSeconds", "2");
         builder.UseSetting("App:RevalueBatchSize", "3");
         builder.UseSetting("App:PdfExportMaxRows", PdfExportMaxRows.ToString(System.Globalization.CultureInfo.InvariantCulture));
-        builder.UseSetting("App:ApiDocs", "true");
+        builder.UseSetting(ConfigKeys.ApiDocs, "true");
         builder.UseSetting("App:SiteUrl", SiteUrl);
     }
 

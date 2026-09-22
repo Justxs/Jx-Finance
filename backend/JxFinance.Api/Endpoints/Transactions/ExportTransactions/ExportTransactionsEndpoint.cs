@@ -1,7 +1,9 @@
 using System.Globalization;
+using System.Net.Mime;
 using System.Text;
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Formats;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.Categories.Interfaces;
@@ -22,9 +24,9 @@ public sealed class ExportTransactionsEndpoint(
 
     public override void Configure()
     {
-        Get("transactions/export");
+        Get(ApiRoutes.Transactions + "/export");
         Group<TransactionsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, "text/csv"));
+        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, MediaTypeNames.Text.Csv));
     }
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
@@ -33,7 +35,7 @@ public sealed class ExportTransactionsEndpoint(
 
         HttpContext.MarkResponseStart();
         HttpContext.Response.StatusCode = StatusCodes.Status200OK;
-        HttpContext.Response.ContentType = "text/csv";
+        HttpContext.Response.ContentType = MediaTypeNames.Text.Csv;
         HttpContext.Response.Headers.ContentDisposition = "attachment; filename=transactions.csv";
 
         await using var writer = new StreamWriter(HttpContext.Response.Body, new UTF8Encoding(false), BufferSize, leaveOpen: true);
@@ -66,7 +68,7 @@ public sealed class ExportTransactionsEndpoint(
     {
         var category = transaction.CategoryId is { } categoryId ? names.Categories.GetValueOrDefault(categoryId) : null;
         return CsvCell.Row(
-            CsvCell.Value(transaction.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+            CsvCell.Value(transaction.Date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture)),
             CsvCell.Text(transaction.Description),
             CsvCell.Text(names.Accounts.GetValueOrDefault(transaction.AccountId)),
             CsvCell.Text(category),

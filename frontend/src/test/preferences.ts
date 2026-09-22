@@ -1,6 +1,7 @@
 import { vi } from "vitest";
+import { PREFERENCES_STORAGE_KEY } from "@/stores/preferences";
 
-const STORAGE_KEY = "jx-preferences";
+const STORAGE_KEY = PREFERENCES_STORAGE_KEY;
 const ROW_KEY = "s:browser";
 
 interface StoredRow {

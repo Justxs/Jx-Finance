@@ -1,6 +1,7 @@
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { I18nextProvider } from "react-i18next";
+import { SESSION_EXPIRED_EVENT } from "@/api/client";
 import { getSettingsQueryKey } from "@/api/generated";
 import type { SettingsResponse } from "@/api/generated/model";
 import { RouteError } from "@/components/route-error/route-error";
@@ -42,7 +43,7 @@ function handleSessionExpired() {
   void router.navigate({ to: "/login" });
 }
 
-window.addEventListener("jx:session-expired", handleSessionExpired);
+window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
 function isFeatureOn(feature: FeatureKey) {
   const settings = queryClient.getQueryData<SettingsResponse>(getSettingsQueryKey());
   return settings?.features[feature] ?? true;

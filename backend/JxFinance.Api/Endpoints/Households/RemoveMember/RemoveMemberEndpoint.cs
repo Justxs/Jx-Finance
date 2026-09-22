@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
@@ -9,7 +10,7 @@ public sealed class RemoveMemberEndpoint(IHouseholdService householdService) : E
 {
     public override void Configure()
     {
-        Delete("households/{id}/members/{userId}");
+        Delete(ApiRoutes.Households + "/{id}/members/{userId}");
         Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }

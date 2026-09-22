@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { getTaxSummaryMockHandler } from "@/api/generated/investments/investments.msw";
+import { TAX_SUMMARY_EXPORT_PATH } from "@/lib/export-url";
 import { withPageFrame } from "@/storybook/decorators";
 import { accounts, incompleteTaxSummary } from "@/storybook/fixtures";
 import { errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
@@ -24,7 +25,7 @@ export const Default: Story = {
     await expect(canvas.getByText(/not tax advice/)).toBeVisible();
     await expect(canvas.getByRole("link", { name: /^CSV\./ })).toHaveAttribute(
       "href",
-      "/api/investments/tax-summary/export?year=2026",
+      `${TAX_SUMMARY_EXPORT_PATH}?year=2026`,
     );
     await expect(canvas.getAllByText("MSFT").length).toBeGreaterThan(0);
     await expect(canvas.getAllByText(/2025.+·\s*3\s*·/).length).toBeGreaterThan(0);

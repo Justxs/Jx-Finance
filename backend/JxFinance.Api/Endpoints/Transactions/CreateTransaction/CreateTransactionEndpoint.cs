@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Transactions.GetTransaction;
 using JxFinance.Endpoints.Transactions.Interfaces;
@@ -11,9 +13,9 @@ public sealed class CreateTransactionEndpoint(ITransactionService transactionSer
 {
     public override void Configure()
     {
-        Post("transactions");
+        Post(ApiRoutes.Transactions);
         Group<TransactionsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<TransactionResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<TransactionResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateTransactionRequest req, CancellationToken ct)

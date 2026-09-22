@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Mappers;
@@ -11,7 +12,7 @@ public sealed class UpdateCategorizationRuleEndpoint(ICategorizationRuleService 
 {
     public override void Configure()
     {
-        Put("categorization-rules/{id}");
+        Put(ApiRoutes.CategorizationRules + "/{id}");
         Group<CategorizationRulesGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

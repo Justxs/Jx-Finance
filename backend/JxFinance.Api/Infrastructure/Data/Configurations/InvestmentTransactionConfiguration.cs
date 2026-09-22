@@ -9,7 +9,7 @@ public sealed class InvestmentTransactionConfiguration : IEntityTypeConfiguratio
 {
     public void Configure(EntityTypeBuilder<InvestmentTransaction> builder)
     {
-        builder.ComplexProperty(t => t.CashAmount, money => money.HasColumns("CashAmount", "Currency"));
+        builder.ComplexProperty(t => t.CashAmount, money => money.HasColumns("CashAmount", DbSchema.CurrencyColumn));
         builder.Property(t => t.Quantity).HasPrecision(20, 8);
         builder.Property(t => t.Price).HasPrecision(20, 8);
         builder.Property(t => t.Fee).HasPrecision(18, 2);

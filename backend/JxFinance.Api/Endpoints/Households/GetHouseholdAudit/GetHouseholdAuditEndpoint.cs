@@ -11,7 +11,7 @@ public sealed class GetHouseholdAuditEndpoint(IHouseholdAuditService auditServic
 {
     public override void Configure()
     {
-        Get("households/{id}/audit");
+        Get(ApiRoutes.Households + "/{id}/audit");
         Group<HouseholdsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

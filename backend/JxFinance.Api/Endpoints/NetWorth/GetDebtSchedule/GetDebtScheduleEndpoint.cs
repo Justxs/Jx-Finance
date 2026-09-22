@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Amortization;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
@@ -11,7 +12,7 @@ public sealed class GetDebtScheduleEndpoint(INetWorthService netWorthService) : 
 {
     public override void Configure()
     {
-        Get("debts/{id}/schedule");
+        Get(ApiRoutes.Debts + "/{id}/schedule");
         Group<NetWorthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

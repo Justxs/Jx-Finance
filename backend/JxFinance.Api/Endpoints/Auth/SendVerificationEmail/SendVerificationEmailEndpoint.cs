@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
@@ -10,7 +11,7 @@ public sealed class SendVerificationEmailEndpoint(IAccountEmailService accountEm
 {
     public override void Configure()
     {
-        Post("auth/send-verification-email");
+        Post(ApiRoutes.Auth + "/send-verification-email");
         Group<AuthGroup>();
         Throttle(hitLimit: 5, durationSeconds: 300);
         Description(d => d.Produces(429).ProducesProblemDetails(404));

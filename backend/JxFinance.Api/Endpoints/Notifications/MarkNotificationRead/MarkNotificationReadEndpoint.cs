@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Notifications.Interfaces;
 
@@ -8,7 +9,7 @@ public sealed class MarkNotificationReadEndpoint(INotificationService notificati
 {
     public override void Configure()
     {
-        Patch("notifications/{id}/read");
+        Patch(ApiRoutes.Notifications + "/{id}/read");
         Group<NotificationsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Infrastructure.Auth;
@@ -9,12 +11,12 @@ public sealed class DownloadBackupEndpoint(IBackupService backupService) : Endpo
 {
     public override void Configure()
     {
-        Get("backups/{id}/download");
+        Get(ApiRoutes.Backups + "/{id}/download");
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d
             .ClearDefaultProduces(200)
-            .Produces<byte[]>(200, "application/zip", "application/gzip")
+            .Produces<byte[]>(200, MediaTypeNames.Application.Zip, MediaTypeNames.Application.GZip)
             .ProducesProblemDetails(403)
             .ProducesProblemDetails(404));
     }

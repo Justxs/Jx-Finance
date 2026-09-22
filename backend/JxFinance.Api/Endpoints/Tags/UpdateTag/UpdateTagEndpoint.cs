@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Tags.Interfaces;
 using JxFinance.Endpoints.Tags.Mappers;
@@ -11,7 +12,7 @@ public sealed class UpdateTagEndpoint(ITagService tagService)
 {
     public override void Configure()
     {
-        Put("tags/{id}");
+        Put(ApiRoutes.Tags + "/{id}");
         Group<TagsGroup>();
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }

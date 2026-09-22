@@ -1,4 +1,5 @@
 using JxFinance.Extensions;
+using JxFinance.Infrastructure.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting.Internal;
 
@@ -16,7 +17,7 @@ public sealed class ApiDocsGateTests
     public void Api_docs_are_served_in_development_or_when_switched_on_explicitly(string environment, string? setting, bool expected)
     {
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["App:ApiDocs"] = setting })
+            .AddInMemoryCollection(new Dictionary<string, string?> { [ConfigKeys.ApiDocs] = setting })
             .Build();
 
         var served = ApiPipelineExtensions.ServesApiDocs(configuration, new HostingEnvironment { EnvironmentName = environment });

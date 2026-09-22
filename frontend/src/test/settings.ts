@@ -1,4 +1,5 @@
 import type { SettingsResponse } from "@/api/generated/model";
+import { DEFAULT_CURRENCY } from "@/lib/currency";
 
 export function settingsFixture(overrides: Partial<SettingsResponse> = {}): SettingsResponse {
   return {
@@ -15,7 +16,7 @@ export function settingsFixture(overrides: Partial<SettingsResponse> = {}): Sett
       investments: true,
       categorizationRules: true,
     },
-    reportingCurrency: "eur",
+    reportingCurrency: DEFAULT_CURRENCY,
     enabledCurrencies: ["eur", "usd"],
     exchangeRateSyncEnabled: true,
     ratesAsOf: null,

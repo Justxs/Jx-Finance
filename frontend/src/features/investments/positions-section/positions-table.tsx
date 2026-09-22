@@ -20,8 +20,8 @@ import {
   useQuantityFormat,
   useSignedPercent,
 } from "@/hooks/use-formatters";
+import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
-import { gainTone } from "../gain-tone";
 
 interface Props {
   label: string;

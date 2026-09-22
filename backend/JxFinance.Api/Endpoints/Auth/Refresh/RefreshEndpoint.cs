@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.Refresh;
@@ -7,7 +8,7 @@ public sealed class RefreshEndpoint(ISessionService sessionService) : EndpointWi
 {
     public override void Configure()
     {
-        Post("auth/refresh");
+        Post(ApiRoutes.Auth + "/refresh");
         Group<AuthGroup>();
         AllowAnonymous();
         Throttle(hitLimit: 60, durationSeconds: 300);

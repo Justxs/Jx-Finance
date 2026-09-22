@@ -2,14 +2,21 @@ import { act, renderHook } from "@testing-library/react";
 import { describe, expect, test, vi } from "vitest";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
+import {
+  DEFAULT_FONT,
+  DEFAULT_PALETTE,
+  DEFAULT_TEXT_SIZE,
+  LEGACY_PREFERENCE_KEYS,
+  PREFERENCES_STORAGE_KEY,
+} from "./preferences";
 
 const loadPreferences = await freshModuleLoader(() => import("./preferences"));
 
 const defaults = {
   id: "browser",
-  palette: "ledger",
-  font: "ledger",
-  textSize: "default",
+  palette: DEFAULT_PALETTE,
+  font: DEFAULT_FONT,
+  textSize: DEFAULT_TEXT_SIZE,
   sidebarCollapsed: false,
 };
 
@@ -18,7 +25,7 @@ describe("reading", () => {
     const preferences = await loadPreferences();
 
     expect(preferences.readPreferences()).toEqual(defaults);
-    expect(localStorage.getItem("jx-preferences")).toBeNull();
+    expect(localStorage.getItem(PREFERENCES_STORAGE_KEY)).toBeNull();
   });
 
   test("stored values outside the schema fall back field by field", async () => {
@@ -31,7 +38,7 @@ describe("reading", () => {
 
   test("unreadable JSON gives the defaults", async () => {
     vi.spyOn(console, "warn").mockImplementation(() => {});
-    localStorage.setItem("jx-preferences", "{not json");
+    localStorage.setItem(PREFERENCES_STORAGE_KEY, "{not json");
 
     const preferences = await loadPreferences();
 
@@ -88,7 +95,7 @@ describe("writing", () => {
     act(() => {
       seedPreferences({ palette: "graphite" });
       globalThis.dispatchEvent(
-        new StorageEvent("storage", { key: "jx-preferences", storageArea: localStorage }),
+        new StorageEvent("storage", { key: PREFERENCES_STORAGE_KEY, storageArea: localStorage }),
       );
     });
 
@@ -98,12 +105,12 @@ describe("writing", () => {
 
 describe("migration from the single-value keys", () => {
   test("moves every old key into the row and removes it", async () => {
-    localStorage.setItem("jx-theme", "dark");
-    localStorage.setItem("jx-palette", "plum");
-    localStorage.setItem("jx-font", "plex");
-    localStorage.setItem("jx-text-size", "small");
-    localStorage.setItem("jx-sidebar-collapsed", "true");
-    localStorage.setItem("jx.locale", "lt");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.theme, "dark");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "plum");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.font, "plex");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.textSize, "small");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.sidebarCollapsed, "true");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.locale, "lt");
 
     const preferences = await loadPreferences();
 
@@ -118,13 +125,13 @@ describe("migration from the single-value keys", () => {
     };
     expect(preferences.readPreferences()).toEqual(migrated);
     expect(storedPreferences()).toEqual(migrated);
-    expect(localStorage.getItem("jx-theme")).toBeNull();
-    expect(localStorage.getItem("jx.locale")).toBeNull();
+    expect(localStorage.getItem(LEGACY_PREFERENCE_KEYS.theme)).toBeNull();
+    expect(localStorage.getItem(LEGACY_PREFERENCE_KEYS.locale)).toBeNull();
   });
 
   test("drops old values that are no longer valid", async () => {
-    localStorage.setItem("jx-theme", "neon");
-    localStorage.setItem("jx-palette", "sepia");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.theme, "neon");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "sepia");
 
     const preferences = await loadPreferences();
 
@@ -133,7 +140,7 @@ describe("migration from the single-value keys", () => {
 
   test("an existing row wins over leftover old keys", async () => {
     seedPreferences({ palette: "graphite" });
-    localStorage.setItem("jx-palette", "plum");
+    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "plum");
 
     const preferences = await loadPreferences();
 

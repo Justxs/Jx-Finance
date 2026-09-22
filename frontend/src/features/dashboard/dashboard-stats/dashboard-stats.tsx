@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useDashboardSummarySuspense } from "@/api/generated";
 import { useMoney, usePercent } from "@/hooks/use-formatters";
+import { EXPENSE_TONE, INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 
 export function DashboardStats() {
@@ -16,19 +17,19 @@ export function DashboardStats() {
 
   let netTone = "text-foreground";
   if (net !== 0) {
-    netTone = net > 0 ? "text-income" : "text-expense";
+    netTone = net > 0 ? INCOME_TONE : EXPENSE_TONE;
   }
 
   const rows = [
     {
       label: t("dashboard.monthIncome"),
       value: income === 0 ? money.format(0) : money.formatSigned(income, "+"),
-      tone: income === 0 ? "text-foreground" : "text-income",
+      tone: income === 0 ? "text-foreground" : INCOME_TONE,
     },
     {
       label: t("dashboard.monthExpense"),
       value: expense === 0 ? money.format(0) : money.formatSigned(expense, "−"),
-      tone: expense === 0 ? "text-foreground" : "text-expense",
+      tone: expense === 0 ? "text-foreground" : EXPENSE_TONE,
     },
     {
       label: t("dashboard.monthNet"),

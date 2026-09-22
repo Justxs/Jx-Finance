@@ -10,7 +10,7 @@ public sealed class GetInvestmentTransactionsEndpoint(IInvestmentService investm
 {
     public override void Configure()
     {
-        Get("investments/transactions");
+        Get(ApiRoutes.Investments + "/transactions");
         Group<InvestmentsGroup>();
     }
 

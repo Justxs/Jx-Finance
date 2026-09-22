@@ -4,6 +4,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Formats;
 using JxFinance.Common.References;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
@@ -253,7 +254,7 @@ public sealed class ImportService(
                 continue;
             }
 
-            var date = DateOnly.ParseExact(csv.GetField(2)!.Trim(), "yyyy-MM-dd", CultureInfo.InvariantCulture);
+            var date = DateOnly.ParseExact(csv.GetField(2)!.Trim(), DateFormats.IsoDate, CultureInfo.InvariantCulture);
             var payee = csv.GetField(3)?.Trim();
             var description = csv.GetField(4)?.Trim();
             var amount = decimal.Parse(csv.GetField(5)!.Trim(), NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture);

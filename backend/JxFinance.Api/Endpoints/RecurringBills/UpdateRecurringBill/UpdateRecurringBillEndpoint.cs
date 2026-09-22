@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
 using JxFinance.Endpoints.RecurringBills.Mappers;
@@ -11,7 +12,7 @@ public sealed class UpdateRecurringBillEndpoint(IRecurringBillService recurringB
 {
     public override void Configure()
     {
-        Put("recurring-bills/{id}");
+        Put(ApiRoutes.RecurringBills + "/{id}");
         Group<RecurringBillsGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

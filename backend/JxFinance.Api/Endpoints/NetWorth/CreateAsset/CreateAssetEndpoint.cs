@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
@@ -9,14 +11,14 @@ public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endp
 {
     public override void Configure()
     {
-        Post("assets");
+        Post(ApiRoutes.Assets);
         Group<NetWorthGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<AssetResponse>(201, "application/json"));
+        Description(d => d.ClearDefaultProduces(200).Produces<AssetResponse>(201, MediaTypeNames.Application.Json));
     }
 
     public override async Task HandleAsync(CreateAssetRequest req, CancellationToken ct)
     {
         var asset = Map.FromEntity(await netWorthService.CreateAssetAsync(Map.ToEntity(req), ct));
-        await Send.ResultAsync(TypedResults.Created($"/api/assets/{asset.Id}", asset));
+        await Send.ResultAsync(TypedResults.Created($"{ApiRoutes.AssetsPath}/{asset.Id}", asset));
     }
 }

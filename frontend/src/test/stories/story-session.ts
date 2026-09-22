@@ -1,6 +1,7 @@
 import { composeStories, setProjectAnnotations } from "@storybook/react-vite";
 import { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
+import { composeStory } from "storybook/preview-api";
 import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
 import { preferencesCollection } from "@/stores/preferences";
 import { mockWorkerLoader, warnAboutUnhandledRequest } from "../../../.storybook/mock-worker";
@@ -26,6 +27,8 @@ export const BROWSER_ONLY_TAG = "browser-only";
 
 const PREFERENCES_ROW = "browser";
 const server = setupServer();
+const teardownStory = composeStory({}, { title: "Teardown", render: () => null }, {}, {});
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -86,7 +89,6 @@ function resetPreferences() {
 
 export async function registerStoryTests(storyFiles: readonly StoryFile[]) {
   const files = await Promise.all(storyFiles.map(composeFile));
-  let mounted: ComposedStory | undefined;
 
   beforeAll(async () => {
     server.listen({ onUnhandledRequest: warnAboutUnhandledRequest });
@@ -94,13 +96,13 @@ export async function registerStoryTests(storyFiles: readonly StoryFile[]) {
   });
 
   afterEach(async () => {
-    await mounted?.load();
-    mounted = undefined;
+    await teardownStory.load();
     server.resetHandlers();
     resetPreferences();
   });
 
-  afterAll(() => {
+  afterAll(async () => {
+    await teardownStory.load();
     server.close();
   });
 
@@ -108,7 +110,6 @@ export async function registerStoryTests(storyFiles: readonly StoryFile[]) {
     describe(path.replace(/^\/src\//u, ""), () => {
       for (const story of stories) {
         it.skipIf(story.tags.includes(BROWSER_ONLY_TAG))(story.storyName, async () => {
-          mounted = story;
           await story.run();
           await expectNoAccessibilityViolations(story.parameters.a11y);
         });

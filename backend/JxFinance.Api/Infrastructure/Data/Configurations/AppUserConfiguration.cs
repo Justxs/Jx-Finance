@@ -20,7 +20,7 @@ public sealed class AppUserConfiguration : IEntityTypeConfiguration<AppUser>
     {
         builder.Property(u => u.DisplayName).HasMaxLength(100);
         builder.Property(u => u.DashboardLayout)
-            .HasColumnType("jsonb")
+            .HasColumnType(DbSchema.Json)
             .HasConversion(
                 layout => JsonSerializer.Serialize(layout, LayoutJson),
                 json => JsonSerializer.Deserialize<DashboardLayout>(json, LayoutJson),

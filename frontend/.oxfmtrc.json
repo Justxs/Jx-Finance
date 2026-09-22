@@ -26,7 +26,6 @@
   "ignorePatterns": [
     "openapi.json",
     "**/route-tree.gen.ts",
-    "public/mockServiceWorker.js",
     ".storybook/public",
     "storybook-static",
     "dist"

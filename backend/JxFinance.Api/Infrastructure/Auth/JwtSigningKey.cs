@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using JxFinance.Infrastructure.Configuration;
 
 namespace JxFinance.Infrastructure.Auth;
 
@@ -8,11 +9,11 @@ public sealed record JwtSigningKey(string Value)
 
     public static JwtSigningKey Resolve(IConfiguration configuration)
     {
-        var configured = configuration["App:Jwt:SigningKey"];
+        var configured = configuration[ConfigKeys.JwtSigningKey];
         if (!string.IsNullOrWhiteSpace(configured))
             return new JwtSigningKey(configured);
 
-        var directory = configuration["App:DataProtectionDirectory"];
+        var directory = configuration[ConfigKeys.DataProtectionDirectory];
         if (string.IsNullOrWhiteSpace(directory))
             return new JwtSigningKey(Generate());
 

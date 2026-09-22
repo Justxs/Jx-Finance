@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, tags } from "@/storybook/fixtures";
 import { TransactionsToolbar } from "./transactions-toolbar";
@@ -11,8 +12,8 @@ const meta = {
     accounts,
     categories,
     tags,
-    exportUrl: "/api/transactions/export",
-    exportPdfUrl: "/api/transactions/export/pdf",
+    exportUrl: TRANSACTIONS_EXPORT_CSV_PATH,
+    exportPdfUrl: TRANSACTIONS_EXPORT_PDF_PATH,
     filtered: false,
     onClearFilters: fn(),
     onUseTemplate: fn(),
@@ -29,8 +30,8 @@ export const Default: Story = {};
 export const Filtered: Story = {
   args: {
     filtered: true,
-    exportUrl: "/api/transactions/export?type=expense",
-    exportPdfUrl: "/api/transactions/export/pdf?type=expense",
+    exportUrl: `${TRANSACTIONS_EXPORT_CSV_PATH}?type=expense`,
+    exportPdfUrl: `${TRANSACTIONS_EXPORT_PDF_PATH}?type=expense`,
   },
 };
 

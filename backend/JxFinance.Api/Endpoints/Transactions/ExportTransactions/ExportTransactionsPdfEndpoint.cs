@@ -1,4 +1,6 @@
+using System.Net.Mime;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
 using JxFinance.Endpoints.Accounts.Interfaces;
@@ -18,9 +20,9 @@ public sealed class ExportTransactionsPdfEndpoint(
 {
     public override void Configure()
     {
-        Get("transactions/export/pdf");
+        Get(ApiRoutes.Transactions + "/export/pdf");
         Group<TransactionsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, "application/pdf"));
+        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, MediaTypeNames.Application.Pdf));
     }
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
@@ -34,6 +36,6 @@ public sealed class ExportTransactionsPdfEndpoint(
             req.DateFrom,
             req.DateTo,
             settings.Current.ReportingCurrency).GeneratePdf();
-        await Send.BytesAsync(pdf, "transactions.pdf", "application/pdf", cancellation: ct);
+        await Send.BytesAsync(pdf, "transactions.pdf", MediaTypeNames.Application.Pdf, cancellation: ct);
     }
 }

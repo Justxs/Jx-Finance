@@ -9,7 +9,7 @@ public sealed class DeleteAssetEndpoint(INetWorthService netWorthService) : Dele
 {
     public override void Configure()
     {
-        Delete("assets/{id}");
+        Delete(ApiRoutes.Assets + "/{id}");
         Group<NetWorthGroup>();
         Description(d => d.ProducesProblemDetails(404));
     }

@@ -10,14 +10,15 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silent } from "@/lib/mutations";
+import { UserRole } from "@/lib/user-role";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
 
-const roles = ["Member", "Admin"] as const;
+const roles = [UserRole.member, UserRole.admin] as const;
 
 interface FormValues {
   email: string;
   displayName: string;
-  role: (typeof roles)[number];
+  role: UserRole;
   password: string;
 }
 
@@ -41,7 +42,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
   const defaultValues: FormValues = {
     email: "",
     displayName: "",
-    role: "Member",
+    role: UserRole.member,
     password: "",
   };
 

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Endpoints.Notifications.Interfaces;
 
 namespace JxFinance.Endpoints.Notifications.MarkAllNotificationsRead;
@@ -8,7 +9,7 @@ public sealed class MarkAllNotificationsReadEndpoint(INotificationService notifi
 {
     public override void Configure()
     {
-        Post("notifications/read-all");
+        Post(ApiRoutes.Notifications + "/read-all");
         Group<NotificationsGroup>();
     }
 

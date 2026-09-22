@@ -169,19 +169,19 @@ public sealed class BackupReader(IBackupVisitor visitor)
         var token = reader.TokenType;
         switch (property)
         {
-            case "format" when token == JsonTokenType.String:
+            case BackupJsonNames.Format when token == JsonTokenType.String:
                 format = reader.GetString();
                 break;
-            case "version" when token == JsonTokenType.Number && reader.TryGetInt32(out var number):
+            case BackupJsonNames.Version when token == JsonTokenType.Number && reader.TryGetInt32(out var number):
                 version = number;
                 break;
-            case "createdAt" when token == JsonTokenType.String && reader.TryGetDateTimeOffset(out var moment):
+            case BackupJsonNames.CreatedAt when token == JsonTokenType.String && reader.TryGetDateTimeOffset(out var moment):
                 createdAt = moment;
                 break;
-            case "migration" when token is JsonTokenType.String or JsonTokenType.Null:
+            case BackupJsonNames.Migration when token is JsonTokenType.String or JsonTokenType.Null:
                 migration = reader.GetString();
                 break;
-            case "tables" when token == JsonTokenType.StartArray && !tablesSeen && version is { } known && createdAt is { } taken:
+            case BackupJsonNames.Tables when token == JsonTokenType.StartArray && !tablesSeen && version is { } known && createdAt is { } taken:
                 tablesSeen = true;
                 steps.Add(new Step(StepKind.Begin, Header: new BackupHeader(format, known, taken, migration)));
                 position = Position.Tables;
@@ -198,15 +198,15 @@ public sealed class BackupReader(IBackupVisitor visitor)
         var token = reader.TokenType;
         switch (property)
         {
-            case "name" when token == JsonTokenType.String:
+            case BackupJsonNames.Name when token == JsonTokenType.String:
                 tableName = reader.GetString();
                 position = Position.Table;
                 break;
-            case "columns" when token == JsonTokenType.StartArray && columns is null:
+            case BackupJsonNames.Columns when token == JsonTokenType.StartArray && columns is null:
                 columns = [];
                 position = Position.Columns;
                 break;
-            case "rows" when token == JsonTokenType.StartArray && !rowsSeen && tableName is not null && columns is not null:
+            case BackupJsonNames.Rows when token == JsonTokenType.StartArray && !rowsSeen && tableName is not null && columns is not null:
                 steps.Add(new Step(StepKind.BeginTable, Name: tableName, Columns: columns));
                 position = Position.Rows;
                 break;
