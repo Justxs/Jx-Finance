@@ -1,6 +1,4 @@
 using FastEndpoints;
-using FluentValidation;
-using FluentValidation.Results;
 using JxFinance.Common.Errors;
 using JxFinance.Domain.Common;
 
@@ -22,12 +20,7 @@ public static class ResultResponses
         CancellationToken ct)
         where TRequest : notnull
     {
-        send.ValidationFailures.Add(
-            new ValidationFailure(ProblemResponses.GeneralErrorsField, error.Message)
-            {
-                ErrorCode = error.Code,
-                Severity = Severity.Error,
-            });
+        send.ValidationFailures.Add(ProblemResponses.FromDomainError(error));
         return send.ErrorsAsync(statusCode, ct);
     }
 

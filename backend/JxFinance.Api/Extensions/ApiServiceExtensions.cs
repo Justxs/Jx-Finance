@@ -22,7 +22,6 @@ public static class ApiServiceExtensions
         builder.Host.UseSerilog();
         builder.AddTelemetry();
 
-        builder.Services.AddProblemDetails();
         builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(
             form => form.MultipartBodyLengthLimit = UploadBackupEndpoint.MaxFileBytes + (1024 * 1024));
         builder.Services.AddFastEndpoints(DiscoveredTypes.All);

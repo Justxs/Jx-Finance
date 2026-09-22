@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
@@ -127,9 +126,7 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
 
             foreach (var response in new[] { list, create, delete })
             {
-                Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-                var problem = await response.Content.ReadFromJsonAsync<JsonElement>();
-                Assert.Equal("feature.disabled", problem.GetProperty("code").GetString());
+                await AssertProblemAsync(response, HttpStatusCode.NotFound, "feature.disabled");
             }
         }
         finally
