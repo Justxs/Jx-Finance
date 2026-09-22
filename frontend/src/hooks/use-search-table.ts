@@ -1,4 +1,4 @@
-import { nextSortDirection, type SortDirection } from "@/components/ui/column-header/column-header";
+import { nextSortDirection, type SortDirection } from "@/lib/sort";
 
 interface SortSearch {
   sort?: string;

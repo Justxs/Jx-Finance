@@ -1,7 +1,12 @@
 import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import {
+  type AccountResponse,
+  type CategoryResponse,
+  type TagResponse,
+  TransactionSortField,
+} from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field/select-field";
@@ -10,14 +15,12 @@ import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-pi
 import { Input } from "@/components/ui/input/input";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
+import type { SortDirection } from "@/lib/sort";
 import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
-const SORT_FIELDS = ["date", "description", "category", "account", "amount"] as const;
 const SEARCH_DEBOUNCE_MS = 300;
 
-type SortField = (typeof SORT_FIELDS)[number];
-type SortDirection = "asc" | "desc";
-type SortValue = `${SortField}:${SortDirection}`;
+type SortValue = `${TransactionSortField}:${SortDirection}`;
 
 interface Props {
   accounts: AccountResponse[];
@@ -49,7 +52,7 @@ export function TransactionsFiltersDialog({
     filters.clearFilters();
   }
 
-  const columnLabels: Record<SortField, string> = {
+  const columnLabels: Record<TransactionSortField, string> = {
     date: t("transactions.date"),
     description: t("transactions.description"),
     category: t("transactions.category"),
@@ -57,7 +60,7 @@ export function TransactionsFiltersDialog({
     amount: t("transactions.amount"),
   };
 
-  const sortOptions = SORT_FIELDS.flatMap((field) => [
+  const sortOptions = Object.values(TransactionSortField).flatMap((field) => [
     {
       sort: field,
       direction: "desc" as const,

@@ -15,12 +15,13 @@ import {
 import { InvestmentsPage } from "@/features/investments/investments-page/investments-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { warm } from "@/lib/route-prefetch";
+import { optionalParam } from "@/lib/search-schema";
 
 export const investmentsSearchSchema = z.object({
-  accountId: z.uuid().optional().catch(undefined),
-  view: z.enum(["portfolio", "taxSummary"]).optional().catch(undefined),
-  taxYear: z.coerce.number().int().min(1900).max(2999).optional().catch(undefined),
-  taxAccounts: z.string().max(2000).optional().catch(undefined),
+  accountId: optionalParam(z.uuid()),
+  view: optionalParam(z.enum(["portfolio", "taxSummary"])),
+  taxYear: optionalParam(z.coerce.number().int().min(1900).max(2999)),
+  taxAccounts: optionalParam(z.string().max(2000)),
 });
 
 const requireInvestments = requireFeature("investments");

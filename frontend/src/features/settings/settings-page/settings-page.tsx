@@ -10,9 +10,9 @@ import {
   useUpdateSettings,
 } from "@/api/generated";
 import { FontPicker } from "@/components/font-picker/font-picker";
-import { PageHeader } from "@/components/page-header/page-header";
 import { PalettePicker } from "@/components/palette-picker/palette-picker";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
+import { SectionLayout } from "@/components/section-layout/section-layout";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
@@ -109,25 +109,23 @@ export function SettingsPage() {
   const section = sections.find((item) => item === search.section) ?? "general";
 
   return (
-    <div className="space-y-5">
-      <PageHeader title={t("settings.title")} description={t("settings.description")} />
-      <div className="grid gap-x-8 gap-y-4 lg:grid-cols-[13rem_minmax(0,1fr)]">
-        <SettingsNav current={section} sections={sections} />
-        <div className="min-w-0 space-y-5">
-          <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-            <SettingsContent section={section} />
-          </QueryBoundary>
-          {section === "email" ? <SmtpSection /> : null}
-          {section === "import" ? <ImportDataSection /> : null}
-          {section === "backups" ? <BackupSection /> : null}
-          {section === "appearance" ? (
-            <>
-              <PalettePicker />
-              <FontPicker />
-            </>
-          ) : null}
-        </div>
-      </div>
-    </div>
+    <SectionLayout
+      title={t("settings.title")}
+      description={t("settings.description")}
+      nav={<SettingsNav current={section} sections={sections} />}
+    >
+      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
+        <SettingsContent section={section} />
+      </QueryBoundary>
+      {section === "email" ? <SmtpSection /> : null}
+      {section === "import" ? <ImportDataSection /> : null}
+      {section === "backups" ? <BackupSection /> : null}
+      {section === "appearance" ? (
+        <>
+          <PalettePicker />
+          <FontPicker />
+        </>
+      ) : null}
+    </SectionLayout>
   );
 }

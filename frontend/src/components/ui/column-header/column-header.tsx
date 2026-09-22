@@ -3,11 +3,8 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { TableHead } from "@/components/ui/table/table";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { ariaSortFor, nextSortDirection, type SortDirection } from "@/lib/sort";
 import { cn } from "@/lib/utils";
-
-export type SortDirection = "asc" | "desc";
-
-export type AriaSort = "ascending" | "descending" | undefined;
 
 interface Props<K extends string> {
   label: string;
@@ -16,26 +13,6 @@ interface Props<K extends string> {
   direction?: SortDirection;
   onSort?: (key: K) => void;
   filter?: ReactNode;
-}
-
-export function nextSortDirection<K extends string>(
-  sortKey: K | undefined,
-  activeSort: K | undefined,
-  direction: SortDirection | undefined,
-): SortDirection {
-  return sortKey !== undefined && activeSort === sortKey && direction === "asc" ? "desc" : "asc";
-}
-
-export function ariaSortFor<K extends string>(
-  sortKey: K | undefined,
-  activeSort: K | undefined,
-  direction: SortDirection | undefined,
-): AriaSort {
-  if (sortKey === undefined || activeSort !== sortKey) {
-    return undefined;
-  }
-
-  return direction === "desc" ? "descending" : "ascending";
 }
 
 export function ColumnHeader<K extends string>({

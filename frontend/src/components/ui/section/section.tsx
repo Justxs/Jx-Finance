@@ -1,8 +1,8 @@
 import type { ComponentProps, ReactNode } from "react";
-import { type PolymorphicProps, rendersAs } from "@/lib/polymorphic";
+import { type PolymorphicProps, splitAs } from "@/lib/polymorphic";
 import { cn } from "@/lib/utils";
-import { Rows } from "../rows/rows";
-import { SplitColumns } from "../split-columns/split-columns";
+import type { Rows } from "../rows/rows";
+import type { SplitColumns } from "../split-columns/split-columns";
 
 const surface =
   "min-w-0 rounded-lg bg-muted/50 p-5 sm:p-6 dark:bg-card [:is([data-surface],[role=dialog])_&]:rounded-none [:is([data-surface],[role=dialog])_&]:bg-transparent [:is([data-surface],[role=dialog])_&]:p-0 dark:[:is([data-surface],[role=dialog])_&]:bg-transparent";
@@ -12,22 +12,7 @@ type PanelProps = PolymorphicProps<"div", "section" | typeof Rows | typeof Split
 export function Panel({ className, ...props }: Readonly<PanelProps>) {
   const slot = { "data-slot": "panel", "data-surface": "", className: cn(surface, className) };
 
-  if (rendersAs(props, Rows)) {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  if (rendersAs(props, SplitColumns)) {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  if (props.as === "section") {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  const { as: Component = "div", ...rest } = props;
+  const { Component, rest } = splitAs(props, "div");
   return <Component {...slot} {...rest} />;
 }
 
@@ -36,17 +21,7 @@ type SectionProps = PolymorphicProps<"section", "div" | "form">;
 export function Section({ className, ...props }: Readonly<SectionProps>) {
   const slot = { "data-slot": "section", "data-surface": "", className: cn(surface, className) };
 
-  if (props.as === "div") {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  if (props.as === "form") {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  const { as: Component = "section", ...rest } = props;
+  const { Component, rest } = splitAs(props, "section");
   return <Component {...slot} {...rest} />;
 }
 

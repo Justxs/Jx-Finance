@@ -1,4 +1,4 @@
-import type { PolymorphicProps } from "@/lib/polymorphic";
+import { type PolymorphicProps, splitAs } from "@/lib/polymorphic";
 import { cn } from "@/lib/utils";
 
 type Props = PolymorphicProps<"div", "form">;
@@ -12,11 +12,6 @@ export function FormGrid({ className, ...props }: Readonly<Props>) {
     ),
   };
 
-  if (props.as === "form") {
-    const { as: Component, ...rest } = props;
-    return <Component {...slot} {...rest} />;
-  }
-
-  const { as: Component = "div", ...rest } = props;
+  const { Component, rest } = splitAs(props, "div");
   return <Component {...slot} {...rest} />;
 }

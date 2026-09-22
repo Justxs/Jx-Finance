@@ -3,14 +3,11 @@ import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
-import {
-  type AriaSort,
-  ariaSortFor,
-  ColumnHeader,
-} from "@/components/ui/column-header/column-header";
+import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
+import { type AriaSort, ariaSortFor } from "@/lib/sort";
 import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
