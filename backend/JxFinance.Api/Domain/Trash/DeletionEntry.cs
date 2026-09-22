@@ -27,5 +27,9 @@ public sealed class DeletionEntry : OwnableEntity
     public IReadOnlyList<Guid> Remembered(DeletionChangeKind kind) =>
         [.. Changes.Where(c => c.Kind == kind).Select(c => c.RowId)];
 
+    public IReadOnlyList<TId> Remembered<TId>(DeletionChangeKind kind)
+        where TId : struct, IStronglyTypedId<TId> =>
+        [.. Changes.Where(c => c.Kind == kind).Select(c => TId.From(c.RowId))];
+
     public static DateTimeOffset WindowStart(DateTimeOffset now) => now.AddDays(-RetentionDays);
 }
