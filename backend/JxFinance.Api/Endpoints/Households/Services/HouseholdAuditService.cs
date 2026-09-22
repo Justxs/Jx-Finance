@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
@@ -17,7 +16,7 @@ namespace JxFinance.Endpoints.Households.Services;
 public sealed class HouseholdAuditService(AppDbContext db, ICurrentUser currentUser, IClock clock)
     : IHouseholdAuditService
 {
-    private static readonly DomainError NotFound = new(ErrorCodes.ResourceNotFound, "Household not found.");
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Household not found.");
 
     public async Task<Result<PagedResponse<AuditEventResponse>>> GetPageAsync(
         GetHouseholdAuditRequest request,

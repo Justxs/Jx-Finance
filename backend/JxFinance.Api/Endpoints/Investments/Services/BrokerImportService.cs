@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Transfers;
@@ -157,10 +158,10 @@ public sealed class BrokerImportService(
     public async Task<Result<Guid>> DeleteConnectionAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var account = new AccountId(accountId);
-        var connection = await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken);
-        if (connection is null)
+        var found = await db.BrokerConnections.FindOrNotFoundAsync(c => c.AccountId == account, "Connection not found.", cancellationToken);
+        if (!found.TryGetValue(out var connection))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Connection not found.");
+            return found.Error;
         }
 
         connection.ProtectedToken = string.Empty;
@@ -173,10 +174,10 @@ public sealed class BrokerImportService(
     public async Task<Result<BrokerImportResponse>> SyncAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var account = new AccountId(accountId);
-        var connection = await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken);
-        if (connection is null)
+        var found = await db.BrokerConnections.FindOrNotFoundAsync(c => c.AccountId == account, "Connection not found.", cancellationToken);
+        if (!found.TryGetValue(out var connection))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Connection not found.");
+            return found.Error;
         }
 
         var result = await DownloadAndImportAsync(connection, cancellationToken);

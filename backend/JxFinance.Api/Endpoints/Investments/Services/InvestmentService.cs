@@ -218,10 +218,10 @@ public sealed class InvestmentService(
         CancellationToken cancellationToken)
     {
         var transactionId = new InvestmentTransactionId(request.Id);
-        var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (transaction is null)
+        var found = await db.InvestmentTransactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Investment transaction not found.", cancellationToken);
+        if (!found.TryGetValue(out var transaction))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
+            return found.Error;
         }
 
         if (transaction.Source != InvestmentSource.Manual)
@@ -325,10 +325,10 @@ public sealed class InvestmentService(
     public async Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new InvestmentTransactionId(id);
-        var transaction = await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (transaction is null)
+        var found = await db.InvestmentTransactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Investment transaction not found.", cancellationToken);
+        if (!found.TryGetValue(out var transaction))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Investment transaction not found.");
+            return found.Error;
         }
 
         if (transaction.SecurityId is { } securityId
@@ -396,10 +396,10 @@ public sealed class InvestmentService(
     {
         var id = new SecurityId(request.Id);
         var symbol = request.Symbol.Trim().ToUpperInvariant();
-        var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-        if (security is null)
+        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, "Security not found.", cancellationToken);
+        if (!found.TryGetValue(out var security))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
+            return found.Error;
         }
 
         if (await db.Securities.AnyAsync(s => s.Id != id && s.Symbol == symbol && s.Currency == request.Currency, cancellationToken))

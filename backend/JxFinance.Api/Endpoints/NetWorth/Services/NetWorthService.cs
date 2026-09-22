@@ -87,10 +87,10 @@ public sealed class NetWorthService(
     public async Task<Result<DebtScheduleResponse>> GetDebtScheduleAsync(Guid id, ExtraPayments extra, CancellationToken cancellationToken)
     {
         var debtId = new DebtId(id);
-        var debt = await db.Debts.AsNoTracking().FirstOrDefaultAsync(d => d.Id == debtId, cancellationToken);
-        if (debt is null)
+        var found = await db.Debts.AsNoTracking().FindOrNotFoundAsync(d => d.Id == debtId, DebtNotFound, cancellationToken);
+        if (!found.TryGetValue(out var debt))
         {
-            return Result<DebtScheduleResponse>.Failure(ErrorCodes.ResourceNotFound, DebtNotFound);
+            return found.Error;
         }
 
         if (AmortizationTerms.From(debt) is not { } terms)

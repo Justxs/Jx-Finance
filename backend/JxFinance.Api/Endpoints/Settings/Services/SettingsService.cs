@@ -157,7 +157,7 @@ public sealed class SettingsService(
     {
         if (await authService.FindByIdAsync(currentUser.Id, cancellationToken) is not { Email: { } address } administrator)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return EntityLookup.NotFound("User not found.");
         }
 
         var settings = store.Current;

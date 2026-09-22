@@ -8,6 +8,8 @@ namespace JxFinance.Common;
 
 public static class EntityLookup
 {
+    public static DomainError NotFound(string message) => new(ErrorCodes.ResourceNotFound, message);
+
     public static async Task<Result<T>> FindOrNotFoundAsync<T>(
         this IQueryable<T> query,
         Expression<Func<T, bool>> predicate,
@@ -18,7 +20,7 @@ public static class EntityLookup
         var entity = await query.FirstOrDefaultAsync(predicate, cancellationToken);
         if (entity is null)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, message);
+            return NotFound(message);
         }
 
         return entity;

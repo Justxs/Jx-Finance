@@ -145,11 +145,13 @@ public sealed class HouseholdService(
             return owned.Error;
         }
 
-        var membership = await db.HouseholdMemberships
-            .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == request.UserId, cancellationToken);
-        if (membership is null)
+        var found = await db.HouseholdMemberships.FindOrNotFoundAsync(
+            m => m.HouseholdId == household.Id && m.UserId == request.UserId,
+            "Membership not found.",
+            cancellationToken);
+        if (!found.TryGetValue(out var membership))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Membership not found.");
+            return found.Error;
         }
 
         if (membership.Role == HouseholdRole.Owner
@@ -178,11 +180,13 @@ public sealed class HouseholdService(
             return owned.Error;
         }
 
-        var membership = await db.HouseholdMemberships
-            .FirstOrDefaultAsync(m => m.HouseholdId == household.Id && m.UserId == userId, cancellationToken);
-        if (membership is null)
+        var found = await db.HouseholdMemberships.FindOrNotFoundAsync(
+            m => m.HouseholdId == household.Id && m.UserId == userId,
+            "Membership not found.",
+            cancellationToken);
+        if (!found.TryGetValue(out var membership))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Membership not found.");
+            return found.Error;
         }
 
         if (membership.Role == HouseholdRole.Owner

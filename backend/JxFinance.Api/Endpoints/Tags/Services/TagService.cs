@@ -34,10 +34,10 @@ public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDelet
     public async Task<Result<Tag>> UpdateAsync(Guid id, Action<Tag> apply, CancellationToken cancellationToken)
     {
         var tagId = new TagId(id);
-        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken);
-        if (tag is null)
+        var found = await db.Tags.FindOrNotFoundAsync(t => t.Id == tagId, "Tag not found.", cancellationToken);
+        if (!found.TryGetValue(out var tag))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Tag not found.");
+            return found.Error;
         }
 
         var (previousScope, previousHouseholdId) = (tag.Scope, tag.HouseholdId);
@@ -63,10 +63,10 @@ public sealed class TagService(AppDbContext db, ICurrentUser currentUser, IDelet
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var tagId = new TagId(id);
-        var tag = await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken);
-        if (tag is null)
+        var found = await db.Tags.FindOrNotFoundAsync(t => t.Id == tagId, "Tag not found.", cancellationToken);
+        if (!found.TryGetValue(out var tag))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Tag not found.");
+            return found.Error;
         }
 
         if (tag.UserId != currentUser.Id)

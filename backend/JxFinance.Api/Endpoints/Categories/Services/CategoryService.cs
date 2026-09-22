@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Categories;
@@ -41,10 +42,10 @@ public sealed class CategoryService(
     public async Task<Result<Category>> UpdateAsync(Guid id, Action<Category> apply, CancellationToken cancellationToken)
     {
         var categoryId = new CategoryId(id);
-        var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
-        if (category is null)
+        var found = await db.Categories.FindOrNotFoundAsync(c => c.Id == categoryId, "Category not found.", cancellationToken);
+        if (!found.TryGetValue(out var category))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Category not found.");
+            return found.Error;
         }
 
         var (previousScope, previousHouseholdId) = (category.Scope, category.HouseholdId);
@@ -88,10 +89,10 @@ public sealed class CategoryService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var categoryId = new CategoryId(id);
-        var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == categoryId, cancellationToken);
-        if (category is null)
+        var found = await db.Categories.FindOrNotFoundAsync(c => c.Id == categoryId, "Category not found.", cancellationToken);
+        if (!found.TryGetValue(out var category))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Category not found.");
+            return found.Error;
         }
 
         if (category.UserId != currentUser.Id)

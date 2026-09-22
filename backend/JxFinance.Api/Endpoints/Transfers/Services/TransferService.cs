@@ -76,10 +76,10 @@ public sealed class TransferService(
         CancellationToken cancellationToken)
     {
         var transferId = new TransferId(request.Id);
-        var transfer = await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken);
-        if (transfer is null)
+        var found = await db.Transfers.FindOrNotFoundAsync(t => t.Id == transferId, "Transfer not found.", cancellationToken);
+        if (!found.TryGetValue(out var transfer))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transfer not found.");
+            return found.Error;
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))
@@ -127,10 +127,10 @@ public sealed class TransferService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transferId = new TransferId(id);
-        var transfer = await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken);
-        if (transfer is null)
+        var found = await db.Transfers.FindOrNotFoundAsync(t => t.Id == transferId, "Transfer not found.", cancellationToken);
+        if (!found.TryGetValue(out var transfer))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transfer not found.");
+            return found.Error;
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))

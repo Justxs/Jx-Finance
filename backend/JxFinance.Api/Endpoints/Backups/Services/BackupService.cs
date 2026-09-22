@@ -39,7 +39,7 @@ public sealed class BackupService(
 
     private const int FlushEveryRows = 1000;
 
-    private static readonly DomainError NotFound = new(ErrorCodes.ResourceNotFound, "The backup does not exist.");
+    private static readonly DomainError NotFound = EntityLookup.NotFound("The backup does not exist.");
 
     public async Task<IReadOnlyList<BackupResponse>> GetAllAsync(CancellationToken cancellationToken)
     {

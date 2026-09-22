@@ -1,5 +1,5 @@
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Notifications.Interfaces;
@@ -29,12 +29,13 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
     public async Task<Result<Guid>> MarkReadAsync(Guid id, CancellationToken cancellationToken)
     {
         var notificationId = new NotificationId(id);
-        var notification = await db.Notifications.FirstOrDefaultAsync(
+        var found = await db.Notifications.FindOrNotFoundAsync(
             n => n.Id == notificationId,
+            "Notification not found.",
             cancellationToken);
-        if (notification is null)
+        if (!found.TryGetValue(out var notification))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Notification not found.");
+            return found.Error;
         }
 
         notification.IsRead = true;

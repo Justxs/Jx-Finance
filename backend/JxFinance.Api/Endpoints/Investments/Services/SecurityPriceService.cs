@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
@@ -70,7 +71,7 @@ public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mappe
         var id = new SecurityId(request.Id);
         if (!await db.Securities.AnyAsync(s => s.Id == id, cancellationToken))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
+            return EntityLookup.NotFound("Security not found.");
         }
 
         var query = db.SecurityPrices.AsNoTracking().Where(p => p.SecurityId == id);
@@ -100,10 +101,10 @@ public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mappe
             return writable.Error;
         }
 
-        var point = await db.SecurityPrices.FirstOrDefaultAsync(p => p.SecurityId == id && p.Date == request.Date, cancellationToken);
-        if (point is null)
+        var found = await db.SecurityPrices.FindOrNotFoundAsync(p => p.SecurityId == id && p.Date == request.Date, "No price is recorded for that date.", cancellationToken);
+        if (!found.TryGetValue(out var point))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "No price is recorded for that date.");
+            return found.Error;
         }
 
         await SecurityPriceBook.RemoveAsync(db, writable.Value!, point, cancellationToken);
@@ -240,10 +241,10 @@ public sealed class SecurityPriceService(AppDbContext db, InvestmentMapper mappe
         bool isAdministrator,
         CancellationToken cancellationToken)
     {
-        var security = await db.Securities.FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-        if (security is null)
+        var found = await db.Securities.FindOrNotFoundAsync(s => s.Id == id, "Security not found.", cancellationToken);
+        if (!found.TryGetValue(out var security))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Security not found.");
+            return found.Error;
         }
 
         if (!isAdministrator && !await HoldsAsync(id, cancellationToken))

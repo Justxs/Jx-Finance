@@ -22,12 +22,12 @@ public sealed class AttachmentService(
     IDeletionRecorder deletions,
     ILogger<AttachmentService> logger) : IAttachmentService
 {
-    private static readonly DomainError TransactionMissing = new(ErrorCodes.ResourceNotFound, "Transaction not found.");
+    private static readonly DomainError TransactionMissing = EntityLookup.NotFound("Transaction not found.");
 
-    private static readonly DomainError AttachmentMissing = new(ErrorCodes.ResourceNotFound, "Attachment not found.");
+    private static readonly DomainError AttachmentMissing = EntityLookup.NotFound("Attachment not found.");
 
     private static readonly DomainError FileMissing =
-        new(ErrorCodes.ResourceNotFound, "The file of this attachment is no longer stored.");
+        EntityLookup.NotFound("The file of this attachment is no longer stored.");
 
     private static readonly DomainError Empty = new(ErrorCodes.AttachmentEmpty, "Choose a file that is not empty.");
 

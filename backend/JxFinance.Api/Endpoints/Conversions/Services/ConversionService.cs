@@ -103,10 +103,10 @@ public sealed class ConversionService(
         CancellationToken cancellationToken)
     {
         var conversionId = new CurrencyConversionId(request.Id);
-        var conversion = await db.CurrencyConversions.FirstOrDefaultAsync(c => c.Id == conversionId, cancellationToken);
-        if (conversion is null)
+        var found = await db.CurrencyConversions.FindOrNotFoundAsync(c => c.Id == conversionId, "Conversion not found.", cancellationToken);
+        if (!found.TryGetValue(out var conversion))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Conversion not found.");
+            return found.Error;
         }
 
         if (conversion.ImportRef is not null)
@@ -189,10 +189,10 @@ public sealed class ConversionService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var conversionId = new CurrencyConversionId(id);
-        var conversion = await db.CurrencyConversions.FirstOrDefaultAsync(c => c.Id == conversionId, cancellationToken);
-        if (conversion is null)
+        var found = await db.CurrencyConversions.FindOrNotFoundAsync(c => c.Id == conversionId, "Conversion not found.", cancellationToken);
+        if (!found.TryGetValue(out var conversion))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Conversion not found.");
+            return found.Error;
         }
 
         Transaction? fee = null;
