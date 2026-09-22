@@ -90,14 +90,7 @@ export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: R
     },
   });
 
-  const update = useUpdateTransaction(
-    silent({
-      onSuccess: () => {
-        toast.success(t("transactions.updated"));
-        onUpdated();
-      },
-    }),
-  );
+  const update = useUpdateTransaction(silent({ onSuccess: onUpdated }));
 
   const remove = useDeleteTransaction({ mutation: optimisticDelete });
 
