@@ -13,7 +13,7 @@ public sealed class RestoredTransactionLedgerTests(ApiFixture fixture) : Integra
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync("1000.00", client: member);
         var category = await CreateCategoryAsync(client: member);
-        await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "500.00" });
+        await Seed.BudgetAsync(member, category, "500.00");
         var today = Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
         var transaction = await CreateTransactionAsync(member, account, category, "expense", "40.00", today, "Maistas");
 

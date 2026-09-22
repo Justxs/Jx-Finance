@@ -283,7 +283,5 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
     private static async Task<PageDto<EntryRow>> LedgerAsync(HttpClient client, Guid accountId) =>
         (await client.GetFromJsonAsync<PageDto<EntryRow>>($"/api/investments/transactions?accountId={accountId}&pageSize=100"))!;
 
-    private sealed record TrashRow(Guid Id, string Kind, Guid EntityId, string Description, DateTimeOffset DeletedAt);
-
     private sealed record EntryRow(Guid Id, string Type);
 }

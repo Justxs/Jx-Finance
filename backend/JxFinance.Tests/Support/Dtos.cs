@@ -1,5 +1,23 @@
 namespace JxFinance.Tests.Support;
 
+public sealed record IdDto(Guid Id);
+
+public sealed record NamedRow(Guid Id, string Name);
+
+public sealed record SetupDto(string SharedKey);
+
+public sealed record BulkDto(int Updated);
+
+public sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
+
+public sealed record NotificationDto(Guid Id, Guid? RelatedId, bool IsRead);
+
+public sealed record TrashRow(Guid Id, string Kind, Guid EntityId, string Description, DateTimeOffset DeletedAt);
+
+public sealed record NetWorthSnapshotItemDto(DateOnly Date, string NetWorth);
+
+public sealed record NetWorthHistoryDto(List<NetWorthSnapshotItemDto> Items);
+
 public sealed record PageDto<T>(List<T> Items, int Page, int PageSize, int Total);
 
 public sealed record BalanceDto(string Currency, string Amount);

@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Domain.Transactions;
-using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -106,7 +105,7 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "150.00" });
+        var budget = await Seed.BudgetAsync(member, category, "150.00");
         var asset = await PostAsync<IdDto>(
             member,
             "/api/assets",
@@ -116,17 +115,17 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             "/api/debts",
             new { name = "Paskola", type = "loan", outstandingAmount = "500.00", asOf = Date });
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/budgets/{budget}", TestContext.Current.CancellationToken);
         await member.DeleteAsync($"/api/assets/{asset.Id}", TestContext.Current.CancellationToken);
         await member.DeleteAsync($"/api/debts/{debt.Id}", TestContext.Current.CancellationToken);
-        var restoredBudget = await RestoreAsync(member, "budget", budget.Id);
+        var restoredBudget = await RestoreAsync(member, "budget", budget);
         var restoredAsset = await RestoreAsync(member, "asset", asset.Id);
         var restoredDebt = await RestoreAsync(member, "debt", debt.Id);
 
         Assert.Equal(HttpStatusCode.NoContent, restoredBudget.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredAsset.StatusCode);
         Assert.Equal(HttpStatusCode.NoContent, restoredDebt.StatusCode);
-        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget.Id);
+        Assert.Contains((await member.GetFromJsonAsync<List<BudgetDto>>("/api/budgets", TestContext.Current.CancellationToken))!, b => b.Id == budget);
         Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/assets", TestContext.Current.CancellationToken))!, a => a.Id == asset.Id);
         Assert.Contains((await member.GetFromJsonAsync<List<NamedRow>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
     }
@@ -183,11 +182,11 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "40.00" });
+        var budget = await Seed.BudgetAsync(member, category, "40.00");
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
+        await member.DeleteAsync($"/api/budgets/{budget}", TestContext.Current.CancellationToken);
         await member.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken);
-        var restore = await RestoreAsync(member, "budget", budget.Id);
+        var restore = await RestoreAsync(member, "budget", budget);
 
         await AssertProblemAsync(restore, HttpStatusCode.BadRequest, "restore.referenceMissing");
     }
@@ -197,11 +196,11 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var budget = await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "40.00" });
+        var budget = await Seed.BudgetAsync(member, category, "40.00");
 
-        await member.DeleteAsync($"/api/budgets/{budget.Id}", TestContext.Current.CancellationToken);
-        await PostAsync<IdDto>(member, "/api/budgets", new { categoryId = category, limitAmount = "90.00" });
-        var restore = await RestoreAsync(member, "budget", budget.Id);
+        await member.DeleteAsync($"/api/budgets/{budget}", TestContext.Current.CancellationToken);
+        await Seed.BudgetAsync(member, category, "90.00");
+        var restore = await RestoreAsync(member, "budget", budget);
 
         await AssertProblemAsync(restore, HttpStatusCode.Conflict, "restore.slotTaken");
     }
@@ -397,30 +396,20 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
     private static async Task<PageDto<TrashRow>> TrashAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<PageDto<TrashRow>>("/api/trash"))!;
 
-    private async Task BackdateAsync(Guid userId, Guid entityId, TimeSpan age)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var entry = await db.DeletionEntries.FirstAsync(e => e.EntityId == entityId);
-        entry.DeletedAt = DateTimeOffset.UtcNow - age;
-        await db.SaveChangesAsync();
-    }
+    private Task BackdateAsync(Guid userId, Guid entityId, TimeSpan age) =>
+        WithDbAsync(userId, async db =>
+        {
+            var entry = await db.DeletionEntries.FirstAsync(e => e.EntityId == entityId);
+            entry.DeletedAt = DateTimeOffset.UtcNow - age;
+            await db.SaveChangesAsync();
+        });
 
-    private async Task ForgetLinesAsync(Guid userId, Guid transactionId)
-    {
-        using var scope = Services.CreateScope();
-        await using var db = OpenAs(scope, userId);
-        var typedId = new TransactionId(transactionId);
-        await db.TransactionLines.Where(l => l.TransactionId == typedId).ExecuteDeleteAsync();
-    }
-
-    private static AppDbContext OpenAs(IServiceScope scope, Guid userId) => new(
-        scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
-        new TestCurrentUser(userId));
-
-    private sealed record TrashRow(Guid Id, string Kind, Guid EntityId, string Description, DateTimeOffset DeletedAt);
-
-    private sealed record NamedRow(Guid Id, string Name);
+    private Task ForgetLinesAsync(Guid userId, Guid transactionId) =>
+        WithDbAsync(userId, async db =>
+        {
+            var typedId = new TransactionId(transactionId);
+            await db.TransactionLines.Where(l => l.TransactionId == typedId).ExecuteDeleteAsync();
+        });
 
     private sealed record ConversionRow(Guid Id, Guid AccountId, Guid? FeeTransactionId);
 }

@@ -147,7 +147,4 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
 
     private sealed record NetWorthDto(string Accounts, string Assets, string Debts, string NetWorth);
 
-    private sealed record NetWorthSnapshotItemDto(DateOnly Date, string NetWorth);
-
-    private sealed record NetWorthHistoryDto(List<NetWorthSnapshotItemDto> Items);
 }

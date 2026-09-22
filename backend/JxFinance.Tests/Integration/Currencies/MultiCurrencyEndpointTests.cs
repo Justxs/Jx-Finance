@@ -227,7 +227,5 @@ public sealed class MultiCurrencyEndpointTests(ApiFixture fixture) : Integration
         string? FeeCurrency,
         Guid? FeeTransactionId);
 
-    private sealed record CurrenciesDto(string ReportingCurrency, IReadOnlyList<string> Currencies);
-
     private sealed record RateDto(string From, string To, string Rate, DateOnly AsOf);
 }

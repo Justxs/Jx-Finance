@@ -30,11 +30,8 @@ public sealed class NetWorthIsolationTests(ApiFixture fixture) : IntegrationTest
     [Fact]
     public async Task Assets_and_debts_of_a_household_partner_stay_out_of_net_worth()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, _) = pair;
         var asset = await PostAsync<IdDto>(ownerClient, "/api/assets", new { name = "Flat", type = "property", currentValue = "90000.00", asOf = Today });
         var debt = await PostAsync<IdDto>(ownerClient, "/api/debts", new { name = "Mortgage", type = "loan", outstandingAmount = "60000.00", asOf = Today });
 
@@ -53,11 +50,8 @@ public sealed class NetWorthIsolationTests(ApiFixture fixture) : IntegrationTest
     [Fact]
     public async Task A_shared_account_counts_in_the_net_worth_of_every_member()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        var household = await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, household) = pair;
         await CreateAccountAsync("250.00", householdId: household, client: ownerClient);
         await CreateAccountAsync("40.00", client: ownerClient);
 

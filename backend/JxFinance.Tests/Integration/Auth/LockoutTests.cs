@@ -128,5 +128,4 @@ public sealed class LockoutTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         Assert.Contains(users!, u => u.GetProperty("id").GetGuid() == user.Id);
     }
 
-    private sealed record SetupDto(string SharedKey);
 }

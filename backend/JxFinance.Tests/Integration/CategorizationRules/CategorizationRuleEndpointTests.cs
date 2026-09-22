@@ -74,7 +74,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var account = await CreateAccountAsync(client: member);
         var category = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA X-123");
-        await CreateRuleAsync(member, match, pattern, categoryId: category);
+        await Seed.RuleAsync(member, match, pattern, categoryId: category);
 
         var preview = await PreviewAsync(member);
 
@@ -91,7 +91,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-01", "Kavine Vero");
         await CreateTransactionAsync(member, account, null, "expense", "90.00", "2026-09-02", "Kavine Vero");
         await CreateTransactionAsync(member, other, null, "expense", "12.00", "2026-09-03", "Kavine Vero");
-        await CreateRuleAsync(
+        await Seed.RuleAsync(
             member,
             "contains",
             "Kavine",
@@ -112,7 +112,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var account = await CreateAccountAsync(client: member);
         var expenseCategory = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, null, "income", "12.00", "2026-09-01", "Grazinimas");
-        await CreateRuleAsync(member, "contains", "Grazinimas", categoryId: expenseCategory);
+        await Seed.RuleAsync(member, "contains", "Grazinimas", categoryId: expenseCategory);
 
         var preview = await PreviewAsync(member);
 
@@ -127,8 +127,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var groceries = await CreateCategoryAsync(client: member);
         var everything = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
-        var first = await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: groceries, name: "Groceries");
-        var second = await CreateRuleAsync(member, "contains", "Pirkinys", categoryId: everything, name: "Shopping");
+        var first = await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: groceries, name: "Groceries");
+        var second = await Seed.RuleAsync(member, "contains", "Pirkinys", categoryId: everything, name: "Shopping");
 
         var preview = await PreviewAsync(member);
         var run = await RunAsync(member);
@@ -148,8 +148,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var groceries = await CreateCategoryAsync(client: member);
         var everything = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: groceries, name: "Groceries");
-        var second = await CreateRuleAsync(member, "contains", "Pirkinys", categoryId: everything, name: "Shopping");
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: groceries, name: "Groceries");
+        var second = await Seed.RuleAsync(member, "contains", "Pirkinys", categoryId: everything, name: "Shopping");
 
         var moved = await PostAsync<List<RuleDto>>(
             member,
@@ -168,8 +168,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var first = await CreateRuleAsync(member, "contains", "a", categoryId: category, name: "First");
-        var second = await CreateRuleAsync(member, "contains", "b", categoryId: category, name: "Second");
+        var first = await Seed.RuleAsync(member, "contains", "a", categoryId: category, name: "First");
+        var second = await Seed.RuleAsync(member, "contains", "b", categoryId: category, name: "Second");
 
         var moved = await PostAsync<List<RuleDto>>(
             member,
@@ -185,9 +185,9 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
     {
         using var member = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: member);
-        var first = await CreateRuleAsync(member, "contains", "a", categoryId: category, name: "First");
-        var second = await CreateRuleAsync(member, "contains", "b", categoryId: category, name: "Second");
-        var third = await CreateRuleAsync(member, "contains", "c", categoryId: category, name: "Third");
+        var first = await Seed.RuleAsync(member, "contains", "a", categoryId: category, name: "First");
+        var second = await Seed.RuleAsync(member, "contains", "b", categoryId: category, name: "Second");
+        var third = await Seed.RuleAsync(member, "contains", "c", categoryId: category, name: "Third");
 
         var deleted = await member.DeleteAsync($"/api/categorization-rules/{second}", TestContext.Current.CancellationToken);
         var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
@@ -205,7 +205,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var chosen = await CreateCategoryAsync(client: member);
         var ruleCategory = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, chosen, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
 
         var preview = await PreviewAsync(member);
         var run = await RunAsync(member);
@@ -224,7 +224,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var chosen = await CreateCategoryAsync(client: member);
         var ruleCategory = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, chosen, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
 
         var preview = await PreviewAsync(member, recategorize: true);
         var run = await RunAsync(member, recategorize: true);
@@ -254,7 +254,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
                 description = "Pirkinys MAXIMA",
                 tagIds = new[] { kept },
             });
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: category, tagIds: [added]);
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: category, tagIds: [added]);
 
         await RunAsync(member);
         var transaction = await OneTransactionAsync(member, account);
@@ -285,7 +285,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
                     new { categoryId = lineCategory, amount = "4.00" },
                 },
             });
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: ruleCategory);
 
         var preview = await PreviewAsync(member);
         var recategorizing = await PreviewAsync(member, recategorize: true);
@@ -297,15 +297,12 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
     [Fact]
     public async Task A_rule_is_personal_but_reaches_a_shared_account_its_owner_can_see()
     {
-        var owner = await CreateUserAsync();
-        var housemate = await CreateUserAsync();
-        var household = await CreateHouseholdAsync(owner, housemate);
-        using var ownerClient = await LoginAsync(owner);
-        using var housemateClient = await LoginAsync(housemate);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, housemateClient, household) = pair;
         var shared = await CreateAccountAsync(householdId: household, client: ownerClient);
         var category = await CreateCategoryAsync(client: housemateClient);
         await CreateTransactionAsync(ownerClient, shared, null, "expense", "12.00", "2026-09-01", "Pirkinys MAXIMA");
-        await CreateRuleAsync(housemateClient, "contains", "MAXIMA", categoryId: category);
+        await Seed.RuleAsync(housemateClient, "contains", "MAXIMA", categoryId: category);
 
         var ownerSeesTheRules = await ownerClient.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);
         var ownerPreview = await PreviewAsync(ownerClient);
@@ -325,7 +322,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         using var mine = await CreateUserClientAsync();
         using var theirs = await CreateUserClientAsync();
         var category = await CreateCategoryAsync(client: mine);
-        var rule = await CreateRuleAsync(mine, "contains", "MAXIMA", categoryId: category);
+        var rule = await Seed.RuleAsync(mine, "contains", "MAXIMA", categoryId: category);
 
         var move = await theirs.PostAsJsonAsync($"/api/categorization-rules/{rule}/move", new { direction = "up" }, TestContext.Current.CancellationToken);
         var delete = await theirs.DeleteAsync($"/api/categorization-rules/{rule}", TestContext.Current.CancellationToken);
@@ -383,7 +380,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var category = await CreateCategoryAsync(client: member);
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-01", "Palukanos 5% metams");
         await CreateTransactionAsync(member, account, null, "expense", "12.00", "2026-09-02", "Palukanos 7 metams");
-        await CreateRuleAsync(member, "contains", "5% metams", categoryId: category);
+        await Seed.RuleAsync(member, "contains", "5% metams", categoryId: category);
 
         var preview = await PreviewAsync(member);
 
@@ -396,7 +393,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         using var member = await CreateUserClientAsync();
         var account = await CreateAccountAsync(client: member);
         var category = await CreateCategoryAsync(client: member);
-        await CreateRuleAsync(member, "contains", "MAXIMA", categoryId: category);
+        await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: category);
         var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
         var switchedOff = original.DeepClone().AsObject();
         switchedOff["features"]!["categorizationRules"] = false;
@@ -429,7 +426,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var account = await CreateAccountAsync(client: member);
         var category = await CreateCategoryAsync(client: member);
         var tag = await CreateTagAsync(client: member);
-        await CreateRuleAsync(member, "contains", "LIDL", categoryId: category, tagIds: [tag], name: "Groceries");
+        await Seed.RuleAsync(member, "contains", "LIDL", categoryId: category, tagIds: [tag], name: "Groceries");
 
         var rows = await ImportPreviewAsync(member, account);
 
@@ -450,7 +447,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var suggested = await CreateCategoryAsync(client: member);
         var chosen = await CreateCategoryAsync(client: member);
         var tag = await CreateTagAsync(client: member);
-        await CreateRuleAsync(member, "contains", "LIDL", categoryId: suggested, name: "Groceries");
+        await Seed.RuleAsync(member, "contains", "LIDL", categoryId: suggested, name: "Groceries");
         var rows = await ImportPreviewAsync(member, account);
         var groceries = rows.Single(r => r.Description!.Contains("LIDL", StringComparison.Ordinal));
 
@@ -498,31 +495,6 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<PreviewDto>())!.Rows;
     }
-
-    private static async Task<Guid> CreateRuleAsync(
-        HttpClient client,
-        string match,
-        string pattern,
-        Guid? categoryId = null,
-        Guid[]? tagIds = null,
-        Guid? accountId = null,
-        string? minAmount = null,
-        string? maxAmount = null,
-        string? name = null) =>
-        (await PostAsync<IdDto>(
-            client,
-            "/api/categorization-rules",
-            new
-            {
-                name = name ?? $"Rule {Guid.NewGuid():N}"[..20],
-                match,
-                pattern,
-                tagIds = tagIds ?? [],
-                categoryId,
-                accountId,
-                minAmount,
-                maxAmount,
-            })).Id;
 
     private static Task<RunDto> PreviewAsync(HttpClient client, bool recategorize = false) =>
         PostAsync<RunDto>(client, "/api/categorization-rules/run/preview", new { recategorize });

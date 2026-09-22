@@ -221,11 +221,8 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
     [Fact]
     public async Task A_dismissal_is_personal_to_the_member_who_made_it()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
-        var household = await CreateHouseholdAsync(owner, partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, household) = pair;
         var account = await CreateAccountAsync(householdId: household, client: ownerClient);
         var name = UniqueName();
         foreach (var date in MonthlyDates(3))

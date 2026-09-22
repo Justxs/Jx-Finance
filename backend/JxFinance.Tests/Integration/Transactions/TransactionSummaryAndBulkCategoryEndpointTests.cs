@@ -246,5 +246,4 @@ public sealed class TransactionSummaryAndBulkCategoryEndpointTests(ApiFixture fi
 
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
 
-    private sealed record BulkDto(int Updated);
 }

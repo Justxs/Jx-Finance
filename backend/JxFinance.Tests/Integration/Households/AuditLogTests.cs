@@ -364,7 +364,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
     }
 
     private static async Task<CategoryDto> CreateNamedCategoryAsync(HttpClient client, string name) =>
-        new((await PostAsync<IdDto>(client, "/api/categories", new { name, type = "expense" })).Id, name);
+        new(await Seed.CategoryAsync(client, name), name);
 
     private static async Task<PageDto<AuditDto>> AuditAsync(HttpClient client, Guid household, string query = "")
     {

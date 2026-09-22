@@ -10,11 +10,8 @@ public sealed class GoalIsolationTests(ApiFixture fixture) : IntegrationTestBase
     [Fact]
     public async Task A_goal_cannot_be_read_changed_or_deleted_by_another_user_even_in_the_same_household()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, _) = pair;
         var goal = await PostAsync<GoalDto>(ownerClient, "/api/goals", new { name = "Private goal", targetAmount = "500.00", currentAmount = "50.00" });
 
         var listed = await partnerClient.GetFromJsonAsync<List<GoalDto>>("/api/goals", TestContext.Current.CancellationToken);

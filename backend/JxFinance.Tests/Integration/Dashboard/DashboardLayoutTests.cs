@@ -99,11 +99,8 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     [Fact]
     public async Task Household_members_keep_separate_layouts()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, _) = pair;
 
         await SaveAsync(ownerClient, ["upcomingBills"], ["summary"]);
         var partnerLayout = await partnerClient.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);

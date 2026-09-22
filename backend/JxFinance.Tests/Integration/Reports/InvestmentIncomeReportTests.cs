@@ -161,11 +161,8 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
     [Fact]
     public async Task A_shared_account_contributes_to_every_member_of_the_household()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        var household = await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, household) = pair;
         var shared = await CreateAccountAsync("1000.00", "investment", householdId: household, client: ownerClient);
         var fund = await CreateSecurityAsync(ownerClient);
         await RecordInvestmentAsync(ownerClient, new { accountId = shared, securityId = fund, type = "dividend", date = "2026-03-02", amount = "40.00" });

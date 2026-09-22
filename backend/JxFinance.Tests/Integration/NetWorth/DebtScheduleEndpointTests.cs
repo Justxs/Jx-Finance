@@ -149,11 +149,8 @@ public sealed class DebtScheduleEndpointTests(ApiFixture fixture) : IntegrationT
     [Fact]
     public async Task The_schedule_of_another_persons_debt_is_not_found()
     {
-        var owner = await CreateUserAsync();
-        var partner = await CreateUserAsync();
-        await CreateHouseholdAsync(owner, partner);
-        using var ownerClient = await LoginAsync(owner);
-        using var partnerClient = await LoginAsync(partner);
+        using var pair = await CreateHouseholdPairAsync();
+        var (_, _, ownerClient, partnerClient, _) = pair;
         var debt = await CreateDebtAsync(ownerClient, new { loanAmount = "1000.00", interestRate = 5m, firstPaymentDate = "2026-01-01", termMonths = 12 });
 
         var partnerResponse = await partnerClient.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken);
