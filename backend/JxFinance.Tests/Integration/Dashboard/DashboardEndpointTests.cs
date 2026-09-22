@@ -27,6 +27,21 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
         Assert.Equal(1, after.MonthStart.Day);
     }
 
+    [Fact]
+    public async Task Summary_says_when_the_total_leaves_out_a_holding_it_could_not_value()
+    {
+        using var member = await CreateUserClientAsync();
+        var account = await CreateAccountAsync("5000.00", "investment", client: member);
+        Assert.True((await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary"))!.IsComplete);
+
+        var unpriced = await CreateSecurityAsync(member);
+        await RecordInvestmentAsync(member, new { accountId = account, securityId = unpriced, type = "buy", date = "2026-06-01", quantity = "1", price = "100" });
+
+        var summary = await member.GetFromJsonAsync<SummaryDto>("/api/dashboard/summary");
+        Assert.False(summary!.IsComplete);
+        Assert.Equal("4900.00", summary.TotalBalance);
+    }
+
     private static decimal Parse(string money) => decimal.Parse(money, CultureInfo.InvariantCulture);
 
     private sealed record SummaryDto(
@@ -34,5 +49,6 @@ public sealed class DashboardEndpointTests(ApiFixture fixture) : IntegrationTest
         string MonthIncome,
         string MonthExpense,
         DateOnly MonthStart,
-        DateOnly MonthEnd);
+        DateOnly MonthEnd,
+        bool IsComplete);
 }

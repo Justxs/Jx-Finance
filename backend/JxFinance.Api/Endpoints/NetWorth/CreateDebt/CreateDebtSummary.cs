@@ -12,7 +12,8 @@ public sealed class CreateDebtSummary : Summary<CreateDebtEndpoint, CreateDebtRe
         Summary = "Add a debt";
         Description = "Starts tracking money owed. The outstanding amount is subtracted from net worth "
             + "from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, "
-            + "a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.";
+            + "a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. "
+            + "The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.";
         ExampleRequest = new CreateDebtRequest(
             "Mortgage",
             DebtType.Mortgage,

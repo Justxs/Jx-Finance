@@ -1,4 +1,5 @@
 using JxFinance.Common.Json;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Endpoints.NetWorth.Shared;
@@ -15,4 +16,5 @@ public sealed record DebtResponse(
     int? TermMonths,
     [property: Money] decimal? MonthlyPayment,
     AmortizationType AmortizationType,
-    DateOnly? PayoffDate);
+    DateOnly? PayoffDate,
+    Currency Currency);

@@ -176,6 +176,9 @@ public sealed class SettingsService(
         var foreignEntries = db.InvestmentTransactions
             .IgnoreQueryFilters()
             .Where(t => !t.IsDeleted && t.CashAmount.Currency != reportingCurrency);
+        var foreignSnapshots = db.NetWorthSnapshots
+            .IgnoreQueryFilters()
+            .Where(s => s.Currency != reportingCurrency);
 
         var dates = new[]
         {
@@ -183,6 +186,8 @@ public sealed class SettingsService(
             await foreign.MaxAsync(t => (DateOnly?)t.Date, cancellationToken),
             await foreignEntries.MinAsync(t => (DateOnly?)t.Date, cancellationToken),
             await foreignEntries.MaxAsync(t => (DateOnly?)t.Date, cancellationToken),
+            await foreignSnapshots.MinAsync(s => (DateOnly?)s.Date, cancellationToken),
+            await foreignSnapshots.MaxAsync(s => (DateOnly?)s.Date, cancellationToken),
         }.OfType<DateOnly>().ToList();
         if (dates.Count > 0)
         {

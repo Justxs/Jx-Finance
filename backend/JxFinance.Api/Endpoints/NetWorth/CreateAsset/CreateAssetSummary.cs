@@ -10,7 +10,8 @@ public sealed class CreateAssetSummary : Summary<CreateAssetEndpoint, CreateAsse
     {
         Summary = "Add an asset";
         Description = "Starts tracking something of value that is not an account balance. Its value "
-            + "counts towards net worth from the as-of date onwards.";
+            + "counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of "
+            + "the day it is created, and later edits keep that currency.";
         ExampleRequest = new CreateAssetRequest("Flat", AssetType.Property, 180000.00m, new DateOnly(2026, 9, 1));
         RequestParam(r => r.Type, "Property, Vehicle, Investment, Valuable, or Other.");
         RequestParam(r => r.CurrentValue, "Decimal string with at most two decimal places.");

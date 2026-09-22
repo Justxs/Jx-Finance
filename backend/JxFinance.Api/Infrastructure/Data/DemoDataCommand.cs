@@ -16,6 +16,7 @@ namespace JxFinance.Infrastructure.Data;
 public static class DemoDataCommand
 {
     private const int Months = 6;
+    private const Currency DemoCurrency = Currency.Eur;
 
     private static readonly (string Category, string Description, decimal Amount, int Day)[] MonthlyExpenses =
     [
@@ -75,8 +76,8 @@ public static class DemoDataCommand
                     UserId = user.Id,
                     FromAccountId = checking.Id,
                     ToAccountId = savings.Id,
-                    Amount = new Money(300.00m),
-                    ReceivedAmount = new Money(300.00m),
+                    Amount = new Money(300.00m, DemoCurrency),
+                    ReceivedAmount = new Money(300.00m, DemoCurrency),
                     Date = transferDate,
                     Description = "Monthly saving",
                 });
@@ -84,31 +85,31 @@ public static class DemoDataCommand
         }
 
         db.Budgets.AddRange(
-            new Budget { UserId = user.Id, CategoryId = categories["Food"], LimitAmount = new Money(300.00m) },
-            new Budget { UserId = user.Id, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m) },
-            new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m) });
+            new Budget { UserId = user.Id, CategoryId = categories["Food"], LimitAmount = new Money(300.00m, DemoCurrency) },
+            new Budget { UserId = user.Id, CategoryId = categories["Transport"], LimitAmount = new Money(60.00m, DemoCurrency) },
+            new Budget { UserId = user.Id, CategoryId = categories["Entertainment"], LimitAmount = new Money(50.00m, DemoCurrency) });
         db.Goals.AddRange(
-            new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m), CurrentAmount = new Money(4300.00m) },
-            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m), CurrentAmount = new Money(450.00m), TargetDate = today.AddMonths(8) },
+            new Goal { UserId = user.Id, Name = "Emergency fund", TargetAmount = new Money(6000.00m, DemoCurrency), CurrentAmount = new Money(4300.00m, DemoCurrency) },
+            new Goal { UserId = user.Id, Name = "Summer trip", TargetAmount = new Money(1800.00m, DemoCurrency), CurrentAmount = new Money(450.00m, DemoCurrency), TargetDate = today.AddMonths(8) },
             new Goal
             {
                 UserId = user.Id,
                 Name = "House deposit",
-                TargetAmount = new Money(15000.00m),
+                TargetAmount = new Money(15000.00m, DemoCurrency),
                 Funding = GoalFunding.Account,
                 FundingAccountId = savings.Id,
                 FundingSharePercent = 100,
             });
-        db.Assets.Add(new Asset { UserId = user.Id, Name = "Car", Type = AssetType.Vehicle, CurrentValue = new Money(8500.00m), AsOf = today });
+        db.Assets.Add(new Asset { UserId = user.Id, Name = "Car", Type = AssetType.Vehicle, CurrentValue = new Money(8500.00m, DemoCurrency), AsOf = today });
         db.Debts.Add(new Debt
         {
             UserId = user.Id,
             Name = "Car loan",
             Type = DebtType.Loan,
-            OutstandingAmount = new Money(3200.00m),
+            OutstandingAmount = new Money(3200.00m, DemoCurrency),
             InterestRate = 5.4m,
             AsOf = today,
-            LoanAmount = new Money(6000.00m),
+            LoanAmount = 6000.00m,
             FirstPaymentDate = new DateOnly(today.Year, today.Month, 1).AddMonths(-23),
             TermMonths = 48,
         });
@@ -165,14 +166,14 @@ public static class DemoDataCommand
     }
 
     private static Account NewAccount(Guid userId, string name, AccountType type, decimal startingBalance) =>
-        new() { UserId = userId, Name = name, Type = type, StartingBalance = new Money(startingBalance) };
+        new() { UserId = userId, Name = name, Type = type, StartingBalance = new Money(startingBalance, DemoCurrency) };
 
     private static void Record(
         AppDbContext db, Guid userId, AccountId accountId, CategoryId categoryId, FlowType type,
         decimal amount, DateOnly date, string description, DateOnly today)
     {
         if (date > today) return;
-        var money = new Money(amount);
+        var money = new Money(amount, DemoCurrency);
         db.Transactions.Add(new Transaction
         {
             UserId = userId,

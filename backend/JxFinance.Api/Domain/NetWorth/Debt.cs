@@ -10,11 +10,12 @@ public sealed class Debt : OwnableEntity
     public required string Name { get; set; }
     public DebtType Type { get; set; }
     public Money OutstandingAmount { get; set; }
+    public Currency Currency => OutstandingAmount.Currency;
     public decimal? InterestRate { get; set; }
     public DateOnly AsOf { get; set; }
-    public Money? LoanAmount { get; set; }
+    public decimal? LoanAmount { get; set; }
     public DateOnly? FirstPaymentDate { get; set; }
     public int? TermMonths { get; set; }
-    public Money? MonthlyPayment { get; set; }
+    public decimal? MonthlyPayment { get; set; }
     public AmortizationType AmortizationType { get; set; }
 }

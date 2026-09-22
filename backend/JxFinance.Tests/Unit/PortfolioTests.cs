@@ -21,7 +21,7 @@ public sealed class PortfolioTests
             Quantity = quantity,
             Price = price,
             Fee = fee,
-            CashAmount = new Money(Portfolio.CashEffect(type, quantity, price, 0m, fee)),
+            CashAmount = new Money(Portfolio.CashEffect(type, quantity, price, 0m, fee), Currency.Eur),
             ReportingAmount = Portfolio.CashEffect(type, quantity, price, 0m, fee),
         };
 

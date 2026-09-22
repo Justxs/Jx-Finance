@@ -27,7 +27,7 @@ public sealed class DashboardService(
         var monthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
         var monthEnd = monthStart.AddMonths(1);
 
-        var (totalBalance, _) = await accountService.GetReportingTotalAsync(cancellationToken);
+        var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
 
         var monthTotals = await db.Transactions
             .Where(t => t.Date >= monthStart && t.Date < monthEnd)
@@ -50,7 +50,8 @@ public sealed class DashboardService(
             monthIncome,
             monthExpense,
             monthStart,
-            monthEnd.AddDays(-1));
+            monthEnd.AddDays(-1),
+            isComplete);
     }
 
     public async Task<CategoryBreakdownResponse> GetCategoryBreakdownAsync(

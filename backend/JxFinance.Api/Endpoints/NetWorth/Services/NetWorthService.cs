@@ -2,6 +2,7 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Amortization;
 using JxFinance.Common.Errors;
+using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
@@ -19,6 +20,7 @@ namespace JxFinance.Endpoints.NetWorth.Services;
 public sealed class NetWorthService(
     AppDbContext db,
     IAccountService accountService,
+    IExchangeRateService rates,
     IClock clock,
     IDeletionRecorder deletions,
     ICurrentUser currentUser) : INetWorthService
@@ -138,23 +140,37 @@ public sealed class NetWorthService(
             accountsTotal,
             assetsTotal,
             debtsTotal,
-            netWorth);
+            netWorth,
+            isComplete);
     }
 
     public async Task<NetWorthHistoryResponse> GetHistoryAsync(CancellationToken cancellationToken)
     {
         var snapshots = await db.NetWorthSnapshots
+            .AsNoTracking()
             .OrderBy(s => s.Date)
             .ToListAsync(cancellationToken);
 
-        var items = snapshots
-            .Select(s => new NetWorthSnapshotItem(
-                s.Date,
-                s.Accounts.Amount,
-                s.Assets.Amount,
-                s.Debts.Amount,
-                s.NetWorthValue.Amount))
-            .ToList();
+        var reporting = rates.ReportingCurrency;
+        var foreign = snapshots.Where(s => s.Currency != reporting).ToList();
+        var history = foreign.Count == 0
+            ? null
+            : await rates.GetHistoryAsync(foreign.Min(s => s.Date), foreign.Max(s => s.Date), cancellationToken);
+
+        var items = new List<NetWorthSnapshotItem>();
+        foreach (var snapshot in snapshots)
+        {
+            var table = snapshot.Currency == reporting ? null : history!.OnOrBefore(snapshot.Date);
+            decimal? InReporting(decimal amount) => table is null ? amount : table.Convert(amount, snapshot.Currency, reporting);
+
+            if (InReporting(snapshot.Accounts) is { } accounts
+                && InReporting(snapshot.Assets) is { } assets
+                && InReporting(snapshot.Debts) is { } debts
+                && InReporting(snapshot.NetWorthValue) is { } netWorth)
+            {
+                items.Add(new NetWorthSnapshotItem(snapshot.Date, accounts, assets, debts, netWorth));
+            }
+        }
 
         return new NetWorthHistoryResponse(items);
     }
@@ -172,12 +188,35 @@ public sealed class NetWorthService(
     private async Task<(decimal Accounts, decimal Assets, decimal Debts, decimal NetWorth, bool IsComplete)> ComputeTotalsAsync(
         CancellationToken cancellationToken)
     {
-        var (accountsTotal, isComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
+        var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
+        var assets = await db.Assets.AsNoTracking().ToListAsync(cancellationToken);
+        var debts = await db.Debts.AsNoTracking().ToListAsync(cancellationToken);
 
-        var assetsTotal = await db.Assets.SumAsync(a => (decimal)a.CurrentValue, cancellationToken);
-        var debtsTotal = await db.Debts.SumAsync(d => (decimal)d.OutstandingAmount, cancellationToken);
+        var (assetsTotal, assetsComplete) = await ToReportingAsync(assets.Select(a => a.CurrentValue), cancellationToken);
+        var (debtsTotal, debtsComplete) = await ToReportingAsync(debts.Select(d => d.OutstandingAmount), cancellationToken);
 
-        return (accountsTotal, assetsTotal, debtsTotal, accountsTotal + assetsTotal - debtsTotal, isComplete);
+        return (
+            accountsTotal,
+            assetsTotal,
+            debtsTotal,
+            accountsTotal + assetsTotal - debtsTotal,
+            accountsComplete && assetsComplete && debtsComplete);
+    }
+
+    private async Task<(decimal Total, bool IsComplete)> ToReportingAsync(
+        IEnumerable<Money> amounts,
+        CancellationToken cancellationToken)
+    {
+        var (total, isComplete) = (0m, true);
+        foreach (var currency in amounts.GroupBy(a => a.Currency))
+        {
+            var sum = new Money(currency.Sum(a => a.Amount), currency.Key);
+            var converted = await rates.ToReportingAsync(sum, clock.Today, cancellationToken);
+            isComplete &= converted.IsSuccess;
+            total += converted.IsSuccess ? converted.Value : 0m;
+        }
+
+        return (total, isComplete);
     }
 
     private async Task UpsertTodaySnapshotAsync(
@@ -188,26 +227,18 @@ public sealed class NetWorthService(
         CancellationToken cancellationToken)
     {
         var today = clock.Today;
-        var existing = await db.NetWorthSnapshots.FirstOrDefaultAsync(s => s.Date == today, cancellationToken);
+        var snapshot = await db.NetWorthSnapshots.FirstOrDefaultAsync(s => s.Date == today, cancellationToken);
+        if (snapshot is null)
+        {
+            snapshot = new NetWorthSnapshot { Date = today };
+            db.NetWorthSnapshots.Add(snapshot);
+        }
 
-        if (existing is null)
-        {
-            db.NetWorthSnapshots.Add(new Domain.NetWorth.NetWorthSnapshot
-            {
-                Date = today,
-                Accounts = new Money(accountsTotal),
-                Assets = new Money(assetsTotal),
-                Debts = new Money(debtsTotal),
-                NetWorthValue = new Money(netWorth),
-            });
-        }
-        else
-        {
-            existing.Accounts = new Money(accountsTotal);
-            existing.Assets = new Money(assetsTotal);
-            existing.Debts = new Money(debtsTotal);
-            existing.NetWorthValue = new Money(netWorth);
-        }
+        snapshot.Currency = rates.ReportingCurrency;
+        snapshot.Accounts = Money.Round(accountsTotal);
+        snapshot.Assets = Money.Round(assetsTotal);
+        snapshot.Debts = Money.Round(debtsTotal);
+        snapshot.NetWorthValue = Money.Round(netWorth);
 
         await db.SaveChangesAsync(cancellationToken);
     }
