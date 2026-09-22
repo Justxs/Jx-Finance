@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
-import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { Rows } from "@/components/ui/rows/rows";
 import { nameById } from "@/lib/options";
 import {
@@ -12,8 +11,6 @@ import {
   sharedFundedGoal,
   unavailableFundedGoal,
 } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
 import { GoalRow } from "./goal-row";
 
 const meta = {
@@ -21,8 +18,8 @@ const meta = {
   component: GoalRow,
   args: {
     goal: goalWithTargetDate,
-    accounts,
     accountNames: nameById(accounts),
+    onEdit: fn(),
     onDelete: fn(),
     deletePending: false,
     deleteDisabled: false,
@@ -84,33 +81,10 @@ export const DeletePending: Story = { args: { deletePending: true, deleteDisable
 
 export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 
-export const EditDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
+export const EditRequested: Story = {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
-    await openedDialog();
-  },
-};
-
-export const EditInvalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
-    const dialog = within(await within(document.body).findByRole("dialog"));
-    await userEvent.clear(dialog.getAllByRole("textbox")[0]!);
-  },
-};
-
-export const SavePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateGoalMockHandler(pending), ...handlers],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
-    const dialog = within(await within(document.body).findByRole("dialog"));
-    await userEvent.click(dialog.getByRole("button", { name: /^(save|išsaugoti)$/i }));
+    await expect(args.onEdit).toHaveBeenCalledOnce();
   },
 };

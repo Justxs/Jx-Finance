@@ -9,6 +9,7 @@ import type { AccountResponse, InvestmentTransactionResponse } from "@/api/gener
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { useRetained } from "@/hooks/use-retained";
 import { silent, upsert } from "@/lib/mutations";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
@@ -42,7 +43,6 @@ function EntryModalContent({ onOpenChange, accounts, accountId, editing }: Reado
 
   return (
     <InvestmentEntryForm
-      key={editing?.id ?? "new"}
       accounts={accounts}
       securities={securities.data ?? []}
       accountId={accountId}
@@ -69,24 +69,24 @@ export function InvestmentEntryModal({
   editing,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const shown = useRetained(editing, !open);
 
   return (
     <Modal
       open={open}
       onOpenChange={onOpenChange}
-      title={editing ? t("investments.entry.editTitle") : t("investments.entry.title")}
-      description={editing ? undefined : t("investments.entry.description")}
+      title={shown ? t("investments.entry.editTitle") : t("investments.entry.title")}
+      description={shown ? undefined : t("investments.entry.description")}
     >
-      {open ? (
-        <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
-          <EntryModalContent
-            onOpenChange={onOpenChange}
-            accounts={accounts}
-            accountId={accountId}
-            editing={editing}
-          />
-        </QueryBoundary>
-      ) : null}
+      <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
+        <EntryModalContent
+          key={shown?.id ?? "new"}
+          onOpenChange={onOpenChange}
+          accounts={accounts}
+          accountId={accountId}
+          editing={shown}
+        />
+      </QueryBoundary>
     </Modal>
   );
 }

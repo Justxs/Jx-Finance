@@ -1,4 +1,4 @@
-import { type ReactNode, useDeferredValue } from "react";
+import { type ReactNode, useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getRecurringBillsQueryKey,
@@ -11,6 +11,7 @@ import {
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
+import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
@@ -19,11 +20,13 @@ import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
-import { RecurringBillRow } from "../recurring-bill-row";
+import { RecurringBillConfirmForm, RecurringBillRow } from "../recurring-bill-row";
 import { SubscriptionSuggestions } from "../subscription-suggestions/subscription-suggestions";
 
 export function RecurringBillsPage() {
   const { t } = useTranslation();
+  const [editing, setEditing] = useState<RecurringBillResponse | null>(null);
+  const [confirming, setConfirming] = useState<RecurringBillResponse | null>(null);
 
   const accounts = useAccountsSuspense();
   const categories = useCategoriesSuspense();
@@ -52,6 +55,8 @@ export function RecurringBillsPage() {
             bill={bill}
             accounts={accountList}
             categories={categoryList}
+            onEdit={() => setEditing(bill)}
+            onConfirm={() => setConfirming(bill)}
             onDelete={() => remove.request(bill.id)}
             deletePending={remove.pendingId === bill.id}
             deleteDisabled={remove.busy}
@@ -88,6 +93,35 @@ export function RecurringBillsPage() {
         accounts={accountList}
         categories={categoryList}
       />
+      <EditModal
+        item={editing}
+        onClose={() => setEditing(null)}
+        title={t("recurringBills.editTitle")}
+        description={(bill) => bill.name}
+      >
+        {(bill) => (
+          <RecurringBillForm
+            bill={bill}
+            accounts={accountList}
+            categories={categoryList}
+            onDone={() => setEditing(null)}
+            onCancel={() => setEditing(null)}
+          />
+        )}
+      </EditModal>
+      <EditModal
+        item={confirming}
+        onClose={() => setConfirming(null)}
+        title={t("recurringBills.confirmTitle")}
+      >
+        {(bill) => (
+          <RecurringBillConfirmForm
+            bill={bill}
+            accounts={accountList}
+            onDone={() => setConfirming(null)}
+          />
+        )}
+      </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );

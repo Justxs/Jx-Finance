@@ -10,7 +10,7 @@ import {
   useUpdateAccount,
 } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { EditModal, Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
@@ -93,23 +93,21 @@ export function AccountsPage() {
         />
       </Modal>
 
-      <Modal
-        open={Boolean(editingAccount)}
-        onClose={() => setEditingId(null)}
+      <EditModal
+        item={editingAccount ?? null}
         title={t("actions.edit")}
+        onClose={() => setEditingId(null)}
       >
-        {editingAccount ? (
+        {(account) => (
           <AccountForm
-            initial={editingAccount}
+            initial={account}
             pending={updateMutation.isPending}
             error={updateMutation.error}
-            onSubmit={(values) =>
-              updateMutation.mutateAsync({ id: editingAccount.id, data: values })
-            }
+            onSubmit={(values) => updateMutation.mutateAsync({ id: account.id, data: values })}
             onCancel={() => setEditingId(null)}
           />
-        ) : null}
-      </Modal>
+        )}
+      </EditModal>
 
       <Panel>
         <AccountsTable

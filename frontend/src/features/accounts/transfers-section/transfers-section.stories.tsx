@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { type ComponentProps, useState } from "react";
+import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
 import {
   getCreateTransferMockHandler,
   getTransfersMockHandler,
@@ -36,15 +37,26 @@ function manyTransfersPage({ request }: { request: Request }) {
   };
 }
 
+function StatefulTransfersSection(args: ComponentProps<typeof TransfersSection>) {
+  const [addOpen, setAddOpen] = useState(args.addOpen);
+
+  function handleAddOpenChange(open: boolean) {
+    setAddOpen(open);
+    args.onAddOpenChange(open);
+  }
+
+  return <TransfersSection {...args} addOpen={addOpen} onAddOpenChange={handleAddOpenChange} />;
+}
+
 const meta = {
   title: "Features/Accounts/TransfersSection",
   component: TransfersSection,
   parameters: { layout: "fullscreen" },
-  args: { accounts },
+  args: { accounts, addOpen: false, onAddOpenChange: fn() },
   render: (args) => (
     <div className="mx-auto max-w-5xl p-6">
       <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <TransfersSection {...args} />
+        <StatefulTransfersSection {...args} />
       </QueryBoundary>
     </div>
   ),

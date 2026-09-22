@@ -7,7 +7,15 @@ import {
   getSubscriptionCandidatesMockHandler,
 } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { inactiveBill, recurringBills, many, subscriptionCandidates } from "@/storybook/fixtures";
+import {
+  dueSoonBill,
+  inactiveBill,
+  recurringBills,
+  many,
+  subscriptionCandidates,
+  transferBill,
+  variableBill,
+} from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -109,6 +117,42 @@ export const AddDialogWithoutAccounts: Story = {
       await canvas.findByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
     await openedDialog();
+  },
+};
+
+async function openFromRow(canvasElement: HTMLElement, billName: string, label: RegExp) {
+  const canvas = within(canvasElement);
+  const heading = await canvas.findByText(billName);
+  const row = heading.closest("li");
+  if (!row) {
+    throw new Error("expected the bill row");
+  }
+  await userEvent.click(within(row).getByRole("button", { name: label }));
+  return openedDialog();
+}
+
+export const EditDialogOpen: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = await openFromRow(canvasElement, dueSoonBill.name, /^(edit|redaguoti):/i);
+    await expect(within(dialog).getByLabelText(/^(name|pavadinimas)$/i)).toHaveValue(
+      dueSoonBill.name,
+    );
+  },
+};
+
+export const ConfirmDialogOpenTransfer: Story = {
+  play: async ({ canvasElement }) => {
+    await openFromRow(
+      canvasElement,
+      transferBill.name,
+      /^(record transfer|registruoti pervedimą)$/i,
+    );
+  },
+};
+
+export const ConfirmDialogOpenVariable: Story = {
+  play: async ({ canvasElement }) => {
+    await openFromRow(canvasElement, variableBill.name, /^(record payment|registruoti mokėjimą)$/i);
   },
 };
 

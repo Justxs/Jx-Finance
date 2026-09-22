@@ -30,21 +30,14 @@ import { TransferForm } from "./transfer-form";
 
 interface Props {
   accounts: AccountResponse[];
-  addOpen?: boolean;
-  onAddOpenChange?: (open: boolean) => void;
+  addOpen: boolean;
+  onAddOpenChange: (open: boolean) => void;
 }
 
 export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
-  const [ownAddOpen, setOwnAddOpen] = useState(false);
-  const createOpen = addOpen ?? ownAddOpen;
-
-  function setAddOpen(open: boolean) {
-    setOwnAddOpen(open);
-    onAddOpenChange?.(open);
-  }
 
   const paging = usePagedList();
   const listParams = transfersPageParams(paging.shownPage);
@@ -52,7 +45,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   const { items, pages } = usePagedItems(paging, transfers.data, pageSize);
   const accountNames = nameById(accounts);
 
-  const createMutation = useCreateTransfer(silent({ onSuccess: () => setAddOpen(false) }));
+  const createMutation = useCreateTransfer(silent({ onSuccess: () => onAddOpenChange(false) }));
   const [editTarget, setEditTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteTransfer({
@@ -109,20 +102,20 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
           size="sm"
           onClick={() => {
             createMutation.reset();
-            setAddOpen(true);
+            onAddOpenChange(true);
           }}
         >
           <Plus />
           {t("transfers.add")}
         </Button>
       </SectionHeader>
-      <Modal open={createOpen} onOpenChange={setAddOpen} title={t("transfers.title")}>
+      <Modal open={addOpen} onOpenChange={onAddOpenChange} title={t("transfers.title")}>
         <TransferForm
           accounts={accounts}
           pending={createMutation.isPending}
           error={createMutation.error}
           onSubmit={(values) => createMutation.mutateAsync({ data: values })}
-          onCancel={() => setAddOpen(false)}
+          onCancel={() => onAddOpenChange(false)}
         />
       </Modal>
       {content}

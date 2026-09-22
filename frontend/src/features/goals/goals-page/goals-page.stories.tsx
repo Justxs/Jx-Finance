@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
-import { getDeleteGoalMockHandler, getGoalsMockHandler } from "@/api/generated/goals/goals.msw";
+import {
+  getDeleteGoalMockHandler,
+  getGoalsMockHandler,
+  getUpdateGoalMockHandler,
+} from "@/api/generated/goals/goals.msw";
 import { withPageFrame } from "@/storybook/decorators";
 import {
   completedGoal,
@@ -74,6 +78,43 @@ export const AddDialogOpen: Story = {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /add goal|pridėti tikslą/i }));
     await openedDialog();
+  },
+};
+
+export const EditDialogOpen: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
+    );
+    await openedDialog();
+  },
+};
+
+export const EditInvalid: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
+    );
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await userEvent.clear(dialog.getAllByRole("textbox")[0]!);
+  },
+};
+
+export const EditSavePending: Story = {
+  parameters: {
+    msw: {
+      handlers: [getUpdateGoalMockHandler(pending), ...handlers],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(
+      (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
+    );
+    const dialog = within(await within(document.body).findByRole("dialog"));
+    await userEvent.click(dialog.getByRole("button", { name: /^(save|išsaugoti)$/i }));
   },
 };
 

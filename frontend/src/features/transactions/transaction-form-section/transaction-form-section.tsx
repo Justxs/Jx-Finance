@@ -5,7 +5,7 @@ import type {
   TagResponse,
   TransactionResponse,
 } from "@/api/generated/model";
-import { Modal } from "@/components/modal";
+import { EditModal, Modal } from "@/components/modal";
 import { TransactionAttachments } from "@/features/transactions/transaction-attachments/transaction-attachments";
 import {
   TransactionForm,
@@ -75,33 +75,31 @@ export function TransactionFormSection({
         />
       </Modal>
 
-      <Modal
-        open={editing !== null}
+      <EditModal
+        item={editing}
         onClose={onCancelEdit}
         title={t("transactions.editTitle")}
         className="max-w-2xl"
       >
-        {editing ? (
+        {(transaction) => (
           <>
             <TransactionForm
-              key={editing.id}
               accounts={accounts}
               categories={categories}
               tags={tags}
-              initial={editing}
+              initial={transaction}
               pending={updatePending}
               error={updateError}
               onSubmit={onUpdate}
               onCancel={onCancelEdit}
             />
             <TransactionAttachments
-              key={`attachments-${editing.id}`}
-              transactionId={editing.id}
+              transactionId={transaction.id}
               className="mt-6 border-t border-border pt-4"
             />
           </>
-        ) : null}
-      </Modal>
+        )}
+      </EditModal>
     </>
   );
 }

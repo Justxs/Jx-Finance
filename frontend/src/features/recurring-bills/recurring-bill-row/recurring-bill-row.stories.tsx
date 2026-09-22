@@ -13,7 +13,6 @@ import {
   transferBill,
   variableBill,
 } from "@/storybook/fixtures";
-import { openedDialog } from "@/storybook/interactions";
 import { RecurringBillRow } from "./recurring-bill-row";
 
 const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? dueSoonBill;
@@ -25,6 +24,8 @@ const meta = {
     bill: dueSoonBill,
     accounts,
     categories,
+    onEdit: fn(),
+    onConfirm: fn(),
     onDelete: fn(),
     deletePending: false,
     deleteDisabled: false,
@@ -74,14 +75,14 @@ export const Transfer: Story = {
   },
 };
 
-export const ConfirmDialogOpenTransfer: Story = {
+export const RecordTransferRequestsConfirm: Story = {
   args: { bill: transferBill },
-  play: async ({ canvasElement }) => {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
       canvas.getByRole("button", { name: /^(record transfer|registruoti pervedimą)$/i }),
     );
-    await openedDialog();
+    await expect(args.onConfirm).toHaveBeenCalledOnce();
   },
 };
 
@@ -97,32 +98,20 @@ export const DeletePending: Story = { args: { deletePending: true, deleteDisable
 
 export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 
-export const EditDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
+export const EditRequestsEdit: Story = {
+  play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
-    await openedDialog();
+    await expect(args.onEdit).toHaveBeenCalledOnce();
   },
 };
 
-export const ConfirmDialogOpenVariable: Story = {
-  args: { bill: variableBill },
+export const InactiveCannotRecord: Story = {
+  args: { bill: inactiveBill },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(
+    await expect(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
-    );
-    await openedDialog();
-  },
-};
-
-export const ConfirmDialogOpenNoAccount: Story = {
-  args: { bill: longNameBill },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await userEvent.click(
-      canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
-    );
-    await openedDialog();
+    ).toBeDisabled();
   },
 };
