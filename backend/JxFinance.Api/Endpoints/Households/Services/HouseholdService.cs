@@ -28,13 +28,8 @@ public sealed class HouseholdService(
     public async Task<IReadOnlyList<HouseholdResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var households = await db.Households.OrderBy(h => h.Name).ToListAsync(cancellationToken);
-        var responses = new List<HouseholdResponse>();
-        foreach (var household in households)
-        {
-            responses.Add(await ToResponseAsync(household, cancellationToken));
-        }
 
-        return responses;
+        return await ToResponsesAsync(households, cancellationToken);
     }
 
     public async Task<Result<HouseholdResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
@@ -266,23 +261,39 @@ public sealed class HouseholdService(
             m => m.HouseholdId == householdId && m.UserId != excludingUserId && m.Role == HouseholdRole.Owner,
             cancellationToken);
 
-    private async Task<HouseholdResponse> ToResponseAsync(Household household, CancellationToken cancellationToken)
+    private async Task<HouseholdResponse> ToResponseAsync(Household household, CancellationToken cancellationToken) =>
+        (await ToResponsesAsync([household], cancellationToken))[0];
+
+    private async Task<List<HouseholdResponse>> ToResponsesAsync(
+        List<Household> households,
+        CancellationToken cancellationToken)
     {
-        var memberships = await db.HouseholdMemberships
-            .Where(m => m.HouseholdId == household.Id)
+        if (households.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = households.Select(h => h.Id).ToList();
+        var rows = await (
+            from membership in db.HouseholdMemberships.Where(m => ids.Contains(m.HouseholdId))
+            join candidate in db.Users on membership.UserId equals candidate.Id into matched
+            from user in matched.DefaultIfEmpty()
+            select new { Membership = membership, User = user })
             .ToListAsync(cancellationToken);
 
-        var userIds = memberships.Select(m => m.UserId).ToList();
-        var users = await db.Users
-            .Where(u => userIds.Contains(u.Id))
-            .ToDictionaryAsync(u => u.Id, cancellationToken);
+        var byHousehold = rows
+            .GroupBy(row => row.Membership.HouseholdId)
+            .ToDictionary(group => group.Key, group => group.ToList());
 
-        var members = memberships
-            .Select(m => m.ToResponse(users.GetValueOrDefault(m.UserId)))
+        return households
+            .Select(household =>
+            {
+                var members = byHousehold.GetValueOrDefault(household.Id, []);
+                var myRole = members
+                    .Find(row => row.Membership.UserId == currentUser.Id)?
+                    .Membership.Role ?? HouseholdRole.Member;
+                return household.ToResponse(myRole, members.Select(row => row.Membership.ToResponse(row.User)).ToList());
+            })
             .ToList();
-
-        var myRole = memberships.FirstOrDefault(m => m.UserId == currentUser.Id)?.Role ?? HouseholdRole.Member;
-
-        return household.ToResponse(myRole, members);
     }
 }

@@ -200,16 +200,47 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         Assert.Equal(10.00m, await StoredReportingAmountAsync(deleted));
     }
 
+    [Fact]
+    public async Task Revaluation_reaches_a_deleted_investment_entry()
+    {
+        var original = await ReadAsync();
+        var account = await CreateAccountAsync("1000.00", "investment", "usd");
+        var entry = await RecordInvestmentAsync(
+            Client,
+            new { accountId = account, type = "interest", date = "2026-06-10", amount = "11.00" });
+        Assert.Equal(10.00m, await StoredEntryReportingAmountAsync(entry));
+        (await Client.DeleteAsync($"/api/investments/transactions/{entry}", TestContext.Current.CancellationToken))
+            .EnsureSuccessStatusCode();
+
+        try
+        {
+            await SaveAsync(original with { ReportingCurrency = "usd" });
+
+            Assert.Equal(11.00m, await StoredEntryReportingAmountAsync(entry));
+        }
+        finally
+        {
+            await SaveAsync(original);
+        }
+
+        Assert.Equal(10.00m, await StoredEntryReportingAmountAsync(entry));
+    }
+
+    private Task<decimal> StoredEntryReportingAmountAsync(Guid id) =>
+        StoredAmountAsync("InvestmentTransactions", id);
+
     private async Task<string> ReportingAmountAsync(Guid id) =>
         (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{id}"))!.ReportingAmount;
 
-    private async Task<decimal> StoredReportingAmountAsync(Guid id)
+    private Task<decimal> StoredReportingAmountAsync(Guid id) => StoredAmountAsync("Transactions", id);
+
+    private async Task<decimal> StoredAmountAsync(string table, Guid id)
     {
         await using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new Npgsql.NpgsqlCommand("SELECT \"ReportingAmount\" FROM \"Transactions\" WHERE \"Id\" = $1", connection);
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = new Npgsql.NpgsqlCommand($"SELECT \"ReportingAmount\" FROM \"{table}\" WHERE \"Id\" = $1", connection);
         command.Parameters.AddWithValue(id);
-        return (decimal)(await command.ExecuteScalarAsync())!;
+        return (decimal)(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken))!;
     }
 
     [Fact]

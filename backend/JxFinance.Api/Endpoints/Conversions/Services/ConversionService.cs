@@ -36,7 +36,7 @@ public sealed class ConversionService(
         GetConversionsRequest request,
         CancellationToken cancellationToken)
     {
-        var query = db.CurrencyConversions.AsQueryable();
+        var query = db.CurrencyConversions.AsNoTracking();
         if (request.AccountId is { } accountId)
         {
             var typedAccountId = new AccountId(accountId);
@@ -51,7 +51,11 @@ public sealed class ConversionService(
         var feeIds = page.Items.Where(c => c.FeeTransactionId is not null).Select(c => c.FeeTransactionId!.Value).ToList();
         var fees = feeIds.Count == 0
             ? []
-            : await db.Transactions.Where(t => feeIds.Contains(t.Id)).ToDictionaryAsync(t => t.Id, cancellationToken);
+            : await db.Transactions
+                .AsNoTracking()
+                .Where(t => feeIds.Contains(t.Id))
+                .Select(t => new ConversionFee(t.Id, t.Amount, t.CategoryId))
+                .ToDictionaryAsync(fee => fee.Id, cancellationToken);
 
         return page.Map(c => c.ToResponse(FeeFor(c, fees)));
     }
@@ -213,7 +217,7 @@ public sealed class ConversionService(
         return id;
     }
 
-    private static Transaction? FeeFor(CurrencyConversion conversion, Dictionary<TransactionId, Transaction> fees) =>
+    private static ConversionFee? FeeFor(CurrencyConversion conversion, Dictionary<TransactionId, ConversionFee> fees) =>
         conversion.FeeTransactionId is { } feeId ? fees.GetValueOrDefault(feeId) : null;
 
     private static string FeeDescription(Currency from, Currency to) => $"Conversion fee {from.ToCode()} to {to.ToCode()}";

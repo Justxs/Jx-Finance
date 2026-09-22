@@ -21,6 +21,8 @@ public interface IAuthService
 
     Task<UserProfileResponse> ToProfileAsync(AppUser user);
 
+    UserProfileResponse ToProfile(AppUser user, string role);
+
     Task<UserProfileResponse?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken);
 
     Task<AppUser?> FindByIdAsync(Guid userId, CancellationToken cancellationToken);

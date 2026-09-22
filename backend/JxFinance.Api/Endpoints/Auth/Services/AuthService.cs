@@ -100,18 +100,18 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
     public async Task<UserProfileResponse> ToProfileAsync(AppUser user)
     {
         var roles = await userManager.GetRolesAsync(user);
-        var role = roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member;
-        var isActive = !user.IsDeactivated;
-        return new UserProfileResponse(
-            user.Id,
-            user.Email!,
-            user.DisplayName,
-            role,
-            user.TwoFactorEnabled,
-            isActive,
-            user.EmailConfirmed,
-            user.BillReminderEmails);
+        return ToProfile(user, roles.Contains(AppRoles.Admin) ? AppRoles.Admin : AppRoles.Member);
     }
+
+    public UserProfileResponse ToProfile(AppUser user, string role) => new(
+        user.Id,
+        user.Email!,
+        user.DisplayName,
+        role,
+        user.TwoFactorEnabled,
+        !user.IsDeactivated,
+        user.EmailConfirmed,
+        user.BillReminderEmails);
 
     public async Task<UserProfileResponse?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken)
     {

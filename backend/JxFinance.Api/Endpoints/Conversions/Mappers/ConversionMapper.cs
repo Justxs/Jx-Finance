@@ -31,7 +31,10 @@ public static class ConversionMapper
         conversion.FeeTransactionId = fee?.Id;
     }
 
-    public static ConversionResponse ToResponse(this CurrencyConversion conversion, Transaction? fee) => new(
+    public static ConversionResponse ToResponse(this CurrencyConversion conversion, Transaction? fee) =>
+        conversion.ToResponse(fee is null ? null : new ConversionFee(fee.Id, fee.Amount, fee.CategoryId));
+
+    public static ConversionResponse ToResponse(this CurrencyConversion conversion, ConversionFee? fee) => new(
         conversion.Id.Value,
         conversion.AccountId.Value,
         conversion.FromAmount.Amount,

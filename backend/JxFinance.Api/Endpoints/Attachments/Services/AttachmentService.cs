@@ -58,6 +58,7 @@ public sealed class AttachmentService(
         }
 
         var attachments = await db.TransactionAttachments
+            .AsNoTracking()
             .Where(a => a.TransactionId == typedId)
             .OrderBy(a => a.CreatedAt)
             .ToListAsync(cancellationToken);

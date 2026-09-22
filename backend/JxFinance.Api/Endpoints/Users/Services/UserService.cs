@@ -29,7 +29,14 @@ public sealed class UserService(
         GetUsersRequest request,
         CancellationToken cancellationToken)
     {
-        var query = userManager.Users.AsQueryable();
+        var wantedRole = request.Role;
+        if (!string.IsNullOrWhiteSpace(wantedRole)
+            && !AppRoles.All.Any(role => string.Equals(role, wantedRole, StringComparison.OrdinalIgnoreCase)))
+        {
+            return [];
+        }
+
+        var query = userManager.Users.AsNoTracking();
 
         if (!string.IsNullOrWhiteSpace(request.Search))
         {
@@ -39,23 +46,29 @@ public sealed class UserService(
                 (u.Email != null && EF.Functions.ILike(u.Email, search, LikePattern.Escape)));
         }
 
-        var users = await query.OrderBy(u => u.Email).ToListAsync(cancellationToken);
-        var profiles = new List<UserProfileResponse>(users.Count);
-        foreach (var user in users)
-        {
-            profiles.Add(await authService.ToProfileAsync(user));
-        }
-
-        IEnumerable<UserProfileResponse> filtered = profiles;
-        if (!string.IsNullOrWhiteSpace(request.Role))
-        {
-            filtered = filtered.Where(p => string.Equals(p.Role, request.Role, StringComparison.OrdinalIgnoreCase));
-        }
-
         if (request.IsActive is { } isActive)
         {
-            filtered = filtered.Where(p => p.IsActive == isActive);
+            query = isActive
+                ? query.Where(u => u.LockoutEnd == null || u.LockoutEnd < AppUser.DeactivatedUntil)
+                : query.Where(u => u.LockoutEnd >= AppUser.DeactivatedUntil);
         }
+
+        var rows = query.Select(u => new
+        {
+            User = u,
+            IsAdmin = db.UserRoles.Any(link =>
+                link.UserId == u.Id && db.Roles.Any(role => role.Id == link.RoleId && role.Name == AppRoles.Admin)),
+        });
+
+        if (!string.IsNullOrWhiteSpace(wantedRole))
+        {
+            var wantsAdmin = string.Equals(wantedRole, AppRoles.Admin, StringComparison.OrdinalIgnoreCase);
+            rows = rows.Where(row => row.IsAdmin == wantsAdmin);
+        }
+
+        var profiles = (await rows.OrderBy(row => row.User.Email).ToListAsync(cancellationToken))
+            .Select(row => authService.ToProfile(row.User, row.IsAdmin ? AppRoles.Admin : AppRoles.Member))
+            .ToList();
 
         Func<UserProfileResponse, IComparable> key = request.Sort switch
         {
@@ -66,8 +79,8 @@ public sealed class UserService(
         };
 
         return request.Direction == SortDirection.Desc
-            ? filtered.OrderByDescending(key).ToList()
-            : filtered.OrderBy(key).ToList();
+            ? profiles.OrderByDescending(key).ToList()
+            : profiles.OrderBy(key).ToList();
     }
 
     public async Task<Result<UserProfileResponse>> CreateAsync(

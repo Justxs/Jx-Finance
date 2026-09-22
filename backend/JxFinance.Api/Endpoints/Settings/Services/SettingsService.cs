@@ -6,6 +6,8 @@ using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Investments;
+using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
@@ -188,7 +190,7 @@ public sealed class SettingsService(
             .Where(t => t.Amount.Currency != reportingCurrency);
         var foreignEntries = db.InvestmentTransactions
             .IgnoreQueryFilters()
-            .Where(t => !t.IsDeleted && t.CashAmount.Currency != reportingCurrency);
+            .Where(t => t.CashAmount.Currency != reportingCurrency);
         var foreignSnapshots = db.NetWorthSnapshots
             .IgnoreQueryFilters()
             .Where(s => s.Currency != reportingCurrency);
@@ -205,16 +207,19 @@ public sealed class SettingsService(
         if (dates.Count > 0)
         {
             await rates.EnsureRangeAsync(dates.Min(), dates.Max(), cancellationToken);
+            await rates.PreloadAsync(dates.Min(), dates.Max(), cancellationToken);
         }
 
-        var error = await RevalueInBatchesAsync(
-            foreign.OrderBy(t => t.Id),
+        var error = await RevalueInBatchesAsync<Transaction, TransactionId>(
+            (after, size) => (after is { } last ? foreign.Where(t => t.Id > last) : foreign).OrderBy(t => t.Id).Take(size),
+            t => t.Id,
             t => (t.Amount, t.Date),
             (t, value) => t.ReportingAmount = value,
             reportingCurrency,
             cancellationToken);
-        error ??= await RevalueInBatchesAsync(
-            foreignEntries.OrderBy(t => t.Id),
+        error ??= await RevalueInBatchesAsync<InvestmentTransaction, InvestmentTransactionId>(
+            (after, size) => (after is { } last ? foreignEntries.Where(t => t.Id > last) : foreignEntries).OrderBy(t => t.Id).Take(size),
+            t => t.Id,
             t => (t.CashAmount, t.Date),
             (t, value) => t.ReportingAmount = value,
             reportingCurrency,
@@ -230,24 +235,27 @@ public sealed class SettingsService(
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.Amount.Amount), cancellationToken);
         await db.InvestmentTransactions
             .IgnoreQueryFilters()
-            .Where(t => !t.IsDeleted && t.CashAmount.Currency == reportingCurrency)
+            .Where(t => t.CashAmount.Currency == reportingCurrency)
             .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.CashAmount.Amount), cancellationToken);
 
         return null;
     }
 
-    private async Task<string?> RevalueInBatchesAsync<T>(
-        IOrderedQueryable<T> rows,
+    private async Task<string?> RevalueInBatchesAsync<T, TId>(
+        Func<TId?, int, IQueryable<T>> page,
+        Func<T, TId> keyOf,
         Func<T, (Money Amount, DateOnly Date)> read,
         Action<T, decimal> write,
         Currency reportingCurrency,
         CancellationToken cancellationToken)
         where T : class
+        where TId : struct
     {
         var batchSize = Math.Max(options.Value.RevalueBatchSize, 1);
-        for (var skip = 0; ; skip += batchSize)
+        TId? after = null;
+        while (true)
         {
-            var batch = await rows.Skip(skip).Take(batchSize).ToListAsync(cancellationToken);
+            var batch = await page(after, batchSize).ToListAsync(cancellationToken);
             if (batch.Count == 0)
             {
                 return null;
@@ -265,6 +273,7 @@ public sealed class SettingsService(
                 write(row, value.Value);
             }
 
+            after = keyOf(batch[^1]);
             await db.SaveChangesAsync(cancellationToken);
             foreach (var row in batch)
             {
