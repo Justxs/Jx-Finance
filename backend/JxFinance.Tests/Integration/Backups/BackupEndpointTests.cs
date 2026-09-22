@@ -69,7 +69,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             Client,
             "/api/transactions",
             new { accountId = account, type = "expense", amount = "7.90", date = "2026-06-06", description = "Deleted later" });
-        var goal = await PostAsync<IdDto>(Client, "/api/goals", new { name = "Restored goal", targetAmount = "900.00", currentAmount = "100.00" });
+        var goal = await Seed.GoalAsync(Client, "Restored goal", "900.00", "100.00");
         var backup = await CreateBackupAsync();
 
         (await Client.PutAsJsonAsync(
@@ -77,7 +77,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
             new { accountId = account, type = "expense", amount = "99.99", date = "2026-07-01", description = "After the backup" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await Client.DeleteAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         (await Client.DeleteAsync($"/api/categories/{category}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        (await Client.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"/api/goals/{goal}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         Assert.Equal("400.01", await CurrentBalanceAsync(account));
 
         try
@@ -93,7 +93,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(new RestoredTransactionDto(edited.Id, category, "42.10", new DateOnly(2026, 6, 5), "Before the backup"), restored);
         Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/transactions/{deleted.Id}", TestContext.Current.CancellationToken)).StatusCode);
         Assert.Contains(category.ToString(), await Client.GetStringAsync("/api/categories", TestContext.Current.CancellationToken));
-        Assert.Contains(goal.Id.ToString(), await Client.GetStringAsync("/api/goals", TestContext.Current.CancellationToken));
+        Assert.Contains(goal.ToString(), await Client.GetStringAsync("/api/goals", TestContext.Current.CancellationToken));
         Assert.Equal("450.00", await CurrentBalanceAsync(account));
     }
 
