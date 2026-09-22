@@ -2,9 +2,9 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Accounts.CreateAccount;
 using JxFinance.Endpoints.Accounts.GetAccounts;
 using JxFinance.Endpoints.Accounts.Interfaces;
@@ -21,6 +21,7 @@ namespace JxFinance.Endpoints.Accounts.Services;
 public sealed class AccountService(
     AppDbContext db,
     ICurrentUser currentUser,
+    ISharingGuard sharing,
     AccountMapper mapper,
     IExchangeRateService rates,
     IHoldingsValuation holdings) : IAccountService
@@ -117,13 +118,12 @@ public sealed class AccountService(
         CreateAccountRequest request,
         CancellationToken cancellationToken)
     {
-        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
-        if (membershipError is not null)
+        var account = mapper.ToEntity(request);
+        if (await sharing.CheckAsync(account, null, cancellationToken) is { } sharingError)
         {
-            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
+            return sharingError;
         }
 
-        var account = mapper.ToEntity(request);
         if (rates.UnusableReason(account.Currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
@@ -146,45 +146,23 @@ public sealed class AccountService(
             return found.Error;
         }
 
-        var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
-        if (membershipError is not null)
+        var previous = SharingState.Of(account);
+        var previousCurrency = account.Currency;
+        mapper.Apply(request, account);
+
+        if (await sharing.CheckAsync(account, previous, cancellationToken) is { } sharingError)
         {
-            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
+            return sharingError;
         }
 
-        if (account.UserId != currentUser.Id &&
-            (account.Scope != request.Scope || account.HouseholdId?.Value != request.HouseholdId))
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
-        }
-
-        if (request.Currency is { } currency && currency != account.Currency && rates.UnusableReason(currency) is { } currencyError)
+        if (account.Currency != previousCurrency && rates.UnusableReason(account.Currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
-        mapper.Apply(request, account);
         await db.SaveChangesAsync(cancellationToken);
 
         return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
-    }
-
-    private async Task<string?> ValidateHouseholdAsync(
-        Scope scope,
-        Guid? householdId,
-        CancellationToken cancellationToken)
-    {
-        if (scope == Scope.Personal || householdId is null)
-        {
-            return null;
-        }
-
-        var typedHouseholdId = new HouseholdId(householdId.Value);
-        var isMember = await db.HouseholdMemberships.AnyAsync(
-            m => m.HouseholdId == typedHouseholdId && m.UserId == currentUser.Id,
-            cancellationToken);
-
-        return isMember ? null : "You are not a member of that household.";
     }
 
     public async Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken)

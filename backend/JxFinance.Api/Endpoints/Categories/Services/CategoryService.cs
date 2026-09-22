@@ -1,10 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Households;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Categories.Interfaces;
 using JxFinance.Infrastructure.Data;
@@ -16,6 +16,7 @@ namespace JxFinance.Endpoints.Categories.Services;
 public sealed class CategoryService(
     AppDbContext db,
     ICurrentUser currentUser,
+    ISharingGuard sharing,
     IClock clock,
     IDeletionRecorder deletions) : ICategoryService
 {
@@ -27,10 +28,9 @@ public sealed class CategoryService(
 
     public async Task<Result<Category>> CreateAsync(Category category, CancellationToken cancellationToken)
     {
-        var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
-        if (membershipError is not null)
+        if (await sharing.CheckAsync(category, null, cancellationToken) is { } sharingError)
         {
-            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
+            return sharingError;
         }
 
         db.Categories.Add(category);
@@ -48,42 +48,17 @@ public sealed class CategoryService(
             return found.Error;
         }
 
-        var (previousScope, previousHouseholdId) = (category.Scope, category.HouseholdId);
+        var previous = SharingState.Of(category);
         apply(category);
 
-        var membershipError = await ValidateHouseholdAsync(category.Scope, category.HouseholdId?.Value, cancellationToken);
-        if (membershipError is not null)
+        if (await sharing.CheckAsync(category, previous, cancellationToken) is { } sharingError)
         {
-            return new DomainError(ErrorCodes.HouseholdNotMember, membershipError);
-        }
-
-        if (category.UserId != currentUser.Id &&
-            (category.Scope != previousScope || category.HouseholdId != previousHouseholdId))
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
+            return sharingError;
         }
 
         await db.SaveChangesAsync(cancellationToken);
 
         return category;
-    }
-
-    private async Task<string?> ValidateHouseholdAsync(
-        Scope scope,
-        Guid? householdId,
-        CancellationToken cancellationToken)
-    {
-        if (scope == Scope.Personal || householdId is null)
-        {
-            return null;
-        }
-
-        var typedHouseholdId = new HouseholdId(householdId.Value);
-        var isMember = await db.HouseholdMemberships.AnyAsync(
-            m => m.HouseholdId == typedHouseholdId && m.UserId == currentUser.Id,
-            cancellationToken);
-
-        return isMember ? null : "You are not a member of that household.";
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

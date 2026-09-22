@@ -2,6 +2,7 @@ using System.Collections.Frozen;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Budgets;
 using JxFinance.Domain.Categories;
@@ -480,49 +481,10 @@ public static class TrashRestorers
             .Select(m => m.UserId)
             .ToListAsync(r.CancellationToken);
         var now = r.Clock.UtcNow;
-        HouseholdId? sharedInto = householdId;
-
-        var accountIds = r.Entry.Remembered<AccountId>(DeletionChangeKind.AccountShare);
-        await db.Accounts
-            .IgnoreQueryFilters()
-            .Where(a => accountIds.Contains(a.Id)
-                && a.Scope == Scope.Personal
-                && a.HouseholdId == null
-                && members.Contains(a.UserId))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(a => a.Scope, Scope.Shared)
-                    .SetProperty(a => a.HouseholdId, sharedInto)
-                    .SetProperty(a => a.UpdatedAt, a => a.IsDeleted ? a.UpdatedAt : now),
-                r.CancellationToken);
-
-        var categoryIds = r.Entry.Remembered<CategoryId>(DeletionChangeKind.CategoryShare);
-        await db.Categories
-            .IgnoreQueryFilters()
-            .Where(c => categoryIds.Contains(c.Id)
-                && c.Scope == Scope.Personal
-                && c.HouseholdId == null
-                && members.Contains(c.UserId))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(c => c.Scope, Scope.Shared)
-                    .SetProperty(c => c.HouseholdId, sharedInto)
-                    .SetProperty(c => c.UpdatedAt, c => c.IsDeleted ? c.UpdatedAt : now),
-                r.CancellationToken);
-
-        var tagIds = r.Entry.Remembered<TagId>(DeletionChangeKind.TagShare);
-        await db.Tags
-            .IgnoreQueryFilters()
-            .Where(t => tagIds.Contains(t.Id)
-                && t.Scope == Scope.Personal
-                && t.HouseholdId == null
-                && members.Contains(t.UserId))
-            .ExecuteUpdateAsync(
-                setters => setters
-                    .SetProperty(t => t.Scope, Scope.Shared)
-                    .SetProperty(t => t.HouseholdId, sharedInto)
-                    .SetProperty(t => t.UpdatedAt, t => t.IsDeleted ? t.UpdatedAt : now),
-                r.CancellationToken);
+        foreach (var set in ShareableSet.All)
+        {
+            await set.ReshareAsync(db, r.Entry.Remembered(set.ShareKind), members, householdId, now, r.CancellationToken);
+        }
 
         return Result.Success();
     }

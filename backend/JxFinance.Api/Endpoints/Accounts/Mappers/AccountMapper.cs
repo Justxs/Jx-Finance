@@ -1,9 +1,9 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Settings;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
-using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Accounts.CreateAccount;
 using JxFinance.Endpoints.Accounts.Shared;
 
@@ -46,10 +46,6 @@ public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<Crea
         account.Iban = Iban.Normalize(input.Iban);
         account.Type = input.Type;
         account.StartingBalance = new Money(input.StartingBalance!.Value, input.Currency ?? fallbackCurrency);
-        account.Scope = input.Scope;
-        account.HouseholdId = HouseholdFor(input.Scope, input.HouseholdId);
+        account.ApplySharing(input);
     }
-
-    private static HouseholdId? HouseholdFor(Scope scope, Guid? householdId) =>
-        scope == Scope.Shared ? new HouseholdId(householdId!.Value) : null;
 }

@@ -1,8 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Sharing;
 using JxFinance.Domain.Categories;
-using JxFinance.Domain.Common;
-using JxFinance.Domain.Households;
 using JxFinance.Endpoints.Categories.CreateCategory;
 using JxFinance.Endpoints.Categories.Shared;
 
@@ -21,8 +20,7 @@ public sealed class CategoryMapper : Mapper<CreateCategoryRequest, CategoryRespo
     {
         category.Name = input.Name.Trim();
         category.Icon = OptionalText.Normalize(input.Icon);
-        category.Scope = input.Scope;
-        category.HouseholdId = HouseholdFor(input.Scope, input.HouseholdId);
+        category.ApplySharing(input);
     }
 
     public override CategoryResponse FromEntity(Category category) => new(
@@ -33,7 +31,4 @@ public sealed class CategoryMapper : Mapper<CreateCategoryRequest, CategoryRespo
         category.IsDefault,
         category.Scope,
         category.HouseholdId?.Value);
-
-    private static HouseholdId? HouseholdFor(Scope scope, Guid? householdId) =>
-        scope == Scope.Shared ? new HouseholdId(householdId!.Value) : null;
 }
