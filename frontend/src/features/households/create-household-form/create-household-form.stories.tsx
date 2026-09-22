@@ -4,7 +4,7 @@ import { getCreateHouseholdMockHandler } from "@/api/generated/households/househ
 import { Modal } from "@/components/modal";
 import { Card } from "@/components/ui/card/card";
 import { serverErrorProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { CreateHouseholdForm } from "./create-household-form";
 
 const meta = {
@@ -41,22 +41,13 @@ export const InModal: Story = {
 };
 
 export const ServerErrorAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getCreateHouseholdMockHandler(
-          failWith({ ...serverErrorProblem, instance: "/api/households" }, 500),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getCreateHouseholdMockHandler(
+      failWith({ ...serverErrorProblem, instance: "/api/households" }, 500),
+    ),
+  ),
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateHouseholdMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateHouseholdMockHandler(pending)),
 };

@@ -4,7 +4,7 @@ import { getCreateUserMockHandler } from "@/api/generated/users/users.msw";
 import { Modal } from "@/components/modal";
 import { Card } from "@/components/ui/card/card";
 import { validationProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { CreateUserForm } from "./create-user-form";
 
 const meta = {
@@ -40,22 +40,13 @@ export const InModal: Story = {
 };
 
 export const ValidationErrorAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getCreateUserMockHandler(
-          failWith({ ...validationProblem, detail: "A user with this email already exists." }, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getCreateUserMockHandler(
+      failWith({ ...validationProblem, detail: "A user with this email already exists." }, 400),
+    ),
+  ),
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateUserMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateUserMockHandler(pending)),
 };

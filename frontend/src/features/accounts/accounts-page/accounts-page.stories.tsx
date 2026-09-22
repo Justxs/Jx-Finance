@@ -5,9 +5,9 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { AccountsPage } from "./accounts-page";
 
@@ -46,5 +46,5 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [getCreateAccountMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getCreateAccountMockHandler(pending)),
 };

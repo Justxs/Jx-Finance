@@ -7,7 +7,7 @@ import {
   spotifyCandidate,
   subscriptionCandidates,
 } from "@/storybook/fixtures";
-import { failWithStatus, handlers, pending } from "@/storybook/handlers";
+import { failWithStatus, pending, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { SubscriptionSuggestions } from "./subscription-suggestions";
 
@@ -40,9 +40,7 @@ export const CreateDialogIsPrefilled: Story = {
 };
 
 export const DismissPending: Story = {
-  parameters: {
-    msw: { handlers: [getDismissSubscriptionCandidateMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getDismissSubscriptionCandidateMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const buttons = await canvas.findAllByRole("button", { name: /^(dismiss|atmesti):/i });
@@ -52,11 +50,7 @@ export const DismissPending: Story = {
 };
 
 export const DismissFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDismissSubscriptionCandidateMockHandler(failWithStatus(500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDismissSubscriptionCandidateMockHandler(failWithStatus(500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const buttons = await canvas.findAllByRole("button", { name: /^(dismiss|atmesti):/i });

@@ -17,9 +17,9 @@ import {
   errorHandlers,
   failWith,
   failWithStatus,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { first, openedDialog } from "@/storybook/interactions";
 import { BackupSection } from "./backup-section";
@@ -77,7 +77,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const Empty: Story = {
-  parameters: { msw: { handlers: [getBackupsMockHandler([]), ...handlers] } },
+  parameters: withHandlers(getBackupsMockHandler([])),
   play: async ({ canvasElement }) => {
     await expect(
       await within(canvasElement).findByText("No backup has been taken yet."),
@@ -118,9 +118,7 @@ export const DeleteAsksFirst: Story = {
 };
 
 export const RestorePending: Story = {
-  parameters: {
-    msw: { handlers: [getRestoreBackupMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getRestoreBackupMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
     await waitFor(() => expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled());
@@ -129,11 +127,7 @@ export const RestorePending: Story = {
 };
 
 export const OtherVersionRejected: Story = {
-  parameters: {
-    msw: {
-      handlers: [getRestoreBackupMockHandler(failWith(backupSchemaProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(backupSchemaProblem, 400))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
     await expect(await dialog.findByText(/another version of the application/u)).toBeVisible();
@@ -149,11 +143,7 @@ export const NoFileChosen: Story = {
 };
 
 export const UploadRejected: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUploadBackupMockHandler(failWith(backupInvalidFileProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupInvalidFileProblem, 400))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const file = new File(["not a backup"], "notes.json", { type: "application/json" });
@@ -174,9 +164,7 @@ export const RestoreWrongPassword: Story = {
 };
 
 export const RestoreLockedOut: Story = {
-  parameters: {
-    msw: { handlers: [getRestoreBackupMockHandler(failWith(lockedOutProblem, 429)), ...handlers] },
-  },
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(lockedOutProblem, 429))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
 
@@ -185,9 +173,7 @@ export const RestoreLockedOut: Story = {
 };
 
 export const RestoreThrottledWithoutBody: Story = {
-  parameters: {
-    msw: { handlers: [getRestoreBackupMockHandler(failWithStatus(429)), ...handlers] },
-  },
+  parameters: withHandlers(getRestoreBackupMockHandler(failWithStatus(429))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
 
@@ -198,11 +184,7 @@ export const RestoreThrottledWithoutBody: Story = {
 };
 
 export const RestoreWhileDatabaseBusy: Story = {
-  parameters: {
-    msw: {
-      handlers: [getRestoreBackupMockHandler(failWith(databaseBusyProblem, 409)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(databaseBusyProblem, 409))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
 
@@ -212,11 +194,7 @@ export const RestoreWhileDatabaseBusy: Story = {
 };
 
 export const UploadTooLarge: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUploadBackupMockHandler(failWith(backupTooLargeProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupTooLargeProblem, 400))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const file = new File(["{}"], "huge.json.gz", { type: "application/gzip" });

@@ -7,7 +7,7 @@ import {
   splitTransaction,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { RecentTransactionsList } from "./recent-transactions-list";
 
 const meta = {
@@ -39,7 +39,5 @@ function specialTransactions() {
 }
 
 export const LongAndSpecialRows: Story = {
-  parameters: {
-    msw: { handlers: [getTransactionsMockHandler(specialTransactions), ...handlers] },
-  },
+  parameters: withHandlers(getTransactionsMockHandler(specialTransactions)),
 };

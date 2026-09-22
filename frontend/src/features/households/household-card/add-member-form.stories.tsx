@@ -4,7 +4,7 @@ import { getAddMemberMockHandler } from "@/api/generated/households/households.m
 import { Modal } from "@/components/modal";
 import { Card } from "@/components/ui/card/card";
 import { familyHousehold, notFoundProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { AddMemberForm } from "./add-member-form";
 
 const meta = {
@@ -43,22 +43,13 @@ export const InModal: Story = {
 };
 
 export const UnknownEmailAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getAddMemberMockHandler(
-          failWith({ ...notFoundProblem, detail: "No user with this email exists." }, 404),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getAddMemberMockHandler(
+      failWith({ ...notFoundProblem, detail: "No user with this email exists." }, 404),
+    ),
+  ),
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getAddMemberMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getAddMemberMockHandler(pending)),
 };

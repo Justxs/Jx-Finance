@@ -9,6 +9,7 @@ import {
   failWith,
   handlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { readBody } from "@/storybook/handlers/http";
 import { paginate } from "@/storybook/handlers/lists";
@@ -70,24 +71,19 @@ export const Empty: Story = {
 };
 
 export const Paged: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getTrashMockHandler(({ request }) =>
-          paginate(
-            trashEntries.flatMap((entry, index) =>
-              Array.from({ length: 3 }, (_, copy) => ({
-                ...entry,
-                id: `${entry.id}-${index}-${copy}`,
-              })),
-            ),
-            new URL(request.url).searchParams,
-          ),
+  parameters: withHandlers(
+    getTrashMockHandler(({ request }) =>
+      paginate(
+        trashEntries.flatMap((entry, index) =>
+          Array.from({ length: 3 }, (_, copy) => ({
+            ...entry,
+            id: `${entry.id}-${index}-${copy}`,
+          })),
         ),
-        ...handlers,
-      ],
-    },
-  },
+        new URL(request.url).searchParams,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("Page 1 of 4")).toBeVisible();
@@ -115,31 +111,26 @@ export const RestoringTakesTheRowOut: Story = {
 };
 
 export const RestoreRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getRestoreDeletedMockHandler(
-          failWith(
+  parameters: withHandlers(
+    getRestoreDeletedMockHandler(
+      failWith(
+        {
+          ...serverErrorProblem,
+          status: 400,
+          title: "Cannot restore",
+          instance: "/api/trash/restore",
+          errors: [
             {
-              ...serverErrorProblem,
-              status: 400,
-              title: "Cannot restore",
-              instance: "/api/trash/restore",
-              errors: [
-                {
-                  name: "GeneralErrors",
-                  reason: "The account this belonged to is archived.",
-                  code: "restore.referenceMissing" as const,
-                },
-              ],
+              name: "GeneralErrors",
+              reason: "The account this belonged to is archived.",
+              code: "restore.referenceMissing" as const,
             },
-            400,
-          ),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+          ],
+        },
+        400,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -154,31 +145,26 @@ export const RestoreRefused: Story = {
 };
 
 export const InvestmentRestoreRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getRestoreDeletedMockHandler(
-          failWith(
+  parameters: withHandlers(
+    getRestoreDeletedMockHandler(
+      failWith(
+        {
+          ...serverErrorProblem,
+          status: 400,
+          title: "Cannot restore",
+          instance: "/api/trash/restore",
+          errors: [
             {
-              ...serverErrorProblem,
-              status: 400,
-              title: "Cannot restore",
-              instance: "/api/trash/restore",
-              errors: [
-                {
-                  name: "GeneralErrors",
-                  reason: "Later sales now depend on the shares this entry would take back.",
-                  code: "holding.dependentSales" as const,
-                },
-              ],
+              name: "GeneralErrors",
+              reason: "Later sales now depend on the shares this entry would take back.",
+              code: "holding.dependentSales" as const,
             },
-            400,
-          ),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+          ],
+        },
+        400,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -191,34 +177,29 @@ export const InvestmentRestoreRefused: Story = {
 };
 
 export const RecordedKinds: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getTrashMockHandler(({ request }) =>
-          paginate(recordedTrashEntries, new URL(request.url).searchParams),
-        ),
-        getRestoreDeletedMockHandler(
-          failWith(
+  parameters: withHandlers(
+    getTrashMockHandler(({ request }) =>
+      paginate(recordedTrashEntries, new URL(request.url).searchParams),
+    ),
+    getRestoreDeletedMockHandler(
+      failWith(
+        {
+          ...serverErrorProblem,
+          status: 409,
+          title: "Cannot restore",
+          instance: "/api/trash/restore",
+          errors: [
             {
-              ...serverErrorProblem,
-              status: 409,
-              title: "Cannot restore",
-              instance: "/api/trash/restore",
-              errors: [
-                {
-                  name: "GeneralErrors",
-                  reason: 'You already have another tag named "Atostogos".',
-                  code: "restore.nameTaken" as const,
-                },
-              ],
+              name: "GeneralErrors",
+              reason: 'You already have another tag named "Atostogos".',
+              code: "restore.nameTaken" as const,
             },
-            409,
-          ),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+          ],
+        },
+        409,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("Maistas, 42 transactions, 1 budget")).toBeVisible();

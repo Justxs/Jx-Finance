@@ -1,20 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { getLoginMockHandler } from "@/api/generated/auth/auth.msw";
-import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
-import { loginTwoFactorRequired, settings, unauthorizedProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { withWidth } from "@/storybook/decorators";
+import { loginTwoFactorRequired, unauthorizedProblem } from "@/storybook/fixtures";
+import { emailEnabledHandler, failWith, pending, withHandlers } from "@/storybook/handlers";
 import { LoginPage } from "./login-page";
 
 const meta = {
   title: "Features/Auth/LoginPage",
   component: LoginPage,
   parameters: { route: "/login" },
-  render: () => (
-    <div className="flex w-96 max-w-full justify-center">
-      <LoginPage />
-    </div>
-  ),
+  decorators: [withWidth("auth")],
 } satisfies Meta<typeof LoginPage>;
 
 export default meta;
@@ -23,18 +19,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const ForgotPasswordIsOfferedWhenEmailWorks: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getPublicSettingsMockHandler({
-          instanceName: settings.instanceName,
-          defaultLanguage: settings.defaultLanguage,
-          emailEnabled: true,
-        }),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(emailEnabledHandler),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
@@ -51,27 +36,18 @@ export const ForgotPasswordIsHiddenWithoutAMailServer: Story = {
 };
 
 export const TwoFactorStepAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getLoginMockHandler(loginTwoFactorRequired), ...handlers],
-    },
-  },
+  parameters: withHandlers(getLoginMockHandler(loginTwoFactorRequired)),
 };
 
 export const InvalidCredentialsAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getLoginMockHandler(
-          failWith(
-            { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
-            401,
-          ),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getLoginMockHandler(
+      failWith(
+        { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
+        401,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.type(canvas.getByLabelText("Email"), "ruta@example.lt");
@@ -82,9 +58,5 @@ export const InvalidCredentialsAfterSubmit: Story = {
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getLoginMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getLoginMockHandler(pending)),
 };

@@ -10,9 +10,9 @@ import { categorizationRules } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { RulesPage } from "./rules-page";
@@ -42,11 +42,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const SingleRule: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCategorizationRulesMockHandler(categorizationRules.slice(0, 1)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCategorizationRulesMockHandler(categorizationRules.slice(0, 1))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const up = await canvas.findByRole("button", { name: /^(move up|pakelti):/i });
@@ -68,9 +64,7 @@ export const ReorderFirstRuleDown: Story = {
 };
 
 export const ReorderPending: Story = {
-  parameters: {
-    msw: { handlers: [getMoveCategorizationRuleMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getMoveCategorizationRuleMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const down = await canvas.findAllByRole("button", { name: /^(move down|nuleisti):/i });
@@ -128,9 +122,7 @@ export const DeleteOffersUndo: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: { handlers: [getDeleteCategorizationRuleMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getDeleteCategorizationRuleMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

@@ -19,6 +19,7 @@ import {
   failWith,
   handlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { HouseholdsPage } from "./households-page";
 
@@ -41,19 +42,11 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const OwnerOnly: Story = {
-  parameters: {
-    msw: {
-      handlers: [getHouseholdsMockHandler([familyHousehold]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getHouseholdsMockHandler([familyHousehold])),
 };
 
 export const MemberOnly: Story = {
-  parameters: {
-    msw: {
-      handlers: [getHouseholdsMockHandler([gardenHousehold]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getHouseholdsMockHandler([gardenHousehold])),
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
@@ -105,11 +98,7 @@ export const CreatesHousehold: Story = {
 };
 
 export const CreateFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateHouseholdMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateHouseholdMockHandler(failWith(serverErrorProblem, 500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

@@ -1,8 +1,9 @@
 import { vi } from "vitest";
-import { PREFERENCES_STORAGE_KEY } from "@/stores/preferences";
+import { PREFERENCES_STORAGE_KEY, preferencesCollection } from "@/stores/preferences";
 
 const STORAGE_KEY = PREFERENCES_STORAGE_KEY;
-const ROW_KEY = "s:browser";
+const PREFERENCES_ROW = "browser";
+const ROW_KEY = `s:${PREFERENCES_ROW}`;
 
 interface StoredRow {
   versionKey: string;
@@ -22,6 +23,12 @@ export function storedPreferences(): Record<string, unknown> {
 export function seedPreferences(patch: Record<string, unknown>) {
   const data = { id: "browser", ...storedPreferences(), ...patch };
   localStorage.setItem(STORAGE_KEY, JSON.stringify({ [ROW_KEY]: { versionKey: "seed", data } }));
+}
+
+export function resetPreferences() {
+  if (preferencesCollection.has(PREFERENCES_ROW)) {
+    preferencesCollection.delete(PREFERENCES_ROW);
+  }
 }
 
 export function blockStorage() {

@@ -4,7 +4,7 @@ import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { currentUserWithTwoFactor, longNameUser, serverErrorProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending, unauthenticatedHandlers } from "@/storybook/handlers";
+import { failWith, pending, unauthenticatedHandlers, withHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
 
 const meta = {
@@ -26,38 +26,21 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const TwoFactorEnabled: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(currentUserWithTwoFactor), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(currentUserWithTwoFactor)),
 };
 
 export const LongDisplayName: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(longNameUser), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(longNameUser)),
 };
 
 export const Loading: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(pending)),
 };
 
 export const ServerError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
+  ),
 };
 
 export const Unauthenticated: Story = {

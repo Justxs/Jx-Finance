@@ -6,7 +6,7 @@ import {
 } from "@/api/generated/households/households.msw";
 import { withWidth } from "@/storybook/decorators";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { HouseholdCard } from "./household-card";
 
 const meta = {
@@ -54,15 +54,10 @@ export const NarrowOwnerView: Story = {
 };
 
 export const SlowMutations: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getRemoveMemberMockHandler(pending),
-        getUpdateHouseholdMockHandler(pending),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getRemoveMemberMockHandler(pending),
+    getUpdateHouseholdMockHandler(pending),
+  ),
 };
 
 export const DeleteOffersUndo: Story = {

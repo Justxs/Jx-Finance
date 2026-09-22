@@ -15,7 +15,7 @@ import {
   transferForbiddenProblem,
   transferLockedProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption, openedDialog } from "@/storybook/interactions";
 import { TransferEditDialog } from "./transfer-edit-dialog";
 
@@ -137,7 +137,7 @@ export const RejectsSameAccount: Story = {
 };
 
 export const Pending: Story = {
-  parameters: { msw: { handlers: [getUpdateTransferMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getUpdateTransferMockHandler(pending)),
   play: async () => {
     const dialog = await saveWithAmount("410");
 
@@ -148,11 +148,7 @@ export const Pending: Story = {
 };
 
 export const LockedValueRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateTransferMockHandler(failWith(transferLockedProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferLockedProblem, 400))),
   play: async ({ args }) => {
     const dialog = await saveWithAmount("410");
 
@@ -164,14 +160,9 @@ export const LockedValueRefused: Story = {
 
 export const AmountMismatch: Story = {
   args: { transfer: crossCurrencyTransfer },
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateTransferMockHandler(failWith(transferAmountMismatchProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUpdateTransferMockHandler(failWith(transferAmountMismatchProblem, 400)),
+  ),
   play: async () => {
     const dialog = await saveWithAmount("1000");
 
@@ -182,14 +173,7 @@ export const AmountMismatch: Story = {
 };
 
 export const Forbidden: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateTransferMockHandler(failWith(transferForbiddenProblem, 403)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferForbiddenProblem, 403))),
   play: async () => {
     const dialog = await saveWithAmount("410");
 
@@ -198,11 +182,7 @@ export const Forbidden: Story = {
 };
 
 export const TransferNoLongerExists: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateTransferMockHandler(failWith(notFoundProblem, 404)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(notFoundProblem, 404))),
   play: async () => {
     const dialog = await saveWithAmount("410");
 

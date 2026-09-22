@@ -3,7 +3,7 @@ import { RequestHandler } from "msw";
 import { setupServer } from "msw/node";
 import { composeStory } from "storybook/preview-api";
 import { afterAll, afterEach, beforeAll, describe, it } from "vitest";
-import { preferencesCollection } from "@/stores/preferences";
+import { resetPreferences } from "@/test/preferences";
 import { mockWorkerLoader, warnAboutUnhandledRequest } from "../../../.storybook/mock-worker";
 import preview from "../../../.storybook/preview";
 import { type AccessibilityParameters, expectNoAccessibilityViolations } from "./accessibility";
@@ -25,7 +25,6 @@ export interface StoryFile {
 
 export const BROWSER_ONLY_TAG = "browser-only";
 
-const PREFERENCES_ROW = "browser";
 const server = setupServer();
 const teardownStory = composeStory({}, { title: "Teardown", render: () => null }, {}, {});
 
@@ -79,12 +78,6 @@ function composedStory(value: unknown): ComposedStory {
 async function composeFile({ path, load }: StoryFile) {
   const composed: unknown[] = Object.values(composeStories(await load()));
   return { path, stories: composed.map(composedStory) };
-}
-
-function resetPreferences() {
-  if (preferencesCollection.has(PREFERENCES_ROW)) {
-    preferencesCollection.delete(PREFERENCES_ROW);
-  }
 }
 
 export async function registerStoryTests(storyFiles: readonly StoryFile[]) {

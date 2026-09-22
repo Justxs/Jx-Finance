@@ -6,9 +6,9 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { accounts, brokerAccount, investmentTransactions, splitEntry } from "@/storybook/fixtures";
 import {
   errorHandlers,
-  handlers,
   investmentsEmptyHandlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { ActivitySection } from "./activity-section";
@@ -34,19 +34,14 @@ export const Default: Story = {};
 export const SingleAccount: Story = { args: { accountId: brokerAccount.id } };
 
 export const WithSplit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getInvestmentTransactionsMockHandler({
-          items: [splitEntry, ...investmentTransactions.slice(0, 4)],
-          page: 1,
-          pageSize: 15,
-          total: 5,
-        }),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getInvestmentTransactionsMockHandler({
+      items: [splitEntry, ...investmentTransactions.slice(0, 4)],
+      page: 1,
+      pageSize: 15,
+      total: 5,
+    }),
+  ),
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: investmentsEmptyHandlers } } };

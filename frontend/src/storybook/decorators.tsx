@@ -54,6 +54,7 @@ const STORY_ROUTES = [
 ] as const;
 
 const STORY_WIDTHS = {
+  auth: "flex w-96 max-w-full justify-center",
   field: "w-72",
   card: "w-80",
   form: "w-[min(32rem,calc(100vw-3rem))]",

@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateAssetMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { AssetForm } from "./asset-form";
 
 const meta = {
@@ -37,11 +37,7 @@ export const ValidationErrors: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateAssetMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateAssetMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const fields = canvas.getAllByRole("textbox");

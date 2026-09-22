@@ -8,9 +8,9 @@ import {
   emptyHandlers,
   errorHandlers,
   failWith,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { TagForm } from "./tag-form";
 
@@ -56,9 +56,7 @@ export const ValidationError: Story = {
 };
 
 export const DuplicateName: Story = {
-  parameters: {
-    msw: { handlers: [getCreateTagMockHandler(failWith(duplicateTagProblem, 409)), ...handlers] },
-  },
+  parameters: withHandlers(getCreateTagMockHandler(failWith(duplicateTagProblem, 409))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Atostogos" } });
@@ -68,7 +66,7 @@ export const DuplicateName: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: { msw: { handlers: [getCreateTagMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getCreateTagMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Remontas" } });
@@ -89,9 +87,7 @@ export const Renamed: Story = {
 
 export const RenameDuplicate: Story = {
   args: { initial: personalTag },
-  parameters: {
-    msw: { handlers: [getUpdateTagMockHandler(failWith(duplicateTagProblem, 409)), ...handlers] },
-  },
+  parameters: withHandlers(getUpdateTagMockHandler(failWith(duplicateTagProblem, 409))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Vaikams" } });

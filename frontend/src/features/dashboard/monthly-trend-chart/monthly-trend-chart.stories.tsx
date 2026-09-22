@@ -4,7 +4,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Card } from "@/components/ui/card/card";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { monthlyTrendItems } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { MonthlyTrendChart } from "./monthly-trend-chart";
 
 const meta = {
@@ -41,13 +41,9 @@ function expenseOnlyTrend() {
 }
 
 export const SingleMonth: Story = {
-  parameters: {
-    msw: { handlers: [getMonthlyTrendMockHandler(singleMonthTrend), ...handlers] },
-  },
+  parameters: withHandlers(getMonthlyTrendMockHandler(singleMonthTrend)),
 };
 
 export const ExpenseOnly: Story = {
-  parameters: {
-    msw: { handlers: [getMonthlyTrendMockHandler(expenseOnlyTrend), ...handlers] },
-  },
+  parameters: withHandlers(getMonthlyTrendMockHandler(expenseOnlyTrend)),
 };

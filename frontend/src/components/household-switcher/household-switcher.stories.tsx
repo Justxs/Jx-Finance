@@ -3,7 +3,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import { setActiveHousehold } from "@/stores/active-household-store";
 import { familyHousehold } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { withHandlers } from "@/storybook/handlers";
 import { QueryBoundary } from "../query-boundary/query-boundary";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { HouseholdSwitcher } from "./household-switcher";
@@ -50,7 +50,7 @@ export const Collapsed: Story = {
 };
 
 export const NoHouseholds: Story = {
-  parameters: { msw: { handlers: [getHouseholdsMockHandler([]), ...handlers] } },
+  parameters: withHandlers(getHouseholdsMockHandler([])),
 };
 
 export const Switching: Story = {

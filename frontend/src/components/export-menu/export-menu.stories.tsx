@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getExportTransactionsPdfMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { exportTooManyRowsProblem } from "@/storybook/fixtures";
-import { handlers, onRouteOf, problem } from "@/storybook/handlers";
+import { onRouteOf, problem, withHandlers } from "@/storybook/handlers";
 import { ExportMenu } from "./export-menu";
 
 const meta = {
@@ -30,16 +30,11 @@ export const Open: Story = {
 };
 
 export const PdfTooManyRows: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
-          problem(exportTooManyRowsProblem, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
+      problem(exportTooManyRowsProblem, 400),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     await userEvent.click(within(canvasElement).getByRole("button"));
     const body = within(canvasElement.ownerDocument.body);

@@ -8,7 +8,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { withWidth } from "@/storybook/decorators";
 import { securityNotHeldProblem, securityPrices, worldEtf } from "@/storybook/fixtures";
-import { errorHandlers, failWith, handlers, loadingHandlers } from "@/storybook/handlers";
+import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { PriceHistory } from "./price-history";
 
 const meta = {
@@ -35,7 +35,7 @@ export const Default: Story = {
 };
 
 export const Empty: Story = {
-  parameters: { msw: { handlers: [getSecurityPricesMockHandler([]), ...handlers] } },
+  parameters: withHandlers(getSecurityPricesMockHandler([])),
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByText("No prices recorded yet.")).toBeVisible();
   },
@@ -70,14 +70,9 @@ export const DeletesPoint: Story = {
 };
 
 export const DeleteRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getDeleteSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getDeleteSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403)),
+  ),
   play: async ({ canvasElement }) => {
     await confirmFirstDelete(canvasElement);
 

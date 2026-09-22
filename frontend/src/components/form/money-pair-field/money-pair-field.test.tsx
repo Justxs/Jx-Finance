@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import type { CurrenciesResponse, Currency } from "@/api/generated/model";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { useAppForm } from "../app-form";
 import { MoneyPairField } from "./money-pair-field";
 
@@ -38,7 +38,7 @@ function Harness() {
 }
 
 test("binds the amount and the currency to the named form fields", async () => {
-  render(<Harness />, { wrapper: createQueryWrapper({ currencies }).Wrapper });
+  renderWithQuery(<Harness />, { currencies });
 
   await userEvent.type(screen.getByLabelText("Sent"), "12.50");
   await userEvent.click(screen.getByRole("combobox", { name: "Sent currency" }));

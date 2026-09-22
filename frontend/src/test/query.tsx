@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import type { ReactNode } from "react";
+import { render } from "@testing-library/react";
+import type { ReactElement, ReactNode } from "react";
 import { vi } from "vitest";
 import { getCurrenciesQueryKey, getSettingsQueryKey } from "@/api/generated";
 import type { CurrenciesResponse, SettingsResponse } from "@/api/generated/model";
@@ -27,6 +28,11 @@ export function createQueryWrapper({ settings, currencies }: Seed = {}) {
   }
 
   return { client, Wrapper };
+}
+
+export function renderWithQuery(ui: ReactElement, seed?: Seed) {
+  const { client, Wrapper } = createQueryWrapper(seed);
+  return { client, ...render(ui, { wrapper: Wrapper }) };
 }
 
 export function plain(text: string) {

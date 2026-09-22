@@ -9,8 +9,8 @@ import {
   emptyHandlers,
   errorHandlers,
   failWith,
-  handlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { NetWorthPage } from "./net-worth-page";
 
@@ -33,17 +33,9 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const OnlyHistoryFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500))),
 };
 
 export const AssetsWithoutDebts: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDebtsMockHandler([]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDebtsMockHandler([])),
 };

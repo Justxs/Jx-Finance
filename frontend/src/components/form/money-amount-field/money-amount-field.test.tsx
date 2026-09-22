@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test } from "vitest";
 import { z } from "zod";
 import { type CurrenciesResponse, Currency } from "@/api/generated/model";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { useAppForm } from "../app-form";
 
 const multiCurrency: CurrenciesResponse = {
@@ -58,7 +58,7 @@ function Harness({ hint, disabled }: Readonly<HarnessProps>) {
 }
 
 function renderField(props: HarnessProps = {}, currencies: CurrenciesResponse = multiCurrency) {
-  render(<Harness {...props} />, { wrapper: createQueryWrapper({ currencies }).Wrapper });
+  renderWithQuery(<Harness {...props} />, { currencies });
   return { input: screen.getByLabelText("Amount") };
 }
 

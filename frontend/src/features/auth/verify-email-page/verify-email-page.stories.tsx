@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { resetLink } from "@/storybook/fixtures";
 import { VerifyEmailPage } from "./verify-email-page";
 
@@ -9,11 +10,7 @@ const meta = {
   title: "Features/Auth/VerifyEmailPage",
   component: VerifyEmailPage,
   parameters: { route: link },
-  render: () => (
-    <div className="flex w-96 max-w-full justify-center">
-      <VerifyEmailPage />
-    </div>
-  ),
+  decorators: [withWidth("auth")],
 } satisfies Meta<typeof VerifyEmailPage>;
 
 export default meta;

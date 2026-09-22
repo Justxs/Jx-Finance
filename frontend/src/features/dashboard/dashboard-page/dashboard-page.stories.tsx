@@ -18,8 +18,8 @@ import {
   emptyHandlers,
   errorHandlers,
   failWith,
-  handlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { DashboardPage } from "./dashboard-page";
 
@@ -61,11 +61,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const PartialFailure: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500))),
 };
 
 export const AllSectionsLoad: Story = {
@@ -82,14 +78,9 @@ export const AllSectionsLoad: Story = {
 };
 
 export const RetryRecoversFailedSection: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500), { once: true }),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500), { once: true }),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const failed = await canvas.findByRole("alert");
@@ -104,9 +95,7 @@ export const RetryRecoversFailedSection: Story = {
 };
 
 export const CustomOrder: Story = {
-  parameters: {
-    msw: { handlers: [getDashboardLayoutMockHandler(customDashboardLayout), ...handlers] },
-  },
+  parameters: withHandlers(getDashboardLayoutMockHandler(customDashboardLayout)),
   play: async ({ canvasElement }) => {
     const headings = await cardHeadings(canvasElement);
     await expect(headings[0]).toMatch(accountsTitle);
@@ -114,9 +103,7 @@ export const CustomOrder: Story = {
 };
 
 export const HiddenCards: Story = {
-  parameters: {
-    msw: { handlers: [getDashboardLayoutMockHandler(hiddenCardsDashboardLayout), ...handlers] },
-  },
+  parameters: withHandlers(getDashboardLayoutMockHandler(hiddenCardsDashboardLayout)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
@@ -128,9 +115,7 @@ export const HiddenCards: Story = {
 };
 
 export const AllHidden: Story = {
-  parameters: {
-    msw: { handlers: [getDashboardLayoutMockHandler(allHiddenDashboardLayout), ...handlers] },
-  },
+  parameters: withHandlers(getDashboardLayoutMockHandler(allHiddenDashboardLayout)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText(/every card is hidden|visos kortelės paslėptos/i);
@@ -147,9 +132,7 @@ export const AllHidden: Story = {
 };
 
 export const FeatureSwitchedOff: Story = {
-  parameters: {
-    msw: { handlers: [withSettings({ budgets: false }), ...handlers] },
-  },
+  parameters: withHandlers(withSettings({ budgets: false })),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
@@ -186,14 +169,9 @@ export const CustomiseAndSave: Story = {
 };
 
 export const SaveError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem, 400)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: customise }));
@@ -208,11 +186,7 @@ export const SaveError: Story = {
 };
 
 export const LayoutUnavailable: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDashboardLayoutMockHandler(failWith(serverErrorProblem, 500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("alert")).toHaveTextContent(

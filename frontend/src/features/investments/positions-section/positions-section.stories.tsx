@@ -10,7 +10,7 @@ import {
   portfolio,
   securityNotHeldProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers } from "@/storybook/handlers";
+import { failWith, withHandlers } from "@/storybook/handlers";
 import { PositionsSection } from "./positions-section";
 
 const meta = {
@@ -96,14 +96,7 @@ export const SavesPrice: Story = {
 };
 
 export const PriceRefusedForSomeoneElsesSecurity: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403))),
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement);
     await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {

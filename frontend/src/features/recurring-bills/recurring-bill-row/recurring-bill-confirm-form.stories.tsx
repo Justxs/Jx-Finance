@@ -18,7 +18,7 @@ import {
   validationProblem,
   variableBill,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { RecurringBillConfirmForm } from "./recurring-bill-confirm-form";
 
@@ -111,14 +111,9 @@ export const CrossCurrencyTransferNeedsTheReceivedAmount: Story = {
 
 export const CrossCurrencyTransferRejectedByServer: Story = {
   args: { bill: crossCurrencyTransferBill, accounts: crossCurrencyAccounts },
-  parameters: {
-    msw: {
-      handlers: [
-        getConfirmRecurringBillMockHandler(failWith(billReceivedAmountProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getConfirmRecurringBillMockHandler(failWith(billReceivedAmountProblem, 400)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText("Amount received"), {
@@ -158,9 +153,7 @@ export const RequiresAmountAndAccount: Story = {
 };
 
 export const ConfirmPending: Story = {
-  parameters: {
-    msw: { handlers: [getConfirmRecurringBillMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 
@@ -171,11 +164,7 @@ export const ConfirmPending: Story = {
 };
 
 export const StaleConfirmation: Story = {
-  parameters: {
-    msw: {
-      handlers: [getConfirmRecurringBillMockHandler(failWith(billStaleProblem, 409)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billStaleProblem, 409))),
   play: async ({ canvasElement, args }) => {
     const canvas = await confirm(canvasElement);
 
@@ -186,14 +175,7 @@ export const StaleConfirmation: Story = {
 };
 
 export const InactiveBill: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getConfirmRecurringBillMockHandler(failWith(billInactiveProblem, 409)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billInactiveProblem, 409))),
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 
@@ -203,11 +185,7 @@ export const InactiveBill: Story = {
 
 export const ServerRejectsAmount: Story = {
   args: { bill: variableBill },
-  parameters: {
-    msw: {
-      handlers: [getConfirmRecurringBillMockHandler(failWith(validationProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(validationProblem, 400))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "12" } });
@@ -220,14 +198,7 @@ export const ServerRejectsAmount: Story = {
 };
 
 export const ConfirmFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getConfirmRecurringBillMockHandler(failWith(serverErrorProblem, 500)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(serverErrorProblem, 500))),
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 

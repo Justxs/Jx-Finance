@@ -3,7 +3,7 @@ import { expect, waitFor, within } from "storybook/test";
 import { getValueHistoryMockHandler } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
 import { partialValueHistory, valueHistory } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { ValueChartSection } from "./value-chart-section";
 
@@ -31,9 +31,7 @@ export const Default: Story = {
 };
 
 export const Partial: Story = {
-  parameters: {
-    msw: { handlers: [getValueHistoryMockHandler(partialValueHistory), ...handlers] },
-  },
+  parameters: withHandlers(getValueHistoryMockHandler(partialValueHistory)),
   play: async ({ canvasElement }) => {
     await expect(
       await within(canvasElement).findByText(/had no price or exchange rate yet/),
@@ -61,17 +59,12 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 const requested: string[] = [];
 
 export const ChangesRange: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getValueHistoryMockHandler(({ request }) => {
-          requested.push(new URL(request.url).searchParams.get("from") ?? "");
-          return valueHistory;
-        }),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getValueHistoryMockHandler(({ request }) => {
+      requested.push(new URL(request.url).searchParams.get("from") ?? "");
+      return valueHistory;
+    }),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByRole("img");

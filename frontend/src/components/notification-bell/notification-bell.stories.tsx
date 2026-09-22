@@ -10,7 +10,7 @@ import {
   notifications,
   transferDueNotification,
 } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { QueryBoundary } from "../query-boundary/query-boundary";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { NotificationBell } from "./notification-bell";
@@ -74,17 +74,17 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const AllRead: Story = {
-  parameters: { msw: { handlers: [notificationsHandler(allRead), ...handlers] } },
+  parameters: withHandlers(notificationsHandler(allRead)),
 };
 
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const ManyUnread: Story = {
-  parameters: { msw: { handlers: [notificationsHandler(manyUnread), ...handlers] } },
+  parameters: withHandlers(notificationsHandler(manyUnread)),
 };
 
 export const BudgetAlerts: Story = {
-  parameters: { msw: { handlers: [notificationsHandler(budgetAlerts), ...handlers] } },
+  parameters: withHandlers(notificationsHandler(budgetAlerts)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /2 unread/i }));
@@ -100,7 +100,7 @@ export const BudgetAlerts: Story = {
 };
 
 export const RecurringEntryReminders: Story = {
-  parameters: { msw: { handlers: [notificationsHandler(recurringReminders), ...handlers] } },
+  parameters: withHandlers(notificationsHandler(recurringReminders)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /3 unread/i }));

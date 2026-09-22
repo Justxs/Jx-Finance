@@ -1,24 +1,16 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
-import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { getUpdateMyProfileMockHandler } from "@/api/generated/users/users.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
   currentUser,
   longNameUser,
   reminderSubscriber,
-  settings,
   unverifiedUser,
   validationProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { emailEnabledHandler, failWith, pending, withHandlers } from "@/storybook/handlers";
 import { ProfileForm } from "./profile-form";
-
-const emailEnabledSettings = getPublicSettingsMockHandler({
-  instanceName: settings.instanceName,
-  defaultLanguage: settings.defaultLanguage,
-  emailEnabled: true,
-});
 
 const meta = {
   title: "Features/Profile/ProfileForm",
@@ -54,9 +46,7 @@ export const ReminderEmailsNeedAMailServer: Story = {
 
 export const ReminderEmailsTurnedOn: Story = {
   args: { profile: reminderSubscriber },
-  parameters: {
-    msw: { handlers: [emailEnabledSettings, ...handlers] },
-  },
+  parameters: withHandlers(emailEnabledHandler),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() =>
@@ -70,9 +60,7 @@ export const ReminderEmailsTurnedOn: Story = {
 
 export const ReminderEmailsNeedAConfirmedAddress: Story = {
   args: { profile: unverifiedUser },
-  parameters: {
-    msw: { handlers: [emailEnabledSettings, ...handlers] },
-  },
+  parameters: withHandlers(emailEnabledHandler),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() =>
@@ -82,22 +70,13 @@ export const ReminderEmailsNeedAConfirmedAddress: Story = {
 };
 
 export const WrongPasswordAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateMyProfileMockHandler(
-          failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUpdateMyProfileMockHandler(
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+    ),
+  ),
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateMyProfileMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateMyProfileMockHandler(pending)),
 };

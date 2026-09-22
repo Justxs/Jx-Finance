@@ -1,4 +1,4 @@
-import type { SettingsResponse } from "@/api/generated/model";
+import type { PublicSettingsResponse, SettingsResponse } from "@/api/generated/model";
 
 export const settings: SettingsResponse = {
   instanceName: null,
@@ -23,4 +23,10 @@ export const settings: SettingsResponse = {
   firstDayOfWeek: "monday",
   defaultAccountId: null,
   defaultPageSize: 20,
+};
+
+export const publicSettings: PublicSettingsResponse = {
+  instanceName: settings.instanceName,
+  defaultLanguage: settings.defaultLanguage,
+  emailEnabled: false,
 };

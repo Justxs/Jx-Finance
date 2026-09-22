@@ -3,7 +3,7 @@ import { expect, userEvent, waitFor, within } from "storybook/test";
 import { getHouseholdAuditMockHandler } from "@/api/generated/households/households.msw";
 import { withWidth } from "@/storybook/decorators";
 import { familyHousehold, householdAuditEvents, memberUser } from "@/storybook/fixtures";
-import { errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { emptyPage } from "@/storybook/handlers/lists";
 import { chooseOption } from "@/storybook/interactions";
 import { HouseholdActivity } from "./household-activity";
@@ -53,7 +53,7 @@ export const Lithuanian: Story = {
 };
 
 export const Empty: Story = {
-  parameters: { msw: { handlers: [getHouseholdAuditMockHandler(emptyPage), ...handlers] } },
+  parameters: withHandlers(getHouseholdAuditMockHandler(emptyPage)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(

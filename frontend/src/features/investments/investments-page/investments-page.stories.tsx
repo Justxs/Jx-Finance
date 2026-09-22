@@ -5,9 +5,9 @@ import { withPageFrame } from "@/storybook/decorators";
 import { brokerAccount, incompletePortfolio } from "@/storybook/fixtures";
 import {
   errorHandlers,
-  handlers,
   investmentsEmptyHandlers,
   loadingHandlers,
+  withHandlers,
 } from "@/storybook/handlers";
 import { InvestmentsPage } from "./investments-page";
 
@@ -34,11 +34,7 @@ export const FilteredByAccount: Story = {
 export const Empty: Story = { parameters: { msw: { handlers: investmentsEmptyHandlers } } };
 
 export const IncompletePrices: Story = {
-  parameters: {
-    msw: {
-      handlers: [getPortfolioMockHandler(incompletePortfolio), ...handlers],
-    },
-  },
+  parameters: withHandlers(getPortfolioMockHandler(incompletePortfolio)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("note")).toBeInTheDocument();

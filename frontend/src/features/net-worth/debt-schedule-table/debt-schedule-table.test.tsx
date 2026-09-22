@@ -1,7 +1,7 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { fireEvent, screen, within } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { mortgageSchedule, mortgageScheduleWithExtra } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { DebtScheduleTable, SCHEDULE_PAGE_SIZE, firstPageToShow } from "./debt-schedule-table";
 
 const { plan, asOf } = mortgageSchedule;
@@ -19,10 +19,9 @@ function firstCell(row: HTMLElement | undefined) {
 }
 
 test("the table opens on the page that holds the next payment", () => {
-  const { Wrapper } = createQueryWrapper();
   const nextIndex = plan.rows.findIndex((row) => row.date > asOf);
 
-  render(<DebtScheduleTable plan={plan} asOf={asOf} />, { wrapper: Wrapper });
+  renderWithQuery(<DebtScheduleTable plan={plan} asOf={asOf} />);
 
   const expectedPage = Math.floor(nextIndex / SCHEDULE_PAGE_SIZE) + 1;
   expect(screen.getByText(`Page ${expectedPage} of ${pageCount}`)).toBeInTheDocument();
@@ -32,9 +31,7 @@ test("the table opens on the page that holds the next payment", () => {
 });
 
 test("the last page holds the payoff and paging goes back from it", () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(<DebtScheduleTable plan={plan} asOf="2099-01-01" />, { wrapper: Wrapper });
+  renderWithQuery(<DebtScheduleTable plan={plan} asOf="2099-01-01" />);
 
   expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   expect(firstCell(bodyRows().at(-1))).toHaveTextContent(String(plan.rows.length));
@@ -44,15 +41,12 @@ test("the last page holds the payoff and paging goes back from it", () => {
 });
 
 test("the overpayment column appears only when a row carries an overpayment", () => {
-  const { Wrapper } = createQueryWrapper();
   const faster = mortgageScheduleWithExtra.withExtra;
   if (!faster) {
     throw new Error("the fixture has no overpayment plan");
   }
 
-  const { rerender } = render(<DebtScheduleTable plan={plan} asOf={asOf} />, {
-    wrapper: Wrapper,
-  });
+  const { rerender } = renderWithQuery(<DebtScheduleTable plan={plan} asOf={asOf} />);
   expect(screen.queryByRole("columnheader", { name: "Overpayment" })).toBeNull();
 
   rerender(<DebtScheduleTable plan={faster} asOf={asOf} />);

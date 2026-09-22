@@ -1,7 +1,7 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, screen } from "@testing-library/react";
 import { expect, test, vi } from "vitest";
 import { mortgageSchedule, mortgageScheduleWithExtra } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { DebtExtraPayments, extraPaymentParams, noExtraPayments } from "./debt-extra-payments";
 
 test("only valid positive amounts become query parameters, and a lump sum needs its date", () => {
@@ -19,17 +19,15 @@ test("only valid positive amounts become query parameters, and a lump sum needs 
 
 test("typing an extra amount commits it once typing pauses", () => {
   vi.useFakeTimers();
-  const { Wrapper } = createQueryWrapper();
   const onChange = vi.fn();
 
-  render(
+  renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={onChange}
     />,
-    { wrapper: Wrapper },
   );
   fireEvent.change(screen.getByLabelText("Extra each month"), { target: { value: "150" } });
   expect(onChange).not.toHaveBeenCalled();
@@ -42,17 +40,15 @@ test("typing an extra amount commits it once typing pauses", () => {
 });
 
 test("the savings sentence names the payments saved and the interest saved", () => {
-  const { Wrapper } = createQueryWrapper();
   const faster = mortgageScheduleWithExtra;
 
-  render(
+  renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
       draft={{ ...noExtraPayments, extraMonthly: "150.00" }}
       schedule={faster}
       onChange={vi.fn()}
     />,
-    { wrapper: Wrapper },
   );
 
   const status = screen.getByRole("status");
@@ -61,16 +57,13 @@ test("the savings sentence names the payments saved and the interest saved", () 
 });
 
 test("without an overpayment the sentence asks for an amount", () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(
+  renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={vi.fn()}
     />,
-    { wrapper: Wrapper },
   );
 
   expect(screen.getByRole("status")).toHaveTextContent(
@@ -79,16 +72,13 @@ test("without an overpayment the sentence asks for an amount", () => {
 });
 
 test("an invalid amount is marked and explained", () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(
+  renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={vi.fn()}
     />,
-    { wrapper: Wrapper },
   );
   const input = screen.getByLabelText("One-off payment");
   fireEvent.change(input, { target: { value: "abc" } });

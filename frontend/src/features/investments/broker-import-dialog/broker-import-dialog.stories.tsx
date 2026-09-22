@@ -14,7 +14,7 @@ import {
   brokerSyncProblem,
   failedBrokerConnection,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { BrokerImportDialog } from "./broker-import-dialog";
 import { BROKER_UPLOAD_FILE_INPUT_ID } from "./upload-panel";
 
@@ -65,11 +65,7 @@ export const UploadResult: Story = {
 };
 
 export const UploadResultWithWarnings: Story = {
-  parameters: {
-    msw: {
-      handlers: [getImportBrokerReportMockHandler(brokerImportWithWarnings), ...handlers],
-    },
-  },
+  parameters: withHandlers(getImportBrokerReportMockHandler(brokerImportWithWarnings)),
   play: async () => {
     await uploadReport();
     const dialog = within(await within(document.body).findByRole("dialog"));
@@ -82,11 +78,7 @@ export const UploadResultWithWarnings: Story = {
 };
 
 export const UploadWhileDatabaseBusy: Story = {
-  parameters: {
-    msw: {
-      handlers: [getImportBrokerReportMockHandler(failWith(databaseBusyProblem, 409)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getImportBrokerReportMockHandler(failWith(databaseBusyProblem, 409))),
   play: async () => {
     await uploadReport();
     const dialog = within(await within(document.body).findByRole("dialog"));
@@ -99,14 +91,7 @@ export const UploadWhileDatabaseBusy: Story = {
 
 export const SyncWhileDatabaseBusy: Story = {
   args: { initialTab: "sync" },
-  parameters: {
-    msw: {
-      handlers: [
-        getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem, 409)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem, 409))),
   play: async () => {
     const dialog = within(await within(document.body).findByRole("dialog"));
     await userEvent.click(await dialog.findByRole("button", { name: "Sync now" }));
@@ -118,11 +103,7 @@ export const SyncWhileDatabaseBusy: Story = {
 };
 
 export const UploadNothingNew: Story = {
-  parameters: {
-    msw: {
-      handlers: [getImportBrokerReportMockHandler(brokerImportNothingNew), ...handlers],
-    },
-  },
+  parameters: withHandlers(getImportBrokerReportMockHandler(brokerImportNothingNew)),
   play: async () => {
     await uploadReport();
     await expect(
@@ -163,11 +144,7 @@ export const ConnectionSavedClearsToken: Story = {
 };
 
 export const UploadPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getImportBrokerReportMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getImportBrokerReportMockHandler(pending)),
   play: async () => {
     await uploadReport();
     const body = within(document.body);
@@ -185,24 +162,15 @@ export const UploadPending: Story = {
 
 export const ConnectionNew: Story = {
   args: { initialTab: "sync" },
-  parameters: {
-    msw: {
-      handlers: [getBrokerConnectionsMockHandler([]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getBrokerConnectionsMockHandler([])),
 };
 
 export const ConnectionError: Story = {
   args: { initialTab: "sync" },
-  parameters: {
-    msw: {
-      handlers: [
-        getBrokerConnectionsMockHandler([failedBrokerConnection]),
-        getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getBrokerConnectionsMockHandler([failedBrokerConnection]),
+    getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem, 400)),
+  ),
   play: async () => {
     const body = within(document.body);
     await expect(await body.findByText("Last sync failed")).toBeInTheDocument();
@@ -216,11 +184,7 @@ export const ConnectionError: Story = {
 
 export const SyncPending: Story = {
   args: { initialTab: "sync" },
-  parameters: {
-    msw: {
-      handlers: [getSyncBrokerConnectionMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getSyncBrokerConnectionMockHandler(pending)),
   play: async () => {
     const body = within(document.body);
     await userEvent.click(await body.findByRole("button", { name: "Sync now" }));

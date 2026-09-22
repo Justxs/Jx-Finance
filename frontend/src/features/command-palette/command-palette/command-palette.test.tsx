@@ -1,17 +1,15 @@
 import type { QueryClient } from "@tanstack/react-query";
 import { act, fireEvent, screen, waitFor, within } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
-import type {
-  AccountResponse,
-  CategoryResponse,
-  TagResponse,
-  UserProfileResponse,
-} from "@/api/generated/model";
+import { setupServer } from "msw/node";
+import { afterAll, afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
+import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
+import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
-import { UserRole } from "@/lib/user-role";
 import { setCommandPaletteOpen, toggleCommandPalette } from "@/stores/command-palette-store";
-import { preferencesCollection } from "@/stores/preferences";
+import { categories, ids, memberUser } from "@/storybook/fixtures";
+import { handlers } from "@/storybook/handlers";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
+import { resetPreferences } from "@/test/preferences";
 import { settingsFixture } from "@/test/settings";
 
 await Promise.all([
@@ -21,84 +19,21 @@ await Promise.all([
 
 vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
 
-const admin: UserProfileResponse = {
-  id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
-  email: "ruta@example.lt",
-  displayName: "Ruta",
-  role: UserRole.admin,
-  twoFactorEnabled: false,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
+function categoryName(id: string) {
+  const found = categories.find((category) => category.id === id);
+  if (!found) {
+    throw new Error(`no category fixture ${id}`);
+  }
+  return found.name;
+}
 
-const accounts: AccountResponse[] = [
-  {
-    id: "8e0d1a3c-0000-4000-8000-000000000001",
-    name: "Swedbank einamoji",
-    description: null,
-    iban: null,
-    type: "checking",
-    startingBalance: "0.00",
-    currentBalance: "0.00",
-    createdAt: "2026-01-01T00:00:00Z",
-    scope: "personal",
-    currency: "eur",
-    balances: [],
-    reportingBalance: "0.00",
-    holdingsValue: "0.00",
-    householdId: null,
-  },
-];
-
-const categories: CategoryResponse[] = [
-  {
-    id: "8e0d1a3c-0000-4000-8000-000000000002",
-    name: "Kavinės ir restoranai",
-    type: "expense",
-    icon: null,
-    isDefault: false,
-    scope: "personal",
-    householdId: null,
-  },
-];
-
-const tags: TagResponse[] = [
-  {
-    id: "8e0d1a3c-0000-4000-8000-000000000003",
-    name: "Atostogos",
-    scope: "personal",
-    householdId: null,
-  },
-];
-
-let role: UserProfileResponse["role"] = UserRole.admin;
-let features = settingsFixture().features;
+const cafes = categoryName(ids.categories.cafes);
+const server = setupServer(getSettingsMockHandler(settingsFixture()), ...handlers);
 let requested: string[] = [];
 
-function bodyFor(url: URL): unknown {
-  switch (url.pathname) {
-    case "/api/auth/me":
-      return { ...admin, role };
-    case "/api/settings":
-    case "/api/settings/public":
-      return settingsFixture({ features });
-    case "/api/accounts":
-      return accounts;
-    case "/api/categories":
-      return categories;
-    case "/api/tags":
-      return tags;
-    default:
-      return [];
-  }
-}
-
-async function respond(input: RequestInfo | URL): Promise<Response> {
-  const url = new URL(input instanceof Request ? input.url : input, "http://localhost");
-  requested.push(url.pathname);
-  return Response.json(bodyFor(url));
-}
+server.events.on("request:start", ({ request }) => {
+  requested.push(new URL(request.url).pathname);
+});
 
 function requestsTo(pathname: string) {
   return requested.filter((entry) => entry === pathname);
@@ -122,24 +57,28 @@ function searchBox() {
 }
 
 function optionNames() {
-  return screen.getAllByRole("option").map((option) => option.textContent ?? "");
+  return screen.queryAllByRole("option").map((option) => option.textContent ?? "");
 }
+
+beforeAll(() => {
+  server.listen({ onUnhandledRequest: "error" });
+});
 
 beforeEach(() => {
   requested = [];
-  role = UserRole.admin;
-  features = settingsFixture().features;
   setSetupNeeded(false);
   setAuthenticated(true);
   setCommandPaletteOpen(false);
-  if (preferencesCollection.has("browser")) {
-    preferencesCollection.delete("browser");
-  }
-  vi.stubGlobal("fetch", vi.fn(respond));
+  resetPreferences();
 });
 
 afterEach(() => {
   setCommandPaletteOpen(false);
+  server.resetHandlers();
+});
+
+afterAll(() => {
+  server.close();
 });
 
 test("nothing is loaded for the palette until it is opened for the first time", async () => {
@@ -184,7 +123,7 @@ test("typing narrows the list to what matches, ignoring case and accents", async
 
   fireEvent.change(searchBox(), { target: { value: "kavines" } });
 
-  expect(optionNames().some((name) => name.includes("Kavinės ir restoranai"))).toBe(true);
+  expect(optionNames().some((name) => name.includes(cafes))).toBe(true);
   expect(screen.getAllByRole("option")).toHaveLength(1);
 });
 
@@ -253,18 +192,21 @@ test("an administrator is offered the settings sections and a backup", async () 
 });
 
 test("a member is offered neither, and a switched-off feature keeps its pages out", async () => {
-  role = UserRole.member;
-  features = { ...features, investments: false };
+  const { features } = settingsFixture();
+  server.use(
+    getMeMockHandler(memberUser),
+    getSettingsMockHandler(settingsFixture({ features: { ...features, investments: false } })),
+  );
   const { queryClient } = mount();
   await settled(queryClient);
   await openPalette(queryClient);
 
   fireEvent.change(searchBox(), { target: { value: "email" } });
-  expect(screen.queryByRole("listbox")).toBeNull();
+  expect(optionNames().some((name) => name.includes("Email"))).toBe(false);
 
   fireEvent.change(searchBox(), { target: { value: "Back up now" } });
-  expect(screen.queryByRole("listbox")).toBeNull();
+  expect(optionNames().some((name) => name.includes("Back up now"))).toBe(false);
 
   fireEvent.change(searchBox(), { target: { value: "Investment tax summary" } });
-  expect(screen.queryByRole("listbox")).toBeNull();
+  expect(optionNames().some((name) => name.includes("Investment tax summary"))).toBe(false);
 });

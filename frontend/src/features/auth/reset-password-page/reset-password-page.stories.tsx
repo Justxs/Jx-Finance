@@ -1,8 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { getResetPasswordMockHandler } from "@/api/generated/auth/auth.msw";
+import { withWidth } from "@/storybook/decorators";
 import { resetLink } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { ResetPasswordPage } from "./reset-password-page";
 
 const link = `/reset-password?email=${encodeURIComponent(resetLink.email)}&token=${resetLink.token}`;
@@ -11,11 +12,7 @@ const meta = {
   title: "Features/Auth/ResetPasswordPage",
   component: ResetPasswordPage,
   parameters: { route: link },
-  render: () => (
-    <div className="flex w-96 max-w-full justify-center">
-      <ResetPasswordPage />
-    </div>
-  ),
+  decorators: [withWidth("auth")],
 } satisfies Meta<typeof ResetPasswordPage>;
 
 export default meta;
@@ -58,7 +55,5 @@ export const AnIncompleteLink: Story = {
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: { handlers: [getResetPasswordMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getResetPasswordMockHandler(pending)),
 };

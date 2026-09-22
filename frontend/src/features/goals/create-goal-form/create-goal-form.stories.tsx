@@ -3,7 +3,7 @@ import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/tes
 import { getCreateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, sharedFundedGoal, unavailableFundedGoal } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { CreateGoalForm } from "./create-goal-form";
 
@@ -121,11 +121,7 @@ export const BackToManualKeepsTheStoredAmount: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateGoalMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateGoalMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const [name, target] = canvas.getAllByRole("textbox");

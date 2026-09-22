@@ -9,9 +9,9 @@ import { budgets, ids, overLimitBudget, many, weeklyRolloverBudget } from "@/sto
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { BudgetsPage } from "./budgets-page";
@@ -63,25 +63,20 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const AllOverLimit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getBudgetsMockHandler([
-          overLimitBudget,
-          {
-            ...overLimitBudget,
-            id: ids.budgets.transport,
-            categoryName: "Transportas",
-            limitAmount: "10.00",
-            effectiveLimit: "10.00",
-            spent: "98.40",
-            remaining: "-88.40",
-          },
-        ]),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getBudgetsMockHandler([
+      overLimitBudget,
+      {
+        ...overLimitBudget,
+        id: ids.budgets.transport,
+        categoryName: "Transportas",
+        limitAmount: "10.00",
+        effectiveLimit: "10.00",
+        spent: "98.40",
+        remaining: "-88.40",
+      },
+    ]),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const label = await canvas.findByText(/^(over by|viršyta)$/i);
@@ -90,41 +85,31 @@ export const AllOverLimit: Story = {
 };
 
 export const ZeroLimit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getBudgetsMockHandler([
-          {
-            ...overLimitBudget,
-            limitAmount: "0.00",
-            effectiveLimit: "0.00",
-            spent: "0.00",
-            remaining: "0.00",
-          },
-        ]),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getBudgetsMockHandler([
+      {
+        ...overLimitBudget,
+        limitAmount: "0.00",
+        effectiveLimit: "0.00",
+        spent: "0.00",
+        remaining: "0.00",
+      },
+    ]),
+  ),
 };
 
 export const NegativeCarry: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getBudgetsMockHandler([
-          {
-            ...weeklyRolloverBudget,
-            carriedAmount: "-18.00",
-            effectiveLimit: "22.00",
-            spent: "30.00",
-            remaining: "-8.00",
-          },
-        ]),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getBudgetsMockHandler([
+      {
+        ...weeklyRolloverBudget,
+        carriedAmount: "-18.00",
+        effectiveLimit: "22.00",
+        spent: "30.00",
+        remaining: "-8.00",
+      },
+    ]),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const carry = await canvas.findByText(/carried|perkelta/i);
@@ -133,11 +118,7 @@ export const NegativeCarry: Story = {
 };
 
 export const LongList: Story = {
-  parameters: {
-    msw: {
-      handlers: [getBudgetsMockHandler(manyBudgets), ...handlers],
-    },
-  },
+  parameters: withHandlers(getBudgetsMockHandler(manyBudgets)),
 };
 
 export const AddDialogOpen: Story = {
@@ -158,11 +139,7 @@ export const EditDialogOpen: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeleteBudgetMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeleteBudgetMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", { name: /^(delete|ištrinti):/i });

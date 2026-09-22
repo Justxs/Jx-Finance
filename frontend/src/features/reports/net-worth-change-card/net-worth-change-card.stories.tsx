@@ -3,7 +3,7 @@ import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-wor
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { FIXTURE_MONTH_END, FIXTURE_YEAR_START, netWorthHistoryItems } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { NetWorthChangeCard } from "./net-worth-change-card";
 
 const decliningHistory = {
@@ -42,19 +42,11 @@ export const Default: Story = {};
 export const ShorterRange: Story = { args: { dateFrom: "2026-06-01", dateTo: "2026-09-30" } };
 
 export const NegativeChange: Story = {
-  parameters: {
-    msw: {
-      handlers: [getNetWorthHistoryMockHandler(decliningHistory), ...handlers],
-    },
-  },
+  parameters: withHandlers(getNetWorthHistoryMockHandler(decliningHistory)),
 };
 
 export const LargeAmountsNarrow: Story = {
-  parameters: {
-    msw: {
-      handlers: [getNetWorthHistoryMockHandler(hugeHistory), ...handlers],
-    },
-  },
+  parameters: withHandlers(getNetWorthHistoryMockHandler(hugeHistory)),
   render: (args) => (
     <div className="w-64">
       <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>

@@ -3,7 +3,7 @@ import { fn } from "storybook/test";
 import { getUpdateMemberRoleMockHandler } from "@/api/generated/households/households.msw";
 import { Rows } from "@/components/ui/rows/rows";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { MemberRow } from "./member-row";
 
 const meta = {
@@ -54,9 +54,5 @@ export const RemovePending: Story = { args: { removePending: true, removeDisable
 export const RemoveDisabled: Story = { args: { removeDisabled: true } };
 
 export const RoleChangePendingAfterSelect: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateMemberRoleMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateMemberRoleMockHandler(pending)),
 };

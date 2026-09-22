@@ -3,7 +3,7 @@ import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
 import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { debtPaymentTooSmallProblem, debts, ids, zeroRateDebt } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { DebtForm, debtFormValues } from "./debt-form";
 
 const [mortgage] = debts;
@@ -41,11 +41,7 @@ export const ValidationErrors: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateDebtMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateDebtMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const fields = canvas.getAllByRole("textbox");
@@ -78,11 +74,7 @@ export const TermAndPaymentTogether: Story = {
 };
 
 export const PaymentTooSmall: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem, 400))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText(/^(name|pavadinimas)$/i), {

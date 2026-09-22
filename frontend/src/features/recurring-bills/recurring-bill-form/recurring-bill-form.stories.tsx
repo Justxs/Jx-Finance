@@ -3,7 +3,7 @@ import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/tes
 import { getCreateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, checkingAccount, savingsAccount } from "@/storybook/fixtures";
-import { handlers, pending } from "@/storybook/handlers";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { RecurringBillForm } from "./recurring-bill-form";
 
@@ -95,11 +95,7 @@ export const ValidationErrors: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateRecurringBillMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateRecurringBillMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const [name, amount] = canvas.getAllByRole("textbox");

@@ -1,7 +1,7 @@
 import { HttpHandler, HttpResponse, delay } from "msw";
 import type { HttpResponseResolver } from "msw";
 import { z } from "zod";
-import { Currency, type ProblemDetails } from "@/api/generated/model";
+import { Currency, type ProblemDetails, type Scope } from "@/api/generated/model";
 import { notFoundProblem } from "@/storybook/fixtures";
 
 export type Body = Record<string, unknown>;
@@ -57,6 +57,12 @@ export function failWithStatus(status: number) {
 export async function pending(): Promise<never> {
   await delay("infinite");
   throw new HttpResponse(null, { status: 204 });
+}
+
+export function withScope<T extends { householdId?: string | null }>(
+  merged: T,
+): T & { scope: Scope } {
+  return { ...merged, scope: merged.householdId ? "shared" : "personal" };
 }
 
 export function onRouteOf(handler: HttpHandler, resolver: HttpResponseResolver): HttpHandler {

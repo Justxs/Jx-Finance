@@ -1,8 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import type { AuditEventResponse } from "@/api/generated/model";
 import { householdAuditEvents } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { ActivityEvent, sentenceKey } from "./household-activity";
 
 function eventAt(index: number): AuditEventResponse {
@@ -14,12 +14,10 @@ function eventAt(index: number): AuditEventResponse {
 }
 
 function renderEvent(event: AuditEventResponse) {
-  const { Wrapper } = createQueryWrapper();
-  return render(
+  return renderWithQuery(
     <ul>
       <ActivityEvent event={event} />
     </ul>,
-    { wrapper: Wrapper },
   );
 }
 
