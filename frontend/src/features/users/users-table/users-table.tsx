@@ -36,10 +36,10 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
   const search = useSearch({ from: "/users" });
   const navigate = useNavigate({ from: "/users" });
 
-  const table = useSearchTable(search, (patch) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) }),
-  );
-  const { setFilter } = table;
+  function patchSearch(patch: Partial<typeof search>) {
+    void navigate({ search: (prev) => ({ ...prev, ...patch }) });
+  }
+  const table = useSearchTable(search, patchSearch);
 
   const filtered = Boolean(search.search) || Boolean(search.role) || search.isActive !== undefined;
   const options = roleOptions(t);
@@ -92,7 +92,7 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                         label={t("users.displayName")}
                         value={search.search ?? ""}
                         debounceMs={300}
-                        onChange={(value) => setFilter({ search: value || undefined })}
+                        onChange={(value) => patchSearch({ search: value || undefined })}
                       />
                     }
                   />
@@ -103,12 +103,12 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                       <ColumnFilter
                         label={t("users.role")}
                         active={Boolean(search.role)}
-                        onClear={() => setFilter({ role: undefined })}
+                        onClear={() => patchSearch({ role: undefined })}
                       >
                         <SelectField
                           aria-label={t("users.role")}
                           value={search.role ?? ""}
-                          onChange={(role) => setFilter({ role: role || undefined })}
+                          onChange={(role) => patchSearch({ role: role || undefined })}
                           options={[{ value: "", label: t("users.allRoles") }, ...options]}
                         />
                       </ColumnFilter>
@@ -121,13 +121,13 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                       <ColumnFilter
                         label={t("users.status")}
                         active={search.isActive !== undefined}
-                        onClear={() => setFilter({ isActive: undefined })}
+                        onClear={() => patchSearch({ isActive: undefined })}
                       >
                         <SelectField
                           aria-label={t("users.status")}
                           value={search.isActive === undefined ? "" : String(search.isActive)}
                           onChange={(value) =>
-                            setFilter({ isActive: value === "" ? undefined : value === "true" })
+                            patchSearch({ isActive: value === "" ? undefined : value === "true" })
                           }
                           options={[
                             { value: "", label: t("users.allStatuses") },

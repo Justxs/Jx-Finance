@@ -7,7 +7,7 @@ export function MonthlyTrendChart() {
   const trend = useMonthlyTrendSuspense(monthlyTrendParams);
   const monthFormat = useShortMonth();
 
-  const items = trend.data?.items ?? [];
+  const items = trend.data.items;
   const chartData = items.map((item) => ({
     label: monthFormat.format(new Date(item.year ?? 0, (item.month ?? 1) - 1, 1)),
     income: Number(item.income ?? 0),

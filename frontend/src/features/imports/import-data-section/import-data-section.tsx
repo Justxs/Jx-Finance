@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useAccountsSuspense } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useSettings } from "@/hooks/use-settings";
@@ -14,7 +14,7 @@ function ImportActions() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const accounts = useAccountsSuspense();
-  const accountList = accounts.data ?? [];
+  const accountList = accounts.data;
 
   if (accountList.length === 0) {
     return (
@@ -44,17 +44,13 @@ export function ImportDataSection() {
   }
 
   return (
-    <Section aria-labelledby="import-data-title">
-      <SectionTitle id="import-data-title">{t("imports.sectionTitle")}</SectionTitle>
-      <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-        {t("imports.sectionDescription")}
-      </p>
+    <TitledSection title={t("imports.sectionTitle")} description={t("imports.sectionDescription")}>
       <QueryBoundary
         fallback={<Skeleton className="mt-4 h-9 w-48" />}
         errorSubject={t("imports.sectionTitle")}
       >
         <ImportActions />
       </QueryBoundary>
-    </Section>
+    </TitledSection>
   );
 }

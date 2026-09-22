@@ -21,7 +21,7 @@ export function NetWorthSeriesChart({ series, ...chart }: Readonly<Props>) {
   const { t } = useTranslation();
   const history = useNetWorthHistorySuspense();
 
-  const items = history.data?.items ?? [];
+  const items = history.data.items;
   if (items.length < 2) {
     return <EmptyText>{t("netWorth.notEnoughHistory")}</EmptyText>;
   }

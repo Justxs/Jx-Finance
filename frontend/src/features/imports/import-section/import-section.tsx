@@ -10,7 +10,9 @@ import {
 } from "@/api/generated";
 import type { AccountResponse, ImportPreviewResponse } from "@/api/generated/model";
 import { Section, SectionTitle } from "@/components/ui/section/section";
+import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
+import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 import {
   importDateRange,
   ImportPreviewTable,
@@ -23,6 +25,12 @@ import { type ImportResult, ImportResultLine } from "./import-result";
 import { ImportUploadForm } from "./import-upload-form";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+const uploadProblemKeys = {
+  required: "imports.fileRequired",
+  empty: "imports.fileEmpty",
+  tooLarge: "imports.fileTooLarge",
+} as const satisfies Record<UploadProblem, TranslationKey>;
 
 interface Props {
   accounts: AccountResponse[];
@@ -85,16 +93,9 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     if (!accountId) {
       return;
     }
-    if (!file) {
-      setFileError(t("imports.fileRequired"));
-      return;
-    }
-    if (file.size === 0) {
-      setFileError(t("imports.fileEmpty"));
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      setFileError(t("imports.fileTooLarge"));
+    const problem = validateUpload(file, MAX_FILE_BYTES);
+    if (!file || problem) {
+      setFileError(t(uploadProblemKeys[problem ?? "required"]));
       return;
     }
     setFileError(undefined);

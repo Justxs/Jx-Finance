@@ -21,7 +21,7 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
   const { t } = useTranslation();
   const formatDateTime = useDateTime();
   const connections = useBrokerConnectionsSuspense();
-  const connection = connections.data?.find((item) => item.accountId === accountId);
+  const connection = connections.data.find((item) => item.accountId === accountId);
   const accountName = accounts.find((account) => account.id === accountId)?.name;
 
   const [formVersion, setFormVersion] = useState(0);

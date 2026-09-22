@@ -30,7 +30,7 @@ interface Props {
 export function CategoryForm({ initial, onDone, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
-  const householdList = households.data ?? [];
+  const householdList = households.data;
   const sharing = useSharingDefaults(householdList);
 
   const schema = refineSharing(

@@ -13,7 +13,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
 import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
 import { silent } from "@/lib/mutations";
-import { password, requiredValue } from "@/lib/validation";
+import { password, requiredMax } from "@/lib/validation";
 import { userName } from "../user-queries";
 
 interface FormProps {
@@ -38,10 +38,7 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
       resetUserPasswordBodyNewPasswordMax,
     ),
     resetTwoFactor: z.boolean(),
-    currentPassword: requiredValue(t).max(
-      resetUserPasswordBodyCurrentPasswordMax,
-      t("validation.maxLength", { max: resetUserPasswordBodyCurrentPasswordMax }),
-    ),
+    currentPassword: requiredMax(t, resetUserPasswordBodyCurrentPasswordMax),
   });
 
   const resetMutation = useResetUserPassword(

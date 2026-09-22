@@ -12,8 +12,8 @@ export function DashboardStats() {
   const percent = usePercent();
   const summary = useDashboardSummarySuspense();
 
-  const income = Number(summary.data?.monthIncome ?? 0);
-  const expense = Number(summary.data?.monthExpense ?? 0);
+  const income = Number(summary.data.monthIncome);
+  const expense = Number(summary.data.monthExpense);
   const net = income - expense;
   const spentShare = income > 0 ? Math.min(1, expense / income) : 0;
 
@@ -40,7 +40,7 @@ export function DashboardStats() {
       <dl>
         <dt className="text-sm text-muted-foreground">{t("dashboard.totalBalance")}</dt>
         <dd className="mt-1 max-w-full font-serif text-stat-lg font-semibold wrap-break-word lining-nums tabular-nums">
-          {money.format(Number(summary.data?.totalBalance ?? 0))}
+          {money.format(Number(summary.data.totalBalance))}
         </dd>
       </dl>
 

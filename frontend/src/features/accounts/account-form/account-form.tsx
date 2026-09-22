@@ -75,7 +75,7 @@ function buildValues(value: FormValues): AccountFormValues {
 export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
-  const householdList = households.data ?? [];
+  const householdList = households.data;
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
   const sharing = useSharingDefaults(householdList);

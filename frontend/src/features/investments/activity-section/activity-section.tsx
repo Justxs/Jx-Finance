@@ -52,8 +52,8 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const transactions = useInvestmentTransactionsSuspense(
     activityParams(shown.page, accountId, shown.type),
   );
-  const pages = usePageClamp({ page, setPage }, transactions.data?.total ?? 0, ACTIVITY_PAGE_SIZE);
-  const items = transactions.data?.items ?? [];
+  const pages = usePageClamp({ page, setPage }, transactions.data.total, ACTIVITY_PAGE_SIZE);
+  const items = transactions.data.items;
   const accountNames = nameById(accounts);
   const severalAccounts = new Set(items.map((entry) => entry.accountId)).size > 1;
 

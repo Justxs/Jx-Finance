@@ -11,7 +11,7 @@ export function HouseholdsPage() {
   const { t } = useTranslation();
 
   const households = useHouseholdsSuspense();
-  const householdList = households.data ?? [];
+  const householdList = households.data;
 
   let content: ReactNode;
   if (householdList.length === 0) {

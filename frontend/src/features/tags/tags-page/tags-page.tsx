@@ -29,7 +29,7 @@ export function TagsPage() {
     mutation: optimisticRemoval<TagResponse>(getTagsQueryKey()),
   });
 
-  const tagList = useDeferredValue(tags.data) ?? [];
+  const tagList = useDeferredValue(tags.data);
   const remove = useConfirmedDelete(deleteMutation, tagList, (tag) => tag.name, "tag");
 
   return (

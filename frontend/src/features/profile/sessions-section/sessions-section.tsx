@@ -9,7 +9,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
@@ -85,7 +85,7 @@ function SessionRow({ session, pending, disabled, onSignOut }: Readonly<SessionR
 function SessionList() {
   const { t } = useTranslation();
   const sessions = useSessionsSuspense();
-  const list = sessions.data ?? [];
+  const list = sessions.data;
   const sessionLabel = useSessionLabel();
   const [confirmingOthers, setConfirmingOthers] = useState<true | null>(null);
 
@@ -155,16 +155,15 @@ export function SessionsSection() {
   const { t } = useTranslation();
 
   return (
-    <Section aria-labelledby="sessions-title">
-      <SectionTitle id="sessions-title">{t("profile.sessions.title")}</SectionTitle>
-      <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-        {t("profile.sessions.description")}
-      </p>
+    <TitledSection
+      title={t("profile.sessions.title")}
+      description={t("profile.sessions.description")}
+    >
       <div className="mt-4">
         <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
           <SessionList />
         </QueryBoundary>
       </div>
-    </Section>
+    </TitledSection>
   );
 }

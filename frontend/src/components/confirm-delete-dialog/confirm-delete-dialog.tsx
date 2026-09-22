@@ -11,6 +11,26 @@ import {
 } from "@/components/ui/alert-dialog/alert-dialog";
 import { useRetained } from "@/hooks/use-retained";
 
+interface HeaderProps {
+  title: string;
+  label?: string | null;
+  description: string;
+}
+
+export function ConfirmDialogHeader({ title, label, description }: Readonly<HeaderProps>) {
+  return (
+    <AlertDialogHeader>
+      <AlertDialogTitle>{title}</AlertDialogTitle>
+      <AlertDialogDescription>
+        {label ? (
+          <span className="mb-1 block font-medium wrap-break-word text-foreground">{label}</span>
+        ) : null}
+        {description}
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+  );
+}
+
 interface Props<T> {
   target: T | null;
   itemLabel?: string;
@@ -51,17 +71,11 @@ export function ConfirmDeleteDialog<T>({
       }}
     >
       <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{title ?? t("confirmDelete.title")}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {shownLabel ? (
-              <span className="mb-1 block font-medium wrap-break-word text-foreground">
-                {shownLabel}
-              </span>
-            ) : null}
-            {description ?? t("confirmDelete.description")}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
+        <ConfirmDialogHeader
+          title={title ?? t("confirmDelete.title")}
+          label={shownLabel}
+          description={description ?? t("confirmDelete.description")}
+        />
         <AlertDialogFooter>
           <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
           <AlertDialogAction variant="destructive" onClick={handleConfirm}>

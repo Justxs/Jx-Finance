@@ -16,7 +16,7 @@ export function NetWorthChangeCard({ dateFrom, dateTo }: Readonly<Props>) {
   const money = useMoney();
   const history = useNetWorthHistorySuspense();
 
-  const items = (history.data?.items ?? [])
+  const items = history.data.items
     .filter((item) => (item.date ?? "") >= dateFrom && (item.date ?? "") <= dateTo)
     .toSorted((a, b) => (a.date ?? "").localeCompare(b.date ?? ""));
 

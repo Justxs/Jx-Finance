@@ -45,7 +45,7 @@ export function UsersPage() {
     },
   });
 
-  const list = users.data ?? [];
+  const list = users.data;
   const deactivate = useConfirmedDelete(deactivateMutation, list, userName);
 
   return (
@@ -60,7 +60,7 @@ export function UsersPage() {
         <UsersTable
           users={list}
           stale={stale}
-          currentUserId={me.data?.id}
+          currentUserId={me.data.id}
           onRoleChange={(id, role) => roleMutation.mutate({ id, data: { role } })}
           rolePendingId={pendingId(roleMutation)}
           onDeactivate={deactivate.request}

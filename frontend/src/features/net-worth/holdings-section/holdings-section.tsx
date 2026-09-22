@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { type DeleteMutation, useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useMoney } from "@/hooks/use-formatters";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -37,9 +37,7 @@ interface Props<TValues> {
   emptyLabel: string;
   tone?: "neutral" | "expense";
   items: readonly HoldingItem<TValues>[];
-  deletingId?: string | null;
-  deleteDisabled: boolean;
-  onDelete: (id: string, options?: { onSuccess?: () => void }) => void;
+  deleteMutation: DeleteMutation;
   undoKind: TrashKind;
   form: ComponentType<HoldingFormProps<TValues>>;
 }
@@ -50,25 +48,14 @@ export function HoldingsSection<TValues = HoldingFormValues>({
   emptyLabel,
   tone = "neutral",
   items,
-  deletingId,
-  deleteDisabled,
-  onDelete,
+  deleteMutation,
   undoKind,
   form: Form,
 }: Readonly<Props<TValues>>) {
   const { t } = useTranslation();
   const money = useMoney();
   const [addOpen, setAddOpen] = useState(false);
-  const remove = useConfirmedDelete(
-    {
-      mutate: ({ id }, options) => onDelete(id, options),
-      isPending: deleteDisabled,
-      variables: deletingId ? { id: deletingId } : undefined,
-    },
-    items,
-    (item) => item.name,
-    undoKind,
-  );
+  const remove = useConfirmedDelete(deleteMutation, items, (item) => item.name, undoKind);
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const editItem = items.find((item) => item.id === editTarget);
 

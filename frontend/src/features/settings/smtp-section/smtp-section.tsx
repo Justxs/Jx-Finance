@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useSendTestEmail, useSmtpSettingsSuspense, useUpdateSmtpSettings } from "@/api/generated";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { silent } from "@/lib/mutations";
 import { SmtpForm } from "./smtp-form";
@@ -51,14 +51,10 @@ export function SmtpSection() {
   const { t } = useTranslation();
 
   return (
-    <Section aria-labelledby="smtp-title">
-      <SectionTitle id="smtp-title">{t("settings.smtp.title")}</SectionTitle>
-      <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-        {t("settings.smtp.description")}
-      </p>
+    <TitledSection title={t("settings.smtp.title")} description={t("settings.smtp.description")}>
       <QueryBoundary fallback={<Skeleton className="mt-4 h-72 w-full" />}>
         <SmtpSettings />
       </QueryBoundary>
-    </Section>
+    </TitledSection>
   );
 }

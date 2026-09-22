@@ -39,7 +39,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   const { t } = useTranslation();
   const securities = useSecuritiesSuspense();
   const canEdit = useMeSuspense().data.role === UserRole.admin;
-  const all = securities.data ?? [];
+  const all = securities.data;
   const shown = all.filter((security) => matches(security, search));
 
   if (shown.length === 0) {

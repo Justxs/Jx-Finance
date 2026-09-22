@@ -12,7 +12,7 @@ interface Props {
 export function ValueChart({ params }: Readonly<Props>) {
   const { t } = useTranslation();
   const history = useValueHistorySuspense(params);
-  const points = history.data?.points ?? [];
+  const points = history.data.points;
 
   if (points.length === 0) {
     return <EmptyText>{t("investments.valueChart.empty")}</EmptyText>;

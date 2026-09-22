@@ -19,6 +19,7 @@ import {
   wholeNumberBetween,
   quantity,
   requiredEmail,
+  requiredMax,
   requiredText,
   requiredValue,
 } from "./validation";
@@ -126,6 +127,12 @@ describe("schema builders", () => {
     expect(messages(requiredValue(t), "x")).toEqual([]);
   });
 
+  test("requiredMax keeps whitespace and enforces the limit", () => {
+    expect(messages(requiredMax(t, 3), "")).toEqual(["validation.required"]);
+    expect(messages(requiredMax(t, 3), "   ")).toEqual([]);
+    expect(messages(requiredMax(t, 3), "abcd")).toEqual(['validation.maxLength:{"max":3}']);
+  });
+
   test("optionalText allows blank and enforces the limit", () => {
     expect(messages(optionalText(t, 3), "")).toEqual([]);
     expect(messages(optionalText(t, 3), "abc")).toEqual([]);
@@ -142,6 +149,11 @@ describe("schema builders", () => {
     expect(messages(requiredEmail(t), " ")).toContain("validation.required");
     expect(messages(requiredEmail(t), "plain")).toEqual(["validation.email"]);
     expect(messages(requiredEmail(t), " justas@example.com ")).toEqual([]);
+  });
+
+  test("requiredEmail enforces an optional length limit", () => {
+    expect(messages(requiredEmail(t, 5), "a@b.c")).toEqual([]);
+    expect(messages(requiredEmail(t, 5), "ab@c.d")).toEqual(['validation.maxLength:{"max":5}']);
   });
 
   test("password enforces both limits", () => {

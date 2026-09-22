@@ -29,10 +29,16 @@ export function EditModal<T extends { id: string }>({
 }: Readonly<Props<T>>) {
   const shown = useRetained(item);
 
+  function handleOpenChange(open: boolean) {
+    if (!open) {
+      onClose();
+    }
+  }
+
   return (
     <Modal
       open={item !== null}
-      onClose={onClose}
+      onOpenChange={handleOpenChange}
       title={titleOf(title, shown)}
       description={shown ? description?.(shown) : undefined}
       className={className}
