@@ -150,4 +150,68 @@ public sealed class PortfolioTests
         Assert.Equal(0m, position.CostBasis);
         Assert.Equal(200m, position.Sales.Sum(s => s.Gain));
     }
+
+    [Fact]
+    public void Applying_the_entries_day_by_day_ends_where_a_full_replay_does()
+    {
+        List<InvestmentTransaction> entries =
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Sell, 2, 4m, 60m),
+            Entry(InvestmentTransactionType.Buy, 2, 5m, 50m),
+            Entry(InvestmentTransactionType.Split, 2, 2m, 0m),
+            Entry(InvestmentTransactionType.Sell, 5, 3m, 70m),
+            Entry(InvestmentTransactionType.Dividend, 5, 0m, 0m),
+        ];
+
+        var ordered = Portfolio.InOrder(entries).ToList();
+        for (var day = 1; day <= 6; day++)
+        {
+            var until = new DateOnly(2026, 6, day);
+            var walked = new Dictionary<SecurityId, Position>();
+            foreach (var entry in ordered.TakeWhile(e => e.Date <= until))
+            {
+                Portfolio.Apply(walked, entry);
+            }
+
+            var replayed = Portfolio.Positions(entries.Where(e => e.Date <= until));
+
+            Assert.Equal(replayed.Count, walked.Count);
+            if (replayed.TryGetValue(Fund, out var expected))
+            {
+                Assert.Equal(expected.Quantity, walked[Fund].Quantity);
+                Assert.Equal(expected.CostBasis, walked[Fund].CostBasis);
+                Assert.Equal(expected.IsOversold, walked[Fund].IsOversold);
+                Assert.Equal(expected.Sales.Sum(s => s.Gain), walked[Fund].Sales.Sum(s => s.Gain));
+            }
+        }
+    }
+
+    [Fact]
+    public void Walking_the_entries_once_gives_every_prefix_in_turn()
+    {
+        List<InvestmentTransaction> entries =
+        [
+            Entry(InvestmentTransactionType.Buy, 1, 10m, 100m),
+            Entry(InvestmentTransactionType.Buy, 3, 10m, 120m),
+            Entry(InvestmentTransactionType.Sell, 5, 15m, 130m),
+        ];
+
+        var ordered = Portfolio.InOrder(entries).ToList();
+        var book = new Dictionary<SecurityId, Position>();
+        var next = 0;
+        var quantities = new List<decimal>();
+        foreach (var day in new[] { 2, 4, 6 })
+        {
+            var until = new DateOnly(2026, 6, day);
+            while (next < ordered.Count && ordered[next].Date <= until)
+            {
+                Portfolio.Apply(book, ordered[next++]);
+            }
+
+            quantities.Add(book[Fund].Quantity);
+        }
+
+        Assert.Equal([10m, 20m, 5m], quantities);
+    }
 }
