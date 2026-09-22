@@ -4,6 +4,7 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Tags;
 using JxFinance.Infrastructure.Data;
+using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Tests.Unit;
@@ -67,7 +68,7 @@ public sealed class SharingGuardTests
     {
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql("Host=unused.invalid;Database=unused").Options;
         var user = new SomeUser(userId);
-        await using var db = new AppDbContext(options, user);
+        await using var db = new AppDbContext(options, user, new TestClock());
 
         return await check(new SharingGuard(db, user));
     }

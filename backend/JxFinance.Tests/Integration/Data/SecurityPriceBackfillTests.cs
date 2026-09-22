@@ -21,7 +21,7 @@ public sealed class SecurityPriceBackfillTests(ApiFixture fixture) : Integration
         try
         {
             var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql(connectionString).Options;
-            await using var db = new AppDbContext(options, new TestCurrentUser(Guid.NewGuid()));
+            await using var db = new AppDbContext(options, new TestCurrentUser(Guid.NewGuid()), new TestClock());
             var migrator = db.GetService<IMigrator>();
             await migrator.MigrateAsync(MigrationBefore, TestContext.Current.CancellationToken);
             var (priced, undated, unpriced) = (Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
