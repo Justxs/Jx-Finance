@@ -1,15 +1,6 @@
-import {
-  FileUp,
-  type LucideIcon,
-  MonitorSmartphone,
-  Palette,
-  ShieldCheck,
-  Trash2,
-  UserRound,
-} from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { SectionNav } from "@/components/section-nav/section-nav";
-import type { TranslationKey } from "@/lib/i18n";
+import { Link } from "@tanstack/react-router";
+import { FileUp, MonitorSmartphone, Palette, ShieldCheck, Trash2, UserRound } from "lucide-react";
+import { SectionNav, type SectionNavItem } from "@/components/section-nav/section-nav";
 
 export const profileSections = [
   "account",
@@ -22,7 +13,7 @@ export const profileSections = [
 
 export type ProfileSection = (typeof profileSections)[number];
 
-const items: Record<ProfileSection, { labelKey: TranslationKey; icon: LucideIcon }> = {
+const items: Record<ProfileSection, SectionNavItem> = {
   account: { labelKey: "profile.detailsTitle", icon: UserRound },
   security: { labelKey: "profile.twoFactorTitle", icon: ShieldCheck },
   sessions: { labelKey: "profile.sessions.title", icon: MonitorSmartphone },
@@ -37,18 +28,13 @@ interface Props {
 }
 
 export function ProfileNav({ current, sections }: Readonly<Props>) {
-  const { t } = useTranslation();
-
   return (
     <SectionNav
-      to="/profile"
-      label={t("profile.sectionsNav")}
+      labelKey="profile.sectionsNav"
       current={current}
-      items={sections.map((section) => ({
-        id: section,
-        label: t(items[section].labelKey),
-        icon: items[section].icon,
-      }))}
+      sections={sections}
+      items={items}
+      renderLink={(section, props) => <Link to="/profile" search={{ section }} {...props} />}
     />
   );
 }

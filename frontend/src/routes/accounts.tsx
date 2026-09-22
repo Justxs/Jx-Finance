@@ -8,7 +8,7 @@ import {
   getHouseholdsSuspenseQueryOptions,
   getTransfersSuspenseQueryOptions,
 } from "@/api/generated";
-import { AccountSortField, SortDirection } from "@/api/generated/model";
+import { AccountSortField } from "@/api/generated/model";
 import {
   accountListParams,
   conversionsPageParams,
@@ -17,14 +17,14 @@ import {
 import { accountTypes } from "@/features/accounts/account-types";
 import { AccountsPage } from "@/features/accounts/accounts-page/accounts-page";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
+import { optionalParam, sortParams } from "@/lib/search-schema";
 
 export const accountsSearchSchema = z.object({
-  search: z.string().optional().catch(undefined),
-  iban: z.string().optional().catch(undefined),
-  type: z.enum(accountTypes).optional().catch(undefined),
-  sort: z.enum(AccountSortField).optional().catch(undefined),
-  direction: z.enum(SortDirection).optional().catch(undefined),
-  new: z.enum(["account", "transfer"]).optional().catch(undefined),
+  search: optionalParam(z.string()),
+  iban: optionalParam(z.string()),
+  type: optionalParam(z.enum(accountTypes)),
+  ...sortParams(AccountSortField),
+  new: optionalParam(z.enum(["account", "transfer"])),
 });
 
 export const Route = createFileRoute("/accounts")({

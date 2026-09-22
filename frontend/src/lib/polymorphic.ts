@@ -8,9 +8,7 @@ export type PolymorphicProps<Default extends ElementType, Others extends Element
   | ({ as?: Default } & Omit<ComponentProps<Default>, "as">)
   | AsProps<Others>;
 
-export function rendersAs<TProps extends { as?: unknown }, TComponent>(
-  props: TProps,
-  component: TComponent,
-): props is Extract<TProps, { as: TComponent }> {
-  return props.as === component;
+export function splitAs<TProps extends { as?: ElementType }>(props: TProps, fallback: ElementType) {
+  const { as: Component = fallback, ...rest } = props;
+  return { Component, rest };
 }

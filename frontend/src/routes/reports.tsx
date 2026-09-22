@@ -9,11 +9,12 @@ import { reportParams } from "@/features/reports/report-queries";
 import { ReportsPage } from "@/features/reports/reports-page/reports-page";
 import { requireFeature } from "@/lib/feature-gate";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
+import { optionalParam } from "@/lib/search-schema";
 
 export const reportsSearchSchema = z.object({
-  dateFrom: z.string().optional().catch(undefined),
-  dateTo: z.string().optional().catch(undefined),
-  comparison: z.enum(ReportComparisonMode).optional().catch(undefined),
+  dateFrom: optionalParam(z.string()),
+  dateTo: optionalParam(z.string()),
+  comparison: optionalParam(z.enum(ReportComparisonMode)),
 });
 
 export const Route = createFileRoute("/reports")({

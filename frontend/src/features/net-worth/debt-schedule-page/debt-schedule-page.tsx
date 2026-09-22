@@ -11,14 +11,14 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { DebtBalanceChart } from "../debt-balance-chart/debt-balance-chart";
+import { DebtBalanceChart } from "../debt-balance-chart";
 import {
   DebtExtraPayments,
   type ExtraPaymentDraft,
   extraPaymentParams,
   noExtraPayments,
 } from "../debt-extra-payments/debt-extra-payments";
-import { DebtPaymentSplitChart } from "../debt-payment-split-chart/debt-payment-split-chart";
+import { DebtPaymentSplitChart } from "../debt-payment-split-chart";
 import { DebtScheduleSummary } from "../debt-schedule-summary/debt-schedule-summary";
 import { DebtScheduleTable } from "../debt-schedule-table/debt-schedule-table";
 

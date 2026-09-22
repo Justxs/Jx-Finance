@@ -22,24 +22,43 @@ export function useUsableCurrencies(): readonly Currency[] {
   return currencies.data?.currencies ?? ALL_CURRENCIES;
 }
 
-const currencyFormatters = new Map<string, Intl.NumberFormat>();
+const numberFormats = new Map<string, Intl.NumberFormat>();
+const dateFormats = new Map<string, Intl.DateTimeFormat>();
 
-function currencyFormatter(language: string, currency: string, compact: boolean) {
-  const code = currency.toUpperCase();
-  const key = `${language}|${code}|${compact}`;
-  const cached = currencyFormatters.get(key);
-  if (cached) {
-    return cached;
+function cached<TFormat>(
+  cache: Map<string, TFormat>,
+  language: string,
+  options: object,
+  create: () => TFormat,
+) {
+  const key = `${language}|${JSON.stringify(options)}`;
+  const existing = cache.get(key);
+  if (existing) {
+    return existing;
   }
 
-  const created = new Intl.NumberFormat(language, {
-    style: "currency",
-    currency: code,
-    currencyDisplay: "symbol",
+  const created = create();
+  cache.set(key, created);
+  return created;
+}
+
+function numberFormat(language: string, options: Intl.NumberFormatOptions) {
+  return cached(numberFormats, language, options, () => new Intl.NumberFormat(language, options));
+}
+
+function dateFormat(language: string, options: Intl.DateTimeFormatOptions) {
+  return cached(dateFormats, language, options, () => new Intl.DateTimeFormat(language, options));
+}
+
+function currencyOptions(currency: string): Intl.NumberFormatOptions {
+  return { style: "currency", currency: currency.toUpperCase(), currencyDisplay: "symbol" };
+}
+
+function currencyFormatter(language: string, currency: string, compact: boolean) {
+  return numberFormat(language, {
+    ...currencyOptions(currency),
     ...(compact ? { notation: "compact", maximumFractionDigits: 1 } : {}),
   });
-  currencyFormatters.set(key, created);
-  return created;
 }
 
 export type MoneySign = "+" | "−" | "auto";
@@ -84,19 +103,13 @@ export function useCurrencyName() {
 export function useDate() {
   const { i18n } = useTranslation();
 
-  return new Intl.DateTimeFormat(i18n.language, {
-    dateStyle: "medium",
-  });
+  return dateFormat(i18n.language, { dateStyle: "medium" });
 }
 
 export function useDateTime() {
   const { i18n } = useTranslation();
   const timeZone = safeTimeZone(useSettings().timeZone);
-  const dateTime = new Intl.DateTimeFormat(i18n.language, {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone,
-  });
+  const dateTime = dateFormat(i18n.language, { dateStyle: "medium", timeStyle: "short", timeZone });
 
   return function formatDateTime(value?: string | null) {
     const parsed = value ? new Date(value) : null;
@@ -119,23 +132,12 @@ export function useCalendarLocale() {
   return i18n.language.startsWith("lt") ? lt : enUS;
 }
 
-const decimalFormatters = new Map<string, Intl.NumberFormat>();
-
 function decimalFormatter(language: string, minimum: number, maximum: number, currency?: string) {
-  const code = currency?.toUpperCase();
-  const key = `${language}|${minimum}|${maximum}|${code ?? ""}`;
-  const cached = decimalFormatters.get(key);
-  if (cached) {
-    return cached;
-  }
-
-  const created = new Intl.NumberFormat(language, {
-    ...(code ? { style: "currency", currency: code, currencyDisplay: "symbol" } : {}),
+  return numberFormat(language, {
+    ...(currency ? currencyOptions(currency) : {}),
     minimumFractionDigits: minimum,
     maximumFractionDigits: maximum,
   });
-  decimalFormatters.set(key, created);
-  return created;
 }
 
 export function useRateFormat() {
@@ -160,7 +162,7 @@ export function usePriceFormat() {
 
 export function useSignedPercent() {
   const { i18n } = useTranslation();
-  const percent = new Intl.NumberFormat(i18n.language, {
+  const percent = numberFormat(i18n.language, {
     style: "percent",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
@@ -177,10 +179,7 @@ export function useSignedPercent() {
 
 export function useRatePercent() {
   const { i18n } = useTranslation();
-  const percent = new Intl.NumberFormat(i18n.language, {
-    style: "percent",
-    maximumFractionDigits: 2,
-  });
+  const percent = numberFormat(i18n.language, { style: "percent", maximumFractionDigits: 2 });
 
   return function formatRatePercent(value: number) {
     return percent.format(value / 100);
@@ -192,12 +191,12 @@ export const EMPTY_VALUE = "—";
 export function usePercent() {
   const { i18n } = useTranslation();
 
-  return new Intl.NumberFormat(i18n.language, { style: "percent", maximumFractionDigits: 0 });
+  return numberFormat(i18n.language, { style: "percent", maximumFractionDigits: 0 });
 }
 
 export function useMonthLabel() {
   const { i18n } = useTranslation();
-  const month = new Intl.DateTimeFormat(i18n.language, { month: "long", year: "numeric" });
+  const month = dateFormat(i18n.language, { month: "long", year: "numeric" });
 
   return function monthLabel(date: Date) {
     return month.format(date);
@@ -207,13 +206,13 @@ export function useMonthLabel() {
 export function useShortMonth() {
   const { i18n } = useTranslation();
 
-  return new Intl.DateTimeFormat(i18n.language, { month: "short", year: "numeric" });
+  return dateFormat(i18n.language, { month: "short", year: "numeric" });
 }
 
 export function useShortDay() {
   const { i18n } = useTranslation();
 
-  return new Intl.DateTimeFormat(i18n.language, { month: "short", day: "numeric" });
+  return dateFormat(i18n.language, { month: "short", day: "numeric" });
 }
 
 export function useAxisDateTick(shortSpan: boolean) {
@@ -221,7 +220,7 @@ export function useAxisDateTick(shortSpan: boolean) {
   const shortDay = useShortDay();
   const tick = shortSpan
     ? shortDay
-    : new Intl.DateTimeFormat(i18n.language, { month: "short", year: "2-digit" });
+    : dateFormat(i18n.language, { month: "short", year: "2-digit" });
 
   return function formatTick(value: string) {
     const parsed = parseIso(value);
@@ -232,7 +231,7 @@ export function useAxisDateTick(shortSpan: boolean) {
 export function useNumberFormat(maximumFractionDigits?: number) {
   const { i18n } = useTranslation();
 
-  return new Intl.NumberFormat(i18n.language, { maximumFractionDigits });
+  return numberFormat(i18n.language, { maximumFractionDigits });
 }
 
 export function useBytes() {

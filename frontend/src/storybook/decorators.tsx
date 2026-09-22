@@ -18,16 +18,15 @@ import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { pageViewTransition } from "@/lib/page-transition";
 import { createToastingMutationCache } from "@/lib/query-client";
+import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
-import { resetPasswordSearchSchema } from "@/routes/reset-password";
 import { settingsSearchSchema } from "@/routes/settings";
 import { transactionsSearchSchema } from "@/routes/transactions";
 import { usersSearchSchema } from "@/routes/users";
-import { verifyEmailSearchSchema } from "@/routes/verify-email";
 import { clearTransactionViews } from "@/stores/transaction-views";
 
 const STORY_ROUTES = [
@@ -50,8 +49,8 @@ const STORY_ROUTES = [
   { path: "/login" },
   { path: "/setup" },
   { path: "/forgot-password" },
-  { path: "/reset-password", validateSearch: resetPasswordSearchSchema },
-  { path: "/verify-email", validateSearch: verifyEmailSearchSchema },
+  { path: "/reset-password", validateSearch: emailTokenSearchSchema },
+  { path: "/verify-email", validateSearch: emailTokenSearchSchema },
 ] as const;
 
 const STORY_WIDTHS = {

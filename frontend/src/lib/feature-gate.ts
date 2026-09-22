@@ -2,6 +2,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { redirect } from "@tanstack/react-router";
 import type { FeatureKey } from "@/hooks/use-settings";
 import { settingsQueryOptions } from "@/hooks/use-settings";
+import { checkIsAdmin } from "@/lib/auth-gate";
 import type { RouterContext } from "@/lib/route-prefetch";
 
 async function isFeatureEnabled(queryClient: QueryClient, feature: FeatureKey): Promise<boolean> {
@@ -26,4 +27,10 @@ export function requireFeature(feature: FeatureKey) {
       throw redirect({ to: "/" });
     }
   };
+}
+
+export async function requireAdmin({ context }: GateArgs) {
+  if (!(await checkIsAdmin(context.queryClient))) {
+    throw redirect({ to: "/" });
+  }
 }
