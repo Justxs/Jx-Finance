@@ -69,6 +69,71 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
         }
     }
 
+    [Theory]
+    [InlineData("smtp.elsewhere.test", "relay")]
+    [InlineData(SmtpHost, "someone-else")]
+    public async Task The_stored_password_is_not_carried_to_another_server_or_user(string host, string userName)
+    {
+        try
+        {
+            await EnableEmailAsync();
+
+            var refused = await Client.PutAsJsonAsync("/api/settings/smtp", Smtp(host, userName, password: null));
+            await AssertProblemAsync(refused, HttpStatusCode.BadRequest, "email.passwordRequired");
+
+            var stored = await Client.GetFromJsonAsync<SmtpDto>("/api/settings/smtp");
+            Assert.Equal(SmtpHost, stored!.Host);
+            Assert.Equal("relay", stored.UserName);
+
+            var moved = await SaveAsync(Smtp(host, userName, password: "new-secret"));
+            Assert.Equal(host, moved.Host);
+            Assert.True(moved.HasPassword);
+
+            await Client.PostAsync("/api/settings/smtp/test", null);
+            Assert.Equal("new-secret", Assert.Single(Transport.Sent).Delivery.Password);
+        }
+        finally
+        {
+            await DisableEmailAsync();
+        }
+    }
+
+    [Fact]
+    public async Task The_host_is_compared_without_case_or_surrounding_spaces()
+    {
+        try
+        {
+            await EnableEmailAsync();
+
+            var kept = await SaveAsync(Smtp($"  {SmtpHost.ToUpperInvariant()} ", "relay", password: null));
+
+            Assert.True(kept.HasPassword);
+        }
+        finally
+        {
+            await DisableEmailAsync();
+        }
+    }
+
+    [Fact]
+    public async Task A_user_name_needs_an_encrypted_connection()
+    {
+        var response = await Client.PutAsJsonAsync("/api/settings/smtp", new
+        {
+            enabled = true,
+            host = SmtpHost,
+            port = 25,
+            encryption = "none",
+            userName = "relay",
+            password = "relay-secret",
+            fromAddress = SenderAddress,
+            fromName = (string?)null,
+        });
+
+        await AssertValidationErrorAsync(response, "encryption");
+        await AssertProblemAsync(response, HttpStatusCode.BadRequest, "email.insecureConnection");
+    }
+
     [Fact]
     public async Task Switching_email_on_needs_a_host_and_a_sender_address()
     {
@@ -174,6 +239,18 @@ public sealed class SmtpSettingsTests(ApiFixture fixture) : EmailTestBase(fixtur
 
         Assert.False((await anonymous.GetFromJsonAsync<PublicDto>("/api/settings/public"))!.EmailEnabled);
     }
+
+    private static object Smtp(string host, string userName, string? password) => new
+    {
+        enabled = true,
+        host,
+        port = 587,
+        encryption = "startTls",
+        userName,
+        password,
+        fromAddress = SenderAddress,
+        fromName = "Jx Finance",
+    };
 
     private async Task<SmtpDto> SaveAsync(object request)
     {

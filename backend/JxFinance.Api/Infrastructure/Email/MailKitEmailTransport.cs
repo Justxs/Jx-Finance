@@ -43,6 +43,15 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
             await client.ConnectAsync(delivery.Host, delivery.Port, SecurityFor(delivery.Encryption), cancellationToken);
             if (!string.IsNullOrWhiteSpace(delivery.UserName))
             {
+                if (!client.IsSecure)
+                {
+                    await client.DisconnectAsync(quit: true, cancellationToken);
+                    return new DomainError(
+                        ErrorCodes.EmailInsecureConnection,
+                        "The connection to the mail server is not encrypted, so the password was not sent. "
+                        + "Choose STARTTLS or SSL/TLS.");
+                }
+
                 await client.AuthenticateAsync(delivery.UserName, delivery.Password ?? string.Empty, cancellationToken);
             }
 
@@ -57,6 +66,7 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
             or System.Net.Sockets.SocketException
             or IOException
             or TimeoutException
+            or NotSupportedException
             or InvalidOperationException)
         {
             logger.LogWarning(ex, "Sending mail through {Host}:{Port} failed.", delivery.Host, delivery.Port);
@@ -66,9 +76,9 @@ public sealed class MailKitEmailTransport(IOptions<AppOptions> options, ILogger<
 
     private static SecureSocketOptions SecurityFor(SmtpEncryption encryption) => encryption switch
     {
+        SmtpEncryption.None => SecureSocketOptions.None,
         SmtpEncryption.SslOnConnect => SecureSocketOptions.SslOnConnect,
-        SmtpEncryption.StartTls => SecureSocketOptions.StartTls,
-        _ => SecureSocketOptions.None,
+        _ => SecureSocketOptions.StartTls,
     };
 
     private static string Describe(Exception exception)

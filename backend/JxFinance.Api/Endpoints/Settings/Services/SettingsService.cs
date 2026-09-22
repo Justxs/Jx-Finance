@@ -114,8 +114,21 @@ public sealed class SettingsService(
         }
 
         var userName = OptionalText.Normalize(request.UserName);
+        var host = OptionalText.Normalize(request.Host);
+        var password = OptionalText.Normalize(request.Password);
+        if (userName is not null
+            && password is null
+            && settings.SmtpProtectedPassword.Length > 0
+            && (!SameText(host, settings.SmtpHost, StringComparison.OrdinalIgnoreCase)
+                || !SameText(userName, settings.SmtpUserName, StringComparison.Ordinal)))
+        {
+            return new DomainError(
+                ErrorCodes.EmailPasswordRequired,
+                "Enter the password again: the stored one is only kept for the same mail server and user name.");
+        }
+
         settings.SmtpEnabled = request.Enabled;
-        settings.SmtpHost = OptionalText.Normalize(request.Host);
+        settings.SmtpHost = host;
         settings.SmtpPort = request.Port;
         settings.SmtpEncryption = request.Encryption;
         settings.SmtpUserName = userName;
@@ -126,7 +139,7 @@ public sealed class SettingsService(
         {
             settings.SmtpProtectedPassword = string.Empty;
         }
-        else if (OptionalText.Normalize(request.Password) is { } password)
+        else if (password is not null)
         {
             settings.SmtpProtectedPassword = protection
                 .CreateProtector(EmailDelivery.ProtectorPurpose)
@@ -272,6 +285,9 @@ public sealed class SettingsService(
         settings.FirstDayOfWeek,
         settings.DefaultAccountId,
         settings.DefaultPageSize);
+
+    private static bool SameText(string? requested, string? stored, StringComparison comparison) =>
+        string.Equals(requested, OptionalText.Normalize(stored), comparison);
 
     private static SmtpSettingsResponse ToResponse(SmtpSettingsSnapshot smtp) => new(
         smtp.Enabled,
