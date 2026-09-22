@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { AmortizationType } from "./amortizationType";
+import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { DebtType } from "./debtType";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
@@ -27,4 +28,5 @@ export interface DebtResponse {
   monthlyPayment: string | null;
   amortizationType: AmortizationType;
   payoffDate: null | NullableOfDateOnly;
+  currency: Currency;
 }

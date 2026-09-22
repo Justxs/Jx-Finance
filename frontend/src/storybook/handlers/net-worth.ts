@@ -36,6 +36,7 @@ export const assetHandlers = [
     type: "other",
     currentValue: "0.00",
     asOf: FIXTURE_TODAY,
+    currency: "eur",
     ...(await readBody(request)),
   })),
   getUpdateAssetMockHandler(async ({ params, request }) => ({
@@ -68,6 +69,7 @@ export const debtHandlers = [
     outstandingAmount: "0.00",
     interestRate: null,
     asOf: FIXTURE_TODAY,
+    currency: "eur",
     loanAmount: null,
     firstPaymentDate: null,
     termMonths: null,

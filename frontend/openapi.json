@@ -588,7 +588,7 @@
           "NetWorth"
         ],
         "summary": "Add an asset",
-        "description": "Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards.",
+        "description": "Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.",
         "operationId": "CreateAsset",
         "requestBody": {
           "content": {
@@ -4375,7 +4375,7 @@
           "Dashboard"
         ],
         "summary": "Get the dashboard summary",
-        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary.",
+        "description": "Returns the headline figures for the current month: total balance across all visible accounts, income and expenses so far, and the resulting net flow. The month is resolved in the instance time zone, not the caller's. While the investments feature is on, income includes dividends and interest from the investment ledger and expenses include withholding tax and standalone fees, exactly as in the report summary. IsComplete is false when a balance or holding could not be valued and the total balance leaves it out.",
         "operationId": "GetDashboardSummary",
         "responses": {
           "200": {
@@ -4432,7 +4432,7 @@
           "NetWorth"
         ],
         "summary": "Add a debt",
-        "description": "Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.",
+        "description": "Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.",
         "operationId": "CreateDebt",
         "requestBody": {
           "content": {
@@ -6588,7 +6588,7 @@
           "Investments"
         ],
         "summary": "Get the investment portfolio",
-        "description": "Returns open holdings with first-in-first-out cost basis, market value at the last known price, and unrealised gain in each security's own currency. Totals and the per-year income table are in the reporting currency: market value and cost at the newest exchange rate, realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.",
+        "description": "Returns open holdings with first-in-first-out cost basis, market value at the last known price, unrealised gain and dividends in each security's own currency, a dividend paid in another currency converted at the rate on its date. Totals and the per-year income table are in the reporting currency: market value at the newest exchange rate, cost at the rate on each purchase's date, and realised gains, dividends, tax and fees at the rate on each transaction's date. IsComplete is false when a holding has no price or no exchange rate, in which case totals leave it out.",
         "operationId": "GetPortfolio",
         "parameters": [
           {
@@ -7826,7 +7826,7 @@
           "NetWorth"
         ],
         "summary": "Get current net worth",
-        "description": "Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.",
+        "description": "Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then.",
         "operationId": "GetNetWorth",
         "responses": {
           "200": {
@@ -7883,7 +7883,7 @@
           "NetWorth"
         ],
         "summary": "Get the net worth history",
-        "description": "Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.",
+        "description": "Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.",
         "operationId": "GetNetWorthHistory",
         "responses": {
           "200": {
@@ -12684,7 +12684,8 @@
           "name",
           "type",
           "currentValue",
-          "asOf"
+          "asOf",
+          "currency"
         ],
         "type": "object",
         "properties": {
@@ -12704,6 +12705,9 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
           }
         }
       },
@@ -14712,7 +14716,8 @@
           "monthIncome",
           "monthExpense",
           "monthStart",
-          "monthEnd"
+          "monthEnd",
+          "isComplete"
         ],
         "type": "object",
         "properties": {
@@ -14733,6 +14738,9 @@
           },
           "monthEnd": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "isComplete": {
+            "type": "boolean"
           }
         }
       },
@@ -14753,7 +14761,8 @@
           "termMonths",
           "monthlyPayment",
           "amortizationType",
-          "payoffDate"
+          "payoffDate",
+          "currency"
         ],
         "type": "object",
         "properties": {
@@ -14824,6 +14833,9 @@
                 "$ref": "#/components/schemas/NullableOfDateOnly"
               }
             ]
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
           }
         }
       },
@@ -15964,7 +15976,8 @@
           "accounts",
           "assets",
           "debts",
-          "netWorth"
+          "netWorth",
+          "isComplete"
         ],
         "type": "object",
         "properties": {
@@ -15983,6 +15996,9 @@
           "netWorth": {
             "type": "string",
             "format": "decimal"
+          },
+          "isComplete": {
+            "type": "boolean"
           }
         }
       },

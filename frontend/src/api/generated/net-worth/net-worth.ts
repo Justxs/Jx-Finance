@@ -55,7 +55,7 @@ export const getCreateAssetUrl = () => {
 };
 
 /**
- * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards.
+ * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add an asset
  */
 export const createAsset = async (
@@ -446,7 +446,7 @@ export const getCreateDebtUrl = () => {
 };
 
 /**
- * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.
+ * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add a debt
  */
 export const createDebt = async (
@@ -972,7 +972,7 @@ export const getNetWorthUrl = () => {
 };
 
 /**
- * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then.
  * @summary Get current net worth
  */
 export const netWorth = async (
@@ -1071,7 +1071,7 @@ export const getNetWorthHistoryUrl = () => {
 };
 
 /**
- * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
  * @summary Get the net worth history
  */
 export const netWorthHistory = async (

@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards.
+ * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add an asset
  */
 export const createAssetBodyNameMin = 0;
@@ -37,6 +37,38 @@ export const CreateAssetResponse = zod.object({
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
   currentValue: zod.stringFormat("decimal", createAssetResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 
 /**
@@ -53,6 +85,38 @@ export const AssetsResponseItem = zod.object({
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
   currentValue: zod.stringFormat("decimal", assetsResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 export const AssetsResponse = zod.array(AssetsResponseItem);
 
@@ -90,10 +154,42 @@ export const UpdateAssetResponse = zod.object({
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
   currentValue: zod.stringFormat("decimal", updateAssetResponseCurrentValueRegExp),
   asOf: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 
 /**
- * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date.
+ * Starts tracking money owed. The outstanding amount is subtracted from net worth from the as-of date onwards. The repayment terms are optional; with a loan amount, an interest rate, a first payment date and a term or a monthly payment the debt gets a repayment schedule and a payoff date. The debt and its terms are kept in the reporting currency of the day it is created, and later edits keep that currency.
  * @summary Add a debt
  */
 export const createDebtBodyNameMin = 0;
@@ -170,6 +266,38 @@ export const CreateDebtResponse = zod.object({
   monthlyPayment: zod.stringFormat("decimal", createDebtResponseMonthlyPaymentRegExp).nullable(),
   amortizationType: zod.enum(["annuity", "linear"]),
   payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 
 /**
@@ -193,6 +321,38 @@ export const DebtsResponseItem = zod.object({
   monthlyPayment: zod.stringFormat("decimal", debtsResponseMonthlyPaymentRegExp).nullable(),
   amortizationType: zod.enum(["annuity", "linear"]),
   payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 export const DebtsResponse = zod.array(DebtsResponseItem);
 
@@ -277,6 +437,38 @@ export const UpdateDebtResponse = zod.object({
   monthlyPayment: zod.stringFormat("decimal", updateDebtResponseMonthlyPaymentRegExp).nullable(),
   amortizationType: zod.enum(["annuity", "linear"]),
   payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
 });
 
 /**
@@ -386,7 +578,7 @@ export const DebtScheduleResponse = zod.object({
 });
 
 /**
- * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other.
+ * Returns assets, debts, and the difference between them as of now. Account balances count towards assets, so cash in the ledger and tracked assets are not double counted against each other. Every total is in the reporting currency; assets and debts are converted from their own currency at today's rate. IsComplete is false when a balance, holding, asset or debt could not be valued and was left out, and no snapshot is taken then.
  * @summary Get current net worth
  */
 export const netWorthResponseAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
@@ -399,10 +591,11 @@ export const NetWorthResponse = zod.object({
   assets: zod.stringFormat("decimal", netWorthResponseAssetsRegExp),
   debts: zod.stringFormat("decimal", netWorthResponseDebtsRegExp),
   netWorth: zod.stringFormat("decimal", netWorthResponseNetWorthRegExp),
+  isComplete: zod.boolean(),
 });
 
 /**
- * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series.
+ * Returns the snapshots taken by the nightly background job, oldest first. Snapshots are only written while the job runs, so a freshly seeded instance can answer with an empty series. A snapshot taken in an earlier reporting currency is converted at the rate of its date, and left out when no rate is known.
  * @summary Get the net worth history
  */
 export const netWorthHistoryResponseItemsItemAccountsRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");

@@ -13,4 +13,5 @@ export interface DashboardSummaryResponse {
   monthExpense: string;
   monthStart: DateOnly;
   monthEnd: DateOnly;
+  isComplete: boolean;
 }

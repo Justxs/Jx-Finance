@@ -46,6 +46,7 @@ export const dashboardSummary: DashboardSummaryResponse = {
   monthExpense: fromCents(monthExpenseCents),
   monthStart: FIXTURE_MONTH_START,
   monthEnd: FIXTURE_MONTH_END,
+  isComplete: true,
 };
 
 export const emptyDashboardSummary: DashboardSummaryResponse = {
@@ -54,6 +55,7 @@ export const emptyDashboardSummary: DashboardSummaryResponse = {
   monthExpense: "0.00",
   monthStart: FIXTURE_MONTH_START,
   monthEnd: FIXTURE_MONTH_END,
+  isComplete: true,
 };
 
 export const monthlyTrendItems: MonthlyTrendItem[] = [
