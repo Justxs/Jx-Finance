@@ -26,7 +26,8 @@ namespace JxFinance.Endpoints.CategorizationRules.Services;
 public sealed class CategorizationRuleService(
     AppDbContext db,
     IReferenceGuard references,
-    IDeletionRecorder deletions) : ICategorizationRuleService
+    IDeletionRecorder deletions,
+    IClock clock) : ICategorizationRuleService
 {
     public async Task<IReadOnlyList<CategorizationRuleResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -94,13 +95,18 @@ public sealed class CategorizationRuleService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(id);
-        var found = await db.CategorizationRules.FindOrNotFoundAsync(r => r.Id == ruleId, "Rule not found.", cancellationToken);
-        if (!found.TryGetValue(out var rule))
-        {
-            return found.Error;
-        }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
+
+        var rules = await db.CategorizationRules
+            .OrderBy(r => r.Position)
+            .ThenBy(r => r.CreatedAt)
+            .ToListAsync(cancellationToken);
+        var rule = rules.Find(r => r.Id == ruleId);
+        if (rule is null)
+        {
+            return EntityLookup.NotFound("Rule not found.");
+        }
 
         var tagIds = await db.CategorizationRuleTags
             .Where(t => t.RuleId == ruleId)
@@ -114,13 +120,8 @@ public sealed class CategorizationRuleService(
 
         await db.CategorizationRuleTags.Where(t => t.RuleId == ruleId).ExecuteDeleteAsync(cancellationToken);
         db.CategorizationRules.Remove(rule);
-        await db.SaveChangesAsync(cancellationToken);
-
-        var remaining = await db.CategorizationRules
-            .OrderBy(r => r.Position)
-            .ThenBy(r => r.CreatedAt)
-            .ToListAsync(cancellationToken);
-        Renumber(remaining);
+        rules.Remove(rule);
+        Renumber(rules);
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
@@ -179,43 +180,34 @@ public sealed class CategorizationRuleService(
             return matched.Error;
         }
 
-        var now = DateTimeOffset.UtcNow;
-        foreach (var match in matched.Value!)
+        var now = clock.UtcNow;
+        var categorized = matched.Value!
+            .Where(m => m.Rows.Count > 0 && m.Item.Rule.CategoryId is not null)
+            .GroupBy(m => m.Item.Rule.CategoryId!.Value);
+        foreach (var group in categorized)
         {
-            if (match.Ids.Count == 0)
-            {
-                continue;
-            }
-
-            if (match.Item.Rule.CategoryId is { } categoryId)
-            {
-                await db.Transactions
-                    .Where(t => match.Ids.Contains(t.Id))
-                    .ExecuteUpdateAsync(
-                        setters => setters
-                            .SetProperty(t => t.CategoryId, categoryId)
-                            .SetProperty(t => t.UpdatedAt, now),
-                        cancellationToken);
-            }
-
-            await AddTagsAsync(match.Ids, match.Item.TagIds, cancellationToken);
+            var categoryId = group.Key;
+            var ids = group.SelectMany(m => m.Rows).Select(row => row.Id).ToList();
+            await db.Transactions
+                .Where(t => ids.Contains(t.Id))
+                .ExecuteUpdateAsync(
+                    setters => setters
+                        .SetProperty(t => t.CategoryId, categoryId)
+                        .SetProperty(t => t.UpdatedAt, now),
+                    cancellationToken);
         }
 
-        var touched = matched.Value!.SelectMany(m => m.Ids).Distinct().ToList();
+        await AddTagsAsync(matched.Value!, cancellationToken);
+
+        var touched = matched.Value!.SelectMany(m => m.Rows).ToList();
         if (touched.Count > 0)
         {
-            var touchedAccounts = await db.Transactions
-                .IgnoreQueryFilters()
-                .Where(t => touched.Contains(t.Id))
-                .Select(t => t.AccountId)
-                .Distinct()
-                .ToListAsync(cancellationToken);
             db.Audit.Summarise(
                 AuditAction.Updated,
                 AuditEntityKind.Transaction,
                 TrashLabel.Counted("Categorization rules run", (touched.Count, "transaction", "transactions")),
                 touched.Count,
-                accounts: touchedAccounts);
+                accounts: touched.Select(row => row.AccountId).Distinct().ToList());
         }
 
         await db.SaveChangesAsync(cancellationToken);
@@ -279,8 +271,9 @@ public sealed class CategorizationRuleService(
 
         var rules = await LoadAllAsync(cancellationToken);
         var categoryTypes = await CategoryTypesAsync(rules, cancellationToken);
+        var candidates = await CandidatesAsync(request, cancellationToken);
 
-        var claimed = new List<TransactionId>();
+        var claimed = new HashSet<TransactionId>();
         var matches = new List<LedgerMatch>(rules.Count);
         foreach (var item in rules)
         {
@@ -297,77 +290,62 @@ public sealed class CategorizationRuleService(
                 categoryType = found;
             }
 
-            var query = db.Transactions.Where(t => !t.IsSplit);
-            if (!request.Recategorize)
+            var rows = candidates
+                .Where(row => !claimed.Contains(row.Id) && RuleMatcher.Matches(rule, categoryType, row))
+                .ToList();
+            foreach (var row in rows)
             {
-                query = query.Where(t => t.CategoryId == null);
+                claimed.Add(row.Id);
             }
 
-            if (request.AccountId is { } chosen)
-            {
-                var chosenId = new AccountId(chosen);
-                query = query.Where(t => t.AccountId == chosenId);
-            }
-
-            if (rule.AccountId is { } ruleAccountId)
-            {
-                query = query.Where(t => t.AccountId == ruleAccountId);
-            }
-
-            if (categoryType is { } type)
-            {
-                query = query.Where(t => t.Type == type);
-            }
-
-            if (rule.MinAmount is { } minimum)
-            {
-                query = query.Where(t => t.Amount.Amount >= minimum);
-            }
-
-            if (rule.MaxAmount is { } maximum)
-            {
-                query = query.Where(t => t.Amount.Amount <= maximum);
-            }
-
-            var pattern = RuleMatcher.LikePatternFor(rule.Match, rule.Pattern);
-            query = query.Where(t =>
-                t.Description != null && EF.Functions.ILike(t.Description, pattern, LikePattern.Escape));
-
-            if (claimed.Count > 0)
-            {
-                query = query.Where(t => !claimed.Contains(t.Id));
-            }
-
-            var ids = await query.Select(t => t.Id).ToListAsync(cancellationToken);
-            claimed.AddRange(ids);
-            matches.Add(new LedgerMatch(item, ids));
+            matches.Add(new LedgerMatch(item, rows));
         }
 
         return matches;
     }
 
-    private async Task AddTagsAsync(
-        IReadOnlyList<TransactionId> transactionIds,
-        IReadOnlyList<Guid> tagIds,
-        CancellationToken cancellationToken)
+    private async Task<List<LedgerEntry>> CandidatesAsync(RunRulesRequest request, CancellationToken cancellationToken)
     {
-        if (tagIds.Count == 0)
+        var query = db.Transactions.AsNoTracking().Where(t => !t.IsSplit && t.Description != null);
+        if (!request.Recategorize)
+        {
+            query = query.Where(t => t.CategoryId == null);
+        }
+
+        if (request.AccountId is { } chosen)
+        {
+            var chosenId = new AccountId(chosen);
+            query = query.Where(t => t.AccountId == chosenId);
+        }
+
+        return await query
+            .Select(t => new LedgerEntry(t.Id, t.AccountId, t.Type, t.Amount.Amount, t.Description))
+            .ToListAsync(cancellationToken);
+    }
+
+    private async Task AddTagsAsync(IReadOnlyList<LedgerMatch> matches, CancellationToken cancellationToken)
+    {
+        var wanted = matches
+            .SelectMany(match => match.Item.TagIds
+                .Distinct()
+                .SelectMany(tagId => match.Rows.Select(row => (row.Id, Tag: new TagId(tagId)))))
+            .ToList();
+        if (wanted.Count == 0)
         {
             return;
         }
 
-        var wanted = tagIds.Distinct().Select(id => new TagId(id)).ToList();
+        var transactionIds = wanted.Select(pair => pair.Id).Distinct().ToList();
+        var tagIds = wanted.Select(pair => pair.Tag).Distinct().ToList();
         var existing = await db.TransactionTags
-            .Where(t => transactionIds.Contains(t.TransactionId) && wanted.Contains(t.TagId))
+            .Where(t => transactionIds.Contains(t.TransactionId) && tagIds.Contains(t.TagId))
             .Select(t => new { t.TransactionId, t.TagId })
             .ToListAsync(cancellationToken);
         var present = existing.Select(t => (t.TransactionId, t.TagId)).ToHashSet();
 
-        db.TransactionTags.AddRange(
-            from transactionId in transactionIds
-            from tagId in wanted
-            where !present.Contains((transactionId, tagId))
-            select new TransactionTag { TransactionId = transactionId, TagId = tagId });
+        db.TransactionTags.AddRange(wanted
+            .Where(pair => !present.Contains((pair.Id, pair.Tag)))
+            .Select(pair => new TransactionTag { TransactionId = pair.Id, TagId = pair.Tag }));
     }
 
     private async Task<IReadOnlyDictionary<CategoryId, FlowType>> CategoryTypesAsync(
@@ -388,8 +366,8 @@ public sealed class CategorizationRuleService(
     }
 
     private static RunRulesResponse Summarize(IReadOnlyList<LedgerMatch> matches, bool recategorize) => new(
-        matches.Select(m => new RunRulesRow(m.Item.Rule.Id.Value, m.Item.Rule.Name, m.Ids.Count)).ToList(),
-        matches.Sum(m => m.Ids.Count),
+        matches.Select(m => new RunRulesRow(m.Item.Rule.Id.Value, m.Item.Rule.Name, m.Rows.Count)).ToList(),
+        matches.Sum(m => m.Rows.Count),
         recategorize);
 
     private static void Renumber(List<CategorizationRule> rules)
@@ -413,6 +391,7 @@ public sealed class CategorizationRuleService(
 
         var ids = rules.Select(r => r.Id).ToList();
         var links = await db.CategorizationRuleTags
+            .AsNoTracking()
             .Where(t => ids.Contains(t.RuleId))
             .ToListAsync(cancellationToken);
         var byRule = links
@@ -427,6 +406,7 @@ public sealed class CategorizationRuleService(
     private async Task<IReadOnlyList<CategorizationRuleWithTags>> LoadAllAsync(CancellationToken cancellationToken)
     {
         var rules = await db.CategorizationRules
+            .AsNoTracking()
             .OrderBy(r => r.Position)
             .ThenBy(r => r.CreatedAt)
             .ToListAsync(cancellationToken);
@@ -462,5 +442,5 @@ public sealed class CategorizationRuleService(
         return null;
     }
 
-    private sealed record LedgerMatch(CategorizationRuleWithTags Item, IReadOnlyList<TransactionId> Ids);
+    private sealed record LedgerMatch(CategorizationRuleWithTags Item, IReadOnlyList<LedgerEntry> Rows);
 }

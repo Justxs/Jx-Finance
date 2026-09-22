@@ -1,9 +1,16 @@
 using JxFinance.Domain.CategorizationRules;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Common.CategorizationRules;
 
 public static class RuleMatcher
 {
+    public static bool Matches(CategorizationRule rule, FlowType? categoryType, LedgerEntry entry) =>
+        (rule.AccountId is not { } ruleAccountId || entry.AccountId == ruleAccountId)
+        && (categoryType is not { } type || entry.Type == type)
+        && AmountInRange(entry.Amount, rule.MinAmount, rule.MaxAmount)
+        && Matches(rule.Match, rule.Pattern, entry.Description);
+
     public static string LikePatternFor(DescriptionMatch match, string pattern) => match switch
     {
         DescriptionMatch.Contains => LikePattern.Contains(pattern),
