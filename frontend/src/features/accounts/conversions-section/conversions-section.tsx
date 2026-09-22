@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { type ReactNode, useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getConversionsQueryKey,
@@ -15,16 +15,13 @@ import type {
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Pagination } from "@/components/pagination/pagination";
+import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney, useRateFormat, useUsableCurrencies } from "@/hooks/use-formatters";
-import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
+import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
@@ -51,10 +48,9 @@ export function ConversionsSection({
   const canConvert = useUsableCurrencies().length >= 2;
 
   const paging = usePagedList();
-  const { page, setPage, shownPage, stale } = paging;
-  const listParams = conversionsPageParams(shownPage);
+  const listParams = conversionsPageParams(paging.shownPage);
   const conversions = useConversionsSuspense(listParams);
-  const pages = usePageClamp(paging, conversions.data?.total ?? 0, pageSize);
+  const { items, pages } = usePagedItems(paging, conversions.data, pageSize);
   const accountNames = nameById(accounts);
 
   const createMutation = useCreateConversion(
@@ -73,7 +69,6 @@ export function ConversionsSection({
       getConversionsQueryKey(),
     ),
   });
-  const items = useDeferredValue(conversions.data?.items) ?? [];
 
   function amounts(conversion: ConversionResponse) {
     const sold = money.format(Number(conversion.fromAmount), conversion.fromCurrency);
@@ -104,29 +99,29 @@ export function ConversionsSection({
     "conversion",
   );
 
-  let content: ReactNode;
-  if (items.length === 0) {
-    content = <EmptyText>{t("conversions.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Rows>
-        {items.map((conversion) => (
-          <RecordRow
-            key={conversion.id}
-            title={accountNames.get(conversion.accountId) ?? ""}
-            subtitle={details(conversion)}
-            note={conversion.isImported ? t("conversions.importedHint") : null}
-            amount={amounts(conversion)}
-            label={`${amounts(conversion)}, ${formatDate(conversion.date)}`}
-            onEdit={conversion.isImported ? undefined : () => setEditTarget(conversion.id)}
-            onDelete={() => remove.request(conversion.id)}
-            deletePending={remove.pendingId === conversion.id}
-            deleteDisabled={remove.busy}
-          />
-        ))}
-      </Rows>
-    );
-  }
+  const content = (
+    <PagedRows
+      paging={paging}
+      pages={pages}
+      count={items.length}
+      emptyText={t("conversions.empty")}
+    >
+      {items.map((conversion) => (
+        <RecordRow
+          key={conversion.id}
+          title={accountNames.get(conversion.accountId) ?? ""}
+          subtitle={details(conversion)}
+          note={conversion.isImported ? t("conversions.importedHint") : null}
+          amount={amounts(conversion)}
+          label={`${amounts(conversion)}, ${formatDate(conversion.date)}`}
+          onEdit={conversion.isImported ? undefined : () => setEditTarget(conversion.id)}
+          onDelete={() => remove.request(conversion.id)}
+          deletePending={remove.pendingId === conversion.id}
+          deleteDisabled={remove.busy}
+        />
+      ))}
+    </PagedRows>
+  );
 
   return (
     <Section>
@@ -160,8 +155,7 @@ export function ConversionsSection({
           />
         ) : null}
       </Modal>
-      <StaleRegion stale={stale}>{content}</StaleRegion>
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      {content}
       <ConversionEditDialog
         accounts={accounts}
         categories={categories}

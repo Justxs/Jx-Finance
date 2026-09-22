@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdAuditSuspense } from "@/api/generated";
 import type {
@@ -7,19 +7,16 @@ import type {
   AuditEventResponse,
   HouseholdMemberResponse,
 } from "@/api/generated/model";
-import { Pagination } from "@/components/pagination/pagination";
+import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Label } from "@/components/ui/label/label";
-import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { Tag } from "@/components/ui/tag/tag";
 import { userName } from "@/features/users/user-queries";
 import { useDateTime } from "@/hooks/use-formatters";
-import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
+import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 
 export const ACTIVITY_PAGE_SIZE = 10;
 export const AUDIT_RETENTION_DAYS = 400;
@@ -168,35 +165,29 @@ interface ListProps {
 function ActivityList({ householdId, filters }: Readonly<ListProps>) {
   const { t } = useTranslation();
   const paging = usePagedList();
-  const { page, setPage, shownPage, stale } = paging;
   const audit = useHouseholdAuditSuspense(householdId, {
-    page: shownPage,
+    page: paging.shownPage,
     pageSize: ACTIVITY_PAGE_SIZE,
     memberId: filters.memberId === ALL ? undefined : filters.memberId,
     kind: filters.kind === ALL ? undefined : filters.kind,
     dateFrom: filters.from || undefined,
     dateTo: filters.to || undefined,
   });
-  const pages = usePageClamp(paging, audit.data?.total ?? 0, ACTIVITY_PAGE_SIZE);
-  const events = useDeferredValue(audit.data?.items) ?? [];
+  const { items: events, pages } = usePagedItems(paging, audit.data, ACTIVITY_PAGE_SIZE);
   const filtered =
     filters.memberId !== ALL || filters.kind !== ALL || Boolean(filters.from || filters.to);
 
-  if (events.length === 0) {
-    return <EmptyText>{filtered ? t("audit.emptyFiltered") : t("audit.empty")}</EmptyText>;
-  }
-
   return (
-    <>
-      <StaleRegion stale={stale}>
-        <Rows>
-          {events.map((event) => (
-            <ActivityEvent key={event.id} event={event} />
-          ))}
-        </Rows>
-      </StaleRegion>
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
-    </>
+    <PagedRows
+      paging={paging}
+      pages={pages}
+      count={events.length}
+      emptyText={filtered ? t("audit.emptyFiltered") : t("audit.empty")}
+    >
+      {events.map((event) => (
+        <ActivityEvent key={event.id} event={event} />
+      ))}
+    </PagedRows>
   );
 }
 

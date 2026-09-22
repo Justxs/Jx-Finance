@@ -1,5 +1,5 @@
 import { Plus } from "lucide-react";
-import { type ReactNode, useDeferredValue, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getTransfersQueryKey,
@@ -14,16 +14,13 @@ import type {
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
-import { Pagination } from "@/components/pagination/pagination";
+import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
-import { usePageClamp, usePagedList } from "@/hooks/use-paged-list";
+import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
@@ -50,10 +47,9 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   }
 
   const paging = usePagedList();
-  const { page, setPage, shownPage, stale } = paging;
-  const listParams = transfersPageParams(shownPage);
+  const listParams = transfersPageParams(paging.shownPage);
   const transfers = useTransfersSuspense(listParams);
-  const pages = usePageClamp(paging, transfers.data?.total ?? 0, pageSize);
+  const { items, pages } = usePagedItems(paging, transfers.data, pageSize);
   const accountNames = nameById(accounts);
 
   const createMutation = useCreateTransfer(silent({ onSuccess: () => setAddOpen(false) }));
@@ -65,8 +61,6 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
       getTransfersQueryKey(),
     ),
   });
-
-  const items = useDeferredValue(transfers.data?.items) ?? [];
 
   function transferRoute(transfer: TransferResponse) {
     return `${accountNames.get(transfer.fromAccountId) ?? ""} → ${accountNames.get(transfer.toAccountId) ?? ""}`;
@@ -88,28 +82,23 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
     "transfer",
   );
 
-  let content: ReactNode;
-  if (items.length === 0) {
-    content = <EmptyText>{t("transfers.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Rows>
-        {items.map((transfer) => (
-          <RecordRow
-            key={transfer.id}
-            title={transferRoute(transfer)}
-            subtitle={`${formatDate(transfer.date)}${transfer.description ? ` · ${transfer.description}` : ""}`}
-            amount={transferAmount(transfer)}
-            label={`${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
-            onEdit={() => setEditTarget(transfer.id)}
-            onDelete={() => remove.request(transfer.id)}
-            deletePending={remove.pendingId === transfer.id}
-            deleteDisabled={remove.busy}
-          />
-        ))}
-      </Rows>
-    );
-  }
+  const content = (
+    <PagedRows paging={paging} pages={pages} count={items.length} emptyText={t("transfers.empty")}>
+      {items.map((transfer) => (
+        <RecordRow
+          key={transfer.id}
+          title={transferRoute(transfer)}
+          subtitle={`${formatDate(transfer.date)}${transfer.description ? ` · ${transfer.description}` : ""}`}
+          amount={transferAmount(transfer)}
+          label={`${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
+          onEdit={() => setEditTarget(transfer.id)}
+          onDelete={() => remove.request(transfer.id)}
+          deletePending={remove.pendingId === transfer.id}
+          deleteDisabled={remove.busy}
+        />
+      ))}
+    </PagedRows>
+  );
 
   return (
     <Section>
@@ -136,8 +125,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
           onCancel={() => setAddOpen(false)}
         />
       </Modal>
-      <StaleRegion stale={stale}>{content}</StaleRegion>
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      {content}
       <TransferEditDialog
         accounts={accounts}
         transfer={items.find((transfer) => transfer.id === editTarget) ?? null}

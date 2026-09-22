@@ -23,7 +23,7 @@ import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks
 import { usePageClamp } from "@/hooks/use-paged-list";
 import { nameById } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
 import { ACTIVITY_PAGE_SIZE, activityParams } from "../investment-queries";
 import { entryTypes, isTrade } from "../investment-types";
@@ -61,7 +61,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
   const deleteMutation = useDeleteInvestmentTransaction();
 
   function title(entry: InvestmentTransactionResponse) {
-    return [t(`investments.types.${entry.type}`), entry.symbol].filter(Boolean).join(" · ");
+    return metaLine(t(`investments.types.${entry.type}`), entry.symbol);
   }
 
   function volume(entry: InvestmentTransactionResponse) {

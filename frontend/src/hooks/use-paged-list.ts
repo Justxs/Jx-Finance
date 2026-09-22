@@ -21,3 +21,19 @@ export function usePagedList() {
 
   return { page, setPage, shownPage, stale: shownPage !== page };
 }
+
+interface PagedData<T> {
+  items: T[];
+  total: number;
+}
+
+export function usePagedItems<T>(
+  paging: PageState,
+  data: PagedData<T> | undefined,
+  pageSize: number,
+) {
+  const pages = usePageClamp(paging, data?.total ?? 0, pageSize);
+  const items = useDeferredValue(data?.items) ?? [];
+
+  return { items, pages };
+}
