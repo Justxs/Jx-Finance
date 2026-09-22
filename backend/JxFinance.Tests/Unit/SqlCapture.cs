@@ -27,6 +27,8 @@ public sealed class SqlCapture : IAsyncDisposable
 
     public IReadOnlyList<string> Statements => recorder.Statements;
 
+    public IReadOnlyList<object?> Values => recorder.Values;
+
     public string OnlyStatement => Assert.Single(recorder.Statements);
 
     public ValueTask DisposeAsync() => db.DisposeAsync();
@@ -47,13 +49,15 @@ public sealed class SqlCapture : IAsyncDisposable
     {
         public List<string> Statements { get; } = [];
 
+        public List<object?> Values { get; } = [];
+
         public override ValueTask<InterceptionResult<int>> NonQueryExecutingAsync(
             DbCommand command,
             CommandEventData eventData,
             InterceptionResult<int> result,
             CancellationToken cancellationToken = default)
         {
-            Statements.Add(command.CommandText);
+            Record(command);
             return ValueTask.FromResult(InterceptionResult<int>.SuppressWithResult(0));
         }
 
@@ -63,8 +67,17 @@ public sealed class SqlCapture : IAsyncDisposable
             InterceptionResult<DbDataReader> result,
             CancellationToken cancellationToken = default)
         {
-            Statements.Add(command.CommandText);
+            Record(command);
             return ValueTask.FromResult(InterceptionResult<DbDataReader>.SuppressWithResult(new DataTable().CreateDataReader()));
+        }
+
+        private void Record(DbCommand command)
+        {
+            Statements.Add(command.CommandText);
+            foreach (DbParameter parameter in command.Parameters)
+            {
+                Values.Add(parameter.Value is DBNull ? null : parameter.Value);
+            }
         }
     }
 }
