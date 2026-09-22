@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { usePageClamp, usePagedList } from "./use-paged-list";
+import { usePageClamp, usePagedItems, usePagedList } from "./use-paged-list";
 
 function usePaged(total: number) {
   const paging = usePagedList();
@@ -34,4 +34,24 @@ test("pulls the page back when the list shrinks", () => {
   rerender({ total: 12 });
   expect(result.current.page).toBe(2);
   expect(result.current.pages).toBe(2);
+});
+
+test("usePagedItems exposes the items and the clamped page count", () => {
+  const { result } = renderHook(() => {
+    const paging = usePagedList();
+    return usePagedItems(paging, { items: ["a", "b"], total: 12 }, 10);
+  });
+
+  expect(result.current.items).toEqual(["a", "b"]);
+  expect(result.current.pages).toBe(2);
+});
+
+test("usePagedItems treats missing data as an empty first page", () => {
+  const { result } = renderHook(() => {
+    const paging = usePagedList();
+    return usePagedItems<string>(paging, undefined, 10);
+  });
+
+  expect(result.current.items).toEqual([]);
+  expect(result.current.pages).toBe(1);
 });
