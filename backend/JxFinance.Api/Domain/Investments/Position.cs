@@ -35,9 +35,9 @@ public sealed class Position(SecurityId securityId)
 
     public decimal Quantity => lots.Sum(l => l.Quantity);
 
-    public decimal CostBasis => lots.Sum(l => l.Quantity * l.UnitCost);
+    public decimal CostBasis => lots.Sum(l => l.Cost);
 
-    public decimal ReportingCostBasis => lots.Sum(l => l.Quantity * l.ReportingUnitCost);
+    public decimal ReportingCostBasis => lots.Sum(l => l.ReportingCost);
 
     public bool IsOversold => FirstOversoldSale is not null;
 
@@ -56,7 +56,7 @@ public sealed class Position(SecurityId securityId)
     {
         if (quantity > 0)
         {
-            lots.AddLast(new Lot(date, quantity, cost / quantity, reportingCost / quantity));
+            lots.AddLast(new Lot(date, quantity, cost, reportingCost));
         }
     }
 
@@ -74,19 +74,24 @@ public sealed class Position(SecurityId securityId)
         {
             var lot = first.Value;
             var taken = Math.Min(lot.Quantity, remaining);
-            var takenCost = taken * lot.UnitCost;
-            var takenReportingCost = taken * lot.ReportingUnitCost;
+            var isWhole = taken == lot.Quantity;
+            var takenCost = isWhole ? lot.Cost : lot.Cost * taken / lot.Quantity;
+            var takenReportingCost = isWhole ? lot.ReportingCost : lot.ReportingCost * taken / lot.Quantity;
             consumed.Add(new ConsumedLot(lot.AcquiredOn, taken, takenCost, takenReportingCost));
             cost += takenCost;
             reportingCost += takenReportingCost;
             remaining -= taken;
-            if (taken == lot.Quantity)
+            if (isWhole)
             {
                 lots.RemoveFirst();
             }
             else
             {
-                first.Value = lot with { Quantity = lot.Quantity - taken };
+                first.Value = new Lot(
+                    lot.AcquiredOn,
+                    lot.Quantity - taken,
+                    lot.Cost - takenCost,
+                    lot.ReportingCost - takenReportingCost);
             }
         }
 
@@ -107,15 +112,9 @@ public sealed class Position(SecurityId securityId)
 
         for (var node = lots.First; node is not null; node = node.Next)
         {
-            var lot = node.Value;
-            node.Value = lot with
-            {
-                Quantity = lot.Quantity * ratio,
-                UnitCost = lot.UnitCost / ratio,
-                ReportingUnitCost = lot.ReportingUnitCost / ratio,
-            };
+            node.Value = node.Value with { Quantity = node.Value.Quantity * ratio };
         }
     }
 
-    private sealed record Lot(DateOnly AcquiredOn, decimal Quantity, decimal UnitCost, decimal ReportingUnitCost);
+    private sealed record Lot(DateOnly AcquiredOn, decimal Quantity, decimal Cost, decimal ReportingCost);
 }

@@ -78,12 +78,31 @@ public sealed class InvestmentService(
             }
         }
 
+        var foreignDividends = transactions
+            .Where(t => t is { Type: InvestmentTransactionType.Dividend, SecurityId: { } id }
+                && t.CashAmount.Currency != securities[id].Currency)
+            .ToList();
+        var dividendRates = foreignDividends.Count == 0
+            ? null
+            : await rates.GetHistoryAsync(foreignDividends.Min(t => t.Date), foreignDividends.Max(t => t.Date), cancellationToken);
+
+        decimal? InSecurityCurrency(InvestmentTransaction dividend)
+        {
+            var currency = securities[dividend.SecurityId!.Value].Currency;
+            return dividend.CashAmount.Currency == currency
+                ? dividend.CashAmount.Amount
+                : dividendRates!.OnOrBefore(dividend.Date).Convert(dividend.CashAmount.Amount, dividend.CashAmount.Currency, currency);
+        }
+
         foreach (var account in transactions.Where(t => t.SecurityId is not null).GroupBy(t => t.AccountId))
         {
-            var dividends = account
-                .Where(t => t.Type == InvestmentTransactionType.Dividend)
-                .GroupBy(t => t.SecurityId!.Value)
-                .ToDictionary(g => g.Key, g => g.Sum(t => t.CashAmount.Amount));
+            var dividends = new Dictionary<SecurityId, decimal>();
+            foreach (var dividend in account.Where(t => t.Type == InvestmentTransactionType.Dividend))
+            {
+                var amount = InSecurityCurrency(dividend);
+                isComplete &= amount is not null;
+                dividends[dividend.SecurityId!.Value] = dividends.GetValueOrDefault(dividend.SecurityId!.Value) + (amount ?? 0m);
+            }
 
             foreach (var position in Portfolio.Positions(account).Values)
             {
@@ -101,13 +120,12 @@ public sealed class InvestmentService(
 
                 var security = securities[position.SecurityId];
                 var (value, valueReporting, _) = position.Value(security.LastPrice, security.Currency, latest, reporting);
-                var costReporting = latest.Convert(position.CostBasis, security.Currency, reporting);
                 isComplete &= !position.IsOversold;
                 if (position.Quantity != 0m)
                 {
-                    isComplete &= valueReporting is not null && costReporting is not null;
+                    isComplete &= valueReporting is not null;
                     marketValue += valueReporting ?? 0m;
-                    costBasis += valueReporting is null ? 0m : costReporting ?? 0m;
+                    costBasis += valueReporting is null ? 0m : Money.Round(position.ReportingCostBasis);
                 }
 
                 holdings.Add(mapper.ToHolding(account.Key, security, position, value, valueReporting, realized, received));
