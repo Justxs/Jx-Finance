@@ -9,10 +9,19 @@ namespace JxFinance.Common.Sharing;
 [RegisterService<ISharingGuard>(LifeTime.Scoped)]
 public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : ISharingGuard
 {
-    public async Task<DomainError?> CheckAsync<T>(T entity, SharingState? previous, CancellationToken cancellationToken)
-        where T : OwnableEntity, IShareable
+    public Task<DomainError?> CheckAsync(IShareableInput input, CancellationToken cancellationToken) =>
+        CheckAsync(SharingState.From(input), null, cancellationToken);
+
+    public Task<DomainError?> CheckAsync<T>(T existing, IShareableInput input, CancellationToken cancellationToken)
+        where T : OwnableEntity, IShareable =>
+        CheckAsync(SharingState.From(input), (existing.UserId, SharingState.Of(existing)), cancellationToken);
+
+    private async Task<DomainError?> CheckAsync(
+        SharingState next,
+        (Guid OwnerId, SharingState State)? current,
+        CancellationToken cancellationToken)
     {
-        if (entity.Scope == Scope.Shared && entity.HouseholdId is { } householdId)
+        if (next.Scope == Scope.Shared && next.HouseholdId is { } householdId)
         {
             var isMember = await db.HouseholdMemberships.AnyAsync(
                 m => m.HouseholdId == householdId && m.UserId == currentUser.Id,
@@ -23,7 +32,7 @@ public sealed class SharingGuard(AppDbContext db, ICurrentUser currentUser) : IS
             }
         }
 
-        if (previous is { } before && entity.UserId != currentUser.Id && SharingState.Of(entity) != before)
+        if (current is { } before && before.OwnerId != currentUser.Id && next != before.State)
         {
             return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can change sharing.");
         }

@@ -1,16 +1,15 @@
 using System.Globalization;
-using FastEndpoints;
 using JxFinance.Common.Formats;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Notifications.Shared;
 
 namespace JxFinance.Endpoints.Notifications.Mappers;
 
-public sealed class NotificationMapper : Mapper<EmptyRequest, NotificationResponse, Notification>
+public static class NotificationMapper
 {
     private static readonly NotificationPayload Empty = new();
 
-    public override NotificationResponse FromEntity(Notification notification) => new(
+    public static NotificationResponse ToResponse(this Notification notification) => new(
         notification.Id.Value,
         notification.Type,
         notification.Title,

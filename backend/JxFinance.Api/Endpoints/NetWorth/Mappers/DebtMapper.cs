@@ -1,6 +1,4 @@
-using FastEndpoints;
 using JxFinance.Common.Amortization;
-using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
@@ -8,20 +6,20 @@ using JxFinance.Endpoints.NetWorth.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.Mappers;
 
-public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
+public static class DebtMapper
 {
-    public override Debt ToEntity(CreateDebtRequest request)
+    public static Debt ToEntity(this CreateDebtRequest request, Currency reportingCurrency)
     {
         var debt = new Debt
         {
             Name = request.Name,
-            OutstandingAmount = new Money(0m, Resolve<IInstanceSettingsStore>().Current.ReportingCurrency),
+            OutstandingAmount = new Money(0m, reportingCurrency),
         };
-        Apply(request, debt);
+        request.ApplyTo(debt);
         return debt;
     }
 
-    public void Apply(IDebtInput input, Debt debt)
+    public static void ApplyTo(this IDebtInput input, Debt debt)
     {
         debt.Name = input.Name.Trim();
         debt.Type = input.Type;
@@ -35,7 +33,7 @@ public sealed class DebtMapper : Mapper<CreateDebtRequest, DebtResponse, Debt>
         debt.AmortizationType = input.AmortizationType ?? AmortizationType.Annuity;
     }
 
-    public override DebtResponse FromEntity(Debt debt) => new(
+    public static DebtResponse ToResponse(this Debt debt) => new(
         debt.Id.Value,
         debt.Name,
         debt.Type,

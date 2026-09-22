@@ -1,6 +1,7 @@
 using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
+using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Households.GetHousehold;
 using JxFinance.Endpoints.Households.Interfaces;
 using JxFinance.Endpoints.Households.Shared;
@@ -19,7 +20,7 @@ public sealed class CreateHouseholdEndpoint(IHouseholdService householdService)
 
     public override async Task HandleAsync(CreateHouseholdRequest req, CancellationToken ct)
     {
-        var household = await householdService.CreateAsync(req, ct);
+        var household = (await householdService.CreateAsync(req, ct)).ValueOrThrow();
         await Send.CreatedAtAsync<GetHouseholdEndpoint>(new { id = household.Id }, household, cancellation: ct);
     }
 }

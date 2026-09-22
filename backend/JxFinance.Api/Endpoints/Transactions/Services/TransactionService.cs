@@ -32,7 +32,6 @@ namespace JxFinance.Endpoints.Transactions.Services;
 public sealed class TransactionService(
     AppDbContext db,
     ICurrentUser currentUser,
-    TransactionMapper mapper,
     ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions,
@@ -48,8 +47,7 @@ public sealed class TransactionService(
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
 
-        return page.Map(t => mapper.FromEntity(
-            t,
+        return page.Map(t => t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
             tagsByTransaction.GetValueOrDefault(t.Id),
             attachmentCounts.GetValueOrDefault(t.Id)));
@@ -68,7 +66,7 @@ public sealed class TransactionService(
 
         await foreach (var transaction in rows)
         {
-            yield return mapper.FromEntity(transaction, null, tagsByTransaction.GetValueOrDefault(transaction.Id));
+            yield return transaction.ToResponse(null, tagsByTransaction.GetValueOrDefault(transaction.Id));
         }
     }
 
@@ -90,7 +88,7 @@ public sealed class TransactionService(
 
         var tagsByTransaction = await LoadTagsAsync(items.Select(t => t.Id), cancellationToken);
 
-        return items.Select(t => mapper.FromEntity(t, null, tagsByTransaction.GetValueOrDefault(t.Id))).ToList();
+        return items.Select(t => t.ToResponse(null, tagsByTransaction.GetValueOrDefault(t.Id))).ToList();
     }
 
     public async Task<TransactionsSummaryResponse> GetSummaryAsync(
@@ -204,7 +202,7 @@ public sealed class TransactionService(
         var tagIds = await TagIdsOfAsync(transactionId, cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return mapper.FromEntity(transaction, lines, tagIds, attachmentCount);
+        return transaction.ToResponse(lines, tagIds, attachmentCount);
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(
@@ -244,17 +242,17 @@ public sealed class TransactionService(
         }
 
         var (currency, reportingAmount) = valuation.Value;
-        var transaction = mapper.ToEntity(request, currency, reportingAmount);
+        var transaction = request.ToEntity(currency, reportingAmount);
 
         db.Transactions.Add(transaction);
 
-        var lines = isSplit ? mapper.ToLines(transaction.Id, currentUser.Id, request.Lines!, currency) : [];
+        var lines = isSplit ? request.Lines!.ToLines(transaction.Id, currentUser.Id, currency) : [];
         if (isSplit)
         {
             db.TransactionLines.AddRange(lines);
         }
 
-        var tags = mapper.ToTags(transaction.Id, request.TagIds);
+        var tags = request.TagIds.ToTransactionTags(transaction.Id);
         if (tags.Count > 0)
         {
             db.TransactionTags.AddRange(tags);
@@ -262,7 +260,7 @@ public sealed class TransactionService(
 
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList());
+        return transaction.ToResponse(lines, tags.Select(tag => tag.TagId).ToList());
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -332,15 +330,15 @@ public sealed class TransactionService(
             db.TransactionTags.RemoveRange(existingTags);
         }
 
-        mapper.Apply(request, transaction, currency, reportingAmount);
+        request.ApplyTo(transaction, currency, reportingAmount);
 
-        var lines = isSplit ? mapper.ToLines(transactionId, currentUser.Id, request.Lines!, currency) : [];
+        var lines = isSplit ? request.Lines!.ToLines(transactionId, currentUser.Id, currency) : [];
         if (isSplit)
         {
             db.TransactionLines.AddRange(lines);
         }
 
-        var tags = mapper.ToTags(transactionId, request.TagIds);
+        var tags = request.TagIds.ToTransactionTags(transactionId);
         if (tags.Count > 0)
         {
             db.TransactionTags.AddRange(tags);
@@ -349,7 +347,7 @@ public sealed class TransactionService(
         await db.SaveChangesAsync(cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return mapper.FromEntity(transaction, lines, tags.Select(tag => tag.TagId).ToList(), attachmentCount);
+        return transaction.ToResponse(lines, tags.Select(tag => tag.TagId).ToList(), attachmentCount);
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
@@ -419,7 +417,7 @@ public sealed class TransactionService(
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         await db.TransactionTags.Where(x => ids.Contains(x.TransactionId)).ExecuteDeleteAsync(cancellationToken);
-        db.TransactionTags.AddRange(ids.SelectMany(id => mapper.ToTags(id, request.TagIds)));
+        db.TransactionTags.AddRange(ids.SelectMany(id => request.TagIds.ToTransactionTags(id)));
         var wanted = (request.TagIds ?? []).Distinct().Select(id => new TagId(id)).ToList();
         var tagNames = await db.Tags.Where(t => wanted.Contains(t.Id)).Select(t => t.Name).OrderBy(n => n).ToListAsync(cancellationToken);
         db.Audit.Summarise(

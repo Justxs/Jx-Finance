@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -10,17 +9,16 @@ using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.Mappers;
 
-[RegisterService<TransactionMapper>(LifeTime.Singleton)]
-public sealed class TransactionMapper : Mapper<CreateTransactionRequest, TransactionResponse, Transaction>
+public static class TransactionMapper
 {
-    public Transaction ToEntity(CreateTransactionRequest request, Currency currency, decimal reportingAmount)
+    public static Transaction ToEntity(this CreateTransactionRequest request, Currency currency, decimal reportingAmount)
     {
         var transaction = new Transaction { Source = TransactionSource.Manual };
-        Apply(request, transaction, currency, reportingAmount);
+        request.ApplyTo(transaction, currency, reportingAmount);
         return transaction;
     }
 
-    public void Apply(ITransactionInput input, Transaction transaction, Currency currency, decimal reportingAmount)
+    public static void ApplyTo(this ITransactionInput input, Transaction transaction, Currency currency, decimal reportingAmount)
     {
         var isSplit = input.Lines is { Count: > 0 };
         transaction.AccountId = new AccountId(input.AccountId);
@@ -33,10 +31,10 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
         transaction.IsSplit = isSplit;
     }
 
-    public List<TransactionLine> ToLines(
+    public static List<TransactionLine> ToLines(
+        this IReadOnlyList<TransactionLineRequest> lines,
         TransactionId transactionId,
         Guid userId,
-        IReadOnlyList<TransactionLineRequest> lines,
         Currency currency) =>
         lines.Select(line => new TransactionLine
         {
@@ -47,14 +45,14 @@ public sealed class TransactionMapper : Mapper<CreateTransactionRequest, Transac
             Description = OptionalText.Normalize(line.Description),
         }).ToList();
 
-    public List<TransactionTag> ToTags(TransactionId transactionId, IReadOnlyList<Guid>? tagIds) =>
+    public static List<TransactionTag> ToTransactionTags(this IReadOnlyList<Guid>? tagIds, TransactionId transactionId) =>
         (tagIds ?? [])
             .Distinct()
             .Select(tagId => new TransactionTag { TransactionId = transactionId, TagId = new TagId(tagId) })
             .ToList();
 
-    public TransactionResponse FromEntity(
-        Transaction transaction,
+    public static TransactionResponse ToResponse(
+        this Transaction transaction,
         IReadOnlyList<TransactionLine>? lines,
         IReadOnlyList<TagId>? tagIds = null,
         int attachmentCount = 0) => new(

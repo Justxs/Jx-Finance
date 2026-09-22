@@ -21,7 +21,6 @@ namespace JxFinance.Endpoints.Transfers.Services;
 [RegisterService<ITransferService>(LifeTime.Scoped)]
 public sealed class TransferService(
     AppDbContext db,
-    TransferMapper mapper,
     ITransferAmountResolver amountResolver,
     IDeletionRecorder deletions) : ITransferService
 {
@@ -43,7 +42,7 @@ public sealed class TransferService(
                 .ToListAsync(cancellationToken))
             .ToLookup(r => r.TransferId, r => r.AccountId);
 
-        return page.Map(t => mapper.FromEntity(t, receipts[t.Id].ToList()));
+        return page.Map(t => t.ToResponse(receipts[t.Id].ToList()));
     }
 
     public async Task<Result<TransferResponse>> CreateAsync(
@@ -63,12 +62,12 @@ public sealed class TransferService(
             return amounts.Error;
         }
 
-        var transfer = mapper.ToEntity(request, resolved.Sent, resolved.Received);
+        var transfer = request.ToEntity(resolved.Sent, resolved.Received);
 
         db.Transfers.Add(transfer);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transfer);
+        return transfer.ToResponse();
     }
 
     public async Task<Result<TransferResponse>> UpdateAsync(
@@ -113,15 +112,10 @@ public sealed class TransferService(
             return new DomainError(ErrorCodes.ValueLocked, locked);
         }
 
-        transfer.FromAccountId = draft.FromAccountId;
-        transfer.ToAccountId = draft.ToAccountId;
-        transfer.Amount = sent;
-        transfer.ReceivedAmount = received;
-        transfer.Date = request.Date;
-        transfer.Description = OptionalText.Normalize(request.Description);
+        request.ApplyTo(transfer, sent, received);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(transfer, receiptAccounts);
+        return transfer.ToResponse(receiptAccounts);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

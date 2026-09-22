@@ -9,8 +9,13 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Accounts.Interfaces;
+using JxFinance.Endpoints.NetWorth.CreateAsset;
+using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.Shared;
+using JxFinance.Endpoints.NetWorth.UpdateAsset;
+using JxFinance.Endpoints.NetWorth.UpdateDebt;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,21 +33,30 @@ public sealed class NetWorthService(
     private const string AssetNotFound = "Asset not found.";
     private const string DebtNotFound = "Debt not found.";
 
-    public async Task<IReadOnlyList<Asset>> GetAssetsAsync(CancellationToken cancellationToken) =>
-        await db.Assets.OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
-
-    public async Task<Asset> CreateAssetAsync(Asset asset, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
+        var assets = await db.Assets.OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
+        return assets.Select(a => a.ToResponse()).ToList();
+    }
+
+    public async Task<Result<AssetResponse>> CreateAssetAsync(
+        CreateAssetRequest request,
+        CancellationToken cancellationToken)
+    {
+        var asset = request.ToEntity(rates.ReportingCurrency);
         db.Assets.Add(asset);
         await db.SaveChangesAsync(cancellationToken);
 
-        return asset;
+        return asset.ToResponse();
     }
 
-    public Task<Result<Asset>> UpdateAssetAsync(Guid id, Action<Asset> apply, CancellationToken cancellationToken)
+    public async Task<Result<AssetResponse>> UpdateAssetAsync(
+        UpdateAssetRequest request,
+        CancellationToken cancellationToken)
     {
-        var assetId = new AssetId(id);
-        return db.UpdateOrNotFoundAsync(a => a.Id == assetId, AssetNotFound, apply, cancellationToken);
+        var assetId = new AssetId(request.Id);
+        var updated = await db.UpdateOrNotFoundAsync<Asset>(a => a.Id == assetId, AssetNotFound, request.ApplyTo, cancellationToken);
+        return updated.TryGetValue(out var asset) ? asset.ToResponse() : updated.Error;
     }
 
     public Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
@@ -56,21 +70,30 @@ public sealed class NetWorthService(
             cancellationToken);
     }
 
-    public async Task<IReadOnlyList<Debt>> GetDebtsAsync(CancellationToken cancellationToken) =>
-        await db.Debts.OrderBy(d => d.CreatedAt).ToListAsync(cancellationToken);
-
-    public async Task<Debt> CreateDebtAsync(Debt debt, CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<DebtResponse>> GetDebtsAsync(CancellationToken cancellationToken)
     {
+        var debts = await db.Debts.OrderBy(d => d.CreatedAt).ToListAsync(cancellationToken);
+        return debts.Select(d => d.ToResponse()).ToList();
+    }
+
+    public async Task<Result<DebtResponse>> CreateDebtAsync(
+        CreateDebtRequest request,
+        CancellationToken cancellationToken)
+    {
+        var debt = request.ToEntity(rates.ReportingCurrency);
         db.Debts.Add(debt);
         await db.SaveChangesAsync(cancellationToken);
 
-        return debt;
+        return debt.ToResponse();
     }
 
-    public Task<Result<Debt>> UpdateDebtAsync(Guid id, Action<Debt> apply, CancellationToken cancellationToken)
+    public async Task<Result<DebtResponse>> UpdateDebtAsync(
+        UpdateDebtRequest request,
+        CancellationToken cancellationToken)
     {
-        var debtId = new DebtId(id);
-        return db.UpdateOrNotFoundAsync(d => d.Id == debtId, DebtNotFound, apply, cancellationToken);
+        var debtId = new DebtId(request.Id);
+        var updated = await db.UpdateOrNotFoundAsync<Debt>(d => d.Id == debtId, DebtNotFound, request.ApplyTo, cancellationToken);
+        return updated.TryGetValue(out var debt) ? debt.ToResponse() : updated.Error;
     }
 
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)

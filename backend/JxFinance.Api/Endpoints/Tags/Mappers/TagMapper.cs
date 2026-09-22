@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Sharing;
 using JxFinance.Domain.Tags;
@@ -7,22 +6,24 @@ using JxFinance.Endpoints.Tags.Shared;
 
 namespace JxFinance.Endpoints.Tags.Mappers;
 
-public sealed class TagMapper : Mapper<CreateTagRequest, TagResponse, Tag>
+public static class TagMapper
 {
-    public override Tag ToEntity(CreateTagRequest request)
+    public static Tag ToEntity(this CreateTagRequest request)
     {
         var tag = new Tag { Name = request.Name };
-        Apply(request, tag);
+        request.ApplyTo(tag);
         return tag;
     }
 
-    public void Apply(ITagInput input, Tag tag)
+    public static void ApplyTo(this ITagInput input, Tag tag)
     {
-        tag.Name = OptionalText.Normalize(input.Name) ?? input.Name;
+        tag.Name = input.NormalizedName();
         tag.ApplySharing(input);
     }
 
-    public override TagResponse FromEntity(Tag tag) => new(
+    public static string NormalizedName(this ITagInput input) => OptionalText.Normalize(input.Name) ?? input.Name;
+
+    public static TagResponse ToResponse(this Tag tag) => new(
         tag.Id.Value,
         tag.Name,
         tag.Scope,

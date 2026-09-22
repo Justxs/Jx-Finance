@@ -22,7 +22,6 @@ public sealed class AccountService(
     AppDbContext db,
     ICurrentUser currentUser,
     ISharingGuard sharing,
-    AccountMapper mapper,
     IExchangeRateService rates,
     IHoldingsValuation holdings) : IAccountService
 {
@@ -58,7 +57,7 @@ public sealed class AccountService(
 
         var balances = await BalancesAsync(accounts, cancellationToken);
 
-        return Sort(accounts, balances, request).Select(a => mapper.FromEntity(a, balances[a.Id])).ToList();
+        return Sort(accounts, balances, request).Select(a => a.ToResponse(balances[a.Id])).ToList();
     }
 
     public async Task<(decimal Total, bool IsComplete)> GetReportingTotalAsync(CancellationToken cancellationToken)
@@ -111,28 +110,29 @@ public sealed class AccountService(
             return found.Error;
         }
 
-        return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }
 
     public async Task<Result<AccountResponse>> CreateAsync(
         CreateAccountRequest request,
         CancellationToken cancellationToken)
     {
-        var account = mapper.ToEntity(request);
-        if (await sharing.CheckAsync(account, null, cancellationToken) is { } sharingError)
+        if (await sharing.CheckAsync(request, cancellationToken) is { } sharingError)
         {
             return sharingError;
         }
 
-        if (rates.UnusableReason(account.Currency) is { } currencyError)
+        var currency = request.Currency ?? rates.ReportingCurrency;
+        if (rates.UnusableReason(currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
+        var account = request.ToEntity(rates.ReportingCurrency);
         db.Accounts.Add(account);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }
 
     public async Task<Result<AccountResponse>> UpdateAsync(
@@ -146,23 +146,22 @@ public sealed class AccountService(
             return found.Error;
         }
 
-        var previous = SharingState.Of(account);
-        var previousCurrency = account.Currency;
-        mapper.Apply(request, account);
-
-        if (await sharing.CheckAsync(account, previous, cancellationToken) is { } sharingError)
+        if (await sharing.CheckAsync(account, request, cancellationToken) is { } sharingError)
         {
             return sharingError;
         }
 
-        if (account.Currency != previousCurrency && rates.UnusableReason(account.Currency) is { } currencyError)
+        if (request.Currency is { } currency
+            && currency != account.Currency
+            && rates.UnusableReason(currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
         }
 
+        request.ApplyTo(account);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }
 
     public async Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken)
@@ -211,7 +210,7 @@ public sealed class AccountService(
         var active = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
         if (active is not null)
         {
-            return mapper.FromEntity(active, await BalanceAsync(active, cancellationToken));
+            return active.ToResponse(await BalanceAsync(active, cancellationToken));
         }
 
         var found = await ArchivedAccounts().FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
@@ -236,7 +235,7 @@ public sealed class AccountService(
         account.IsDeleted = false;
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
+        return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }
 
     private IQueryable<Account> ArchivedAccounts()

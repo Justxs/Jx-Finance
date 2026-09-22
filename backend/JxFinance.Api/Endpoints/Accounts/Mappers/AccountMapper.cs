@@ -1,6 +1,4 @@
-using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Settings;
 using JxFinance.Common.Sharing;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -9,19 +7,18 @@ using JxFinance.Endpoints.Accounts.Shared;
 
 namespace JxFinance.Endpoints.Accounts.Mappers;
 
-[RegisterService<AccountMapper>(LifeTime.Singleton)]
-public sealed class AccountMapper(IInstanceSettingsStore settings) : Mapper<CreateAccountRequest, AccountResponse, Account>
+public static class AccountMapper
 {
-    public override Account ToEntity(CreateAccountRequest request)
+    public static Account ToEntity(this CreateAccountRequest request, Currency reportingCurrency)
     {
         var account = new Account { Name = request.Name };
-        Apply(request, account, settings.Current.ReportingCurrency);
+        Apply(request, account, reportingCurrency);
         return account;
     }
 
-    public void Apply(IAccountInput input, Account account) => Apply(input, account, account.Currency);
+    public static void ApplyTo(this IAccountInput input, Account account) => Apply(input, account, account.Currency);
 
-    public AccountResponse FromEntity(Account account, AccountBalance balance) => new(
+    public static AccountResponse ToResponse(this Account account, AccountBalance balance) => new(
         account.Id.Value,
         account.Name,
         account.Description,

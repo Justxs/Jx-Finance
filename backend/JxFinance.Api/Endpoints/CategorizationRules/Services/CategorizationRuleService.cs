@@ -12,9 +12,11 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
+using JxFinance.Endpoints.CategorizationRules.CreateCategorizationRule;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
 using JxFinance.Endpoints.CategorizationRules.Mappers;
 using JxFinance.Endpoints.CategorizationRules.Shared;
+using JxFinance.Endpoints.CategorizationRules.UpdateCategorizationRule;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,26 +25,20 @@ namespace JxFinance.Endpoints.CategorizationRules.Services;
 [RegisterService<ICategorizationRuleService>(LifeTime.Scoped)]
 public sealed class CategorizationRuleService(
     AppDbContext db,
-    CategorizationRuleMapper mapper,
     IReferenceGuard references,
     IDeletionRecorder deletions) : ICategorizationRuleService
 {
-    public async Task<IReadOnlyList<CategorizationRuleWithTags>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<CategorizationRuleResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        var rules = await db.CategorizationRules
-            .OrderBy(r => r.Position)
-            .ThenBy(r => r.CreatedAt)
-            .ToListAsync(cancellationToken);
-
-        return await WithTagsAsync(rules, cancellationToken);
+        var rules = await LoadAllAsync(cancellationToken);
+        return rules.Select(r => r.ToResponse()).ToList();
     }
 
-    public async Task<Result<CategorizationRuleWithTags>> CreateAsync(
-        CategorizationRule rule,
-        IReadOnlyList<Guid> tagIds,
+    public async Task<Result<CategorizationRuleResponse>> CreateAsync(
+        CreateCategorizationRuleRequest request,
         CancellationToken cancellationToken)
     {
-        var error = await ValidateAsync(rule, tagIds, cancellationToken);
+        var error = await ValidateAsync(request, cancellationToken);
         if (error is not null)
         {
             return error;
@@ -56,44 +52,43 @@ public sealed class CategorizationRuleService(
                 $"You already have {RuleLimits.MaxRulesPerUser} rules.");
         }
 
+        var rule = request.ToEntity();
         rule.Position = used;
         db.CategorizationRules.Add(rule);
-        db.CategorizationRuleTags.AddRange(mapper.ToTags(rule.Id, tagIds));
+        db.CategorizationRuleTags.AddRange(request.TagIds.ToRuleTags(rule.Id));
         await db.SaveChangesAsync(cancellationToken);
 
-        return new CategorizationRuleWithTags(rule, Distinct(tagIds));
+        return new CategorizationRuleWithTags(rule, Distinct(request.TagIds)).ToResponse();
     }
 
-    public async Task<Result<CategorizationRuleWithTags>> UpdateAsync(
-        Guid id,
-        Action<CategorizationRule> apply,
-        IReadOnlyList<Guid> tagIds,
+    public async Task<Result<CategorizationRuleResponse>> UpdateAsync(
+        UpdateCategorizationRuleRequest request,
         CancellationToken cancellationToken)
     {
-        var ruleId = new CategorizationRuleId(id);
+        var ruleId = new CategorizationRuleId(request.Id);
         var found = await db.CategorizationRules.FindOrNotFoundAsync(r => r.Id == ruleId, "Rule not found.", cancellationToken);
         if (!found.TryGetValue(out var rule))
         {
             return found.Error;
         }
 
-        apply(rule);
-
-        var error = await ValidateAsync(rule, tagIds, cancellationToken);
+        var error = await ValidateAsync(request, cancellationToken);
         if (error is not null)
         {
             return error;
         }
 
+        request.ApplyTo(rule);
+
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         await db.CategorizationRuleTags.Where(t => t.RuleId == ruleId).ExecuteDeleteAsync(cancellationToken);
-        db.CategorizationRuleTags.AddRange(mapper.ToTags(ruleId, tagIds));
+        db.CategorizationRuleTags.AddRange(request.TagIds.ToRuleTags(ruleId));
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
 
-        return new CategorizationRuleWithTags(rule, Distinct(tagIds));
+        return new CategorizationRuleWithTags(rule, Distinct(request.TagIds)).ToResponse();
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -133,7 +128,7 @@ public sealed class CategorizationRuleService(
         return id;
     }
 
-    public async Task<Result<IReadOnlyList<CategorizationRuleWithTags>>> MoveAsync(
+    public async Task<Result<IReadOnlyList<CategorizationRuleResponse>>> MoveAsync(
         Guid id,
         MoveDirection direction,
         CancellationToken cancellationToken)
@@ -159,7 +154,8 @@ public sealed class CategorizationRuleService(
         Renumber(rules);
         await db.SaveChangesAsync(cancellationToken);
 
-        return Result<IReadOnlyList<CategorizationRuleWithTags>>.Success(await WithTagsAsync(rules, cancellationToken));
+        var moved = await WithTagsAsync(rules, cancellationToken);
+        return Result<IReadOnlyList<CategorizationRuleResponse>>.Success(moved.Select(r => r.ToResponse()).ToList());
     }
 
     public async Task<Result<RunRulesResponse>> PreviewRunAsync(
@@ -233,7 +229,7 @@ public sealed class CategorizationRuleService(
         IReadOnlyList<RuleCandidate> candidates,
         CancellationToken cancellationToken)
     {
-        var rules = await GetAllAsync(cancellationToken);
+        var rules = await LoadAllAsync(cancellationToken);
         var applicable = rules.Where(r => r.Rule.AccountId is null || r.Rule.AccountId == accountId).ToList();
         if (applicable.Count == 0)
         {
@@ -281,7 +277,7 @@ public sealed class CategorizationRuleService(
             return accountError;
         }
 
-        var rules = await GetAllAsync(cancellationToken);
+        var rules = await LoadAllAsync(cancellationToken);
         var categoryTypes = await CategoryTypesAsync(rules, cancellationToken);
 
         var claimed = new List<TransactionId>();
@@ -428,24 +424,36 @@ public sealed class CategorizationRuleService(
             .ToList();
     }
 
+    private async Task<IReadOnlyList<CategorizationRuleWithTags>> LoadAllAsync(CancellationToken cancellationToken)
+    {
+        var rules = await db.CategorizationRules
+            .OrderBy(r => r.Position)
+            .ThenBy(r => r.CreatedAt)
+            .ToListAsync(cancellationToken);
+
+        return await WithTagsAsync(rules, cancellationToken);
+    }
+
     private async Task<DomainError?> ValidateAsync(
-        CategorizationRule rule,
-        IReadOnlyList<Guid> tagIds,
+        ICategorizationRuleInput input,
         CancellationToken cancellationToken)
     {
-        if (rule.AccountId is { } accountId
-            && await references.AccountExistsAsync(accountId, cancellationToken) is { } accountError)
+        if (input.AccountId is { } accountId
+            && await references.AccountExistsAsync(new AccountId(accountId), cancellationToken) is { } accountError)
         {
             return accountError;
         }
 
-        if (rule.CategoryId is { } categoryId
-            && !await db.Categories.AnyAsync(c => c.Id == categoryId, cancellationToken))
+        if (input.CategoryId is { } rawCategoryId)
         {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
+            var categoryId = new CategoryId(rawCategoryId);
+            if (!await db.Categories.AnyAsync(c => c.Id == categoryId, cancellationToken))
+            {
+                return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
+            }
         }
 
-        var wanted = tagIds.Distinct().Select(id => new TagId(id)).ToList();
+        var wanted = input.TagIds.Distinct().Select(id => new TagId(id)).ToList();
         if (wanted.Count > 0 && await db.Tags.CountAsync(t => wanted.Contains(t.Id), cancellationToken) != wanted.Count)
         {
             return new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");

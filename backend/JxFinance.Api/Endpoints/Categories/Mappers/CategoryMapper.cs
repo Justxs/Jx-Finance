@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Sharing;
 using JxFinance.Domain.Categories;
@@ -7,23 +6,23 @@ using JxFinance.Endpoints.Categories.Shared;
 
 namespace JxFinance.Endpoints.Categories.Mappers;
 
-public sealed class CategoryMapper : Mapper<CreateCategoryRequest, CategoryResponse, Category>
+public static class CategoryMapper
 {
-    public override Category ToEntity(CreateCategoryRequest request)
+    public static Category ToEntity(this CreateCategoryRequest request)
     {
         var category = new Category { Name = request.Name, Type = request.Type };
-        Apply(request, category);
+        request.ApplyTo(category);
         return category;
     }
 
-    public void Apply(ICategoryInput input, Category category)
+    public static void ApplyTo(this ICategoryInput input, Category category)
     {
         category.Name = input.Name.Trim();
         category.Icon = OptionalText.Normalize(input.Icon);
         category.ApplySharing(input);
     }
 
-    public override CategoryResponse FromEntity(Category category) => new(
+    public static CategoryResponse ToResponse(this Category category) => new(
         category.Id.Value,
         category.Name,
         category.Type,

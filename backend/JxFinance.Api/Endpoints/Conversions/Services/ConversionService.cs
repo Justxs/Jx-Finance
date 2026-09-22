@@ -24,7 +24,6 @@ namespace JxFinance.Endpoints.Conversions.Services;
 [RegisterService<IConversionService>(LifeTime.Scoped)]
 public sealed class ConversionService(
     AppDbContext db,
-    ConversionMapper mapper,
     IExchangeRateService rates,
     ITransactionValuation valuations,
     IReferenceGuard references,
@@ -54,7 +53,7 @@ public sealed class ConversionService(
             ? []
             : await db.Transactions.Where(t => feeIds.Contains(t.Id)).ToDictionaryAsync(t => t.Id, cancellationToken);
 
-        return page.Map(c => mapper.FromEntity(c, FeeFor(c, fees)));
+        return page.Map(c => c.ToResponse(FeeFor(c, fees)));
     }
 
     public async Task<Result<ConversionResponse>> CreateAsync(
@@ -91,11 +90,11 @@ public sealed class ConversionService(
             db.Transactions.Add(fee);
         }
 
-        var conversion = mapper.ToEntity(request, fee);
+        var conversion = request.ToEntity(fee);
         db.CurrencyConversions.Add(conversion);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(conversion, fee);
+        return conversion.ToResponse(fee);
     }
 
     public async Task<Result<ConversionResponse>> UpdateAsync(
@@ -176,14 +175,10 @@ public sealed class ConversionService(
             fee = null;
         }
 
-        conversion.FromAmount = new Money(request.FromAmount, request.FromCurrency);
-        conversion.ToAmount = new Money(request.ToAmount, request.ToCurrency);
-        conversion.Date = request.Date;
-        conversion.Description = OptionalText.Normalize(request.Description);
-        conversion.FeeTransactionId = fee?.Id;
+        request.ApplyTo(conversion, fee);
         await db.SaveChangesAsync(cancellationToken);
 
-        return mapper.FromEntity(conversion, fee);
+        return conversion.ToResponse(fee);
     }
 
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)

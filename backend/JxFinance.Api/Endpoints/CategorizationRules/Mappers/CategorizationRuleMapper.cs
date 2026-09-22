@@ -1,4 +1,3 @@
-using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -9,18 +8,16 @@ using JxFinance.Endpoints.CategorizationRules.Shared;
 
 namespace JxFinance.Endpoints.CategorizationRules.Mappers;
 
-[RegisterService<CategorizationRuleMapper>(LifeTime.Singleton)]
-public sealed class CategorizationRuleMapper
-    : Mapper<CreateCategorizationRuleRequest, CategorizationRuleResponse, CategorizationRule>
+public static class CategorizationRuleMapper
 {
-    public override CategorizationRule ToEntity(CreateCategorizationRuleRequest request)
+    public static CategorizationRule ToEntity(this CreateCategorizationRuleRequest request)
     {
         var rule = new CategorizationRule { Name = request.Name, Pattern = request.Pattern };
-        Apply(request, rule);
+        request.ApplyTo(rule);
         return rule;
     }
 
-    public void Apply(ICategorizationRuleInput input, CategorizationRule rule)
+    public static void ApplyTo(this ICategorizationRuleInput input, CategorizationRule rule)
     {
         rule.Name = OptionalText.Normalize(input.Name) ?? input.Name;
         rule.Match = input.Match;
@@ -31,13 +28,13 @@ public sealed class CategorizationRuleMapper
         rule.CategoryId = input.CategoryId is { } categoryId ? new CategoryId(categoryId) : null;
     }
 
-    public List<CategorizationRuleTag> ToTags(CategorizationRuleId ruleId, IReadOnlyList<Guid>? tagIds) =>
+    public static List<CategorizationRuleTag> ToRuleTags(this IReadOnlyList<Guid>? tagIds, CategorizationRuleId ruleId) =>
         (tagIds ?? [])
             .Distinct()
             .Select(tagId => new CategorizationRuleTag { RuleId = ruleId, TagId = new TagId(tagId) })
             .ToList();
 
-    public CategorizationRuleResponse FromEntity(CategorizationRuleWithTags item) => new(
+    public static CategorizationRuleResponse ToResponse(this CategorizationRuleWithTags item) => new(
         item.Rule.Id.Value,
         item.Rule.Name,
         item.Rule.Position,

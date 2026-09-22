@@ -3,6 +3,8 @@ using JxFinance.Common;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Notifications.Interfaces;
+using JxFinance.Endpoints.Notifications.Mappers;
+using JxFinance.Endpoints.Notifications.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +13,7 @@ namespace JxFinance.Endpoints.Notifications.Services;
 [RegisterService<INotificationService>(LifeTime.Scoped)]
 public sealed class NotificationService(AppDbContext db) : INotificationService
 {
-    public async Task<IReadOnlyList<Notification>> GetAllAsync(
+    public async Task<IReadOnlyList<NotificationResponse>> GetAllAsync(
         bool? unreadOnly,
         CancellationToken cancellationToken)
     {
@@ -21,9 +23,10 @@ public sealed class NotificationService(AppDbContext db) : INotificationService
             query = query.Where(n => !n.IsRead);
         }
 
-        return await query
+        var notifications = await query
             .OrderByDescending(n => n.CreatedAt)
             .ToListAsync(cancellationToken);
+        return notifications.Select(n => n.ToResponse()).ToList();
     }
 
     public async Task<Result<Guid>> MarkReadAsync(Guid id, CancellationToken cancellationToken)

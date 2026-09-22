@@ -1,28 +1,26 @@
 using JxFinance.Domain.Accounts;
-using JxFinance.Domain.CategorizationRules;
 using JxFinance.Domain.Common;
+using JxFinance.Endpoints.CategorizationRules.CreateCategorizationRule;
 using JxFinance.Endpoints.CategorizationRules.Shared;
+using JxFinance.Endpoints.CategorizationRules.UpdateCategorizationRule;
 
 namespace JxFinance.Endpoints.CategorizationRules.Interfaces;
 
 public interface ICategorizationRuleService
 {
-    Task<IReadOnlyList<CategorizationRuleWithTags>> GetAllAsync(CancellationToken cancellationToken);
+    Task<IReadOnlyList<CategorizationRuleResponse>> GetAllAsync(CancellationToken cancellationToken);
 
-    Task<Result<CategorizationRuleWithTags>> CreateAsync(
-        CategorizationRule rule,
-        IReadOnlyList<Guid> tagIds,
+    Task<Result<CategorizationRuleResponse>> CreateAsync(
+        CreateCategorizationRuleRequest request,
         CancellationToken cancellationToken);
 
-    Task<Result<CategorizationRuleWithTags>> UpdateAsync(
-        Guid id,
-        Action<CategorizationRule> apply,
-        IReadOnlyList<Guid> tagIds,
+    Task<Result<CategorizationRuleResponse>> UpdateAsync(
+        UpdateCategorizationRuleRequest request,
         CancellationToken cancellationToken);
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
-    Task<Result<IReadOnlyList<CategorizationRuleWithTags>>> MoveAsync(
+    Task<Result<IReadOnlyList<CategorizationRuleResponse>>> MoveAsync(
         Guid id,
         MoveDirection direction,
         CancellationToken cancellationToken);

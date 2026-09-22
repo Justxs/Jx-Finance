@@ -1,13 +1,12 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Tags.Interfaces;
-using JxFinance.Endpoints.Tags.Mappers;
 using JxFinance.Endpoints.Tags.Shared;
 
 namespace JxFinance.Endpoints.Tags.GetTags;
 
 public sealed class GetTagsEndpoint(ITagService tagService)
-    : EndpointWithoutRequest<IReadOnlyList<TagResponse>, TagMapper>
+    : EndpointWithoutRequest<IReadOnlyList<TagResponse>>
 {
     public override void Configure()
     {
@@ -17,7 +16,6 @@ public sealed class GetTagsEndpoint(ITagService tagService)
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var tags = await tagService.GetAllAsync(ct);
-        await Send.OkAsync(tags.Select(Map.FromEntity).ToList(), ct);
+        await Send.OkAsync(await tagService.GetAllAsync(ct), ct);
     }
 }

@@ -4,7 +4,6 @@ using JxFinance.Common.Settings;
 using JxFinance.Common.Sharing;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Accounts.Mappers;
 using JxFinance.Endpoints.Accounts.Services;
 using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.NetWorth.Interfaces;
@@ -31,7 +30,6 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
                 db,
                 user,
                 new SharingGuard(db, user),
-                services.GetRequiredService<AccountMapper>(),
                 rates,
                 new HoldingsValuation(db, rates, settings)),
             rates,

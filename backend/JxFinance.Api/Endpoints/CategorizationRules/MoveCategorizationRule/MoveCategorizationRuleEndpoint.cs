@@ -2,13 +2,12 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
-using JxFinance.Endpoints.CategorizationRules.Mappers;
 using JxFinance.Endpoints.CategorizationRules.Shared;
 
 namespace JxFinance.Endpoints.CategorizationRules.MoveCategorizationRule;
 
 public sealed class MoveCategorizationRuleEndpoint(ICategorizationRuleService ruleService)
-    : Endpoint<MoveCategorizationRuleRequest, IReadOnlyList<CategorizationRuleResponse>, CategorizationRuleMapper>
+    : Endpoint<MoveCategorizationRuleRequest, IReadOnlyList<CategorizationRuleResponse>>
 {
     public override void Configure()
     {
@@ -20,6 +19,6 @@ public sealed class MoveCategorizationRuleEndpoint(ICategorizationRuleService ru
     public override async Task HandleAsync(MoveCategorizationRuleRequest req, CancellationToken ct)
     {
         var rules = (await ruleService.MoveAsync(req.Id, req.Direction, ct)).ValueOrThrow();
-        await Send.OkAsync(rules.Select(Map.FromEntity).ToList(), ct);
+        await Send.OkAsync(rules, ct);
     }
 }

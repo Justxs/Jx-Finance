@@ -6,14 +6,18 @@ using JxFinance.Common.References;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
+using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
+using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Interfaces;
+using JxFinance.Endpoints.RecurringBills.Mappers;
 using JxFinance.Endpoints.RecurringBills.Shared;
+using JxFinance.Endpoints.RecurringBills.UpdateRecurringBill;
 using JxFinance.Endpoints.Transfers.CreateTransfer;
 using JxFinance.Endpoints.Transfers.Interfaces;
 using JxFinance.Infrastructure.Data;
@@ -38,44 +42,51 @@ public sealed class RecurringBillService(
     private static readonly DomainError CategoryNotIncome =
         new(ErrorCodes.CategoryWrongType, "Choose an accessible income category.");
 
-    public async Task<IReadOnlyList<RecurringBill>> GetAllAsync(CancellationToken cancellationToken)
+    public async Task<IReadOnlyList<RecurringBillResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var bills = await db.RecurringBills.OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
-        return bills;
+        return bills.Select(b => b.ToResponse()).ToList();
     }
 
-    public Task<Result<RecurringBill>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        return db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
+        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
+        return found.TryGetValue(out var bill) ? bill.ToResponse() : found.Error;
     }
 
-    public async Task<Result<RecurringBill>> CreateAsync(RecurringBill bill, CancellationToken cancellationToken)
+    public async Task<Result<RecurringBillResponse>> CreateAsync(
+        CreateRecurringBillRequest request,
+        CancellationToken cancellationToken)
     {
-        var error = await ValidateReferencesAsync(bill, cancellationToken);
+        var error = await ValidateReferencesAsync(request, cancellationToken);
         if (error is not null) return error;
 
+        var bill = request.ToEntity();
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return bill;
+        return bill.ToResponse();
     }
 
-    public async Task<Result<RecurringBill>> UpdateAsync(Guid id, Action<RecurringBill> apply, CancellationToken cancellationToken)
+    public async Task<Result<RecurringBillResponse>> UpdateAsync(
+        UpdateRecurringBillRequest request,
+        CancellationToken cancellationToken)
     {
-        var billId = new RecurringBillId(id);
+        var billId = new RecurringBillId(request.Id);
         var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
         if (!found.TryGetValue(out var bill))
         {
             return found.Error;
         }
 
-        apply(bill);
-        var error = await ValidateReferencesAsync(bill, cancellationToken);
+        var error = await ValidateReferencesAsync(request, cancellationToken);
         if (error is not null) return error;
+
+        request.ApplyTo(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return bill;
+        return bill.ToResponse();
     }
 
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -89,7 +100,7 @@ public sealed class RecurringBillService(
             cancellationToken);
     }
 
-    public async Task<Result<RecurringBillConfirmation>> ConfirmAsync(
+    public async Task<Result<ConfirmRecurringBillResponse>> ConfirmAsync(
         ConfirmRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
@@ -136,7 +147,7 @@ public sealed class RecurringBillService(
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
-        return new RecurringBillConfirmation(bill, transactionId, transferId);
+        return new ConfirmRecurringBillResponse(bill.ToResponse(), transactionId, transferId);
     }
 
     private static Result<decimal> ResolveAmount(RecurringBill bill, ConfirmRecurringBillRequest request)
@@ -238,15 +249,15 @@ public sealed class RecurringBillService(
     private static FlowType FlowOf(RecurringBillShape shape) =>
         shape == RecurringBillShape.Income ? FlowType.Income : FlowType.Expense;
 
-    private async Task<DomainError?> ValidateReferencesAsync(RecurringBill bill, CancellationToken ct)
+    private async Task<DomainError?> ValidateReferencesAsync(IRecurringBillInput input, CancellationToken ct)
     {
-        if (bill.AccountId is { } from && await references.AccountExistsAsync(from, ct) is { } fromError) return fromError;
-        if (bill.ToAccountId is { } to && await references.AccountExistsAsync(to, ct) is { } toError) return toError;
-        if (bill.Shape == RecurringBillShape.Transfer || bill.CategoryId is not { } categoryId) return null;
+        if (input.AccountId is { } from && await references.AccountExistsAsync(new AccountId(from), ct) is { } fromError) return fromError;
+        if (input.ToAccountId is { } to && await references.AccountExistsAsync(new AccountId(to), ct) is { } toError) return toError;
+        if (input.Shape == RecurringBillShape.Transfer || input.CategoryId is not { } categoryId) return null;
 
-        var flow = FlowOf(bill.Shape);
+        var flow = FlowOf(input.Shape);
         return await references.CategoryOfTypeAsync(
-            categoryId,
+            new CategoryId(categoryId),
             flow,
             flow == FlowType.Income ? CategoryNotIncome : CategoryNotExpense,
             ct);

@@ -22,7 +22,6 @@ namespace JxFinance.Endpoints.Households.Services;
 public sealed class HouseholdService(
     AppDbContext db,
     ICurrentUser currentUser,
-    HouseholdMapper mapper,
     IClock clock,
     IDeletionRecorder deletions) : IHouseholdService
 {
@@ -49,11 +48,11 @@ public sealed class HouseholdService(
         return await ToResponseAsync(household, cancellationToken);
     }
 
-    public async Task<HouseholdResponse> CreateAsync(
+    public async Task<Result<HouseholdResponse>> CreateAsync(
         CreateHouseholdRequest request,
         CancellationToken cancellationToken)
     {
-        var household = mapper.ToEntity(request);
+        var household = request.ToEntity();
         db.Households.Add(household);
         db.HouseholdMemberships.Add(new HouseholdMembership
         {
@@ -77,7 +76,7 @@ public sealed class HouseholdService(
             return owned.Error;
         }
 
-        mapper.Apply(request, household);
+        request.ApplyTo(household);
         await db.SaveChangesAsync(cancellationToken);
 
         return await ToResponseAsync(household, cancellationToken);
@@ -279,11 +278,11 @@ public sealed class HouseholdService(
             .ToDictionaryAsync(u => u.Id, cancellationToken);
 
         var members = memberships
-            .Select(m => mapper.ToMember(m, users.GetValueOrDefault(m.UserId)))
+            .Select(m => m.ToResponse(users.GetValueOrDefault(m.UserId)))
             .ToList();
 
         var myRole = memberships.FirstOrDefault(m => m.UserId == currentUser.Id)?.Role ?? HouseholdRole.Member;
 
-        return mapper.FromEntity(household, myRole, members);
+        return household.ToResponse(myRole, members);
     }
 }
