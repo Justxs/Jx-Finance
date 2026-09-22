@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using JxFinance.Common;
 using JxFinance.Infrastructure.Configuration;
 
 namespace JxFinance.Infrastructure.Auth;
@@ -28,6 +29,8 @@ public sealed record JwtSigningKey(string Value)
 
         return new JwtSigningKey(stored);
     }
+
+    public override string ToString() => $"{nameof(JwtSigningKey)} {{ Value = {SecretText.Hidden} }}";
 
     private static string Generate() => Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
 }

@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Text;
 using JxFinance.Domain.Email;
 
 namespace JxFinance.Common.Email;
@@ -9,4 +11,14 @@ public sealed record SmtpDelivery(
     string? UserName,
     string? Password,
     string FromAddress,
-    string FromName);
+    string FromName)
+{
+    private bool PrintMembers(StringBuilder builder)
+    {
+        builder.Append(
+            CultureInfo.InvariantCulture,
+            $"Host = {Host}, Port = {Port}, Encryption = {Encryption}, UserName = {UserName}, "
+            + $"Password = {SecretText.Hidden}, FromAddress = {FromAddress}, FromName = {FromName}");
+        return true;
+    }
+}
