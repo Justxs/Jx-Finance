@@ -1,7 +1,7 @@
 import type { Scope } from "@/api/generated/model";
 import { readPreferences, savePreferences, usePreferences } from "./preferences";
 
-export interface SharingDefaults {
+interface SharingDefaults {
   scope: Scope;
   householdId: string;
 }

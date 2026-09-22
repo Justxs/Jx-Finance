@@ -14,7 +14,7 @@ import { FlexQueryHelp } from "./flex-query-help";
 import { UploadPanel } from "./upload-panel";
 import { useBrokerImportBusy, useBrokerImportMutations } from "./use-broker-import-mutations";
 
-export type BrokerImportTab = "upload" | "sync";
+type BrokerImportTab = "upload" | "sync";
 
 function isBrokerImportTab(value: unknown): value is BrokerImportTab {
   return value === "upload" || value === "sync";

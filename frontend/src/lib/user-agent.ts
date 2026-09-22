@@ -1,4 +1,4 @@
-export interface UserAgentLabel {
+interface UserAgentLabel {
   browser: string | null;
   os: string | null;
 }

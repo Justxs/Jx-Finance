@@ -9,7 +9,7 @@ export interface SectionNavItem {
   icon: LucideIcon;
 }
 
-export interface SectionLinkProps {
+interface SectionLinkProps {
   replace: true;
   "aria-current": "page" | undefined;
   className: string;

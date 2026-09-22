@@ -3,7 +3,8 @@ import { expect, test } from "vitest";
 import type { AuditEventResponse } from "@/api/generated/model";
 import { householdAuditEvents } from "@/storybook/fixtures";
 import { renderWithQuery } from "@/test/query";
-import { ActivityEvent, sentenceKey } from "./household-activity";
+import { sentenceKey } from "./activity-sentences";
+import { ActivityEvent } from "./household-activity";
 
 function eventAt(index: number): AuditEventResponse {
   const found = householdAuditEvents[index];

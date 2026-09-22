@@ -11,7 +11,7 @@ export const profileSections = [
   "appearance",
 ] as const;
 
-export type ProfileSection = (typeof profileSections)[number];
+type ProfileSection = (typeof profileSections)[number];
 
 const items: Record<ProfileSection, SectionNavItem> = {
   account: { labelKey: "profile.detailsTitle", icon: UserRound },

@@ -8,7 +8,7 @@ interface Props {
   withExtra: DebtSchedulePlan | null;
 }
 
-export function balancePoints(plan: DebtSchedulePlan, withExtra: DebtSchedulePlan | null) {
+function balancePoints(plan: DebtSchedulePlan, withExtra: DebtSchedulePlan | null) {
   return plan.rows.map((row, index) => ({
     date: row.date,
     balance: Number(row.balance),

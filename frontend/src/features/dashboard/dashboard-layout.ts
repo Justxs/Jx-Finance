@@ -41,7 +41,7 @@ const cardFeature: Partial<Record<DashboardCard, FeatureKey>> = {
   upcomingBills: "recurringBills",
 };
 
-export function isCardAvailable(card: DashboardCard, features: FeatureFlags): boolean {
+function isCardAvailable(card: DashboardCard, features: FeatureFlags): boolean {
   const feature = cardFeature[card];
   return feature === undefined || features[feature];
 }

@@ -1,4 +1,4 @@
-export type BrowserStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
+type BrowserStorage = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 
 const PROBE_KEY = "jx-storage-probe";
 

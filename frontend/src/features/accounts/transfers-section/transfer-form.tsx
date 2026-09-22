@@ -10,7 +10,7 @@ import { namedOptions, withMissingOption } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
 
-export interface TransferFormValues {
+interface TransferFormValues {
   fromAccountId: string;
   toAccountId: string;
   amount: string;

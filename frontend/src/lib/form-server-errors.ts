@@ -3,7 +3,7 @@ import { type ApiError, isApiError } from "@/api/client";
 import type { ErrorCode } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
 
-export type ServerErrorDetail = NonNullable<ApiError["errors"]>[number];
+type ServerErrorDetail = NonNullable<ApiError["errors"]>[number];
 
 interface Submission<TFormData> {
   value: TFormData;

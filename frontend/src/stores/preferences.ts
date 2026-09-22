@@ -41,7 +41,7 @@ const preferencesSchema = z.object({
 });
 
 export type Preferences = z.output<typeof preferencesSchema>;
-export type PreferencesPatch = Partial<Omit<Preferences, "id">>;
+type PreferencesPatch = Partial<Omit<Preferences, "id">>;
 
 export const LEGACY_PREFERENCE_KEYS = {
   theme: "jx-theme",

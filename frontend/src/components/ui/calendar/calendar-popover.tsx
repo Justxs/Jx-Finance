@@ -8,7 +8,7 @@ import { useToday } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
-export interface CalendarPopoverApi {
+interface CalendarPopoverApi {
   month: Date;
   setMonth: (month: Date) => void;
   locale: Locale;

@@ -13,7 +13,7 @@ import { useReportingCurrency } from "@/hooks/use-formatters";
 import { optionalQuantity, optionalText, requiredText } from "@/lib/validation";
 import { securityTypes } from "../investment-types";
 
-export interface SecurityFormValues {
+interface SecurityFormValues {
   symbol: string;
   name: string;
   type: SecurityType;
