@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select/select";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { namedOptions } from "@/lib/options";
 import { cn } from "@/lib/utils";
 import { setActiveHousehold, useActiveHouseholdId } from "@/stores/active-household-store";
 
@@ -28,10 +29,7 @@ export function HouseholdSwitcher({ collapsed = false, className }: Readonly<Pro
   const value = active?.id ?? EVERYTHING;
   const label = active?.name ?? t("households.scope.everything");
   const scopeLabel = `${t("households.scope.label")}: ${label}`;
-  const options = [
-    { value: EVERYTHING, label: t("households.scope.everything") },
-    ...households.map((household) => ({ value: household.id, label: household.name })),
-  ];
+  const options = namedOptions(households, t("households.scope.everything"), EVERYTHING);
 
   function choose(next: string | null) {
     const chosen = options.find((option) => option.value === next);

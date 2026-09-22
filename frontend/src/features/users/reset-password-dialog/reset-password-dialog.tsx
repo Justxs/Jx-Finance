@@ -14,6 +14,7 @@ import { EditModal } from "@/components/modal";
 import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
 import { silent } from "@/lib/mutations";
 import { password, requiredValue } from "@/lib/validation";
+import { userName } from "../user-queries";
 
 interface FormProps {
   user: UserProfileResponse;
@@ -24,10 +25,6 @@ interface FormProps {
 interface Props {
   user: UserProfileResponse | null;
   onClose: () => void;
-}
-
-function userName(user: UserProfileResponse) {
-  return user.displayName || user.email;
 }
 
 function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {

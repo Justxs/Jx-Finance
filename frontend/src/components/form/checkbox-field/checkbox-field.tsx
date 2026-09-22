@@ -1,7 +1,7 @@
 import type { FieldWithValue } from "@tanstack/react-form";
 import type { ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
-import { FieldError } from "@/components/ui/field-error";
+import { FieldError, Hint } from "@/components/ui/field-error";
 import { cn } from "@/lib/utils";
 import { fieldAria } from "../field-shell/field-shell";
 
@@ -48,9 +48,11 @@ export function CheckboxField({
         {label}
       </label>
       {hint ? (
-        <p id={`${id}-hint`} className="mt-0.5 pl-7 text-xs text-muted-foreground">
-          {hint}
-        </p>
+        <div className="pl-7">
+          <Hint id={`${id}-hint`} className="mt-0.5">
+            {hint}
+          </Hint>
+        </div>
       ) : null}
       <FieldError id={`${id}-error`} message={error} />
     </div>

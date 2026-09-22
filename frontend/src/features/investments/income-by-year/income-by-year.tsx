@@ -67,14 +67,10 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
                       {money.format(Number(row.interest), currency)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{charge(row.fees)}</TableCell>
-                    <TableCell
-                      className={cn(
-                        "text-right font-semibold tabular-nums",
-                        Number(row.realizedGain) > 0 && "text-income",
-                        Number(row.realizedGain) < 0 && "text-expense",
-                      )}
-                    >
-                      {money.formatSigned(Number(row.realizedGain), "auto", currency)}
+                    <TableCell className="text-right font-semibold tabular-nums">
+                      <span className={gainTone(Number(row.realizedGain))}>
+                        {money.formatSigned(Number(row.realizedGain), "auto", currency)}
+                      </span>
                     </TableCell>
                   </TableRow>
                 ))}

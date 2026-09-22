@@ -17,6 +17,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Panel } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { nameById } from "@/lib/options";
 import { CreateGoalForm } from "../create-goal-form/create-goal-form";
 import { GoalRow } from "../goal-row/goal-row";
 
@@ -32,6 +33,7 @@ export function GoalsPage() {
   });
 
   const accountList = accounts.data ?? [];
+  const accountNames = nameById(accountList);
   const goalList = useDeferredValue(goals.data) ?? [];
   const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name, "goal");
 
@@ -46,6 +48,7 @@ export function GoalsPage() {
             key={goal.id}
             goal={goal}
             accounts={accountList}
+            accountNames={accountNames}
             onDelete={() => remove.request(goal.id)}
             deletePending={remove.pendingId === goal.id}
             deleteDisabled={remove.busy}

@@ -42,6 +42,10 @@ function cumulativeByDay(points: readonly ReportTrendPoint[], lastDay: number) {
   return totals;
 }
 
+function lastDayOf(isoDate: string | null | undefined) {
+  return parseIso(isoDate ?? "")?.getDate() ?? 0;
+}
+
 export function SpendingPaceChart() {
   const { t } = useTranslation();
   const axisMoney = useAxisMoney();
@@ -50,8 +54,8 @@ export function SpendingPaceChart() {
   const current = useReportSummarySuspense(ranges.current);
   const previous = useReportSummarySuspense(ranges.previous);
 
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const daysInPrevious = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+  const daysInMonth = lastDayOf(ranges.current.dateTo);
+  const daysInPrevious = lastDayOf(ranges.previous.dateTo);
   const currentTotals = cumulativeByDay(current.data.trend, today.getDate());
   const previousTotals = cumulativeByDay(previous.data.trend, daysInPrevious);
 

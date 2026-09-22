@@ -9,7 +9,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
 import { useIsoDate } from "@/hooks/use-formatters";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import {
   TransactionAmount,
   isOptimistic,
@@ -60,13 +60,11 @@ export function TransactionsList({
         const name = transactionName(row, categoryById, t);
         const optimistic = isOptimistic(row);
         const categoryLabel = transactionCategoryLabel(row, categoryById, t);
-        const meta = [
+        const meta = metaLine(
           formatDate(row.date),
           row.description ? categoryLabel : null,
           accountNames.get(row.accountId),
-        ]
-          .filter(Boolean)
-          .join(" · ");
+        );
 
         return (
           <RowTransition key={row.id}>

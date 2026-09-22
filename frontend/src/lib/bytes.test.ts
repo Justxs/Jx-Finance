@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { splitBytes } from "./format-bytes";
+import { splitBytes } from "./bytes";
 
 test("picks the largest unit that keeps the number at one or above", () => {
   expect(splitBytes(0)).toEqual({ value: 0, unit: "b" });

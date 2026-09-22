@@ -41,6 +41,10 @@ export function todayInZone(timeZone: string | null | undefined) {
   }).format(new Date());
 }
 
+export function previousMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() - 1, 1);
+}
+
 export function monthBounds(date: Date) {
   return {
     dateFrom: toIso(new Date(date.getFullYear(), date.getMonth(), 1)),

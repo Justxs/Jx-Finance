@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useTranslation } from "react-i18next";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { cn } from "@/lib/utils";
 
 function Table({ className, ...props }: React.ComponentProps<"table">) {
@@ -80,12 +80,10 @@ interface TableEmptyRowProps {
 }
 
 function TableEmptyRow({ colSpan, filtered = false, children }: Readonly<TableEmptyRowProps>) {
-  const { t } = useTranslation();
-
   return (
     <TableRow className="hover:bg-transparent">
-      <TableCell colSpan={colSpan} className="py-6 whitespace-normal text-muted-foreground">
-        {filtered ? t("filters.noMatches") : children}
+      <TableCell colSpan={colSpan} className="py-0 whitespace-normal">
+        <EmptyText filtered={filtered}>{children}</EmptyText>
       </TableCell>
     </TableRow>
   );

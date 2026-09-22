@@ -1,6 +1,6 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
-import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { namedOptions } from "@/lib/options";
 import {
@@ -13,12 +13,11 @@ import {
 interface Args {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
-  tags?: TagResponse[];
 }
 
 export type TransactionTypeFilter = "" | "income" | "expense";
 
-export function useTransactionFilters({ accounts, categories, tags = [] }: Args) {
+export function useTransactionFilters({ accounts, categories }: Args) {
   const { t } = useTranslation();
   const search = useSearch({ from: "/transactions" });
   const navigate = useNavigate({ from: "/transactions" });
@@ -77,7 +76,6 @@ export function useTransactionFilters({ accounts, categories, tags = [] }: Args)
     typeOptions,
     categoryOptions: namedOptions(categories, t("transactions.allCategories")),
     accountOptions: namedOptions(accounts, t("transactions.allAccounts")),
-    tags,
     selectedTagIds,
     setTagIds,
     dateRange: { from: search.dateFrom ?? "", to: search.dateTo ?? "" },

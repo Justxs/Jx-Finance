@@ -95,11 +95,29 @@ export function quantity(t: Translate, messageKey: TranslationKey) {
   return z.string().refine(isQuantity, t(messageKey));
 }
 
+export function optionalQuantity(t: Translate, messageKey: TranslationKey) {
+  return z.string().refine((value) => value.trim() === "" || isQuantity(value), t(messageKey));
+}
+
+function isWholeNumberBetween(value: string, min: number, max: number): boolean {
+  const trimmed = value.trim();
+  return /^\d+$/.test(trimmed) && Number(trimmed) >= min && Number(trimmed) <= max;
+}
+
 export function wholeNumberBetween(t: Translate, min: number, max: number) {
   return z
     .string()
     .refine(
-      (value) => /^\d+$/.test(value.trim()) && Number(value) >= min && Number(value) <= max,
+      (value) => isWholeNumberBetween(value, min, max),
+      t("validation.wholeNumberBetween", { min, max }),
+    );
+}
+
+export function optionalWholeNumberBetween(t: Translate, min: number, max: number) {
+  return z
+    .string()
+    .refine(
+      (value) => value.trim() === "" || isWholeNumberBetween(value, min, max),
       t("validation.wholeNumberBetween", { min, max }),
     );
 }

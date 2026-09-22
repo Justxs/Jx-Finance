@@ -14,7 +14,9 @@ import { Section } from "@/components/ui/section/section";
 import { Tag } from "@/components/ui/tag/tag";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
+import { pendingId } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
+import { metaLine } from "@/lib/utils";
 
 interface ListProps {
   accounts: readonly ArchivedAccountResponse[];
@@ -36,16 +38,14 @@ export function ArchivedAccountsList({
   return (
     <Rows aria-label={t("accounts.archivedList.label")}>
       {accounts.map((account) => {
-        const details = [
+        const details = metaLine(
           t(`accounts.types.${account.type}`),
           money.format(Number(account.startingBalance), account.currency),
           account.iban,
           t("accounts.archivedList.archivedOn", {
             date: date.format(new Date(account.archivedAt)),
           }),
-        ]
-          .filter(Boolean)
-          .join(" · ");
+        );
 
         return (
           <RowTransition key={account.id}>
@@ -104,7 +104,7 @@ export function ArchivedAccounts() {
   const restoreMutation = useRestoreAccount({
     mutation: { onSuccess: () => toast.success(t("accounts.restored")) },
   });
-  const restoringId = restoreMutation.isPending ? (restoreMutation.variables?.id ?? null) : null;
+  const restoringId = pendingId(restoreMutation);
   const accounts = archived.data;
 
   if (accounts.length === 0) {

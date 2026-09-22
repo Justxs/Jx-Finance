@@ -13,6 +13,7 @@ import { CreateGoalForm } from "../create-goal-form/create-goal-form";
 interface Props {
   goal: GoalResponse;
   accounts: AccountResponse[];
+  accountNames: ReadonlyMap<string, string>;
   onDelete: () => void;
   deletePending: boolean;
   deleteDisabled: boolean;
@@ -21,6 +22,7 @@ interface Props {
 export function GoalRow({
   goal,
   accounts,
+  accountNames,
   onDelete,
   deletePending,
   deleteDisabled,
@@ -35,8 +37,8 @@ export function GoalRow({
   const current = goal.progressAmount === null ? null : Number(goal.progressAmount);
   const reached = current !== null && target > 0 && current >= target;
 
-  const account = accounts.find((candidate) => candidate.id === goal.fundingAccountId);
-  const accountName = account?.name ?? t("goals.unavailableAccount");
+  const accountName =
+    accountNames.get(goal.fundingAccountId ?? "") ?? t("goals.unavailableAccount");
   let source: string | null = null;
   if (goal.funding === "account") {
     source =

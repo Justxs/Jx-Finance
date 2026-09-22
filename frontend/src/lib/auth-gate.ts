@@ -17,6 +17,15 @@ export function setAuthenticated(value: boolean) {
   authenticatedCache = value;
 }
 
+export function endSession(
+  queryClient: QueryClient,
+  navigate: (options: { to: "/login" }) => unknown,
+) {
+  setAuthenticated(false);
+  queryClient.clear();
+  void navigate({ to: "/login" });
+}
+
 export async function checkSetupNeeded(): Promise<boolean> {
   if (setupNeededCache !== null) {
     return setupNeededCache;

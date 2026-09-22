@@ -36,14 +36,18 @@ export function TransactionsTotalsLine({
         ·
       </span>
       <span className="whitespace-nowrap">
-        <span className="font-semibold text-income">+{money.format(Number(totalIncome))}</span>{" "}
+        <span className="font-semibold text-income">
+          {money.formatSigned(Number(totalIncome), "+")}
+        </span>{" "}
         {t("transactions.totalIncome")}
       </span>
       <span aria-hidden="true" className="hidden sm:inline">
         ·
       </span>
       <span className="whitespace-nowrap">
-        <span className="font-semibold text-foreground">−{money.format(Number(totalExpense))}</span>{" "}
+        <span className="font-semibold text-foreground">
+          {money.formatSigned(Number(totalExpense), "−")}
+        </span>{" "}
         {t("transactions.totalExpense")}
       </span>
     </p>

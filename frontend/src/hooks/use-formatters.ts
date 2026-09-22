@@ -1,18 +1,14 @@
 import { enUS, lt } from "react-day-picker/locale";
 import { useTranslation } from "react-i18next";
 import { useCurrencies } from "@/api/generated";
-import { Currency } from "@/api/generated/model";
+import type { Currency } from "@/api/generated/model";
 import { useSettings } from "@/hooks/use-settings";
+import { splitBytes } from "@/lib/bytes";
 import { parseIso, safeTimeZone } from "@/lib/calendar";
-import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { ALL_CURRENCIES, DEFAULT_CURRENCY } from "@/lib/currency";
+import { silentQuery } from "@/lib/mutations";
 
-const currenciesQuery = {
-  staleTime: 5 * 60 * 1000,
-  retry: false,
-  throwOnError: false,
-  meta: { silent: true },
-} as const;
-const allCurrencies = Object.values(Currency);
+const currenciesQuery = { staleTime: 5 * 60 * 1000, ...silentQuery } as const;
 
 export function useReportingCurrency(): Currency {
   const currencies = useCurrencies({ query: currenciesQuery });
@@ -23,7 +19,7 @@ export function useReportingCurrency(): Currency {
 export function useUsableCurrencies(): readonly Currency[] {
   const currencies = useCurrencies({ query: currenciesQuery });
 
-  return currencies.data?.currencies ?? allCurrencies;
+  return currencies.data?.currencies ?? ALL_CURRENCIES;
 }
 
 const currencyFormatters = new Map<string, Intl.NumberFormat>();
@@ -237,4 +233,14 @@ export function useNumberFormat(maximumFractionDigits?: number) {
   const { i18n } = useTranslation();
 
   return new Intl.NumberFormat(i18n.language, { maximumFractionDigits });
+}
+
+export function useBytes() {
+  const { t } = useTranslation();
+  const number = useNumberFormat(1);
+
+  return function formatBytes(bytes: number) {
+    const { value, unit } = splitBytes(bytes);
+    return t(`backup.bytes.${unit}`, { value: number.format(value) });
+  };
 }

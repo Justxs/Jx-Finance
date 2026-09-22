@@ -4,15 +4,16 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useBackupsSuspense, useDeleteBackup, useRestoreBackup } from "@/api/generated";
-import type { BackupResponse } from "@/api/generated/model";
+import type { BackupResponse, RestoreBackupResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { EditModal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
-import { setAuthenticated } from "@/lib/auth-gate";
+import { endSession } from "@/lib/auth-gate";
+import { pendingId, silent } from "@/lib/mutations";
 import { BackupNoteForm } from "./backup-note-form";
 import { BackupUploadForm } from "./backup-upload-form";
 import { BackupsTable } from "./backups-table";
@@ -41,24 +42,16 @@ function BackupList() {
     formatDateTime(backup.createdAt),
   );
 
-  const restoreMutation = useRestoreBackup({
-    mutation: {
-      meta: { silent: true },
-      onSuccess: (restored) => {
+  const restoreMutation = useRestoreBackup(
+    silent({
+      onSuccess: (restored: RestoreBackupResponse) => {
         toast.success(t("backup.restored", { date: formatDateTime(restored.createdAt) }));
-        setAuthenticated(false);
-        queryClient.clear();
-        void navigate({ to: "/login" });
+        endSession(queryClient, navigate);
       },
-    },
-  });
+    }),
+  );
 
-  let busyId: string | null = null;
-  if (restoreMutation.isPending) {
-    busyId = restoreMutation.variables.id;
-  } else if (deleteMutation.isPending) {
-    busyId = deleteMutation.variables.id;
-  }
+  const busyId = pendingId(restoreMutation) ?? pendingId(deleteMutation);
 
   return (
     <>
@@ -79,24 +72,23 @@ function BackupList() {
         onDelete={(backup) => remove.request(backup.id)}
       />
 
-      <Modal
-        open={editing !== null}
-        onClose={() => setEditing(null)}
+      <EditModal
+        item={editing}
         title={t("backup.editNote")}
-        description={editing ? formatDateTime(editing.createdAt) : undefined}
+        description={(backup) => formatDateTime(backup.createdAt)}
+        onClose={() => setEditing(null)}
       >
-        {editing ? (
+        {(backup) => (
           <BackupNoteForm
-            key={editing.id}
-            backup={editing}
+            backup={backup}
             onSaved={() => {
               toast.success(t("backup.noteSaved"));
               setEditing(null);
             }}
             onCancel={() => setEditing(null)}
           />
-        ) : null}
-      </Modal>
+        )}
+      </EditModal>
 
       <RestoreBackupDialog
         backupId={restoring?.id ?? null}

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, within } from "storybook/test";
 import { getUpdateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { Rows } from "@/components/ui/rows/rows";
+import { nameById } from "@/lib/options";
 import {
   accountFundedGoal,
   accounts,
@@ -21,6 +22,7 @@ const meta = {
   args: {
     goal: goalWithTargetDate,
     accounts,
+    accountNames: nameById(accounts),
     onDelete: fn(),
     deletePending: false,
     deleteDisabled: false,

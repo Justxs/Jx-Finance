@@ -73,10 +73,7 @@ export function ImportSummaryBar({
 
       <div className="flex flex-wrap items-end gap-2">
         <div className="w-full max-w-64 min-w-0 space-y-1.5">
-          <label
-            className="text-xs font-medium text-muted-foreground"
-            htmlFor="import-bulk-category"
-          >
+          <label className="text-xs text-muted-foreground" htmlFor="import-bulk-category">
             {t("imports.bulkCategory")}
           </label>
           <SelectField

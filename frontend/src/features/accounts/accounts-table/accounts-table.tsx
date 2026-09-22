@@ -27,7 +27,7 @@ import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { nameById } from "@/lib/options";
 import { EXPENSE_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { accountTypes } from "../account-types";
 
 interface Props {
@@ -39,11 +39,8 @@ interface Props {
   onConvert?: (id: string) => void;
 }
 
-function balanceClass(account: AccountResponse) {
-  return cn(
-    "text-right font-semibold tabular-nums",
-    Number(account.currentBalance) < 0 && EXPENSE_TONE,
-  );
+function balanceTone(account: AccountResponse) {
+  return Number(account.currentBalance) < 0 ? EXPENSE_TONE : undefined;
 }
 
 export function AccountsTable({
@@ -172,13 +169,8 @@ export function AccountsTable({
         <TableCell className="hidden text-right text-muted-foreground tabular-nums xl:table-cell">
           {money.format(Number(account.startingBalance), account.currency)}
         </TableCell>
-        <TableCell
-          className={cn(
-            "text-right font-semibold tabular-nums",
-            Number(account.currentBalance) < 0 && "text-expense",
-          )}
-        >
-          {balanceLines(account)}
+        <TableCell className="text-right font-semibold tabular-nums">
+          <span className={balanceTone(account)}>{balanceLines(account)}</span>
         </TableCell>
         <TableCell>{actions(account)}</TableCell>
       </TableRow>
@@ -193,7 +185,7 @@ export function AccountsTable({
         ) : (
           <Rows aria-label={t("accounts.title")}>
             {accounts.map((account) => {
-              const secondary = [
+              const secondary = metaLine(
                 t(`accounts.types.${account.type}`),
                 account.scope === "shared"
                   ? t("sharing.sharedWith", {
@@ -201,15 +193,18 @@ export function AccountsTable({
                     })
                   : null,
                 account.iban,
-              ]
-                .filter(Boolean)
-                .join(" · ");
+              );
 
               return (
                 <li key={account.id} className="py-2.5 text-sm">
                   <div className="flex items-start gap-3">
                     <p className="min-w-0 flex-1 font-medium wrap-break-word">{account.name}</p>
-                    <div className={cn("shrink-0", balanceClass(account))}>
+                    <div
+                      className={cn(
+                        "shrink-0 text-right font-semibold tabular-nums",
+                        balanceTone(account),
+                      )}
+                    >
                       {balanceLines(account)}
                     </div>
                   </div>

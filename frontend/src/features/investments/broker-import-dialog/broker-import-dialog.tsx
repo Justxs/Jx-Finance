@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
-import { Hint } from "@/components/ui/field-error";
-import { Label } from "@/components/ui/label/label";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs/tabs";
 import { namedOptions } from "@/lib/options";
@@ -54,8 +53,11 @@ function BrokerImportContent({
 
   return (
     <>
-      <div className="space-y-1.5">
-        <Label htmlFor="broker-import-account">{t("investments.import.account")}</Label>
+      <FieldShell
+        id="broker-import-account"
+        label={t("investments.import.account")}
+        hint={t("investments.import.accountHint")}
+      >
         <SelectField
           id="broker-import-account"
           value={selectedAccountId}
@@ -64,8 +66,7 @@ function BrokerImportContent({
           onChange={setSelectedAccountId}
           options={namedOptions(accounts)}
         />
-        <Hint id="broker-import-account-hint">{t("investments.import.accountHint")}</Hint>
-      </div>
+      </FieldShell>
 
       <Tabs
         value={tab}

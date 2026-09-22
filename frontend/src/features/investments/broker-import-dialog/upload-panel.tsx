@@ -1,14 +1,12 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
-import { FieldError, Hint } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
-import { Label } from "@/components/ui/label/label";
 import { namedOptions } from "@/lib/options";
-import { BrokerImportFailure } from "./import-failure";
 import { BrokerImportResult } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
@@ -35,6 +33,12 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
   const failure = ownsImport ? importMutation.error : null;
 
   const funding = fundingAccountId === accountId ? "" : fundingAccountId;
+  const fileDescribedBy = [
+    `${BROKER_UPLOAD_FILE_INPUT_ID}-hint`,
+    fileError ? `${BROKER_UPLOAD_FILE_INPUT_ID}-error` : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   function handleImport() {
     const file = fileInputRef.current?.files?.[0];
@@ -85,8 +89,12 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         />
       </FieldShell>
 
-      <div className="space-y-1.5">
-        <Label htmlFor={BROKER_UPLOAD_FILE_INPUT_ID}>{t("investments.import.file")}</Label>
+      <FieldShell
+        id={BROKER_UPLOAD_FILE_INPUT_ID}
+        label={t("investments.import.file")}
+        hint={t("investments.import.fileHint")}
+        error={fileError}
+      >
         <FileInput
           key={uploadKey}
           id={BROKER_UPLOAD_FILE_INPUT_ID}
@@ -96,15 +104,9 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
           onChange={() => setFileError(undefined)}
           placeholder={t("investments.import.chooseFile")}
           aria-invalid={fileError ? true : undefined}
-          aria-describedby={
-            fileError
-              ? `${BROKER_UPLOAD_FILE_INPUT_ID}-hint ${BROKER_UPLOAD_FILE_INPUT_ID}-error`
-              : `${BROKER_UPLOAD_FILE_INPUT_ID}-hint`
-          }
+          aria-describedby={fileDescribedBy}
         />
-        <Hint id={`${BROKER_UPLOAD_FILE_INPUT_ID}-hint`}>{t("investments.import.fileHint")}</Hint>
-        <FieldError id={`${BROKER_UPLOAD_FILE_INPUT_ID}-error`} message={fileError} />
-      </div>
+      </FieldShell>
 
       <div role="status" aria-live="polite">
         {importMutation.isPending ? (
@@ -112,7 +114,7 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         ) : null}
         {!importMutation.isPending && result ? <BrokerImportResult result={result} /> : null}
       </div>
-      <BrokerImportFailure error={failure} />
+      <FormError error={failure} />
 
       <div className="flex justify-end">
         <Button

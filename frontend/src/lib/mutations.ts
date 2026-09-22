@@ -4,9 +4,16 @@ interface MutationState<TVariables, TError> {
   error: TError | null;
 }
 
+interface PendingState {
+  isPending: boolean;
+  variables?: { id: string };
+}
+
 interface SilentMeta {
   meta: { silent: true };
 }
+
+export const silentQuery = { retry: false, throwOnError: false, meta: { silent: true } } as const;
 
 export function silent(): { mutation: SilentMeta };
 export function silent<TOptions extends object>(
@@ -15,6 +22,10 @@ export function silent<TOptions extends object>(
 export function silent(options?: object) {
   const meta: SilentMeta["meta"] = { silent: true };
   return { mutation: { ...options, meta } };
+}
+
+export function pendingId(mutation: PendingState): string | null {
+  return mutation.isPending ? (mutation.variables?.id ?? null) : null;
 }
 
 export function upsert<TCreate, TUpdate, TError>(

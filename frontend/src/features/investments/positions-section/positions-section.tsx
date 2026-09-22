@@ -12,7 +12,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
-import { silent } from "@/lib/mutations";
+import { silent, silentQuery } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
 import { PriceHistory } from "../price-history/price-history";
 import { PositionsTable } from "./positions-table";
@@ -45,9 +45,7 @@ export function PositionsSection({ holdings, reportingCurrency, accounts }: Read
   const { t } = useTranslation();
   const [priceTarget, setPriceTarget] = useState<SecurityResponse | null>(null);
   const [priceOpen, setPriceOpen] = useState(false);
-  const securities = useSecurities(undefined, {
-    query: { throwOnError: false, meta: { silent: true } },
-  });
+  const securities = useSecurities(undefined, { query: silentQuery });
   const priceSecurity =
     securities.data?.find((security) => security.id === priceTarget?.id) ?? priceTarget;
 

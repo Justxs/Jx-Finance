@@ -1,4 +1,4 @@
-import type { StandardSchemaV1 } from "@tanstack/react-form";
+import type { AnyFormApi, StandardSchemaV1 } from "@tanstack/react-form";
 import { type FieldAliases, submitToServer } from "@/lib/form-server-errors";
 import { useAppForm } from "./app-form";
 
@@ -6,7 +6,7 @@ interface Options<TFormData> {
   defaultValues: TFormData;
   schema: StandardSchemaV1<TFormData, unknown>;
   aliases?: FieldAliases;
-  submit: (value: TFormData) => Promise<unknown> | void;
+  submit: (value: TFormData, formApi: AnyFormApi) => Promise<unknown> | void;
 }
 
 export function useServerForm<TFormData>({
@@ -18,6 +18,7 @@ export function useServerForm<TFormData>({
   return useAppForm({
     defaultValues,
     validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => submitToServer(submission, () => submit(submission.value), aliases),
+    onSubmit: (submission) =>
+      submitToServer(submission, () => submit(submission.value, submission.formApi), aliases),
   });
 }

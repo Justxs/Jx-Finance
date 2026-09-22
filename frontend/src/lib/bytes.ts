@@ -1,4 +1,4 @@
-export type ByteUnit = "b" | "kb" | "mb" | "gb";
+type ByteUnit = "b" | "kb" | "mb" | "gb";
 
 const units: readonly ByteUnit[] = ["b", "kb", "mb", "gb"];
 

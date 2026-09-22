@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { HouseholdResponse, Scope } from "@/api/generated/model";
 import { defineAppFieldGroup } from "@/components/form";
+import { namedOptions } from "@/lib/options";
 
 const sharingFieldGroup = defineAppFieldGroup(({ strict }) => ({
   scope: strict<Scope>(),
@@ -35,13 +36,7 @@ function SharingFieldsGroup({ fields, idPrefix, households }: Readonly<Props>) {
                 <field.SelectFieldControl
                   id={`${idPrefix}-household`}
                   label={t("sharing.household")}
-                  options={[
-                    { value: "", label: t("sharing.selectHousehold") },
-                    ...households.map((household) => ({
-                      value: household.id,
-                      label: household.name,
-                    })),
-                  ]}
+                  options={namedOptions(households, t("sharing.selectHousehold"))}
                 />
               )}
             </fields.Field>

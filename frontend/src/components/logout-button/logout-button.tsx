@@ -4,7 +4,7 @@ import { LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useLogout } from "@/api/generated";
 import { Button } from "@/components/ui/button/button";
-import { setAuthenticated } from "@/lib/auth-gate";
+import { endSession } from "@/lib/auth-gate";
 
 export function LogoutButton() {
   const { t } = useTranslation();
@@ -13,11 +13,7 @@ export function LogoutButton() {
 
   const logoutMutation = useLogout({
     mutation: {
-      onSuccess: () => {
-        setAuthenticated(false);
-        queryClient.clear();
-        void navigate({ to: "/login" });
-      },
+      onSuccess: () => endSession(queryClient, navigate),
     },
   });
 

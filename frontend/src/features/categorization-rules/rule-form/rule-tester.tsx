@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useTestCategorizationRule } from "@/api/generated";
 import type { DescriptionMatch } from "@/api/generated/model";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
-import { Label } from "@/components/ui/label/label";
 import { silent } from "@/lib/mutations";
 import { normalizeMoney } from "@/lib/validation";
 
@@ -65,25 +65,27 @@ export function RuleTester({
       <legend className="float-left -mt-1 mb-2 w-full text-sm font-semibold">
         {t("categorizationRules.tester")}
       </legend>
-      <div className="space-y-1.5">
-        <Label htmlFor="rule-sample">{t("categorizationRules.sample")}</Label>
+      <FieldShell id="rule-sample" label={t("categorizationRules.sample")}>
         <Input
           id="rule-sample"
           value={sample}
           placeholder={t("categorizationRules.samplePlaceholder")}
           onChange={(event) => onSampleChange(event.target.value)}
         />
-      </div>
+      </FieldShell>
       <div className="flex flex-wrap items-end gap-2">
-        <div className="min-w-32 flex-1 space-y-1.5">
-          <Label htmlFor="rule-sample-amount">{t("categorizationRules.sampleAmount")}</Label>
+        <FieldShell
+          id="rule-sample-amount"
+          label={t("categorizationRules.sampleAmount")}
+          className="min-w-32 flex-1"
+        >
           <Input
             id="rule-sample-amount"
             inputMode="decimal"
             value={sampleAmount}
             onChange={(event) => onSampleAmountChange(event.target.value)}
           />
-        </div>
+        </FieldShell>
         <Button
           type="button"
           variant="outline"

@@ -3,12 +3,12 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useMe, useSendVerificationEmail } from "@/api/generated";
 import { Button } from "@/components/ui/button/button";
-import { usePublicSettings } from "@/hooks/use-settings";
+import { useEmailEnabled } from "@/hooks/use-settings";
 import { silent } from "@/lib/mutations";
 
 export function EmailVerificationBanner() {
   const { t } = useTranslation();
-  const emailEnabled = usePublicSettings()?.emailEnabled ?? false;
+  const emailEnabled = useEmailEnabled();
   const me = useMe({ query: { throwOnError: false, meta: { silent: true } } });
 
   const resendMutation = useSendVerificationEmail(

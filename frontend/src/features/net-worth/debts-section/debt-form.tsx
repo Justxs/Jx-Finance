@@ -17,6 +17,7 @@ import {
   money,
   normalizeMoney,
   optionalPositiveMoney,
+  optionalWholeNumberBetween,
   requiredText,
 } from "@/lib/validation";
 import type { HoldingFormProps } from "../holdings-section";
@@ -75,16 +76,6 @@ export function debtRequest(values: DebtFormValues) {
   };
 }
 
-function isTerm(value: string) {
-  const trimmed = value.trim();
-  return (
-    trimmed === "" ||
-    (/^\d+$/.test(trimmed) &&
-      Number(trimmed) >= TERM_MIN &&
-      Number(trimmed) <= createDebtBodyTermMonthsMax)
-  );
-}
-
 export function DebtForm({
   editing,
   onCreated,
@@ -107,13 +98,7 @@ export function DebtForm({
       asOf: z.string(),
       loanAmount: optionalPositiveMoney(t),
       firstPaymentDate: z.string(),
-      termMonths: z.string().refine(
-        isTerm,
-        t("validation.wholeNumberBetween", {
-          min: TERM_MIN,
-          max: createDebtBodyTermMonthsMax,
-        }),
-      ),
+      termMonths: optionalWholeNumberBetween(t, TERM_MIN, createDebtBodyTermMonthsMax),
       monthlyPayment: optionalPositiveMoney(t),
       amortizationType: z.string(),
     })

@@ -25,7 +25,6 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
 import { Panel } from "@/components/ui/section/section";
-import { tagMapOf } from "@/features/tags/tag-chips/tag-chips";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
@@ -34,7 +33,7 @@ import { useSettingsSuspense } from "@/hooks/use-settings";
 import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval, optimisticUpdate } from "@/lib/optimistic";
-import { nameById } from "@/lib/options";
+import { byId, nameById } from "@/lib/options";
 import { normalizeMoney } from "@/lib/validation";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
 import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
@@ -213,9 +212,9 @@ export function TransactionsPage() {
   const accountList = accounts.data;
   const categoryList = categories.data;
   const accountNames = nameById(accountList);
-  const categoryById = new Map(categoryList.map((c) => [c.id, c]));
+  const categoryById = byId(categoryList);
   const tagList = tags.data;
-  const tagById = tagMapOf(tagList);
+  const tagById = byId(tagList);
 
   const items = transactions.data.items;
   const selectableIds = items.filter(isSelectableTransaction).map((item) => item.id);

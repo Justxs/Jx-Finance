@@ -1,5 +1,5 @@
 import type { InvestmentTransactionType } from "@/api/generated/model";
-import { isNonNegativeMoney, isQuantity, normalizeMoney } from "../../lib/validation.ts";
+import { isNonNegativeMoney, isQuantity, normalizeMoney } from "@/lib/validation";
 
 export interface CashEffectInput {
   type: InvestmentTransactionType;

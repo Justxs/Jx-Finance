@@ -9,7 +9,7 @@ import { RoutePending } from "@/components/route-pending/route-pending";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { type FeatureKey, publicSettingsQueryOptions } from "@/hooks/use-settings";
-import { setAuthenticated } from "@/lib/auth-gate";
+import { endSession } from "@/lib/auth-gate";
 import { i18n } from "@/lib/i18n";
 import { pageViewTransition } from "@/lib/page-transition";
 import { queryClient } from "@/lib/query-client";
@@ -38,9 +38,7 @@ declare module "@tanstack/react-router" {
 }
 
 function handleSessionExpired() {
-  setAuthenticated(false);
-  queryClient.clear();
-  void router.navigate({ to: "/login" });
+  endSession(queryClient, router.navigate);
 }
 
 window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);

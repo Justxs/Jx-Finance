@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
-import { TagChips, tagMapOf } from "@/features/tags/tag-chips/tag-chips";
+import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
+import { byId } from "@/lib/options";
 
 interface Props {
   tags: TagResponse[];
@@ -34,7 +35,7 @@ export function ImportTagPicker({ tags, value, label, disabled, onChange }: Read
         {value.length === 0 ? (
           t("imports.chooseTags")
         ) : (
-          <TagChips tagIds={value} tagById={tagMapOf(tags)} />
+          <TagChips tagIds={value} tagById={byId(tags)} />
         )}
       </PopoverTrigger>
       <PopoverContent align="start" aria-label={label} className="w-64">

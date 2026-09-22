@@ -7,6 +7,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silent, upsert } from "@/lib/mutations";
 import { positiveMoney, requiredValue } from "@/lib/validation";
+import { budgetPeriodOptions } from "../budget-periods";
 
 interface FormValues {
   categoryId: string;
@@ -90,12 +91,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
               <field.SelectFieldControl
                 id="budget-period"
                 label={t("budgets.period")}
-                options={[
-                  { value: "weekly", label: t("budgets.periods.weekly") },
-                  { value: "monthly", label: t("budgets.periods.monthly") },
-                  { value: "quarterly", label: t("budgets.periods.quarterly") },
-                  { value: "yearly", label: t("budgets.periods.yearly") },
-                ]}
+                options={budgetPeriodOptions(t)}
               />
             )}
           </form.Field>

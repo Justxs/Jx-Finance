@@ -4,7 +4,7 @@ import type {
   ImportPreviewRow,
   TransactionResponse,
 } from "@/api/generated/model";
-import { toCents } from "../../../lib/money.ts";
+import { toCents } from "@/lib/money";
 
 export interface PreviewRowState extends ImportPreviewRow {
   transferAccountId: string;

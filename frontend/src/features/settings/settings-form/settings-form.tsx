@@ -10,11 +10,10 @@ import {
   type UpdateSettingsRequest,
 } from "@/api/generated/model";
 import { updateSettingsBodyInstanceNameMax } from "@/api/schemas/settings/settings.zod";
-import { useAppForm } from "@/components/form";
+import { useServerForm } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import { submitToServer } from "@/lib/form-server-errors";
 import { namedOptions } from "@/lib/options";
 import { optionalText, requiredValue } from "@/lib/validation";
 import type { SettingsSection } from "../settings-nav/settings-nav";
@@ -92,30 +91,25 @@ export function SettingsForm({
     defaultPageSize: String(settings.defaultPageSize),
   };
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues,
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) => {
-      const { value, formApi } = submission;
-
-      return submitToServer(submission, () =>
-        onSubmit(
-          {
-            instanceName: value.instanceName.trim() || null,
-            features: value.features,
-            reportingCurrency: value.reportingCurrency,
-            enabledCurrencies: value.enabledCurrencies,
-            exchangeRateSyncEnabled: value.exchangeRateSyncEnabled,
-            defaultLanguage: value.defaultLanguage,
-            timeZone: value.timeZone,
-            firstDayOfWeek: value.firstDayOfWeek,
-            defaultAccountId: value.defaultAccountId || null,
-            defaultPageSize: Number(value.defaultPageSize),
-          },
-          () => formApi.reset(value),
-        ),
-      );
-    },
+    schema,
+    submit: (value, formApi) =>
+      onSubmit(
+        {
+          instanceName: value.instanceName.trim() || null,
+          features: value.features,
+          reportingCurrency: value.reportingCurrency,
+          enabledCurrencies: value.enabledCurrencies,
+          exchangeRateSyncEnabled: value.exchangeRateSyncEnabled,
+          defaultLanguage: value.defaultLanguage,
+          timeZone: value.timeZone,
+          firstDayOfWeek: value.firstDayOfWeek,
+          defaultAccountId: value.defaultAccountId || null,
+          defaultPageSize: Number(value.defaultPageSize),
+        },
+        () => formApi.reset(value),
+      ),
   });
 
   return (

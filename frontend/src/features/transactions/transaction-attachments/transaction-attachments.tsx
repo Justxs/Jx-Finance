@@ -17,9 +17,8 @@ import { Button, buttonVariants } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { useBytes } from "@/features/settings/backup-section/use-bytes";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
-import { useDateTime } from "@/hooks/use-formatters";
+import { useBytes, useDateTime } from "@/hooks/use-formatters";
 import { silent } from "@/lib/mutations";
 import { cn } from "@/lib/utils";
 import {

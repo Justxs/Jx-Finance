@@ -3,12 +3,14 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
 import { useLogin } from "@/api/generated";
+import type { LoginResponse } from "@/api/generated/model";
 import { Brand } from "@/components/brand/brand";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Card } from "@/components/ui/card/card";
-import { usePublicSettings } from "@/hooks/use-settings";
+import { useEmailEnabled } from "@/hooks/use-settings";
 import { setAuthenticated } from "@/lib/auth-gate";
+import { silent } from "@/lib/mutations";
 import { requiredEmail, requiredValue } from "@/lib/validation";
 
 interface FormValues {
@@ -21,7 +23,7 @@ interface FormValues {
 export function LoginPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const emailEnabled = usePublicSettings()?.emailEnabled ?? false;
+  const emailEnabled = useEmailEnabled();
   const [twoFactorRequired, setTwoFactorRequired] = useState(false);
 
   const schema = z.object({
@@ -31,10 +33,9 @@ export function LoginPage() {
     twoFactorCode: twoFactorRequired ? requiredValue(t) : z.string(),
   });
 
-  const loginMutation = useLogin({
-    mutation: {
-      meta: { silent: true },
-      onSuccess: (data) => {
+  const loginMutation = useLogin(
+    silent({
+      onSuccess: (data: LoginResponse) => {
         if (data.twoFactorRequired) {
           setTwoFactorRequired(true);
           return;
@@ -42,8 +43,8 @@ export function LoginPage() {
         setAuthenticated(true);
         void navigate({ to: "/" });
       },
-    },
-  });
+    }),
+  );
 
   const defaultValues: FormValues = {
     email: "",

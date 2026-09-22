@@ -1,8 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { isApiError } from "@/api/client";
 import { restoreBackupBodyPasswordMax } from "@/api/schemas/backups/backups.zod";
-import { useAppForm } from "@/components/form";
+import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import {
   AlertDialog,
@@ -15,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog/alert-dialog";
 import { Button } from "@/components/ui/button/button";
 import { useRetained } from "@/hooks/use-retained";
-import { submitToServer } from "@/lib/form-server-errors";
+import { hasServerErrorCode } from "@/lib/form-server-errors";
 import { requiredValue } from "@/lib/validation";
 
 interface FormProps {
@@ -30,14 +29,6 @@ interface Props extends FormProps {
   onCancel: () => void;
 }
 
-function isWrongPassword(error: unknown) {
-  return (
-    isApiError(error) &&
-    (error.code === "password.incorrect" ||
-      (error.errors ?? []).some((detail) => detail.code === "password.incorrect"))
-  );
-}
-
 function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
   const { t } = useTranslation();
   const confirmWord = t("backup.confirmWord");
@@ -50,20 +41,19 @@ function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
     ),
   });
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: { confirmation: "", password: "" },
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, async () => {
-        try {
-          await onRestore(submission.value.password);
-        } catch (failure) {
-          if (isWrongPassword(failure)) {
-            submission.formApi.setFieldValue("password", "");
-          }
-          throw failure;
+    schema,
+    submit: async (value, formApi) => {
+      try {
+        await onRestore(value.password);
+      } catch (failure) {
+        if (hasServerErrorCode(failure, "password.incorrect")) {
+          formApi.setFieldValue("password", "");
         }
-      }),
+        throw failure;
+      }
+    },
   });
 
   return (

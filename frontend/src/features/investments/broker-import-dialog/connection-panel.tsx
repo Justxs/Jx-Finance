@@ -4,10 +4,10 @@ import { toast } from "sonner";
 import { useBrokerConnectionsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
+import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { useDateTime } from "@/hooks/use-formatters";
 import { ConnectionForm } from "./connection-form";
-import { BrokerImportFailure } from "./import-failure";
 import { BrokerImportResult } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
@@ -116,7 +116,7 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
         ) : null}
         {!syncMutation.isPending && syncResult ? <BrokerImportResult result={syncResult} /> : null}
       </div>
-      <BrokerImportFailure error={syncFailure} />
+      <FormError error={syncFailure} />
 
       <ConfirmDeleteDialog
         target={removeTarget}

@@ -10,7 +10,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
-import { isQuantity, optionalText } from "@/lib/validation";
+import { optionalQuantity, optionalText, requiredText } from "@/lib/validation";
 import { securityTypes } from "../investment-types";
 
 export interface SecurityFormValues {
@@ -50,20 +50,8 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
   const reportingCurrency = useReportingCurrency();
 
   const schema = z.object({
-    symbol: z
-      .string()
-      .refine((value) => value.trim() !== "", t("validation.required"))
-      .max(
-        createSecurityBodySymbolMax,
-        t("validation.maxLength", { max: createSecurityBodySymbolMax }),
-      ),
-    name: z
-      .string()
-      .refine((value) => value.trim() !== "", t("validation.required"))
-      .max(
-        createSecurityBodyNameMax,
-        t("validation.maxLength", { max: createSecurityBodyNameMax }),
-      ),
+    symbol: requiredText(t, createSecurityBodySymbolMax),
+    name: requiredText(t, createSecurityBodyNameMax),
     type: z.enum(SecurityType),
     currency: z.enum(Currency),
     isin: z
@@ -73,12 +61,7 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
         t("investments.validation.isin"),
       ),
     exchange: optionalText(t, createSecurityBodyExchangeMax),
-    lastPrice: z
-      .string()
-      .refine(
-        (value) => value.trim() === "" || isQuantity(value),
-        t("investments.validation.price"),
-      ),
+    lastPrice: optionalQuantity(t, "investments.validation.price"),
     lastPriceDate: z.string(),
   });
 

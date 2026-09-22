@@ -1,7 +1,8 @@
 import type { FocusEventHandler } from "react";
-import { Currency } from "@/api/generated/model";
+import type { Currency } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { useCurrencyName, useUsableCurrencies } from "@/hooks/use-formatters";
+import { ALL_CURRENCIES } from "@/lib/currency";
 
 interface Props {
   id?: string;
@@ -17,14 +18,13 @@ interface Props {
   onBlur?: FocusEventHandler<HTMLButtonElement>;
 }
 
-export const allCurrencies: readonly Currency[] = Object.values(Currency);
 const noPreference: readonly Currency[] = [];
 
 export function orderCurrencies(preferred: readonly Currency[]) {
   const first = [...new Set(preferred)];
-  const rest = allCurrencies
-    .filter((currency) => !first.includes(currency))
-    .toSorted((left, right) => left.localeCompare(right));
+  const rest = ALL_CURRENCIES.filter((currency) => !first.includes(currency)).toSorted(
+    (left, right) => left.localeCompare(right),
+  );
 
   return [...first, ...rest];
 }

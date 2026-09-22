@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button/button";
 import { FieldError, Hint } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { Label } from "@/components/ui/label/label";
 import { SectionTitle } from "@/components/ui/section/section";
 import { namedOptions } from "@/lib/options";
 
@@ -68,9 +69,7 @@ export function ImportUploadForm({
       ) : null}
       <FormGrid className={collapsed ? "hidden" : undefined}>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium" htmlFor="import-account">
-            {t("transactions.account")}
-          </label>
+          <Label htmlFor="import-account">{t("transactions.account")}</Label>
           <SelectField
             id="import-account"
             value={accountId}
@@ -80,9 +79,7 @@ export function ImportUploadForm({
           />
         </div>
         <div className="col-span-full space-y-1.5">
-          <label className="text-sm font-medium" htmlFor={IMPORT_FILE_INPUT_ID}>
-            {t("imports.file")}
-          </label>
+          <Label htmlFor={IMPORT_FILE_INPUT_ID}>{t("imports.file")}</Label>
           <FileInput
             id={IMPORT_FILE_INPUT_ID}
             ref={fileInputRef}

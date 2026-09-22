@@ -4,14 +4,15 @@ import {
   useSaveBrokerConnection,
   useSyncBrokerConnection,
 } from "@/api/generated";
+import { silent } from "@/lib/mutations";
 
 export function useBrokerImportMutations() {
-  const importReport = useImportBrokerReport({ mutation: { meta: { silent: true } } });
+  const importReport = useImportBrokerReport(silent());
   const saveConnection = useSaveBrokerConnection({
     mutation: { gcTime: 0 },
   });
   const deleteConnection = useDeleteBrokerConnection();
-  const syncConnection = useSyncBrokerConnection({ mutation: { meta: { silent: true } } });
+  const syncConnection = useSyncBrokerConnection(silent());
 
   const busy =
     importReport.isPending ||

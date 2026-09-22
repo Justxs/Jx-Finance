@@ -14,7 +14,6 @@ interface Props {
   "aria-label"?: string;
   "aria-describedby"?: string;
   className?: string;
-  searchFrom?: number;
 }
 
 const SEARCH_FROM = 8;
@@ -27,13 +26,12 @@ export function TagPicker({
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   className,
-  searchFrom = SEARCH_FROM,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
 
   const chosen = new Set(value);
-  const showSearch = tags.length >= searchFrom;
+  const showSearch = tags.length >= SEARCH_FROM;
   const needle = query.trim().toLocaleLowerCase("lt");
   const shown = needle
     ? tags.filter((tag) => tag.name.toLocaleLowerCase("lt").includes(needle))
