@@ -192,10 +192,10 @@ public sealed class TransactionService(
     public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(id);
-        var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (transaction is null)
+        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
+        if (!found.TryGetValue(out var transaction))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return found.Error;
         }
 
         var lines = transaction.IsSplit
@@ -270,10 +270,10 @@ public sealed class TransactionService(
         CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(request.Id);
-        var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (transaction is null)
+        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
+        if (!found.TryGetValue(out var transaction))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return found.Error;
         }
 
         var referenceError = await ValidateReferencesAsync(
@@ -439,10 +439,10 @@ public sealed class TransactionService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(id);
-        var transaction = await db.Transactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
-        if (transaction is null)
+        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
+        if (!found.TryGetValue(out var transaction))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            return found.Error;
         }
 
         deletions.Record(TrashKind.Transaction, id, TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount));
@@ -462,7 +462,7 @@ public sealed class TransactionService(
 
         return transactions.Count == ids.Count
             ? transactions
-            : new DomainError(ErrorCodes.ResourceNotFound, "Transaction not found.");
+            : EntityLookup.NotFound("Transaction not found.");
     }
 
     private async Task<Result<(Currency Currency, decimal ReportingAmount)>> ValueAsync(

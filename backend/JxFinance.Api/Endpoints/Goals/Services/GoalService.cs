@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Common.References;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
@@ -57,10 +56,10 @@ public sealed class GoalService(
         CancellationToken cancellationToken)
     {
         var goalId = new GoalId(request.Id);
-        var goal = await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken);
-        if (goal is null)
+        var found = await db.Goals.FindOrNotFoundAsync(g => g.Id == goalId, NotFound, cancellationToken);
+        if (!found.TryGetValue(out var goal))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, NotFound);
+            return found.Error;
         }
 
         mapper.Apply(request, goal);

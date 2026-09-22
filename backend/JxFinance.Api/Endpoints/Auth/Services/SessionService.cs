@@ -165,7 +165,7 @@ public sealed class SessionService(
     {
         var userId = currentUser.Id;
         if (!await db.UserSessions.AnyAsync(s => s.Id == id && s.UserId == userId, cancellationToken))
-            return new DomainError(ErrorCodes.ResourceNotFound, "Session not found.");
+            return EntityLookup.NotFound("Session not found.");
 
         if (id == CurrentSessionId())
             return new DomainError(ErrorCodes.SessionCurrent, "Sign out to end the session of this browser.");

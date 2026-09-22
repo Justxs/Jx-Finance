@@ -65,10 +65,10 @@ public sealed class BudgetService(
         CancellationToken cancellationToken)
     {
         var budgetId = new BudgetId(request.Id);
-        var budget = await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken);
-        if (budget is null)
+        var found = await db.Budgets.FindOrNotFoundAsync(b => b.Id == budgetId, "Budget not found.", cancellationToken);
+        if (!found.TryGetValue(out var budget))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Budget not found.");
+            return found.Error;
         }
 
         var error = await ValidateAsync(request, budgetId, cancellationToken);

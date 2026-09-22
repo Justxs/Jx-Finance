@@ -12,7 +12,6 @@ using JxFinance.Endpoints.Trash.RestoreDeleted;
 using JxFinance.Endpoints.Trash.Shared;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.Trash.Services;
 
@@ -27,7 +26,7 @@ public sealed class TrashService(
     TrashMapper mapper) : ITrashService
 {
     private static readonly DomainError Gone =
-        new(ErrorCodes.ResourceNotFound, "That record is no longer stored and cannot be restored.");
+        EntityLookup.NotFound("That record is no longer stored and cannot be restored.");
 
     public async Task<PagedResponse<TrashEntryResponse>> GetPageAsync(
         GetTrashRequest request,
@@ -50,13 +49,15 @@ public sealed class TrashService(
 
     public async Task<Result> RestoreAsync(RestoreDeletedRequest request, CancellationToken cancellationToken)
     {
-        var entry = await db.DeletionEntries
-            .Where(e => e.Kind == request.Kind && e.EntityId == request.EntityId)
+        var found = await db.DeletionEntries
             .OrderByDescending(e => e.DeletedAt)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (entry is null)
+            .FindOrNotFoundAsync(
+                e => e.Kind == request.Kind && e.EntityId == request.EntityId,
+                "Nothing you deleted matches that record.",
+                cancellationToken);
+        if (!found.TryGetValue(out var entry))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Nothing you deleted matches that record.");
+            return found.Error;
         }
 
         if (!TrashRestorers.IsEnabled(entry.Kind, settings.Current))

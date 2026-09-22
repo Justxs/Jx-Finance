@@ -104,10 +104,10 @@ public sealed class AccountService(
     public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var accountId = new AccountId(id);
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
-        if (account is null)
+        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
+        if (!found.TryGetValue(out var account))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Account not found.");
+            return found.Error;
         }
 
         return mapper.FromEntity(account, await BalanceAsync(account, cancellationToken));
@@ -140,10 +140,10 @@ public sealed class AccountService(
         CancellationToken cancellationToken)
     {
         var accountId = new AccountId(request.Id);
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
-        if (account is null)
+        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
+        if (!found.TryGetValue(out var account))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Account not found.");
+            return found.Error;
         }
 
         var membershipError = await ValidateHouseholdAsync(request.Scope, request.HouseholdId, cancellationToken);
@@ -189,10 +189,10 @@ public sealed class AccountService(
 
     public async Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken)
     {
-        var account = await db.Accounts.FirstOrDefaultAsync(a => a.Id == new AccountId(id), cancellationToken);
-        if (account is null)
+        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == new AccountId(id), "Account not found.", cancellationToken);
+        if (!found.TryGetValue(out var account))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Account not found.");
+            return found.Error;
         }
 
         if (account.UserId != currentUser.Id)
@@ -236,10 +236,10 @@ public sealed class AccountService(
             return mapper.FromEntity(active, await BalanceAsync(active, cancellationToken));
         }
 
-        var account = await ArchivedAccounts().FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
-        if (account is null)
+        var found = await ArchivedAccounts().FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
+        if (!found.TryGetValue(out var account))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Account not found.");
+            return found.Error;
         }
 
         if (account.UserId != currentUser.Id)

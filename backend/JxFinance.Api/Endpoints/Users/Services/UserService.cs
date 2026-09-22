@@ -105,10 +105,10 @@ public sealed class UserService(
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        if (user is null)
+        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
+        if (!found.TryGetValue(out var user))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return found.Error;
         }
 
         if (request.Role != AppRoles.Admin && await IsLastAdministratorAsync(id, cancellationToken))
@@ -133,10 +133,10 @@ public sealed class UserService(
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        if (user is null)
+        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
+        if (!found.TryGetValue(out var user))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return found.Error;
         }
 
         if (await IsLastAdministratorAsync(id, cancellationToken))
@@ -172,10 +172,10 @@ public sealed class UserService(
 
     public async Task<Result<Guid>> ReactivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        if (user is null)
+        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
+        if (!found.TryGetValue(out var user))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return found.Error;
         }
 
         if (!user.IsDeactivated)
@@ -213,10 +213,10 @@ public sealed class UserService(
             return confirmed.Error;
         }
 
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
-        if (user is null)
+        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
+        if (!found.TryGetValue(out var user))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return found.Error;
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -251,10 +251,10 @@ public sealed class UserService(
         UpdateMyProfileRequest request,
         CancellationToken cancellationToken)
     {
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        if (user is null)
+        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == userId, "User not found.", cancellationToken);
+        if (!found.TryGetValue(out var user))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return found.Error;
         }
 
         if (request.NewPassword is not null)

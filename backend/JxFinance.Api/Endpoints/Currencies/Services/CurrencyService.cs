@@ -1,6 +1,6 @@
 using System.Globalization;
 using FastEndpoints;
-using JxFinance.Common.Errors;
+using JxFinance.Common;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
@@ -29,8 +29,7 @@ public sealed class CurrencyService(IExchangeRateService rates, IInstanceSetting
 
         if (table.Rate(request.From, request.To) is not { } rate || table.AsOf is not { } asOf)
         {
-            return new DomainError(
-                ErrorCodes.ResourceNotFound,
+            return EntityLookup.NotFound(
                 $"No exchange rate is available for {request.From.ToCode()} to {request.To.ToCode()}.");
         }
 

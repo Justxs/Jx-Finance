@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.Email;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Settings;
@@ -89,7 +90,7 @@ public sealed class AccountEmailService(
         var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user?.Email is null)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "User not found.");
+            return EntityLookup.NotFound("User not found.");
         }
 
         if (user.EmailConfirmed)

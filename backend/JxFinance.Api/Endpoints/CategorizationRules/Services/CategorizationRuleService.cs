@@ -71,10 +71,10 @@ public sealed class CategorizationRuleService(
         CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(id);
-        var rule = await db.CategorizationRules.FirstOrDefaultAsync(r => r.Id == ruleId, cancellationToken);
-        if (rule is null)
+        var found = await db.CategorizationRules.FindOrNotFoundAsync(r => r.Id == ruleId, "Rule not found.", cancellationToken);
+        if (!found.TryGetValue(out var rule))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Rule not found.");
+            return found.Error;
         }
 
         apply(rule);
@@ -99,10 +99,10 @@ public sealed class CategorizationRuleService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(id);
-        var rule = await db.CategorizationRules.FirstOrDefaultAsync(r => r.Id == ruleId, cancellationToken);
-        if (rule is null)
+        var found = await db.CategorizationRules.FindOrNotFoundAsync(r => r.Id == ruleId, "Rule not found.", cancellationToken);
+        if (!found.TryGetValue(out var rule))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Rule not found.");
+            return found.Error;
         }
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -147,7 +147,7 @@ public sealed class CategorizationRuleService(
         var index = rules.FindIndex(r => r.Id == ruleId);
         if (index < 0)
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Rule not found.");
+            return EntityLookup.NotFound("Rule not found.");
         }
 
         var target = direction == MoveDirection.Up ? index - 1 : index + 1;

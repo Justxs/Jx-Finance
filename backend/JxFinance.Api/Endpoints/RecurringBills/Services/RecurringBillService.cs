@@ -64,10 +64,10 @@ public sealed class RecurringBillService(
     public async Task<Result<RecurringBill>> UpdateAsync(Guid id, Action<RecurringBill> apply, CancellationToken cancellationToken)
     {
         var billId = new RecurringBillId(id);
-        var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
-        if (bill is null)
+        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
+        if (!found.TryGetValue(out var bill))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring entry not found.");
+            return found.Error;
         }
 
         apply(bill);
@@ -96,10 +96,10 @@ public sealed class RecurringBillService(
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(request.Id, cancellationToken);
         var billId = new RecurringBillId(request.Id);
-        var bill = await db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
-        if (bill is null)
+        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
+        if (!found.TryGetValue(out var bill))
         {
-            return new DomainError(ErrorCodes.ResourceNotFound, "Recurring entry not found.");
+            return found.Error;
         }
 
         if (!bill.IsActive)
