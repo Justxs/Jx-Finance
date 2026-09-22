@@ -244,8 +244,7 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
 
             (await Client.PutAsJsonAsync("/api/settings", switchedOff)).EnsureSuccessStatusCode();
             var gated = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "110.00", "usd", "2026-06-05"));
-            Assert.Equal(HttpStatusCode.NotFound, gated.StatusCode);
-            Assert.Equal("feature.disabled", (await gated.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("code").GetString());
+            await AssertProblemAsync(gated, HttpStatusCode.NotFound, "feature.disabled");
         }
         finally
         {

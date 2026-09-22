@@ -24,13 +24,8 @@ public static class ErrorContract
             Enum = ErrorCodes.All.Select(code => (JsonNode)JsonValue.Create(code)).ToList(),
         };
 
-        problem.Properties ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
-        problem.Properties[CodeProperty] = new OpenApiSchemaReference(ErrorCodeSchema, document)
-        {
-            Description = "Set when the problem has no errors entries, for example feature.disabled.",
-        };
-
-        if (problem.Properties.TryGetValue(ErrorsProperty, out var errors)
+        if (problem.Properties is not null
+            && problem.Properties.TryGetValue(ErrorsProperty, out var errors)
             && errors is OpenApiSchema { Items: OpenApiSchema { Properties: { } item } })
         {
             item[CodeProperty] = new OpenApiSchemaReference(ErrorCodeSchema, document)

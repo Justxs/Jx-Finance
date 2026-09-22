@@ -1,13 +1,10 @@
-using System.Net.Mime;
 using JxFinance.Common.Errors;
-using JxFinance.Common.OpenApi;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Common.Middleware;
@@ -64,21 +61,10 @@ public sealed class ActiveHouseholdMiddleware(RequestDelegate next, IInstanceSet
         return true;
     }
 
-    private static Task RefuseAsync(HttpContext context)
-    {
-        context.Response.StatusCode = StatusCodes.Status400BadRequest;
-        return context.Response.WriteAsJsonAsync(
-            new ProblemDetails
-            {
-                Status = StatusCodes.Status400BadRequest,
-                Title = "Conflicting active household",
-                Detail =
-                    $"The {ActiveHousehold.HeaderName} header and the {ActiveHousehold.QueryName} query parameter name two different households.",
-                Instance = context.Request.Path,
-                Extensions = { [ErrorContract.CodeProperty] = ErrorCodes.HouseholdScopeMismatch },
-            },
-            options: null,
-            contentType: MediaTypeNames.Application.ProblemJson,
-            context.RequestAborted);
-    }
+    private static Task RefuseAsync(HttpContext context) =>
+        ProblemResponses.WriteAsync(
+            context,
+            new DomainError(
+                ErrorCodes.HouseholdScopeMismatch,
+                $"The {ActiveHousehold.HeaderName} header and the {ActiveHousehold.QueryName} query parameter name two different households."));
 }

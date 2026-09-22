@@ -19,7 +19,7 @@ public static class ApiPipelineExtensions
 
     public static WebApplication UseApiPipeline(this WebApplication app)
     {
-        app.UseExceptionHandler();
+        app.UseExceptionHandler(new ExceptionHandlerOptions { ExceptionHandler = ProblemResponses.WriteServerErrorAsync });
         app.UseMiddleware<CorrelationIdMiddleware>();
         app.UseSerilogRequestLogging(options => options.GetLevel = RequestLogLevel);
 
@@ -28,23 +28,7 @@ public static class ApiPipelineExtensions
         app.UseMiddleware<FeatureGateMiddleware>();
         app.UseMiddleware<ActiveHouseholdMiddleware>();
 
-        app.UseFastEndpoints(c =>
-        {
-            c.Endpoints.ShortNames = true;
-            c.Binding.ReflectionCache.AddFromJxFinanceApi();
-            c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
-            c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
-            c.Serializer.SerializerErrorsField = ProblemResponses.SerializerErrorsField;
-            c.Errors.GeneralErrorsField = ProblemResponses.GeneralErrorsField;
-            c.Binding.JsonExceptionTransformer = ProblemResponses.FromJsonException;
-            c.Errors.UseProblemDetails(p =>
-            {
-                p.IndicateErrorCode = true;
-                p.AllowDuplicateErrors = false;
-                p.TypeValue = "https://tools.ietf.org/html/rfc9110#section-15.5";
-            });
-            c.Errors.ResponseBuilder = ProblemResponses.Build;
-        });
+        app.UseFastEndpoints(ConfigureFastEndpoints);
         if (ServesApiDocs(app.Configuration, app.Environment))
         {
             app.MapApiDocs();
@@ -53,6 +37,25 @@ public static class ApiPipelineExtensions
         app.MapHealthChecks(HealthPath);
 
         return app;
+    }
+
+    public static void ConfigureFastEndpoints(Config c)
+    {
+        c.Endpoints.ShortNames = true;
+        c.Binding.ReflectionCache.AddFromJxFinanceApi();
+        c.Endpoints.Configurator = ep => ep.Description(d => d.ProducesProblemDetails(500));
+        c.Serializer.Options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase));
+        c.Serializer.SerializerErrorsField = ProblemResponses.SerializerErrorsField;
+        c.Errors.GeneralErrorsField = ProblemResponses.GeneralErrorsField;
+        c.Binding.JsonExceptionTransformer = ProblemResponses.FromJsonException;
+        c.Errors.UseProblemDetails(p =>
+        {
+            p.IndicateErrorCode = true;
+            p.AllowDuplicateErrors = false;
+            p.TypeValue = "https://tools.ietf.org/html/rfc9110#section-15.5";
+            p.TitleTransformer = ProblemResponses.TitleFor;
+        });
+        c.Errors.ResponseBuilder = ProblemResponses.Build;
     }
 
     public static bool ServesApiDocs(IConfiguration configuration, IHostEnvironment environment) =>

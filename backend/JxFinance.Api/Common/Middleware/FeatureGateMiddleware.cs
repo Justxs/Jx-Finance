@@ -1,9 +1,6 @@
-using System.Net.Mime;
 using JxFinance.Common.Errors;
-using JxFinance.Common.OpenApi;
 using JxFinance.Common.Settings;
-using JxFinance.Domain.Settings;
-using Microsoft.AspNetCore.Mvc;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Common.Middleware;
 
@@ -11,54 +8,23 @@ public sealed class FeatureGateMiddleware(RequestDelegate next, IInstanceSetting
 {
     private const string EmptyWhenDisabled = ApiRoutes.HouseholdsPath;
 
-    private static readonly (string Prefix, Feature Feature)[] Gates =
-    [
-        (ApiRoutes.BudgetsPath, Feature.Budgets),
-        (ApiRoutes.GoalsPath, Feature.Goals),
-        (ApiRoutes.RecurringBillsPath, Feature.RecurringBills),
-        (ApiRoutes.NetWorthPath, Feature.NetWorth),
-        (ApiRoutes.AssetsPath, Feature.NetWorth),
-        (ApiRoutes.DebtsPath, Feature.NetWorth),
-        (ApiRoutes.ReportsPath, Feature.Reports),
-        (ApiRoutes.ImportPath, Feature.Import),
-        (ApiRoutes.HouseholdsPath, Feature.Households),
-        (ApiRoutes.ConversionsPath, Feature.MultiCurrency),
-        (ApiRoutes.InvestmentsPath, Feature.Investments),
-        (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),
-    ];
-
     public async Task InvokeAsync(HttpContext context)
     {
-        var path = context.Request.Path;
-        foreach (var (prefix, feature) in Gates)
+        var feature = context.GetEndpoint()?.Metadata.GetMetadata<RequiresFeature>()?.Feature;
+        if (feature is not { } gated || settings.Current.IsEnabled(gated))
         {
-            if (!path.StartsWithSegments(prefix, StringComparison.OrdinalIgnoreCase) || settings.Current.IsEnabled(feature))
-            {
-                continue;
-            }
-
-            if (HttpMethods.IsGet(context.Request.Method) && path.Equals(EmptyWhenDisabled, StringComparison.OrdinalIgnoreCase))
-            {
-                await context.Response.WriteAsJsonAsync(Array.Empty<object>(), context.RequestAborted);
-                return;
-            }
-
-            context.Response.StatusCode = StatusCodes.Status404NotFound;
-            await context.Response.WriteAsJsonAsync(
-                new ProblemDetails
-                {
-                    Status = StatusCodes.Status404NotFound,
-                    Title = "Feature disabled",
-                    Detail = $"The {feature} feature is turned off for this installation.",
-                    Instance = path,
-                    Extensions = { [ErrorContract.CodeProperty] = ErrorCodes.FeatureDisabled },
-                },
-                options: null,
-                contentType: MediaTypeNames.Application.ProblemJson,
-                context.RequestAborted);
+            await next(context);
             return;
         }
 
-        await next(context);
+        if (HttpMethods.IsGet(context.Request.Method) && context.Request.Path.Equals(EmptyWhenDisabled, StringComparison.OrdinalIgnoreCase))
+        {
+            await context.Response.WriteAsJsonAsync(Array.Empty<object>(), context.RequestAborted);
+            return;
+        }
+
+        await ProblemResponses.WriteAsync(
+            context,
+            new DomainError(ErrorCodes.FeatureDisabled, $"The {gated} feature is turned off for this installation."));
     }
 }
