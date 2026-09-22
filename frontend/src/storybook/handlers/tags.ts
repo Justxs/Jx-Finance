@@ -6,14 +6,14 @@ import {
   getUpdateTagMockHandler,
 } from "@/api/generated/tags/tags.msw";
 import { tags } from "@/storybook/fixtures";
-import { found, readBody } from "./http";
+import { found, readBody, withScope } from "./http";
 import type { Body } from "./http";
 import { NEW_ID } from "./ids";
 import { byId } from "./lists";
 
 function mergeTag(base: TagResponse, body: Body): TagResponse {
   const merged: TagResponse = { ...base, ...body };
-  return { ...merged, scope: merged.householdId ? "shared" : "personal" };
+  return withScope(merged);
 }
 
 export const tagHandlers = [

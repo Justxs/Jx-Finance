@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getTransactionsSummaryMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { withWidth } from "@/storybook/decorators";
-import { emptyHandlers, errorHandlers, handlers, pending } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, pending, withHandlers } from "@/storybook/handlers";
 import { TransactionsTotals, TransactionsTotalsLine } from "./transactions-totals";
 
 const meta = {
@@ -26,11 +26,7 @@ export const Zero: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 export const Stale: Story = { args: { stale: true } };
 
 export const Loading: Story = {
-  parameters: {
-    msw: {
-      handlers: [getTransactionsSummaryMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getTransactionsSummaryMockHandler(pending)),
 };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };

@@ -1,7 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { debts, linearDebt, zeroRateDebt } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { DebtForm, debtFormValues, debtRequest } from "./debt-form";
 
 test("a debt read into the form and written back keeps every repayment term", () => {
@@ -50,9 +50,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
 });
 
 test("a term and a monthly payment together are refused under the payment", async () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(<DebtForm onCreated={() => {}} onCancel={() => {}} />, { wrapper: Wrapper });
+  renderWithQuery(<DebtForm onCreated={() => {}} onCancel={() => {}} />);
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "360" } });
   fireEvent.change(screen.getByLabelText("Monthly payment"), { target: { value: "500" } });
 
@@ -63,9 +61,7 @@ test("a term and a monthly payment together are refused under the payment", asyn
 });
 
 test("a term outside 1 to 600 months is refused", async () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(<DebtForm onCreated={() => {}} onCancel={() => {}} />, { wrapper: Wrapper });
+  renderWithQuery(<DebtForm onCreated={() => {}} onCancel={() => {}} />);
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "601" } });
 
   expect(await screen.findByText("Enter a whole number from 1 to 600.")).toBeInTheDocument();

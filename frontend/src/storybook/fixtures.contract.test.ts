@@ -121,6 +121,7 @@ const contracts: Record<string, Contract> = {
   conversionRateUnavailableProblem: { schema: schemas.ProblemDetailsResponse },
   conversionReadOnlyProblem: { schema: schemas.ProblemDetailsResponse },
   settings: { schema: schemas.SettingsResponse },
+  publicSettings: { schema: schemas.PublicSettingsResponse },
   currencies: { schema: schemas.CurrenciesResponse },
   overLimitBudget: { schema: schemas.BudgetsResponseItem },
   weeklyRolloverBudget: { schema: schemas.BudgetsResponseItem },

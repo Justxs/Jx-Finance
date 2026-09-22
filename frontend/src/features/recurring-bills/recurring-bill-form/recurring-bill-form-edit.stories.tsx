@@ -15,7 +15,7 @@ import {
   transferBill,
   variableBill,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { RecurringBillForm } from "./recurring-bill-form";
 
@@ -125,9 +125,7 @@ export const ChangesEverything: Story = {
 };
 
 export const SavePending: Story = {
-  parameters: {
-    msw: { handlers: [getUpdateRecurringBillMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getUpdateRecurringBillMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const save = canvas.getByRole("button", { name: "Save" });
@@ -138,14 +136,7 @@ export const SavePending: Story = {
 };
 
 export const ServerFieldError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateRecurringBillMockHandler(failWith(billCategoryProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(billCategoryProblem, 400))),
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
@@ -160,11 +151,7 @@ export const ServerFieldError: Story = {
 };
 
 export const BillNoLongerExists: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateRecurringBillMockHandler(failWith(notFoundProblem, 404)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(notFoundProblem, 404))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));

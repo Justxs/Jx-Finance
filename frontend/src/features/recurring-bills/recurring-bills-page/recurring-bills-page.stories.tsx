@@ -19,9 +19,9 @@ import {
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { RecurringBillsPage } from "./recurring-bills-page";
@@ -47,19 +47,11 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const OnlyInactive: Story = {
-  parameters: {
-    msw: {
-      handlers: [getRecurringBillsMockHandler([inactiveBill]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getRecurringBillsMockHandler([inactiveBill])),
 };
 
 export const NothingToSuggest: Story = {
-  parameters: {
-    msw: {
-      handlers: [getSubscriptionCandidatesMockHandler([]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getSubscriptionCandidatesMockHandler([])),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
@@ -69,11 +61,7 @@ export const NothingToSuggest: Story = {
 };
 
 export const SuggestionCreatesAnEntry: Story = {
-  parameters: {
-    msw: {
-      handlers: [getSubscriptionCandidatesMockHandler(subscriptionCandidates), ...handlers],
-    },
-  },
+  parameters: withHandlers(getSubscriptionCandidatesMockHandler(subscriptionCandidates)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const create = await canvas.findAllByRole("button", {
@@ -88,11 +76,7 @@ export const SuggestionCreatesAnEntry: Story = {
 };
 
 export const LongList: Story = {
-  parameters: {
-    msw: {
-      handlers: [getRecurringBillsMockHandler(manyBills), ...handlers],
-    },
-  },
+  parameters: withHandlers(getRecurringBillsMockHandler(manyBills)),
 };
 
 export const AddDialogOpen: Story = {
@@ -106,11 +90,7 @@ export const AddDialogOpen: Story = {
 };
 
 export const AddDialogWithoutAccounts: Story = {
-  parameters: {
-    msw: {
-      handlers: [getAccountsMockHandler([]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getAccountsMockHandler([])),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -157,11 +137,7 @@ export const ConfirmDialogOpenVariable: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeleteRecurringBillMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeleteRecurringBillMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

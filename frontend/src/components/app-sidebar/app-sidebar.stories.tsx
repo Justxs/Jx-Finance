@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { setSidebarCollapsed } from "@/stores/sidebar-store";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
-import { handlers } from "@/storybook/handlers";
+import { withHandlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { AppSidebar } from "./app-sidebar";
 
@@ -45,17 +45,9 @@ export const Collapsed: Story = {
 };
 
 export const MemberWithoutUsersLink: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(memberUser), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(memberUser)),
 };
 
 export const LongUserName: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(longNameUser), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(longNameUser)),
 };

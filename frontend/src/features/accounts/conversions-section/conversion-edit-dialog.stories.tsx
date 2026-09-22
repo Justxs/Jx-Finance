@@ -12,7 +12,7 @@ import {
   conversionWithoutFee,
   notFoundProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { chooseOption, openedDialog } from "@/storybook/interactions";
 import { ConversionEditDialog } from "./conversion-edit-dialog";
 
@@ -103,7 +103,7 @@ export const RejectsSameCurrency: Story = {
 };
 
 export const Pending: Story = {
-  parameters: { msw: { handlers: [getUpdateConversionMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getUpdateConversionMockHandler(pending)),
   play: async () => {
     const dialog = await saveWithBought("2712");
 
@@ -114,14 +114,9 @@ export const Pending: Story = {
 };
 
 export const FeeWasSplitByHand: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateConversionMockHandler(failWith(conversionFeeSplitProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUpdateConversionMockHandler(failWith(conversionFeeSplitProblem, 400)),
+  ),
   play: async ({ args }) => {
     const dialog = await saveWithBought("2712");
 
@@ -131,14 +126,9 @@ export const FeeWasSplitByHand: Story = {
 };
 
 export const RateUnavailable: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateConversionMockHandler(failWith(conversionRateUnavailableProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUpdateConversionMockHandler(failWith(conversionRateUnavailableProblem, 400)),
+  ),
   play: async () => {
     const dialog = await saveWithBought("2712");
 
@@ -147,14 +137,9 @@ export const RateUnavailable: Story = {
 };
 
 export const ImportedMeanwhile: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUpdateConversionMockHandler(failWith(conversionReadOnlyProblem, 409)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUpdateConversionMockHandler(failWith(conversionReadOnlyProblem, 409)),
+  ),
   play: async () => {
     const dialog = await saveWithBought("2712");
 
@@ -163,11 +148,7 @@ export const ImportedMeanwhile: Story = {
 };
 
 export const ConversionNoLongerExists: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateConversionMockHandler(failWith(notFoundProblem, 404)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateConversionMockHandler(failWith(notFoundProblem, 404))),
   play: async () => {
     const dialog = await saveWithBought("2712");
 

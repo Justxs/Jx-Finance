@@ -1,18 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import { getForgotPasswordMockHandler } from "@/api/generated/auth/auth.msw";
-import { handlers, pending } from "@/storybook/handlers";
+import { withWidth } from "@/storybook/decorators";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { ForgotPasswordPage } from "./forgot-password-page";
 
 const meta = {
   title: "Features/Auth/ForgotPasswordPage",
   component: ForgotPasswordPage,
   parameters: { route: "/forgot-password" },
-  render: () => (
-    <div className="flex w-96 max-w-full justify-center">
-      <ForgotPasswordPage />
-    </div>
-  ),
+  decorators: [withWidth("auth")],
 } satisfies Meta<typeof ForgotPasswordPage>;
 
 export default meta;
@@ -42,7 +39,5 @@ export const AnInvalidAddressIsCaughtBeforeSending: Story = {
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: { handlers: [getForgotPasswordMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getForgotPasswordMockHandler(pending)),
 };

@@ -4,7 +4,7 @@ import { getTaxSummaryMockHandler } from "@/api/generated/investments/investment
 import { TAX_SUMMARY_EXPORT_PATH } from "@/lib/export-url";
 import { withPageFrame } from "@/storybook/decorators";
 import { accounts, incompleteTaxSummary } from "@/storybook/fixtures";
-import { errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { TaxSummarySection } from "./tax-summary-section";
 
 const meta = {
@@ -42,9 +42,7 @@ export const Empty: Story = {
 };
 
 export const Incomplete: Story = {
-  parameters: {
-    msw: { handlers: [getTaxSummaryMockHandler(incompleteTaxSummary), ...handlers] },
-  },
+  parameters: withHandlers(getTaxSummaryMockHandler(incompleteTaxSummary)),
   play: async ({ canvasElement }) => {
     await expect(
       await within(canvasElement).findByText(/sold without a recorded purchase/),

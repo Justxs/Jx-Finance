@@ -7,7 +7,13 @@ import {
 } from "@/api/generated/auth/auth.msw";
 import type { SessionResponse } from "@/api/generated/model";
 import { serverErrorProblem, sessions } from "@/storybook/fixtures";
-import { errorHandlers, failWith, handlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  errorHandlers,
+  failWith,
+  handlers,
+  loadingHandlers,
+  withHandlers,
+} from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { SessionsSection } from "./sessions-section";
 
@@ -62,14 +68,7 @@ export const Lithuanian: Story = {
 };
 
 export const OnlyCurrentSession: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getSessionsMockHandler(sessions.filter((session) => session.isCurrent)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(getSessionsMockHandler(sessions.filter((session) => session.isCurrent))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("This browser")).toBeVisible();
@@ -117,16 +116,11 @@ export const SignOutEverywhereElse: Story = {
 };
 
 export const RevokeFailed: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getRevokeSessionMockHandler(
-          failWith({ ...serverErrorProblem, instance: "/api/auth/sessions" }, 500),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getRevokeSessionMockHandler(
+      failWith({ ...serverErrorProblem, instance: "/api/auth/sessions" }, 500),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

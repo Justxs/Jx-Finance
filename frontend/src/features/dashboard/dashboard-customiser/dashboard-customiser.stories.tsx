@@ -12,7 +12,7 @@ import {
   serverErrorProblem,
   settings,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { DashboardCustomiser } from "./dashboard-customiser";
 
 const meta = {
@@ -130,9 +130,7 @@ export const ResetToDefault: Story = {
 };
 
 export const Saving: Story = {
-  parameters: {
-    msw: { handlers: [getSaveDashboardLayoutMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getSaveDashboardLayoutMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
@@ -143,15 +141,10 @@ export const Saving: Story = {
 };
 
 export const SaveError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getSaveDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
-        getResetDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getSaveDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
+    getResetDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
+  ),
   args: { onDone: fn() },
   play: async ({ args, canvasElement }) => {
     const canvas = within(canvasElement);

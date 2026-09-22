@@ -13,9 +13,9 @@ import { ids, splitTransaction } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { TransactionsPage } from "./transactions-page";
 
@@ -239,5 +239,5 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [getCreateTransactionMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getCreateTransactionMockHandler(pending)),
 };

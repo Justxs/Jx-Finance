@@ -4,7 +4,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Card } from "@/components/ui/card/card";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { categoryBreakdown } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
 
 const meta = {
@@ -35,9 +35,5 @@ function singleCategoryBreakdown() {
 }
 
 export const SingleCategory: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCategoryBreakdownMockHandler(singleCategoryBreakdown), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCategoryBreakdownMockHandler(singleCategoryBreakdown)),
 };

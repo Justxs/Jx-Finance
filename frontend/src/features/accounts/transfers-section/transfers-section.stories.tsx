@@ -11,9 +11,9 @@ import { accounts, ids, transfers, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { first, openedDialog } from "@/storybook/interactions";
 import { TransfersSection } from "./transfers-section";
@@ -70,7 +70,7 @@ export const Default: Story = {};
 export const Empty: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const Paginated: Story = {
-  parameters: { msw: { handlers: [getTransfersMockHandler(manyTransfersPage), ...handlers] } },
+  parameters: withHandlers(getTransfersMockHandler(manyTransfersPage)),
 };
 
 export const UnknownAccounts: Story = { args: { accounts: [] } };
@@ -80,7 +80,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const CreatePending: Story = {
-  parameters: { msw: { handlers: [getCreateTransferMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getCreateTransferMockHandler(pending)),
 };
 
 export const EditsTransfer: Story = {

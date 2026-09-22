@@ -6,7 +6,13 @@ import {
 } from "@/api/generated/net-worth/net-worth.msw";
 import { withPageFrame } from "@/storybook/decorators";
 import { debts, ids, linearDebt, serverErrorProblem, zeroRateDebt } from "@/storybook/fixtures";
-import { errorHandlers, failWith, handlers, loadingHandlers, pending } from "@/storybook/handlers";
+import {
+  errorHandlers,
+  failWith,
+  loadingHandlers,
+  pending,
+  withHandlers,
+} from "@/storybook/handlers";
 import { DebtSchedulePage } from "./debt-schedule-page";
 
 const meta = {
@@ -32,16 +38,12 @@ export const Default: Story = {
 
 export const ZeroRate: Story = {
   args: { debtId: zeroRateDebt.id },
-  parameters: {
-    msw: { handlers: [getDebtsMockHandler([...debts, zeroRateDebt]), ...handlers] },
-  },
+  parameters: withHandlers(getDebtsMockHandler([...debts, zeroRateDebt])),
 };
 
 export const Linear: Story = {
   args: { debtId: linearDebt.id },
-  parameters: {
-    msw: { handlers: [getDebtsMockHandler([...debts, linearDebt]), ...handlers] },
-  },
+  parameters: withHandlers(getDebtsMockHandler([...debts, linearDebt])),
 };
 
 export const PayingExtra: Story = {
@@ -71,15 +73,11 @@ export const UnknownDebt: Story = {
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
 
 export const ScheduleLoading: Story = {
-  parameters: { msw: { handlers: [getDebtScheduleMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getDebtScheduleMockHandler(pending)),
 };
 
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const ScheduleFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDebtScheduleMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDebtScheduleMockHandler(failWith(serverErrorProblem, 500))),
 };

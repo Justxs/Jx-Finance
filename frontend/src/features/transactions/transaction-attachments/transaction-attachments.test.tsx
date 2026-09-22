@@ -2,7 +2,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 import { getAttachmentsQueryKey } from "@/api/generated";
 import { fullAttachments, ids, maximaAttachments, splitAttachments } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { createQueryWrapper, renderWithQuery } from "@/test/query";
 import { AttachmentCount } from "./attachment-count";
 import { TransactionAttachments } from "./transaction-attachments";
 
@@ -68,8 +68,7 @@ test("a transaction with ten files takes no more", async () => {
 });
 
 test("the paperclip names the number of files for screen readers", () => {
-  const { Wrapper } = createQueryWrapper();
-  const { rerender } = render(<AttachmentCount count={3} />, { wrapper: Wrapper });
+  const { rerender } = renderWithQuery(<AttachmentCount count={3} />);
 
   expect(screen.getByText("3 files attached")).toBeInTheDocument();
 

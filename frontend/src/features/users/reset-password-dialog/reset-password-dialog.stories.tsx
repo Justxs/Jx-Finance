@@ -9,7 +9,7 @@ import {
   notFoundProblem,
   weakPasswordProblem,
 } from "@/storybook/fixtures";
-import { failWith, failWithStatus, handlers, pending } from "@/storybook/handlers";
+import { failWith, failWithStatus, pending, withHandlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { ResetPasswordDialog } from "./reset-password-dialog";
 
@@ -74,7 +74,7 @@ export const ResetsPasswordAndTwoFactor: Story = {
 };
 
 export const Pending: Story = {
-  parameters: { msw: { handlers: [getResetUserPasswordMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getResetUserPasswordMockHandler(pending)),
   play: async () => {
     const dialog = await submitReset();
 
@@ -100,11 +100,7 @@ export const WrongCurrentPassword: Story = {
 };
 
 export const WeakPassword: Story = {
-  parameters: {
-    msw: {
-      handlers: [getResetUserPasswordMockHandler(failWith(weakPasswordProblem, 400)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(weakPasswordProblem, 400))),
   play: async () => {
     const dialog = await submitReset();
 
@@ -115,11 +111,7 @@ export const WeakPassword: Story = {
 };
 
 export const LockedOut: Story = {
-  parameters: {
-    msw: {
-      handlers: [getResetUserPasswordMockHandler(failWith(lockedOutProblem, 429)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(lockedOutProblem, 429))),
   play: async () => {
     const dialog = await submitReset();
 
@@ -128,9 +120,7 @@ export const LockedOut: Story = {
 };
 
 export const ThrottledWithoutBody: Story = {
-  parameters: {
-    msw: { handlers: [getResetUserPasswordMockHandler(failWithStatus(429)), ...handlers] },
-  },
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWithStatus(429))),
   play: async () => {
     const dialog = await submitReset();
 
@@ -141,11 +131,7 @@ export const ThrottledWithoutBody: Story = {
 };
 
 export const UserNoLongerExists: Story = {
-  parameters: {
-    msw: {
-      handlers: [getResetUserPasswordMockHandler(failWith(notFoundProblem, 404)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(notFoundProblem, 404))),
   play: async () => {
     const dialog = await submitReset();
 

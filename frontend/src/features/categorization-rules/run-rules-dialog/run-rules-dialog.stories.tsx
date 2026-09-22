@@ -5,7 +5,7 @@ import {
   getRunCategorizationRulesMockHandler,
 } from "@/api/generated/categorization-rules/categorization-rules.msw";
 import { accounts, rulesRunNothing } from "@/storybook/fixtures";
-import { failWithStatus, handlers, pending } from "@/storybook/handlers";
+import { failWithStatus, pending, withHandlers } from "@/storybook/handlers";
 import { RunRulesDialog } from "./run-rules-dialog";
 
 const meta = {
@@ -38,11 +38,7 @@ export const PreviewShowsWhatEachRuleWouldTouch: Story = {
 };
 
 export const PreviewFindsNothing: Story = {
-  parameters: {
-    msw: {
-      handlers: [getPreviewCategorizationRunMockHandler(rulesRunNothing), ...handlers],
-    },
-  },
+  parameters: withHandlers(getPreviewCategorizationRunMockHandler(rulesRunNothing)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
@@ -53,9 +49,7 @@ export const PreviewFindsNothing: Story = {
 };
 
 export const PreviewPending: Story = {
-  parameters: {
-    msw: { handlers: [getPreviewCategorizationRunMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getPreviewCategorizationRunMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
@@ -86,11 +80,7 @@ export const ApplyRuns: Story = {
 };
 
 export const ApplyFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getRunCategorizationRulesMockHandler(failWithStatus(500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getRunCategorizationRulesMockHandler(failWithStatus(500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));

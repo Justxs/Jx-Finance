@@ -10,9 +10,9 @@ import { assets, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { AssetsSection } from "./assets-section";
@@ -48,11 +48,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const LongList: Story = {
-  parameters: {
-    msw: {
-      handlers: [getAssetsMockHandler(manyItems), ...handlers],
-    },
-  },
+  parameters: withHandlers(getAssetsMockHandler(manyItems)),
 };
 
 export const AddDialogOpen: Story = {
@@ -64,11 +60,7 @@ export const AddDialogOpen: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeleteAssetMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeleteAssetMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

@@ -3,7 +3,7 @@ import { getDashboardSummaryMockHandler } from "@/api/generated/dashboard/dashbo
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { dashboardSummary } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
+import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { DashboardStats } from "./dashboard-stats";
 
 const meta = {
@@ -48,13 +48,9 @@ function largeSummary() {
 }
 
 export const Overspent: Story = {
-  parameters: {
-    msw: { handlers: [getDashboardSummaryMockHandler(overspentSummary), ...handlers] },
-  },
+  parameters: withHandlers(getDashboardSummaryMockHandler(overspentSummary)),
 };
 
 export const LargeAmounts: Story = {
-  parameters: {
-    msw: { handlers: [getDashboardSummaryMockHandler(largeSummary), ...handlers] },
-  },
+  parameters: withHandlers(getDashboardSummaryMockHandler(largeSummary)),
 };

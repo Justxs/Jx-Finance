@@ -5,7 +5,7 @@ import { fn } from "storybook/test";
 import { getEnableTwoFactorMockHandler } from "@/api/generated/auth/auth.msw";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { twoFactorSetup, validationProblem } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { TwoFactorSetup } from "./two-factor-setup";
 
 const qrDataUrlPromise = QRCode.toDataURL(twoFactorSetup.authenticatorUri ?? "");
@@ -58,22 +58,13 @@ export const Narrow: Story = {
 };
 
 export const InvalidCodeAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getEnableTwoFactorMockHandler(
-          failWith({ ...validationProblem, detail: "The verification code is invalid." }, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getEnableTwoFactorMockHandler(
+      failWith({ ...validationProblem, detail: "The verification code is invalid." }, 400),
+    ),
+  ),
 };
 
 export const PendingAfterSubmit: Story = {
-  parameters: {
-    msw: {
-      handlers: [getEnableTwoFactorMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getEnableTwoFactorMockHandler(pending)),
 };

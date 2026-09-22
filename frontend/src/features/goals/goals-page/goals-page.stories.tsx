@@ -16,9 +16,9 @@ import {
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { GoalsPage } from "./goals-page";
@@ -44,19 +44,11 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const SingleCompletedGoal: Story = {
-  parameters: {
-    msw: {
-      handlers: [getGoalsMockHandler([completedGoal]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getGoalsMockHandler([completedGoal])),
 };
 
 export const WithUnavailableFunding: Story = {
-  parameters: {
-    msw: {
-      handlers: [getGoalsMockHandler([...goals, unavailableFundedGoal]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getGoalsMockHandler([...goals, unavailableFundedGoal])),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(
@@ -66,11 +58,7 @@ export const WithUnavailableFunding: Story = {
 };
 
 export const LongList: Story = {
-  parameters: {
-    msw: {
-      handlers: [getGoalsMockHandler([openEndedGoal, ...manyGoals]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getGoalsMockHandler([openEndedGoal, ...manyGoals])),
 };
 
 export const AddDialogOpen: Story = {
@@ -103,11 +91,7 @@ export const EditInvalid: Story = {
 };
 
 export const EditSavePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUpdateGoalMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUpdateGoalMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -139,11 +123,7 @@ export const DeleteOffersUndo: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeleteGoalMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeleteGoalMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

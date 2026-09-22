@@ -9,9 +9,9 @@ import { categories, incomeCategories, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { CategoriesPage } from "./categories-page";
@@ -37,19 +37,11 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const OnlyIncomeCategories: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCategoriesMockHandler(incomeCategories), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCategoriesMockHandler(incomeCategories)),
 };
 
 export const LongList: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCategoriesMockHandler(manyCategories), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCategoriesMockHandler(manyCategories)),
 };
 
 export const AddDialogOpen: Story = {
@@ -63,11 +55,7 @@ export const AddDialogOpen: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeleteCategoryMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeleteCategoryMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

@@ -12,7 +12,14 @@ import {
   ids,
   maximaAttachments,
 } from "@/storybook/fixtures";
-import { errorHandlers, failWith, handlers, loadingHandlers, pending } from "@/storybook/handlers";
+import {
+  errorHandlers,
+  failWith,
+  handlers,
+  loadingHandlers,
+  pending,
+  withHandlers,
+} from "@/storybook/handlers";
 import { readUpload, uploadedAttachment } from "@/storybook/handlers/attachments";
 import { MAX_ATTACHMENT_BYTES } from "./attachment-files";
 import { TransactionAttachments } from "./transaction-attachments";
@@ -104,7 +111,7 @@ export const Empty: Story = {
 };
 
 export const Full: Story = {
-  parameters: { msw: { handlers: [getAttachmentsMockHandler(fullAttachments), ...handlers] } },
+  parameters: withHandlers(getAttachmentsMockHandler(fullAttachments)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByText("kvitas-10.png")).toBeVisible();
@@ -152,9 +159,7 @@ export const UploadThenRemoveWithUndo: Story = {
 };
 
 export const UploadInProgress: Story = {
-  parameters: {
-    msw: { handlers: [getUploadAttachmentMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getUploadAttachmentMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText("maxima-kvitas.jpg");
@@ -169,14 +174,9 @@ export const UploadInProgress: Story = {
 };
 
 export const RefusedFiles: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUploadAttachmentMockHandler(failWith(attachmentContentMismatchProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUploadAttachmentMockHandler(failWith(attachmentContentMismatchProblem, 400)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await canvas.findByText("maxima-kvitas.jpg");

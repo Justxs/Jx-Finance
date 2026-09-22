@@ -4,21 +4,9 @@ import {
   getMeMockHandler,
   getSendVerificationEmailMockHandler,
 } from "@/api/generated/auth/auth.msw";
-import { getPublicSettingsMockHandler } from "@/api/generated/settings/settings.msw";
-import {
-  currentUser,
-  emailAlreadyVerifiedProblem,
-  settings,
-  unverifiedUser,
-} from "@/storybook/fixtures";
-import { failWith, handlers } from "@/storybook/handlers";
+import { currentUser, emailAlreadyVerifiedProblem, unverifiedUser } from "@/storybook/fixtures";
+import { emailEnabledHandler, failWith, withHandlers } from "@/storybook/handlers";
 import { EmailVerificationBanner } from "./email-verification-banner";
-
-const emailOn = getPublicSettingsMockHandler({
-  instanceName: settings.instanceName,
-  defaultLanguage: settings.defaultLanguage,
-  emailEnabled: true,
-});
 
 const meta = {
   title: "Features/Profile/EmailVerificationBanner",
@@ -26,7 +14,7 @@ const meta = {
   parameters: {
     layout: "padded",
     route: "/",
-    msw: { handlers: [emailOn, getMeMockHandler(unverifiedUser), ...handlers] },
+    ...withHandlers(emailEnabledHandler, getMeMockHandler(unverifiedUser)),
   },
 } satisfies Meta<typeof EmailVerificationBanner>;
 
@@ -51,16 +39,11 @@ export const ResendingTheLink: Story = {
 };
 
 export const ResendRefusedBecauseItIsAlreadyConfirmed: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        emailOn,
-        getMeMockHandler(unverifiedUser),
-        getSendVerificationEmailMockHandler(failWith(emailAlreadyVerifiedProblem, 400)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    emailEnabledHandler,
+    getMeMockHandler(unverifiedUser),
+    getSendVerificationEmailMockHandler(failWith(emailAlreadyVerifiedProblem, 400)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: "Send the link again" }));
@@ -71,9 +54,7 @@ export const ResendRefusedBecauseItIsAlreadyConfirmed: Story = {
 };
 
 export const HiddenWhenTheAddressIsConfirmed: Story = {
-  parameters: {
-    msw: { handlers: [emailOn, getMeMockHandler(currentUser), ...handlers] },
-  },
+  parameters: withHandlers(emailEnabledHandler, getMeMockHandler(currentUser)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() =>
@@ -83,9 +64,7 @@ export const HiddenWhenTheAddressIsConfirmed: Story = {
 };
 
 export const HiddenWhenTheInstallationCannotSendEmail: Story = {
-  parameters: {
-    msw: { handlers: [getMeMockHandler(unverifiedUser), ...handlers] },
-  },
+  parameters: withHandlers(getMeMockHandler(unverifiedUser)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await waitFor(() =>

@@ -10,9 +10,9 @@ import { categories, ids } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { CategoryForm } from "./category-form";
 
@@ -72,7 +72,7 @@ export const ValidationError: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: { msw: { handlers: [getCreateCategoryMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getCreateCategoryMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Pets" } });
@@ -91,7 +91,7 @@ export const EditHidesType: Story = {
 
 export const SavePending: Story = {
   args: { initial: personalCategory },
-  parameters: { msw: { handlers: [getUpdateCategoryMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getUpdateCategoryMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Maistas" } });

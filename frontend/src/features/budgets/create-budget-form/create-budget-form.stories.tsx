@@ -10,7 +10,7 @@ import {
   validationProblem,
   weeklyRolloverBudget,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { CreateBudgetForm } from "./create-budget-form";
 
 const meta = {
@@ -52,11 +52,7 @@ export const ValidationError: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateBudgetMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateBudgetMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByRole("textbox"), { target: { value: "250.00" } });
@@ -65,29 +61,24 @@ export const SubmitPending: Story = {
 };
 
 export const ServerFieldError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getCreateBudgetMockHandler(
-          failWith(
+  parameters: withHandlers(
+    getCreateBudgetMockHandler(
+      failWith(
+        {
+          ...validationProblem,
+          instance: "/api/budgets",
+          errors: [
             {
-              ...validationProblem,
-              instance: "/api/budgets",
-              errors: [
-                {
-                  name: "limitAmount",
-                  reason: "Limit must be a decimal greater than 0.",
-                  code: "money.positive",
-                },
-              ],
+              name: "limitAmount",
+              reason: "Limit must be a decimal greater than 0.",
+              code: "money.positive",
             },
-            400,
-          ),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+          ],
+        },
+        400,
+      ),
+    ),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const limit = canvas.getByRole("textbox");

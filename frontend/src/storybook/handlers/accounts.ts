@@ -10,7 +10,7 @@ import {
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import { accounts, archivedAccounts, checkingAccount } from "@/storybook/fixtures";
-import { found, readBody } from "./http";
+import { found, readBody, withScope } from "./http";
 import type { Body } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { applyDirection, byId, compareText, includesText } from "./lists";
@@ -50,7 +50,7 @@ function filterAccounts(params: URLSearchParams): AccountResponse[] {
 
 function mergeAccount(base: AccountResponse, body: Body): AccountResponse {
   const merged: AccountResponse = { ...base, ...body };
-  return { ...merged, scope: merged.householdId ? "shared" : "personal" };
+  return withScope(merged);
 }
 
 export const accountHandlers = [

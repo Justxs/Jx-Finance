@@ -9,7 +9,7 @@ import {
   mortgageSchedule,
   serverErrorProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { DebtScheduleSummary } from "./debt-schedule-summary";
 
 const [mortgage] = debts;
@@ -52,7 +52,7 @@ export const UsingScheduledBalance: Story = {
 };
 
 export const UpdatePending: Story = {
-  parameters: { msw: { handlers: [getUpdateDebtMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getUpdateDebtMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(
@@ -62,9 +62,7 @@ export const UpdatePending: Story = {
 };
 
 export const UpdateFails: Story = {
-  parameters: {
-    msw: { handlers: [getUpdateDebtMockHandler(failWith(serverErrorProblem, 500)), ...handlers] },
-  },
+  parameters: withHandlers(getUpdateDebtMockHandler(failWith(serverErrorProblem, 500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

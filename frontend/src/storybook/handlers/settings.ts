@@ -7,15 +7,22 @@ import {
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
-import { FIXTURE_TODAY, settings, smtpSettings, smtpTestSent } from "@/storybook/fixtures";
+import {
+  FIXTURE_TODAY,
+  publicSettings,
+  settings,
+  smtpSettings,
+  smtpTestSent,
+} from "@/storybook/fixtures";
 import { readBody, text } from "./http";
 
+export const emailEnabledHandler = getPublicSettingsMockHandler({
+  ...publicSettings,
+  emailEnabled: true,
+});
+
 export const settingsHandlers = [
-  getPublicSettingsMockHandler({
-    instanceName: settings.instanceName,
-    defaultLanguage: settings.defaultLanguage,
-    emailEnabled: false,
-  }),
+  getPublicSettingsMockHandler(publicSettings),
   getSettingsMockHandler(settings),
   getUpdateSettingsMockHandler(async ({ request }) => ({
     ...settings,

@@ -1,23 +1,20 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, test, vi } from "vitest";
 import { archivedAccount, archivedAccounts, familyHousehold } from "@/storybook/fixtures";
-import { createQueryWrapper } from "@/test/query";
+import { renderWithQuery } from "@/test/query";
 import { ArchivedAccountsList } from "./archived-accounts";
 
 const householdNames = new Map([[familyHousehold.id, familyHousehold.name]]);
 
 test("offers Restore only on the accounts the caller owns", () => {
-  const { Wrapper } = createQueryWrapper();
-
-  render(
+  renderWithQuery(
     <ArchivedAccountsList
       accounts={archivedAccounts}
       householdNames={householdNames}
       restoringId={null}
       onRestore={vi.fn()}
     />,
-    { wrapper: Wrapper },
   );
 
   expect(screen.getAllByRole("listitem")).toHaveLength(2);
@@ -28,16 +25,14 @@ test("offers Restore only on the accounts the caller owns", () => {
 });
 
 test("passes the account id to onRestore and locks the buttons while one restores", async () => {
-  const { Wrapper } = createQueryWrapper();
   const onRestore = vi.fn();
-  const { rerender } = render(
+  const { rerender } = renderWithQuery(
     <ArchivedAccountsList
       accounts={archivedAccounts}
       householdNames={householdNames}
       restoringId={null}
       onRestore={onRestore}
     />,
-    { wrapper: Wrapper },
   );
 
   await userEvent.click(screen.getByRole("button", { name: `Restore: ${archivedAccount.name}` }));

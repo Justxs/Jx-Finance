@@ -6,9 +6,9 @@ import { many, tags } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { TagsPage } from "./tags-page";
@@ -39,7 +39,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const LongList: Story = {
-  parameters: { msw: { handlers: [getTagsMockHandler(manyTags), ...handlers] } },
+  parameters: withHandlers(getTagsMockHandler(manyTags)),
 };
 
 export const AddDialogOpen: Story = {
@@ -51,7 +51,7 @@ export const AddDialogOpen: Story = {
 };
 
 export const DeletePending: Story = {
-  parameters: { msw: { handlers: [getDeleteTagMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getDeleteTagMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deleteButtons = await canvas.findAllByRole("button", {

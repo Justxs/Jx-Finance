@@ -22,9 +22,9 @@ import {
   emptyHandlers,
   errorHandlers,
   failWith,
-  handlers,
   loadingHandlers,
   pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { chooseOption, first, openedDialog } from "@/storybook/interactions";
 import { UsersPage } from "./users-page";
@@ -60,25 +60,15 @@ export const SortedByNameDescending: Story = {
 export const OnlyCurrentUser: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
 export const NoUsers: Story = {
-  parameters: {
-    msw: { handlers: [getUsersMockHandler([]), ...handlers] },
-  },
+  parameters: withHandlers(getUsersMockHandler([])),
 };
 
 export const SignedInAsAnotherAdmin: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler({ ...memberUser, role: UserRole.admin }), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler({ ...memberUser, role: UserRole.admin })),
 };
 
 export const LongNamesAndInactive: Story = {
-  parameters: {
-    msw: {
-      handlers: [getUsersMockHandler([longNameUser, inactiveUser]), ...handlers],
-    },
-  },
+  parameters: withHandlers(getUsersMockHandler([longNameUser, inactiveUser])),
 };
 
 export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
@@ -124,11 +114,7 @@ export const CancelsDeactivation: Story = {
 };
 
 export const DeactivationFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getDeactivateUserMockHandler(failWith(serverErrorProblem, 500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getDeactivateUserMockHandler(failWith(serverErrorProblem, 500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deactivate = first(
@@ -149,15 +135,10 @@ export const DeactivationFails: Story = {
 const secondAdmin = { ...memberUser, role: UserRole.admin };
 
 export const DeactivatingLastAdministratorRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUsersMockHandler([secondAdmin]),
-        getDeactivateUserMockHandler(failWith(lastAdministratorProblem, 403)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUsersMockHandler([secondAdmin]),
+    getDeactivateUserMockHandler(failWith(lastAdministratorProblem, 403)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deactivate = first(
@@ -177,15 +158,10 @@ export const DeactivatingLastAdministratorRefused: Story = {
 };
 
 export const DemotingLastAdministratorRefused: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getUsersMockHandler([secondAdmin]),
-        getUpdateUserRoleMockHandler(failWith(lastAdministratorProblem, 403)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getUsersMockHandler([secondAdmin]),
+    getUpdateUserRoleMockHandler(failWith(lastAdministratorProblem, 403)),
+  ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const role = first(
@@ -217,7 +193,7 @@ export const ReactivatesUser: Story = {
 };
 
 export const ReactivationPending: Story = {
-  parameters: { msw: { handlers: [getReactivateUserMockHandler(pending), ...handlers] } },
+  parameters: withHandlers(getReactivateUserMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const reactivate = first(

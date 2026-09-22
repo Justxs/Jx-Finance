@@ -11,7 +11,7 @@ import {
   serverErrorProblem,
   validationProblem,
 } from "@/storybook/fixtures";
-import { failWith, handlers, pending } from "@/storybook/handlers";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { TwoFactorSettings } from "./two-factor-settings";
 
 const meta = {
@@ -33,55 +33,32 @@ type Story = StoryObj<typeof meta>;
 export const Disabled: Story = {};
 
 export const Enabled: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(currentUserWithTwoFactor), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(currentUserWithTwoFactor)),
 };
 
 export const WrongPasswordOnEnable: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getSetupTwoFactorMockHandler(
-          failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getSetupTwoFactorMockHandler(
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+    ),
+  ),
 };
 
 export const WrongPasswordOnDisable: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getMeMockHandler(currentUserWithTwoFactor),
-        getDisableTwoFactorMockHandler(
-          failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
-        ),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getMeMockHandler(currentUserWithTwoFactor),
+    getDisableTwoFactorMockHandler(
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+    ),
+  ),
 };
 
 export const Loading: Story = {
-  parameters: {
-    msw: {
-      handlers: [getMeMockHandler(pending), ...handlers],
-    },
-  },
+  parameters: withHandlers(getMeMockHandler(pending)),
 };
 
 export const ServerError: Story = {
-  parameters: {
-    msw: {
-      handlers: [
-        getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
-        ...handlers,
-      ],
-    },
-  },
+  parameters: withHandlers(
+    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
+  ),
 };

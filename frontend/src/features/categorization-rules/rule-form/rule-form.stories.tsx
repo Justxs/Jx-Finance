@@ -12,7 +12,7 @@ import {
   ruleTestNoMatch,
   tags,
 } from "@/storybook/fixtures";
-import { errorHandlers, failWithStatus, handlers, pending } from "@/storybook/handlers";
+import { errorHandlers, failWithStatus, pending, withHandlers } from "@/storybook/handlers";
 import { RuleForm } from "./rule-form";
 
 const meta = {
@@ -72,11 +72,7 @@ export const SampleMatches: Story = {
 
 export const SampleDoesNotMatch: Story = {
   args: { initial: categorizationRules[0] },
-  parameters: {
-    msw: {
-      handlers: [getTestCategorizationRuleMockHandler(ruleTestNoMatch), ...handlers],
-    },
-  },
+  parameters: withHandlers(getTestCategorizationRuleMockHandler(ruleTestNoMatch)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(
@@ -92,11 +88,7 @@ export const SampleDoesNotMatch: Story = {
 
 export const SampleFailsOnTheAmount: Story = {
   args: { initial: categorizationRules[1] },
-  parameters: {
-    msw: {
-      handlers: [getTestCategorizationRuleMockHandler(ruleTestAmountOnly), ...handlers],
-    },
-  },
+  parameters: withHandlers(getTestCategorizationRuleMockHandler(ruleTestAmountOnly)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(
@@ -114,9 +106,7 @@ export const SampleFailsOnTheAmount: Story = {
 };
 
 export const SubmitPending: Story = {
-  parameters: {
-    msw: { handlers: [getCreateCategorizationRuleMockHandler(pending), ...handlers] },
-  },
+  parameters: withHandlers(getCreateCategorizationRuleMockHandler(pending)),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByLabelText(/^(name|pavadinimas)$/i), {
@@ -131,11 +121,7 @@ export const SubmitPending: Story = {
 };
 
 export const SubmitFails: Story = {
-  parameters: {
-    msw: {
-      handlers: [getCreateCategorizationRuleMockHandler(failWithStatus(500)), ...handlers],
-    },
-  },
+  parameters: withHandlers(getCreateCategorizationRuleMockHandler(failWithStatus(500))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByLabelText(/^(name|pavadinimas)$/i), {
