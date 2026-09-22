@@ -1,17 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Bar } from "recharts";
 import type { DebtSchedulePlan } from "@/api/generated/model";
 import {
   CHART_COLOR_NEGATIVE,
   CHART_COLOR_POSITIVE,
   CHART_COLOR_PRIMARY,
   type ChartSeries,
-  ChartLegend,
-  ChartTooltip,
-  axisProps,
-  chartCursor,
 } from "@/components/chart";
-import { useAxisMoney } from "@/hooks/use-formatters";
+import { BarChartFrame } from "@/components/chart/bar-chart-frame";
 import { toCents } from "@/lib/money";
 
 interface YearSplit {
@@ -46,7 +42,6 @@ export function splitByYear(plan: DebtSchedulePlan): YearSplit[] {
 
 export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
   const { t } = useTranslation();
-  const axisMoney = useAxisMoney();
   const data = splitByYear(plan);
   const withExtra = data.some((year) => year.extra > 0);
 
@@ -61,49 +56,23 @@ export function DebtPaymentSplitChart({ plan }: Readonly<Props>) {
   ];
 
   return (
-    <div className="space-y-3">
-      <ChartLegend series={series} />
-      <div role="img" aria-label={t("netWorth.schedule.splitChartLabel")}>
-        <ResponsiveContainer width="100%" height={240}>
-          <BarChart
-            accessibilityLayer={false}
-            data={data}
-            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-            barCategoryGap="20%"
-          >
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="label"
-              {...axisProps}
-              tickMargin={8}
-              minTickGap={16}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tickFormatter={(value) => axisMoney.format(Number(value))}
-              {...axisProps}
-              tickCount={5}
-              width={56}
-            />
-            <Tooltip
-              cursor={chartCursor}
-              content={<ChartTooltip series={series} />}
-              isAnimationActive={false}
-              offset={12}
-            />
-            {series.map((item) => (
-              <Bar
-                key={item.key}
-                isAnimationActive={false}
-                stackId="payment"
-                maxBarSize={24}
-                dataKey={item.key}
-                fill={item.color}
-              />
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <BarChartFrame
+      data={data}
+      series={series}
+      ariaLabel={t("netWorth.schedule.splitChartLabel")}
+      height={240}
+      barCategoryGap="20%"
+    >
+      {series.map((item) => (
+        <Bar
+          key={item.key}
+          isAnimationActive={false}
+          stackId="payment"
+          maxBarSize={24}
+          dataKey={item.key}
+          fill={item.color}
+        />
+      ))}
+    </BarChartFrame>
   );
 }

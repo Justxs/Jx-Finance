@@ -1,25 +1,12 @@
 import { useTranslation } from "react-i18next";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { useReportSummarySuspense } from "@/api/generated";
 import type { ReportTrendPoint } from "@/api/generated/model";
+import { CHART_COLOR_PRIMARY } from "@/components/chart";
 import {
-  CHART_COLOR_PRIMARY,
-  axisProps,
-  chartCursor,
-  ChartLegend,
-  type ChartSeries,
-  ChartTooltip,
-} from "@/components/chart";
+  type TimeSeriesLine,
+  TimeSeriesLineChart,
+} from "@/components/chart/time-series-line-chart";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { useAxisMoney } from "@/hooks/use-formatters";
 import { useTodayDate } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
 import { spendingPaceRanges } from "../dashboard-queries";
@@ -48,7 +35,6 @@ function lastDayOf(isoDate: string | null | undefined) {
 
 export function SpendingPaceChart() {
   const { t } = useTranslation();
-  const axisMoney = useAxisMoney();
   const today = useTodayDate();
   const ranges = spendingPaceRanges(today);
   const current = useReportSummarySuspense(ranges.current);
@@ -59,7 +45,7 @@ export function SpendingPaceChart() {
   const currentTotals = cumulativeByDay(current.data.trend, today.getDate());
   const previousTotals = cumulativeByDay(previous.data.trend, daysInPrevious);
 
-  const series: ChartSeries[] = [
+  const series: TimeSeriesLine[] = [
     {
       key: "current",
       label: t("dashboard.pace.current"),
@@ -71,6 +57,7 @@ export function SpendingPaceChart() {
       label: t("dashboard.pace.previous"),
       color: "var(--muted-foreground)",
       shape: "line",
+      comparison: true,
     },
   ];
 
@@ -85,67 +72,14 @@ export function SpendingPaceChart() {
   }
 
   return (
-    <div className="space-y-3">
-      <ChartLegend series={series} />
-      <div role="img" aria-label={t("dashboard.pace.label")}>
-        <ResponsiveContainer width="100%" height={240}>
-          <LineChart
-            accessibilityLayer={false}
-            data={chartData}
-            margin={{ top: 8, right: 12, bottom: 0, left: 0 }}
-          >
-            <CartesianGrid vertical={false} stroke="var(--border)" />
-            <XAxis
-              dataKey="day"
-              {...axisProps}
-              tickMargin={8}
-              minTickGap={24}
-              interval="preserveStartEnd"
-            />
-            <YAxis
-              tickFormatter={(value) => axisMoney.format(Number(value))}
-              {...axisProps}
-              tickCount={5}
-              width={56}
-            />
-            <Tooltip
-              cursor={chartCursor}
-              content={
-                <ChartTooltip
-                  series={series}
-                  formatLabel={(day) => t("dashboard.pace.day", { day })}
-                />
-              }
-              isAnimationActive={false}
-              offset={12}
-            />
-            <Line
-              isAnimationActive={false}
-              type="stepAfter"
-              dataKey="previous"
-              stroke="var(--muted-foreground)"
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              dot={false}
-              activeDot={false}
-            />
-            <Line
-              isAnimationActive={false}
-              type="stepAfter"
-              dataKey="current"
-              stroke={CHART_COLOR_PRIMARY}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{
-                r: 4,
-                fill: CHART_COLOR_PRIMARY,
-                stroke: "var(--background)",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <TimeSeriesLineChart
+      data={chartData}
+      series={series}
+      ariaLabel={t("dashboard.pace.label")}
+      xAxis="day"
+      curve="stepAfter"
+      formatLabel={(day) => t("dashboard.pace.day", { day })}
+      legend
+    />
   );
 }

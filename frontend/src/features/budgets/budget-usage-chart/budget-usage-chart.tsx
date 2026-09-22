@@ -1,25 +1,9 @@
 import { useTranslation } from "react-i18next";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Rectangle,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Bar, Rectangle } from "recharts";
 import type { BarShapeProps } from "recharts";
 import type { BudgetResponse } from "@/api/generated/model";
-import {
-  CHART_COLOR_NEGATIVE,
-  CHART_COLOR_PRIMARY,
-  axisProps,
-  ChartLegend,
-  type ChartSeries,
-  ChartTooltip,
-} from "@/components/chart";
-import { useAxisMoney } from "@/hooks/use-formatters";
+import { CHART_COLOR_NEGATIVE, CHART_COLOR_PRIMARY, type ChartSeries } from "@/components/chart";
+import { BarChartFrame } from "@/components/chart/bar-chart-frame";
 
 const ROW_HEIGHT = 44;
 const MAX_LABEL = 18;
@@ -34,7 +18,6 @@ function shorten(value: string) {
 
 export function BudgetUsageChart({ budgets }: Readonly<Props>) {
   const { t } = useTranslation();
-  const axisMoney = useAxisMoney();
 
   const series: ChartSeries[] = [
     { key: "limit", label: t("budgets.limitSeries"), color: "var(--input)" },
@@ -43,7 +26,7 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
 
   const chartData = budgets
     .map((budget) => ({
-      name: budget.categoryName,
+      label: budget.categoryName,
       limit: Number(budget.effectiveLimit),
       spent: Number(budget.spent),
     }))
@@ -56,43 +39,18 @@ export function BudgetUsageChart({ budgets }: Readonly<Props>) {
   }
 
   return (
-    <div className="space-y-3">
-      <ChartLegend series={series} />
-      <div role="img" aria-label={t("budgets.usageLabel")}>
-        <ResponsiveContainer width="100%" height={chartData.length * ROW_HEIGHT + 32}>
-          <BarChart
-            accessibilityLayer={false}
-            layout="vertical"
-            data={chartData}
-            margin={{ top: 0, right: 12, bottom: 0, left: 0 }}
-            barCategoryGap="30%"
-            barGap={2}
-          >
-            <CartesianGrid horizontal={false} stroke="var(--border)" />
-            <XAxis
-              type="number"
-              tickFormatter={(value) => axisMoney.format(Number(value))}
-              {...axisProps}
-              tickCount={5}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              tickFormatter={(value) => shorten(String(value))}
-              {...axisProps}
-              width={132}
-            />
-            <Tooltip
-              cursor={{ fill: "var(--muted)", fillOpacity: 0.5 }}
-              content={<ChartTooltip series={series} />}
-              isAnimationActive={false}
-              offset={12}
-            />
-            <Bar isAnimationActive={false} dataKey="limit" fill="var(--input)" maxBarSize={10} />
-            <Bar isAnimationActive={false} dataKey="spent" maxBarSize={10} shape={spentShape} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <BarChartFrame
+      data={chartData}
+      series={series}
+      ariaLabel={t("budgets.usageLabel")}
+      height={chartData.length * ROW_HEIGHT + 32}
+      layout="vertical"
+      barCategoryGap="30%"
+      barGap={2}
+      formatCategory={shorten}
+    >
+      <Bar isAnimationActive={false} dataKey="limit" fill="var(--input)" maxBarSize={10} />
+      <Bar isAnimationActive={false} dataKey="spent" maxBarSize={10} shape={spentShape} />
+    </BarChartFrame>
   );
 }

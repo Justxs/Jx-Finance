@@ -1,12 +1,7 @@
 import { ListFilter } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  type AccountResponse,
-  type CategoryResponse,
-  type TagResponse,
-  TransactionSortField,
-} from "@/api/generated/model";
+import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { SelectField } from "@/components/select-field/select-field";
@@ -15,12 +10,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-pi
 import { Input } from "@/components/ui/input/input";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
-import type { SortDirection } from "@/lib/sort";
-import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
-
-const SEARCH_DEBOUNCE_MS = 300;
-
-type SortValue = `${TransactionSortField}:${SortDirection}`;
+import { useTransactionFilters } from "../use-transaction-filters";
 
 interface Props {
   accounts: AccountResponse[];
@@ -39,43 +29,14 @@ export function TransactionsFiltersDialog({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const filters = useTransactionFilters({ accounts, categories });
-  const { search, setFilter, activeCount } = filters;
+  const { fields, activeCount } = filters;
   const [open, setOpen] = useState(defaultOpen);
-  const text = useDebouncedDraft(
-    search.search ?? "",
-    (next) => setFilter({ search: next || undefined }),
-    SEARCH_DEBOUNCE_MS,
-  );
+  const text = useDebouncedDraft(fields.search.value, fields.search.set, fields.search.debounceMs);
 
   function clearAll() {
     text.cancel();
     filters.clearFilters();
   }
-
-  const columnLabels: Record<TransactionSortField, string> = {
-    date: t("transactions.date"),
-    description: t("transactions.description"),
-    category: t("transactions.category"),
-    account: t("transactions.account"),
-    amount: t("transactions.amount"),
-  };
-
-  const sortOptions = Object.values(TransactionSortField).flatMap((field) => [
-    {
-      sort: field,
-      direction: "desc" as const,
-      value: `${field}:desc` as SortValue,
-      label: t("transactions.sortDescending", { column: columnLabels[field] }),
-    },
-    {
-      sort: field,
-      direction: "asc" as const,
-      value: `${field}:asc` as SortValue,
-      label: t("transactions.sortAscending", { column: columnLabels[field] }),
-    },
-  ]);
-
-  const sortValue: SortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
 
   return (
     <>
@@ -93,75 +54,70 @@ export function TransactionsFiltersDialog({
 
       <Modal open={open} onOpenChange={setOpen} title={t("transactions.filtersTitle")}>
         <div className="space-y-4">
-          <FieldShell id="tx-filter-search" label={t("transactions.description")}>
+          <FieldShell id="tx-filter-search" label={fields.search.label}>
             <Input
               id="tx-filter-search"
               type="search"
-              placeholder={t("transactions.searchPlaceholder")}
+              placeholder={fields.search.placeholder}
               value={text.draft}
               onChange={(event) => text.change(event.target.value)}
             />
           </FieldShell>
 
-          <FieldShell id="tx-filter-type" label={t("transactions.type")}>
-            <SelectField<TransactionTypeFilter>
+          <FieldShell id="tx-filter-type" label={fields.type.label}>
+            <SelectField
               id="tx-filter-type"
-              value={search.type ?? ""}
-              onChange={(value) => setFilter({ type: value || undefined })}
-              options={filters.typeOptions}
+              value={fields.type.value}
+              onChange={fields.type.set}
+              options={fields.type.options}
             />
           </FieldShell>
 
-          <FieldShell id="tx-filter-date" label={t("transactions.date")}>
+          <FieldShell id="tx-filter-date" label={fields.date.label}>
             <DateRangePicker
               id="tx-filter-date"
-              value={filters.dateRange}
-              onChange={filters.setDateRange}
+              value={fields.date.value}
+              onChange={fields.date.set}
             />
           </FieldShell>
 
-          <FieldShell id="tx-filter-category" label={t("transactions.category")}>
+          <FieldShell id="tx-filter-category" label={fields.category.label}>
             <SelectField
               id="tx-filter-category"
-              value={search.categoryId ?? ""}
-              onChange={(value) => setFilter({ categoryId: value || undefined })}
-              options={filters.categoryOptions}
+              value={fields.category.value}
+              onChange={fields.category.set}
+              options={fields.category.options}
             />
           </FieldShell>
 
           {tags.length > 0 ? (
-            <FieldShell id="tx-filter-tags" label={t("tags.field")} hint={t("tags.filterHint")}>
+            <FieldShell id="tx-filter-tags" label={fields.tags.label} hint={fields.tags.hint}>
               <TagPicker
                 id="tx-filter-tags"
                 tags={tags}
-                value={filters.selectedTagIds}
-                onChange={filters.setTagIds}
-                aria-label={t("tags.field")}
+                value={fields.tags.value}
+                onChange={fields.tags.set}
+                aria-label={fields.tags.label}
                 aria-describedby="tx-filter-tags-hint"
               />
             </FieldShell>
           ) : null}
 
-          <FieldShell id="tx-filter-account" label={t("transactions.account")}>
+          <FieldShell id="tx-filter-account" label={fields.account.label}>
             <SelectField
               id="tx-filter-account"
-              value={search.accountId ?? ""}
-              onChange={(value) => setFilter({ accountId: value || undefined })}
-              options={filters.accountOptions}
+              value={fields.account.value}
+              onChange={fields.account.set}
+              options={fields.account.options}
             />
           </FieldShell>
 
-          <FieldShell id="tx-filter-sort" label={t("transactions.sortBy")}>
-            <SelectField<SortValue>
+          <FieldShell id="tx-filter-sort" label={fields.sort.label}>
+            <SelectField
               id="tx-filter-sort"
-              value={sortValue}
-              onChange={(value) => {
-                const chosen = sortOptions.find((option) => option.value === value);
-                if (chosen) {
-                  filters.setSort(chosen.sort, chosen.direction);
-                }
-              }}
-              options={sortOptions}
+              value={fields.sort.value}
+              onChange={fields.sort.set}
+              options={fields.sort.options}
             />
           </FieldShell>
 

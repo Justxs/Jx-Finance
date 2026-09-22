@@ -1,5 +1,4 @@
 import type { ReactNode } from "react";
-import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
 import { SelectField } from "@/components/select-field/select-field";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
@@ -8,7 +7,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-pi
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
 import { type AriaSort, ariaSortFor } from "@/lib/sort";
-import { type TransactionTypeFilter, useTransactionFilters } from "../use-transaction-filters";
+import { useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
   accounts: AccountResponse[];
@@ -17,14 +16,15 @@ interface Args {
 }
 
 export function useTransactionColumnHeaders({ accounts, categories, tags }: Args) {
-  const { t } = useTranslation();
   const filters = useTransactionFilters({ accounts, categories });
-  const { search, setFilter } = filters;
+  const { search, fields, columnLabels } = filters;
 
   type SortKey = NonNullable<typeof search.sort>;
 
-  function header(sortKey: SortKey, label: string, filter: ReactNode) {
-    return <ColumnHeader label={label} {...filters.sortProps(sortKey)} filter={filter} />;
+  function header(sortKey: SortKey, filter: ReactNode) {
+    return (
+      <ColumnHeader label={columnLabels[sortKey]} {...filters.sortProps(sortKey)} filter={filter} />
+    );
   }
 
   function ariaSort(sortKey: SortKey): AriaSort {
@@ -42,61 +42,58 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
   const byColumn: Record<string, ReactNode> = {
     date: header(
       "date",
-      t("transactions.date"),
       <ColumnFilter
-        label={t("transactions.date")}
-        active={Boolean(search.dateFrom) || Boolean(search.dateTo)}
-        onClear={() => setFilter({ dateFrom: undefined, dateTo: undefined })}
+        label={fields.date.label}
+        active={fields.date.active}
+        onClear={fields.date.clear}
       >
-        <DateRangePicker value={filters.dateRange} onChange={filters.setDateRange} />
+        <DateRangePicker value={fields.date.value} onChange={fields.date.set} />
       </ColumnFilter>,
     ),
     description: header(
       "description",
-      t("transactions.description"),
       <TextColumnFilter
-        label={t("transactions.description")}
-        value={search.search ?? ""}
-        placeholder={t("transactions.searchPlaceholder")}
-        debounceMs={300}
+        label={fields.search.label}
+        value={fields.search.value}
+        placeholder={fields.search.placeholder}
+        debounceMs={fields.search.debounceMs}
         shortcut={SEARCH_SHORTCUT_TARGET}
-        onChange={(value) => setFilter({ search: value || undefined })}
+        onChange={fields.search.set}
       />,
     ),
     categoryId: header(
       "category",
-      t("transactions.category"),
       <ColumnFilter
-        label={t("transactions.category")}
-        active={Boolean(search.categoryId)}
-        onClear={() => setFilter({ categoryId: undefined })}
+        label={fields.category.label}
+        active={fields.category.active}
+        onClear={fields.category.clear}
       >
         <SelectField
-          aria-label={t("transactions.category")}
-          value={search.categoryId ?? ""}
-          onChange={(value) => setFilter({ categoryId: value || undefined })}
-          options={filters.categoryOptions}
+          aria-label={fields.category.label}
+          value={fields.category.value}
+          onChange={fields.category.set}
+          options={fields.category.options}
         />
       </ColumnFilter>,
     ),
     tagIds: (
       <ColumnHeader<string>
-        label={t("tags.field")}
+        label={fields.tags.label}
         filter={
           <ColumnFilter
-            label={t("tags.field")}
-            active={filters.selectedTagIds.length > 0}
-            onClear={() => filters.setTagIds([])}
+            label={fields.tags.label}
+            active={fields.tags.active}
+            onClear={fields.tags.clear}
           >
             <TagPicker
               tags={tags}
-              value={filters.selectedTagIds}
-              onChange={filters.setTagIds}
-              aria-label={t("tags.field")}
+              value={fields.tags.value}
+              onChange={fields.tags.set}
+              aria-label={fields.tags.label}
               aria-describedby="tx-tag-filter-hint"
             />
             <p id="tx-tag-filter-hint" className="text-xs text-muted-foreground">
-              {t("tags.filterHint")}
+              {fields.tags.hint}
             </p>
           </ColumnFilter>
         }
@@ -104,33 +101,31 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
     ),
     accountId: header(
       "account",
-      t("transactions.account"),
       <ColumnFilter
-        label={t("transactions.account")}
-        active={Boolean(search.accountId)}
-        onClear={() => setFilter({ accountId: undefined })}
+        label={fields.account.label}
+        active={fields.account.active}
+        onClear={fields.account.clear}
       >
         <SelectField
-          aria-label={t("transactions.account")}
-          value={search.accountId ?? ""}
-          onChange={(value) => setFilter({ accountId: value || undefined })}
-          options={filters.accountOptions}
+          aria-label={fields.account.label}
+          value={fields.account.value}
+          onChange={fields.account.set}
+          options={fields.account.options}
         />
       </ColumnFilter>,
     ),
     amount: header(
       "amount",
-      t("transactions.amount"),
       <ColumnFilter
-        label={t("transactions.amount")}
-        active={Boolean(search.type)}
-        onClear={() => setFilter({ type: undefined })}
+        label={columnLabels.amount}
+        active={fields.type.active}
+        onClear={fields.type.clear}
       >
-        <SelectField<TransactionTypeFilter>
-          aria-label={t("transactions.amount")}
-          value={search.type ?? ""}
-          onChange={(value) => setFilter({ type: value || undefined })}
-          options={filters.typeOptions}
+        <SelectField
+          aria-label={columnLabels.amount}
+          value={fields.type.value}
+          onChange={fields.type.set}
+          options={fields.type.options}
         />
       </ColumnFilter>,
     ),
