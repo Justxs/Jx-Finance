@@ -26,12 +26,11 @@ public sealed class EmailOutboxJob(
         var delivery = services.GetRequiredService<IEmailDelivery>();
         var db = services.GetRequiredService<AppDbContext>();
         var clock = services.GetRequiredService<IClock>();
+        await PruneAsync(db, clock, ct);
         if (!delivery.IsConfigured)
         {
             return;
         }
-
-        await PruneAsync(db, clock, ct);
 
         var now = clock.UtcNow;
         var batchSize = Math.Max(options.Value.Email.OutboxBatchSize, 1);
