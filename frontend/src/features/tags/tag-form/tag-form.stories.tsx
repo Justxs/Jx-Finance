@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
-import { getCreateTagMockHandler } from "@/api/generated/tags/tags.msw";
+import { getCreateTagMockHandler, getUpdateTagMockHandler } from "@/api/generated/tags/tags.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { duplicateTagProblem } from "@/storybook/fixtures";
+import { duplicateTagProblem, ids, tags } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -12,25 +12,32 @@ import {
   loadingHandlers,
   pending,
 } from "@/storybook/handlers";
-import { AddTagForm } from "./add-tag-form";
+import { TagForm } from "./tag-form";
+
+const personalTag = tags.find((item) => item.id === ids.tags.holiday)!;
+const sharedTag = tags.find((item) => item.scope === "shared")!;
 
 const meta = {
-  title: "Features/Tags/AddTagForm",
-  component: AddTagForm,
-  args: { onCreated: fn(), onCancel: fn() },
+  title: "Features/Tags/TagForm",
+  component: TagForm,
+  args: { onDone: fn(), onCancel: fn() },
   render: (args) => (
     <div className="w-[min(32rem,calc(100vw-3rem))]">
       <QueryBoundary fallback={<Skeleton className="h-52 w-full" />}>
-        <AddTagForm {...args} />
+        <TagForm {...args} />
       </QueryBoundary>
     </div>
   ),
-} satisfies Meta<typeof AddTagForm>;
+} satisfies Meta<typeof TagForm>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
+
+export const Editing: Story = { args: { initial: personalTag } };
+
+export const EditingShared: Story = { args: { initial: sharedTag } };
 
 export const NoHouseholds: Story = { parameters: { msw: { handlers: emptyHandlers } } };
 
@@ -56,8 +63,7 @@ export const DuplicateName: Story = {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Atostogos" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
-    const alert = await canvas.findByRole("alert");
-    await expect(alert).toBeInTheDocument();
+    await expect(await canvas.findByRole("alert")).toBeInTheDocument();
   },
 };
 
@@ -67,5 +73,29 @@ export const SubmitPending: Story = {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Remontas" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
+  },
+};
+
+export const Renamed: Story = {
+  args: { initial: personalTag },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const name = await canvas.findByRole("textbox");
+    await fireEvent.change(name, { target: { value: "Atostogos Ispanijoje" } });
+    await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
+    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+  },
+};
+
+export const RenameDuplicate: Story = {
+  args: { initial: personalTag },
+  parameters: {
+    msw: { handlers: [getUpdateTagMockHandler(failWith(duplicateTagProblem, 409)), ...handlers] },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Vaikams" } });
+    await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
+    await expect(await canvas.findByRole("alert")).toBeInTheDocument();
   },
 };

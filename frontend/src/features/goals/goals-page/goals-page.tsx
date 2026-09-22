@@ -1,5 +1,4 @@
-import { Plus } from "lucide-react";
-import { type ReactNode, useState, useDeferredValue } from "react";
+import { type ReactNode, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGoalsQueryKey,
@@ -9,9 +8,8 @@ import {
 } from "@/api/generated";
 import type { GoalResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { Panel } from "@/components/ui/section/section";
@@ -23,7 +21,6 @@ import { GoalRow } from "../goal-row/goal-row";
 
 export function GoalsPage() {
   const { t } = useTranslation();
-  const [addOpen, setAddOpen] = useState(false);
 
   const accounts = useAccountsSuspense();
   const goals = useGoalsSuspense();
@@ -61,19 +58,10 @@ export function GoalsPage() {
   return (
     <div className="space-y-5">
       <PageHeader title={t("goals.title")}>
-        <Button onClick={() => setAddOpen(true)}>
-          <Plus />
-          {t("goals.add")}
-        </Button>
+        <CreateDialog label={t("goals.add")} title={t("goals.add")}>
+          {(close) => <CreateGoalForm accounts={accountList} onCreated={close} onCancel={close} />}
+        </CreateDialog>
       </PageHeader>
-
-      <Modal open={addOpen} onOpenChange={setAddOpen} title={t("goals.add")}>
-        <CreateGoalForm
-          accounts={accountList}
-          onCreated={() => setAddOpen(false)}
-          onCancel={() => setAddOpen(false)}
-        />
-      </Modal>
 
       {content}
       <ConfirmDeleteDialog {...remove.dialogProps} />

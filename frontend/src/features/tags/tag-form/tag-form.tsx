@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateTag, useHouseholdsSuspense } from "@/api/generated";
-import type { Scope } from "@/api/generated/model";
+import { useCreateTag, useHouseholdsSuspense, useUpdateTag } from "@/api/generated";
+import type { Scope, TagResponse } from "@/api/generated/model";
 import { createTagBodyNameMax } from "@/api/schemas/tags/tags.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { silent } from "@/lib/mutations";
+import { silent, upsert } from "@/lib/mutations";
 import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 
@@ -18,11 +18,12 @@ interface FormValues {
 }
 
 interface Props {
-  onCreated: () => void;
+  initial?: TagResponse;
+  onDone: () => void;
   onCancel: () => void;
 }
 
-export function AddTagForm({ onCreated, onCancel }: Readonly<Props>) {
+export function TagForm({ initial, onDone, onCancel }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data ?? [];
@@ -36,25 +37,28 @@ export function AddTagForm({ onCreated, onCancel }: Readonly<Props>) {
     t,
   );
 
-  const createMutation = useCreateTag(silent({ onSuccess: onCreated }));
+  const { create, update, pending, error } = upsert(
+    useCreateTag(silent({ onSuccess: onDone })),
+    useUpdateTag(silent({ onSuccess: onDone })),
+  );
 
   const defaultValues: FormValues = {
-    name: "",
-    scope: sharing.scope,
-    householdId: sharing.householdId,
+    name: initial?.name ?? "",
+    scope: initial?.scope ?? sharing.scope,
+    householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
   };
 
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) =>
-      createMutation.mutateAsync({
-        data: {
-          name: value.name.trim(),
-          scope: value.scope,
-          householdId: sharedHouseholdId(value),
-        },
-      }),
+    submit: (value) => {
+      const data = {
+        name: value.name.trim(),
+        scope: value.scope,
+        householdId: sharedHouseholdId(value),
+      };
+      return initial ? update({ id: initial.id, data }) : create({ data });
+    },
   });
 
   return (
@@ -82,11 +86,11 @@ export function AddTagForm({ onCreated, onCancel }: Readonly<Props>) {
           </FormGrid>
         ) : null}
 
-        <FormError error={createMutation.error} />
+        <FormError error={error} />
 
         <form.FormActions
-          pending={createMutation.isPending}
-          submitLabel={t("actions.add")}
+          pending={pending}
+          submitLabel={initial ? t("actions.save") : t("actions.add")}
           onCancel={onCancel}
         />
       </form.FormShell>
