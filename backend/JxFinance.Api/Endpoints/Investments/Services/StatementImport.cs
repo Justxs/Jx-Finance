@@ -1,6 +1,6 @@
 using JxFinance.Common;
-using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
+using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
@@ -19,6 +19,7 @@ namespace JxFinance.Endpoints.Investments.Services;
 public sealed class StatementImport(
     AppDbContext db,
     IExchangeRateService rates,
+    ITransferAmountResolver transfers,
     FlexStatement statement,
     AccountId account,
     AccountId? funding)
@@ -67,7 +68,7 @@ public sealed class StatementImport(
         var error = await ImportTradesAsync(cancellationToken) ?? await ImportCashTransactionsAsync(cancellationToken);
         if (error is not null)
         {
-            return new DomainError(ErrorCodes.ExchangeRateUnavailable, error);
+            return error;
         }
 
         await UpdatePricesAsync(cancellationToken);
@@ -193,12 +194,12 @@ public sealed class StatementImport(
         }
     }
 
-    private async Task<string?> ImportTradesAsync(CancellationToken cancellationToken)
+    private async Task<DomainError?> ImportTradesAsync(CancellationToken cancellationToken)
     {
         foreach (var trade in statement.Trades.OrderBy(t => t.Date))
         {
             var reference = TradeRefPrefix + trade.Id;
-            string? error = null;
+            DomainError? error = null;
             if (reference.Length > MaxRefLength - 4)
             {
                 counts.Skipped++;
@@ -268,7 +269,7 @@ public sealed class StatementImport(
         return null;
     }
 
-    private async Task<string?> ImportCashTransactionsAsync(CancellationToken cancellationToken)
+    private async Task<DomainError?> ImportCashTransactionsAsync(CancellationToken cancellationToken)
     {
         foreach (var entry in statement.CashTransactions.OrderBy(c => c.Date))
         {
@@ -289,20 +290,12 @@ public sealed class StatementImport(
                 {
                     counts.Duplicates++;
                 }
+                else if (await AddTransferAsync(reference, entry, funding.Value, cancellationToken) is { } error)
+                {
+                    return error;
+                }
                 else
                 {
-                    var amount = new Money(Math.Abs(entry.Amount), entry.Currency);
-                    var transfer = new Transfer
-                    {
-                        FromAccountId = entry.Amount > 0 ? funding.Value : account,
-                        ToAccountId = entry.Amount > 0 ? account : funding.Value,
-                        Amount = amount,
-                        ReceivedAmount = amount,
-                        Date = entry.Date,
-                        Description = entry.Description,
-                    };
-                    db.Transfers.Add(transfer);
-                    db.TransferImports.Add(new TransferImport { AccountId = account, ImportRef = reference, TransferId = transfer.Id });
                     counts.Transfers++;
                 }
 
@@ -422,7 +415,7 @@ public sealed class StatementImport(
         return security;
     }
 
-    private async Task<string?> AddEntryAsync(
+    private async Task<DomainError?> AddEntryAsync(
         string reference,
         InvestmentTransactionType type,
         Security? security,
@@ -437,7 +430,7 @@ public sealed class StatementImport(
         var reporting = await rates.ToReportingAsync(cash, date, cancellationToken);
         if (reporting.IsFailure)
         {
-            return reporting.ErrorMessage;
+            return reporting.Error;
         }
 
         AddEntry(reference, type, security, date, cash, reporting.Value, description, quantity, price, fee);
@@ -473,7 +466,47 @@ public sealed class StatementImport(
         });
     }
 
-    private async Task<string?> AddConversionAsync(
+    private async Task<DomainError?> AddTransferAsync(
+        string reference,
+        FlexCashTransaction entry,
+        AccountId fundingAccount,
+        CancellationToken cancellationToken)
+    {
+        var atBroker = new Money(Math.Abs(entry.Amount), entry.Currency);
+        var fundingCurrency = await db.Accounts
+            .Where(a => a.Id == fundingAccount)
+            .Select(a => a.StartingBalance.Currency)
+            .FirstAsync(cancellationToken);
+        var atFunding = await rates.ConvertAsync(atBroker, fundingCurrency, entry.Date, cancellationToken);
+        if (atFunding.IsFailure)
+        {
+            return atFunding.Error;
+        }
+
+        var draft = entry.Amount > 0
+            ? new TransferDraft(fundingAccount, account, atFunding.Value, fundingCurrency, atBroker.Amount, atBroker.Currency)
+            : new TransferDraft(account, fundingAccount, atBroker.Amount, atBroker.Currency, atFunding.Value, fundingCurrency);
+        var amounts = await transfers.ResolveAsync(draft, [atBroker.Currency, fundingCurrency], cancellationToken);
+        if (amounts.IsFailure)
+        {
+            return amounts.Error;
+        }
+
+        var transfer = new Transfer
+        {
+            FromAccountId = draft.FromAccountId,
+            ToAccountId = draft.ToAccountId,
+            Amount = amounts.Value!.Sent,
+            ReceivedAmount = amounts.Value.Received,
+            Date = entry.Date,
+            Description = entry.Description,
+        };
+        db.Transfers.Add(transfer);
+        db.TransferImports.Add(new TransferImport { AccountId = account, ImportRef = reference, TransferId = transfer.Id });
+        return null;
+    }
+
+    private async Task<DomainError?> AddConversionAsync(
         string reference,
         FlexTrade trade,
         Currency baseCurrency,
@@ -489,7 +522,7 @@ public sealed class StatementImport(
             var reporting = await rates.ToReportingAsync(amount, trade.Date, cancellationToken);
             if (reporting.IsFailure)
             {
-                return reporting.ErrorMessage;
+                return reporting.Error;
             }
 
             fee = new Transaction
