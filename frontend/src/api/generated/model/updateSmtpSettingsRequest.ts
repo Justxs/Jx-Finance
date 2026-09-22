@@ -28,7 +28,7 @@ export interface UpdateSmtpSettingsRequest {
    */
   userName: string | null;
   /**
-   * Leave empty to keep the stored password.
+   * Leave empty to keep the stored password; required when the host or user name changes.
    * @minLength 0
    * @maxLength 255
    * @nullable

@@ -1705,8 +1705,10 @@
     },
     "email": {
       "alreadyVerified": "Šis adresas jau patvirtintas.",
+      "insecureConnection": "Pašto serverio slaptažodis siunčiamas tik šifruotu ryšiu. Pasirinkite STARTTLS arba SSL/TLS arba išvalykite naudotojo vardą.",
       "invalid": "Įveskite galiojantį el. pašto adresą.",
       "notConfigured": "Ši įdiegtis dar negali siųsti laiškų. Nustatykite pašto serverį nustatymuose.",
+      "passwordRequired": "Įveskite slaptažodį iš naujo: pasikeitė serveris arba naudotojo vardas.",
       "passwordUnreadable": "Išsaugoto pašto serverio slaptažodžio nebepavyksta perskaityti. Įveskite jį iš naujo.",
       "sendFailed": "Pašto serveris atmetė laišką: {{reason}}",
       "taken": "Šis el. paštas jau naudojamas.",

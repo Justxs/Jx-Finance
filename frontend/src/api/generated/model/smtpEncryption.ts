@@ -7,12 +7,12 @@
  */
 
 /**
- * none, startTls or sslOnConnect.
+ * startTls (the default, usually port 587; the server must offer STARTTLS), sslOnConnect (usually port 465) or none, which is only accepted without a user name.
  */
 export type SmtpEncryption = (typeof SmtpEncryption)[keyof typeof SmtpEncryption];
 
 export const SmtpEncryption = {
-  none: "none",
   startTls: "startTls",
   sslOnConnect: "sslOnConnect",
+  none: "none",
 } as const;

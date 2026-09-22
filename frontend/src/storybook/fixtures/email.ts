@@ -52,6 +52,34 @@ export const emailNotConfiguredProblem: ProblemDetails = {
   ],
 };
 
+export const smtpPasswordRequiredProblem: ProblemDetails = {
+  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "generalErrors",
+      reason:
+        "Enter the password again: the stored one is only kept for the same mail server and user name.",
+      code: "email.passwordRequired",
+    },
+  ],
+};
+
+export const smtpInsecureConnectionProblem: ProblemDetails = {
+  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
+  title: "One or more validation errors occurred.",
+  status: 400,
+  errors: [
+    {
+      name: "encryption",
+      reason:
+        "A user name and password are only sent over an encrypted connection. Choose STARTTLS or SSL/TLS.",
+      code: "email.insecureConnection",
+    },
+  ],
+};
+
 export const emailAlreadyVerifiedProblem: ProblemDetails = {
   type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
   title: "One or more validation errors occurred.",
