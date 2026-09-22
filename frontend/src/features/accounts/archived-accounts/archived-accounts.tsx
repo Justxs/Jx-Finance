@@ -8,10 +8,10 @@ import {
 } from "@/api/generated";
 import type { ArchivedAccountResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
-import { Tag } from "@/components/ui/tag/tag";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
 import { pendingId } from "@/lib/mutations";
@@ -58,13 +58,10 @@ export function ArchivedAccountsList({
                 <div className="min-w-0 space-y-1">
                   <p className="flex flex-wrap items-center gap-2 text-sm font-medium wrap-break-word">
                     {account.name}
-                    {account.scope === "shared" ? (
-                      <Tag tone="accent">
-                        {t("sharing.sharedWith", {
-                          household: householdNames.get(account.householdId ?? "") ?? "",
-                        })}
-                      </Tag>
-                    ) : null}
+                    <SharedScopeTag
+                      scope={account.scope}
+                      householdName={householdNames.get(account.householdId ?? "")}
+                    />
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">
                     {details}

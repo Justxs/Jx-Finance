@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
+import { Button } from "@/components/ui/button/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
@@ -25,10 +26,12 @@ export function ImportTagPicker({ tags, value, label, disabled, onChange }: Read
       <PopoverTrigger
         disabled={disabled}
         render={
-          <button
+          <Button
             type="button"
+            variant="link-muted"
+            size="inline"
             aria-label={label}
-            className="inline-flex min-h-6 max-w-full items-center gap-1 rounded-sm text-sm text-muted-foreground underline-offset-4 outline-none hover:text-foreground hover:underline focus-visible:ring-3 focus-visible:ring-ring/50 disabled:opacity-50 pointer-coarse:min-h-11"
+            className="min-h-6 max-w-full"
           />
         }
       >

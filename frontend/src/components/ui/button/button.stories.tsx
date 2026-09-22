@@ -9,9 +9,17 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "outline", "ghost", "destructive"],
+      options: [
+        "default",
+        "outline",
+        "ghost",
+        "ghost-destructive",
+        "destructive",
+        "link",
+        "link-muted",
+      ],
     },
-    size: { control: "select", options: ["default", "sm", "lg", "icon", "icon-sm"] },
+    size: { control: "select", options: ["default", "sm", "lg", "icon", "icon-sm", "inline"] },
   },
 } satisfies Meta<typeof Button>;
 
@@ -31,6 +39,12 @@ export const Variants: Story = {
       <Button variant="outline">Outline</Button>
       <Button variant="ghost">Ghost</Button>
       <Button variant="destructive">Destructive</Button>
+      <Button variant="link" size="inline">
+        Link
+      </Button>
+      <Button variant="link-muted" size="inline">
+        Muted link
+      </Button>
     </div>
   ),
 };

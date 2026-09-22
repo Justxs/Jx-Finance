@@ -37,4 +37,8 @@ export const SeveralFields: Story = {
 
 export const UnknownError: Story = { args: { error: new TypeError("offline") } };
 
+export const PlainMessage: Story = {
+  args: { message: "The bill changed since this form opened. Close it and try again." },
+};
+
 export const NoError: Story = { args: { error: null } };

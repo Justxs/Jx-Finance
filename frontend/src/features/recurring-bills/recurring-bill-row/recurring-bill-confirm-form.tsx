@@ -116,9 +116,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
         ) : null}
 
         {stale ? (
-          <p role="alert" className="border-t border-expense pt-2 text-sm text-expense">
-            {t("recurringBills.confirmStale")}
-          </p>
+          <FormError message={t("recurringBills.confirmStale")} />
         ) : (
           <FormError error={confirmMutation.error} />
         )}

@@ -1,8 +1,8 @@
-import { Check, type LucideIcon, Pencil, Trash2, X } from "lucide-react";
+import { Check, type LucideIcon, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { InlineNameInput } from "@/components/inline-name-input/inline-name-input";
 import { Button } from "@/components/ui/button/button";
-import { Input } from "@/components/ui/input/input";
 import {
   Popover,
   PopoverContent,
@@ -55,27 +55,10 @@ export function SavedListMenu({
   const { t } = useTranslation();
   const [open, setOpen] = useState(defaultOpen);
   const [renamingId, setRenamingId] = useState<string | null>(null);
-  const [draftName, setDraftName] = useState("");
-  const [newName, setNewName] = useState("");
 
-  function startRenaming(item: SavedListItem) {
-    setRenamingId(item.id);
-    setDraftName(item.name);
-  }
-
-  function confirmRename() {
-    if (renamingId && draftName.trim()) {
-      onRename(renamingId, draftName);
-    }
+  function confirmRename(id: string, name: string) {
+    onRename(id, name);
     setRenamingId(null);
-  }
-
-  function save() {
-    if (!newName.trim() || !onSave) {
-      return;
-    }
-    onSave(newName);
-    setNewName("");
   }
 
   return (
@@ -102,37 +85,18 @@ export function SavedListMenu({
           <ul className="border-t border-t-rule">
             {items.map((item) =>
               renamingId === item.id ? (
-                <li key={item.id} className="flex items-center gap-1 border-b py-1.5">
-                  <Input
-                    aria-label={t("transactions.savedName")}
-                    value={draftName}
+                <li key={item.id} className="border-b py-1.5">
+                  <InlineNameInput
+                    label={t("transactions.savedName")}
+                    submitLabel={t("actions.save")}
+                    submitIcon={<Check />}
+                    cancelLabel={t("actions.cancel")}
                     maxLength={SAVED_NAME_MAX_LENGTH}
-                    className="h-8 min-w-0 flex-1"
-                    onChange={(event) => setDraftName(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        confirmRename();
-                      }
-                    }}
+                    defaultValue={item.name}
+                    className="gap-1"
+                    onSubmit={(name) => confirmRename(item.id, name)}
+                    onCancel={() => setRenamingId(null)}
                   />
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={!draftName.trim()}
-                    aria-label={t("actions.save")}
-                    onClick={confirmRename}
-                  >
-                    <Check />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    aria-label={t("actions.cancel")}
-                    onClick={() => setRenamingId(null)}
-                  >
-                    <X />
-                  </Button>
                 </li>
               ) : (
                 <li key={item.id} className="flex items-center gap-1 border-b py-1">
@@ -156,7 +120,7 @@ export function SavedListMenu({
                     variant="ghost"
                     size="icon-sm"
                     aria-label={`${t("actions.rename")}: ${item.name}`}
-                    onClick={() => startRenaming(item)}
+                    onClick={() => setRenamingId(item.id)}
                   >
                     <Pencil />
                   </Button>
@@ -176,31 +140,15 @@ export function SavedListMenu({
 
         {onSave ? (
           <div className="space-y-1.5 border-t border-t-rule pt-2.5">
-            <div className="flex items-center gap-2">
-              <Input
-                aria-label={saveLabel}
-                value={newName}
-                maxLength={SAVED_NAME_MAX_LENGTH}
-                placeholder={savePlaceholder}
-                disabled={!canSave}
-                className="h-8 min-w-0 flex-1"
-                onChange={(event) => setNewName(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    event.preventDefault();
-                    save();
-                  }
-                }}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={!canSave || !newName.trim()}
-                onClick={save}
-              >
-                {saveLabel}
-              </Button>
-            </div>
+            <InlineNameInput
+              label={saveLabel}
+              submitLabel={saveLabel}
+              maxLength={SAVED_NAME_MAX_LENGTH}
+              placeholder={savePlaceholder}
+              disabled={!canSave}
+              className="gap-2"
+              onSubmit={onSave}
+            />
             {!canSave && saveHint ? (
               <p className="text-xs text-muted-foreground">{saveHint}</p>
             ) : null}

@@ -3,11 +3,22 @@ import { errorMessage } from "@/lib/query-client";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  error: unknown;
+  error?: unknown;
+  message?: string;
   className?: string;
 }
 
-export function FormError({ error, className }: Readonly<Props>) {
+const containerClass = "col-span-full border-t border-expense pt-2 text-sm text-expense";
+
+export function FormError({ error, message, className }: Readonly<Props>) {
+  if (message) {
+    return (
+      <div role="alert" className={cn(containerClass, className)}>
+        {message}
+      </div>
+    );
+  }
+
   if (error === null || error === undefined) {
     return null;
   }
@@ -23,10 +34,7 @@ export function FormError({ error, className }: Readonly<Props>) {
   const listed = placedAny || reasons.length > 1;
 
   return (
-    <div
-      role="alert"
-      className={cn("col-span-full border-t border-expense pt-2 text-sm text-expense", className)}
-    >
+    <div role="alert" className={cn(containerClass, className)}>
       <p className="font-medium">{title}</p>
       {listed ? (
         <ul className="mt-1 list-disc space-y-0.5 pl-5">

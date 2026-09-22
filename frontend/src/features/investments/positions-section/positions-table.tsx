@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { Currency, HoldingResponse, SecurityResponse } from "@/api/generated/model";
-import { ApproximateAmount } from "@/components/approximate-amount/approximate-amount";
+import { DualCurrencyAmount } from "@/components/approximate-amount/dual-currency-amount";
 import { Rows } from "@/components/ui/rows/rows";
 import {
   Table,
@@ -11,10 +11,8 @@ import {
   TableRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
-import { Tag } from "@/components/ui/tag/tag";
 import {
   EMPTY_VALUE,
-  useIsoDate,
   useMoney,
   usePriceFormat,
   useQuantityFormat,
@@ -22,6 +20,7 @@ import {
 } from "@/hooks/use-formatters";
 import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
+import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
 interface Props {
   label: string;
@@ -35,8 +34,6 @@ interface Props {
 
 const priceButtonClass =
   "inline-flex min-h-6 flex-col items-end justify-center group/price rounded-sm text-right outline-none focus-visible:ring-3 focus-visible:ring-ring/50 pointer-coarse:min-h-11";
-
-const numericHeadClass = "h-auto py-2 text-right align-bottom whitespace-normal";
 
 function rowKey(holding: HoldingResponse) {
   return `${holding.accountId}:${holding.security.id}`;
@@ -53,7 +50,6 @@ export function PositionsTable({
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
-  const formatDate = useIsoDate();
   const formatPrice = usePriceFormat();
   const quantityFormat = useQuantityFormat();
   const formatPercent = useSignedPercent();
@@ -76,12 +72,12 @@ export function PositionsTable({
           </span>
         ) : (
           <>
-            <span className="block whitespace-nowrap tabular-nums underline decoration-muted-foreground/70 decoration-dotted underline-offset-4 group-hover/price:decoration-foreground group-hover/price:decoration-solid">
-              {formatPrice(Number(security.lastPrice), security.currency)}
-            </span>
-            <span className="block text-xs whitespace-nowrap text-muted-foreground tabular-nums">
-              {formatDate(security.lastPriceDate)}
-            </span>
+            <PriceWithDate
+              price={Number(security.lastPrice)}
+              currency={security.currency}
+              date={security.lastPriceDate}
+              linked
+            />
             <span className="sr-only">{actionLabel}</span>
           </>
         )}
@@ -94,18 +90,17 @@ export function PositionsTable({
       return <span className="text-muted-foreground">{EMPTY_VALUE}</span>;
     }
 
-    const foreign = holding.security.currency !== reportingCurrency;
-
     return (
-      <span className="font-semibold whitespace-nowrap tabular-nums">
-        {money.format(Number(holding.marketValue), holding.security.currency)}
-        {foreign && holding.marketValueReporting !== null ? (
-          <ApproximateAmount
-            value={Number(holding.marketValueReporting)}
-            currency={reportingCurrency}
-          />
-        ) : null}
-      </span>
+      <DualCurrencyAmount
+        value={Number(holding.marketValue)}
+        currency={holding.security.currency}
+        secondaryValue={
+          holding.marketValueReporting === null ? null : Number(holding.marketValueReporting)
+        }
+        secondaryCurrency={reportingCurrency}
+        approximate
+        strong
+      />
     );
   }
 
@@ -145,27 +140,27 @@ export function PositionsTable({
               <TableHead className="align-bottom">{t("investments.holdings.security")}</TableHead>
               {closed ? null : (
                 <>
-                  <TableHead className={numericHeadClass}>
+                  <TableHead numeric wrap>
                     {t("investments.holdings.quantity")}
                   </TableHead>
-                  <TableHead className={numericHeadClass}>
+                  <TableHead numeric wrap>
                     {t("investments.holdings.averageCost")}
                   </TableHead>
-                  <TableHead className={numericHeadClass}>
+                  <TableHead numeric wrap>
                     {t("investments.holdings.lastPrice")}
                   </TableHead>
-                  <TableHead className={numericHeadClass}>
+                  <TableHead numeric wrap>
                     {t("investments.holdings.marketValue")}
                   </TableHead>
-                  <TableHead className={numericHeadClass}>
+                  <TableHead numeric wrap>
                     {t("investments.holdings.unrealizedGain")}
                   </TableHead>
                 </>
               )}
-              <TableHead className={numericHeadClass}>
+              <TableHead numeric wrap>
                 {t("investments.holdings.realizedGain")}
               </TableHead>
-              <TableHead className={numericHeadClass}>
+              <TableHead numeric wrap>
                 {t("investments.holdings.dividends")}
               </TableHead>
             </TableRow>
@@ -178,36 +173,25 @@ export function PositionsTable({
               return (
                 <TableRow key={rowKey(holding)}>
                   <TableCell className="max-w-64 min-w-36 whitespace-normal">
-                    <p className="flex items-center gap-2">
-                      <span className="font-semibold">{security.symbol}</span>
-                      <Tag>{t(`investments.securityTypes.${security.type}`)}</Tag>
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground" title={security.name}>
-                      {security.name}
-                    </p>
-                    {account ? (
-                      <p className="truncate text-xs text-muted-foreground" title={account}>
-                        {account}
-                      </p>
-                    ) : null}
+                    <SecurityIdentity security={security} meta={security.name} detail={account} />
                   </TableCell>
                   {closed ? null : (
                     <>
-                      <TableCell className="text-right tabular-nums">
+                      <TableCell numeric>
                         {quantityFormat.format(Number(holding.quantity))}
                       </TableCell>
-                      <TableCell className="text-right text-muted-foreground tabular-nums">
+                      <TableCell numeric className="text-muted-foreground">
                         {formatPrice(Number(holding.averageCost), security.currency)}
                       </TableCell>
-                      <TableCell className="text-right">{priceButton(security)}</TableCell>
-                      <TableCell className="text-right">{marketValue(holding)}</TableCell>
-                      <TableCell className="text-right">{unrealized(holding)}</TableCell>
+                      <TableCell numeric>{priceButton(security)}</TableCell>
+                      <TableCell numeric>{marketValue(holding)}</TableCell>
+                      <TableCell numeric>{unrealized(holding)}</TableCell>
                     </>
                   )}
-                  <TableCell className="text-right">
+                  <TableCell numeric>
                     {signedGain(holding.realizedGain, security.currency)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell numeric>
                     {money.format(Number(holding.dividends), security.currency)}
                   </TableCell>
                 </TableRow>
@@ -227,13 +211,7 @@ export function PositionsTable({
             <li key={rowKey(holding)} className="py-2.5 text-sm">
               <div className="flex items-start gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2">
-                    <span className="font-semibold">{security.symbol}</span>
-                    <Tag>{t(`investments.securityTypes.${security.type}`)}</Tag>
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground" title={secondary}>
-                    {secondary}
-                  </p>
+                  <SecurityIdentity security={security} meta={secondary} />
                 </div>
                 <div className="shrink-0 text-right">
                   {closed

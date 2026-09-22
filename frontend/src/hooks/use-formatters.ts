@@ -126,6 +126,15 @@ export function useIsoDate() {
   };
 }
 
+export function useShortDayIso() {
+  const shortDay = useShortDay();
+
+  return function formatShortDayIso(value?: string | null) {
+    const parsed = value ? parseIso(value) : null;
+    return parsed ? shortDay.format(parsed) : "";
+  };
+}
+
 export function useCalendarLocale() {
   const { i18n } = useTranslation();
 

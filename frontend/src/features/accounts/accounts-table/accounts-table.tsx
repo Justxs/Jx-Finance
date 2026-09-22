@@ -1,10 +1,12 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
-import { Archive, ArrowLeftRight, Pencil } from "lucide-react";
+import { ArrowLeftRight } from "lucide-react";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { SelectField } from "@/components/select-field/select-field";
+import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
 import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
@@ -21,7 +23,6 @@ import {
   TableEmptyRow,
   ScrollRegion,
 } from "@/components/ui/table/table";
-import { Tag } from "@/components/ui/tag/tag";
 import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatters";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
@@ -90,7 +91,15 @@ export function AccountsTable({
 
   function actions(account: AccountResponse) {
     return (
-      <div className="flex justify-end gap-1">
+      <RowActions
+        label={account.name}
+        removeKind="archive"
+        onEdit={() => onEdit(account.id)}
+        onDelete={() => onDelete(account.id)}
+        deletePending={deletingId === account.id}
+        deleteDisabled={deletingId !== null}
+        className="justify-end"
+      >
         {onConvert ? (
           <Button
             variant="ghost"
@@ -102,25 +111,7 @@ export function AccountsTable({
             <ArrowLeftRight />
           </Button>
         ) : null}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={() => onEdit(account.id)}
-          aria-label={`${t("actions.edit")}: ${account.name}`}
-        >
-          <Pencil />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          pending={deletingId === account.id}
-          disabled={deletingId !== null}
-          onClick={() => onDelete(account.id)}
-          aria-label={`${t("actions.archive")}: ${account.name}`}
-        >
-          <Archive />
-        </Button>
-      </div>
+      </RowActions>
     );
   }
 
@@ -152,13 +143,11 @@ export function AccountsTable({
                   {account.description}
                 </p>
               ) : null}
-              {account.scope === "shared" ? (
-                <Tag tone="accent" className="mt-1">
-                  {t("sharing.sharedWith", {
-                    household: householdNames.get(account.householdId ?? "") ?? "",
-                  })}
-                </Tag>
-              ) : null}
+              <SharedScopeTag
+                scope={account.scope}
+                householdName={householdNames.get(account.householdId ?? "")}
+                className="mt-1"
+              />
             </div>
           </div>
         </TableCell>

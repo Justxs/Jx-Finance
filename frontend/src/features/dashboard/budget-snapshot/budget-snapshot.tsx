@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useBudgetsSuspense } from "@/api/generated";
+import { ShareRow } from "@/components/breakdown-list/share-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Meter } from "@/components/ui/meter/meter";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useMoney } from "@/hooks/use-formatters";
 import { EXPENSE_TONE } from "@/lib/tone";
@@ -38,9 +38,10 @@ export function BudgetSnapshot() {
         const limit = Number(budget.effectiveLimit);
         const overBudget = spent > limit;
         return (
-          <li key={budget.id}>
-            <div className="flex items-baseline gap-3 text-sm">
-              <span className="min-w-0 flex-1 wrap-break-word">{budget.categoryName}</span>
+          <ShareRow
+            key={budget.id}
+            name={<span className="min-w-0 flex-1 wrap-break-word">{budget.categoryName}</span>}
+            note={
               <span
                 className={cn(
                   "shrink-0 text-right text-xs tabular-nums",
@@ -51,18 +52,13 @@ export function BudgetSnapshot() {
                   ? t("budgets.over", { amount: money.format(spent - limit) })
                   : t("budgets.left", { amount: money.format(limit - spent) })}
               </span>
-              <span className="w-24 shrink-0 text-right font-medium tabular-nums">
-                {money.format(spent)}
-              </span>
-            </div>
-            <Meter
-              value={spent}
-              max={limit}
-              tone={overBudget ? "negative" : "primary"}
-              label={budget.categoryName}
-              className="mt-1.5"
-            />
-          </li>
+            }
+            amount={money.format(spent)}
+            value={spent}
+            max={limit}
+            tone={overBudget ? "negative" : "primary"}
+            meterLabel={budget.categoryName}
+          />
         );
       })}
     </ul>

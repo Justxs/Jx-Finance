@@ -1,6 +1,7 @@
-import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
@@ -67,7 +68,13 @@ export function RuleRow({
             </p>
           </div>
         </div>
-        <div className="flex shrink-0 gap-1">
+        <RowActions
+          label={rule.name}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          deletePending={deletePending}
+          deleteDisabled={deleteDisabled}
+        >
           <Button
             variant="ghost"
             size="icon-sm"
@@ -86,25 +93,7 @@ export function RuleRow({
           >
             <ArrowDown />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={onEdit}
-            aria-label={`${t("actions.edit")}: ${rule.name}`}
-          >
-            <Pencil />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            pending={deletePending}
-            disabled={deleteDisabled}
-            onClick={onDelete}
-            aria-label={`${t("actions.delete")}: ${rule.name}`}
-          >
-            <Trash2 />
-          </Button>
-        </div>
+        </RowActions>
       </li>
     </RowTransition>
   );

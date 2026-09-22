@@ -1,9 +1,10 @@
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { type ComponentType, type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TrashKind } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -90,28 +91,17 @@ export function HoldingsSection<TValues = HoldingFormValues>({
                 <p className="font-medium">{item.name}</p>
                 <p className="text-xs text-muted-foreground tabular-nums">{item.details}</p>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
+              <RowActions
+                label={item.name}
+                size="icon"
+                onEdit={() => setEditTarget(item.id)}
+                onDelete={() => remove.request(item.id)}
+                deletePending={remove.pendingId === item.id}
+                deleteDisabled={remove.busy}
+              >
                 <span className={cn("text-right", amountClass)}>{money.format(item.amount)}</span>
                 {item.action}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setEditTarget(item.id)}
-                  aria-label={`${t("actions.edit")}: ${item.name}`}
-                >
-                  <Pencil />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  pending={remove.pendingId === item.id}
-                  disabled={remove.busy}
-                  onClick={() => remove.request(item.id)}
-                  aria-label={`${t("actions.delete")}: ${item.name}`}
-                >
-                  <Trash2 />
-                </Button>
-              </div>
+              </RowActions>
             </li>
           </RowTransition>
         ))}

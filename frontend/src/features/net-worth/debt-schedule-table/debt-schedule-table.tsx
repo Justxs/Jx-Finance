@@ -28,9 +28,6 @@ export function firstPageToShow(plan: DebtSchedulePlan, asOf: string) {
   return Math.floor(Math.max(0, index) / SCHEDULE_PAGE_SIZE) + 1;
 }
 
-const numericHead = "text-right";
-const numericCell = "text-right tabular-nums";
-
 export function DebtScheduleTable({ plan, asOf }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
@@ -51,15 +48,13 @@ export function DebtScheduleTable({ plan, asOf }: Readonly<Props>) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className={numericHead}>{t("netWorth.schedule.number")}</TableHead>
+              <TableHead numeric>{t("netWorth.schedule.number")}</TableHead>
               <TableHead>{t("netWorth.schedule.date")}</TableHead>
-              <TableHead className={numericHead}>{t("netWorth.schedule.payment")}</TableHead>
-              <TableHead className={numericHead}>{t("netWorth.schedule.interest")}</TableHead>
-              <TableHead className={numericHead}>{t("netWorth.schedule.principal")}</TableHead>
-              {withExtra ? (
-                <TableHead className={numericHead}>{t("netWorth.schedule.extra")}</TableHead>
-              ) : null}
-              <TableHead className={numericHead}>{t("netWorth.schedule.balance")}</TableHead>
+              <TableHead numeric>{t("netWorth.schedule.payment")}</TableHead>
+              <TableHead numeric>{t("netWorth.schedule.interest")}</TableHead>
+              <TableHead numeric>{t("netWorth.schedule.principal")}</TableHead>
+              {withExtra ? <TableHead numeric>{t("netWorth.schedule.extra")}</TableHead> : null}
+              <TableHead numeric>{t("netWorth.schedule.balance")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -68,17 +63,15 @@ export function DebtScheduleTable({ plan, asOf }: Readonly<Props>) {
                 key={row.number}
                 className={cn(row.date <= asOf && "text-muted-foreground")}
               >
-                <TableCell className={numericCell}>{row.number}</TableCell>
+                <TableCell numeric>{row.number}</TableCell>
                 <TableCell className="tabular-nums">{formatDate(row.date)}</TableCell>
-                <TableCell className={cn(numericCell, "font-medium")}>
+                <TableCell numeric className="font-medium">
                   {amount(row.payment)}
                 </TableCell>
-                <TableCell className={numericCell}>{amount(row.interest)}</TableCell>
-                <TableCell className={numericCell}>{amount(row.principal)}</TableCell>
-                {withExtra ? (
-                  <TableCell className={numericCell}>{amount(row.extra)}</TableCell>
-                ) : null}
-                <TableCell className={numericCell}>{amount(row.balance)}</TableCell>
+                <TableCell numeric>{amount(row.interest)}</TableCell>
+                <TableCell numeric>{amount(row.principal)}</TableCell>
+                {withExtra ? <TableCell numeric>{amount(row.extra)}</TableCell> : null}
+                <TableCell numeric>{amount(row.balance)}</TableCell>
               </TableRow>
             ))}
           </TableBody>

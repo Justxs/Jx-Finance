@@ -19,6 +19,9 @@ const buttonVariants = cva(
           "text-expense hover:bg-muted hover:text-expense aria-expanded:bg-muted dark:hover:bg-muted/50",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/85 focus-visible:border-destructive/40 focus-visible:ring-destructive/30",
+        link: "rounded-sm border-0 whitespace-normal text-primary underline-offset-4 hover:underline active:not-aria-[haspopup]:translate-y-0",
+        "link-muted":
+          "rounded-sm border-0 font-normal whitespace-normal text-muted-foreground underline-offset-4 hover:text-foreground hover:underline active:not-aria-[haspopup]:translate-y-0",
       },
       size: {
         default: "h-9 gap-1.5 px-3.5",
@@ -26,6 +29,7 @@ const buttonVariants = cva(
         lg: "h-10 gap-1.5 px-4",
         icon: "size-9",
         "icon-sm": "size-8",
+        inline: "gap-1",
       },
     },
     defaultVariants: {
