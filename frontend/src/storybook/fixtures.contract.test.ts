@@ -55,6 +55,8 @@ const contracts: Record<string, Contract> = {
   duplicateTagProblem: { schema: schemas.ProblemDetailsResponse },
   securityNotHeldProblem: { schema: schemas.ProblemDetailsResponse },
   brokerSyncProblem: { schema: schemas.ProblemDetailsResponse },
+  smtpPasswordRequiredProblem: { schema: schemas.ProblemDetailsResponse },
+  smtpInsecureConnectionProblem: { schema: schemas.ProblemDetailsResponse },
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
   unverifiedUser: { schema: schemas.MeResponse },
