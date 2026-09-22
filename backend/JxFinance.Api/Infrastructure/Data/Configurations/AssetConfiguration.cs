@@ -11,6 +11,5 @@ public sealed class AssetConfiguration : IEntityTypeConfiguration<Asset>
         builder.Property(a => a.Name).HasMaxLength(100);
         builder.ComplexProperty(a => a.CurrentValue, money => money.HasColumns("CurrentValue", DbSchema.CurrencyColumn));
         builder.Ignore(a => a.Currency);
-        builder.HasIndex(a => a.UserId);
     }
 }

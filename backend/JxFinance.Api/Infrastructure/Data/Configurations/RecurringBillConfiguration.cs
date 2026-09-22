@@ -12,7 +12,6 @@ public sealed class RecurringBillConfiguration : IEntityTypeConfiguration<Recurr
     {
         builder.Property(b => b.Name).HasMaxLength(100);
         builder.Property(b => b.NextDueDate).IsConcurrencyToken();
-        builder.HasIndex(b => b.UserId);
         builder.HasOne<Category>().WithMany().HasForeignKey(b => b.CategoryId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Account>().WithMany().HasForeignKey(b => b.AccountId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Account>().WithMany().HasForeignKey(b => b.ToAccountId).OnDelete(DeleteBehavior.Restrict);

@@ -1,4 +1,3 @@
-using JxFinance.Domain.Households;
 using JxFinance.Domain.Tags;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,10 +10,8 @@ public sealed class TagConfiguration : IEntityTypeConfiguration<Tag>
     {
         builder.Property(t => t.Name).HasMaxLength(50);
         builder.HasIndex(t => t.UserId);
-        builder.HasIndex(t => t.HouseholdId);
         builder.HasIndex(t => new { t.UserId, t.Name })
             .IsUnique()
             .HasFilter(DbSchema.NotDeletedFilter);
-        builder.HasOne<Household>().WithMany().HasForeignKey(t => t.HouseholdId).OnDelete(DeleteBehavior.Restrict);
     }
 }

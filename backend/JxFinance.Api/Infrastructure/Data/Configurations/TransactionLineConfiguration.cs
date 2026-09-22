@@ -10,7 +10,6 @@ public sealed class TransactionLineConfiguration : IEntityTypeConfiguration<Tran
     public void Configure(EntityTypeBuilder<TransactionLine> builder)
     {
         builder.Property(l => l.Description).HasMaxLength(500);
-        builder.HasIndex(l => l.TransactionId);
         builder.HasOne<Transaction>().WithMany().HasForeignKey(l => l.TransactionId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne<Category>().WithMany().HasForeignKey(l => l.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
