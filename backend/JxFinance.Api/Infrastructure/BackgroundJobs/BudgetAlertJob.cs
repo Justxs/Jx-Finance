@@ -5,7 +5,6 @@ using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Budgets.Services;
-using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,33 +28,13 @@ public sealed class BudgetAlertJob(
 
     public Task ScanAsync(CancellationToken cancellationToken) => RunOnceAsync(cancellationToken);
 
-    protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
-    {
-        var source = services.GetRequiredService<AppDbContext>();
-        var userIds = await source.Users
-            .Where(AppUser.IsActive)
-            .OrderBy(u => u.Id)
-            .Select(u => u.Id)
-            .ToListAsync(ct);
-
-        foreach (var userId in userIds)
-        {
-            try
-            {
-                await ScanUserAsync(services, userId, ct);
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                Logger.LogError(ex, "Budget alert scan for user {UserId} failed.", userId);
-            }
-        }
-    }
+    protected override Task RunAsync(IServiceProvider services, CancellationToken ct) =>
+        ForEachActiveUserAsync(services, userId => ScanUserAsync(services, userId, ct), ct);
 
     private static async Task ScanUserAsync(IServiceProvider services, Guid userId, CancellationToken ct)
     {
-        var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();
         var clock = services.GetRequiredService<IClock>();
-        await using var db = new AppDbContext(options, new AlertUser(userId), clock);
+        await using var db = AppDbContext.For(services, userId);
 
         var budgets = await db.Budgets.ToListAsync(ct);
         if (budgets.Count == 0)
@@ -114,6 +93,4 @@ public sealed class BudgetAlertJob(
 
     private static bool Reached(decimal spent, decimal effectiveLimit, int percent) =>
         effectiveLimit > 0m ? spent * 100m >= effectiveLimit * percent : spent > 0m;
-
-    private sealed record AlertUser(Guid Id) : ICurrentUser;
 }

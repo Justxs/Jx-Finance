@@ -7,8 +7,8 @@ using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Accounts.Services;
 using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Endpoints.NetWorth.Services;
 
@@ -21,9 +21,9 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
         var services = scope.ServiceProvider;
         var settings = services.GetRequiredService<IInstanceSettingsStore>();
         var rates = services.GetRequiredService<IExchangeRateService>();
-        var user = new SnapshotUser(userId);
+        var user = new FixedUser(userId);
         var clock = services.GetRequiredService<IClock>();
-        await using var db = new AppDbContext(services.GetRequiredService<DbContextOptions<AppDbContext>>(), user, clock);
+        await using var db = AppDbContext.For(services, userId);
         var service = new NetWorthService(
             db,
             new AccountService(
@@ -38,6 +38,4 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
             user);
         await service.GetCurrentAsync(cancellationToken);
     }
-
-    private sealed record SnapshotUser(Guid Id) : ICurrentUser;
 }

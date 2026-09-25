@@ -212,14 +212,14 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected async Task WithDbAsync(Guid userId, Func<AppDbContext, Task> work)
     {
         await using var scope = Services.CreateAsyncScope();
-        await using var db = OpenAs(scope, userId);
+        await using var db = AppDbContext.For(scope.ServiceProvider, userId);
         await work(db);
     }
 
     protected async Task<T> WithDbAsync<T>(Guid userId, Func<AppDbContext, Task<T>> work)
     {
         await using var scope = Services.CreateAsyncScope();
-        await using var db = OpenAs(scope, userId);
+        await using var db = AppDbContext.For(scope.ServiceProvider, userId);
         return await work(db);
     }
 
@@ -276,11 +276,6 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
-    private static AppDbContext OpenAs(AsyncServiceScope scope, Guid userId) => new(
-        scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
-        new TestCurrentUser(userId),
-        scope.ServiceProvider.GetRequiredService<IClock>());
-
     private sealed class SettingsOverride(Func<Task> restore) : IAsyncDisposable
     {
         public ValueTask DisposeAsync() => new(restore());
@@ -288,8 +283,6 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 }
 
 public sealed record TestUser(Guid Id, string Email, string Password);
-
-public sealed record TestCurrentUser(Guid Id) : ICurrentUser;
 
 public sealed record HouseholdPair(
     TestUser Owner,

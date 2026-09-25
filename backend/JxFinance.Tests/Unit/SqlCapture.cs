@@ -1,7 +1,7 @@
 using System.Data;
 using System.Data.Common;
-using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +20,7 @@ public sealed class SqlCapture : IAsyncDisposable
             .UseNpgsql("Host=unused.invalid;Database=unused")
             .AddInterceptors(recorder, new NoConnection())
             .Options;
-        db = new AppDbContext(options, new SomeUser(userId ?? Guid.NewGuid(), householdId), new TestClock());
+        db = new AppDbContext(options, new FixedUser(userId ?? Guid.NewGuid(), householdId), new TestClock());
     }
 
     public AppDbContext Db => db;
@@ -32,8 +32,6 @@ public sealed class SqlCapture : IAsyncDisposable
     public string OnlyStatement => Assert.Single(recorder.Statements);
 
     public ValueTask DisposeAsync() => db.DisposeAsync();
-
-    private sealed record SomeUser(Guid Id, HouseholdId? ActiveHouseholdId) : ICurrentUser;
 
     private sealed class NoConnection : DbConnectionInterceptor
     {
