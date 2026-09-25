@@ -48,6 +48,9 @@ public sealed class Result<T>
         return IsSuccess;
     }
 
+    public Result<TOut> Map<TOut>(Func<T, TOut> map) =>
+        IsSuccess ? map(Value!) : Result<TOut>.Failure(ErrorCode!, ErrorMessage!);
+
     public static Result<T> Success(T value) => new(true, value, null, null);
 
     public static Result<T> Failure(string code, string message) => new(false, default, code, message);

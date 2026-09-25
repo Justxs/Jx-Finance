@@ -165,9 +165,7 @@ public sealed class CategorizationRuleService(
     {
         var matched = await MatchLedgerAsync(request, cancellationToken);
 
-        return matched.IsFailure
-            ? Result<RunRulesResponse>.Failure(matched.Error)
-            : Summarize(matched.Value!, request.Recategorize);
+        return matched.Map(matches => Summarize(matches, request.Recategorize));
     }
 
     public async Task<Result<RunRulesResponse>> RunAsync(RunRulesRequest request, CancellationToken cancellationToken)
@@ -175,13 +173,13 @@ public sealed class CategorizationRuleService(
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
         var matched = await MatchLedgerAsync(request, cancellationToken);
-        if (matched.IsFailure)
+        if (!matched.TryGetValue(out var matches))
         {
             return matched.Error;
         }
 
         var now = clock.UtcNow;
-        var categorized = matched.Value!
+        var categorized = matches
             .Where(m => m.Rows.Count > 0 && m.Item.Rule.CategoryId is not null)
             .GroupBy(m => m.Item.Rule.CategoryId!.Value);
         foreach (var group in categorized)
@@ -197,9 +195,9 @@ public sealed class CategorizationRuleService(
                     cancellationToken);
         }
 
-        await AddTagsAsync(matched.Value!, cancellationToken);
+        await AddTagsAsync(matches, cancellationToken);
 
-        var touched = matched.Value!.SelectMany(m => m.Rows).ToList();
+        var touched = matches.SelectMany(m => m.Rows).ToList();
         if (touched.Count > 0)
         {
             db.Audit.Summarise(
@@ -213,7 +211,7 @@ public sealed class CategorizationRuleService(
         await db.SaveChangesAsync(cancellationToken);
         await dbTransaction.CommitAsync(cancellationToken);
 
-        return Summarize(matched.Value!, request.Recategorize);
+        return Summarize(matches, request.Recategorize);
     }
 
     public async Task<IReadOnlyList<RuleSuggestion?>> SuggestAsync(

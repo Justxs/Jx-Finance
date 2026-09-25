@@ -52,7 +52,7 @@ public sealed class RecurringBillService(
     {
         var billId = new RecurringBillId(id);
         var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
-        return found.TryGetValue(out var bill) ? bill.ToResponse() : found.Error;
+        return found.Map(bill => bill.ToResponse());
     }
 
     public async Task<Result<RecurringBillResponse>> CreateAsync(
@@ -238,12 +238,7 @@ public sealed class RecurringBillService(
                 ReceivedAmount: request.ReceivedAmount),
             cancellationToken);
 
-        if (!created.TryGetValue(out var transfer))
-        {
-            return created.Error;
-        }
-
-        return transfer.Id;
+        return created.Map(transfer => transfer.Id);
     }
 
     private static FlowType FlowOf(RecurringBillShape shape) =>
