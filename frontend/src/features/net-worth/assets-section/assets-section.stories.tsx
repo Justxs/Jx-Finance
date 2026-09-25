@@ -4,8 +4,7 @@ import {
   getDeleteAssetMockHandler,
   getAssetsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { assets, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -17,23 +16,13 @@ import {
 import { openedDialog } from "@/storybook/interactions";
 import { AssetsSection } from "./assets-section";
 
-function AssetsSectionStory() {
-  return (
-    <div className="w-[min(48rem,calc(100vw-3rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <AssetsSection />
-      </QueryBoundary>
-    </div>
-  );
-}
-
 const manyItems = many(assets, 15);
 
 const meta = {
   title: "Features/NetWorth/AssetsSection",
   component: AssetsSection,
   parameters: { route: "/net-worth" },
-  render: () => <AssetsSectionStory />,
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof AssetsSection>;
 
 export default meta;

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
 import { expect, fn, waitFor } from "storybook/test";
 import type { ReportComparisonMode } from "@/api/generated/model";
+import { withWidth } from "@/storybook/decorators";
 import { chooseOption } from "@/storybook/interactions";
 import { presetRange } from "./date-range-presets";
 import { ReportFilters } from "./report-filters";
@@ -47,11 +48,8 @@ const meta = {
     onChange: fn(),
     onComparisonChange: fn(),
   },
-  render: (args) => (
-    <div className="w-[40rem] max-w-full">
-      <StatefulFilters {...args} />
-    </div>
-  ),
+  decorators: [withWidth("panel")],
+  render: (args) => <StatefulFilters {...args} />,
 } satisfies Meta<typeof ReportFilters>;
 
 export default meta;

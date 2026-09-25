@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { accounts, checkingAccount, ids, sharedAccount } from "@/storybook/fixtures";
 import { AccountsTable } from "./accounts-table";
 
@@ -17,13 +16,7 @@ const meta = {
     onDelete: fn(),
     onConvert: fn(),
   },
-  render: (args) => (
-    <div className="p-6 lg:p-10">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <AccountsTable {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof AccountsTable>;
 
 export default meta;

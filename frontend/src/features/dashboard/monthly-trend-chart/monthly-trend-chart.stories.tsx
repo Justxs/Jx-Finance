@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getMonthlyTrendMockHandler } from "@/api/generated/dashboard/dashboard.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Card } from "@/components/ui/card/card";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { monthlyTrendItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { MonthlyTrendChart } from "./monthly-trend-chart";
@@ -10,13 +9,14 @@ import { MonthlyTrendChart } from "./monthly-trend-chart";
 const meta = {
   title: "Features/Dashboard/MonthlyTrendChart",
   component: MonthlyTrendChart,
-  render: () => (
-    <Card className="w-[min(40rem,90vw)] p-6">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <MonthlyTrendChart />
-      </QueryBoundary>
-    </Card>
-  ),
+  decorators: [
+    (Story) => (
+      <Card className="p-6">
+        <Story />
+      </Card>
+    ),
+    withWidth("panel"),
+  ],
 } satisfies Meta<typeof MonthlyTrendChart>;
 
 export default meta;

@@ -5,7 +5,7 @@ import { ShareRow } from "./share-row";
 const meta = {
   title: "Components/ShareRow",
   component: ShareRow,
-  decorators: [withWidth("w-[min(28rem,90vw)]")],
+  decorators: [withWidth("column")],
   args: {
     name: <span className="min-w-0 flex-1 wrap-break-word">Groceries</span>,
     share: "42%",

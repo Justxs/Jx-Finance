@@ -6,7 +6,7 @@ const meta = {
   title: "Features/Profile/ProfileNav",
   component: ProfileNav,
   parameters: { route: "/profile" },
-  decorators: [withWidth("w-[min(16rem,90vw)]")],
+  decorators: [withWidth("narrow")],
   args: { current: "account", sections: profileSections },
 } satisfies Meta<typeof ProfileNav>;
 

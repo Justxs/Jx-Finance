@@ -4,8 +4,6 @@ import {
   getDeleteSecurityPriceMockHandler,
   getSecurityPricesMockHandler,
 } from "@/api/generated/investments/investments.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { withWidth } from "@/storybook/decorators";
 import { securityNotHeldProblem, securityPrices, worldEtf } from "@/storybook/fixtures";
 import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
@@ -16,12 +14,7 @@ const meta = {
   title: "Features/Investments/PriceHistory",
   component: PriceHistory,
   args: { security: worldEtf },
-  decorators: [withWidth("w-[min(32rem,90vw)]")],
-  render: (args) => (
-    <QueryBoundary fallback={<RowsSkeleton rows={3} />} errorSubject="Price history">
-      <PriceHistory {...args} />
-    </QueryBoundary>
-  ),
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof PriceHistory>;
 
 export default meta;

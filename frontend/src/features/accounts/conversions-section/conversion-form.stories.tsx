@@ -21,7 +21,7 @@ const meta = {
     accountId: brokerAccount.id,
     onClose: fn(),
   },
-  decorators: [withWidth("w-[min(36rem,90vw)]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof ConversionForm>;
 
 export default meta;

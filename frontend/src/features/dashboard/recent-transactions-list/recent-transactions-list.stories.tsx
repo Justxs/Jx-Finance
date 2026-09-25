@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getTransactionsMockHandler } from "@/api/generated/transactions/transactions.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import {
   longDescriptionTransaction,
   splitTransaction,
@@ -13,13 +12,7 @@ import { RecentTransactionsList } from "./recent-transactions-list";
 const meta = {
   title: "Features/Dashboard/RecentTransactionsList",
   component: RecentTransactionsList,
-  render: () => (
-    <div className="w-[min(48rem,90vw)]">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <RecentTransactionsList />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof RecentTransactionsList>;
 
 export default meta;

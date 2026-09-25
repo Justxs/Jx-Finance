@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, screen, userEvent } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { currentUserWithTwoFactor, longNameUser, serverErrorProblem } from "@/storybook/fixtures";
 import { failWith, pending, unauthenticatedHandlers, withHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
@@ -11,13 +10,7 @@ const meta = {
   title: "Features/Profile/ProfilePage",
   component: ProfilePage,
   parameters: { layout: "fullscreen", route: "/profile" },
-  render: () => (
-    <div className="p-6">
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full max-w-md" />}>
-        <ProfilePage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof ProfilePage>;
 
 export default meta;

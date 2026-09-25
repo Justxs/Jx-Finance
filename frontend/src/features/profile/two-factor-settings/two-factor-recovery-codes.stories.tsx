@@ -8,7 +8,7 @@ const meta = {
   title: "Features/Profile/TwoFactorRecoveryCodes",
   component: TwoFactorRecoveryCodes,
   args: { codes: twoFactorRecoveryCodes.recoveryCodes ?? [], onDone: fn() },
-  decorators: [withWidth("w-[28rem] max-w-full")],
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof TwoFactorRecoveryCodes>;
 
 export default meta;
@@ -31,5 +31,5 @@ export const LongCodes: Story = {
 };
 
 export const Narrow: Story = {
-  decorators: [withWidth("w-64")],
+  decorators: [withWidth("narrow")],
 };

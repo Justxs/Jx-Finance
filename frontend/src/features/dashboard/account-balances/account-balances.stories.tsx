@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { AccountBalances } from "./account-balances";
 
 const meta = {
   title: "Features/Dashboard/AccountBalances",
   component: AccountBalances,
-  render: () => (
-    <div className="w-[min(28rem,90vw)]">
-      <QueryBoundary fallback={<RowsSkeleton rows={5} />}>
-        <AccountBalances />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof AccountBalances>;
 
 export default meta;

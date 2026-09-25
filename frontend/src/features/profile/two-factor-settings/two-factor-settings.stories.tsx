@@ -4,8 +4,7 @@ import {
   getMeMockHandler,
   getSetupTwoFactorMockHandler,
 } from "@/api/generated/auth/auth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import {
   currentUserWithTwoFactor,
   serverErrorProblem,
@@ -18,13 +17,7 @@ const meta = {
   title: "Features/Profile/TwoFactorSettings",
   component: TwoFactorSettings,
   parameters: { route: "/profile" },
-  render: () => (
-    <div className="w-[28rem] max-w-full">
-      <QueryBoundary fallback={<Skeleton className="h-56 w-full" />}>
-        <TwoFactorSettings />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof TwoFactorSettings>;
 
 export default meta;

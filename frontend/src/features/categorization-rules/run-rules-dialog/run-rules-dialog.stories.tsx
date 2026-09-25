@@ -4,6 +4,7 @@ import {
   getPreviewCategorizationRunMockHandler,
   getRunCategorizationRulesMockHandler,
 } from "@/api/generated/categorization-rules/categorization-rules.msw";
+import { withWidth } from "@/storybook/decorators";
 import { accounts, rulesRunNothing } from "@/storybook/fixtures";
 import { failWithStatus, pending, withHandlers } from "@/storybook/handlers";
 import { RunRulesDialog } from "./run-rules-dialog";
@@ -12,11 +13,7 @@ const meta = {
   title: "Features/CategorizationRules/RunRulesDialog",
   component: RunRulesDialog,
   args: { accounts, hasRules: true, onClose: fn() },
-  render: (args) => (
-    <div className="w-[min(40rem,calc(100vw-3rem))]">
-      <RunRulesDialog {...args} />
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof RunRulesDialog>;
 
 export default meta;

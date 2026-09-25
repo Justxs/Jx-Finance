@@ -17,7 +17,7 @@ const meta = {
   component: ProfileForm,
   parameters: { route: "/profile" },
   args: { profile: currentUser },
-  decorators: [withWidth("w-[28rem] max-w-full")],
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof ProfileForm>;
 
 export default meta;

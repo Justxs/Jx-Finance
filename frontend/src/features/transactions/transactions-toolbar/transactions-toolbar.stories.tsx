@@ -19,7 +19,7 @@ const meta = {
     onUseTemplate: fn(),
   },
   parameters: { route: "/transactions" },
-  decorators: [withWidth("w-[min(48rem,90vw)]")],
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof TransactionsToolbar>;
 
 export default meta;

@@ -10,7 +10,7 @@ const meta = {
   title: "Features/Accounts/TransferForm",
   component: TransferForm,
   args: { accounts, onClose: fn() },
-  decorators: [withWidth("w-[min(36rem,90vw)]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof TransferForm>;
 
 export default meta;

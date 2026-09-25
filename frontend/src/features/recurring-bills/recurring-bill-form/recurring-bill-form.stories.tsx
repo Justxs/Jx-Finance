@@ -11,7 +11,7 @@ const meta = {
   title: "Features/RecurringBills/RecurringBillForm",
   component: RecurringBillForm,
   args: { accounts, categories, onClose: fn() },
-  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof RecurringBillForm>;
 
 export default meta;

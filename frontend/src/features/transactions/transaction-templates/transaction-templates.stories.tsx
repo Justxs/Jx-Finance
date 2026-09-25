@@ -20,7 +20,7 @@ const meta = {
   title: "Features/Transactions/TransactionTemplates",
   component: TransactionTemplates,
   args: { onUse: fn() },
-  decorators: [withWidth("w-72")],
+  decorators: [withWidth("field")],
 } satisfies Meta<typeof TransactionTemplates>;
 
 export default meta;

@@ -13,7 +13,7 @@ const meta = {
   component: HouseholdActivity,
   parameters: { layout: "padded", route: "/households" },
   args: { householdId: familyHousehold.id, members: familyHousehold.members },
-  decorators: [withWidth("w-[48rem] max-w-full")],
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof HouseholdActivity>;
 
 export default meta;

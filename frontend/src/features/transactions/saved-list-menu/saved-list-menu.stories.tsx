@@ -27,7 +27,7 @@ const meta = {
     onRename: fn(),
     onDelete: fn(),
   },
-  decorators: [withWidth("w-72")],
+  decorators: [withWidth("field")],
 } satisfies Meta<typeof SavedListMenu>;
 
 export default meta;

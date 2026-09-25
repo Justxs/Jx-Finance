@@ -18,7 +18,7 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
-  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof HoldingForm>;
 
 export default meta;

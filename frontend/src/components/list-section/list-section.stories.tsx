@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { withWidth } from "@/storybook/decorators";
 import { ListSection } from "./list-section";
 
 const meta = {
@@ -14,11 +15,7 @@ const meta = {
       </li>
     )),
   },
-  render: (args) => (
-    <div className="w-[min(32rem,calc(100vw-3rem))]">
-      <ListSection {...args} />
-    </div>
-  ),
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof ListSection>;
 
 export default meta;

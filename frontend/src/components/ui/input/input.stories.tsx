@@ -18,7 +18,7 @@ const meta = {
   title: "UI/Input",
   component: Input,
   args: { "aria-label": "Description" },
-  decorators: [withWidth("w-64")],
+  decorators: [withWidth("narrow")],
 } satisfies Meta<typeof Input>;
 
 export default meta;

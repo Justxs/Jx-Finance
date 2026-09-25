@@ -5,7 +5,7 @@ import { DashboardSection } from "./dashboard-section";
 const meta = {
   title: "Features/Dashboard/DashboardSection",
   component: DashboardSection,
-  decorators: [withWidth("w-[min(28rem,90vw)]")],
+  decorators: [withWidth("column")],
   args: {
     title: "Budgets this month",
     children: <p className="text-sm text-muted-foreground">Section content.</p>,

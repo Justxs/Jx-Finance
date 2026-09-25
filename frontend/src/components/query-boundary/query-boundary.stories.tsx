@@ -58,7 +58,8 @@ const meta = {
     fallback: <Skeleton className="m-6 h-24" />,
     children: <AccountNames />,
   },
-  decorators: [withWidth("w-[min(90vw,32rem)]")],
+  parameters: { boundary: false },
+  decorators: [withWidth("form")],
   render: (args) => (
     <Card as="section">
       <QueryBoundary {...args} />

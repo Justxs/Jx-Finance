@@ -2,24 +2,15 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent } from "storybook/test";
 import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import { setActiveHousehold } from "@/stores/active-household-store";
+import { withWidth } from "@/storybook/decorators";
 import { familyHousehold } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
-import { QueryBoundary } from "../query-boundary/query-boundary";
-import { Skeleton } from "../ui/skeleton/skeleton";
 import { HouseholdSwitcher } from "./household-switcher";
 
 const meta = {
   title: "Components/HouseholdSwitcher",
   component: HouseholdSwitcher,
-  decorators: [
-    (Story) => (
-      <div className="w-58 bg-sidebar p-3">
-        <QueryBoundary fallback={<Skeleton className="h-8 w-full rounded-lg" />}>
-          <Story />
-        </QueryBoundary>
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-58 bg-sidebar p-3")],
   beforeEach: () => {
     setActiveHousehold(undefined);
     return () => setActiveHousehold(undefined);
@@ -40,13 +31,7 @@ export const OneHouseholdActive: Story = {
 
 export const Collapsed: Story = {
   args: { collapsed: true },
-  decorators: [
-    (Story) => (
-      <div className="w-16 bg-sidebar p-2">
-        <Story />
-      </div>
-    ),
-  ],
+  decorators: [withWidth("w-16 bg-sidebar p-2")],
 };
 
 export const NoHouseholds: Story = {

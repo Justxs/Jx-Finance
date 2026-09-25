@@ -10,7 +10,7 @@ const meta = {
   component: SavedFilters,
   args: { accounts, categories, tags },
   parameters: { route: "/transactions" },
-  decorators: [withWidth("w-72")],
+  decorators: [withWidth("field")],
 } satisfies Meta<typeof SavedFilters>;
 
 export default meta;

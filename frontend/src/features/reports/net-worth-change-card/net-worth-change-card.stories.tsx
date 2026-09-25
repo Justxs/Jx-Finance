@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { FIXTURE_MONTH_END, FIXTURE_YEAR_START, netWorthHistoryItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { NetWorthChangeCard } from "./net-worth-change-card";
@@ -25,13 +24,7 @@ const meta = {
   component: NetWorthChangeCard,
   parameters: { route: "/reports" },
   args: { dateFrom: FIXTURE_YEAR_START, dateTo: FIXTURE_MONTH_END },
-  render: (args) => (
-    <div className="w-[28rem] max-w-full">
-      <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
-        <NetWorthChangeCard {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof NetWorthChangeCard>;
 
 export default meta;
@@ -47,13 +40,7 @@ export const NegativeChange: Story = {
 
 export const LargeAmountsNarrow: Story = {
   parameters: withHandlers(getNetWorthHistoryMockHandler(hugeHistory)),
-  render: (args) => (
-    <div className="w-64">
-      <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
-        <NetWorthChangeCard {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("narrow")],
 };
 
 export const SingleSnapshotInRange: Story = {

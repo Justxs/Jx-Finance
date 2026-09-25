@@ -9,7 +9,7 @@ const meta = {
   title: "Features/Investments/SecurityForm",
   component: SecurityForm,
   args: { pending: false, onSubmit: fn(), onCancel: fn() },
-  decorators: [withWidth("w-[min(36rem,90vw)]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof SecurityForm>;
 
 export default meta;

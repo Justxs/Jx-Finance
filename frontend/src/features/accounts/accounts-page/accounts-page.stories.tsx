@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCreateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import {
   emptyHandlers,
   errorHandlers,
@@ -15,13 +14,7 @@ const meta = {
   title: "Features/Accounts/AccountsPage",
   component: AccountsPage,
   parameters: { layout: "fullscreen", route: "/accounts" },
-  render: () => (
-    <div className="p-6 lg:p-10">
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-        <AccountsPage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof AccountsPage>;
 
 export default meta;

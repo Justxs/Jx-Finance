@@ -5,8 +5,6 @@ import {
   getRestoreAccountMockHandler,
 } from "@/api/generated/accounts/accounts.msw";
 import type { ArchivedAccountResponse } from "@/api/generated/model";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { archivedAccounts, checkingAccount, problemOf } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -22,11 +20,6 @@ const meta = {
   title: "Features/Accounts/ArchivedAccounts",
   component: ArchivedAccounts,
   parameters: { layout: "padded", route: "/accounts" },
-  render: () => (
-    <QueryBoundary fallback={<Skeleton className="h-8 w-48" />}>
-      <ArchivedAccounts />
-    </QueryBoundary>
-  ),
 } satisfies Meta<typeof ArchivedAccounts>;
 
 export default meta;

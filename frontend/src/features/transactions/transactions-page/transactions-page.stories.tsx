@@ -1,14 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import {
   readSavedFilters,
   readTransactionTemplates,
   saveFilter,
   saveTransactionTemplate,
 } from "@/stores/transaction-views";
+import { withPageFrame } from "@/storybook/decorators";
 import { ids, splitTransaction } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -24,13 +23,7 @@ const meta = {
   title: "Features/Transactions/TransactionsPage",
   component: TransactionsPage,
   parameters: { layout: "fullscreen", route: "/transactions" },
-  render: () => (
-    <div className="p-6 lg:p-10">
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-        <TransactionsPage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof TransactionsPage>;
 
 export default meta;

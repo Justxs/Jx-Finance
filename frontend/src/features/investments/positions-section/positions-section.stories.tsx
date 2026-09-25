@@ -18,7 +18,7 @@ const meta = {
   title: "Features/Investments/PositionsSection",
   component: PositionsSection,
   args: { holdings: portfolio.holdings, reportingCurrency: "eur", accounts },
-  decorators: [withWidth("w-[min(64rem,calc(100vw-5rem))]")],
+  decorators: [withWidth("full")],
 } satisfies Meta<typeof PositionsSection>;
 
 export default meta;

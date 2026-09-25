@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { first, openedDialog } from "@/storybook/interactions";
@@ -12,13 +11,7 @@ const meta = {
   component: ConversionsSection,
   parameters: { layout: "fullscreen" },
   args: { accounts, convertAccountId: null, onConvertAccountChange: fn() },
-  render: (args) => (
-    <div className="mx-auto max-w-4xl p-6">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <ConversionsSection {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof ConversionsSection>;
 
 export default meta;

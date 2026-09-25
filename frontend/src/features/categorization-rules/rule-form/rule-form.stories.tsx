@@ -4,6 +4,7 @@ import {
   getCreateCategorizationRuleMockHandler,
   getTestCategorizationRuleMockHandler,
 } from "@/api/generated/categorization-rules/categorization-rules.msw";
+import { withWidth } from "@/storybook/decorators";
 import {
   accounts,
   categories,
@@ -24,11 +25,7 @@ const meta = {
     tags,
     onClose: fn(),
   },
-  render: (args) => (
-    <div className="w-[min(40rem,calc(100vw-3rem))]">
-      <RuleForm {...args} />
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof RuleForm>;
 
 export default meta;
