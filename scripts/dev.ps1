@@ -1,16 +1,9 @@
-Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
-
-$root = Split-Path $PSScriptRoot -Parent
-Set-Location $root
-
 . (Join-Path $PSScriptRoot "dev-env.ps1")
-Set-DevEnvironment -Root $root
+Set-DevEnvironment
 $env:ASPNETCORE_URLS = "http://localhost:8091"
 $env:OTEL_EXPORTER_OTLP_ENDPOINT = "http://localhost:4317"
 
-docker compose up -d --wait db aspire
-if ($LASTEXITCODE -ne 0) { throw "PostgreSQL or the Aspire dashboard did not start." }
+Invoke-Checked { docker compose up -d --wait db aspire } "PostgreSQL or the Aspire dashboard did not start."
 
 $api = Start-Process dotnet -ArgumentList "watch --project backend/JxFinance.Api --non-interactive" -NoNewWindow -PassThru
 try {
