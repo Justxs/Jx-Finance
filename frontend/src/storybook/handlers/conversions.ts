@@ -6,13 +6,13 @@ import {
 } from "@/api/generated/conversions/conversions.msw";
 import type { ConversionResponse } from "@/api/generated/model";
 import { conversionWithFee, conversions } from "@/storybook/fixtures";
-import { found, readBody, text } from "./http";
+import { found, query, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { byId, paginate } from "./lists";
 
 export const conversionHandlers = [
   getConversionsMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     const accountId = params.get("accountId");
     return paginate(
       conversions.filter((item) => !accountId || item.accountId === accountId),

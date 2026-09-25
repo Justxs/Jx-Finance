@@ -5,9 +5,9 @@ import {
   getUpdateGoalMockHandler,
 } from "@/api/generated/goals/goals.msw";
 import { goals } from "@/storybook/fixtures";
-import { found, readBody } from "./http";
+import { readBody } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
+import { updateFrom } from "./lists";
 
 export const goalHandlers = [
   getGoalsMockHandler(goals),
@@ -23,9 +23,6 @@ export const goalHandlers = [
     progressAmount: "0.00",
     ...(await readBody(request)),
   })),
-  getUpdateGoalMockHandler(async ({ params, request }) => ({
-    ...found(byId(goals, params.id)),
-    ...(await readBody(request)),
-  })),
+  getUpdateGoalMockHandler(updateFrom(goals)),
   getDeleteGoalMockHandler(),
 ];

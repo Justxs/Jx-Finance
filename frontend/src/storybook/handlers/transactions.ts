@@ -22,10 +22,18 @@ import {
   transactionsCsv,
 } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
-import { found, notFound, onRouteOf, readBody, text } from "./http";
+import { notFound, onRouteOf, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { CREATED_AT, NEW_TRANSACTION_ID } from "./ids";
-import { applyDirection, byId, compareText, includesText, paginate } from "./lists";
+import {
+  applyDirection,
+  byId,
+  byIdFrom,
+  compareText,
+  includesText,
+  paginate,
+  updateFrom,
+} from "./lists";
 
 function accountName(id: string | null): string {
   return accounts.find((item) => item.id === id)?.name ?? "";
@@ -101,6 +109,16 @@ function mergeTransaction(base: TransactionResponse, body: Body): TransactionRes
   return { ...base, ...body, lines, isSplit: lines !== null };
 }
 
+async function bulkUpdate({ request }: { request: Request }) {
+  const body = await readBody(request);
+  const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
+  const matched = requested.map((id) => byId(transactions, id));
+  if (matched.some((item) => item === undefined)) {
+    throw notFound();
+  }
+  return { updated: matched.length };
+}
+
 export const transactionHandlers = [
   onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
     HttpResponse.arrayBuffer(new TextEncoder().encode("%PDF-1.4\n%%EOF\n").buffer, {
@@ -119,19 +137,11 @@ export const transactionHandlers = [
     }),
   ),
   getTransactionsSummaryMockHandler(({ request }) =>
-    buildTransactionsSummary(filterTransactions(new URL(request.url).searchParams)),
+    buildTransactionsSummary(filterTransactions(query(request))),
   ),
-  getBulkCategorizeTransactionsMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
-    const matched = requested.map((id) => byId(transactions, id));
-    if (matched.some((item) => item === undefined)) {
-      throw notFound();
-    }
-    return { updated: matched.length };
-  }),
+  getBulkCategorizeTransactionsMockHandler(bulkUpdate),
   getTransactionsMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     return paginate(filterTransactions(params), params);
   }),
   getCreateTransactionMockHandler(async ({ request }) => {
@@ -154,18 +164,8 @@ export const transactionHandlers = [
     };
     return mergeTransaction(base, await readBody(request));
   }),
-  getTransactionMockHandler(({ params }) => found(byId(transactions, params.id))),
-  getUpdateTransactionMockHandler(async ({ params, request }) =>
-    mergeTransaction(found(byId(transactions, params.id)), await readBody(request)),
-  ),
+  getTransactionMockHandler(byIdFrom(transactions)),
+  getUpdateTransactionMockHandler(updateFrom(transactions, mergeTransaction)),
   getDeleteTransactionMockHandler(),
-  getBulkTagTransactionsMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    const requested = Array.isArray(body.transactionIds) ? body.transactionIds : [];
-    const matched = requested.map((id) => byId(transactions, id));
-    if (matched.some((item) => item === undefined)) {
-      throw notFound();
-    }
-    return { updated: matched.length };
-  }),
+  getBulkTagTransactionsMockHandler(bulkUpdate),
 ];

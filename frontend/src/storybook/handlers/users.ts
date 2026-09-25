@@ -10,7 +10,7 @@ import {
 } from "@/api/generated/users/users.msw";
 import { UserRole } from "@/lib/user-role";
 import { adminPassword, currentUser, users, wrongAdminPasswordProblem } from "@/storybook/fixtures";
-import { found, problem, readBody, text } from "./http";
+import { found, problem, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_USER_ID } from "./ids";
 import { applyDirection, byId, compareText, includesText } from "./lists";
@@ -54,7 +54,7 @@ export function mergeProfile(base: UserProfileResponse, body: Body): UserProfile
 }
 
 export const userHandlers = [
-  getUsersMockHandler(({ request }) => filterUsers(new URL(request.url).searchParams)),
+  getUsersMockHandler(({ request }) => filterUsers(query(request))),
   getCreateUserMockHandler(async ({ request }) => {
     const base: UserProfileResponse = {
       id: NEW_USER_ID,

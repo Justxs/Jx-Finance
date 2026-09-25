@@ -4,10 +4,11 @@ import {
   getMarkNotificationReadMockHandler,
 } from "@/api/generated/notifications/notifications.msw";
 import { notifications } from "@/storybook/fixtures";
+import { query } from "./http";
 
 export const notificationHandlers = [
   getNotificationsMockHandler(({ request }) => {
-    const unread = new URL(request.url).searchParams.get("unread") === "true";
+    const unread = query(request).get("unread") === "true";
     return unread ? notifications.filter((item) => !item.isRead) : notifications;
   }),
   getMarkAllNotificationsReadMockHandler(),

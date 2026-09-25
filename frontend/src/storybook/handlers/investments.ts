@@ -38,20 +38,24 @@ import {
   valueHistory,
   worldEtf,
 } from "@/storybook/fixtures";
-import { currencyCode, found, problem, readBody, text } from "./http";
+import { currencyCode, found, problem, query, readBody, text } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
-import { byId, emptyPage, paginate } from "./lists";
+import { byId, byIdFrom, emptyPage, paginate, updateFrom } from "./lists";
 
 const investmentType = z.enum(InvestmentTransactionType).catch("buy");
 
+function heldOr<T>(held: T, empty: T) {
+  return function resolve({ request }: { request: Request }): T {
+    const accountId = query(request).get("accountId");
+    const holds = portfolio.holdings.some((holding) => holding.accountId === accountId);
+    return !accountId || holds ? held : empty;
+  };
+}
+
 export const investmentHandlers = [
-  getPortfolioMockHandler(({ request }) => {
-    const accountId = new URL(request.url).searchParams.get("accountId");
-    const held = portfolio.holdings.some((holding) => holding.accountId === accountId);
-    return !accountId || held ? portfolio : emptyPortfolio;
-  }),
+  getPortfolioMockHandler(heldOr(portfolio, emptyPortfolio)),
   getInvestmentTransactionsMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     const accountId = params.get("accountId");
     const securityId = params.get("securityId");
     const type = params.get("type");
@@ -102,12 +106,10 @@ export const investmentHandlers = [
       createdAt: CREATED_AT,
     };
   }),
-  getUpdateInvestmentTransactionMockHandler(({ params }) =>
-    found(byId(investmentTransactions, params.id)),
-  ),
+  getUpdateInvestmentTransactionMockHandler(byIdFrom(investmentTransactions)),
   getDeleteInvestmentTransactionMockHandler(),
   getSecuritiesMockHandler(({ request }) => {
-    const search = new URL(request.url).searchParams.get("search")?.toLowerCase() ?? "";
+    const search = query(request).get("search")?.toLowerCase() ?? "";
     return securities.filter((item) =>
       [item.symbol, item.name, item.isin ?? ""].some((value) =>
         value.toLowerCase().includes(search),
@@ -138,10 +140,7 @@ export const investmentHandlers = [
     const lastPriceDate = created.lastPrice ? (created.lastPriceDate ?? FIXTURE_TODAY) : null;
     return { ...created, lastPriceDate };
   }),
-  getUpdateSecurityMockHandler(async ({ params, request }) => ({
-    ...found(byId(securities, params.id)),
-    ...(await readBody(request)),
-  })),
+  getUpdateSecurityMockHandler(updateFrom(securities)),
   getSetSecurityPriceMockHandler(async ({ params, request }) => {
     const body = await readBody(request);
     return {
@@ -161,13 +160,9 @@ export const investmentHandlers = [
       : [];
   }),
   getDeleteSecurityPriceMockHandler(),
-  getValueHistoryMockHandler(({ request }) => {
-    const accountId = new URL(request.url).searchParams.get("accountId");
-    const held = portfolio.holdings.some((holding) => holding.accountId === accountId);
-    return !accountId || held ? valueHistory : emptyValueHistory;
-  }),
+  getValueHistoryMockHandler(heldOr(valueHistory, emptyValueHistory)),
   getTaxSummaryMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     const year = Number(params.get("year") ?? taxSummary.year);
     const chosen = (params.get("accountIds") ?? "").split(",").filter(Boolean);
     const accounts =

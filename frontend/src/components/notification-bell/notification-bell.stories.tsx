@@ -11,13 +11,14 @@ import {
   transferDueNotification,
 } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
+import { query } from "@/storybook/handlers/http";
 import { QueryBoundary } from "../query-boundary/query-boundary";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { NotificationBell } from "./notification-bell";
 
 function notificationsHandler(items: NotificationResponse[]) {
   return getNotificationsMockHandler(({ request }) => {
-    const unreadOnly = new URL(request.url).searchParams.get("unread") === "true";
+    const unreadOnly = query(request).get("unread") === "true";
     return unreadOnly ? items.filter((item) => !item.isRead) : items;
   });
 }

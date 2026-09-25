@@ -4,6 +4,7 @@ import { getValueHistoryMockHandler } from "@/api/generated/investments/investme
 import { withWidth } from "@/storybook/decorators";
 import { partialValueHistory, valueHistory } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
+import { query } from "@/storybook/handlers/http";
 import { chooseOption } from "@/storybook/interactions";
 import { ValueChartSection } from "./value-chart-section";
 
@@ -61,7 +62,7 @@ const requested: string[] = [];
 export const ChangesRange: Story = {
   parameters: withHandlers(
     getValueHistoryMockHandler(({ request }) => {
-      requested.push(new URL(request.url).searchParams.get("from") ?? "");
+      requested.push(query(request).get("from") ?? "");
       return valueHistory;
     }),
   ),

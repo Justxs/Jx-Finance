@@ -22,9 +22,9 @@ import {
   scheduleIncompleteProblem,
   zeroRateDebt,
 } from "@/storybook/fixtures";
-import { found, problem, readBody } from "./http";
+import { found, problem, query, readBody } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
+import { byId, updateFrom } from "./lists";
 
 const scheduledDebts = [...debts, zeroRateDebt, linearDebt];
 
@@ -39,10 +39,7 @@ export const assetHandlers = [
     currency: "eur",
     ...(await readBody(request)),
   })),
-  getUpdateAssetMockHandler(async ({ params, request }) => ({
-    ...found(byId(assets, params.id)),
-    ...(await readBody(request)),
-  })),
+  getUpdateAssetMockHandler(updateFrom(assets)),
   getDeleteAssetMockHandler(),
 ];
 
@@ -51,11 +48,11 @@ export const debtScheduleHandler = getDebtScheduleMockHandler(({ params, request
   if (debt.payoffDate === null) {
     throw problem(scheduleIncompleteProblem);
   }
-  const query = new URL(request.url).searchParams;
+  const search = query(request);
   return buildDebtSchedule(debt, {
-    extraMonthly: query.get("extraMonthly"),
-    lumpSum: query.get("lumpSum"),
-    lumpSumDate: query.get("lumpSumDate"),
+    extraMonthly: search.get("extraMonthly"),
+    lumpSum: search.get("lumpSum"),
+    lumpSumDate: search.get("lumpSumDate"),
   });
 });
 
@@ -78,10 +75,7 @@ export const debtHandlers = [
     payoffDate: null,
     ...(await readBody(request)),
   })),
-  getUpdateDebtMockHandler(async ({ params, request }) => ({
-    ...found(byId(scheduledDebts, params.id)),
-    ...(await readBody(request)),
-  })),
+  getUpdateDebtMockHandler(updateFrom(scheduledDebts)),
   getDeleteDebtMockHandler(),
 ];
 

@@ -11,10 +11,10 @@ import {
 } from "@/api/generated/households/households.msw";
 import type { AuditEventResponse, HouseholdResponse } from "@/api/generated/model";
 import { familyHousehold, householdAuditEvents, households, users } from "@/storybook/fixtures";
-import { found, readBody, text } from "./http";
+import { found, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_ID, NEW_USER_ID } from "./ids";
-import { byId, paginate } from "./lists";
+import { byId, byIdFrom, paginate } from "./lists";
 
 export function filterAudit(events: AuditEventResponse[], params: URLSearchParams) {
   const memberId = params.get("memberId");
@@ -58,7 +58,7 @@ export const householdHandlers = [
       members: familyHousehold.members.slice(0, 1),
     };
   }),
-  getHouseholdMockHandler(({ params }) => found(byId(households, params.id))),
+  getHouseholdMockHandler(byIdFrom(households)),
   getUpdateHouseholdMockHandler(async ({ params, request }) => {
     const household = found(byId(households, params.id));
     const body = await readBody(request);
@@ -66,7 +66,7 @@ export const householdHandlers = [
   }),
   getDeleteHouseholdMockHandler(),
   getHouseholdAuditMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     return paginate(filterAudit(householdAuditEvents, params), params);
   }),
   getAddMemberMockHandler(async ({ params, request }) =>

@@ -11,7 +11,7 @@ import {
 import { dueSoonBill, recurringBills, subscriptionCandidates } from "@/storybook/fixtures";
 import { found, readBody } from "./http";
 import { NEW_ID, NEW_TRANSACTION_ID, NEW_TRANSFER_ID } from "./ids";
-import { byId } from "./lists";
+import { byId, byIdFrom, updateFrom } from "./lists";
 
 export const recurringBillHandlers = [
   getRecurringBillsMockHandler(recurringBills),
@@ -23,11 +23,8 @@ export const recurringBillHandlers = [
     isActive: true,
     ...(await readBody(request)),
   })),
-  getRecurringBillMockHandler(({ params }) => found(byId(recurringBills, params.id))),
-  getUpdateRecurringBillMockHandler(async ({ params, request }) => ({
-    ...found(byId(recurringBills, params.id)),
-    ...(await readBody(request)),
-  })),
+  getRecurringBillMockHandler(byIdFrom(recurringBills)),
+  getUpdateRecurringBillMockHandler(updateFrom(recurringBills)),
   getDeleteRecurringBillMockHandler(),
   getConfirmRecurringBillMockHandler(({ params }) => {
     const bill = found(byId(recurringBills, params.id));
