@@ -141,7 +141,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var housemate = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var housemateClient = await LoginAsync(housemate);
-        var household = await CreateOwnHouseholdAsync(ownerClient, housemate);
+        var household = await Seed.HouseholdAsync(ownerClient, null, housemate);
         var shared = await PostAsync<IdDto>(
             ownerClient,
             "/api/categories",
@@ -305,7 +305,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var housemate = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var housemateClient = await LoginAsync(housemate);
-        var household = await CreateOwnHouseholdAsync(ownerClient, housemate, "Šeima");
+        var household = await Seed.HouseholdAsync(ownerClient, "Šeima", housemate);
         var ownerAccount = await CreateAccountAsync(householdId: household, client: ownerClient);
         var housemateAccount = await CreateAccountAsync(householdId: household, client: housemateClient);
         var category = await PostAsync<IdDto>(
@@ -341,13 +341,13 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var housemate = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var housemateClient = await LoginAsync(housemate);
-        var household = await CreateOwnHouseholdAsync(ownerClient, housemate);
+        var household = await Seed.HouseholdAsync(ownerClient, null, housemate);
         var archived = await CreateAccountAsync(householdId: household, client: ownerClient);
         var moved = await CreateAccountAsync(householdId: household, client: housemateClient);
 
         await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         await ownerClient.DeleteAsync($"/api/accounts/{archived}", TestContext.Current.CancellationToken);
-        var elsewhere = await CreateOwnHouseholdAsync(housemateClient);
+        var elsewhere = await Seed.HouseholdAsync(housemateClient);
         (await housemateClient.PutAsJsonAsync(
             $"/api/accounts/{moved}",
             new { name = "Kitur", type = "checking", startingBalance = "0.00", scope = "shared", householdId = elsewhere }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
@@ -366,7 +366,7 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
         var housemate = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var housemateClient = await LoginAsync(housemate);
-        var household = await CreateOwnHouseholdAsync(ownerClient, housemate);
+        var household = await Seed.HouseholdAsync(ownerClient, null, housemate);
 
         await ownerClient.DeleteAsync($"/api/households/{household}", TestContext.Current.CancellationToken);
         var byHousemate = await RestoreAsync(housemateClient, "household", household);
@@ -381,31 +381,17 @@ public sealed class RecordedChangesTrashTests(ApiFixture fixture) : IntegrationT
     public async Task A_deleted_household_named_as_active_does_not_narrow_anything()
     {
         using var ownerClient = await CreateUserClientAsync();
-        var deleted = await CreateOwnHouseholdAsync(ownerClient);
-        var kept = await CreateOwnHouseholdAsync(ownerClient);
+        var deleted = await Seed.HouseholdAsync(ownerClient);
+        var kept = await Seed.HouseholdAsync(ownerClient);
         var keptCategory = await PostAsync<IdDto>(
             ownerClient,
             "/api/categories",
             new { name = "Kita šeima", type = "expense", scope = "shared", householdId = kept });
 
         await ownerClient.DeleteAsync($"/api/households/{deleted}", TestContext.Current.CancellationToken);
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/categories");
-        request.Headers.Add("X-Active-Household", deleted.ToString());
-        var response = await ownerClient.SendAsync(request, TestContext.Current.CancellationToken);
-        var categories = (await response.Content.ReadFromJsonAsync<List<NamedRow>>(TestContext.Current.CancellationToken))!;
+        var categories = await GetScopedAsync<List<NamedRow>>(ownerClient, "/api/categories", deleted);
 
         Assert.Contains(categories, c => c.Id == keptCategory.Id);
-    }
-
-    private static async Task<Guid> CreateOwnHouseholdAsync(HttpClient owner, TestUser? member = null, string? name = null)
-    {
-        var household = await PostAsync<IdDto>(owner, "/api/households", new { name = name ?? $"Household {Guid.NewGuid():N}" });
-        if (member is not null)
-        {
-            await PostAsync<IdDto>(owner, $"/api/households/{household.Id}/members", new { email = member.Email, role = "member" });
-        }
-
-        return household.Id;
     }
 
     private static async Task<Guid> TaggedTransactionAsync(HttpClient client, Guid account, Guid tag) =>

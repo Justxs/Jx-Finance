@@ -7,8 +7,6 @@ namespace JxFinance.Tests.Integration.Accounts;
 [Collection<IntegrationCollection>]
 public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ScopeHeader = "X-Active-Household";
-
     [Fact]
     public async Task An_archived_account_is_listed_and_restoring_it_brings_back_everything_posted_to_it()
     {
@@ -97,7 +95,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         var memberUser = await CreateUserAsync();
         using var owner = await LoginAsync(ownerUser);
         using var member = await LoginAsync(memberUser);
-        var household = await NewHouseholdAsync(owner, memberUser);
+        var household = await Seed.HouseholdAsync(owner, null, memberUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
         await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
@@ -118,18 +116,17 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
     public async Task The_active_household_narrows_the_list_and_the_restore()
     {
         using var owner = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(owner);
-        var second = await NewHouseholdAsync(owner);
+        var first = await Seed.HouseholdAsync(owner);
+        var second = await Seed.HouseholdAsync(owner);
         var inFirst = await CreateAccountAsync("1.00", householdId: first, client: owner);
         var inSecond = await CreateAccountAsync("2.00", householdId: second, client: owner);
         var personal = await CreateAccountAsync("3.00", client: owner);
         foreach (var id in new[] { inFirst, inSecond, personal })
             await owner.DeleteAsync($"/api/accounts/{id}", TestContext.Current.CancellationToken);
 
-        var listed = await ReadAsync<List<ArchivedAccountDto>>(
-            await SendAsync(owner, HttpMethod.Get, "/api/accounts/archived", first));
-        var hidden = await SendAsync(owner, HttpMethod.Post, $"/api/accounts/{inSecond}/restore", first);
-        var visible = await SendAsync(owner, HttpMethod.Post, $"/api/accounts/{inFirst}/restore", first);
+        var listed = await GetScopedAsync<List<ArchivedAccountDto>>(owner, "/api/accounts/archived", first);
+        var hidden = await SendScopedAsync(owner, HttpMethod.Post, $"/api/accounts/{inSecond}/restore", first);
+        var visible = await SendScopedAsync(owner, HttpMethod.Post, $"/api/accounts/{inFirst}/restore", first);
 
         Assert.Contains(listed, a => a.Id == inFirst);
         Assert.Contains(listed, a => a.Id == personal);
@@ -145,7 +142,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         var memberUser = await CreateUserAsync();
         using var owner = await CreateUserClientAsync();
         using var member = await LoginAsync(memberUser);
-        var household = await NewHouseholdAsync(owner, memberUser);
+        var household = await Seed.HouseholdAsync(owner, null, memberUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
         await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
         var before = Assert.Single(await ArchivedAsync(owner), a => a.Id == accountId);
@@ -169,7 +166,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         var ownerUser = await CreateUserAsync();
         using var householdOwner = await CreateUserClientAsync();
         using var owner = await LoginAsync(ownerUser);
-        var household = await NewHouseholdAsync(householdOwner, ownerUser);
+        var household = await Seed.HouseholdAsync(householdOwner, null, ownerUser);
         var accountId = await CreateAccountAsync("10.00", householdId: household, client: owner);
         await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
 
@@ -189,7 +186,7 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         var ownerUser = await CreateUserAsync();
         using var householdOwner = await CreateUserClientAsync();
         using var owner = await LoginAsync(ownerUser);
-        var left = await NewHouseholdAsync(householdOwner);
+        var left = await Seed.HouseholdAsync(householdOwner);
         var accountId = await CreateAccountAsync("10.00", client: owner);
         await owner.DeleteAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken);
         await ShareArchivedAsync(accountId, left);
@@ -212,27 +209,6 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
 
     private static async Task<List<ArchivedAccountDto>> ArchivedAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<List<ArchivedAccountDto>>("/api/accounts/archived"))!;
-
-    private static async Task<Guid> NewHouseholdAsync(HttpClient client, params TestUser[] members)
-    {
-        var household = await PostAsync<IdDto>(client, "/api/households", new { name = $"Household {Guid.NewGuid():N}" });
-        foreach (var member in members)
-            await PostAsync<IdDto>(client, $"/api/households/{household.Id}/members", new { email = member.Email, role = "member" });
-        return household.Id;
-    }
-
-    private static Task<HttpResponseMessage> SendAsync(HttpClient client, HttpMethod method, string url, Guid household)
-    {
-        var request = new HttpRequestMessage(method, url);
-        request.Headers.Add(ScopeHeader, household.ToString());
-        return client.SendAsync(request);
-    }
-
-    private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
-    {
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<T>())!;
-    }
 
     private sealed record ArchivedAccountDto(
         Guid Id,

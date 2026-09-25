@@ -7,7 +7,6 @@ namespace JxFinance.Tests.Integration.Households;
 [Collection<IntegrationCollection>]
 public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ScopeHeader = "X-Active-Household";
     private const string ScopeQuery = "activeHousehold";
 
     [Fact]
@@ -35,7 +34,7 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
 
         var everything = await world.Client.GetAsync("/api/transactions/export/pdf", TestContext.Current.CancellationToken);
         var scoped = await world.Client.GetAsync($"/api/transactions/export/pdf?{ScopeQuery}={world.First}", TestContext.Current.CancellationToken);
-        var headed = await SendAsync(world.Client, "/api/transactions/export/pdf", world.First);
+        var headed = await SendScopedAsync(world.Client, HttpMethod.Get, "/api/transactions/export/pdf", world.First);
 
         await AssertProblemAsync(everything, HttpStatusCode.BadRequest, "export.tooManyRows");
         Assert.Equal(HttpStatusCode.OK, scoped.StatusCode);
@@ -64,7 +63,7 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     {
         var world = await LedgerAsync();
         using var outsider = await CreateUserClientAsync();
-        var theirs = (await PostAsync<IdDto>(outsider, "/api/households", new { name = $"Outsiders {Guid.NewGuid():N}" })).Id;
+        var theirs = await Seed.HouseholdAsync(outsider);
 
         var csv = await DescriptionsAsync(world.Client, $"?{ScopeQuery}={theirs}");
 
@@ -90,9 +89,9 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     {
         var world = await LedgerAsync();
 
-        var agreeing = await SendAsync(world.Client, $"/api/transactions/export?{ScopeQuery}={world.First}", world.First);
-        var differing = await SendAsync(world.Client, $"/api/transactions/export?{ScopeQuery}={world.Second}", world.First);
-        var bothUnknown = await SendAsync(world.Client, $"/api/transactions/export?{ScopeQuery}=not-a-guid", world.First);
+        var agreeing = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/transactions/export?{ScopeQuery}={world.First}", world.First);
+        var differing = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/transactions/export?{ScopeQuery}={world.Second}", world.First);
+        var bothUnknown = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/transactions/export?{ScopeQuery}=not-a-guid", world.First);
 
         Assert.Equal(HttpStatusCode.OK, agreeing.StatusCode);
         Assert.Equal(
@@ -122,8 +121,8 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     private async Task<Ledger> LedgerAsync()
     {
         var client = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(client);
-        var second = await NewHouseholdAsync(client);
+        var first = await Seed.HouseholdAsync(client);
+        var second = await Seed.HouseholdAsync(client);
         var firstAccount = await CreateAccountAsync("100.00", householdId: first, client: client);
         var secondAccount = await CreateAccountAsync("100.00", householdId: second, client: client);
         var personal = await CreateAccountAsync("100.00", client: client);
@@ -139,8 +138,8 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     private async Task<Holdings> HoldingsAsync()
     {
         var client = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(client);
-        var second = await NewHouseholdAsync(client);
+        var first = await Seed.HouseholdAsync(client);
+        var second = await Seed.HouseholdAsync(client);
         var firstAccount = await CreateAccountAsync("10000.00", "investment", householdId: first, client: client);
         var secondAccount = await CreateAccountAsync("10000.00", "investment", householdId: second, client: client);
         var fund = await CreateSecurityAsync(client);
@@ -157,20 +156,6 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
     private static async Task<string> AccountNameAsync(HttpClient client, Guid accountId) =>
         (await client.GetFromJsonAsync<AccountDto>($"/api/accounts/{accountId}"))!.Name;
 
-    private static async Task<Guid> NewHouseholdAsync(HttpClient client) =>
-        (await PostAsync<IdDto>(client, "/api/households", new { name = $"House {Guid.NewGuid():N}" })).Id;
-
-    private static Task<HttpResponseMessage> SendAsync(HttpClient client, string url, Guid? household)
-    {
-        var request = new HttpRequestMessage(HttpMethod.Get, url);
-        if (household is not null)
-        {
-            request.Headers.Add(ScopeHeader, household.Value.ToString());
-        }
-
-        return client.SendAsync(request);
-    }
-
     private static async Task<List<string>> DescriptionsAsync(HttpClient client, string query) =>
         Descriptions(await client.GetStringAsync($"/api/transactions/export{query}"));
 
@@ -185,17 +170,13 @@ public sealed class ActiveHouseholdExportScopeTests(ApiFixture fixture) : Integr
 
     private static async Task<List<string>> ScreenAsync(HttpClient client, Guid household)
     {
-        using var response = await SendAsync(client, "/api/transactions?pageSize=200", household);
-        response.EnsureSuccessStatusCode();
-        var page = (await response.Content.ReadFromJsonAsync<PageDto<TransactionDto>>())!;
+        var page = await GetScopedAsync<PageDto<TransactionDto>>(client, "/api/transactions?pageSize=200", household);
         return [.. page.Items.Select(t => t.Description ?? string.Empty).Order(StringComparer.Ordinal)];
     }
 
     private static async Task<List<string>> TaxAccountsAsync(HttpClient client, Guid household)
     {
-        using var response = await SendAsync(client, "/api/investments/tax-summary?year=2026", household);
-        response.EnsureSuccessStatusCode();
-        var summary = (await response.Content.ReadFromJsonAsync<TaxSummaryAccountsDto>())!;
+        var summary = await GetScopedAsync<TaxSummaryAccountsDto>(client, "/api/investments/tax-summary?year=2026", household);
         return [.. summary.Accounts.Select(a => a.Name).Order(StringComparer.Ordinal)];
     }
 

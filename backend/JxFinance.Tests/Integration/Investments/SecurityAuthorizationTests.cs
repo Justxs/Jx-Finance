@@ -85,10 +85,9 @@ public sealed class SecurityAuthorizationTests(ApiFixture fixture) : Integration
         var partner = await CreateUserAsync();
         using var ownerClient = await LoginAsync(owner);
         using var partnerClient = await LoginAsync(partner);
-        var household = await PostAsync<IdDto>(ownerClient, "/api/households", new { name = $"Household {Guid.NewGuid():N}" });
-        await PostAsync<IdDto>(ownerClient, $"/api/households/{household.Id}/members", new { email = partner.Email, role = "member" });
+        var household = await Seed.HouseholdAsync(ownerClient, null, partner);
         var (id, _) = await CreateSharedSecurityAsync(ownerClient);
-        await BuyAsync(ownerClient, id, household.Id);
+        await BuyAsync(ownerClient, id, household);
 
         var response = await partnerClient.PutAsJsonAsync($"/api/investments/securities/{id}/price", new { lastPrice = "5" }, TestContext.Current.CancellationToken);
 

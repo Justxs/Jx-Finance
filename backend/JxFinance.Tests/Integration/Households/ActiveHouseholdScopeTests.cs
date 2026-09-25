@@ -1,5 +1,5 @@
 using System.Net;
-using System.Net.Http.Json;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Households;
@@ -7,8 +7,6 @@ namespace JxFinance.Tests.Integration.Households;
 [Collection<IntegrationCollection>]
 public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ScopeHeader = "X-Active-Household";
-
     [Fact]
     public async Task Without_a_header_the_caller_sees_every_household_at_once()
     {
@@ -55,11 +53,9 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
         var world = await TwoHouseholdsAsync();
         var entry = await CreateTransactionAsync(world.Client, world.SecondAccount, null, "expense", "5.00", "2026-06-10");
 
-        var account = await SendAsync(world.Client, HttpMethod.Get, $"/api/accounts/{world.SecondAccount}", world.First);
-        var page = await ReadAsync<PageDto<TransactionDto>>(
-            await SendAsync(world.Client, HttpMethod.Get, "/api/transactions?pageSize=200", world.First));
-        var everything = await ReadAsync<PageDto<TransactionDto>>(
-            await SendAsync(world.Client, HttpMethod.Get, "/api/transactions?pageSize=200", null));
+        var account = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/accounts/{world.SecondAccount}", world.First);
+        var page = await GetScopedAsync<PageDto<TransactionDto>>(world.Client, "/api/transactions?pageSize=200", world.First);
+        var everything = await GetScopedAsync<PageDto<TransactionDto>>(world.Client, "/api/transactions?pageSize=200", null);
 
         Assert.Equal(HttpStatusCode.NotFound, account.StatusCode);
         Assert.DoesNotContain(page.Items, t => t.Id == entry.Id);
@@ -71,11 +67,11 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
     {
         var world = await TwoHouseholdsAsync();
         using var outsider = await CreateUserClientAsync();
-        var theirHousehold = await NewHouseholdAsync(outsider, "Outsiders");
+        var theirHousehold = await Seed.HouseholdAsync(outsider);
         var theirAccount = await CreateAccountAsync("50.00", householdId: theirHousehold, client: outsider);
 
         var accounts = await AccountsAsync(world.Client, theirHousehold);
-        var theirs = await SendAsync(world.Client, HttpMethod.Get, $"/api/accounts/{theirAccount}", theirHousehold);
+        var theirs = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/accounts/{theirAccount}", theirHousehold);
 
         Assert.Contains(accounts, a => a.Id == world.FirstAccount);
         Assert.Contains(accounts, a => a.Id == world.SecondAccount);
@@ -88,7 +84,7 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
     {
         var world = await TwoHouseholdsAsync();
         using var outsider = await CreateUserClientAsync();
-        var theirHousehold = await NewHouseholdAsync(outsider, "Outsiders");
+        var theirHousehold = await Seed.HouseholdAsync(outsider);
         var theirAccount = await CreateAccountAsync("50.00", householdId: theirHousehold, client: outsider);
         var theirCategory = await NewCategoryAsync(outsider, theirHousehold);
 
@@ -96,7 +92,7 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
         {
             var accounts = await AccountsAsync(world.Client, header);
             var categories = await CategoriesAsync(world.Client, header);
-            var account = await SendAsync(world.Client, HttpMethod.Get, $"/api/accounts/{theirAccount}", header);
+            var account = await SendScopedAsync(world.Client, HttpMethod.Get, $"/api/accounts/{theirAccount}", header);
 
             Assert.DoesNotContain(accounts, a => a.Id == theirAccount);
             Assert.DoesNotContain(categories, c => c.Id == theirCategory);
@@ -110,8 +106,8 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
         var world = await TwoHouseholdsAsync();
 
         using var request = new HttpRequestMessage(HttpMethod.Get, "/api/accounts");
-        request.Headers.Add(ScopeHeader, "not-a-guid");
-        var accounts = await ReadAsync<List<AccountDto>>(await world.Client.SendAsync(request, TestContext.Current.CancellationToken));
+        request.Headers.Add(ActiveHousehold.HeaderName, "not-a-guid");
+        var accounts = await ReadOkAsync<List<AccountDto>>(await world.Client.SendAsync(request, TestContext.Current.CancellationToken));
 
         Assert.Contains(accounts, a => a.Id == world.FirstAccount);
         Assert.Contains(accounts, a => a.Id == world.SecondAccount);
@@ -126,15 +122,14 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
             "/api/transfers",
             new { fromAccountId = world.FirstAccount, toAccountId = world.SecondAccount, amount = "10.00", date = "2026-06-10" });
 
-        var listed = await ReadAsync<PageDto<TransferDto>>(
-            await SendAsync(world.Client, HttpMethod.Get, "/api/transfers?pageSize=200", world.First));
-        var edit = await SendAsync(
+        var listed = await GetScopedAsync<PageDto<TransferDto>>(world.Client, "/api/transfers?pageSize=200", world.First);
+        var edit = await SendScopedAsync(
             world.Client,
             HttpMethod.Put,
             $"/api/transfers/{transfer.Id}",
             world.First,
             new { fromAccountId = world.FirstAccount, toAccountId = world.SecondAccount, amount = "11.00", date = "2026-06-10" });
-        var editUnscoped = await SendAsync(
+        var editUnscoped = await SendScopedAsync(
             world.Client,
             HttpMethod.Put,
             $"/api/transfers/{transfer.Id}",
@@ -160,8 +155,8 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
     private async Task<World> TwoHouseholdsAsync()
     {
         var client = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(client, "First");
-        var second = await NewHouseholdAsync(client, "Second");
+        var first = await Seed.HouseholdAsync(client);
+        var second = await Seed.HouseholdAsync(client);
         return new World(
             client,
             first,
@@ -173,9 +168,6 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
             await NewCategoryAsync(client, second),
             await NewCategoryAsync(client, null));
     }
-
-    private static async Task<Guid> NewHouseholdAsync(HttpClient client, string name) =>
-        (await PostAsync<IdDto>(client, "/api/households", new { name = $"{name} {Guid.NewGuid():N}" })).Id;
 
     private static async Task<Guid> NewCategoryAsync(HttpClient client, Guid? householdId) =>
         (await PostAsync<IdDto>(
@@ -189,40 +181,11 @@ public sealed class ActiveHouseholdScopeTests(ApiFixture fixture) : IntegrationT
                 householdId,
             })).Id;
 
-    private static Task<HttpResponseMessage> SendAsync(
-        HttpClient client,
-        HttpMethod method,
-        string url,
-        Guid? household,
-        object? body = null)
-    {
-        var request = new HttpRequestMessage(method, url);
-        if (household is not null)
-        {
-            request.Headers.Add(ScopeHeader, household.Value.ToString());
-        }
+    private static Task<List<AccountDto>> AccountsAsync(HttpClient client, Guid? household) =>
+        GetScopedAsync<List<AccountDto>>(client, "/api/accounts", household);
 
-        if (body is not null)
-        {
-            request.Content = JsonContent.Create(body);
-        }
-
-        return client.SendAsync(request);
-    }
-
-    private static async Task<T> ReadAsync<T>(HttpResponseMessage response)
-    {
-        Assert.True(
-            response.IsSuccessStatusCode,
-            $"{(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}");
-        return (await response.Content.ReadFromJsonAsync<T>())!;
-    }
-
-    private static async Task<List<AccountDto>> AccountsAsync(HttpClient client, Guid? household) =>
-        await ReadAsync<List<AccountDto>>(await SendAsync(client, HttpMethod.Get, "/api/accounts", household));
-
-    private static async Task<List<CategoryDto>> CategoriesAsync(HttpClient client, Guid? household) =>
-        await ReadAsync<List<CategoryDto>>(await SendAsync(client, HttpMethod.Get, "/api/categories", household));
+    private static Task<List<CategoryDto>> CategoriesAsync(HttpClient client, Guid? household) =>
+        GetScopedAsync<List<CategoryDto>>(client, "/api/categories", household);
 
     private sealed record CategoryDto(Guid Id, string Name, string Type);
 }
