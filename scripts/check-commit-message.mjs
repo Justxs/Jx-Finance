@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fail } from "./run.mjs";
 
 const types = [
   "feat",
@@ -20,7 +21,10 @@ if (/^(Merge|Revert|fixup!|squash!)/.test(subject) || conventional.test(subject)
   process.exit(0);
 }
 
-console.error(`Commit subject "${subject}" is not a conventional commit.`);
-console.error(`Use <type>(optional-scope): summary, with a type from: ${types.join(", ")}.`);
-console.error("Example: feat(goals): archive a finished goal");
-process.exit(1);
+fail(
+  [
+    `Commit subject "${subject}" is not a conventional commit.`,
+    `Use <type>(optional-scope): summary, with a type from: ${types.join(", ")}.`,
+    "Example: feat(goals): archive a finished goal",
+  ].join("\n"),
+);

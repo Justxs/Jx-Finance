@@ -1,8 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { root } from "./run.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const checkOnly = process.argv.includes("--check");
 
 const files = ["docker-compose.yml", "backend/JxFinance.Api/Dockerfile", "frontend/Dockerfile"];
