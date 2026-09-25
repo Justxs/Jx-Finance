@@ -24,6 +24,8 @@ public sealed class TransferService(
     ITransferAmountResolver amountResolver,
     IDeletionRecorder deletions) : ITransferService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Transfer not found.");
+
     public async Task<PagedResponse<TransferResponse>> GetPageAsync(
         GetTransfersRequest request,
         CancellationToken cancellationToken)
@@ -75,10 +77,9 @@ public sealed class TransferService(
         CancellationToken cancellationToken)
     {
         var transferId = new TransferId(request.Id);
-        var found = await db.Transfers.FindOrNotFoundAsync(t => t.Id == transferId, "Transfer not found.", cancellationToken);
-        if (!found.TryGetValue(out var transfer))
+        if (await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken) is not { } transfer)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))
@@ -121,10 +122,9 @@ public sealed class TransferService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transferId = new TransferId(id);
-        var found = await db.Transfers.FindOrNotFoundAsync(t => t.Id == transferId, "Transfer not found.", cancellationToken);
-        if (!found.TryGetValue(out var transfer))
+        if (await db.Transfers.FirstOrDefaultAsync(t => t.Id == transferId, cancellationToken) is not { } transfer)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (!await SeesBothAccountsAsync(transfer, cancellationToken))

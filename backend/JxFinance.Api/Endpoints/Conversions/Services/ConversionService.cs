@@ -29,6 +29,8 @@ public sealed class ConversionService(
     IReferenceGuard references,
     IDeletionRecorder deletions) : IConversionService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Conversion not found.");
+
     private static readonly DomainError FeeCategoryNotExpense =
         new(ErrorCodes.CategoryWrongType, "The fee category must be an expense category.");
 
@@ -106,10 +108,9 @@ public sealed class ConversionService(
         CancellationToken cancellationToken)
     {
         var conversionId = new CurrencyConversionId(request.Id);
-        var found = await db.CurrencyConversions.FindOrNotFoundAsync(c => c.Id == conversionId, "Conversion not found.", cancellationToken);
-        if (!found.TryGetValue(out var conversion))
+        if (await db.CurrencyConversions.FirstOrDefaultAsync(c => c.Id == conversionId, cancellationToken) is not { } conversion)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (conversion.ImportRef is not null)
@@ -185,36 +186,34 @@ public sealed class ConversionService(
         return conversion.ToResponse(fee);
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var conversionId = new CurrencyConversionId(id);
-        var found = await db.CurrencyConversions.FindOrNotFoundAsync(c => c.Id == conversionId, "Conversion not found.", cancellationToken);
-        if (!found.TryGetValue(out var conversion))
-        {
-            return found.Error;
-        }
-
-        Transaction? fee = null;
-        if (conversion.FeeTransactionId is { } feeId)
-        {
-            fee = await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken);
-            if (fee is not null)
-            {
-                db.Transactions.Remove(fee);
-                conversion.FeeTransactionId = feeId;
-            }
-        }
-
-        deletions.Record(
-            TrashKind.Conversion,
+        return db.DeleteOrNotFoundAsync<CurrencyConversion>(
             id,
-            TrashLabel.Exchanged(conversion.FromAmount, conversion.ToAmount, conversion.Date),
-            fee?.Id.Value);
+            c => c.Id == conversionId,
+            NotFound.Message,
+            async conversion =>
+            {
+                Transaction? fee = null;
+                if (conversion.FeeTransactionId is { } feeId)
+                {
+                    fee = await db.Transactions.FirstOrDefaultAsync(t => t.Id == feeId, cancellationToken);
+                    if (fee is not null)
+                    {
+                        db.Transactions.Remove(fee);
+                        conversion.FeeTransactionId = feeId;
+                    }
+                }
 
-        db.CurrencyConversions.Remove(conversion);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return id;
+                deletions.Record(
+                    TrashKind.Conversion,
+                    id,
+                    TrashLabel.Exchanged(conversion.FromAmount, conversion.ToAmount, conversion.Date),
+                    fee?.Id.Value);
+                return null;
+            },
+            cancellationToken);
     }
 
     private static ConversionFee? FeeFor(CurrencyConversion conversion, Dictionary<TransactionId, ConversionFee> fees) =>

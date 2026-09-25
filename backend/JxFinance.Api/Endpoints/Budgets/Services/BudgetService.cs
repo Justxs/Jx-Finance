@@ -27,6 +27,8 @@ public sealed class BudgetService(
     IInstanceSettingsStore settings)
     : IBudgetService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Budget not found.");
+
     public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.ToListAsync(cancellationToken);
@@ -66,10 +68,9 @@ public sealed class BudgetService(
         CancellationToken cancellationToken)
     {
         var budgetId = new BudgetId(request.Id);
-        var found = await db.Budgets.FindOrNotFoundAsync(b => b.Id == budgetId, "Budget not found.", cancellationToken);
-        if (!found.TryGetValue(out var budget))
+        if (await db.Budgets.FirstOrDefaultAsync(b => b.Id == budgetId, cancellationToken) is not { } budget)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var error = await ValidateAsync(request, budgetId, cancellationToken);
@@ -84,26 +85,23 @@ public sealed class BudgetService(
         return await ToResponseAsync(budget, cancellationToken);
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var budgetId = new BudgetId(id);
-        var found = await db.Budgets.FindOrNotFoundAsync(b => b.Id == budgetId, "Budget not found.", cancellationToken);
-        if (!found.TryGetValue(out var budget))
-        {
-            return found.Error;
-        }
-
-        var categoryName = await db.Categories
-            .Where(c => c.Id == budget.CategoryId)
-            .Select(c => c.Name)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        deletions.Record(TrashKind.Budget, id, $"{categoryName ?? budget.Period.ToString()}, {TrashLabel.Amount(budget.LimitAmount)}");
-
-        db.Budgets.Remove(budget);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return id;
+        return db.DeleteOrNotFoundAsync<Budget>(
+            id,
+            b => b.Id == budgetId,
+            NotFound.Message,
+            async budget =>
+            {
+                var categoryName = await db.Categories
+                    .Where(c => c.Id == budget.CategoryId)
+                    .Select(c => c.Name)
+                    .FirstOrDefaultAsync(cancellationToken);
+                deletions.Record(TrashKind.Budget, id, $"{categoryName ?? budget.Period.ToString()}, {TrashLabel.Amount(budget.LimitAmount)}");
+                return null;
+            },
+            cancellationToken);
     }
 
     private async Task<DomainError?> ValidateAsync(

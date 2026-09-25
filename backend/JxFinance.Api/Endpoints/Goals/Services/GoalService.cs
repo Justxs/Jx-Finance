@@ -26,7 +26,7 @@ public sealed class GoalService(
     IDeletionRecorder deletions,
     IAccountService accounts) : IGoalService
 {
-    private const string NotFound = "Goal not found.";
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Goal not found.");
 
     public async Task<IReadOnlyList<GoalResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
@@ -57,10 +57,9 @@ public sealed class GoalService(
         CancellationToken cancellationToken)
     {
         var goalId = new GoalId(request.Id);
-        var found = await db.Goals.FindOrNotFoundAsync(g => g.Id == goalId, NotFound, cancellationToken);
-        if (!found.TryGetValue(out var goal))
+        if (await db.Goals.FirstOrDefaultAsync(g => g.Id == goalId, cancellationToken) is not { } goal)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (await FundingAccountErrorAsync(request, cancellationToken) is { } error)
@@ -80,7 +79,7 @@ public sealed class GoalService(
         return db.DeleteOrNotFoundAsync<Goal>(
             id,
             g => g.Id == goalId,
-            NotFound,
+            NotFound.Message,
             goal => deletions.Record(TrashKind.Goal, id, goal.Name),
             cancellationToken);
     }

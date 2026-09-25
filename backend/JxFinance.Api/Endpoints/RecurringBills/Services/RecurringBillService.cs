@@ -33,6 +33,8 @@ public sealed class RecurringBillService(
     IDeletionRecorder deletions,
     ITransferService transfers) : IRecurringBillService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Recurring entry not found.");
+
     private static readonly DomainError CategoryGone =
         new(ErrorCodes.ReferenceNotFound, "The category of this recurring entry is no longer available.");
 
@@ -50,9 +52,9 @@ public sealed class RecurringBillService(
 
     public async Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var billId = new RecurringBillId(id);
-        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
-        return found.Map(bill => bill.ToResponse());
+        return await FindAsync(id, cancellationToken) is { } bill
+            ? bill.ToResponse()
+            : NotFound;
     }
 
     public async Task<Result<RecurringBillResponse>> CreateAsync(
@@ -73,11 +75,9 @@ public sealed class RecurringBillService(
         UpdateRecurringBillRequest request,
         CancellationToken cancellationToken)
     {
-        var billId = new RecurringBillId(request.Id);
-        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
-        if (!found.TryGetValue(out var bill))
+        if (await FindAsync(request.Id, cancellationToken) is not { } bill)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var error = await ValidateReferencesAsync(request, cancellationToken);
@@ -95,7 +95,7 @@ public sealed class RecurringBillService(
         return db.DeleteOrNotFoundAsync<RecurringBill>(
             id,
             b => b.Id == billId,
-            "Recurring entry not found.",
+            NotFound.Message,
             bill => deletions.Record(TrashKind.RecurringBill, id, bill.Name),
             cancellationToken);
     }
@@ -106,11 +106,9 @@ public sealed class RecurringBillService(
     {
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
         await db.Database.LockAsync(request.Id, cancellationToken);
-        var billId = new RecurringBillId(request.Id);
-        var found = await db.RecurringBills.FindOrNotFoundAsync(b => b.Id == billId, "Recurring entry not found.", cancellationToken);
-        if (!found.TryGetValue(out var bill))
+        if (await FindAsync(request.Id, cancellationToken) is not { } bill)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (!bill.IsActive)
@@ -148,6 +146,12 @@ public sealed class RecurringBillService(
 
         await dbTransaction.CommitAsync(cancellationToken);
         return new ConfirmRecurringBillResponse(bill.ToResponse(), transactionId, transferId);
+    }
+
+    private Task<RecurringBill?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var billId = new RecurringBillId(id);
+        return db.RecurringBills.FirstOrDefaultAsync(b => b.Id == billId, cancellationToken);
     }
 
     private static Result<decimal> ResolveAmount(RecurringBill bill, ConfirmRecurringBillRequest request)

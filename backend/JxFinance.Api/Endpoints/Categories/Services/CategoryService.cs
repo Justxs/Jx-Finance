@@ -24,6 +24,8 @@ public sealed class CategoryService(
     IClock clock,
     IDeletionRecorder deletions) : ICategoryService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Category not found.");
+
     public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var categories = await db.Categories
@@ -53,11 +55,9 @@ public sealed class CategoryService(
         UpdateCategoryRequest request,
         CancellationToken cancellationToken)
     {
-        var categoryId = new CategoryId(request.Id);
-        var found = await db.Categories.FindOrNotFoundAsync(c => c.Id == categoryId, "Category not found.", cancellationToken);
-        if (!found.TryGetValue(out var category))
+        if (await FindAsync(new CategoryId(request.Id), cancellationToken) is not { } category)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (await sharing.CheckAsync(category, request, cancellationToken) is { } sharingError)
@@ -74,10 +74,9 @@ public sealed class CategoryService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var categoryId = new CategoryId(id);
-        var found = await db.Categories.FindOrNotFoundAsync(c => c.Id == categoryId, "Category not found.", cancellationToken);
-        if (!found.TryGetValue(out var category))
+        if (await FindAsync(categoryId, cancellationToken) is not { } category)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (category.UserId != currentUser.Id)
@@ -150,4 +149,7 @@ public sealed class CategoryService(
 
         return id;
     }
+
+    private Task<Category?> FindAsync(CategoryId id, CancellationToken cancellationToken) =>
+        db.Categories.FirstOrDefaultAsync(c => c.Id == id, cancellationToken);
 }

@@ -25,6 +25,11 @@ public sealed class AccountService(
     IExchangeRateService rates,
     IHoldingsValuation holdings) : IAccountService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Account not found.");
+
+    private static readonly DomainError OnlyOwnerArchives =
+        new(ErrorCodes.AccessForbidden, "Only the owner can archive an account.");
+
     public Task<IReadOnlyList<AccountResponse>> GetAllAsync(CancellationToken cancellationToken) =>
         GetAllAsync(new GetAccountsRequest(), cancellationToken);
 
@@ -103,11 +108,9 @@ public sealed class AccountService(
 
     public async Task<Result<AccountResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var accountId = new AccountId(id);
-        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
-        if (!found.TryGetValue(out var account))
+        if (await FindAsync(id, cancellationToken) is not { } account)
         {
-            return found.Error;
+            return NotFound;
         }
 
         return account.ToResponse(await BalanceAsync(account, cancellationToken));
@@ -139,11 +142,9 @@ public sealed class AccountService(
         UpdateAccountRequest request,
         CancellationToken cancellationToken)
     {
-        var accountId = new AccountId(request.Id);
-        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
-        if (!found.TryGetValue(out var account))
+        if (await FindAsync(request.Id, cancellationToken) is not { } account)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (await sharing.CheckAsync(account, request, cancellationToken) is { } sharingError)
@@ -164,24 +165,13 @@ public sealed class AccountService(
         return account.ToResponse(await BalanceAsync(account, cancellationToken));
     }
 
-    public async Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken)
-    {
-        var found = await db.Accounts.FindOrNotFoundAsync(a => a.Id == new AccountId(id), "Account not found.", cancellationToken);
-        if (!found.TryGetValue(out var account))
-        {
-            return found.Error;
-        }
-
-        if (account.UserId != currentUser.Id)
-        {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only the owner can archive an account.");
-        }
-
-        db.Accounts.Remove(account);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return id;
-    }
+    public Task<Result<Guid>> ArchiveAsync(Guid id, CancellationToken cancellationToken) =>
+        db.DeleteOrNotFoundAsync<Account>(
+            id,
+            a => a.Id == new AccountId(id),
+            NotFound.Message,
+            account => Task.FromResult(account.UserId == currentUser.Id ? null : OnlyOwnerArchives),
+            cancellationToken);
 
     public async Task<IReadOnlyList<ArchivedAccountResponse>> GetArchivedAsync(CancellationToken cancellationToken)
     {
@@ -213,10 +203,9 @@ public sealed class AccountService(
             return active.ToResponse(await BalanceAsync(active, cancellationToken));
         }
 
-        var found = await ArchivedAccounts().FindOrNotFoundAsync(a => a.Id == accountId, "Account not found.", cancellationToken);
-        if (!found.TryGetValue(out var account))
+        if (await ArchivedAccounts().FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken) is not { } account)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (account.UserId != currentUser.Id)
@@ -236,6 +225,12 @@ public sealed class AccountService(
         await db.SaveChangesAsync(cancellationToken);
 
         return account.ToResponse(await BalanceAsync(account, cancellationToken));
+    }
+
+    private Task<Account?> FindAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var accountId = new AccountId(id);
+        return db.Accounts.FirstOrDefaultAsync(a => a.Id == accountId, cancellationToken);
     }
 
     private IQueryable<Account> ArchivedAccounts()

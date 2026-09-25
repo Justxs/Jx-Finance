@@ -200,30 +200,28 @@ public sealed class AttachmentService(
             attachment.Sha256);
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var typedId = new TransactionAttachmentId(id);
-        var attachment = await db.TransactionAttachments.FirstOrDefaultAsync(a => a.Id == typedId, cancellationToken);
-        if (attachment is null)
-        {
-            return AttachmentMissing;
-        }
-
-        var transaction = await db.Transactions
-            .AsNoTracking()
-            .Where(t => t.Id == attachment.TransactionId)
-            .Select(t => new { t.Description, t.Date, t.Amount })
-            .FirstAsync(cancellationToken);
-
-        deletions.Record(
-            TrashKind.Attachment,
+        return db.DeleteOrNotFoundAsync<TransactionAttachment>(
             id,
-            $"{attachment.FileName}, {TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount)}");
+            a => a.Id == typedId,
+            AttachmentMissing.Message,
+            async attachment =>
+            {
+                var transaction = await db.Transactions
+                    .AsNoTracking()
+                    .Where(t => t.Id == attachment.TransactionId)
+                    .Select(t => new { t.Description, t.Date, t.Amount })
+                    .FirstAsync(cancellationToken);
 
-        db.TransactionAttachments.Remove(attachment);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return id;
+                deletions.Record(
+                    TrashKind.Attachment,
+                    id,
+                    $"{attachment.FileName}, {TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount)}");
+                return null;
+            },
+            cancellationToken);
     }
 
     private static async Task<string?> DetectAsync(string path, CancellationToken cancellationToken)

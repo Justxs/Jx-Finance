@@ -29,6 +29,8 @@ public sealed class CategorizationRuleService(
     IDeletionRecorder deletions,
     IClock clock) : ICategorizationRuleService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Rule not found.");
+
     public async Task<IReadOnlyList<CategorizationRuleResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var rules = await LoadAllAsync(cancellationToken);
@@ -67,10 +69,9 @@ public sealed class CategorizationRuleService(
         CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(request.Id);
-        var found = await db.CategorizationRules.FindOrNotFoundAsync(r => r.Id == ruleId, "Rule not found.", cancellationToken);
-        if (!found.TryGetValue(out var rule))
+        if (await db.CategorizationRules.FirstOrDefaultAsync(r => r.Id == ruleId, cancellationToken) is not { } rule)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var error = await ValidateAsync(request, cancellationToken);
@@ -105,7 +106,7 @@ public sealed class CategorizationRuleService(
         var rule = rules.Find(r => r.Id == ruleId);
         if (rule is null)
         {
-            return EntityLookup.NotFound("Rule not found.");
+            return NotFound;
         }
 
         var tagIds = await db.CategorizationRuleTags
@@ -143,7 +144,7 @@ public sealed class CategorizationRuleService(
         var index = rules.FindIndex(r => r.Id == ruleId);
         if (index < 0)
         {
-            return EntityLookup.NotFound("Rule not found.");
+            return NotFound;
         }
 
         var target = direction == MoveDirection.Up ? index - 1 : index + 1;
