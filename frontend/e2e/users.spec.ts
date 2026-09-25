@@ -1,11 +1,20 @@
-import { admin, expect, expectSignedIn, fillSignIn, newVisitor, test, unique } from "./support";
+import {
+  admin,
+  expect,
+  fillSignIn,
+  newVisitor,
+  signIn,
+  test,
+  unique,
+  uniqueEmail,
+} from "./support";
 
 test("an administrator creates, deactivates, reactivates a member and resets their password", async ({
   page,
   browser,
 }, testInfo) => {
   const name = unique("Member");
-  const email = `${name.replace(" ", "-").toLowerCase()}@localhost.test`;
+  const email = uniqueEmail("member");
   const firstPassword = "First-Password-123!";
   const temporaryPassword = "Temporary-Password-456!";
 
@@ -42,12 +51,10 @@ test("an administrator creates, deactivates, reactivates a member and resets the
   await reset.getByRole("button", { name: "Reset password" }).click();
   await expect(reset).toBeHidden();
 
-  const visitor = await newVisitor(browser, testInfo, "member");
-  const memberPage = await visitor.newPage();
-  await fillSignIn(memberPage, email, firstPassword);
-  await expect(memberPage.getByText("Wrong email or password.")).toBeVisible();
-  await fillSignIn(memberPage, email, temporaryPassword);
-  await expectSignedIn(memberPage);
-  await expect(memberPage.getByRole("link", { name: "Users" })).toHaveCount(0);
-  await visitor.close();
+  const member = await newVisitor(browser, testInfo, "member");
+  await fillSignIn(member, email, firstPassword);
+  await expect(member.getByText("Wrong email or password.")).toBeVisible();
+  await signIn(member, email, temporaryPassword);
+  await expect(member.getByRole("link", { name: "Users" })).toHaveCount(0);
+  await member.context().close();
 });

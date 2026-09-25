@@ -1,4 +1,4 @@
-import { admin, expect, expectSignedIn, fillSignIn, test, unique } from "./support";
+import { admin, expect, signIn, test, unique } from "./support";
 
 test("a backup is taken and restored with the administrator's password", async ({ page }) => {
   const note = unique("E2E backup");
@@ -22,8 +22,7 @@ test("a backup is taken and restored with the administrator's password", async (
   await replace.click();
   await expect(page).toHaveURL(/\/login/, { timeout: 60_000 });
 
-  await fillSignIn(page, admin.email, admin.password);
-  await expectSignedIn(page);
+  await signIn(page);
   await page.goto("/settings?section=backups");
   await expect(page.getByRole("row").filter({ hasText: note })).toBeVisible();
 });

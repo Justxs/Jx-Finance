@@ -1,26 +1,25 @@
 import type { Browser, Page, TestInfo } from "@playwright/test";
 import { Secret, TOTP } from "otpauth";
-import { z } from "zod";
+import { EnableTwoFactorResponse } from "../src/api/schemas/index.zod";
 import {
   createMember,
   expect,
   expectSignedIn,
   fillSignIn,
   newVisitor,
+  signIn,
   test,
-  unique,
+  uniqueEmail,
 } from "./support";
 
 const password = "Totp-Member-Password-123!";
 
 async function signedInMember(admin: Page, browser: Browser, testInfo: TestInfo) {
-  const email = `${unique("totp").replace(" ", "-")}@localhost.test`;
+  const email = uniqueEmail("totp");
   await createMember(admin.request, email, password);
-  const visitor = await newVisitor(browser, testInfo, "member");
-  const member = await visitor.newPage();
-  await fillSignIn(member, email, password);
-  await expectSignedIn(member);
-  return { email, member, visitor };
+  const member = await newVisitor(browser, testInfo, "member");
+  await signIn(member, email, password);
+  return { email, member };
 }
 
 async function enrol(member: Page) {
@@ -38,9 +37,7 @@ async function enrol(member: Page) {
   await member.getByRole("button", { name: "Confirm and enable" }).click();
   const response = await enabled;
   expect(response.status()).toBe(200);
-  const { recoveryCodes } = z
-    .object({ recoveryCodes: z.array(z.string()) })
-    .parse(await response.json());
+  const { recoveryCodes } = EnableTwoFactorResponse.parse(await response.json());
   expect(recoveryCodes.length).toBeGreaterThan(1);
   return { totp, recoveryCodes };
 }
@@ -49,7 +46,7 @@ test("a member enrols in two-factor authentication and signs in with a code and 
   page,
   browser,
 }, testInfo) => {
-  const { email, member, visitor } = await signedInMember(page, browser, testInfo);
+  const { email, member } = await signedInMember(page, browser, testInfo);
   const { totp, recoveryCodes } = await enrol(member);
 
   await member.context().clearCookies();
@@ -73,14 +70,14 @@ test("a member enrols in two-factor authentication and signs in with a code and 
   await member.getByRole("button", { name: "Verify code" }).click();
   await expectSignedIn(member);
 
-  await visitor.close();
+  await member.context().close();
 });
 
 test("enabling two-factor authentication keeps the member signed in to read the recovery codes", async ({
   page,
   browser,
 }, testInfo) => {
-  const { member, visitor } = await signedInMember(page, browser, testInfo);
+  const { member } = await signedInMember(page, browser, testInfo);
   await enrol(member);
 
   await expect(member.getByRole("heading", { name: "Save your recovery codes" })).toBeVisible();
@@ -91,5 +88,5 @@ test("enabling two-factor authentication keeps the member signed in to read the 
     member.getByText("Two-factor authentication is currently enabled for your account."),
   ).toBeVisible();
 
-  await visitor.close();
+  await member.context().close();
 });

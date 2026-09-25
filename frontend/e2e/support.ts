@@ -12,9 +12,11 @@ import {
   expect,
 } from "@playwright/test";
 import { z } from "zod";
+import { adminStatePath } from "../playwright.config";
 import type { AccountType } from "../src/api/generated/model/accountType";
 import type { Currency } from "../src/api/generated/model/currency";
 import type { FeatureFlags } from "../src/api/generated/model/featureFlags";
+import { SettingsResponse, UpdateSettingsBody } from "../src/api/schemas/index.zod";
 import { UserRole } from "../src/lib/user-role";
 
 export const admin = {
@@ -22,8 +24,6 @@ export const admin = {
   email: "e2e-admin@localhost.test",
   password: "E2e-Smoke-Password-123!",
 };
-
-export const adminStatePath = path.join(import.meta.dirname, ".auth", "admin.json");
 
 export function clientAddress(testInfo: TestInfo, salt = "") {
   const hash = createHash("sha256")
@@ -34,6 +34,10 @@ export function clientAddress(testInfo: TestInfo, salt = "") {
 
 export function unique(prefix: string) {
   return `${prefix} ${randomUUID().slice(0, 8)}`;
+}
+
+export function uniqueEmail(prefix: string) {
+  return `${unique(prefix).replace(" ", "-")}@localhost.test`;
 }
 
 export function today() {
@@ -57,12 +61,18 @@ export async function expectSignedIn(page: Page) {
   await expect(page.getByRole("link", { name: "Transactions" }).first()).toBeVisible();
 }
 
+export async function signIn(page: Page, email = admin.email, password = admin.password) {
+  await fillSignIn(page, email, password);
+  await expectSignedIn(page);
+}
+
 export async function newVisitor(browser: Browser, testInfo: TestInfo, salt: string) {
-  return browser.newContext({
+  const visitor = await browser.newContext({
     baseURL: testInfo.project.use.baseURL,
     storageState: { cookies: [], origins: [] },
     extraHTTPHeaders: { "X-Forwarded-For": clientAddress(testInfo, salt) },
   });
+  return visitor.newPage();
 }
 
 type JsonResponse = Awaited<ReturnType<APIRequestContext["get"]>>;
@@ -72,8 +82,6 @@ export async function readJson<T>(response: JsonResponse, schema: z.ZodType<T>):
 }
 
 const createdBody = z.object({ id: z.string() });
-
-const settingsBody = z.looseObject({ features: z.record(z.string(), z.boolean()) });
 
 async function created(response: JsonResponse) {
   expect(response.status(), await response.text()).toBe(201);
@@ -116,20 +124,12 @@ export async function setFeature(
 ) {
   const current = await request.get("/api/settings");
   expect(current.ok()).toBe(true);
-  const settings = await readJson(current, settingsBody);
+  const settings = await readJson(current, SettingsResponse);
   const updated = await request.put("/api/settings", {
-    data: {
-      instanceName: settings.instanceName,
+    data: UpdateSettingsBody.parse({
+      ...settings,
       features: { ...settings.features, [feature]: enabled },
-      reportingCurrency: settings.reportingCurrency,
-      enabledCurrencies: settings.enabledCurrencies,
-      exchangeRateSyncEnabled: settings.exchangeRateSyncEnabled,
-      defaultLanguage: settings.defaultLanguage,
-      timeZone: settings.timeZone,
-      firstDayOfWeek: settings.firstDayOfWeek,
-      defaultAccountId: settings.defaultAccountId,
-      defaultPageSize: settings.defaultPageSize,
-    },
+    }),
   });
   expect(updated.ok(), await updated.text()).toBe(true);
 }
