@@ -72,7 +72,7 @@ export const ReminderEmailsNeedAConfirmedAddress: Story = {
 export const WrongPasswordAfterSubmit: Story = {
   parameters: withHandlers(
     getUpdateMyProfileMockHandler(
-      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }),
     ),
   ),
 };

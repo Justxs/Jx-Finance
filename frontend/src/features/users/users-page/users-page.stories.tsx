@@ -114,7 +114,7 @@ export const CancelsDeactivation: Story = {
 };
 
 export const DeactivationFails: Story = {
-  parameters: withHandlers(getDeactivateUserMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getDeactivateUserMockHandler(failWith(serverErrorProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const deactivate = first(
@@ -127,7 +127,7 @@ export const DeactivationFails: Story = {
     await userEvent.click(confirm.getByRole("button", { name: "Deactivate" }));
 
     await expect(
-      await within(document.body).findByText(serverErrorProblem.title ?? ""),
+      await within(document.body).findByText(serverErrorProblem.title),
     ).toBeInTheDocument();
   },
 };
@@ -137,7 +137,7 @@ const secondAdmin = { ...memberUser, role: UserRole.admin };
 export const DeactivatingLastAdministratorRefused: Story = {
   parameters: withHandlers(
     getUsersMockHandler([secondAdmin]),
-    getDeactivateUserMockHandler(failWith(lastAdministratorProblem, 403)),
+    getDeactivateUserMockHandler(failWith(lastAdministratorProblem)),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -160,7 +160,7 @@ export const DeactivatingLastAdministratorRefused: Story = {
 export const DemotingLastAdministratorRefused: Story = {
   parameters: withHandlers(
     getUsersMockHandler([secondAdmin]),
-    getUpdateUserRoleMockHandler(failWith(lastAdministratorProblem, 403)),
+    getUpdateUserRoleMockHandler(failWith(lastAdministratorProblem)),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

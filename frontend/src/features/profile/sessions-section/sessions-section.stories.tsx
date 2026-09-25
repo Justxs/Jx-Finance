@@ -118,7 +118,7 @@ export const SignOutEverywhereElse: Story = {
 export const RevokeFailed: Story = {
   parameters: withHandlers(
     getRevokeSessionMockHandler(
-      failWith({ ...serverErrorProblem, instance: "/api/auth/sessions" }, 500),
+      failWith({ ...serverErrorProblem, instance: "/api/auth/sessions" }),
     ),
   ),
   play: async ({ canvasElement }) => {

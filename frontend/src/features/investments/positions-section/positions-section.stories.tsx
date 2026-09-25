@@ -96,7 +96,7 @@ export const SavesPrice: Story = {
 };
 
 export const PriceRefusedForSomeoneElsesSecurity: Story = {
-  parameters: withHandlers(getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403))),
+  parameters: withHandlers(getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem))),
   play: async ({ canvasElement }) => {
     const dialog = await openPriceDialog(canvasElement);
     await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {

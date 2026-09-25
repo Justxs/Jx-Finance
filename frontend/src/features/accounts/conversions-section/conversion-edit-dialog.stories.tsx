@@ -114,9 +114,7 @@ export const Pending: Story = {
 };
 
 export const FeeWasSplitByHand: Story = {
-  parameters: withHandlers(
-    getUpdateConversionMockHandler(failWith(conversionFeeSplitProblem, 400)),
-  ),
+  parameters: withHandlers(getUpdateConversionMockHandler(failWith(conversionFeeSplitProblem))),
   play: async ({ args }) => {
     const dialog = await saveWithBought("2712");
 
@@ -127,7 +125,7 @@ export const FeeWasSplitByHand: Story = {
 
 export const RateUnavailable: Story = {
   parameters: withHandlers(
-    getUpdateConversionMockHandler(failWith(conversionRateUnavailableProblem, 400)),
+    getUpdateConversionMockHandler(failWith(conversionRateUnavailableProblem)),
   ),
   play: async () => {
     const dialog = await saveWithBought("2712");
@@ -137,9 +135,7 @@ export const RateUnavailable: Story = {
 };
 
 export const ImportedMeanwhile: Story = {
-  parameters: withHandlers(
-    getUpdateConversionMockHandler(failWith(conversionReadOnlyProblem, 409)),
-  ),
+  parameters: withHandlers(getUpdateConversionMockHandler(failWith(conversionReadOnlyProblem))),
   play: async () => {
     const dialog = await saveWithBought("2712");
 
@@ -148,7 +144,7 @@ export const ImportedMeanwhile: Story = {
 };
 
 export const ConversionNoLongerExists: Story = {
-  parameters: withHandlers(getUpdateConversionMockHandler(failWith(notFoundProblem, 404))),
+  parameters: withHandlers(getUpdateConversionMockHandler(failWith(notFoundProblem))),
   play: async () => {
     const dialog = await saveWithBought("2712");
 

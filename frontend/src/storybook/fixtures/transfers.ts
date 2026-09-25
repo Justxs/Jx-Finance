@@ -1,5 +1,6 @@
-import type { ProblemDetails, TransferResponse } from "@/api/generated/model";
+import type { TransferResponse } from "@/api/generated/model";
 import { ids } from "./base";
+import { problemOf } from "./problems";
 
 export const manualTransfer: TransferResponse = {
   id: ids.transfers.toSavings,
@@ -79,43 +80,24 @@ export const importedBothTransfer: TransferResponse = {
   toAccountImported: true,
 };
 
-export const transferLockedProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "amount",
-      reason: "The amount of an imported bank entry cannot change.",
-      code: "value.locked",
-    },
-  ],
-};
+export const transferLockedProblem = problemOf(
+  400,
+  "value.locked",
+  "The amount of an imported bank entry cannot change.",
+  { name: "amount" },
+);
 
-export const transferAmountMismatchProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "receivedAmount",
-      reason: "Sent and received amounts must match in the same currency.",
-      code: "transfer.amountMismatch",
-    },
-  ],
-};
+export const transferAmountMismatchProblem = problemOf(
+  400,
+  "transfer.amountMismatch",
+  "Sent and received amounts must match in the same currency.",
+  { name: "receivedAmount" },
+);
 
-export const transferForbiddenProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
-  title: "Forbidden",
-  status: 403,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "You need access to both accounts of a transfer.",
-      code: "access.forbidden",
-    },
-  ],
-};
+export const transferForbiddenProblem = problemOf(
+  403,
+  "access.forbidden",
+  "You need access to both accounts of a transfer.",
+);
 
 export const transfers: TransferResponse[] = [crossCurrencyTransfer, ...sameCurrencyTransfers];

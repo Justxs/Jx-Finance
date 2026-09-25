@@ -111,9 +111,7 @@ export const CrossCurrencyTransferNeedsTheReceivedAmount: Story = {
 
 export const CrossCurrencyTransferRejectedByServer: Story = {
   args: { bill: crossCurrencyTransferBill, accounts: crossCurrencyAccounts },
-  parameters: withHandlers(
-    getConfirmRecurringBillMockHandler(failWith(billReceivedAmountProblem, 400)),
-  ),
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billReceivedAmountProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText("Amount received"), {
@@ -164,7 +162,7 @@ export const ConfirmPending: Story = {
 };
 
 export const StaleConfirmation: Story = {
-  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billStaleProblem, 409))),
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billStaleProblem))),
   play: async ({ canvasElement, args }) => {
     const canvas = await confirm(canvasElement);
 
@@ -175,7 +173,7 @@ export const StaleConfirmation: Story = {
 };
 
 export const InactiveBill: Story = {
-  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billInactiveProblem, 409))),
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(billInactiveProblem))),
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 
@@ -185,7 +183,7 @@ export const InactiveBill: Story = {
 
 export const ServerRejectsAmount: Story = {
   args: { bill: variableBill },
-  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(validationProblem, 400))),
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(validationProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "12" } });
@@ -198,7 +196,7 @@ export const ServerRejectsAmount: Story = {
 };
 
 export const ConfirmFails: Story = {
-  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getConfirmRecurringBillMockHandler(failWith(serverErrorProblem))),
   play: async ({ canvasElement }) => {
     const canvas = await confirm(canvasElement);
 

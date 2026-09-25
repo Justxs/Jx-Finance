@@ -57,19 +57,7 @@ export const InvalidIsin: Story = {
 };
 
 export const SymbolAlreadyExists: Story = {
-  args: {
-    error: new ApiError({
-      status: 409,
-      title: duplicateSecurityProblem.title ?? undefined,
-      errors: [
-        {
-          name: "generalErrors",
-          reason: "A security with this symbol and currency already exists.",
-          code: "conflict.duplicate",
-        },
-      ],
-    }),
-  },
+  args: { error: new ApiError(duplicateSecurityProblem) },
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByRole("alert")).toHaveTextContent(
       "This already exists.",

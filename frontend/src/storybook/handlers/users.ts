@@ -81,7 +81,7 @@ export const userHandlers = [
     const user = found(byId(users, params.id));
     const body = await readBody(request);
     if (text(body.currentPassword) !== adminPassword) {
-      throw problem(wrongAdminPasswordProblem, 400);
+      throw problem(wrongAdminPasswordProblem);
     }
     return {
       ...user,

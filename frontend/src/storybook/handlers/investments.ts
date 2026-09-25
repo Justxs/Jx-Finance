@@ -70,7 +70,7 @@ export const investmentHandlers = [
     const quantity = Number(text(body.quantity) ?? 0);
     const held = portfolio.holdings.find((holding) => holding.security.id === security?.id);
     if (type === "sell" && quantity > Number(held?.quantity ?? 0)) {
-      throw problem(oversellProblem, 400);
+      throw problem(oversellProblem);
     }
 
     const gross = quantity * Number(text(body.price) ?? 0);
@@ -120,7 +120,7 @@ export const investmentHandlers = [
       (item) => item.symbol === body.symbol && item.currency === body.currency,
     );
     if (exists) {
-      throw problem(duplicateSecurityProblem, 409);
+      throw problem(duplicateSecurityProblem);
     }
 
     const created: SecurityResponse = {

@@ -33,7 +33,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const OnlyHistoryFails: Story = {
-  parameters: withHandlers(getNetWorthHistoryMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getNetWorthHistoryMockHandler(failWith(serverErrorProblem))),
 };
 
 export const AssetsWithoutDebts: Story = {

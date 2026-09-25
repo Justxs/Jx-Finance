@@ -39,7 +39,7 @@ export const Loading: Story = {
 
 export const ServerError: Story = {
   parameters: withHandlers(
-    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
+    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" })),
   ),
 };
 

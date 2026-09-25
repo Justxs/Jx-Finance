@@ -42,7 +42,7 @@ export const ResendRefusedBecauseItIsAlreadyConfirmed: Story = {
   parameters: withHandlers(
     emailEnabledHandler,
     getMeMockHandler(unverifiedUser),
-    getSendVerificationEmailMockHandler(failWith(emailAlreadyVerifiedProblem, 400)),
+    getSendVerificationEmailMockHandler(failWith(emailAlreadyVerifiedProblem)),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

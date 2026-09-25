@@ -1,5 +1,6 @@
-import type { ConversionResponse, ProblemDetails } from "@/api/generated/model";
+import type { ConversionResponse } from "@/api/generated/model";
 import { ids, uid } from "./base";
+import { problemOf } from "./problems";
 
 export const importedConversion: ConversionResponse = {
   id: ids.conversions.imported,
@@ -61,41 +62,22 @@ export const conversions: ConversionResponse[] = [
   importedConversion,
 ];
 
-export const conversionFeeSplitProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "feeAmount",
-      reason: "The fee transaction was split by hand. Change it under Transactions.",
-      code: "transaction.splitNotAllowed",
-    },
-  ],
-};
+export const conversionFeeSplitProblem = problemOf(
+  400,
+  "transaction.splitNotAllowed",
+  "The fee transaction was split by hand. Change it under Transactions.",
+  { name: "feeAmount" },
+);
 
-export const conversionRateUnavailableProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "date",
-      reason: "No exchange rate is stored for that date.",
-      code: "exchangeRate.unavailable",
-    },
-  ],
-};
+export const conversionRateUnavailableProblem = problemOf(
+  400,
+  "exchangeRate.unavailable",
+  "No exchange rate is stored for that date.",
+  { name: "date" },
+);
 
-export const conversionReadOnlyProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
-  title: "Conflict",
-  status: 409,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "Imported conversions cannot be edited.",
-      code: "resource.readOnly",
-    },
-  ],
-};
+export const conversionReadOnlyProblem = problemOf(
+  409,
+  "resource.readOnly",
+  "Imported conversions cannot be edited.",
+);
