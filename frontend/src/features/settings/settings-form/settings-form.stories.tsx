@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { accounts, settings } from "@/storybook/fixtures";
 import { SettingsForm } from "./settings-form";
 
@@ -34,8 +34,7 @@ export const NoAccounts: Story = { args: { section: "defaults", accounts: [] } }
 
 export const Saving: Story = {
   args: { pending: true, onSubmit: fn() },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(
       await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
       {
@@ -50,8 +49,7 @@ export const Saving: Story = {
 };
 
 export const SavesTrimmedName: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     await fireEvent.change(
       await canvas.findByLabelText(/installation name|sistemos pavadinimas/i),
       {
@@ -72,8 +70,7 @@ export const SavesTrimmedName: Story = {
 };
 
 export const DiscardRestoresValues: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     const name = await canvas.findByLabelText(/installation name|sistemos pavadinimas/i);
     await fireEvent.change(name, { target: { value: "Something else" } });
     await userEvent.click(

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { PalettePicker } from "./palette-picker";
 
 const meta = {
@@ -18,8 +18,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const ChoosePalette: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("radio", { name: "Sepia" }));
     await expect(document.documentElement.dataset.palette).toBe("sepia");
     await userEvent.click(canvas.getByRole("radio", { name: "Ledger navy" }));

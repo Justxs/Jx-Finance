@@ -19,8 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("Import finished.")).toBeVisible();
     await expect(canvas.queryByText("Check your holdings")).toBeNull();
   },
@@ -30,8 +29,7 @@ export const NothingNew: Story = { args: { result: brokerImportNothingNew } };
 
 export const WithWarnings: Story = {
   args: { result: brokerImportWithWarnings },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("2 stock splits booked.")).toBeVisible();
     await expect(canvas.getByText("Merger or takeover: 1")).toBeVisible();
     await expect(canvas.getByText("Spin-off: 2")).toBeVisible();
@@ -53,8 +51,7 @@ export const WithWarningsDark: Story = {
 export const WithWarningsLithuanian: Story = {
   args: { result: brokerImportWithWarnings },
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Susijungimas arba perėmimas: 1")).toBeVisible();
     await expect(canvas.getByText("Įrašyti 2 akcijų skaidymai.")).toBeVisible();
   },
@@ -70,8 +67,7 @@ export const OnlyMismatches: Story = {
 
 export const OnlySplitsImported: Story = {
   args: { result: { ...brokerImportNothingNew, splits: 1, duplicates: 0 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("Import finished.")).toBeVisible();
     await expect(canvas.getByText("1 stock split booked.")).toBeVisible();
   },

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import {
   getSendTestEmailMockHandler,
   getSmtpSettingsMockHandler,
@@ -22,8 +22,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Server")).toHaveValue("smtp.example.lt");
     await expect(canvas.getByLabelText("Port")).toHaveValue("587");
     await expect(canvas.getByLabelText("Password")).toHaveValue("");
@@ -33,16 +32,14 @@ export const Default: Story = {
 
 export const NotConfiguredYet: Story = {
   parameters: withHandlers(getSmtpSettingsMockHandler(smtpSettingsOff)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Server")).toHaveValue("");
     await expect(canvas.getByRole("button", { name: /Send a test message/u })).toBeDisabled();
   },
 };
 
 export const TestMessageSent: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const test = await canvas.findByRole("button", { name: /Send a test message/u });
     await userEvent.click(test);
     await waitFor(() => expect(test).toBeEnabled());
@@ -51,8 +48,7 @@ export const TestMessageSent: Story = {
 
 export const TestMessageRefused: Story = {
   parameters: withHandlers(getSendTestEmailMockHandler(failWith(smtpSendFailedProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /Send a test message/u }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent(/535 5\.7\.8/u);
   },
@@ -60,8 +56,7 @@ export const TestMessageRefused: Story = {
 
 export const TestMessageWithoutSettings: Story = {
   parameters: withHandlers(getSendTestEmailMockHandler(failWith(emailNotConfiguredProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /Send a test message/u }));
     await expect(await canvas.findByRole("alert")).toHaveTextContent(/cannot send email yet/u);
   },
@@ -69,8 +64,7 @@ export const TestMessageWithoutSettings: Story = {
 
 export const SwitchingOnNeedsAServer: Story = {
   parameters: withHandlers(getSmtpSettingsMockHandler(smtpSettingsOff)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const enabled = await canvas.findByRole("checkbox", {
       name: "Send email from this installation",
     });
@@ -86,8 +80,7 @@ export const SwitchingOnNeedsAServer: Story = {
 
 export const SavingAPassword: Story = {
   parameters: withHandlers(getSmtpSettingsMockHandler(smtpSettingsOff)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByLabelText("Server"), {
       target: { value: "smtp.example.lt" },
     });

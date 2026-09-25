@@ -21,6 +21,7 @@ import {
   withHandlers,
 } from "@/storybook/handlers";
 import { readUpload, uploadedAttachment } from "@/storybook/handlers/attachments";
+import { openedDialog } from "@/storybook/interactions";
 import { MAX_ATTACHMENT_BYTES } from "./attachment-files";
 import { TransactionAttachments } from "./transaction-attachments";
 
@@ -66,8 +67,7 @@ function pdf(name: string) {
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("maxima-kvitas.jpg")).toBeVisible();
     await expect(canvas.getByRole("img", { name: "Preview of maxima-kvitas.jpg" })).toBeVisible();
     await expect(canvas.getByRole("link", { name: "Download: maxima-kvitas.jpg" })).toHaveAttribute(
@@ -81,8 +81,7 @@ export const Default: Story = {
 
 export const DocumentsAndPhotos: Story = {
   args: { transactionId: ids.transactions.split },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("IMG_4812.heic")).toBeVisible();
     await expect(canvas.queryByRole("img")).toBeNull();
     await expect(canvas.getByText(/Šarūnas Kazlauskas/u)).toBeVisible();
@@ -93,8 +92,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Čekiai ir failai")).toBeVisible();
     await expect(
       canvas.getByRole("button", { name: "Pašalinti: maxima-kvitas.jpg" }),
@@ -104,16 +102,14 @@ export const Lithuanian: Story = {
 
 export const Empty: Story = {
   args: { transactionId: ids.transactions.salary },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("No files attached yet.")).toBeVisible();
   },
 };
 
 export const Full: Story = {
   parameters: withHandlers(getAttachmentsMockHandler(fullAttachments)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("kvitas-10.png")).toBeVisible();
     await expect(canvas.getByLabelText("Drop files here or choose them")).toBeDisabled();
   },
@@ -123,8 +119,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 
 export const LoadFailed: Story = {
   parameters: { msw: { handlers: errorHandlers } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText("The files of this transaction could not be loaded."),
     ).toBeVisible();
@@ -133,8 +128,7 @@ export const LoadFailed: Story = {
 
 export const UploadThenRemoveWithUndo: Story = {
   parameters: { msw: { handlers: statefulHandlers(maximaAttachments) } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByText("maxima-kvitas.jpg");
 
     await userEvent.upload(canvas.getByLabelText("Drop files here or choose them"), [
@@ -148,7 +142,7 @@ export const UploadThenRemoveWithUndo: Story = {
 
     await userEvent.click(canvas.getByRole("button", { name: "Remove: saskaita.pdf" }));
 
-    const dialog = within(await screen.findByRole("alertdialog"));
+    const dialog = within(await openedDialog("alertdialog"));
     await expect(dialog.getByText("saskaita.pdf")).toBeVisible();
     await userEvent.click(dialog.getByRole("button", { name: "Remove" }));
 
@@ -160,8 +154,7 @@ export const UploadThenRemoveWithUndo: Story = {
 
 export const UploadInProgress: Story = {
   parameters: withHandlers(getUploadAttachmentMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByText("maxima-kvitas.jpg");
 
     await userEvent.upload(canvas.getByLabelText("Drop files here or choose them"), [
@@ -177,8 +170,7 @@ export const RefusedFiles: Story = {
   parameters: withHandlers(
     getUploadAttachmentMockHandler(failWith(attachmentContentMismatchProblem)),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByText("maxima-kvitas.jpg");
     const huge = new File([new Uint8Array(MAX_ATTACHMENT_BYTES + 1)], "panorama.png", {
       type: "image/png",

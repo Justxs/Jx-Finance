@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent } from "storybook/test";
 import { Button } from "@/components/ui/button/button";
 import { openedDialog } from "@/storybook/interactions";
 import { CreateDialog } from "./create-dialog";
@@ -25,19 +25,16 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Opened: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Add tag" }));
     await openedDialog();
   },
 };
 
 export const ClosesFromContent: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const page = within(document.body);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Add tag" }));
-    await userEvent.click(await page.findByRole("button", { name: "Done" }));
-    await expect(page.queryByRole("dialog")).toBeNull();
+    await userEvent.click(await screen.findByRole("button", { name: "Done" }));
+    await expect(screen.queryByRole("dialog")).toBeNull();
   },
 };

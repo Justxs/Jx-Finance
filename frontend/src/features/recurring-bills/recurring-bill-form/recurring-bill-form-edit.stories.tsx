@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getUpdateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -32,8 +32,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByLabelText("Name")).toHaveValue(dueSoonBill.name);
     await expect(canvas.getByLabelText("Amount")).toHaveValue(dueSoonBill.amount);
     await expect(canvas.getByRole("checkbox", { name: "Active" })).toBeChecked();
@@ -55,8 +54,7 @@ export const Income: Story = { args: { bill: incomeBill } };
 export const Transfer: Story = { args: { bill: transferBill } };
 
 export const SwitchesAnExpenseToATransfer: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Transfer");
 
     await expect(canvas.queryByRole("combobox", { name: "Category" })).toBeNull();
@@ -73,8 +71,7 @@ export const SwitchesAnExpenseToATransfer: Story = {
 
 export const SwitchesATransferToAnIncome: Story = {
   args: { bill: transferBill },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Income");
 
     await expect(canvas.queryByRole("combobox", { name: "To account" })).toBeNull();
@@ -89,8 +86,7 @@ export const SwitchesATransferToAnIncome: Story = {
 export const NoAccountsOrCategories: Story = { args: { accounts: [], categories: [] } };
 
 export const InvalidValues: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "0" } });
     await fireEvent.change(canvas.getByLabelText("Remind days before"), {
       target: { value: "400" },
@@ -106,8 +102,7 @@ export const InvalidValues: Story = {
 };
 
 export const ChangesEverything: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Name"), {
       target: { value: "Telia internetas" },
     });
@@ -126,8 +121,7 @@ export const ChangesEverything: Story = {
 
 export const SavePending: Story = {
   parameters: withHandlers(getUpdateRecurringBillMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const save = canvas.getByRole("button", { name: "Save" });
     await userEvent.click(save);
 
@@ -137,8 +131,7 @@ export const SavePending: Story = {
 
 export const ServerFieldError: Story = {
   parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(billCategoryProblem))),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
     await expect(await canvas.findByText("Choose a category of the matching type.")).toBeVisible();
@@ -152,8 +145,7 @@ export const ServerFieldError: Story = {
 
 export const BillNoLongerExists: Story = {
   parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(notFoundProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
     await expect(await canvas.findByRole("alert")).toBeVisible();

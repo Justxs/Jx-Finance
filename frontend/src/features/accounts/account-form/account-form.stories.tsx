@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { getUpdateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -37,8 +37,7 @@ export const EditShared: Story = { args: { initial: sharedAccount } };
 
 export const SavesChanges: Story = {
   args: { initial: checkingAccount },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Save" }));
     await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
@@ -47,8 +46,7 @@ export const SavesChanges: Story = {
 export const Pending: Story = {
   args: { initial: checkingAccount },
   parameters: withHandlers(getUpdateAccountMockHandler(pending)),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const save = await canvas.findByRole("button", { name: "Save" });
     await userEvent.click(save);
     await waitFor(() => expect(save).toHaveAttribute("aria-busy", "true"));
@@ -75,8 +73,7 @@ export const NoHouseholds: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const buttons = await canvas.findAllByRole("button");
     const submit = buttons.find((button) => button.getAttribute("type") === "submit");
     if (submit) {

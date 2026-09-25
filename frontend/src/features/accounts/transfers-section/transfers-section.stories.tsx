@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getCreateTransferMockHandler,
   getTransfersMockHandler,
@@ -85,9 +85,7 @@ export const CreatePending: Story = {
 };
 
 export const EditsTransfer: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const edit = first(await canvas.findAllByRole("button", { name: /^Edit: .*Taupomoji/u }));
     await userEvent.click(edit);
 
@@ -96,6 +94,6 @@ export const EditsTransfer: Story = {
     await fireEvent.change(dialog.getByLabelText("Description"), { target: { value: "Taupymas" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 };

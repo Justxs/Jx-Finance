@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import { getSetSecurityPriceMockHandler } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -11,6 +11,7 @@ import {
   securityNotHeldProblem,
 } from "@/storybook/fixtures";
 import { failWith, withHandlers } from "@/storybook/handlers";
+import { openedDialog, type Canvas } from "@/storybook/interactions";
 import { PositionsSection } from "./positions-section";
 
 const meta = {
@@ -41,8 +42,7 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const ClosedPositionsOpen: Story = {
   tags: ["browser-only"],
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByText("Closed positions (1)"));
     const symbols = await canvas.findAllByText("ASML");
     await expect(symbols.some((symbol) => symbol.offsetParent !== null)).toBe(true);
@@ -50,33 +50,31 @@ export const ClosedPositionsOpen: Story = {
 };
 
 export const UpdatePrice: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const buttons = await canvas.findAllByRole("button", { name: /Update price: VWCE/ });
     const visible = buttons.find((button) => button.offsetParent !== null) ?? buttons[0];
     if (!visible) {
       throw new Error("The price button is missing.");
     }
     await userEvent.click(visible);
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await expect(await dialog.findByLabelText("Last price (EUR)")).toHaveValue("128.46");
   },
 };
 
-async function openPriceDialog(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement);
+async function openPriceDialog(canvas: Canvas) {
   const buttons = await canvas.findAllByRole("button", { name: /Update price: VWCE/ });
   const visible = buttons.find((button) => button.offsetParent !== null) ?? buttons[0];
   if (!visible) {
     throw new Error("The price button is missing.");
   }
   await userEvent.click(visible);
-  return within(await within(document.body).findByRole("dialog"));
+  return within(await openedDialog());
 }
 
 export const PriceDialogListsHistory: Story = {
-  play: async ({ canvasElement }) => {
-    const dialog = await openPriceDialog(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await openPriceDialog(canvas);
 
     await expect(await dialog.findByRole("heading", { name: "Price history" })).toBeVisible();
     await expect(await dialog.findAllByRole("button", { name: /^Delete: / })).toHaveLength(4);
@@ -84,21 +82,21 @@ export const PriceDialogListsHistory: Story = {
 };
 
 export const SavesPrice: Story = {
-  play: async ({ canvasElement }) => {
-    const dialog = await openPriceDialog(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await openPriceDialog(canvas);
     await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
       target: { value: "131.20" },
     });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 };
 
 export const PriceRefusedForSomeoneElsesSecurity: Story = {
   parameters: withHandlers(getSetSecurityPriceMockHandler(failWith(securityNotHeldProblem))),
-  play: async ({ canvasElement }) => {
-    const dialog = await openPriceDialog(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await openPriceDialog(canvas);
     await fireEvent.change(await dialog.findByLabelText("Last price (EUR)"), {
       target: { value: "131.20" },
     });

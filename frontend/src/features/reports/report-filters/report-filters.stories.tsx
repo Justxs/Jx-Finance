@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { type ComponentProps, useState } from "react";
-import { expect, fn, waitFor, within } from "storybook/test";
+import { expect, fn, waitFor } from "storybook/test";
 import type { ReportComparisonMode } from "@/api/generated/model";
 import { chooseOption } from "@/storybook/interactions";
 import { presetRange } from "./date-range-presets";
@@ -70,8 +70,7 @@ export const CustomRange: Story = { args: { dateFrom: "2026-03-10", dateTo: "202
 export const ComparedWithLastYear: Story = { args: { comparison: "previousYear" } };
 
 export const ChoosesAComparison: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     const select = await canvas.findByRole("combobox", { name: /compare with|palyginti su/i });
     await expect(select).toHaveTextContent(/no comparison|be palyginimo/i);
 

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useMutation } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { ApiError } from "@/api/client";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -13,6 +13,7 @@ import {
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
+import type { Canvas } from "@/storybook/interactions";
 import { duplicateDraft } from "./transaction-draft";
 import { TransactionForm } from "./transaction-form";
 
@@ -31,8 +32,7 @@ const splitLineProblem = new ApiError({
 
 const incomeTransaction = transactions.find((item) => item.type === "income") ?? transactions[0];
 
-async function submitForm(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement);
+async function submitForm(canvas: Canvas) {
   const buttons = await canvas.findAllByRole("button");
   const submit = buttons.find((button) => button.getAttribute("type") === "submit");
   if (submit) {
@@ -81,8 +81,8 @@ export const LongDescription: Story = { args: { initial: longDescriptionTransact
 
 export const SplitTotalMismatch: Story = {
   args: { initial: { ...splitTransaction, amount: "999.99" } },
-  play: async ({ canvasElement, args }) => {
-    await submitForm(canvasElement);
+  play: async ({ canvas, args }) => {
+    await submitForm(canvas);
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
@@ -103,8 +103,7 @@ export const WithAddAnother: Story = {
 
 export const PrefilledFromADuplicate: Story = {
   args: { prefill: duplicateDraft(splitTransaction) },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const amounts = await canvas.findAllByLabelText("Amount");
 
     await expect(amounts[0]).toHaveValue("128.40");
@@ -116,9 +115,7 @@ export const PrefilledFromADuplicate: Story = {
 
 export const SaveAsTemplate: Story = {
   args: { onSaveAsTemplate: fn() },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas, args }) => {
     await fireEvent.change(await canvas.findByLabelText("Amount"), { target: { value: "12,50" } });
     await userEvent.click(canvas.getByRole("button", { name: "Save as template" }));
     await userEvent.type(await canvas.findByLabelText("Template name"), "Weekly shop");
@@ -135,9 +132,7 @@ export const SaveAsTemplate: Story = {
 
 export const SaveAsTemplateHiddenWhenEditing: Story = {
   args: { initial: transactions[0], onSaveAsTemplate: fn() },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await canvas.findByLabelText("Amount");
     await expect(
       canvas.queryByRole("button", { name: "Save as template" }),
@@ -147,8 +142,7 @@ export const SaveAsTemplateHiddenWhenEditing: Story = {
 
 export const SaveAndAddAnother: Story = {
   args: { onSubmitAndAddAnother: fn(async () => true) },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const amount = await canvas.findByLabelText("Amount");
     const description = canvas.getByLabelText("Description");
     await fireEvent.change(amount, { target: { value: "12,50" } });
@@ -163,8 +157,8 @@ export const SaveAndAddAnother: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement, args }) => {
-    await submitForm(canvasElement);
+  play: async ({ canvas, args }) => {
+    await submitForm(canvas);
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
 };
@@ -175,9 +169,8 @@ export const ServerLineError: Story = {
     onSubmit: fn(() => Promise.reject(splitLineProblem)),
   },
   render: (args) => <MutationBackedForm {...args} />,
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await submitForm(canvasElement);
+  play: async ({ canvas, canvasElement, args }) => {
+    await submitForm(canvas);
     await waitFor(() => expect(args.onSubmit).toHaveBeenCalledTimes(1));
 
     const message = await canvas.findByText("Enter an amount greater than 0, e.g. 12.34.");

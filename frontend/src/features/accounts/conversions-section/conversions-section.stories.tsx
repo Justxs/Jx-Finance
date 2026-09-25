@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { accounts, brokerAccount } from "@/storybook/fixtures";
@@ -41,8 +41,7 @@ export const LoadError: Story = { parameters: { msw: { handlers: errorHandlers }
 export const NoAccounts: Story = { args: { accounts: [] } };
 
 export const ImportedRowHasNoEdit: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(
         "Imported from the broker. Correct it at the broker and import again.",
@@ -54,9 +53,7 @@ export const ImportedRowHasNoEdit: Story = {
 };
 
 export const EditsConversion: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const edit = first(await canvas.findAllByRole("button", { name: /^Edit: /u }));
     await userEvent.click(edit);
 
@@ -65,6 +62,6 @@ export const EditsConversion: Story = {
     await fireEvent.change(dialog.getByLabelText("Bought"), { target: { value: "2712.00" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 };

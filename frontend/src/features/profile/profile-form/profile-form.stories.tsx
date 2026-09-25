@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, waitFor, within } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 import { getUpdateMyProfileMockHandler } from "@/api/generated/users/users.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -34,8 +34,7 @@ export const Narrow: Story = {
 };
 
 export const ReminderEmailsNeedAMailServer: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const preference = canvas.getByRole("checkbox", {
       name: "Email me about a due recurring entry",
     });
@@ -47,8 +46,7 @@ export const ReminderEmailsNeedAMailServer: Story = {
 export const ReminderEmailsTurnedOn: Story = {
   args: { profile: reminderSubscriber },
   parameters: withHandlers(emailEnabledHandler),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await waitFor(() =>
       expect(canvas.getByText(/One message per entry and day/u)).toBeInTheDocument(),
     );
@@ -61,8 +59,7 @@ export const ReminderEmailsTurnedOn: Story = {
 export const ReminderEmailsNeedAConfirmedAddress: Story = {
   args: { profile: unverifiedUser },
   parameters: withHandlers(emailEnabledHandler),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await waitFor(() =>
       expect(canvas.getByText(/Confirm your address first/u)).toBeInTheDocument(),
     );

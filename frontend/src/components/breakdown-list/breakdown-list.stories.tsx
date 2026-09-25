@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import { BreakdownList } from "./breakdown-list";
 
@@ -37,8 +37,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("link", { name: "Groceries" })).toBeVisible();
     await expect(canvas.queryByRole("link", { name: "Other" })).not.toBeInTheDocument();
   },

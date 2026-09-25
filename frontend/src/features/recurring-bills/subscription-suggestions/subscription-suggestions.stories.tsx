@@ -28,8 +28,7 @@ export const OneCandidate: Story = { args: { candidates: [spotifyCandidate] } };
 
 export const CreateDialogIsPrefilled: Story = {
   args: { candidates: [spotifyCandidate] },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /create entry|sukurti įrašą/i }),
     );
@@ -41,8 +40,7 @@ export const CreateDialogIsPrefilled: Story = {
 
 export const DismissPending: Story = {
   parameters: withHandlers(getDismissSubscriptionCandidateMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const buttons = await canvas.findAllByRole("button", { name: /^(dismiss|atmesti):/i });
     await userEvent.click(buttons[0]!);
     await expect(buttons[1]!).toBeDisabled();
@@ -51,8 +49,7 @@ export const DismissPending: Story = {
 
 export const DismissFails: Story = {
   parameters: withHandlers(getDismissSubscriptionCandidateMockHandler(failWithStatus(500))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const buttons = await canvas.findAllByRole("button", { name: /^(dismiss|atmesti):/i });
     await userEvent.click(buttons[0]!);
     await expect(

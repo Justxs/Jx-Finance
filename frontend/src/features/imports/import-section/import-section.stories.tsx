@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, within } from "storybook/test";
+import { userEvent } from "storybook/test";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { accounts, checkingAccount, ids } from "@/storybook/fixtures";
@@ -75,8 +75,7 @@ export const EmptyFileChosen: Story = {
 };
 
 export const NoFileChosen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūra)$/i }));
   },
 };
@@ -89,9 +88,8 @@ export const AllDuplicates: Story = {
 };
 
 export const Confirmed: Story = {
-  play: async ({ canvasElement }) => {
+  play: async ({ canvas, canvasElement }) => {
     await uploadAndPreview(canvasElement);
-    const canvas = within(canvasElement);
     await userEvent.click(
       await canvas.findByRole("button", { name: /^(import \d+ rows?|importuoti \d+ eilu)/i }),
     );

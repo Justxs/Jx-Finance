@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, checkingAccount, savingsAccount } from "@/storybook/fixtures";
@@ -24,8 +24,7 @@ export const NoAccounts: Story = { args: { accounts: [] } };
 export const NoCategories: Story = { args: { categories: [] } };
 
 export const ChooseIncomeShape: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Income");
 
     await expect(canvas.getByRole("combobox", { name: "Category" })).toBeVisible();
@@ -34,8 +33,7 @@ export const ChooseIncomeShape: Story = {
 };
 
 export const ChooseTransferShape: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(canvas.getByRole("combobox", { name: "Records" }), "Transfer");
 
     await expect(canvas.getByRole("combobox", { name: "From account" })).toBeVisible();
@@ -46,8 +44,7 @@ export const ChooseTransferShape: Story = {
 };
 
 export const TransferNeedsTwoDifferentAccounts: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const [name, amount] = canvas.getAllByRole("textbox");
     await fireEvent.change(name!, { target: { value: "Standing order" } });
     await fireEvent.change(amount!, { target: { value: "250.00" } });
@@ -76,8 +73,7 @@ export const TransferNeedsTwoDifferentAccounts: Story = {
 };
 
 export const Filled: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, amount] = canvas.getAllByRole("textbox");
     await userEvent.type(name!, "Telia mobile and home internet");
     await userEvent.type(amount!, "24.99");
@@ -85,8 +81,7 @@ export const Filled: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, amount] = canvas.getAllByRole("textbox");
     await userEvent.type(name!, "x");
     await userEvent.clear(name!);
@@ -96,8 +91,7 @@ export const ValidationErrors: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateRecurringBillMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, amount] = canvas.getAllByRole("textbox");
     await fireEvent.change(name!, { target: { value: "Netflix" } });
     await fireEvent.change(amount!, { target: { value: "13.99" } });

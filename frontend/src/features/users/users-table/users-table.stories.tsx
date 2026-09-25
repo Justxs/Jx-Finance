@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { UserRole } from "@/lib/user-role";
 import { withWidth } from "@/storybook/decorators";
 import { currentUser, inactiveUser, longNameUser, memberUser, users } from "@/storybook/fixtures";
@@ -66,8 +66,7 @@ export const ReactivatePending: Story = {
 };
 
 export const OffersActionsPerRow: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     const own = new RegExp(`: ${currentUser.displayName}$`, "u");
     await expect(canvas.queryAllByRole("button", { name: own })).toHaveLength(0);
 

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import {
   emptyReportSummary,
@@ -51,9 +51,7 @@ export const LargeAmounts: Story = {
 
 export const ComparedWithThePreviousPeriod: Story = {
   args: { comparison: reportSummaryMonthCompared.comparison },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(canvas.getAllByText(/the earlier period|ankstesni/i)).toHaveLength(3);
   },
 };
@@ -69,9 +67,7 @@ export const ComparedWithNothing: Story = {
       net: "0.00",
     },
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(canvas.getAllByText(/up from nothing|anksčiau nebuvo nieko/i)).toHaveLength(3);
   },
 };

@@ -21,7 +21,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { first, openedDialog } from "@/storybook/interactions";
+import { type Canvas, first, openedDialog } from "@/storybook/interactions";
 import { BackupSection } from "./backup-section";
 
 const meta = {
@@ -33,15 +33,11 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-async function confirmRestoreOfNewest(
-  canvasElement: HTMLElement,
-  password = backupRestorePassword,
-) {
-  const canvas = within(canvasElement);
+async function confirmRestoreOfNewest(canvas: Canvas, password = backupRestorePassword) {
   const restore = first(await canvas.findAllByRole("button", { name: /^Restore:/u }));
   await userEvent.click(restore);
 
-  const dialog = within(await screen.findByRole("alertdialog"));
+  const dialog = within(await openedDialog("alertdialog"));
   const confirm = dialog.getByRole("button", { name: "Replace all data" });
   await expect(confirm).toBeDisabled();
   const word = dialog.getByLabelText("Type RESTORE to confirm");
@@ -62,8 +58,7 @@ async function confirmRestoreOfNewest(
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Before the Swedbank import")).toBeVisible();
     await expect(canvas.getByText("403 KB")).toBeVisible();
     await expect(canvas.getByText("5.6 MB")).toBeVisible();
@@ -78,10 +73,8 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const Empty: Story = {
   parameters: withHandlers(getBackupsMockHandler([])),
-  play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByText("No backup has been taken yet."),
-    ).toBeVisible();
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("No backup has been taken yet.")).toBeVisible();
   },
 };
 
@@ -90,8 +83,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const BackUpNow: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByLabelText("Note"), "Before upgrade");
     await userEvent.click(canvas.getByRole("button", { name: "Back up now" }));
     await expect(await screen.findByText("Backup taken.")).toBeInTheDocument();
@@ -99,18 +91,16 @@ export const BackUpNow: Story = {
 };
 
 export const EditNote: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const edit = first(await canvas.findAllByRole("button", { name: /^Edit note:/u }));
     await userEvent.click(edit);
-    const dialog = within(await screen.findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await expect(dialog.getByLabelText("Note")).toHaveValue("Before the Swedbank import");
   },
 };
 
 export const DeleteAsksFirst: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const remove = first(await canvas.findAllByRole("button", { name: /^Delete backup:/u }));
     await userEvent.click(remove);
     await openedDialog("alertdialog");
@@ -119,8 +109,8 @@ export const DeleteAsksFirst: Story = {
 
 export const RestorePending: Story = {
   parameters: withHandlers(getRestoreBackupMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas);
     await waitFor(() => expect(dialog.getByRole("button", { name: "Cancel" })).toBeDisabled());
     await expect(dialog.getByRole("button", { name: /Replace all data/u })).toBeDisabled();
   },
@@ -128,15 +118,14 @@ export const RestorePending: Story = {
 
 export const OtherVersionRejected: Story = {
   parameters: withHandlers(getRestoreBackupMockHandler(failWith(backupSchemaProblem))),
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas);
     await expect(await dialog.findByText(/another version of the application/u)).toBeVisible();
   },
 };
 
 export const NoFileChosen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Upload" }));
     await expect(canvas.getByText("Choose a backup file first.")).toBeVisible();
   },
@@ -144,8 +133,7 @@ export const NoFileChosen: Story = {
 
 export const UploadRejected: Story = {
   parameters: withHandlers(getUploadBackupMockHandler(failWith(backupInvalidFileProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const file = new File(["not a backup"], "notes.json", { type: "application/json" });
     await userEvent.upload(canvas.getByLabelText("Backup file"), file);
     await userEvent.click(canvas.getByRole("button", { name: "Upload" }));
@@ -154,8 +142,8 @@ export const UploadRejected: Story = {
 };
 
 export const RestoreWrongPassword: Story = {
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement, "not-my-password");
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas, "not-my-password");
 
     await expect(await dialog.findByText("The current password is wrong.")).toBeVisible();
     await expect(dialog.getByLabelText("Current password")).toHaveValue("");
@@ -165,8 +153,8 @@ export const RestoreWrongPassword: Story = {
 
 export const RestoreLockedOut: Story = {
   parameters: withHandlers(getRestoreBackupMockHandler(failWith(lockedOutProblem))),
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas);
 
     await expect(await dialog.findByText(/Wait 15 minutes and try again/u)).toBeVisible();
   },
@@ -174,8 +162,8 @@ export const RestoreLockedOut: Story = {
 
 export const RestoreThrottledWithoutBody: Story = {
   parameters: withHandlers(getRestoreBackupMockHandler(failWithStatus(429))),
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas);
 
     await expect(
       await dialog.findByText("Too many attempts. Wait a moment and try again."),
@@ -185,8 +173,8 @@ export const RestoreThrottledWithoutBody: Story = {
 
 export const RestoreWhileDatabaseBusy: Story = {
   parameters: withHandlers(getRestoreBackupMockHandler(failWith(databaseBusyProblem))),
-  play: async ({ canvasElement }) => {
-    const dialog = await confirmRestoreOfNewest(canvasElement);
+  play: async ({ canvas }) => {
+    const dialog = await confirmRestoreOfNewest(canvas);
 
     await expect(await dialog.findByText(/Nothing was changed; try again/u)).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Replace all data" })).toBeEnabled();
@@ -195,8 +183,7 @@ export const RestoreWhileDatabaseBusy: Story = {
 
 export const UploadTooLarge: Story = {
   parameters: withHandlers(getUploadBackupMockHandler(failWith(backupTooLargeProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const file = new File(["{}"], "huge.json.gz", { type: "application/gzip" });
     await userEvent.upload(canvas.getByLabelText("Backup file"), file);
     await userEvent.click(canvas.getByRole("button", { name: "Upload" }));

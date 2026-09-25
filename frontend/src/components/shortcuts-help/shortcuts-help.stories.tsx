@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, waitFor, within } from "storybook/test";
 import { registerShortcuts } from "@/lib/shortcuts";
 import {
   isShortcutsHelpOpen,
@@ -7,6 +7,7 @@ import {
   toggleShortcutsHelp,
 } from "@/stores/shortcuts-help-store";
 import { withWidth } from "@/storybook/decorators";
+import { openedDialog } from "@/storybook/interactions";
 import { ShortcutsHelp } from "./shortcuts-help";
 
 const storyRouter = {
@@ -34,7 +35,7 @@ export const Open: Story = {
     setShortcutsHelpOpen(true);
   },
   play: async () => {
-    const dialog = await within(document.body).findByRole("dialog");
+    const dialog = await openedDialog();
     await expect(within(dialog).getAllByRole("listitem")).toHaveLength(16);
     await within(dialog).findByText("Command palette");
   },
@@ -46,7 +47,7 @@ export const Lithuanian: Story = {
     setShortcutsHelpOpen(true);
   },
   play: async () => {
-    const dialog = await within(document.body).findByRole("dialog");
+    const dialog = await openedDialog();
     await within(dialog).findByText("Spartieji klavišai");
   },
 };
@@ -58,14 +59,12 @@ export const OpenedByQuestionMark: Story = {
       isHelpOpen: isShortcutsHelpOpen,
     }),
   play: async () => {
-    const body = within(document.body);
-    await expect(body.queryByRole("dialog")).toBeNull();
+    await expect(screen.queryByRole("dialog")).toBeNull();
     await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
-    const dialog = await body.findByRole("dialog");
-    await waitFor(() => expect(dialog).toBeVisible());
+    await openedDialog();
     await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await fireEvent.keyDown(document.body, { key: "?", shiftKey: true });
-    await body.findByRole("dialog");
+    await openedDialog();
   },
 };

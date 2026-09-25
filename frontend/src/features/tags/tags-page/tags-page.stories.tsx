@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import { getDeleteTagMockHandler, getTagsMockHandler } from "@/api/generated/tags/tags.msw";
 import { withPageFrame } from "@/storybook/decorators";
 import { many, tags } from "@/storybook/fixtures";
@@ -26,8 +26,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText(tags[0]!.name)).toBeInTheDocument();
   },
 };
@@ -43,8 +42,7 @@ export const LongList: Story = {
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /add tag|pridėti žymą/i }));
     await openedDialog();
   },
@@ -52,41 +50,37 @@ export const AddDialogOpen: Story = {
 
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteTagMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti)(:|$)/i,
     });
     await userEvent.click(deleteButtons[0]!);
-    const dialog = await within(document.body).findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },
 };
 
 export const DeleteOffersUndo: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti)(:|$)/i,
     });
     await userEvent.click(deleteButtons[0]!);
-    const dialog = await within(document.body).findByRole("alertdialog");
-    const page = within(document.body);
+    const dialog = await openedDialog("alertdialog");
     await expect(
       within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
     ).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
 
-    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    const undo = await screen.findByRole("button", { name: /^(undo|atšaukti)$/i });
     await userEvent.click(undo);
 
-    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+    await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
 
 export const EditDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const editButtons = await canvas.findAllByRole("button", { name: /^(edit|redaguoti)(:|$)/i });
     await userEvent.click(editButtons[0]!);
     await openedDialog();

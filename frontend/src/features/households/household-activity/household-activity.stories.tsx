@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor } from "storybook/test";
 import { getHouseholdAuditMockHandler } from "@/api/generated/households/households.msw";
 import { withWidth } from "@/storybook/decorators";
 import { familyHousehold, householdAuditEvents, memberUser } from "@/storybook/fixtures";
@@ -20,8 +20,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(`${memberUser.displayName} changed Maxima, 42.18 EUR`),
     ).toBeVisible();
@@ -41,8 +40,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(`${memberUser.displayName} pakeitė: Maxima, 42.18 EUR`),
     ).toBeVisible();
@@ -54,8 +52,7 @@ export const Lithuanian: Story = {
 
 export const Empty: Story = {
   parameters: withHandlers(getHouseholdAuditMockHandler(emptyPage)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText("Nothing has happened in this household yet."),
     ).toBeVisible();
@@ -67,8 +64,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const Paged: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Page 1 of 2")).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(canvas.getByText("Page 2 of 2")).toBeVisible());
@@ -78,8 +74,7 @@ export const Paged: Story = {
 };
 
 export const FilterByMemberAndKind: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByText("Page 1 of 2");
 
     await chooseOption(canvas.getByLabelText("Member"), memberUser.displayName);

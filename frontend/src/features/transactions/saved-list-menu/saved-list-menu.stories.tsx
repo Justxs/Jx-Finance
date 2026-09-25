@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Bookmark } from "lucide-react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, screen, userEvent } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import { SavedListMenu } from "./saved-list-menu";
 
@@ -46,10 +46,8 @@ export const WithoutSaving: Story = {
 export const Applying: Story = {
   args: { defaultOpen: true },
   play: async ({ args }) => {
-    const body = within(document.body);
-
     await userEvent.click(
-      await body.findByRole("button", { name: "Apply saved filter: Groceries this month" }),
+      await screen.findByRole("button", { name: "Apply saved filter: Groceries this month" }),
     );
 
     await expect(args.onApply).toHaveBeenCalledWith("1");
@@ -59,13 +57,11 @@ export const Applying: Story = {
 export const Renaming: Story = {
   args: { defaultOpen: true },
   play: async ({ args }) => {
-    const body = within(document.body);
-
-    await userEvent.click(await body.findByRole("button", { name: "Rename: Renovation" }));
-    const field = await body.findByRole("textbox", { name: "Name" });
+    await userEvent.click(await screen.findByRole("button", { name: "Rename: Renovation" }));
+    const field = await screen.findByRole("textbox", { name: "Name" });
     await userEvent.clear(field);
     await userEvent.type(field, "Kitchen");
-    await userEvent.click(body.getByRole("button", { name: "Save" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await expect(args.onRename).toHaveBeenCalledWith("2", "Kitchen");
   },
@@ -74,10 +70,8 @@ export const Renaming: Story = {
 export const Saving: Story = {
   args: { defaultOpen: true },
   play: async ({ args }) => {
-    const body = within(document.body);
-
-    await userEvent.type(await body.findByRole("textbox", { name: "Save filter" }), "September");
-    await userEvent.click(body.getByRole("button", { name: "Save filter" }));
+    await userEvent.type(await screen.findByRole("textbox", { name: "Save filter" }), "September");
+    await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
 
     await expect(args.onSave).toHaveBeenCalledWith("September");
   },
@@ -86,10 +80,8 @@ export const Saving: Story = {
 export const RenamingWithEnter: Story = {
   args: { defaultOpen: true },
   play: async ({ args }) => {
-    const body = within(document.body);
-
-    await userEvent.click(await body.findByRole("button", { name: "Rename: Renovation" }));
-    const field = await body.findByRole("textbox", { name: "Name" });
+    await userEvent.click(await screen.findByRole("button", { name: "Rename: Renovation" }));
+    const field = await screen.findByRole("textbox", { name: "Name" });
     await userEvent.clear(field);
     await userEvent.type(field, "Kitchen{Enter}");
 
@@ -100,9 +92,7 @@ export const RenamingWithEnter: Story = {
 export const NothingToSave: Story = {
   args: { defaultOpen: true, canSave: false },
   play: async () => {
-    const body = within(document.body);
-
-    await expect(await body.findByText("Filter the list first.")).toBeVisible();
-    await expect(body.getByRole("button", { name: "Save filter" })).toBeDisabled();
+    await expect(await screen.findByText("Filter the list first.")).toBeVisible();
+    await expect(screen.getByRole("button", { name: "Save filter" })).toBeDisabled();
   },
 };

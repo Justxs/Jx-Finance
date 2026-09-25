@@ -23,7 +23,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
-import { openedDialog } from "@/storybook/interactions";
+import { type Canvas, openedDialog } from "@/storybook/interactions";
 import { RecurringBillsPage } from "./recurring-bills-page";
 
 const manyBills = many(recurringBills, 18);
@@ -52,8 +52,7 @@ export const OnlyInactive: Story = {
 
 export const NothingToSuggest: Story = {
   parameters: withHandlers(getSubscriptionCandidatesMockHandler([])),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(/nothing repeats often enough|kol kas nėra pakankamai/i),
     ).toBeInTheDocument();
@@ -62,8 +61,7 @@ export const NothingToSuggest: Story = {
 
 export const SuggestionCreatesAnEntry: Story = {
   parameters: withHandlers(getSubscriptionCandidatesMockHandler(subscriptionCandidates)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const create = await canvas.findAllByRole("button", {
       name: /create entry|sukurti įrašą/i,
     });
@@ -80,8 +78,7 @@ export const LongList: Story = {
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
@@ -91,8 +88,7 @@ export const AddDialogOpen: Story = {
 
 export const AddDialogWithoutAccounts: Story = {
   parameters: withHandlers(getAccountsMockHandler([])),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
@@ -100,8 +96,7 @@ export const AddDialogWithoutAccounts: Story = {
   },
 };
 
-async function openFromRow(canvasElement: HTMLElement, billName: string, label: RegExp) {
-  const canvas = within(canvasElement);
+async function openFromRow(canvas: Canvas, billName: string, label: RegExp) {
   const heading = await canvas.findByText(billName);
   const row = heading.closest("li");
   if (!row) {
@@ -112,8 +107,8 @@ async function openFromRow(canvasElement: HTMLElement, billName: string, label: 
 }
 
 export const EditDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const dialog = await openFromRow(canvasElement, dueSoonBill.name, /^(edit|redaguoti):/i);
+  play: async ({ canvas }) => {
+    const dialog = await openFromRow(canvas, dueSoonBill.name, /^(edit|redaguoti):/i);
     await expect(within(dialog).getByLabelText(/^(name|pavadinimas)$/i)).toHaveValue(
       dueSoonBill.name,
     );
@@ -121,30 +116,25 @@ export const EditDialogOpen: Story = {
 };
 
 export const ConfirmDialogOpenTransfer: Story = {
-  play: async ({ canvasElement }) => {
-    await openFromRow(
-      canvasElement,
-      transferBill.name,
-      /^(record transfer|registruoti pervedimą)$/i,
-    );
+  play: async ({ canvas }) => {
+    await openFromRow(canvas, transferBill.name, /^(record transfer|registruoti pervedimą)$/i);
   },
 };
 
 export const ConfirmDialogOpenVariable: Story = {
-  play: async ({ canvasElement }) => {
-    await openFromRow(canvasElement, variableBill.name, /^(record payment|registruoti mokėjimą)$/i);
+  play: async ({ canvas }) => {
+    await openFromRow(canvas, variableBill.name, /^(record payment|registruoti mokėjimą)$/i);
   },
 };
 
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteRecurringBillMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti)(:|$)/i,
     });
     await userEvent.click(deleteButtons[0]!);
-    const dialog = await within(document.body).findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },
 };

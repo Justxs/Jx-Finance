@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import type { Currency } from "@/api/generated/model";
 import { useAppForm } from "../app-form";
 
@@ -43,8 +43,7 @@ export const AllCurrencies: Story = { args: { all: true } };
 
 export const WithHint: Story = {
   args: { hint: "Cannot be changed later." },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("combobox", { name: "Currency" })).toHaveAttribute(
       "aria-describedby",
       "demo-currency-hint",

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { useAppForm } from "../app-form";
 
 interface DemoProps {
@@ -46,8 +46,7 @@ export const Disabled: Story = { args: { disabled: true } };
 
 export const Toggled: Story = {
   args: { hint: "Runs shortly after midnight." },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const checkbox = canvas.getByRole("checkbox", { name: "Sync every day" });
     await expect(checkbox).toHaveAttribute("aria-describedby", "demo-enabled-hint");
     await userEvent.click(checkbox);

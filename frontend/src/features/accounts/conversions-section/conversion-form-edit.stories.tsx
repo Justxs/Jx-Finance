@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getUpdateConversionMockHandler } from "@/api/generated/conversions/conversions.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -14,7 +14,7 @@ import {
   notFoundProblem,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
-import { chooseOption } from "@/storybook/interactions";
+import { type Canvas, chooseOption } from "@/storybook/interactions";
 import { ConversionForm } from "./conversion-form";
 
 const meta = {
@@ -27,16 +27,13 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-async function saveWithBought(canvasElement: HTMLElement, amount: string) {
-  const canvas = within(canvasElement);
+async function saveWithBought(canvas: Canvas, amount: string) {
   await fireEvent.change(canvas.getByLabelText("Bought"), { target: { value: amount } });
   await userEvent.click(canvas.getByRole("button", { name: "Save" }));
-  return canvas;
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByLabelText("Sold")).toHaveValue("2500.00");
     await expect(canvas.getByLabelText("Bought")).toHaveValue("2710.40");
     await expect(canvas.getByLabelText("Fee (optional)")).toHaveValue("2.00");
@@ -56,8 +53,7 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const WithoutFee: Story = {
   args: { conversion: conversionWithoutFee },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByLabelText("Fee (optional)")).toHaveValue("");
     await expect(canvas.getByRole("combobox", { name: "Fee category" })).toBeDisabled();
   },
@@ -66,8 +62,7 @@ export const WithoutFee: Story = {
 export const NoCategories: Story = { args: { categories: [] } };
 
 export const ClearsTheFee: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Fee (optional)"), { target: { value: "" } });
     await waitFor(() =>
       expect(canvas.getByRole("combobox", { name: "Fee category" })).toBeDisabled(),
@@ -80,8 +75,7 @@ export const ClearsTheFee: Story = {
 
 export const AddsFeeWithCategory: Story = {
   args: { conversion: conversionWithoutFee },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Fee (optional)"), { target: { value: "1,50" } });
     const category = canvas.getByRole("combobox", { name: "Fee category" });
     await waitFor(() => expect(category).toBeEnabled());
@@ -93,8 +87,7 @@ export const AddsFeeWithCategory: Story = {
 };
 
 export const RejectsSameCurrency: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(canvas.getByRole("combobox", { name: "Bought currency" }), /^EUR/u);
 
     await expect(await canvas.findByText("Choose two different currencies.")).toBeVisible();
@@ -104,8 +97,8 @@ export const RejectsSameCurrency: Story = {
 
 export const Pending: Story = {
   parameters: withHandlers(getUpdateConversionMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = await saveWithBought(canvasElement, "2712");
+  play: async ({ canvas }) => {
+    await saveWithBought(canvas, "2712");
 
     await waitFor(() =>
       expect(canvas.getByRole("button", { name: "Save" })).toHaveAttribute("aria-busy", "true"),
@@ -115,8 +108,8 @@ export const Pending: Story = {
 
 export const FeeWasSplitByHand: Story = {
   parameters: withHandlers(getUpdateConversionMockHandler(failWith(conversionFeeSplitProblem))),
-  play: async ({ canvasElement, args }) => {
-    const canvas = await saveWithBought(canvasElement, "2712");
+  play: async ({ canvas, args }) => {
+    await saveWithBought(canvas, "2712");
 
     await expect(await canvas.findByText(/Change it under Transactions instead/u)).toBeVisible();
     await expect(args.onClose).not.toHaveBeenCalled();
@@ -127,8 +120,8 @@ export const RateUnavailable: Story = {
   parameters: withHandlers(
     getUpdateConversionMockHandler(failWith(conversionRateUnavailableProblem)),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = await saveWithBought(canvasElement, "2712");
+  play: async ({ canvas }) => {
+    await saveWithBought(canvas, "2712");
 
     await expect(await canvas.findByText(/No exchange rate for that date/u)).toBeVisible();
   },
@@ -136,8 +129,8 @@ export const RateUnavailable: Story = {
 
 export const ImportedMeanwhile: Story = {
   parameters: withHandlers(getUpdateConversionMockHandler(failWith(conversionReadOnlyProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = await saveWithBought(canvasElement, "2712");
+  play: async ({ canvas }) => {
+    await saveWithBought(canvas, "2712");
 
     await expect(await canvas.findByText("Imported entries cannot be edited.")).toBeVisible();
   },
@@ -145,8 +138,8 @@ export const ImportedMeanwhile: Story = {
 
 export const ConversionNoLongerExists: Story = {
   parameters: withHandlers(getUpdateConversionMockHandler(failWith(notFoundProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = await saveWithBought(canvasElement, "2712");
+  play: async ({ canvas }) => {
+    await saveWithBought(canvas, "2712");
 
     await expect(await canvas.findByRole("alert")).toBeVisible();
   },

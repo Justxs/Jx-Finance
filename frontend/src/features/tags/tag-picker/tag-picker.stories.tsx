@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import type { TagResponse } from "@/api/generated/model";
 import { withWidth } from "@/storybook/decorators";
 import { ids, many, tags } from "@/storybook/fixtures";
@@ -52,8 +52,7 @@ export const NoTags: Story = { args: { tags: [] } };
 export const WithSearch: Story = { args: { tags: manyTags } };
 
 export const ChoosingATag: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const boxes = await canvas.findAllByRole("checkbox");
     await userEvent.click(boxes[0]!);
     await waitFor(() => expect(args.onChange).toHaveBeenCalledWith([ids.tags.holiday]));

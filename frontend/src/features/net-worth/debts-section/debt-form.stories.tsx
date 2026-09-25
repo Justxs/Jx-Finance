@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent } from "storybook/test";
 import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { debtPaymentTooSmallProblem, debts, ids, zeroRateDebt } from "@/storybook/fixtures";
@@ -21,8 +21,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Filled: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await userEvent.type(fields[0]!, "Mortgage (Swedbank)");
     await userEvent.type(fields[1]!, "98450.32");
@@ -31,8 +30,7 @@ export const Filled: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await userEvent.type(fields[0]!, "x");
     await userEvent.clear(fields[0]!);
@@ -42,8 +40,7 @@ export const ValidationErrors: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateDebtMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await fireEvent.change(fields[0]!, { target: { value: "Mortgage (Swedbank)" } });
     await fireEvent.change(fields[1]!, { target: { value: "98450.32" } });
@@ -63,8 +60,7 @@ export const EditingZeroRate: Story = {
 };
 
 export const TermAndPaymentTogether: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(canvas.getByLabelText(/term, months|terminas/i), "360");
     await userEvent.type(canvas.getByLabelText(/^(monthly payment|mėnesio įmoka)$/i), "500");
     await expect(
@@ -75,8 +71,7 @@ export const TermAndPaymentTogether: Story = {
 
 export const PaymentTooSmall: Story = {
   parameters: withHandlers(getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByLabelText(/^(name|pavadinimas)$/i), {
       target: { value: "Mortgage" },
     });

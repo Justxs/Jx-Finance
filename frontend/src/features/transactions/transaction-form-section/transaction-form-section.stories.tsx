@@ -5,6 +5,7 @@ import { expect, within } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
 import { Button } from "@/components/ui/button/button";
 import { accounts, categories, splitTransaction, tags, transactions } from "@/storybook/fixtures";
+import { openedDialog } from "@/storybook/interactions";
 import { TransactionFormSection } from "./transaction-form-section";
 
 interface HarnessProps {
@@ -71,7 +72,7 @@ export const CreateOpen: Story = { args: { initialCreateOpen: true } };
 export const EditOpen: Story = {
   args: { initialEditing: transactions[0] },
   play: async () => {
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await expect(await dialog.findByRole("heading", { name: "Receipts and files" })).toBeVisible();
     await expect(await dialog.findByText("maxima-kvitas.jpg")).toBeVisible();
   },

@@ -52,8 +52,7 @@ export const LongList: Story = {
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /add debt|pridėti skolą/i }));
     await openedDialog();
   },
@@ -61,13 +60,12 @@ export const AddDialogOpen: Story = {
 
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteDebtMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti)(:|$)/i,
     });
     await userEvent.click(deleteButtons[0]!);
-    const dialog = await within(document.body).findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },
 };

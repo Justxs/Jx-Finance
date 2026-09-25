@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor } from "storybook/test";
 import {
   getArchivedAccountsMockHandler,
   getRestoreAccountMockHandler,
@@ -45,8 +45,7 @@ function restorableHandlers() {
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const summary = await canvas.findByText("Archived accounts (2)");
     await userEvent.click(summary);
 
@@ -61,8 +60,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByText("Archyvuotos sąskaitos (2)"));
     await expect(canvas.getByRole("button", { name: "Atkurti: Senoji SEB kortelė" })).toBeVisible();
   },
@@ -70,8 +68,7 @@ export const Lithuanian: Story = {
 
 export const Empty: Story = {
   parameters: { msw: { handlers: emptyHandlers } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, canvasElement }) => {
     await waitFor(() => expect(canvasElement.querySelector('[data-slot="skeleton"]')).toBeNull());
     await expect(canvas.queryByText(/Archived accounts/u)).toBeNull();
   },
@@ -83,8 +80,7 @@ export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers 
 
 export const RestoringTakesTheRowOut: Story = {
   parameters: { msw: { handlers: restorableHandlers() } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByText("Archived accounts (2)"));
     await userEvent.click(canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" }));
 
@@ -105,8 +101,7 @@ export const RestoreRefused: Story = {
       ),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByText("Archived accounts (2)"));
     await userEvent.click(canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" }));
 

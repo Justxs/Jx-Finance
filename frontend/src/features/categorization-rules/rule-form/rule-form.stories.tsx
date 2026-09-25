@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import {
   getCreateCategorizationRuleMockHandler,
   getTestCategorizationRuleMockHandler,
@@ -45,8 +45,7 @@ export const NoTagsYet: Story = { args: { tags: [] } };
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const NameIsRequired: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const name = await canvas.findByLabelText(/^(name|pavadinimas)$/i);
     await userEvent.type(name, "x");
     await userEvent.clear(name);
@@ -56,8 +55,7 @@ export const NameIsRequired: Story = {
 
 export const SampleMatches: Story = {
   args: { initial: categorizationRules[0] },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(
       await canvas.findByLabelText(/sample description|pavyzdinis paaiškinimas/i),
       { target: { value: "Pirkinys MAXIMA X-123" } },
@@ -72,8 +70,7 @@ export const SampleMatches: Story = {
 export const SampleDoesNotMatch: Story = {
   args: { initial: categorizationRules[0] },
   parameters: withHandlers(getTestCategorizationRuleMockHandler(ruleTestNoMatch)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(
       await canvas.findByLabelText(/sample description|pavyzdinis paaiškinimas/i),
       { target: { value: "LIDL ZIRMUNU" } },
@@ -88,8 +85,7 @@ export const SampleDoesNotMatch: Story = {
 export const SampleFailsOnTheAmount: Story = {
   args: { initial: categorizationRules[1] },
   parameters: withHandlers(getTestCategorizationRuleMockHandler(ruleTestAmountOnly)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(
       await canvas.findByLabelText(/sample description|pavyzdinis paaiškinimas/i),
       { target: { value: "TRAFI bilietas" } },
@@ -106,8 +102,7 @@ export const SampleFailsOnTheAmount: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateCategorizationRuleMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByLabelText(/^(name|pavadinimas)$/i), {
       target: { value: "Parduotuvės" },
     });
@@ -121,8 +116,7 @@ export const SubmitPending: Story = {
 
 export const SubmitFails: Story = {
   parameters: withHandlers(getCreateCategorizationRuleMockHandler(failWithStatus(500))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByLabelText(/^(name|pavadinimas)$/i), {
       target: { value: "Parduotuvės" },
     });

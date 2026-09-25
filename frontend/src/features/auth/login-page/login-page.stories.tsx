@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { getLoginMockHandler } from "@/api/generated/auth/auth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { loginTwoFactorRequired, unauthorizedProblem } from "@/storybook/fixtures";
@@ -20,8 +20,7 @@ export const Default: Story = {};
 
 export const ForgotPasswordIsOfferedWhenEmailWorks: Story = {
   parameters: withHandlers(emailEnabledHandler),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole("link", { name: "Forgot your password?" }),
     ).toHaveAttribute("href", "/forgot-password");
@@ -29,8 +28,7 @@ export const ForgotPasswordIsOfferedWhenEmailWorks: Story = {
 };
 
 export const ForgotPasswordIsHiddenWithoutAMailServer: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.queryByRole("link", { name: "Forgot your password?" })).toBeNull();
   },
 };
@@ -49,8 +47,7 @@ export const InvalidCredentialsAfterSubmit: Story = {
       }),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(canvas.getByLabelText("Email"), "ruta@example.lt");
     await userEvent.type(canvas.getByLabelText("Password"), "fixture-value");
     await userEvent.click(canvas.getByRole("button", { name: "Sign in" }));

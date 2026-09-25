@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, waitFor, within } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { rememberCommand, setCommandPaletteOpen } from "@/stores/command-palette-store";
@@ -86,7 +86,7 @@ export const KeyboardChoice: Story = {
     await expect(input).toHaveAttribute("aria-activedescendant", first?.id);
 
     await fireEvent.keyDown(input, { key: "Enter" });
-    await waitFor(() => expect(within(document.body).queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 };
 
@@ -95,8 +95,8 @@ export const Empty: Story = {
     const input = await type("qqqjjj");
 
     await expect(input).toHaveAttribute("aria-expanded", "false");
-    await expect(within(document.body).queryByRole("listbox")).toBeNull();
-    await within(document.body).findByText("Nothing matches what you typed.");
+    await expect(screen.queryByRole("listbox")).toBeNull();
+    await screen.findByText("Nothing matches what you typed.");
   },
 };
 

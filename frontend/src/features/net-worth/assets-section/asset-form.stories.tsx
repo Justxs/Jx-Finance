@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fireEvent, fn, userEvent, within } from "storybook/test";
+import { fireEvent, fn, userEvent } from "storybook/test";
 import { getCreateAssetMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { pending, withHandlers } from "@/storybook/handlers";
@@ -18,8 +18,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Filled: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await userEvent.type(fields[0]!, "Three-room apartment in Zirmunai, 68 square metres");
     await userEvent.type(fields[1]!, "145000.00");
@@ -27,8 +26,7 @@ export const Filled: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await userEvent.type(fields[0]!, "x");
     await userEvent.clear(fields[0]!);
@@ -38,8 +36,7 @@ export const ValidationErrors: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateAssetMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const fields = canvas.getAllByRole("textbox");
     await fireEvent.change(fields[0]!, {
       target: { value: "Three-room apartment in Zirmunai, 68 square metres" },
