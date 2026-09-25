@@ -8,7 +8,7 @@ interface Props<T extends { id: string }> {
   description?: (item: T) => string;
   className?: string;
   onClose: () => void;
-  children: (item: T) => ReactNode;
+  children: (item: T, close: () => void) => ReactNode;
 }
 
 function titleOf<T>(title: string | ((item: T) => string), item: T | null) {
@@ -43,7 +43,7 @@ export function EditModal<T extends { id: string }>({
       description={shown ? description?.(shown) : undefined}
       className={className}
     >
-      {shown ? <Fragment key={shown.id}>{children(shown)}</Fragment> : null}
+      {shown ? <Fragment key={shown.id}>{children(shown, onClose)}</Fragment> : null}
     </Modal>
   );
 }

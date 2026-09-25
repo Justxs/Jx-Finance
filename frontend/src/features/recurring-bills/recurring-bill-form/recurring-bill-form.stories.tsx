@@ -10,7 +10,7 @@ import { RecurringBillForm } from "./recurring-bill-form";
 const meta = {
   title: "Features/RecurringBills/RecurringBillForm",
   component: RecurringBillForm,
-  args: { accounts, categories, onDone: fn(), onCancel: fn() },
+  args: { accounts, categories, onClose: fn() },
   decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
 } satisfies Meta<typeof RecurringBillForm>;
 
@@ -64,14 +64,14 @@ export const TransferNeedsTwoDifferentAccounts: Story = {
     await expect(
       await canvas.findByText("Source and destination accounts must differ."),
     ).toBeVisible();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
 
     await chooseOption(canvas.getByRole("combobox", { name: "To account" }), savingsAccount.name);
     await userEvent.click(
       canvas.getByRole("button", { name: /add recurring entry|pridėti periodinį/i }),
     );
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 

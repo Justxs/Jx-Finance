@@ -18,8 +18,7 @@ import { userName } from "../user-queries";
 
 interface FormProps {
   user: UserProfileResponse;
-  onDone: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
 interface Props {
@@ -27,7 +26,7 @@ interface Props {
   onClose: () => void;
 }
 
-function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
+function ResetPasswordForm({ user, onClose }: Readonly<FormProps>) {
   const { t } = useTranslation();
   const name = userName(user);
 
@@ -45,7 +44,7 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
     silent({
       onSuccess: () => {
         toast.success(t("users.resetPassword.done", { name }));
-        onDone();
+        onClose();
       },
     }),
   );
@@ -119,7 +118,7 @@ function ResetPasswordForm({ user, onDone, onCancel }: Readonly<FormProps>) {
           pending={resetMutation.isPending}
           cancelDisabled={resetMutation.isPending}
           submitLabel={t("users.resetPassword.submit")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>
@@ -136,7 +135,7 @@ export function ResetPasswordDialog({ user, onClose }: Readonly<Props>) {
       description={userName}
       onClose={onClose}
     >
-      {(shown) => <ResetPasswordForm user={shown} onDone={onClose} onCancel={onClose} />}
+      {(shown, close) => <ResetPasswordForm user={shown} onClose={close} />}
     </EditModal>
   );
 }

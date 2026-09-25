@@ -36,18 +36,12 @@ export function TagsPage() {
     <div className="space-y-5">
       <PageHeader title={t("tags.title")}>
         <CreateDialog label={t("tags.add")} title={t("tags.addTitle")}>
-          {(close) => <TagForm onDone={close} onCancel={close} />}
+          {(close) => <TagForm onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
       <EditModal item={editing} title={t("tags.editTitle")} onClose={() => setEditing(null)}>
-        {(tag) => (
-          <TagForm
-            initial={tag}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        )}
+        {(tag, close) => <TagForm initial={tag} onClose={close} />}
       </EditModal>
 
       <ListSection

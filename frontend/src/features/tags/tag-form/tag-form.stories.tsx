@@ -20,7 +20,7 @@ const sharedTag = tags.find((item) => item.scope === "shared")!;
 const meta = {
   title: "Features/Tags/TagForm",
   component: TagForm,
-  args: { onDone: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   render: (args) => (
     <div className="w-[min(32rem,calc(100vw-3rem))]">
       <QueryBoundary fallback={<Skeleton className="h-52 w-full" />}>
@@ -81,7 +81,7 @@ export const Renamed: Story = {
     const name = await canvas.findByRole("textbox");
     await fireEvent.change(name, { target: { value: "Atostogos Ispanijoje" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 

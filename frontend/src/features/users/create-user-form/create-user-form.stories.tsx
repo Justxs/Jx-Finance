@@ -10,7 +10,7 @@ import { CreateUserForm } from "./create-user-form";
 const meta = {
   title: "Features/Users/CreateUserForm",
   component: CreateUserForm,
-  args: { onCreated: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   render: (args) => (
     <Card className="w-[36rem] max-w-full p-6">
       <CreateUserForm {...args} />
@@ -33,7 +33,7 @@ export const Narrow: Story = {
 
 export const InModal: Story = {
   render: (args) => (
-    <Modal open onOpenChange={args.onCancel} title="Add user">
+    <Modal open onOpenChange={args.onClose} title="Add user">
       <CreateUserForm {...args} />
     </Modal>
   ),

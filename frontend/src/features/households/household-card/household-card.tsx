@@ -61,11 +61,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
       </SectionHeader>
 
       <Modal open={renaming} onOpenChange={setRenaming} title={t("actions.edit")}>
-        <CreateHouseholdForm
-          initial={household}
-          onCreated={() => setRenaming(false)}
-          onCancel={() => setRenaming(false)}
-        />
+        <CreateHouseholdForm initial={household} onClose={() => setRenaming(false)} />
       </Modal>
 
       <Rows>
@@ -111,11 +107,7 @@ export function HouseholdCard({ household }: Readonly<Props>) {
       ) : null}
 
       <Modal open={addMemberOpen} onOpenChange={setAddMemberOpen} title={t("households.addMember")}>
-        <AddMemberForm
-          householdId={household.id}
-          onAdded={() => setAddMemberOpen(false)}
-          onCancel={() => setAddMemberOpen(false)}
-        />
+        <AddMemberForm householdId={household.id} onClose={() => setAddMemberOpen(false)} />
       </Modal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>

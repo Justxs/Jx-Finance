@@ -76,7 +76,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
         title={t("subscriptions.createTitle")}
         description={() => t("subscriptions.createDescription")}
       >
-        {({ candidate }) => (
+        {({ candidate }, close) => (
           <RecurringBillForm
             draft={{
               name: suggestedName(candidate.description),
@@ -90,8 +90,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
             }}
             accounts={accounts}
             categories={categories}
-            onDone={() => setCreating(null)}
-            onCancel={() => setCreating(null)}
+            onClose={close}
           />
         )}
       </EditModal>

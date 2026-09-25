@@ -52,7 +52,7 @@ export function UsersPage() {
     <div className="space-y-5">
       <PageHeader title={t("users.title")}>
         <CreateDialog label={t("users.add")} title={t("users.add")}>
-          {(close) => <CreateUserForm onCreated={close} onCancel={close} />}
+          {(close) => <CreateUserForm onClose={close} />}
         </CreateDialog>
       </PageHeader>
 

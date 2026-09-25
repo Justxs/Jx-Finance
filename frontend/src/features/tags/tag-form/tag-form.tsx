@@ -19,11 +19,10 @@ interface FormValues {
 
 interface Props {
   initial?: TagResponse;
-  onDone: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function TagForm({ initial, onDone, onCancel }: Readonly<Props>) {
+export function TagForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data;
@@ -38,8 +37,8 @@ export function TagForm({ initial, onDone, onCancel }: Readonly<Props>) {
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateTag(silent({ onSuccess: onDone })),
-    useUpdateTag(silent({ onSuccess: onDone })),
+    useCreateTag(silent({ onSuccess: onClose })),
+    useUpdateTag(silent({ onSuccess: onClose })),
   );
 
   const defaultValues: FormValues = {
@@ -91,7 +90,7 @@ export function TagForm({ initial, onDone, onCancel }: Readonly<Props>) {
         <form.FormActions
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("actions.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

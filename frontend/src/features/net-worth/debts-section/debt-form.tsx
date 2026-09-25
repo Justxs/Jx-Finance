@@ -76,16 +76,12 @@ export function debtRequest(values: DebtFormValues) {
   };
 }
 
-export function DebtForm({
-  editing,
-  onCreated,
-  onCancel,
-}: Readonly<HoldingFormProps<DebtFormValues>>) {
+export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFormValues>>) {
   const { t } = useTranslation();
   const today = useToday();
   const { create, update, pending, error } = upsert(
-    useCreateDebt(silent({ onSuccess: onCreated })),
-    useUpdateDebt(silent({ onSuccess: onCreated })),
+    useCreateDebt(silent({ onSuccess: onClose })),
+    useUpdateDebt(silent({ onSuccess: onClose })),
   );
   const idPrefix = editing ? "debt-edit" : "debt";
 
@@ -238,7 +234,7 @@ export function DebtForm({
         <FormError error={error} />
 
         <div className="col-span-full flex items-end justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
+          <Button type="button" variant="outline" onClick={onClose}>
             {t("actions.cancel")}
           </Button>
           <form.SubmitButton pending={pending}>

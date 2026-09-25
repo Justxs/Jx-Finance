@@ -40,8 +40,7 @@ interface Props {
   categories: CategoryResponse[];
   tags: TagResponse[];
   initial?: CategorizationRuleResponse;
-  onSaved: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
 function FormSection({ title, children }: Readonly<{ title: string; children: ReactNode }>) {
@@ -53,14 +52,7 @@ function FormSection({ title, children }: Readonly<{ title: string; children: Re
   );
 }
 
-export function RuleForm({
-  accounts,
-  categories,
-  tags,
-  initial,
-  onSaved,
-  onCancel,
-}: Readonly<Props>) {
+export function RuleForm({ accounts, categories, tags, initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const [sample, setSample] = useState("");
   const [sampleAmount, setSampleAmount] = useState("");
@@ -89,8 +81,8 @@ export function RuleForm({
     );
 
   const { create, update, pending, error } = upsert(
-    useCreateCategorizationRule(silent({ onSuccess: onSaved })),
-    useUpdateCategorizationRule(silent({ onSuccess: onSaved })),
+    useCreateCategorizationRule(silent({ onSuccess: onClose })),
+    useUpdateCategorizationRule(silent({ onSuccess: onClose })),
   );
 
   const defaultValues: FormValues = {
@@ -253,7 +245,7 @@ export function RuleForm({
         <form.FormActions
           pending={pending}
           submitLabel={t(initial ? "actions.save" : "actions.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

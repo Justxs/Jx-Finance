@@ -11,7 +11,7 @@ import { RunRulesDialog } from "./run-rules-dialog";
 const meta = {
   title: "Features/CategorizationRules/RunRulesDialog",
   component: RunRulesDialog,
-  args: { accounts, hasRules: true, onDone: fn(), onCancel: fn() },
+  args: { accounts, hasRules: true, onClose: fn() },
   render: (args) => (
     <div className="w-[min(40rem,calc(100vw-3rem))]">
       <RunRulesDialog {...args} />

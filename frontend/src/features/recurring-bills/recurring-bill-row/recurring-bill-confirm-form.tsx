@@ -13,10 +13,10 @@ import { positiveMoney, requiredValue } from "@/lib/validation";
 interface Props {
   bill: RecurringBillResponse;
   accounts: AccountResponse[];
-  onDone: () => void;
+  onClose: () => void;
 }
 
-export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Props>) {
+export function RecurringBillConfirmForm({ bill, accounts, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
   const money = useMoney();
@@ -39,7 +39,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
     receivedAmount: crossCurrency ? positiveMoney(t) : z.string(),
   });
 
-  const confirmMutation = useConfirmRecurringBill(silent({ onSuccess: onDone }));
+  const confirmMutation = useConfirmRecurringBill(silent({ onSuccess: onClose }));
 
   const form = useServerForm({
     defaultValues: { amount: "", accountId: "", receivedAmount: "" },
@@ -124,7 +124,7 @@ export function RecurringBillConfirmForm({ bill, accounts, onDone }: Readonly<Pr
         <form.FormActions
           pending={confirmMutation.isPending}
           submitLabel={t("recurringBills.confirm")}
-          onCancel={onDone}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

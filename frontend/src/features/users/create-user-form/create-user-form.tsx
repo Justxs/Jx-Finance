@@ -22,11 +22,10 @@ interface FormValues {
 }
 
 interface Props {
-  onCreated: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
+export function CreateUserForm({ onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -36,7 +35,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
     password: password(t, createUserBodyPasswordMin, createUserBodyPasswordMax),
   });
 
-  const createMutation = useCreateUser(silent({ onSuccess: onCreated }));
+  const createMutation = useCreateUser(silent({ onSuccess: onClose }));
 
   const defaultValues: FormValues = {
     email: "",
@@ -97,7 +96,7 @@ export function CreateUserForm({ onCreated, onCancel }: Readonly<Props>) {
         <form.FormActions
           pending={createMutation.isPending}
           submitLabel={t("users.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

@@ -50,7 +50,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
 });
 
 test("a term and a monthly payment together are refused under the payment", async () => {
-  renderWithQuery(<DebtForm onCreated={() => {}} onCancel={() => {}} />);
+  renderWithQuery(<DebtForm onClose={() => {}} />);
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "360" } });
   fireEvent.change(screen.getByLabelText("Monthly payment"), { target: { value: "500" } });
 
@@ -61,7 +61,7 @@ test("a term and a monthly payment together are refused under the payment", asyn
 });
 
 test("a term outside 1 to 600 months is refused", async () => {
-  renderWithQuery(<DebtForm onCreated={() => {}} onCancel={() => {}} />);
+  renderWithQuery(<DebtForm onClose={() => {}} />);
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "601" } });
 
   expect(await screen.findByText("Enter a whole number from 1 to 600.")).toBeInTheDocument();

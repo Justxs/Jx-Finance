@@ -10,7 +10,7 @@ import { CreateGoalForm } from "./create-goal-form";
 const meta = {
   title: "Features/Goals/CreateGoalForm",
   component: CreateGoalForm,
-  args: { accounts, onCreated: fn(), onCancel: fn() },
+  args: { accounts, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof CreateGoalForm>;
 
@@ -69,7 +69,7 @@ export const FundingAccountMissing: Story = {
     await userEvent.click(canvas.getByRole("button", { name: /add goal|pridėti tikslą/i }));
 
     await expect(await canvas.findByText(/this field is required|privalomas/i)).toBeVisible();
-    await expect(args.onCreated).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 
