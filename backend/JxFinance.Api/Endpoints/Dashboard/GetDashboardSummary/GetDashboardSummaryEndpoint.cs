@@ -14,9 +14,6 @@ public sealed class GetDashboardSummaryEndpoint(IDashboardService dashboardServi
         Group<DashboardGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var summary = await dashboardService.GetSummaryAsync(ct);
-        await Send.OkAsync(summary, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(await dashboardService.GetSummaryAsync(ct), ct);
 }

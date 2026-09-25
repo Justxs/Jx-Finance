@@ -15,8 +15,6 @@ public sealed class UpdateTransactionEndpoint(ITransactionService transactionSer
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateTransactionRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateTransactionRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await transactionService.UpdateAsync(req, ct), ct);
-    }
 }

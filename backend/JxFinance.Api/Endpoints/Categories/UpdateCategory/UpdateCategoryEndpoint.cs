@@ -15,8 +15,6 @@ public sealed class UpdateCategoryEndpoint(ICategoryService categoryService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateCategoryRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateCategoryRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await categoryService.UpdateAsync(req, ct), ct);
-    }
 }

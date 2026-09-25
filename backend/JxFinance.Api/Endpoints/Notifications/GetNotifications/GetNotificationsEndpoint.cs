@@ -14,8 +14,6 @@ public sealed class GetNotificationsEndpoint(INotificationService notificationSe
         Group<NotificationsGroup>();
     }
 
-    public override async Task HandleAsync(GetNotificationsRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(GetNotificationsRequest req, CancellationToken ct) =>
         await Send.OkAsync(await notificationService.GetAllAsync(req.Unread, ct), ct);
-    }
 }

@@ -13,9 +13,6 @@ public sealed class GetSetupStatusEndpoint(IAuthService authService) : EndpointW
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var needsSetup = await authService.IsSetupNeededAsync(ct);
-        await Send.OkAsync(new SetupStatusResponse(needsSetup), ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(new SetupStatusResponse(await authService.IsSetupNeededAsync(ct)), ct);
 }

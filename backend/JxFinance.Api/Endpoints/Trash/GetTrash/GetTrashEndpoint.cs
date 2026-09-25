@@ -14,9 +14,6 @@ public sealed class GetTrashEndpoint(ITrashService trashService)
         Group<TrashGroup>();
     }
 
-    public override async Task HandleAsync(GetTrashRequest req, CancellationToken ct)
-    {
-        var page = await trashService.GetPageAsync(req, ct);
-        await Send.OkAsync(page, ct);
-    }
+    public override async Task HandleAsync(GetTrashRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await trashService.GetPageAsync(req, ct), ct);
 }

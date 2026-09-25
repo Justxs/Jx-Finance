@@ -15,8 +15,6 @@ public sealed class CreateInvestmentTransactionEndpoint(IInvestmentService inves
         Description(d => d.ProducesCreated<InvestmentTransactionResponse>());
     }
 
-    public override async Task HandleAsync(CreateInvestmentTransactionRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateInvestmentTransactionRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await investmentService.CreateTransactionAsync(req, ct), created => $"{ApiRoutes.InvestmentsPath}/transactions/{created.Id}", ct);
-    }
 }

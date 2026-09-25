@@ -15,8 +15,6 @@ public sealed class CreateRecurringBillEndpoint(IRecurringBillService recurringB
         Description(d => d.ProducesCreated<RecurringBillResponse>());
     }
 
-    public override async Task HandleAsync(CreateRecurringBillRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateRecurringBillRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await recurringBillService.CreateAsync(req, ct), bill => $"{ApiRoutes.RecurringBillsPath}/{bill.Id}", ct);
-    }
 }

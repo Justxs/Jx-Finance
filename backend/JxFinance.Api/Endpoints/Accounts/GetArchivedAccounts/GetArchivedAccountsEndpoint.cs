@@ -14,9 +14,6 @@ public sealed class GetArchivedAccountsEndpoint(IAccountService accountService)
         Group<AccountsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var accounts = await accountService.GetArchivedAsync(ct);
-        await Send.OkAsync(accounts, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(await accountService.GetArchivedAsync(ct), ct);
 }

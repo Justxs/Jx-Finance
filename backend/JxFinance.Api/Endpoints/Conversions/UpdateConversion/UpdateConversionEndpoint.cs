@@ -15,8 +15,6 @@ public sealed class UpdateConversionEndpoint(IConversionService conversionServic
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateConversionRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateConversionRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await conversionService.UpdateAsync(req, ct), ct);
-    }
 }

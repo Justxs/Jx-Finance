@@ -15,8 +15,6 @@ public sealed class GetExchangeRateEndpoint(ICurrencyService currencyService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(GetExchangeRateRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(GetExchangeRateRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await currencyService.GetRateAsync(req, ct), ct);
-    }
 }

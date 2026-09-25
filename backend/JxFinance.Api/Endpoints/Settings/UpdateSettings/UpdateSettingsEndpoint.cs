@@ -17,8 +17,6 @@ public sealed class UpdateSettingsEndpoint(ISettingsService settingsService)
         Description(d => d.ProducesProblemDetails(403));
     }
 
-    public override async Task HandleAsync(UpdateSettingsRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateSettingsRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await settingsService.UpdateAsync(req, ct), ct);
-    }
 }

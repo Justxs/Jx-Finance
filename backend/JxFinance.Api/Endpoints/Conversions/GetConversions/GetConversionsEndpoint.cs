@@ -14,9 +14,6 @@ public sealed class GetConversionsEndpoint(IConversionService conversionService)
         Group<ConversionsGroup>();
     }
 
-    public override async Task HandleAsync(GetConversionsRequest req, CancellationToken ct)
-    {
-        var page = await conversionService.GetPageAsync(req, ct);
-        await Send.OkAsync(page, ct);
-    }
+    public override async Task HandleAsync(GetConversionsRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await conversionService.GetPageAsync(req, ct), ct);
 }

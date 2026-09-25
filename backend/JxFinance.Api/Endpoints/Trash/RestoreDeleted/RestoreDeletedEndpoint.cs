@@ -13,8 +13,6 @@ public sealed class RestoreDeletedEndpoint(ITrashService trashService) : Endpoin
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
-    public override async Task HandleAsync(RestoreDeletedRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(RestoreDeletedRequest req, CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await trashService.RestoreAsync(req, ct), ct);
-    }
 }

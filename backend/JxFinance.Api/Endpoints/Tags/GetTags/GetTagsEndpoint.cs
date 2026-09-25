@@ -14,8 +14,6 @@ public sealed class GetTagsEndpoint(ITagService tagService)
         Group<TagsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await tagService.GetAllAsync(ct), ct);
-    }
 }

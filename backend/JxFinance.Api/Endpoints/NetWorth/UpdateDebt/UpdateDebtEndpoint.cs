@@ -14,8 +14,6 @@ public sealed class UpdateDebtEndpoint(INetWorthService netWorthService) : Endpo
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateDebtRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateDebtRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await netWorthService.UpdateDebtAsync(req, ct), ct);
-    }
 }

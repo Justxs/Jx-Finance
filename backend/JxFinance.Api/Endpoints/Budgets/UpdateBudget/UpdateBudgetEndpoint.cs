@@ -14,8 +14,6 @@ public sealed class UpdateBudgetEndpoint(IBudgetService budgetService) : Endpoin
         Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
-    public override async Task HandleAsync(UpdateBudgetRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateBudgetRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await budgetService.UpdateAsync(req, ct), ct);
-    }
 }
