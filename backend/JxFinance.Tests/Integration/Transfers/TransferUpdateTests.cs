@@ -202,13 +202,7 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var brokerage = await CreateAccountAsync("0.00", "investment", "eur");
         var bank = await CreateAccountAsync("5000.00");
         var otherBank = await CreateAccountAsync("5000.00");
-        using var form = new MultipartFormDataContent();
-        var file = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(SampleFlexReport.Xml));
-        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
-        form.Add(file, "file", "report.xml");
-        form.Add(new StringContent(brokerage.ToString()), "accountId");
-        form.Add(new StringContent(bank.ToString()), "fundingAccountId");
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await UploadFlexAsync(Client, brokerage, fundingAccountId: bank)).EnsureSuccessStatusCode();
         var deposit = (await Client.GetFromJsonAsync<PageDto<TransferDto>>("/api/transfers?pageSize=200", TestContext.Current.CancellationToken))!.Items.Single(t => t.ToAccountId == brokerage);
         Assert.Equal((false, true), (deposit.FromAccountImported, deposit.ToAccountImported));
 
