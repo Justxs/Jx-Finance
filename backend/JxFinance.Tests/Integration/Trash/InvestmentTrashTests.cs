@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Trash;
@@ -245,19 +243,8 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         Assert.Contains((await TrashAsync(member)).Items, row => row.EntityId == interest);
     }
 
-    private async Task UploadAsync(Guid accountId)
-    {
-        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(SampleFlexReport.Xml));
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-        var form = new MultipartFormDataContent
-        {
-            { file, "file", "flex.xml" },
-            { new StringContent(accountId.ToString()), "accountId" },
-        };
-
-        var response = await Client.PostAsync("/api/investments/import/interactive-brokers", form);
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    }
+    private async Task UploadAsync(Guid accountId) =>
+        Assert.Equal(HttpStatusCode.OK, (await UploadFlexAsync(Client, accountId)).StatusCode);
 
     private static Task<HttpResponseMessage> RestoreAsync(HttpClient client, Guid entityId, string kind = Kind) =>
         client.PostAsJsonAsync("/api/trash/restore", new { kind, entityId });

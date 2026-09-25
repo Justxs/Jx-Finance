@@ -268,14 +268,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
               </FlexStatements>
             </FlexQueryResponse>
             """;
-        var file = new ByteArrayContent(System.Text.Encoding.UTF8.GetBytes(report));
-        file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/xml");
-        using var form = new MultipartFormDataContent
-        {
-            { file, "file", "flex.xml" },
-            { new StringContent(account.ToString()), "accountId" },
-        };
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await UploadFlexAsync(Client, account, report)).EnsureSuccessStatusCode();
 
         var events = (await AuditAsync(Client, household)).Items
             .Where(e => e.EntityKind == "investmentTransaction")
