@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
@@ -223,15 +221,7 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
 
     private async Task UploadAsync(Guid accountId, string xml)
     {
-        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(xml));
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-        var form = new MultipartFormDataContent
-        {
-            { file, "file", "flex.xml" },
-            { new StringContent(accountId.ToString()), "accountId" },
-        };
-
-        var response = await Client.PostAsync("/api/investments/import/interactive-brokers", form);
+        var response = await UploadFlexAsync(Client, accountId, xml);
         Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
     }
 
