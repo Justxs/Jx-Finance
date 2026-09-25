@@ -1,5 +1,8 @@
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Settings;
+using JxFinance.Infrastructure.Auth;
+using JxFinance.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Infrastructure.BackgroundJobs;
 
@@ -26,6 +29,26 @@ public abstract class PeriodicJob(IServiceScopeFactory scopes, ILogger logger) :
         }
 
         await RunAsync(services, ct);
+    }
+
+    protected async Task ForEachActiveUserAsync(IServiceProvider services, Func<Guid, Task> work, CancellationToken ct)
+    {
+        var userIds = await services.GetRequiredService<AppDbContext>().Users
+            .Where(AppUser.IsActive)
+            .OrderBy(u => u.Id)
+            .Select(u => u.Id)
+            .ToListAsync(ct);
+        foreach (var userId in userIds)
+        {
+            try
+            {
+                await work(userId);
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
+                logger.LogError(ex, "{Job} for user {UserId} failed.", Name, userId);
+            }
+        }
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

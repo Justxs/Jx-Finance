@@ -3,6 +3,7 @@ using JxFinance.Common.Sharing;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Tags;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -67,13 +68,11 @@ public sealed class SharingGuardTests
     private static async Task<DomainError?> CheckAsync(Guid userId, Func<SharingGuard, Task<DomainError?>> check)
     {
         var options = new DbContextOptionsBuilder<AppDbContext>().UseNpgsql("Host=unused.invalid;Database=unused").Options;
-        var user = new SomeUser(userId);
+        var user = new FixedUser(userId);
         await using var db = new AppDbContext(options, user, new TestClock());
 
         return await check(new SharingGuard(db, user));
     }
-
-    private sealed record SomeUser(Guid Id) : ICurrentUser;
 
     private sealed record Input(Scope Scope, Guid? HouseholdId) : IShareableInput;
 }

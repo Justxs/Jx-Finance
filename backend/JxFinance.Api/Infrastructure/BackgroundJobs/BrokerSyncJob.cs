@@ -1,4 +1,3 @@
-using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Endpoints.Investments.Services;
 using JxFinance.Infrastructure.Auth;
@@ -26,16 +25,13 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
                 && activeUsers.Any(u => u.Id == c.UserId))
             .Select(c => new { c.UserId, c.AccountId })
             .ToListAsync(ct);
-        var options = services.GetRequiredService<DbContextOptions<AppDbContext>>();
-        var clock = services.GetRequiredService<IClock>();
 
         foreach (var connection in connections)
         {
             try
             {
-                var user = new SyncUser(connection.UserId);
-                await using var db = new AppDbContext(options, user, clock);
-                var importer = ActivatorUtilities.CreateInstance<BrokerImportService>(services, db, user);
+                await using var db = AppDbContext.For(services, connection.UserId);
+                var importer = ActivatorUtilities.CreateInstance<BrokerImportService>(services, db, new FixedUser(connection.UserId));
                 var result = await importer.SyncAsync(connection.AccountId.Value, ct);
                 if (result.IsFailure)
                 {
@@ -48,6 +44,4 @@ public sealed class BrokerSyncJob(IServiceScopeFactory scopes, ILogger<BrokerSyn
             }
         }
     }
-
-    private sealed record SyncUser(Guid Id) : ICurrentUser;
 }

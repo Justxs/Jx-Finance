@@ -72,6 +72,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
     public AuditTrail Audit { get; } = new();
 
+    public static AppDbContext For(IServiceProvider services, Guid userId) =>
+        new(services.GetRequiredService<DbContextOptions<AppDbContext>>(), new FixedUser(userId), services.GetRequiredService<IClock>());
+
     public override int SaveChanges(bool acceptAllChangesOnSuccess) =>
         throw new NotSupportedException("Saving is asynchronous; call SaveChangesAsync instead.");
 
