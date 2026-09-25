@@ -1,26 +1,17 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import https from "node:https";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { root, run } from "./run.mjs";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const keepStack = process.argv.includes("--keep");
 const host = "finance.internal";
 const port = Number(process.env.VERIFY_HTTPS_PORT ?? 8443);
 const compose = ["compose", "-p", "jx-verify", "-f", "docker-compose.yml", "-f", "docker-compose.production.yml"];
-const environment = { ...process.env, SITE_ADDRESS: host, BIND_ADDRESS: "127.0.0.1", HTTPS_PORT: String(port) };
+const environment = { SITE_ADDRESS: host, BIND_ADDRESS: "127.0.0.1", HTTPS_PORT: String(port) };
 const admin = { email: "verify@example.com", password: "Verify-production-1!", displayName: "Verify" };
 
 function docker(args, options = {}) {
-  const result = spawnSync("docker", [...compose, ...args], {
-    cwd: root,
-    env: environment,
-    encoding: "utf8",
-    stdio: options.capture ? ["ignore", "pipe", "inherit"] : "inherit",
-  });
-  if (result.status !== 0 && !options.allowFailure) throw new Error(`docker ${[...compose, ...args].join(" ")} exited with ${result.status}`);
-  return result.stdout ?? "";
+  return run("docker", [...compose, ...args], { ...options, env: environment }).stdout;
 }
 
 function request(method, route, { body, cookies } = {}) {
@@ -107,8 +98,8 @@ async function main() {
   const after = await request("GET", "/api/auth/me", { cookies });
   check("the same access token authenticates after the API container is recreated", after.status === 200, `status ${after.status}`);
 
-  const wrongHost = spawnSync("docker", [...compose, "exec", "-T", "api", "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "-H", "Host: other.example", "http://localhost:8080/api/setup/status"], { cwd: root, env: environment, encoding: "utf8" });
-  check("the API rejects a Host header outside AllowedHosts", wrongHost.stdout.trim() === "400", `status ${wrongHost.stdout.trim()}`);
+  const wrongHost = docker(["exec", "-T", "api", "curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", "-H", "Host: other.example", "http://localhost:8080/api/setup/status"], { capture: true, allowFailure: true }).trim();
+  check("the API rejects a Host header outside AllowedHosts", wrongHost === "400", `status ${wrongHost}`);
 }
 
 let crashed = false;

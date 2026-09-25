@@ -1,14 +1,11 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
+import { fail, root, scaffold } from "./run.mjs";
 
 const [feature, name] = process.argv.slice(2);
 const kebab = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 if (!feature || !name || !kebab.test(feature) || !kebab.test(name)) {
-  console.error("Usage: just new-component <feature> <component-name>, both in kebab-case");
-  console.error("Example: just new-component goals goal-archive-dialog");
-  process.exit(1);
+  fail("Usage: just new-component <feature> <component-name>, both in kebab-case\nExample: just new-component goals goal-archive-dialog");
 }
 
 function pascal(value) {
@@ -18,16 +15,9 @@ function pascal(value) {
     .join("");
 }
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const folder = join(root, "frontend", "src", "features", feature, name);
 const component = pascal(name);
 
-if (existsSync(folder)) {
-  console.error(`${folder} already exists.`);
-  process.exit(1);
-}
-
-const files = {
+scaffold(join(root, "frontend", "src", "features", feature, name), {
   [`${name}.tsx`]: `interface ${component}Props {
   title: string;
 }
@@ -67,11 +57,4 @@ test("renders its title", () => {
   expect(screen.getByRole("heading", { name: "Example" })).toBeInTheDocument();
 });
 `,
-};
-
-mkdirSync(folder, { recursive: true });
-for (const [file, content] of Object.entries(files)) {
-  writeFileSync(join(folder, file), content);
-}
-
-console.log(`Created ${Object.keys(files).length} files in frontend/src/features/${feature}/${name}.`);
+});

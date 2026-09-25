@@ -1,29 +1,20 @@
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import { fail, root, scaffold } from "./run.mjs";
 
 const [tag, name, verbInput, route] = process.argv.slice(2);
 const verbs = { get: "Get", post: "Post", put: "Put", patch: "Patch", delete: "Delete" };
 const verb = verbs[(verbInput ?? "").toLowerCase()];
 
 if (!tag || !name || !verb || !route) {
-  console.error('Usage: just new-endpoint <Tag> <Name> <get|post|put|patch|delete> "<route>"');
-  console.error('Example: just new-endpoint Goals ArchiveGoal post "goals/{id}/archive"');
-  process.exit(1);
+  fail('Usage: just new-endpoint <Tag> <Name> <get|post|put|patch|delete> "<route>"\nExample: just new-endpoint Goals ArchiveGoal post "goals/{id}/archive"');
 }
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const tagFolder = join(root, "backend", "JxFinance.Api", "Endpoints", tag);
-const folder = join(tagFolder, name);
 const namespace = `JxFinance.Endpoints.${tag}.${name}`;
 
 if (!existsSync(join(tagFolder, `${tag}Group.cs`))) {
-  console.error(`No ${tag}Group.cs in ${tagFolder}. Create the group first or pick an existing tag.`);
-  process.exit(1);
-}
-if (existsSync(folder)) {
-  console.error(`${folder} already exists.`);
-  process.exit(1);
+  fail(`No ${tag}Group.cs in ${tagFolder}. Create the group first or pick an existing tag.`);
 }
 
 const deleteFiles = {
@@ -131,13 +122,6 @@ public sealed class ${name}Summary : Summary<${name}Endpoint, ${name}Request>
 `,
 };
 
-const files = verb === "Delete" ? deleteFiles : requestFiles;
-
-mkdirSync(folder, { recursive: true });
-for (const [file, content] of Object.entries(files)) {
-  writeFileSync(join(folder, file), content);
-}
-
-console.log(`Created ${Object.keys(files).length} files in backend/JxFinance.Api/Endpoints/${tag}/${name}.`);
+scaffold(join(tagFolder, name), verb === "Delete" ? deleteFiles : requestFiles);
 console.log("Next: implement the handler through the tag's service, write the summary, add an integration test,");
 console.log("then run 'just gen' and follow docs/13. Adding a feature.md for the frontend half.");
