@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.Accounts;
 
@@ -205,17 +204,8 @@ public sealed class AccountRestoreTests(ApiFixture fixture) : IntegrationTestBas
         Assert.Equal(HttpStatusCode.NotFound, (await householdOwner.GetAsync($"/api/accounts/{accountId}", TestContext.Current.CancellationToken)).StatusCode);
     }
 
-    private async Task ShareArchivedAsync(Guid accountId, Guid householdId)
-    {
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new NpgsqlCommand(
-            "UPDATE \"Accounts\" SET \"Scope\" = 1, \"HouseholdId\" = $1 WHERE \"Id\" = $2",
-            connection);
-        command.Parameters.AddWithValue(householdId);
-        command.Parameters.AddWithValue(accountId);
-        Assert.Equal(1, await command.ExecuteNonQueryAsync());
-    }
+    private async Task ShareArchivedAsync(Guid accountId, Guid householdId) =>
+        Assert.Equal(1, await SqlAsync($"""UPDATE "Accounts" SET "Scope" = 1, "HouseholdId" = {householdId} WHERE "Id" = {accountId}"""));
 
     private static async Task<string?> ProgressAsync(HttpClient client, Guid goalId) =>
         (await client.GetFromJsonAsync<List<GoalDto>>("/api/goals"))!.Single(g => g.Id == goalId).ProgressAmount;
