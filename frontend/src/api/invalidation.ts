@@ -6,6 +6,7 @@ type QueryRootGetter = () => readonly [string, ...unknown[]];
 
 interface Rule {
   after: readonly MutationKeyGetter[];
+  deleted?: readonly MutationKeyGetter[];
   refresh: readonly QueryRootGetter[] | "everything";
 }
 
@@ -48,19 +49,13 @@ const rules: readonly Rule[] = [
       api.getBulkCategorizeTransactionsMutationKey,
       api.getBulkTagTransactionsMutationKey,
     ],
+    deleted: [api.getDeleteTransactionMutationKey],
     refresh: ledger,
   },
   {
-    after: [api.getDeleteTransactionMutationKey],
-    refresh: [...ledger, api.getTrashQueryKey],
-  },
-  {
     after: [api.getUploadAttachmentMutationKey],
+    deleted: [api.getDeleteAttachmentMutationKey],
     refresh: [api.getTransactionsQueryKey],
-  },
-  {
-    after: [api.getDeleteAttachmentMutationKey],
-    refresh: [api.getTransactionsQueryKey, api.getTrashQueryKey],
   },
   {
     after: [api.getRestoreDeletedMutationKey, api.getRestoreAccountMutationKey],
@@ -68,21 +63,12 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getCreateTagMutationKey, api.getUpdateTagMutationKey],
+    deleted: [api.getDeleteTagMutationKey],
     refresh: [
       api.getTagsQueryKey,
       api.getTransactionsQueryKey,
       api.getTransactionsSummaryQueryKey,
       api.getReportSummaryQueryKey,
-    ],
-  },
-  {
-    after: [api.getDeleteTagMutationKey],
-    refresh: [
-      api.getTagsQueryKey,
-      api.getTransactionsQueryKey,
-      api.getTransactionsSummaryQueryKey,
-      api.getReportSummaryQueryKey,
-      api.getTrashQueryKey,
     ],
   },
   {
@@ -91,11 +77,8 @@ const rules: readonly Rule[] = [
       api.getUpdateCategorizationRuleMutationKey,
       api.getMoveCategorizationRuleMutationKey,
     ],
+    deleted: [api.getDeleteCategorizationRuleMutationKey],
     refresh: [api.getCategorizationRulesQueryKey],
-  },
-  {
-    after: [api.getDeleteCategorizationRuleMutationKey],
-    refresh: [api.getCategorizationRulesQueryKey, api.getTrashQueryKey],
   },
   {
     after: [api.getRunCategorizationRulesMutationKey],
@@ -130,41 +113,27 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getCreateTransferMutationKey, api.getUpdateTransferMutationKey],
+    deleted: [api.getDeleteTransferMutationKey],
     refresh: [
       api.getTransfersQueryKey,
       api.getAccountsQueryKey,
       api.getDashboardSummaryQueryKey,
       api.getNetWorthQueryKey,
-    ],
-  },
-  {
-    after: [api.getDeleteTransferMutationKey],
-    refresh: [
-      api.getTransfersQueryKey,
-      api.getAccountsQueryKey,
-      api.getDashboardSummaryQueryKey,
-      api.getNetWorthQueryKey,
-      api.getTrashQueryKey,
     ],
   },
   {
     after: [api.getCreateConversionMutationKey, api.getUpdateConversionMutationKey],
+    deleted: [api.getDeleteConversionMutationKey],
     refresh: [...ledger, api.getConversionsQueryKey],
   },
   {
-    after: [api.getDeleteConversionMutationKey],
-    refresh: [...ledger, api.getConversionsQueryKey, api.getTrashQueryKey],
-  },
-  {
     after: [api.getCreateBudgetMutationKey, api.getUpdateBudgetMutationKey],
+    deleted: [api.getDeleteBudgetMutationKey],
     refresh: [api.getBudgetsQueryKey],
   },
   {
-    after: [api.getDeleteBudgetMutationKey],
-    refresh: [api.getBudgetsQueryKey, api.getTrashQueryKey],
-  },
-  {
     after: [api.getCreateCategoryMutationKey, api.getUpdateCategoryMutationKey],
+    deleted: [api.getDeleteCategoryMutationKey],
     refresh: [
       api.getCategoriesQueryKey,
       api.getTransactionsQueryKey,
@@ -172,27 +141,12 @@ const rules: readonly Rule[] = [
       api.getCategoryBreakdownQueryKey,
       api.getReportSummaryQueryKey,
       api.getRecurringBillsQueryKey,
-    ],
-  },
-  {
-    after: [api.getDeleteCategoryMutationKey],
-    refresh: [
-      api.getCategoriesQueryKey,
-      api.getTransactionsQueryKey,
-      api.getBudgetsQueryKey,
-      api.getCategoryBreakdownQueryKey,
-      api.getReportSummaryQueryKey,
-      api.getRecurringBillsQueryKey,
-      api.getTrashQueryKey,
     ],
   },
   {
     after: [api.getCreateGoalMutationKey, api.getUpdateGoalMutationKey],
+    deleted: [api.getDeleteGoalMutationKey],
     refresh: [api.getGoalsQueryKey],
-  },
-  {
-    after: [api.getDeleteGoalMutationKey],
-    refresh: [api.getGoalsQueryKey, api.getTrashQueryKey],
   },
   {
     after: [
@@ -205,6 +159,7 @@ const rules: readonly Rule[] = [
   },
   {
     after: [api.getRemoveMemberMutationKey],
+    deleted: [api.getDeleteHouseholdMutationKey],
     refresh: [
       ...ledger,
       api.getHouseholdsQueryKey,
@@ -213,48 +168,22 @@ const rules: readonly Rule[] = [
       api.getTransfersQueryKey,
       api.getConversionsQueryKey,
       api.getRecurringBillsQueryKey,
-    ],
-  },
-  {
-    after: [api.getDeleteHouseholdMutationKey],
-    refresh: [
-      ...ledger,
-      api.getHouseholdsQueryKey,
-      api.getCategoriesQueryKey,
-      api.getTagsQueryKey,
-      api.getTransfersQueryKey,
-      api.getConversionsQueryKey,
-      api.getRecurringBillsQueryKey,
-      api.getTrashQueryKey,
     ],
   },
   {
     after: [api.getCreateAssetMutationKey, api.getUpdateAssetMutationKey],
+    deleted: [api.getDeleteAssetMutationKey],
     refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey],
   },
   {
-    after: [api.getDeleteAssetMutationKey],
-    refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey, api.getTrashQueryKey],
-  },
-  {
     after: [api.getCreateDebtMutationKey, api.getUpdateDebtMutationKey],
+    deleted: [api.getDeleteDebtMutationKey],
     refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey],
   },
   {
-    after: [api.getDeleteDebtMutationKey],
-    refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey, api.getTrashQueryKey],
-  },
-  {
     after: [api.getCreateRecurringBillMutationKey, api.getUpdateRecurringBillMutationKey],
+    deleted: [api.getDeleteRecurringBillMutationKey],
     refresh: [api.getRecurringBillsQueryKey, api.getSubscriptionCandidatesQueryKey],
-  },
-  {
-    after: [api.getDeleteRecurringBillMutationKey],
-    refresh: [
-      api.getRecurringBillsQueryKey,
-      api.getSubscriptionCandidatesQueryKey,
-      api.getTrashQueryKey,
-    ],
   },
   {
     after: [api.getDismissSubscriptionCandidateMutationKey],
@@ -269,11 +198,8 @@ const rules: readonly Rule[] = [
       api.getSetSecurityPriceMutationKey,
       api.getDeleteSecurityPriceMutationKey,
     ],
+    deleted: [api.getDeleteInvestmentTransactionMutationKey],
     refresh: holdings,
-  },
-  {
-    after: [api.getDeleteInvestmentTransactionMutationKey],
-    refresh: [...holdings, api.getTrashQueryKey],
   },
   {
     after: [api.getImportBrokerReportMutationKey, api.getSyncBrokerConnectionMutationKey],
@@ -359,8 +285,15 @@ export const mutationsWithoutInvalidation: readonly MutationKeyGetter[] = [
   api.getResetDashboardLayoutMutationKey,
 ];
 
+function withTrash(refresh: Rule["refresh"]): Rule["refresh"] {
+  return refresh === "everything" ? refresh : [...refresh, api.getTrashQueryKey];
+}
+
 const refreshByMutation = new Map(
-  rules.flatMap((rule) => rule.after.map((getKey) => [getKey()[0], rule.refresh] as const)),
+  rules.flatMap((rule) => [
+    ...rule.after.map((getKey) => [getKey()[0], rule.refresh] as const),
+    ...(rule.deleted ?? []).map((getKey) => [getKey()[0], withTrash(rule.refresh)] as const),
+  ]),
 );
 
 export function hasInvalidationRule(mutationKey: MutationKey): boolean {
