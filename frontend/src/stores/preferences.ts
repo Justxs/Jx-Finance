@@ -1,7 +1,7 @@
-import { createCollection, localStorageCollectionOptions } from "@tanstack/react-db";
-import { useSyncExternalStore } from "react";
+import { useLiveQuery } from "@tanstack/react-db";
 import { z } from "zod";
 import { browserStorage } from "@/lib/browser-storage";
+import { localCollection } from "./local-collection";
 
 export const PREFERENCES_STORAGE_KEY = "jx-preferences";
 
@@ -54,19 +54,11 @@ export const LEGACY_PREFERENCE_KEYS = {
 
 const storage = browserStorage();
 
-const options = localStorageCollectionOptions({
-  id: "preferences",
-  storageKey: PREFERENCES_STORAGE_KEY,
-  storage,
-  schema: preferencesSchema,
-  getKey: (row) => row.id,
-});
-
-export const preferencesCollection = createCollection({
-  ...options,
-  startSync: true,
-  sync: { ...options.sync, getSyncMetadata: () => ({ storageKey: PREFERENCES_STORAGE_KEY }) },
-});
+export const preferencesCollection = localCollection(
+  "preferences",
+  PREFERENCES_STORAGE_KEY,
+  preferencesSchema,
+);
 
 function legacyPreferences(): PreferencesPatch | null {
   const stored = Object.entries(LEGACY_PREFERENCE_KEYS).flatMap(([name, key]) => {
@@ -93,17 +85,12 @@ function migrateLegacyKeys() {
 
 migrateLegacyKeys();
 
-let parsedFrom = "";
-let parsed: Preferences = preferencesSchema.parse({ id: ROW_ID });
+function parsedPreferences(row: Preferences | undefined): Preferences {
+  return preferencesSchema.parse({ ...row, id: ROW_ID });
+}
 
 export function readPreferences(): Preferences {
-  const row = preferencesCollection.get(ROW_ID);
-  const serialized = JSON.stringify(row ?? null);
-  if (serialized !== parsedFrom) {
-    parsedFrom = serialized;
-    parsed = preferencesSchema.parse({ ...row, id: ROW_ID });
-  }
-  return parsed;
+  return parsedPreferences(preferencesCollection.get(ROW_ID));
 }
 
 export function savePreferences(patch: PreferencesPatch) {
@@ -122,5 +109,5 @@ export function onPreferencesChange(listener: () => void) {
 }
 
 export function usePreferences(): Preferences {
-  return useSyncExternalStore(onPreferencesChange, readPreferences);
+  return parsedPreferences(useLiveQuery(preferencesCollection).state.get(ROW_ID));
 }

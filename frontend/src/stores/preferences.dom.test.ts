@@ -45,15 +45,17 @@ describe("reading", () => {
     expect(preferences.readPreferences()).toEqual(defaults);
   });
 
-  test("the snapshot keeps its identity until something changes", async () => {
+  test("the hook keeps its snapshot identity until something changes", async () => {
     const preferences = await loadPreferences();
-    const first = preferences.readPreferences();
+    const { result, rerender } = renderHook(() => preferences.usePreferences());
+    const first = result.current;
 
-    expect(preferences.readPreferences()).toBe(first);
+    rerender();
+    expect(result.current).toBe(first);
 
-    preferences.savePreferences({ palette: "sepia" });
+    act(() => preferences.savePreferences({ palette: "sepia" }));
 
-    expect(preferences.readPreferences()).not.toBe(first);
+    expect(result.current).not.toBe(first);
   });
 });
 
