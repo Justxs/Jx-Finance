@@ -1,13 +1,15 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { getCreateTransferMockHandler } from "@/api/generated/transfers/transfers.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, checkingAccount } from "@/storybook/fixtures";
+import { pending, withHandlers } from "@/storybook/handlers";
 import { TransferForm } from "./transfer-form";
 
 const meta = {
   title: "Features/Accounts/TransferForm",
   component: TransferForm,
-  args: { accounts, pending: false, onSubmit: fn(), onCancel: fn() },
+  args: { accounts, onClose: fn() },
   decorators: [withWidth("w-[min(36rem,90vw)]")],
 } satisfies Meta<typeof TransferForm>;
 
@@ -16,9 +18,26 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-export const Pending: Story = { args: { pending: true } };
+export const Transfers: Story = {
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "120" } });
+    await userEvent.click(canvas.getByRole("button", { name: "Transfer" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
+};
 
-export const WithoutCancel: Story = { args: { onCancel: undefined } };
+export const Pending: Story = {
+  parameters: withHandlers(getCreateTransferMockHandler(pending)),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "120" } });
+    const submit = canvas.getByRole("button", { name: "Transfer" });
+    await userEvent.click(submit);
+    await waitFor(() => expect(submit).toHaveAttribute("aria-busy", "true"));
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
+};
 
 export const SingleAccount: Story = { args: { accounts: [checkingAccount] } };
 
@@ -47,6 +66,6 @@ export const ValidationErrors: Story = {
     if (submit) {
       await userEvent.click(submit);
     }
-    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };

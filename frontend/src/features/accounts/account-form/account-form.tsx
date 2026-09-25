@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useHouseholdsSuspense } from "@/api/generated";
+import { useCreateAccount, useHouseholdsSuspense, useUpdateAccount } from "@/api/generated";
 import {
   type AccountResponse,
   type AccountType,
@@ -17,6 +17,7 @@ import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
+import { silent, upsert } from "@/lib/mutations";
 import {
   isIban,
   money,
@@ -28,17 +29,6 @@ import {
 } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 import { accountTypes } from "../account-types";
-
-interface AccountFormValues {
-  name: string;
-  description: string | null;
-  iban: string | null;
-  type: AccountType;
-  startingBalance: string;
-  currency: Currency;
-  scope: Scope;
-  householdId: string | null;
-}
 
 interface FormValues {
   name: string;
@@ -53,13 +43,10 @@ interface FormValues {
 
 interface Props {
   initial?: AccountResponse;
-  error?: unknown;
-  pending: boolean;
-  onSubmit: (values: AccountFormValues) => Promise<unknown> | void;
-  onCancel?: () => void;
+  onClose: () => void;
 }
 
-function buildValues(value: FormValues): AccountFormValues {
+function buildValues(value: FormValues) {
   return {
     name: value.name.trim(),
     description: value.description.trim() || null,
@@ -72,7 +59,7 @@ function buildValues(value: FormValues): AccountFormValues {
   };
 }
 
-export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Readonly<Props>) {
+export function AccountForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data;
@@ -93,6 +80,11 @@ export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Rea
     t,
   );
 
+  const { create, update, pending, error } = upsert(
+    useCreateAccount(silent({ onSuccess: onClose })),
+    useUpdateAccount(silent({ onSuccess: onClose })),
+  );
+
   const form = useServerForm({
     defaultValues: {
       name: initial?.name ?? "",
@@ -105,7 +97,10 @@ export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Rea
       householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
     } satisfies FormValues,
     schema,
-    submit: (value) => onSubmit(buildValues(value)),
+    submit: (value) => {
+      const data = buildValues(value);
+      return initial ? update({ id: initial.id, data }) : create({ data });
+    },
   });
 
   return (
@@ -193,7 +188,7 @@ export function AccountForm({ initial, error, pending, onSubmit, onCancel }: Rea
           span
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("actions.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

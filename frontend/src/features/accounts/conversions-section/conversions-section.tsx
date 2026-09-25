@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import {
   getConversionsQueryKey,
   useCategoriesSuspense,
-  useCreateConversion,
   useDeleteConversion,
   useConversionsSuspense,
 } from "@/api/generated";
@@ -14,7 +13,7 @@ import type {
   PagedResponseOfConversionResponse,
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { EditModal, Modal } from "@/components/modal";
 import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
@@ -22,12 +21,10 @@ import { Section, SectionHeader } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney, useRateFormat, useUsableCurrencies } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
-import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
 import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
-import { ConversionEditDialog } from "./conversion-edit-dialog";
 import { ConversionForm } from "./conversion-form";
 
 interface Props {
@@ -53,15 +50,7 @@ export function ConversionsSection({
   const { items, pages } = usePagedItems(paging, conversions.data, pageSize);
   const accountNames = nameById(accounts);
 
-  const createMutation = useCreateConversion(
-    silent({ onSuccess: () => onConvertAccountChange(null) }),
-  );
   const categories = useCategoriesSuspense().data ?? [];
-
-  function closeConvert() {
-    createMutation.reset();
-    onConvertAccountChange(null);
-  }
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteConversion({
     mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
@@ -140,7 +129,7 @@ export function ConversionsSection({
         open={convertAccountId !== null}
         onOpenChange={(open) => {
           if (!open) {
-            closeConvert();
+            onConvertAccountChange(null);
           }
         }}
         title={t("conversions.title")}
@@ -152,20 +141,25 @@ export function ConversionsSection({
             accounts={accounts}
             categories={categories}
             accountId={convertAccountId}
-            pending={createMutation.isPending}
-            error={createMutation.error}
-            onSubmit={(values) => createMutation.mutateAsync({ data: values })}
-            onCancel={closeConvert}
+            onClose={() => onConvertAccountChange(null)}
           />
         ) : null}
       </Modal>
       {content}
-      <ConversionEditDialog
-        accounts={accounts}
-        categories={categories}
-        conversion={items.find((conversion) => conversion.id === editTarget) ?? null}
+      <EditModal
+        item={items.find((conversion) => conversion.id === editTarget) ?? null}
+        title={t("conversions.editTitle")}
         onClose={() => setEditTarget(null)}
-      />
+      >
+        {(conversion, close) => (
+          <ConversionForm
+            accounts={accounts}
+            categories={categories}
+            conversion={conversion}
+            onClose={close}
+          />
+        )}
+      </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );

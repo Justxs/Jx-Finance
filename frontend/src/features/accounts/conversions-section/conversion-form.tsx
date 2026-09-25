@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { useCreateConversion, useUpdateConversion } from "@/api/generated";
 import {
   type AccountResponse,
   type CategoryResponse,
@@ -14,6 +15,7 @@ import { useUsableCurrencies } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
 import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { silent, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import {
   optionalPositiveMoney,
@@ -25,23 +27,17 @@ import { heldCurrencies } from "../held-currencies";
 import { ConversionRate } from "./conversion-rate";
 import {
   type ConversionFieldValues,
-  type ConversionFormValues,
   buildValues,
   otherCurrency,
   valuesOf,
 } from "./conversion-values";
-
-export type { ConversionFormValues } from "./conversion-values";
 
 interface Props {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   accountId?: string;
   conversion?: ConversionResponse;
-  error?: unknown;
-  pending: boolean;
-  onSubmit: (values: ConversionFormValues) => Promise<unknown> | void;
-  onCancel?: () => void;
+  onClose: () => void;
 }
 
 export function ConversionForm({
@@ -49,10 +45,7 @@ export function ConversionForm({
   categories,
   accountId,
   conversion,
-  error,
-  pending,
-  onSubmit,
-  onCancel,
+  onClose,
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
@@ -104,10 +97,20 @@ export function ConversionForm({
     t("recurringBills.noCategory"),
   );
 
+  const { create, update, pending, error } = upsert(
+    useCreateConversion(silent({ onSuccess: onClose })),
+    useUpdateConversion(silent({ onSuccess: onClose })),
+  );
+
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) => onSubmit(buildValues(value)),
+    submit: (value) => {
+      const { accountId: chosenAccountId, ...data } = buildValues(value);
+      return conversion
+        ? update({ id: conversion.id, data })
+        : create({ data: { ...data, accountId: chosenAccountId } });
+    },
   });
 
   return (
@@ -240,7 +243,7 @@ export function ConversionForm({
           span
           pending={pending}
           submitLabel={conversion ? t("actions.save") : t("conversions.submit")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>
