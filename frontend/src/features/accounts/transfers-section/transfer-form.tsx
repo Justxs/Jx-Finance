@@ -1,25 +1,16 @@
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
+import { useCreateTransfer, useUpdateTransfer } from "@/api/generated";
 import { type AccountResponse, Currency, type TransferResponse } from "@/api/generated/model";
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useFeature, useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { silent, upsert } from "@/lib/mutations";
 import { namedOptions, withMissingOption } from "@/lib/options";
 import { isPositiveMoney, positiveMoney, requiredValue } from "@/lib/validation";
 import { heldCurrencies } from "../held-currencies";
-
-interface TransferFormValues {
-  fromAccountId: string;
-  toAccountId: string;
-  amount: string;
-  currency: Currency;
-  receivedAmount: string | null;
-  receivedCurrency: Currency;
-  date: string;
-  description: string | null;
-}
 
 interface FormValues {
   fromAccountId: string;
@@ -35,13 +26,10 @@ interface FormValues {
 interface Props {
   accounts: AccountResponse[];
   transfer?: TransferResponse;
-  error?: unknown;
-  pending: boolean;
-  onSubmit: (values: TransferFormValues) => Promise<unknown> | void;
-  onCancel?: () => void;
+  onClose: () => void;
 }
 
-function buildValues(value: FormValues): TransferFormValues {
+function buildValues(value: FormValues) {
   return {
     fromAccountId: value.fromAccountId,
     toAccountId: value.toAccountId,
@@ -67,14 +55,7 @@ function valuesOf(transfer: TransferResponse): FormValues {
   };
 }
 
-export function TransferForm({
-  accounts,
-  transfer,
-  error,
-  pending,
-  onSubmit,
-  onCancel,
-}: Readonly<Props>) {
+export function TransferForm({ accounts, transfer, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const multiCurrency = useFeature("multiCurrency");
@@ -137,10 +118,18 @@ export function TransferForm({
         description: "",
       };
 
+  const { create, update, pending, error } = upsert(
+    useCreateTransfer(silent({ onSuccess: onClose })),
+    useUpdateTransfer(silent({ onSuccess: onClose })),
+  );
+
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) => onSubmit(buildValues(value)),
+    submit: (value) => {
+      const data = buildValues(value);
+      return transfer ? update({ id: transfer.id, data }) : create({ data });
+    },
   });
 
   return (
@@ -256,7 +245,7 @@ export function TransferForm({
           span
           pending={pending}
           submitLabel={transfer ? t("actions.save") : t("transfers.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

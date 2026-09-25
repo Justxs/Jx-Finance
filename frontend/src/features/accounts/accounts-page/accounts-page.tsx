@@ -3,12 +3,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
-import {
-  useCreateAccount,
-  useDeleteAccount,
-  useAccountsSuspense,
-  useUpdateAccount,
-} from "@/api/generated";
+import { useDeleteAccount, useAccountsSuspense } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { EditModal, Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
@@ -20,7 +15,6 @@ import { AccountBalances } from "@/features/dashboard/account-balances/account-b
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
-import { silent } from "@/lib/mutations";
 import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table/accounts-table";
@@ -45,15 +39,7 @@ export function AccountsPage() {
   }
 
   function setCreateOpen(open: boolean) {
-    if (open) {
-      createMutation.reset();
-    }
     setCreating(open ? "account" : undefined);
-  }
-
-  function startEditing(id: string) {
-    updateMutation.reset();
-    setEditingId(id);
   }
 
   function setTransferOpen(open: boolean) {
@@ -62,8 +48,6 @@ export function AccountsPage() {
 
   const createOpen = creating === "account";
 
-  const createMutation = useCreateAccount(silent({ onSuccess: () => setCreateOpen(false) }));
-  const updateMutation = useUpdateAccount(silent({ onSuccess: () => setEditingId(null) }));
   const deleteMutation = useDeleteAccount({
     mutation: {
       onSuccess: () => toast.success(t("accounts.archived")),
@@ -85,12 +69,7 @@ export function AccountsPage() {
       </PageHeader>
 
       <Modal open={createOpen} onOpenChange={setCreateOpen} title={t("accounts.add")}>
-        <AccountForm
-          pending={createMutation.isPending}
-          error={createMutation.error}
-          onSubmit={(values) => createMutation.mutateAsync({ data: values })}
-          onCancel={() => setCreateOpen(false)}
-        />
+        <AccountForm onClose={() => setCreateOpen(false)} />
       </Modal>
 
       <EditModal
@@ -98,22 +77,14 @@ export function AccountsPage() {
         title={t("actions.edit")}
         onClose={() => setEditingId(null)}
       >
-        {(account) => (
-          <AccountForm
-            initial={account}
-            pending={updateMutation.isPending}
-            error={updateMutation.error}
-            onSubmit={(values) => updateMutation.mutateAsync({ id: account.id, data: values })}
-            onCancel={() => setEditingId(null)}
-          />
-        )}
+        {(account, close) => <AccountForm initial={account} onClose={close} />}
       </EditModal>
 
       <Panel>
         <AccountsTable
           accounts={accountList}
           stale={stale}
-          onEdit={startEditing}
+          onEdit={setEditingId}
           deletingId={remove.pendingId}
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}

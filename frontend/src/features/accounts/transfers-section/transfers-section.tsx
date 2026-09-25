@@ -1,19 +1,14 @@
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  getTransfersQueryKey,
-  useCreateTransfer,
-  useDeleteTransfer,
-  useTransfersSuspense,
-} from "@/api/generated";
+import { getTransfersQueryKey, useDeleteTransfer, useTransfersSuspense } from "@/api/generated";
 import type {
   AccountResponse,
   PagedResponseOfTransferResponse,
   TransferResponse,
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Modal } from "@/components/modal";
+import { EditModal, Modal } from "@/components/modal";
 import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RecordRow } from "@/components/record-row/record-row";
 import { Button } from "@/components/ui/button/button";
@@ -21,11 +16,9 @@ import { Section, SectionHeader } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
-import { silent } from "@/lib/mutations";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
-import { TransferEditDialog } from "./transfer-edit-dialog";
 import { TransferForm } from "./transfer-form";
 
 interface Props {
@@ -45,7 +38,6 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   const { items, pages } = usePagedItems(paging, transfers.data, pageSize);
   const accountNames = nameById(accounts);
 
-  const createMutation = useCreateTransfer(silent({ onSuccess: () => onAddOpenChange(false) }));
   const [editTarget, setEditTarget] = useState<string | null>(null);
 
   const deleteMutation = useDeleteTransfer({
@@ -100,30 +92,25 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
           variant="outline"
           disabled={accounts.length < 2}
           size="sm"
-          onClick={() => {
-            createMutation.reset();
-            onAddOpenChange(true);
-          }}
+          onClick={() => onAddOpenChange(true)}
         >
           <Plus />
           {t("transfers.add")}
         </Button>
       </SectionHeader>
       <Modal open={addOpen} onOpenChange={onAddOpenChange} title={t("transfers.title")}>
-        <TransferForm
-          accounts={accounts}
-          pending={createMutation.isPending}
-          error={createMutation.error}
-          onSubmit={(values) => createMutation.mutateAsync({ data: values })}
-          onCancel={() => onAddOpenChange(false)}
-        />
+        <TransferForm accounts={accounts} onClose={() => onAddOpenChange(false)} />
       </Modal>
       {content}
-      <TransferEditDialog
-        accounts={accounts}
-        transfer={items.find((transfer) => transfer.id === editTarget) ?? null}
+      <EditModal
+        item={items.find((transfer) => transfer.id === editTarget) ?? null}
+        title={t("transfers.editTitle")}
         onClose={() => setEditTarget(null)}
-      />
+      >
+        {(transfer, close) => (
+          <TransferForm accounts={accounts} transfer={transfer} onClose={close} />
+        )}
+      </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </Section>
   );

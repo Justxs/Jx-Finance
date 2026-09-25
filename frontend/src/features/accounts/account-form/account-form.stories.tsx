@@ -1,15 +1,22 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { getUpdateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { checkingAccount, sharedAccount } from "@/storybook/fixtures";
-import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
+import {
+  emptyHandlers,
+  errorHandlers,
+  loadingHandlers,
+  pending,
+  withHandlers,
+} from "@/storybook/handlers";
 import { AccountForm } from "./account-form";
 
 const meta = {
   title: "Features/Accounts/AccountForm",
   component: AccountForm,
-  args: { pending: false, onSubmit: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   render: (args) => (
     <div className="w-[min(36rem,90vw)]">
       <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
@@ -28,9 +35,26 @@ export const EditPersonal: Story = { args: { initial: checkingAccount } };
 
 export const EditShared: Story = { args: { initial: sharedAccount } };
 
-export const Pending: Story = { args: { initial: checkingAccount, pending: true } };
+export const SavesChanges: Story = {
+  args: { initial: checkingAccount },
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(await canvas.findByRole("button", { name: "Save" }));
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
+  },
+};
 
-export const WithoutCancel: Story = { args: { onCancel: undefined } };
+export const Pending: Story = {
+  args: { initial: checkingAccount },
+  parameters: withHandlers(getUpdateAccountMockHandler(pending)),
+  play: async ({ canvasElement, args }) => {
+    const canvas = within(canvasElement);
+    const save = await canvas.findByRole("button", { name: "Save" });
+    await userEvent.click(save);
+    await waitFor(() => expect(save).toHaveAttribute("aria-busy", "true"));
+    await expect(args.onClose).not.toHaveBeenCalled();
+  },
+};
 
 export const LongContent: Story = {
   args: {
@@ -58,7 +82,7 @@ export const ValidationErrors: Story = {
     if (submit) {
       await userEvent.click(submit);
     }
-    await expect(args.onSubmit).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 
