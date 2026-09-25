@@ -1,9 +1,8 @@
-import { createCollection, localStorageCollectionOptions } from "@tanstack/react-db";
-import { useSyncExternalStore } from "react";
+import { type Collection, type NonSingleResult, useLiveQuery } from "@tanstack/react-db";
 import { z } from "zod";
 import { Currency, FlowType } from "@/api/generated/model";
-import { browserStorage } from "@/lib/browser-storage";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
+import { localCollection } from "./local-collection";
 
 export const SAVED_FILTERS_STORAGE_KEY = "jx-saved-filters";
 export const TEMPLATES_STORAGE_KEY = "jx-transaction-templates";
@@ -52,144 +51,114 @@ type SavedFilterValue = SavedFilter["filter"];
 type TransactionTemplate = z.output<typeof templateSchema>;
 export type TransactionTemplateValues = TransactionTemplate["values"];
 
-const storage = browserStorage();
-
-const savedFilterOptions = localStorageCollectionOptions({
-  id: "saved-filters",
-  storageKey: SAVED_FILTERS_STORAGE_KEY,
-  storage,
-  schema: savedFilterSchema,
-  getKey: (row) => row.id,
-});
-
-const savedFiltersCollection = createCollection({
-  ...savedFilterOptions,
-  startSync: true,
-  sync: {
-    ...savedFilterOptions.sync,
-    getSyncMetadata: () => ({ storageKey: SAVED_FILTERS_STORAGE_KEY }),
-  },
-});
-
-const templateOptions = localStorageCollectionOptions({
-  id: "transaction-templates",
-  storageKey: TEMPLATES_STORAGE_KEY,
-  storage,
-  schema: templateSchema,
-  getKey: (row) => row.id,
-});
-
-const transactionTemplatesCollection = createCollection({
-  ...templateOptions,
-  startSync: true,
-  sync: {
-    ...templateOptions.sync,
-    getSyncMetadata: () => ({ storageKey: TEMPLATES_STORAGE_KEY }),
-  },
-});
-
-function byName<T extends { name: string }>(rows: readonly T[]): T[] {
-  return rows.toSorted((left, right) => left.name.localeCompare(right.name));
-}
-
-let savedFiltersFrom = "";
-let savedFilters: SavedFilter[] = [];
-
-export function readSavedFilters(): SavedFilter[] {
-  const rows = byName(savedFiltersCollection.toArray).map((row) => savedFilterSchema.parse(row));
-  const serialized = JSON.stringify(rows);
-  if (serialized !== savedFiltersFrom) {
-    savedFiltersFrom = serialized;
-    savedFilters = rows;
-  }
-  return savedFilters;
-}
-
-let templatesFrom = "";
-let templates: TransactionTemplate[] = [];
-
-export function readTransactionTemplates(): TransactionTemplate[] {
-  const rows = byName(transactionTemplatesCollection.toArray).map((row) =>
-    templateSchema.parse(row),
-  );
-  const serialized = JSON.stringify(rows);
-  if (serialized !== templatesFrom) {
-    templatesFrom = serialized;
-    templates = rows;
-  }
-  return templates;
-}
-
-function onSavedFiltersChange(listener: () => void) {
-  const subscription = savedFiltersCollection.subscribeChanges(listener);
-  return () => subscription.unsubscribe();
-}
-
-function onTemplatesChange(listener: () => void) {
-  const subscription = transactionTemplatesCollection.subscribeChanges(listener);
-  return () => subscription.unsubscribe();
-}
-
-export function useSavedFilters(): SavedFilter[] {
-  return useSyncExternalStore(onSavedFiltersChange, readSavedFilters);
-}
-
-export function useTransactionTemplates(): TransactionTemplate[] {
-  return useSyncExternalStore(onTemplatesChange, readTransactionTemplates);
+interface NamedRow {
+  id: string;
+  name: string;
 }
 
 function trimmedName(name: string) {
   return name.trim().slice(0, SAVED_NAME_MAX_LENGTH);
 }
 
+function namedRows<TRow extends NamedRow>(
+  collection: Collection<TRow, string> & NonSingleResult,
+  schema: z.ZodType<TRow>,
+) {
+  function parsedByName(rows: readonly TRow[]): TRow[] {
+    return rows
+      .toSorted((left, right) => left.name.localeCompare(right.name))
+      .map((row) => schema.parse(row));
+  }
+
+  return {
+    collection,
+    parsedByName,
+    read() {
+      return parsedByName(collection.toArray);
+    },
+    save(name: string, fields: Omit<TRow, keyof NamedRow>): TRow {
+      const row = schema.parse({ ...fields, id: crypto.randomUUID(), name: trimmedName(name) });
+      collection.insert(row);
+      return row;
+    },
+    rename(id: string, name: string) {
+      collection.update(id, (draft) => {
+        Object.assign(draft, { name: trimmedName(name) });
+      });
+    },
+    remove(id: string) {
+      collection.delete(id);
+    },
+    clear() {
+      for (const row of collection.toArray) {
+        collection.delete(row.id);
+      }
+    },
+  };
+}
+
+function useNamedRows<TRow extends NamedRow>({
+  collection,
+  parsedByName,
+}: ReturnType<typeof namedRows<TRow>>): TRow[] {
+  const { data } = useLiveQuery(collection);
+  return parsedByName(data);
+}
+
+const savedFilters = namedRows(
+  localCollection("saved-filters", SAVED_FILTERS_STORAGE_KEY, savedFilterSchema),
+  savedFilterSchema,
+);
+
+const templates = namedRows(
+  localCollection("transaction-templates", TEMPLATES_STORAGE_KEY, templateSchema),
+  templateSchema,
+);
+
+export function readSavedFilters(): SavedFilter[] {
+  return savedFilters.read();
+}
+
+export function readTransactionTemplates(): TransactionTemplate[] {
+  return templates.read();
+}
+
+export function useSavedFilters(): SavedFilter[] {
+  return useNamedRows(savedFilters);
+}
+
+export function useTransactionTemplates(): TransactionTemplate[] {
+  return useNamedRows(templates);
+}
+
 export function saveFilter(name: string, filter: SavedFilterValue): SavedFilter {
-  const row = savedFilterSchema.parse({
-    id: crypto.randomUUID(),
-    name: trimmedName(name),
-    filter,
-  });
-  savedFiltersCollection.insert(row);
-  return row;
+  return savedFilters.save(name, { filter });
 }
 
 export function renameSavedFilter(id: string, name: string) {
-  savedFiltersCollection.update(id, (draft) => {
-    draft.name = trimmedName(name);
-  });
+  savedFilters.rename(id, name);
 }
 
 export function deleteSavedFilter(id: string) {
-  savedFiltersCollection.delete(id);
+  savedFilters.remove(id);
 }
 
 export function saveTransactionTemplate(
   name: string,
   values: TransactionTemplateValues,
 ): TransactionTemplate {
-  const row = templateSchema.parse({
-    id: crypto.randomUUID(),
-    name: trimmedName(name),
-    values,
-  });
-  transactionTemplatesCollection.insert(row);
-  return row;
+  return templates.save(name, { values });
 }
 
 export function renameTransactionTemplate(id: string, name: string) {
-  transactionTemplatesCollection.update(id, (draft) => {
-    draft.name = trimmedName(name);
-  });
+  templates.rename(id, name);
 }
 
 export function deleteTransactionTemplate(id: string) {
-  transactionTemplatesCollection.delete(id);
+  templates.remove(id);
 }
 
 export function clearTransactionViews() {
-  for (const row of savedFiltersCollection.toArray) {
-    savedFiltersCollection.delete(row.id);
-  }
-  for (const row of transactionTemplatesCollection.toArray) {
-    transactionTemplatesCollection.delete(row.id);
-  }
+  savedFilters.clear();
+  templates.clear();
 }

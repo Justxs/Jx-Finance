@@ -40,19 +40,24 @@ describe("saved filters", () => {
     expect(storedKeys(SAVED_FILTERS_STORAGE_KEY)).toEqual([`s:${saved.id}`]);
   });
 
-  test("the list is ordered by name and the snapshot keeps its identity", async () => {
+  test("the list is ordered by name and the hook keeps its snapshot identity", async () => {
     const store = await loadStore();
-
     store.saveFilter("Zebra", groceries);
     store.saveFilter("Apples", groceries);
 
-    const first = store.readSavedFilters();
+    const { result, rerender } = renderHook(() => store.useSavedFilters());
+    const first = result.current;
     expect(first.map((row) => row.name)).toEqual(["Apples", "Zebra"]);
-    expect(store.readSavedFilters()).toBe(first);
+    expect(store.readSavedFilters().map((row) => row.name)).toEqual(["Apples", "Zebra"]);
 
-    store.saveFilter("Milk", groceries);
+    rerender();
+    expect(result.current).toBe(first);
 
-    expect(store.readSavedFilters()).not.toBe(first);
+    act(() => {
+      store.saveFilter("Milk", groceries);
+    });
+
+    expect(result.current.map((row) => row.name)).toEqual(["Apples", "Milk", "Zebra"]);
   });
 
   test("renaming trims the name and clamps it to the maximum length", async () => {
