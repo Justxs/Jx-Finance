@@ -15,8 +15,6 @@ public sealed class ResetPasswordEndpoint(IAccountEmailService accountEmails) : 
         Description(d => d.Produces(429));
     }
 
-    public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(ResetPasswordRequest req, CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await accountEmails.ResetPasswordAsync(req.Email.Trim(), req.Token, req.NewPassword, ct), ct);
-    }
 }

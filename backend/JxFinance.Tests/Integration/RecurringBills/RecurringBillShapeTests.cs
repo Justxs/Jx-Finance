@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
@@ -52,21 +51,11 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
     {
         var pounds = await CreateAccountAsync("500.00", currency: "gbp");
         var entry = await CreateEntryAsync("expense", "40.00", accountId: pounds);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var restricted = original.DeepClone().AsObject();
-        restricted["enabledCurrencies"] = new JsonArray("usd");
-
-        try
+        await using (await OnlyCurrenciesAsync("usd"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var response = await ConfirmAsync(entry.Id, new { expectedDueDate = entry.NextDueDate });
 
             await AssertRejectedAsync(response, "currency.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal("500.00", await CurrentBalanceAsync(pounds));

@@ -15,8 +15,6 @@ public sealed class GetHouseholdAuditEndpoint(IHouseholdAuditService auditServic
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(GetHouseholdAuditRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(GetHouseholdAuditRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await auditService.GetPageAsync(req, ct), ct);
-    }
 }

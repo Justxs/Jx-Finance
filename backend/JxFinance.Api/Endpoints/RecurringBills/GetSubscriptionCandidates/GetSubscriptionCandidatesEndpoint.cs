@@ -14,8 +14,6 @@ public sealed class GetSubscriptionCandidatesEndpoint(ISubscriptionDetectionServ
         Group<RecurringBillsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await detection.DetectAsync(ct), ct);
-    }
 }

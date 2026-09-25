@@ -14,9 +14,6 @@ public sealed class GetCategoryBreakdownEndpoint(IDashboardService dashboardServ
         Group<DashboardGroup>();
     }
 
-    public override async Task HandleAsync(GetCategoryBreakdownRequest req, CancellationToken ct)
-    {
-        var response = await dashboardService.GetCategoryBreakdownAsync(req.Month, ct);
-        await Send.OkAsync(response, ct);
-    }
+    public override async Task HandleAsync(GetCategoryBreakdownRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await dashboardService.GetCategoryBreakdownAsync(req.Month, ct), ct);
 }

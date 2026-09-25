@@ -15,8 +15,6 @@ public sealed class UpdateTagEndpoint(ITagService tagService)
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
-    public override async Task HandleAsync(UpdateTagRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateTagRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await tagService.UpdateAsync(req, ct), ct);
-    }
 }

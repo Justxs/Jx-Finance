@@ -14,8 +14,6 @@ public sealed class CreateAssetEndpoint(INetWorthService netWorthService) : Endp
         Description(d => d.ProducesCreated<AssetResponse>());
     }
 
-    public override async Task HandleAsync(CreateAssetRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateAssetRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await netWorthService.CreateAssetAsync(req, ct), asset => $"{ApiRoutes.AssetsPath}/{asset.Id}", ct);
-    }
 }

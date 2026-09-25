@@ -13,13 +13,6 @@ public sealed class GetReportSummaryEndpoint(IReportService reportService) : End
         Group<ReportsGroup>();
     }
 
-    public override async Task HandleAsync(GetReportSummaryRequest req, CancellationToken ct)
-    {
-        var response = await reportService.GetSummaryAsync(
-            req.DateFrom,
-            req.DateTo,
-            req.Comparison ?? ReportComparisonMode.None,
-            ct);
-        await Send.OkAsync(response, ct);
-    }
+    public override async Task HandleAsync(GetReportSummaryRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await reportService.GetSummaryAsync(req.DateFrom, req.DateTo, req.Comparison ?? ReportComparisonMode.None, ct), ct);
 }

@@ -14,9 +14,6 @@ public sealed class GetTransactionsEndpoint(ITransactionService transactionServi
         Group<TransactionsGroup>();
     }
 
-    public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
-    {
-        var pageResult = await transactionService.GetPageAsync(req, ct);
-        await Send.OkAsync(pageResult, ct);
-    }
+    public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await transactionService.GetPageAsync(req, ct), ct);
 }

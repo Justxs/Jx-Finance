@@ -14,8 +14,6 @@ public sealed class GetNetWorthHistoryEndpoint(INetWorthService netWorthService)
         Group<NetWorthGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await netWorthService.GetHistoryAsync(ct), ct);
-    }
 }

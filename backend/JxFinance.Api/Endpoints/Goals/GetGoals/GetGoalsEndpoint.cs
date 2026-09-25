@@ -13,8 +13,6 @@ public sealed class GetGoalsEndpoint(IGoalService goalService) : EndpointWithout
         Group<GoalsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await goalService.GetAllAsync(ct), ct);
-    }
 }

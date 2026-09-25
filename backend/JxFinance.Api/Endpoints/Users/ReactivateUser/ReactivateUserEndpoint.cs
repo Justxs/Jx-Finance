@@ -15,8 +15,6 @@ public sealed class ReactivateUserEndpoint(IUserService userService) : EndpointW
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await userService.ReactivateAsync(Route<Guid>("id"), ct), ct);
-    }
 }

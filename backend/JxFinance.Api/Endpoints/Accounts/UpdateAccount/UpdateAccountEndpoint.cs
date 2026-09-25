@@ -15,8 +15,6 @@ public sealed class UpdateAccountEndpoint(IAccountService accountService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateAccountRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateAccountRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await accountService.UpdateAsync(req, ct), ct);
-    }
 }

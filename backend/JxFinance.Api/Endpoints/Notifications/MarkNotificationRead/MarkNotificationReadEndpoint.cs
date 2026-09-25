@@ -13,8 +13,6 @@ public sealed class MarkNotificationReadEndpoint(INotificationService notificati
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await notificationService.MarkReadAsync(Route<Guid>("id"), ct), ct);
-    }
 }

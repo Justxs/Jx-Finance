@@ -14,8 +14,6 @@ public sealed class GetCategoriesEndpoint(ICategoryService categoryService)
         Group<CategoriesGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await categoryService.GetAllAsync(ct), ct);
-    }
 }

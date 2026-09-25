@@ -17,8 +17,6 @@ public sealed class UpdateSmtpSettingsEndpoint(ISettingsService settingsService)
         Description(d => d.ProducesProblemDetails(403));
     }
 
-    public override async Task HandleAsync(UpdateSmtpSettingsRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateSmtpSettingsRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await settingsService.UpdateSmtpAsync(req, ct), ct);
-    }
 }

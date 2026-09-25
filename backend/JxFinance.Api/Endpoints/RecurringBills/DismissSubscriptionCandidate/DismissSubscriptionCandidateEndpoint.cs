@@ -13,8 +13,6 @@ public sealed class DismissSubscriptionCandidateEndpoint(ISubscriptionDetectionS
         Group<RecurringBillsGroup>();
     }
 
-    public override async Task HandleAsync(DismissSubscriptionCandidateRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(DismissSubscriptionCandidateRequest req, CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await detection.DismissAsync(req, ct), ct);
-    }
 }

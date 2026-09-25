@@ -16,8 +16,6 @@ public sealed class SetSecurityPriceEndpoint(ISecurityPriceService priceService)
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409));
     }
 
-    public override async Task HandleAsync(SetSecurityPriceRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(SetSecurityPriceRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await priceService.SetPriceAsync(req, User.IsInRole(AppRoles.Admin), ct), ct);
-    }
 }

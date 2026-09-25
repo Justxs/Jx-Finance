@@ -16,8 +16,6 @@ public sealed class CreateBudgetEndpoint(IBudgetService budgetService) : Endpoin
             .ProducesProblemDetails(409));
     }
 
-    public override async Task HandleAsync(CreateBudgetRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateBudgetRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await budgetService.CreateAsync(req, ct), budget => $"{ApiRoutes.BudgetsPath}/{budget.Id}", ct);
-    }
 }
