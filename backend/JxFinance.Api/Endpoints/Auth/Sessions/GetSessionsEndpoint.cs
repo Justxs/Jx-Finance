@@ -13,9 +13,6 @@ public sealed class GetSessionsEndpoint(ISessionService sessionService)
         Group<AuthGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var sessions = await sessionService.GetSessionsAsync(ct);
-        await Send.OkAsync(sessions, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(await sessionService.GetSessionsAsync(ct), ct);
 }

@@ -14,9 +14,6 @@ public sealed class GetTransfersEndpoint(ITransferService transferService)
         Group<TransfersGroup>();
     }
 
-    public override async Task HandleAsync(GetTransfersRequest req, CancellationToken ct)
-    {
-        var page = await transferService.GetPageAsync(req, ct);
-        await Send.OkAsync(page, ct);
-    }
+    public override async Task HandleAsync(GetTransfersRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await transferService.GetPageAsync(req, ct), ct);
 }

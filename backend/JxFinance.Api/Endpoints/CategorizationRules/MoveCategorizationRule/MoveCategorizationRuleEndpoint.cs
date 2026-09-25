@@ -15,8 +15,6 @@ public sealed class MoveCategorizationRuleEndpoint(ICategorizationRuleService ru
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(MoveCategorizationRuleRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(MoveCategorizationRuleRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await ruleService.MoveAsync(req.Id, req.Direction, ct), ct);
-    }
 }

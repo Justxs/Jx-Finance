@@ -15,8 +15,6 @@ public sealed class UpdateRecurringBillEndpoint(IRecurringBillService recurringB
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateRecurringBillRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateRecurringBillRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await recurringBillService.UpdateAsync(req, ct), ct);
-    }
 }

@@ -15,8 +15,6 @@ public sealed class CreateTransferEndpoint(ITransferService transferService)
         Description(d => d.ProducesCreated<TransferResponse>());
     }
 
-    public override async Task HandleAsync(CreateTransferRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateTransferRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await transferService.CreateAsync(req, ct), transfer => $"{ApiRoutes.TransfersPath}/{transfer.Id}", ct);
-    }
 }

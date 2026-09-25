@@ -13,9 +13,6 @@ public sealed class GetBudgetsEndpoint(IBudgetService budgetService) : EndpointW
         Group<BudgetsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var budgets = await budgetService.GetAllAsync(ct);
-        await Send.OkAsync(budgets, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(await budgetService.GetAllAsync(ct), ct);
 }

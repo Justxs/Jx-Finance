@@ -15,8 +15,6 @@ public sealed class GetPublicSettingsEndpoint(ISettingsService settingsService)
         AllowAnonymous();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(settingsService.GetPublic(), ct);
-    }
 }

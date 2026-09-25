@@ -15,8 +15,6 @@ public sealed class GetAttachmentsEndpoint(IAttachmentService attachmentService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkOrProblemAsync(await attachmentService.GetAllAsync(Route<Guid>("transactionId"), ct), ct);
-    }
 }

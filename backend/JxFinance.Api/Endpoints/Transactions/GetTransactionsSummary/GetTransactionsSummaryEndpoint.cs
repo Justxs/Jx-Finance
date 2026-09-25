@@ -14,9 +14,6 @@ public sealed class GetTransactionsSummaryEndpoint(ITransactionService transacti
         Group<TransactionsGroup>();
     }
 
-    public override async Task HandleAsync(GetTransactionsSummaryRequest req, CancellationToken ct)
-    {
-        var summary = await transactionService.GetSummaryAsync(req, ct);
-        await Send.OkAsync(summary, ct);
-    }
+    public override async Task HandleAsync(GetTransactionsSummaryRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await transactionService.GetSummaryAsync(req, ct), ct);
 }

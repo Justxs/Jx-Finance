@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Domain.Transactions;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
@@ -330,20 +329,13 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
             new { name = "Isjungta", targetAmount = "100.00", currentAmount = "0.00" });
         await member.DeleteAsync($"/api/goals/{goal.Id}", TestContext.Current.CancellationToken);
 
-        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings", TestContext.Current.CancellationToken))!;
-        try
+        await using (await FeatureOffAsync("goals"))
         {
-            await SwitchGoalsAsync(settings, false);
-
             var listed = await TrashAsync(member);
             var restore = await RestoreAsync(member, "goal", goal.Id);
 
             Assert.DoesNotContain(listed.Items, row => row.EntityId == goal.Id);
             await AssertProblemAsync(restore, HttpStatusCode.NotFound, "feature.disabled");
-        }
-        finally
-        {
-            await SwitchGoalsAsync(settings, true);
         }
 
         Assert.Contains((await TrashAsync(member)).Items, row => row.EntityId == goal.Id);
@@ -381,13 +373,6 @@ public sealed class TrashEndpointTests(ApiFixture fixture) : IntegrationTestBase
                 feeCurrency = "eur",
                 feeCategoryId = category,
             });
-    }
-
-    private async Task SwitchGoalsAsync(JsonNode settings, bool enabled)
-    {
-        settings["features"]!["goals"] = enabled;
-        var response = await Client.PutAsJsonAsync("/api/settings", settings);
-        response.EnsureSuccessStatusCode();
     }
 
     private static Task<HttpResponseMessage> RestoreAsync(HttpClient client, string kind, Guid entityId) =>

@@ -13,8 +13,6 @@ public sealed class GetNetWorthEndpoint(INetWorthService netWorthService) : Endp
         Group<NetWorthGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await netWorthService.GetCurrentAsync(ct), ct);
-    }
 }

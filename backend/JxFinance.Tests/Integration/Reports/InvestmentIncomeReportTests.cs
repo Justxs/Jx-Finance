@@ -1,5 +1,4 @@
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Reports;
@@ -88,16 +87,11 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
         await RecordTransactionAsync(member, new { accountId = broker, type = "expense", amount = "30.00", date = today });
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "dividend", date = today, amount = "40.00" });
         await RecordInvestmentAsync(member, new { accountId = broker, securityId = fund, type = "withholdingTax", date = today, amount = "6.00" });
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["investments"] = false;
 
         var on = await ReportAsync(member, $"dateFrom={today}&dateTo={today}");
         var dashboardOn = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
-        try
+        await using (await FeatureOffAsync("investments"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var off = await ReportAsync(member, $"dateFrom={today}&dateTo={today}");
             var dashboardOff = await member.GetFromJsonAsync<DashboardDto>("/api/dashboard/summary", TestContext.Current.CancellationToken);
             var breakdownOff = await member.GetFromJsonAsync<BreakdownDto>($"/api/dashboard/category-breakdown?month={month}", TestContext.Current.CancellationToken);
@@ -110,10 +104,6 @@ public sealed class InvestmentIncomeReportTests(ApiFixture fixture) : Integratio
             Assert.Equal(("100.00", "30.00"), (dashboardOff!.MonthIncome, dashboardOff.MonthExpense));
             Assert.Equal([Row(null, "30.00")], breakdownOff!.Items.Select(c => (c.CategoryId, c.Amount, c.SyntheticGroup)));
             Assert.Equal(("100.00", "30.00"), (Assert.Single(trendOff!.Items).Income, Assert.Single(trendOff.Items).Expense));
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal(("140.00", "36.00", "104.00"), (on.TotalIncome, on.TotalExpense, on.Net));

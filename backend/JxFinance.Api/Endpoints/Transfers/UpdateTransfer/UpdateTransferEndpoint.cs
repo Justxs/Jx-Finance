@@ -15,8 +15,6 @@ public sealed class UpdateTransferEndpoint(ITransferService transferService)
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateTransferRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateTransferRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await transferService.UpdateAsync(req, ct), ct);
-    }
 }

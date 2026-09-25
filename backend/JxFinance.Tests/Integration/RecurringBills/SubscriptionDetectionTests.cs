@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Common.Subscriptions;
 using JxFinance.Tests.Support;
 
@@ -259,14 +258,8 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
     public async Task Suggestions_follow_the_recurring_entries_switch()
     {
         using var member = await CreateUserClientAsync();
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["recurringBills"] = false;
-
-        try
+        await using (await FeatureOffAsync("recurringBills"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var list = await member.GetAsync("/api/recurring-bills/suggestions", TestContext.Current.CancellationToken);
             var dismissal = await member.PostAsJsonAsync(
                 "/api/recurring-bills/suggestions/dismiss",
@@ -274,10 +267,6 @@ public sealed class SubscriptionDetectionTests(ApiFixture fixture) : Integration
 
             await AssertProblemAsync(list, HttpStatusCode.NotFound, "feature.disabled");
             await AssertProblemAsync(dismissal, HttpStatusCode.NotFound, "feature.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         (await member.GetAsync("/api/recurring-bills/suggestions", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();

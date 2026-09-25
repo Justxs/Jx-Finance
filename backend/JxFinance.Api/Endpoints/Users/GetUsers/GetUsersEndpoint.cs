@@ -17,9 +17,6 @@ public sealed class GetUsersEndpoint(IUserService userService)
         Description(d => d.ProducesProblemDetails(403));
     }
 
-    public override async Task HandleAsync(GetUsersRequest req, CancellationToken ct)
-    {
-        var users = await userService.GetAllAsync(req, ct);
-        await Send.OkAsync(users, ct);
-    }
+    public override async Task HandleAsync(GetUsersRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await userService.GetAllAsync(req, ct), ct);
 }

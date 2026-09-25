@@ -15,8 +15,6 @@ public sealed class GetRecurringBillEndpoint(IRecurringBillService recurringBill
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkOrProblemAsync(await recurringBillService.GetByIdAsync(Route<Guid>("id"), ct), ct);
-    }
 }

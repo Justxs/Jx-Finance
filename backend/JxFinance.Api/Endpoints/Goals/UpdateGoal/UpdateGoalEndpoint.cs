@@ -14,8 +14,6 @@ public sealed class UpdateGoalEndpoint(IGoalService goalService) : Endpoint<Upda
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateGoalRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateGoalRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await goalService.UpdateAsync(req, ct), ct);
-    }
 }

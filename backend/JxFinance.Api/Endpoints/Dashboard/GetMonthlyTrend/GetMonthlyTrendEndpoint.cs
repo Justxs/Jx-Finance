@@ -14,9 +14,6 @@ public sealed class GetMonthlyTrendEndpoint(IDashboardService dashboardService)
         Group<DashboardGroup>();
     }
 
-    public override async Task HandleAsync(GetMonthlyTrendRequest req, CancellationToken ct)
-    {
-        var response = await dashboardService.GetMonthlyTrendAsync(req.Months, ct);
-        await Send.OkAsync(response, ct);
-    }
+    public override async Task HandleAsync(GetMonthlyTrendRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await dashboardService.GetMonthlyTrendAsync(req.Months, ct), ct);
 }

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
@@ -185,23 +184,13 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
     {
         var account = await CreateAccountAsync("100.00");
         Guid? destination = asTransfer ? await CreateAccountAsync("0.00", currency: "gbp") : null;
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var restricted = original.DeepClone().AsObject();
-        restricted["enabledCurrencies"] = new JsonArray("usd");
-
-        try
+        await using (await OnlyCurrenciesAsync("usd"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var response = await Client.PostAsJsonAsync(
                 "/api/import/swedbank/confirm",
                 new { accountId = account, rows = new[] { Row("pounds", currency: "gbp", transferAccountId: destination) } }, TestContext.Current.CancellationToken);
 
             await AssertRejectedAsync(response, "currency.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         Assert.Equal("100.00", await CurrentBalanceAsync(account));

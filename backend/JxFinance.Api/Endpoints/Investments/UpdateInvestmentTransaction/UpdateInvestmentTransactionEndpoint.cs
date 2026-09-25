@@ -15,8 +15,6 @@ public sealed class UpdateInvestmentTransactionEndpoint(IInvestmentService inves
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateInvestmentTransactionRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateInvestmentTransactionRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await investmentService.UpdateTransactionAsync(req, ct), ct);
-    }
 }

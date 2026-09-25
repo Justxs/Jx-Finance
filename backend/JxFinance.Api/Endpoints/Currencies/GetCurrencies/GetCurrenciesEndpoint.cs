@@ -13,8 +13,6 @@ public sealed class GetCurrenciesEndpoint(ICurrencyService currencyService) : En
         Group<CurrenciesGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await currencyService.GetCurrenciesAsync(ct), ct);
-    }
 }

@@ -19,8 +19,6 @@ public sealed class ResetUserPasswordEndpoint(IUserService userService, ICurrent
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).Produces(429));
     }
 
-    public override async Task HandleAsync(ResetUserPasswordRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(ResetUserPasswordRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await userService.ResetPasswordAsync(req.Id, req, currentUser.Id, ct), ct);
-    }
 }
