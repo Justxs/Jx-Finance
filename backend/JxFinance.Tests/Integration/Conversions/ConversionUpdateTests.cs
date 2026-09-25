@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
@@ -159,10 +157,7 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
     public async Task A_conversion_imported_from_a_broker_is_read_only()
     {
         var broker = await CreateAccountAsync("0.00", "investment", "eur");
-        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(SampleFlexReport.Xml));
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-        using var form = new MultipartFormDataContent { { file, "file", "flex.xml" }, { new StringContent(broker.ToString()), "accountId" } };
-        (await Client.PostAsync("/api/investments/import/interactive-brokers", form, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await UploadFlexAsync(Client, broker)).EnsureSuccessStatusCode();
         var imported = Assert.Single((await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={broker}", TestContext.Current.CancellationToken))!.Items);
         Assert.True(imported.IsImported);
 

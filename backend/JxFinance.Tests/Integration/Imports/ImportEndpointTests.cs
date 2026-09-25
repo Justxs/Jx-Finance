@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Imports;
@@ -204,13 +203,7 @@ public sealed class ImportEndpointTests(ApiFixture fixture) : IntegrationTestBas
 
     private async Task<(HttpResponseMessage response, PreviewDto? body)> PreviewAsync(Guid accountId, string csv)
     {
-        using var content = new MultipartFormDataContent();
-        var fileContent = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
-        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("text/csv");
-        content.Add(fileContent, "File", "export.csv");
-        content.Add(new StringContent(accountId.ToString()), "AccountId");
-
-        var response = await Client.PostAsync("/api/import/swedbank/preview", content);
+        var response = await UploadCsvAsync(Client, accountId, csv);
         var body = response.IsSuccessStatusCode
             ? await response.Content.ReadFromJsonAsync<PreviewDto>()
             : null;

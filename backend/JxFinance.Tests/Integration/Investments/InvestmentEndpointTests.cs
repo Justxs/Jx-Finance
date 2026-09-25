@@ -1,7 +1,5 @@
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
@@ -109,7 +107,7 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         var broker = await CreateBrokerAccountAsync();
 
-        var response = await PostReportAsync(broker, null, "Statement,Header,Field Name");
+        var response = await UploadFlexAsync(Client, broker, "Statement,Header,Field Name");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -157,26 +155,9 @@ public sealed class InvestmentEndpointTests(ApiFixture fixture) : IntegrationTes
 
     private async Task<ImportDto> UploadAsync(Guid accountId, Guid? fundingAccountId, string xml)
     {
-        var response = await PostReportAsync(accountId, fundingAccountId, xml);
+        var response = await UploadFlexAsync(Client, accountId, xml, fundingAccountId);
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         return (await response.Content.ReadFromJsonAsync<ImportDto>())!;
-    }
-
-    private Task<HttpResponseMessage> PostReportAsync(Guid accountId, Guid? fundingAccountId, string content)
-    {
-        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(content));
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/xml");
-        var form = new MultipartFormDataContent
-        {
-            { file, "file", "flex.xml" },
-            { new StringContent(accountId.ToString()), "accountId" },
-        };
-        if (fundingAccountId is { } funding)
-        {
-            form.Add(new StringContent(funding.ToString()), "fundingAccountId");
-        }
-
-        return Client.PostAsync("/api/investments/import/interactive-brokers", form);
     }
 
     private sealed record SecurityDto(Guid Id, string Symbol, string Type);

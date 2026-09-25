@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using FastEndpoints.Testing;
@@ -139,6 +141,16 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected static async Task<Guid> RecordInvestmentAsync(HttpClient client, object entry) =>
         (await PostAsync<IdDto>(client, "/api/investments/transactions", entry)).Id;
 
+    protected static Task<HttpResponseMessage> UploadFlexAsync(
+        HttpClient client,
+        Guid accountId,
+        string xml = SampleFlexReport.Xml,
+        Guid? fundingAccountId = null) =>
+        UploadAsync(client, "/api/investments/import/interactive-brokers", "flex.xml", "text/xml", xml, accountId, fundingAccountId);
+
+    protected static Task<HttpResponseMessage> UploadCsvAsync(HttpClient client, Guid accountId, string csv) =>
+        UploadAsync(client, "/api/import/swedbank/preview", "export.csv", "text/csv", csv, accountId);
+
     protected static Task<T> PostAsync<T>(HttpClient client, string url, object body) =>
         Seed.PostAsync<T>(client, url, body);
 
@@ -202,6 +214,26 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         Assert.True(response.StatusCode == status, $"Expected {(int)status}, got {(int)response.StatusCode}: {body}");
         Assert.Contains($"\"{code}\"", body);
+    }
+
+    private static async Task<HttpResponseMessage> UploadAsync(
+        HttpClient client,
+        string url,
+        string fileName,
+        string contentType,
+        string content,
+        Guid accountId,
+        Guid? fundingAccountId = null)
+    {
+        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(content));
+        file.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        using var form = new MultipartFormDataContent { { file, "file", fileName }, { new StringContent(accountId.ToString()), "accountId" } };
+        if (fundingAccountId is { } funding)
+        {
+            form.Add(new StringContent(funding.ToString()), "fundingAccountId");
+        }
+
+        return await client.PostAsync(url, form, TestContext.Current.CancellationToken);
     }
 
     private async Task SaveSettingsAsync(JsonObject settings)

@@ -1,8 +1,6 @@
 using System.Globalization;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.CategorizationRules;
@@ -474,13 +472,7 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
             SampleCsv,
             Guid.NewGuid().ToString("N")[..8]);
 
-        using var content = new MultipartFormDataContent();
-        var file = new ByteArrayContent(Encoding.UTF8.GetBytes(csv));
-        file.Headers.ContentType = new MediaTypeHeaderValue("text/csv");
-        content.Add(file, "File", "export.csv");
-        content.Add(new StringContent(accountId.ToString()), "AccountId");
-
-        var response = await client.PostAsync("/api/import/swedbank/preview", content);
+        var response = await UploadCsvAsync(client, accountId, csv);
         response.EnsureSuccessStatusCode();
         return (await response.Content.ReadFromJsonAsync<PreviewDto>())!.Rows;
     }
