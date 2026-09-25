@@ -227,21 +227,13 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
     }
 
     private Task<decimal> StoredEntryReportingAmountAsync(Guid id) =>
-        StoredAmountAsync("InvestmentTransactions", id);
+        SqlValueAsync<decimal>($"""SELECT "ReportingAmount" AS "Value" FROM "InvestmentTransactions" WHERE "Id" = {id}""");
 
     private async Task<string> ReportingAmountAsync(Guid id) =>
         (await Client.GetFromJsonAsync<TransactionDto>($"/api/transactions/{id}"))!.ReportingAmount;
 
-    private Task<decimal> StoredReportingAmountAsync(Guid id) => StoredAmountAsync("Transactions", id);
-
-    private async Task<decimal> StoredAmountAsync(string table, Guid id)
-    {
-        await using var connection = new Npgsql.NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync(TestContext.Current.CancellationToken);
-        await using var command = new Npgsql.NpgsqlCommand($"SELECT \"ReportingAmount\" FROM \"{table}\" WHERE \"Id\" = $1", connection);
-        command.Parameters.AddWithValue(id);
-        return (decimal)(await command.ExecuteScalarAsync(TestContext.Current.CancellationToken))!;
-    }
+    private Task<decimal> StoredReportingAmountAsync(Guid id) =>
+        SqlValueAsync<decimal>($"""SELECT "ReportingAmount" AS "Value" FROM "Transactions" WHERE "Id" = {id}""");
 
     [Fact]
     public async Task Invalid_values_are_rejected()

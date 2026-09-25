@@ -2,7 +2,6 @@ using System.Net.Http.Json;
 using JxFinance.Domain.Common;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.Budgets;
 
@@ -115,16 +114,6 @@ public sealed class BudgetRolloverTests(ApiFixture fixture) : IntegrationTestBas
             "/api/transactions",
             new { accountId = account, categoryId = category, type = "expense", amount, date });
 
-    private async Task BackdateAsync(Guid budgetId, DateOnly createdOn)
-    {
-        var createdAt = Services.GetRequiredService<IClock>().StartOfDay(createdOn);
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new NpgsqlCommand(
-            "UPDATE \"Budgets\" SET \"CreatedAt\" = $1 WHERE \"Id\" = $2",
-            connection);
-        command.Parameters.AddWithValue(createdAt);
-        command.Parameters.AddWithValue(budgetId);
-        await command.ExecuteNonQueryAsync();
-    }
+    private Task BackdateAsync(Guid budgetId, DateOnly createdOn) =>
+        SqlAsync($"""UPDATE "Budgets" SET "CreatedAt" = {Services.GetRequiredService<IClock>().StartOfDay(createdOn)} WHERE "Id" = {budgetId}""");
 }

@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
@@ -82,34 +81,15 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
     private static async Task<List<NetWorthSnapshotItemDto>> HistoryAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history"))!.Items;
 
-    private async Task StoreSnapshotAsync(Guid userId, DateOnly date, decimal amount, string currency)
-    {
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new NpgsqlCommand(
-            "INSERT INTO \"NetWorthSnapshots\" "
-            + "(\"Id\", \"UserId\", \"Date\", \"Accounts\", \"Assets\", \"Debts\", \"NetWorthValue\", \"Currency\", \"CreatedAt\", \"UpdatedAt\", \"IsDeleted\") "
-            + "VALUES ($1, $2, $3, $4, 0, 0, $4, $5, now(), now(), false)",
-            connection);
-        command.Parameters.AddWithValue(Guid.NewGuid());
-        command.Parameters.AddWithValue(userId);
-        command.Parameters.AddWithValue(date);
-        command.Parameters.AddWithValue(amount);
-        command.Parameters.AddWithValue(currency);
-        await command.ExecuteNonQueryAsync();
-    }
+    private Task StoreSnapshotAsync(Guid userId, DateOnly date, decimal amount, string currency) =>
+        SqlAsync($"""
+            INSERT INTO "NetWorthSnapshots"
+            ("Id", "UserId", "Date", "Accounts", "Assets", "Debts", "NetWorthValue", "Currency", "CreatedAt", "UpdatedAt", "IsDeleted")
+            VALUES ({Guid.NewGuid()}, {userId}, {date}, {amount}, 0, 0, {amount}, {currency}, now(), now(), false)
+            """);
 
-    private async Task<string?> StoredSnapshotCurrencyAsync(Guid userId, DateOnly date)
-    {
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new NpgsqlCommand(
-            "SELECT \"Currency\" FROM \"NetWorthSnapshots\" WHERE \"UserId\" = $1 AND \"Date\" = $2",
-            connection);
-        command.Parameters.AddWithValue(userId);
-        command.Parameters.AddWithValue(date);
-        return (string?)await command.ExecuteScalarAsync();
-    }
+    private Task<string> StoredSnapshotCurrencyAsync(Guid userId, DateOnly date) =>
+        SqlValueAsync<string>($"""SELECT "Currency" AS "Value" FROM "NetWorthSnapshots" WHERE "UserId" = {userId} AND "Date" = {date}""");
 
     private sealed record AssetDto(Guid Id, string CurrentValue, string Currency);
 

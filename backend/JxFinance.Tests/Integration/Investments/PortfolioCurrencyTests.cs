@@ -1,6 +1,5 @@
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.Investments;
 
@@ -46,17 +45,12 @@ public sealed class PortfolioCurrencyTests(ApiFixture fixture) : IntegrationTest
 
     private async Task StoreUsdRateAsync(DateOnly from, DateOnly to, decimal rate)
     {
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
         for (var date = from; date <= to; date = date.AddDays(1))
         {
-            await using var command = new NpgsqlCommand(
-                "INSERT INTO \"ExchangeRates\" (\"Date\", \"Currency\", \"Rate\") VALUES ($1, 'USD', $2) "
-                + "ON CONFLICT (\"Date\", \"Currency\") DO UPDATE SET \"Rate\" = EXCLUDED.\"Rate\"",
-                connection);
-            command.Parameters.AddWithValue(date);
-            command.Parameters.AddWithValue(rate);
-            await command.ExecuteNonQueryAsync();
+            await SqlAsync($"""
+                INSERT INTO "ExchangeRates" ("Date", "Currency", "Rate") VALUES ({date}, 'USD', {rate})
+                ON CONFLICT ("Date", "Currency") DO UPDATE SET "Rate" = EXCLUDED."Rate"
+                """);
         }
     }
 

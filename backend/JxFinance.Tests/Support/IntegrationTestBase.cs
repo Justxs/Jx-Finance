@@ -195,6 +195,12 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         return await work(db);
     }
 
+    protected Task<int> SqlAsync(FormattableString sql) =>
+        WithDbAsync(db => db.Database.ExecuteSqlAsync(sql, TestContext.Current.CancellationToken));
+
+    protected Task<T> SqlValueAsync<T>(FormattableString sql) =>
+        WithDbAsync(db => db.Database.SqlQuery<T>(sql).SingleAsync(TestContext.Current.CancellationToken));
+
     protected static async Task AssertValidationErrorAsync(HttpResponseMessage response, string field)
     {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

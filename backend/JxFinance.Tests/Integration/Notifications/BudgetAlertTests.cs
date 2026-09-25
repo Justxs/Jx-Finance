@@ -8,7 +8,6 @@ using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
@@ -167,26 +166,12 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             ?? Services.GetRequiredService<IInstanceSettingsStore>().Defaults());
 
     private Task MoveAlertsIntoThePreviousWindowAsync(BudgetSetup budget) =>
-        ExecuteAsync(
-            "UPDATE \"Notifications\" SET \"CreatedAt\" = $1 WHERE \"RelatedId\" = $2",
-            Services.GetRequiredService<IClock>().StartOfDay(budget.Budget.WindowStart.AddDays(-1)),
-            budget.Budget.Id);
+        SqlAsync($"""UPDATE "Notifications" SET "CreatedAt" = {StartOfDay(budget.Budget.WindowStart.AddDays(-1))} WHERE "RelatedId" = {budget.Budget.Id}""");
 
     private Task BackdateBudgetAsync(Guid budgetId, DateOnly createdOn) =>
-        ExecuteAsync(
-            "UPDATE \"Budgets\" SET \"CreatedAt\" = $1 WHERE \"Id\" = $2",
-            Services.GetRequiredService<IClock>().StartOfDay(createdOn),
-            budgetId);
+        SqlAsync($"""UPDATE "Budgets" SET "CreatedAt" = {StartOfDay(createdOn)} WHERE "Id" = {budgetId}""");
 
-    private async Task ExecuteAsync(string sql, DateTimeOffset moment, Guid id)
-    {
-        await using var connection = new NpgsqlConnection(ConnectionString);
-        await connection.OpenAsync();
-        await using var command = new NpgsqlCommand(sql, connection);
-        command.Parameters.AddWithValue(moment);
-        command.Parameters.AddWithValue(id);
-        await command.ExecuteNonQueryAsync();
-    }
+    private DateTimeOffset StartOfDay(DateOnly date) => Services.GetRequiredService<IClock>().StartOfDay(date);
 
     private sealed record BudgetSetup(BudgetDto Budget, Guid Account, Guid Category);
 

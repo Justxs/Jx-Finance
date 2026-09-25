@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Tests.Support;
-using Npgsql;
 
 namespace JxFinance.Tests.Integration.Dashboard;
 
@@ -119,18 +118,8 @@ public sealed class DashboardLayoutTests(ApiFixture fixture) : IntegrationTestBa
     {
         var user = await CreateUserAsync();
         using var client = await LoginAsync(user);
-        await using (var connection = new NpgsqlConnection(ConnectionString))
-        {
-            await connection.OpenAsync(TestContext.Current.CancellationToken);
-            await using var command = new NpgsqlCommand(
-                """UPDATE "AspNetUsers" SET "DashboardLayout" = @layout::jsonb WHERE "Id" = @id""",
-                connection);
-            command.Parameters.AddWithValue(
-                "layout",
-                """{"order":["weather","accounts","accounts","stocksTicker","summary"],"hidden":["weather","accounts"]}""");
-            command.Parameters.AddWithValue("id", user.Id);
-            Assert.Equal(1, await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken));
-        }
+        const string stored = """{"order":["weather","accounts","accounts","stocksTicker","summary"],"hidden":["weather","accounts"]}""";
+        Assert.Equal(1, await SqlAsync($"""UPDATE "AspNetUsers" SET "DashboardLayout" = {stored}::jsonb WHERE "Id" = {user.Id}"""));
 
         var layout = await client.GetFromJsonAsync<LayoutDto>(Url, TestContext.Current.CancellationToken);
 
