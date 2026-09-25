@@ -42,7 +42,7 @@ export const InModal: Story = {
 export const ValidationErrorAfterSubmit: Story = {
   parameters: withHandlers(
     getCreateUserMockHandler(
-      failWith({ ...validationProblem, detail: "A user with this email already exists." }, 400),
+      failWith({ ...validationProblem, detail: "A user with this email already exists." }),
     ),
   ),
 };

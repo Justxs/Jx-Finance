@@ -1,9 +1,6 @@
-import type {
-  ImportPreviewResponse,
-  ImportPreviewRow,
-  ProblemDetails,
-} from "@/api/generated/model";
+import type { ImportPreviewResponse, ImportPreviewRow } from "@/api/generated/model";
 import { ids } from "./base";
+import { statusProblem } from "./problems";
 
 const noSuggestion = {
   suggestedCategoryId: null,
@@ -139,10 +136,8 @@ export const importPreviewWithoutRules: ImportPreviewResponse = {
   rows: importPreviewRows.map((row) => ({ ...row, ...noSuggestion })),
 };
 
-export const importFormatProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
+export const importFormatProblem = {
+  ...statusProblem(400),
   instance: "/api/import/swedbank/preview",
   detail: "The file doesn't match the expected Swedbank CSV export shape.",
 };

@@ -61,7 +61,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const PartialFailure: Story = {
-  parameters: withHandlers(getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getMonthlyTrendMockHandler(failWith(serverErrorProblem))),
 };
 
 export const AllSectionsLoad: Story = {
@@ -79,7 +79,7 @@ export const AllSectionsLoad: Story = {
 
 export const RetryRecoversFailedSection: Story = {
   parameters: withHandlers(
-    getMonthlyTrendMockHandler(failWith(serverErrorProblem, 500), { once: true }),
+    getMonthlyTrendMockHandler(failWith(serverErrorProblem), { once: true }),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -170,7 +170,7 @@ export const CustomiseAndSave: Story = {
 
 export const SaveError: Story = {
   parameters: withHandlers(
-    getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem, 400)),
+    getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem)),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -186,7 +186,7 @@ export const SaveError: Story = {
 };
 
 export const LayoutUnavailable: Story = {
-  parameters: withHandlers(getDashboardLayoutMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getDashboardLayoutMockHandler(failWith(serverErrorProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(await canvas.findByRole("alert")).toHaveTextContent(

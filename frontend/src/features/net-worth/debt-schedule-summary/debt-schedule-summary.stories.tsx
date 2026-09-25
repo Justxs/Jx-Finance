@@ -62,7 +62,7 @@ export const UpdatePending: Story = {
 };
 
 export const UpdateFails: Story = {
-  parameters: withHandlers(getUpdateDebtMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getUpdateDebtMockHandler(failWith(serverErrorProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

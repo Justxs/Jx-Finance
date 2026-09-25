@@ -175,7 +175,7 @@ export const UploadInProgress: Story = {
 
 export const RefusedFiles: Story = {
   parameters: withHandlers(
-    getUploadAttachmentMockHandler(failWith(attachmentContentMismatchProblem, 400)),
+    getUploadAttachmentMockHandler(failWith(attachmentContentMismatchProblem)),
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

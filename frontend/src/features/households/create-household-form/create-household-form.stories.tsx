@@ -42,9 +42,7 @@ export const InModal: Story = {
 
 export const ServerErrorAfterSubmit: Story = {
   parameters: withHandlers(
-    getCreateHouseholdMockHandler(
-      failWith({ ...serverErrorProblem, instance: "/api/households" }, 500),
-    ),
+    getCreateHouseholdMockHandler(failWith({ ...serverErrorProblem, instance: "/api/households" })),
   ),
 };
 

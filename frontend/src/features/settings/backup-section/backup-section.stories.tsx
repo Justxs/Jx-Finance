@@ -127,7 +127,7 @@ export const RestorePending: Story = {
 };
 
 export const OtherVersionRejected: Story = {
-  parameters: withHandlers(getRestoreBackupMockHandler(failWith(backupSchemaProblem, 400))),
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(backupSchemaProblem))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
     await expect(await dialog.findByText(/another version of the application/u)).toBeVisible();
@@ -143,7 +143,7 @@ export const NoFileChosen: Story = {
 };
 
 export const UploadRejected: Story = {
-  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupInvalidFileProblem, 400))),
+  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupInvalidFileProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const file = new File(["not a backup"], "notes.json", { type: "application/json" });
@@ -164,7 +164,7 @@ export const RestoreWrongPassword: Story = {
 };
 
 export const RestoreLockedOut: Story = {
-  parameters: withHandlers(getRestoreBackupMockHandler(failWith(lockedOutProblem, 429))),
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(lockedOutProblem))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
 
@@ -184,7 +184,7 @@ export const RestoreThrottledWithoutBody: Story = {
 };
 
 export const RestoreWhileDatabaseBusy: Story = {
-  parameters: withHandlers(getRestoreBackupMockHandler(failWith(databaseBusyProblem, 409))),
+  parameters: withHandlers(getRestoreBackupMockHandler(failWith(databaseBusyProblem))),
   play: async ({ canvasElement }) => {
     const dialog = await confirmRestoreOfNewest(canvasElement);
 
@@ -194,7 +194,7 @@ export const RestoreWhileDatabaseBusy: Story = {
 };
 
 export const UploadTooLarge: Story = {
-  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupTooLargeProblem, 400))),
+  parameters: withHandlers(getUploadBackupMockHandler(failWith(backupTooLargeProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const file = new File(["{}"], "huge.json.gz", { type: "application/gzip" });

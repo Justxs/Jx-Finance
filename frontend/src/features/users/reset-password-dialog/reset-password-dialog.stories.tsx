@@ -100,7 +100,7 @@ export const WrongCurrentPassword: Story = {
 };
 
 export const WeakPassword: Story = {
-  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(weakPasswordProblem, 400))),
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(weakPasswordProblem))),
   play: async () => {
     const dialog = await submitReset();
 
@@ -111,7 +111,7 @@ export const WeakPassword: Story = {
 };
 
 export const LockedOut: Story = {
-  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(lockedOutProblem, 429))),
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(lockedOutProblem))),
   play: async () => {
     const dialog = await submitReset();
 
@@ -131,7 +131,7 @@ export const ThrottledWithoutBody: Story = {
 };
 
 export const UserNoLongerExists: Story = {
-  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(notFoundProblem, 404))),
+  parameters: withHandlers(getResetUserPasswordMockHandler(failWith(notFoundProblem))),
   play: async () => {
     const dialog = await submitReset();
 

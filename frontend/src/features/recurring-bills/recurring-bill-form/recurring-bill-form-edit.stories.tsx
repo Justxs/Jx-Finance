@@ -136,7 +136,7 @@ export const SavePending: Story = {
 };
 
 export const ServerFieldError: Story = {
-  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(billCategoryProblem, 400))),
+  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(billCategoryProblem))),
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
@@ -151,7 +151,7 @@ export const ServerFieldError: Story = {
 };
 
 export const BillNoLongerExists: Story = {
-  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(notFoundProblem, 404))),
+  parameters: withHandlers(getUpdateRecurringBillMockHandler(failWith(notFoundProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));

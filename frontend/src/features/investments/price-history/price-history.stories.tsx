@@ -70,9 +70,7 @@ export const DeletesPoint: Story = {
 };
 
 export const DeleteRefused: Story = {
-  parameters: withHandlers(
-    getDeleteSecurityPriceMockHandler(failWith(securityNotHeldProblem, 403)),
-  ),
+  parameters: withHandlers(getDeleteSecurityPriceMockHandler(failWith(securityNotHeldProblem))),
   play: async ({ canvasElement }) => {
     await confirmFirstDelete(canvasElement);
 

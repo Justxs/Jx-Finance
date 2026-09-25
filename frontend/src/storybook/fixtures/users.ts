@@ -1,6 +1,9 @@
-import type { ProblemDetails, UserProfileResponse } from "@/api/generated/model";
+import type { UserProfileResponse } from "@/api/generated/model";
 import { UserRole } from "@/lib/user-role";
 import { ids } from "./base";
+import { problemOf } from "./problems";
+
+const validationType = "https://tools.ietf.org/html/rfc9110#section-15.5.1";
 
 export const currentUser: UserProfileResponse = {
   id: ids.users.ruta,
@@ -65,41 +68,22 @@ export const users: UserProfileResponse[] = [currentUser, memberUser, longNameUs
 
 export const adminPassword = "Correct-horse-42";
 
-export const wrongAdminPasswordProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The current password is wrong.",
-      code: "password.incorrect",
-    },
-  ],
-};
+export const wrongAdminPasswordProblem = problemOf(
+  400,
+  "password.incorrect",
+  "The current password is wrong.",
+  { type: validationType },
+);
 
-export const weakPasswordProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "newPassword",
-      reason: "Passwords must have at least one digit.",
-      code: "password.tooWeak",
-    },
-  ],
-};
+export const weakPasswordProblem = problemOf(
+  400,
+  "password.tooWeak",
+  "Passwords must have at least one digit.",
+  { name: "newPassword", type: validationType },
+);
 
-export const lastAdministratorProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
-  title: "Forbidden",
-  status: 403,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The installation must keep one active administrator.",
-      code: "user.lastAdministrator",
-    },
-  ],
-};
+export const lastAdministratorProblem = problemOf(
+  403,
+  "user.lastAdministrator",
+  "The installation must keep one active administrator.",
+);

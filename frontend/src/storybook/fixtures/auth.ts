@@ -1,10 +1,10 @@
 import type {
   EnableTwoFactorResponse,
   LoginResponse,
-  ProblemDetails,
   SessionResponse,
   TwoFactorSetupResponse,
 } from "@/api/generated/model";
+import { problemOf } from "./problems";
 import { currentUser } from "./users";
 
 export const twoFactorSetup: TwoFactorSetupResponse = {
@@ -79,16 +79,9 @@ export const sessions: SessionResponse[] = [
   },
 ];
 
-export const sessionCurrentProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
-  title: "Forbidden",
-  status: 403,
-  instance: "/api/auth/sessions/5d0f6a52-5a0e-4f0e-9b57-0a4f3a1c9e01",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "Sign out to end the session of this browser.",
-      code: "session.current",
-    },
-  ],
-};
+export const sessionCurrentProblem = problemOf(
+  403,
+  "session.current",
+  "Sign out to end the session of this browser.",
+  { instance: "/api/auth/sessions/5d0f6a52-5a0e-4f0e-9b57-0a4f3a1c9e01" },
+);

@@ -19,7 +19,7 @@ export const Default: Story = {};
 
 export const ServerErrorAfterSubmit: Story = {
   parameters: withHandlers(
-    getSetupMockHandler(failWith({ ...serverErrorProblem, instance: "/api/setup" }, 500)),
+    getSetupMockHandler(failWith({ ...serverErrorProblem, instance: "/api/setup" })),
   ),
 };
 
