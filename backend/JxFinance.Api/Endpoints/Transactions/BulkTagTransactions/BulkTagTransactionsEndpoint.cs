@@ -17,12 +17,6 @@ public sealed class BulkTagTransactionsEndpoint(ITransactionService transactionS
     public override async Task HandleAsync(BulkTagTransactionsRequest req, CancellationToken ct)
     {
         var result = await transactionService.BulkTagAsync(req, ct);
-        if (!result.TryGetValue(out var updated))
-        {
-            await Send.ProblemAsync(result.Error, ct);
-            return;
-        }
-
-        await Send.OkAsync(new BulkTagTransactionsResponse(updated), ct);
+        await Send.OkOrProblemAsync(result.Map(updated => new BulkTagTransactionsResponse(updated)), ct);
     }
 }

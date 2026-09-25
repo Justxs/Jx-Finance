@@ -17,12 +17,6 @@ public sealed class BulkCategorizeTransactionsEndpoint(ITransactionService trans
     public override async Task HandleAsync(BulkCategorizeTransactionsRequest req, CancellationToken ct)
     {
         var result = await transactionService.BulkCategorizeAsync(req, ct);
-        if (!result.TryGetValue(out var updated))
-        {
-            await Send.ProblemAsync(result.Error, ct);
-            return;
-        }
-
-        await Send.OkAsync(new BulkCategorizeTransactionsResponse(updated), ct);
+        await Send.OkOrProblemAsync(result.Map(updated => new BulkCategorizeTransactionsResponse(updated)), ct);
     }
 }

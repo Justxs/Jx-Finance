@@ -480,9 +480,7 @@ public sealed class TransactionService(
             date,
             existing is { } inUse ? [inUse] : [],
             cancellationToken);
-        return value.TryGetValue(out var valued)
-            ? (valued.Amount.Currency, valued.ReportingAmount)
-            : value.Error;
+        return value.Map(valued => (valued.Amount.Currency, valued.ReportingAmount));
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(

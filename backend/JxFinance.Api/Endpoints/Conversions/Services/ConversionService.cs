@@ -85,12 +85,12 @@ public sealed class ConversionService(
                 request.Date,
                 [],
                 cancellationToken);
-            if (terms.IsFailure)
+            if (!terms.TryGetValue(out var feeTerms))
             {
                 return terms.Error;
             }
 
-            fee = NewFee(accountId, terms.Value!, request.Date, FeeDescription(request.FromCurrency, request.ToCurrency));
+            fee = NewFee(accountId, feeTerms, request.Date, FeeDescription(request.FromCurrency, request.ToCurrency));
             db.Transactions.Add(fee);
         }
 
@@ -151,21 +151,21 @@ public sealed class ConversionService(
                 request.Date,
                 [conversion.FromAmount.Currency, conversion.ToAmount.Currency],
                 cancellationToken);
-            if (terms.IsFailure)
+            if (!terms.TryGetValue(out var feeTerms))
             {
                 return terms.Error;
             }
 
             if (fee is null)
             {
-                fee = NewFee(conversion.AccountId, terms.Value!, request.Date, description);
+                fee = NewFee(conversion.AccountId, feeTerms, request.Date, description);
                 db.Transactions.Add(fee);
             }
             else if (!fee.IsSplit)
             {
-                fee.Amount = terms.Value!.Amount;
-                fee.ReportingAmount = terms.Value.ReportingAmount;
-                fee.CategoryId = terms.Value.CategoryId;
+                fee.Amount = feeTerms.Amount;
+                fee.ReportingAmount = feeTerms.ReportingAmount;
+                fee.CategoryId = feeTerms.CategoryId;
                 fee.Date = request.Date;
                 if (fee.Description == previousDescription)
                 {
@@ -250,9 +250,7 @@ public sealed class ConversionService(
         }
 
         var value = await valuations.ValueAsync(accountId, amount.Amount, amount.Currency, date, currenciesInUse, cancellationToken);
-        return value.TryGetValue(out var valued)
-            ? new FeeTerms(valued.Amount, feeCategoryId, valued.ReportingAmount)
-            : value.Error;
+        return value.Map(valued => new FeeTerms(valued.Amount, feeCategoryId, valued.ReportingAmount));
     }
 
     private sealed record FeeTerms(Money Amount, CategoryId? CategoryId, decimal ReportingAmount);

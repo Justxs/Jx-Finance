@@ -56,7 +56,7 @@ public sealed class NetWorthService(
     {
         var assetId = new AssetId(request.Id);
         var updated = await db.UpdateOrNotFoundAsync<Asset>(a => a.Id == assetId, AssetNotFound, request.ApplyTo, cancellationToken);
-        return updated.TryGetValue(out var asset) ? asset.ToResponse() : updated.Error;
+        return updated.Map(asset => asset.ToResponse());
     }
 
     public Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
@@ -93,7 +93,7 @@ public sealed class NetWorthService(
     {
         var debtId = new DebtId(request.Id);
         var updated = await db.UpdateOrNotFoundAsync<Debt>(d => d.Id == debtId, DebtNotFound, request.ApplyTo, cancellationToken);
-        return updated.TryGetValue(out var debt) ? debt.ToResponse() : updated.Error;
+        return updated.Map(debt => debt.ToResponse());
     }
 
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
