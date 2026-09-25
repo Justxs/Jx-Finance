@@ -98,7 +98,7 @@ export const CreatesHousehold: Story = {
 };
 
 export const CreateFails: Story = {
-  parameters: withHandlers(getCreateHouseholdMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getCreateHouseholdMockHandler(failWith(serverErrorProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(

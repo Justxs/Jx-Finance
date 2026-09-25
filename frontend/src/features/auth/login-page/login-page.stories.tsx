@@ -42,10 +42,11 @@ export const TwoFactorStepAfterSubmit: Story = {
 export const InvalidCredentialsAfterSubmit: Story = {
   parameters: withHandlers(
     getLoginMockHandler(
-      failWith(
-        { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
-        401,
-      ),
+      failWith({
+        ...unauthorizedProblem,
+        instance: "/api/auth/login",
+        detail: "Invalid credentials.",
+      }),
     ),
   ),
   play: async ({ canvasElement }) => {

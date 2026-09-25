@@ -7,7 +7,6 @@ import type {
   InvestmentTransactionResponse,
   InvestmentTransactionType,
   PortfolioResponse,
-  ProblemDetails,
   SecurityPriceResponse,
   SecurityResponse,
   TaxSummaryResponse,
@@ -15,6 +14,7 @@ import type {
 } from "@/api/generated/model";
 import { brokerAccount, checkingAccount, savingsAccount } from "./accounts";
 import { uid } from "./base";
+import { problemOf, statusProblem } from "./problems";
 
 export const worldEtf: SecurityResponse = {
   id: uid("eeeeeeee", 1),
@@ -569,46 +569,28 @@ export const brokerImportNothingNew: BrokerImportResponse = {
   positionMismatches: null,
 };
 
-export const oversellProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
+export const oversellProblem = {
+  ...statusProblem(400),
   instance: "/api/investments/transactions",
   detail: "You cannot sell more than you hold: 12 MSFT on this account on that date.",
 };
 
-export const duplicateSecurityProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
-  title: "Conflict",
-  status: 409,
-  instance: "/api/investments/securities",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "A security with this symbol and currency already exists.",
-      code: "conflict.duplicate",
-    },
-  ],
-};
+export const duplicateSecurityProblem = problemOf(
+  409,
+  "conflict.duplicate",
+  "A security with this symbol and currency already exists.",
+  { instance: "/api/investments/securities" },
+);
 
-export const securityNotHeldProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.3",
-  title: "Forbidden",
-  status: 403,
-  instance: "/api/investments/securities/price",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "Only a holder of the security or an administrator can set its price.",
-      code: "security.notHeld",
-    },
-  ],
-};
+export const securityNotHeldProblem = problemOf(
+  403,
+  "security.notHeld",
+  "Only a holder of the security or an administrator can set its price.",
+  { instance: "/api/investments/securities/price" },
+);
 
-export const brokerSyncProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
+export const brokerSyncProblem = {
+  ...statusProblem(400),
   instance: "/api/investments/connections/sync",
   detail:
     "Interactive Brokers rejected the request: the token has expired (code 1012). Create a new token in Flex Web Service and save it here.",

@@ -1,5 +1,6 @@
-import type { ProblemDetails, RecurringBillResponse } from "@/api/generated/model";
+import type { RecurringBillResponse } from "@/api/generated/model";
 import { ids } from "./base";
+import { problemOf } from "./problems";
 
 export const dueSoonBill: RecurringBillResponse = {
   id: ids.bills.telia,
@@ -144,54 +145,28 @@ export const recurringBills: RecurringBillResponse[] = [
   inactiveBill,
 ];
 
-export const billStaleProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
-  title: "Conflict",
-  status: 409,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The bill is no longer due on the expected date.",
-      code: "conflict.stale",
-    },
-  ],
-};
+export const billStaleProblem = problemOf(
+  409,
+  "conflict.stale",
+  "The bill is no longer due on the expected date.",
+);
 
-export const billInactiveProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
-  title: "Conflict",
-  status: 409,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "An inactive recurring entry cannot be confirmed.",
-      code: "recurringBill.inactive",
-    },
-  ],
-};
+export const billInactiveProblem = problemOf(
+  409,
+  "recurringBill.inactive",
+  "An inactive recurring entry cannot be confirmed.",
+);
 
-export const billReceivedAmountProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "Bad Request",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "A transfer between currencies needs the received amount.",
-      code: "transfer.receivedAmountRequired",
-    },
-  ],
-};
+export const billReceivedAmountProblem = problemOf(
+  400,
+  "transfer.receivedAmountRequired",
+  "A transfer between currencies needs the received amount.",
+  { title: "Bad Request" },
+);
 
-export const billCategoryProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "categoryId",
-      reason: "A recurring expense needs an expense category.",
-      code: "category.wrongType",
-    },
-  ],
-};
+export const billCategoryProblem = problemOf(
+  400,
+  "category.wrongType",
+  "A recurring expense needs an expense category.",
+  { name: "categoryId" },
+);

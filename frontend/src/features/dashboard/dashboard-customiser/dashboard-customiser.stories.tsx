@@ -142,8 +142,8 @@ export const Saving: Story = {
 
 export const SaveError: Story = {
   parameters: withHandlers(
-    getSaveDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
-    getResetDashboardLayoutMockHandler(failWith(serverErrorProblem, 500)),
+    getSaveDashboardLayoutMockHandler(failWith(serverErrorProblem)),
+    getResetDashboardLayoutMockHandler(failWith(serverErrorProblem)),
   ),
   args: { onDone: fn() },
   play: async ({ args, canvasElement }) => {

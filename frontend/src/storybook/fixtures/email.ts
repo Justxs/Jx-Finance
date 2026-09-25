@@ -1,4 +1,7 @@
-import type { ProblemDetails, SmtpSettingsResponse, SmtpTestResponse } from "@/api/generated/model";
+import type { SmtpSettingsResponse, SmtpTestResponse } from "@/api/generated/model";
+import { problemOf } from "./problems";
+
+const validationType = "https://tools.ietf.org/html/rfc9110#section-15.5.1";
 
 export const smtpSettings: SmtpSettingsResponse = {
   enabled: true,
@@ -26,98 +29,54 @@ export const smtpTestSent: SmtpTestResponse = {
   sentTo: "ruta.kazlauskiene@example.lt",
 };
 
-export const smtpSendFailedProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "535 5.7.8 Authentication credentials invalid",
-      code: "email.sendFailed",
-    },
-  ],
-};
+export const smtpSendFailedProblem = problemOf(
+  400,
+  "email.sendFailed",
+  "535 5.7.8 Authentication credentials invalid",
+  { type: validationType },
+);
 
-export const emailNotConfiguredProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "Email is switched off, or the server and sender address are missing.",
-      code: "email.notConfigured",
-    },
-  ],
-};
+export const emailNotConfiguredProblem = problemOf(
+  400,
+  "email.notConfigured",
+  "Email is switched off, or the server and sender address are missing.",
+  { type: validationType },
+);
 
-export const smtpPasswordRequiredProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason:
-        "Enter the password again: the stored one is only kept for the same mail server and user name.",
-      code: "email.passwordRequired",
-    },
-  ],
-};
+export const smtpPasswordRequiredProblem = problemOf(
+  400,
+  "email.passwordRequired",
+  "Enter the password again: the stored one is only kept for the same mail server and user name.",
+  { type: validationType },
+);
 
-export const smtpInsecureConnectionProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "encryption",
-      reason:
-        "A user name and password are only sent over an encrypted connection. Choose STARTTLS or SSL/TLS.",
-      code: "email.insecureConnection",
-    },
-  ],
-};
+export const smtpInsecureConnectionProblem = problemOf(
+  400,
+  "email.insecureConnection",
+  "A user name and password are only sent over an encrypted connection. Choose STARTTLS or SSL/TLS.",
+  { name: "encryption", type: validationType },
+);
 
-export const emailAlreadyVerifiedProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "This address is already confirmed.",
-      code: "email.alreadyVerified",
-    },
-  ],
-};
+export const emailAlreadyVerifiedProblem = problemOf(
+  400,
+  "email.alreadyVerified",
+  "This address is already confirmed.",
+  { type: validationType },
+);
 
-export const resetTokenInvalidProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "This link is no longer valid. Ask for a new one.",
-      code: "passwordReset.tokenInvalid",
-    },
-  ],
-};
+export const resetTokenInvalidProblem = problemOf(
+  400,
+  "passwordReset.tokenInvalid",
+  "This link is no longer valid. Ask for a new one.",
+  { type: validationType },
+);
 
-export const verificationTokenInvalidProblem: ProblemDetails = {
-  type: "https://tools.ietf.org/html/rfc9110#section-15.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "This link is no longer valid. Ask for a new one.",
-      code: "email.tokenInvalid",
-    },
-  ],
-};
+export const verificationTokenInvalidProblem = problemOf(
+  400,
+  "email.tokenInvalid",
+  "This link is no longer valid. Ask for a new one.",
+  { type: validationType },
+);
 
 export const resetLink = {
   email: "ruta.kazlauskiene@example.lt",

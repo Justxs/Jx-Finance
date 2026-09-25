@@ -39,7 +39,7 @@ export const Enabled: Story = {
 export const WrongPasswordOnEnable: Story = {
   parameters: withHandlers(
     getSetupTwoFactorMockHandler(
-      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }),
     ),
   ),
 };
@@ -48,7 +48,7 @@ export const WrongPasswordOnDisable: Story = {
   parameters: withHandlers(
     getMeMockHandler(currentUserWithTwoFactor),
     getDisableTwoFactorMockHandler(
-      failWith({ ...validationProblem, detail: "Current password is incorrect." }, 400),
+      failWith({ ...validationProblem, detail: "Current password is incorrect." }),
     ),
   ),
 };
@@ -59,6 +59,6 @@ export const Loading: Story = {
 
 export const ServerError: Story = {
   parameters: withHandlers(
-    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" }, 500)),
+    getMeMockHandler(failWith({ ...serverErrorProblem, instance: "/api/auth/me" })),
   ),
 };

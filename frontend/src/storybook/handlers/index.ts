@@ -177,7 +177,7 @@ export const emptyHandlers: RequestHandler[] = [
 export const errorHandlers: RequestHandler[] = [
   ...dataGetHandlers().map((handler) =>
     onRouteOf(handler, ({ request }) =>
-      problem({ ...serverErrorProblem, instance: new URL(request.url).pathname }, 500),
+      problem({ ...serverErrorProblem, instance: new URL(request.url).pathname }),
     ),
   ),
   ...handlers,
@@ -189,7 +189,7 @@ export const loadingHandlers: RequestHandler[] = [
 ];
 
 export const importFormatErrorHandlers: RequestHandler[] = [
-  getImportPreviewMockHandler(failWith(importFormatProblem, 400)),
+  getImportPreviewMockHandler(failWith(importFormatProblem)),
   ...handlers,
 ];
 
@@ -204,7 +204,7 @@ export const importPendingHandlers: RequestHandler[] = [
 ];
 
 export const unauthenticatedHandlers: RequestHandler[] = [
-  getMeMockHandler(failWith(unauthorizedProblem, 401)),
+  getMeMockHandler(failWith(unauthorizedProblem)),
   ...handlers,
 ];
 

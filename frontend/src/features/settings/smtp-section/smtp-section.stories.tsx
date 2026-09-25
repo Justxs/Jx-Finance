@@ -50,7 +50,7 @@ export const TestMessageSent: Story = {
 };
 
 export const TestMessageRefused: Story = {
-  parameters: withHandlers(getSendTestEmailMockHandler(failWith(smtpSendFailedProblem, 400))),
+  parameters: withHandlers(getSendTestEmailMockHandler(failWith(smtpSendFailedProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /Send a test message/u }));
@@ -59,7 +59,7 @@ export const TestMessageRefused: Story = {
 };
 
 export const TestMessageWithoutSettings: Story = {
-  parameters: withHandlers(getSendTestEmailMockHandler(failWith(emailNotConfiguredProblem, 400))),
+  parameters: withHandlers(getSendTestEmailMockHandler(failWith(emailNotConfiguredProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.click(await canvas.findByRole("button", { name: /Send a test message/u }));

@@ -56,7 +56,7 @@ export const ValidationError: Story = {
 };
 
 export const DuplicateName: Story = {
-  parameters: withHandlers(getCreateTagMockHandler(failWith(duplicateTagProblem, 409))),
+  parameters: withHandlers(getCreateTagMockHandler(failWith(duplicateTagProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Atostogos" } });
@@ -87,7 +87,7 @@ export const Renamed: Story = {
 
 export const RenameDuplicate: Story = {
   args: { initial: personalTag },
-  parameters: withHandlers(getUpdateTagMockHandler(failWith(duplicateTagProblem, 409))),
+  parameters: withHandlers(getUpdateTagMockHandler(failWith(duplicateTagProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Vaikams" } });

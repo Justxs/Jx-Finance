@@ -33,10 +33,11 @@ export const authHandlers = [
   getLoginMockHandler(async ({ request }) => {
     const body = await readBody(request);
     if (body.password === "wrong") {
-      throw problem(
-        { ...unauthorizedProblem, instance: "/api/auth/login", detail: "Invalid credentials." },
-        401,
-      );
+      throw problem({
+        ...unauthorizedProblem,
+        instance: "/api/auth/login",
+        detail: "Invalid credentials.",
+      });
     }
     const needsCode = (text(body.email) ?? "").includes("2fa") && !text(body.twoFactorCode);
     return needsCode ? loginTwoFactorRequired : loginSuccess;
@@ -48,7 +49,7 @@ export const authHandlers = [
   getSessionsMockHandler(sessions),
   getRevokeSessionMockHandler(({ params }) => {
     if (found(sessions.find((session) => session.id === params.id)).isCurrent) {
-      throw problem(sessionCurrentProblem, 403);
+      throw problem(sessionCurrentProblem);
     }
   }),
   getRevokeOtherSessionsMockHandler(),
@@ -56,13 +57,13 @@ export const authHandlers = [
   getResetPasswordMockHandler(async ({ request }) => {
     const body = await readBody(request);
     if (text(body.token) !== resetLink.token) {
-      throw problem(resetTokenInvalidProblem, 400);
+      throw problem(resetTokenInvalidProblem);
     }
   }),
   getVerifyEmailMockHandler(async ({ request }) => {
     const body = await readBody(request);
     if (text(body.token) !== resetLink.token) {
-      throw problem(verificationTokenInvalidProblem, 400);
+      throw problem(verificationTokenInvalidProblem);
     }
   }),
   getSendVerificationEmailMockHandler(),

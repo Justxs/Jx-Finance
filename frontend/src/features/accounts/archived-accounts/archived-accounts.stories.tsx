@@ -7,7 +7,7 @@ import {
 import type { ArchivedAccountResponse } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { archivedAccounts, checkingAccount, serverErrorProblem } from "@/storybook/fixtures";
+import { archivedAccounts, checkingAccount, problemOf } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -98,20 +98,10 @@ export const RestoreRefused: Story = {
   parameters: withHandlers(
     getRestoreAccountMockHandler(
       failWith(
-        {
-          ...serverErrorProblem,
-          status: 403,
-          title: "Forbidden",
+        problemOf(403, "access.forbidden", "Only the owner can restore an account.", {
+          name: "GeneralErrors",
           instance: "/api/accounts/33333333-0000-4000-8000-000000000006/restore",
-          errors: [
-            {
-              name: "GeneralErrors",
-              reason: "Only the owner can restore an account.",
-              code: "access.forbidden" as const,
-            },
-          ],
-        },
-        403,
+        }),
       ),
     ),
   ),

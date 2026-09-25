@@ -7,7 +7,7 @@ import {
   categories,
   incomeCategories,
   overLimitBudget,
-  validationProblem,
+  problemOf,
   weeklyRolloverBudget,
 } from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
@@ -64,18 +64,10 @@ export const ServerFieldError: Story = {
   parameters: withHandlers(
     getCreateBudgetMockHandler(
       failWith(
-        {
-          ...validationProblem,
+        problemOf(400, "money.positive", "Limit must be a decimal greater than 0.", {
+          name: "limitAmount",
           instance: "/api/budgets",
-          errors: [
-            {
-              name: "limitAmount",
-              reason: "Limit must be a decimal greater than 0.",
-              code: "money.positive",
-            },
-          ],
-        },
-        400,
+        }),
       ),
     ),
   ),
