@@ -25,6 +25,10 @@ public sealed class HouseholdService(
     IClock clock,
     IDeletionRecorder deletions) : IHouseholdService
 {
+    private static readonly DomainError MembershipNotFound = EntityLookup.NotFound("Membership not found.");
+
+    private static readonly DomainError LastOwner = new(ErrorCodes.HouseholdLastOwner, "A household needs at least one owner.");
+
     public async Task<IReadOnlyList<HouseholdResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var households = await db.Households.OrderBy(h => h.Name).ToListAsync(cancellationToken);
@@ -140,22 +144,16 @@ public sealed class HouseholdService(
             return owned.Error;
         }
 
-        var found = await db.HouseholdMemberships.FindOrNotFoundAsync(
-            m => m.HouseholdId == household.Id && m.UserId == request.UserId,
-            "Membership not found.",
-            cancellationToken);
-        if (!found.TryGetValue(out var membership))
+        if (await FindMemberAsync(household.Id, request.UserId, cancellationToken) is not { } membership)
         {
-            return found.Error;
+            return MembershipNotFound;
         }
 
         if (membership.Role == HouseholdRole.Owner
             && request.Role != HouseholdRole.Owner
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
-            return new DomainError(
-                ErrorCodes.HouseholdLastOwner,
-                "A household needs at least one owner.");
+            return LastOwner;
         }
 
         membership.Role = request.Role;
@@ -175,21 +173,15 @@ public sealed class HouseholdService(
             return owned.Error;
         }
 
-        var found = await db.HouseholdMemberships.FindOrNotFoundAsync(
-            m => m.HouseholdId == household.Id && m.UserId == userId,
-            "Membership not found.",
-            cancellationToken);
-        if (!found.TryGetValue(out var membership))
+        if (await FindMemberAsync(household.Id, userId, cancellationToken) is not { } membership)
         {
-            return found.Error;
+            return MembershipNotFound;
         }
 
         if (membership.Role == HouseholdRole.Owner
             && !await HasAnotherOwnerAsync(household.Id, membership.UserId, cancellationToken))
         {
-            return new DomainError(
-                ErrorCodes.HouseholdLastOwner,
-                "A household needs at least one owner.");
+            return LastOwner;
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -247,6 +239,12 @@ public sealed class HouseholdService(
 
         return found;
     }
+
+    private Task<HouseholdMembership?> FindMemberAsync(
+        HouseholdId householdId,
+        Guid userId,
+        CancellationToken cancellationToken) =>
+        db.HouseholdMemberships.FirstOrDefaultAsync(m => m.HouseholdId == householdId && m.UserId == userId, cancellationToken);
 
     private Task<bool> IsOwnerAsync(HouseholdId householdId, CancellationToken cancellationToken) =>
         db.HouseholdMemberships.AnyAsync(

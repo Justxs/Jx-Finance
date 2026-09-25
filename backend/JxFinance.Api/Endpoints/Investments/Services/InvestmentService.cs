@@ -31,6 +31,8 @@ public sealed class InvestmentService(
     IHoldingLedger ledger,
     IDeletionRecorder deletions) : IInvestmentService
 {
+    private static readonly DomainError TransactionNotFound = EntityLookup.NotFound("Investment transaction not found.");
+
     private const string OversoldMessage =
         "This would sell more than was held on that date; short positions are not supported.";
 
@@ -217,10 +219,9 @@ public sealed class InvestmentService(
         CancellationToken cancellationToken)
     {
         var transactionId = new InvestmentTransactionId(request.Id);
-        var found = await db.InvestmentTransactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Investment transaction not found.", cancellationToken);
-        if (!found.TryGetValue(out var transaction))
+        if (await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken) is not { } transaction)
         {
-            return found.Error;
+            return TransactionNotFound;
         }
 
         if (transaction.Source != InvestmentSource.Manual)
@@ -324,10 +325,9 @@ public sealed class InvestmentService(
     public async Task<Result<Guid>> DeleteTransactionAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new InvestmentTransactionId(id);
-        var found = await db.InvestmentTransactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Investment transaction not found.", cancellationToken);
-        if (!found.TryGetValue(out var transaction))
+        if (await db.InvestmentTransactions.FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken) is not { } transaction)
         {
-            return found.Error;
+            return TransactionNotFound;
         }
 
         if (transaction.SecurityId is { } securityId

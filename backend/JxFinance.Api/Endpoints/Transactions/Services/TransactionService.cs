@@ -37,6 +37,8 @@ public sealed class TransactionService(
     IDeletionRecorder deletions,
     IOptions<AppOptions> options) : ITransactionService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Transaction not found.");
+
     public async Task<PagedResponse<TransactionResponse>> GetPageAsync(
         GetTransactionsRequest request,
         CancellationToken cancellationToken)
@@ -192,10 +194,9 @@ public sealed class TransactionService(
     public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(id);
-        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
-        if (!found.TryGetValue(out var transaction))
+        if (await FindAsync(transactionId, cancellationToken) is not { } transaction)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var lines = transaction.IsSplit
@@ -270,10 +271,9 @@ public sealed class TransactionService(
         CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(request.Id);
-        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
-        if (!found.TryGetValue(out var transaction))
+        if (await FindAsync(transactionId, cancellationToken) is not { } transaction)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var referenceError = await ValidateReferencesAsync(
@@ -436,21 +436,18 @@ public sealed class TransactionService(
         return transactions.Count;
     }
 
-    public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var transactionId = new TransactionId(id);
-        var found = await db.Transactions.FindOrNotFoundAsync(t => t.Id == transactionId, "Transaction not found.", cancellationToken);
-        if (!found.TryGetValue(out var transaction))
-        {
-            return found.Error;
-        }
-
-        deletions.Record(TrashKind.Transaction, id, TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount));
-
-        db.Transactions.Remove(transaction);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return id;
+        return db.DeleteOrNotFoundAsync<Transaction>(
+            id,
+            t => t.Id == transactionId,
+            NotFound.Message,
+            transaction => deletions.Record(
+                TrashKind.Transaction,
+                id,
+                TrashLabel.Dated(transaction.Description, transaction.Date, transaction.Amount)),
+            cancellationToken);
     }
 
     private async Task<Result<List<Transaction>>> LoadForBulkAsync(
@@ -462,8 +459,11 @@ public sealed class TransactionService(
 
         return transactions.Count == ids.Count
             ? transactions
-            : EntityLookup.NotFound("Transaction not found.");
+            : NotFound;
     }
+
+    private Task<Transaction?> FindAsync(TransactionId id, CancellationToken cancellationToken) =>
+        db.Transactions.FirstOrDefaultAsync(t => t.Id == id, cancellationToken);
 
     private async Task<Result<(Currency Currency, decimal ReportingAmount)>> ValueAsync(
         Guid accountId,

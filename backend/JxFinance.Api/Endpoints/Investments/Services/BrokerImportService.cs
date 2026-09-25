@@ -30,6 +30,8 @@ public sealed class BrokerImportService(
     private const int MaxErrorLength = 500;
     private const int MaxImportAttempts = 3;
 
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Connection not found.");
+
     private IDataProtector Protector => protection.CreateProtector("JxFinance.BrokerConnection.Token");
 
     public async Task<Result<BrokerImportResponse>> ImportAsync(
@@ -155,29 +157,23 @@ public sealed class BrokerImportService(
         return ToResponse(connection);
     }
 
-    public async Task<Result<Guid>> DeleteConnectionAsync(Guid accountId, CancellationToken cancellationToken)
+    public Task<Result<Guid>> DeleteConnectionAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var account = new AccountId(accountId);
-        var found = await db.BrokerConnections.FindOrNotFoundAsync(c => c.AccountId == account, "Connection not found.", cancellationToken);
-        if (!found.TryGetValue(out var connection))
-        {
-            return found.Error;
-        }
-
-        connection.ProtectedToken = string.Empty;
-        db.BrokerConnections.Remove(connection);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return accountId;
+        return db.DeleteOrNotFoundAsync<BrokerConnection>(
+            accountId,
+            c => c.AccountId == account,
+            NotFound.Message,
+            connection => connection.ProtectedToken = string.Empty,
+            cancellationToken);
     }
 
     public async Task<Result<BrokerImportResponse>> SyncAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var account = new AccountId(accountId);
-        var found = await db.BrokerConnections.FindOrNotFoundAsync(c => c.AccountId == account, "Connection not found.", cancellationToken);
-        if (!found.TryGetValue(out var connection))
+        if (await db.BrokerConnections.FirstOrDefaultAsync(c => c.AccountId == account, cancellationToken) is not { } connection)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var result = await DownloadAndImportAsync(connection, cancellationToken);

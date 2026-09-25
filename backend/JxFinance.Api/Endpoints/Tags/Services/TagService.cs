@@ -23,6 +23,8 @@ public sealed class TagService(
     ISharingGuard sharing,
     IDeletionRecorder deletions) : ITagService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("Tag not found.");
+
     public async Task<IReadOnlyList<TagResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var tags = await db.Tags.OrderBy(t => t.Name).ToListAsync(cancellationToken);
@@ -47,10 +49,9 @@ public sealed class TagService(
     public async Task<Result<TagResponse>> UpdateAsync(UpdateTagRequest request, CancellationToken cancellationToken)
     {
         var tagId = new TagId(request.Id);
-        var found = await db.Tags.FindOrNotFoundAsync(t => t.Id == tagId, "Tag not found.", cancellationToken);
-        if (!found.TryGetValue(out var tag))
+        if (await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken) is not { } tag)
         {
-            return found.Error;
+            return NotFound;
         }
 
         var error = await ValidateAsync(request, tag, cancellationToken);
@@ -68,10 +69,9 @@ public sealed class TagService(
     public async Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         var tagId = new TagId(id);
-        var found = await db.Tags.FindOrNotFoundAsync(t => t.Id == tagId, "Tag not found.", cancellationToken);
-        if (!found.TryGetValue(out var tag))
+        if (await db.Tags.FirstOrDefaultAsync(t => t.Id == tagId, cancellationToken) is not { } tag)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (tag.UserId != currentUser.Id)
