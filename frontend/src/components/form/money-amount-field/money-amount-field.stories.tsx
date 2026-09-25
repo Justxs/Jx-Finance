@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, within } from "storybook/test";
+import { expect, fireEvent } from "storybook/test";
 import { z } from "zod";
 import { Currency } from "@/api/generated/model";
 import { isPositiveMoney } from "@/lib/validation";
@@ -69,8 +69,7 @@ export const WithHint: Story = { args: { hint: "Charged on top of the amount." }
 export const Disabled: Story = { args: { disabled: true } };
 
 export const Invalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "abc" } });
     await expect(await canvas.findByText("Enter a positive amount.")).toHaveAttribute(
       "id",

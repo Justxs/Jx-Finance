@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import { Rows } from "../rows/rows";
 import { StaleRegion } from "./stale-region";
 
@@ -30,8 +30,8 @@ export const Fresh: Story = {};
 
 export const Stale: Story = {
   args: { stale: true },
-  play: async ({ canvasElement }) => {
-    const list = within(canvasElement).getByRole("list", { name: "Transactions" });
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole("list", { name: "Transactions" });
     const region = list.parentElement;
     await expect(region).toHaveAttribute("aria-busy", "true");
     await expect(getComputedStyle(list).opacity).toBe("1");

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getCreateHouseholdMockHandler,
   getHouseholdsMockHandler,
@@ -21,6 +21,7 @@ import {
   loadingHandlers,
   withHandlers,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { HouseholdsPage } from "./households-page";
 
 const meta = {
@@ -78,13 +79,11 @@ function createdHouseholdHandlers() {
 
 export const CreatesHousehold: Story = {
   parameters: { msw: { handlers: createdHouseholdHandlers() } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
-    const dialog = await body.findByRole("dialog");
+    const dialog = await openedDialog();
     await fireEvent.change(within(dialog).getByRole("textbox"), {
       target: { value: "Summer house" },
     });
@@ -92,19 +91,18 @@ export const CreatesHousehold: Story = {
       within(dialog).getByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
 
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
     await expect(await canvas.findByText("Summer house")).toBeVisible();
   },
 };
 
 export const CreateFails: Story = {
   parameters: withHandlers(getCreateHouseholdMockHandler(failWith(serverErrorProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /create household|sukurti namų ūkį/i }),
     );
-    const dialog = await within(document.body).findByRole("dialog");
+    const dialog = await openedDialog();
     await fireEvent.change(within(dialog).getByRole("textbox"), {
       target: { value: "Kazlauskų šeima" },
     });

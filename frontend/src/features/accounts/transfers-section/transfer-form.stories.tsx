@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateTransferMockHandler } from "@/api/generated/transfers/transfers.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, checkingAccount } from "@/storybook/fixtures";
@@ -19,8 +19,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Transfers: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "120" } });
     await userEvent.click(canvas.getByRole("button", { name: "Transfer" }));
     await waitFor(() => expect(args.onClose).toHaveBeenCalled());
@@ -29,8 +28,7 @@ export const Transfers: Story = {
 
 export const Pending: Story = {
   parameters: withHandlers(getCreateTransferMockHandler(pending)),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "120" } });
     const submit = canvas.getByRole("button", { name: "Transfer" });
     await userEvent.click(submit);
@@ -59,8 +57,7 @@ export const LongAccountNames: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const buttons = await canvas.findAllByRole("button");
     const submit = buttons.find((button) => button.getAttribute("type") === "submit");
     if (submit) {

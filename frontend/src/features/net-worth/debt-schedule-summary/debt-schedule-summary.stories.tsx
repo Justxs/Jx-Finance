@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent } from "storybook/test";
 import { getUpdateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -31,8 +31,7 @@ export const MatchesRecordedBalance: Story = {
     debt: { ...linearDebt, outstandingAmount: linearSchedule.scheduledBalance },
     schedule: linearSchedule,
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       canvas.queryByRole("button", { name: /scheduled balance|pagal grafiką/i }),
     ).toBeNull();
@@ -40,21 +39,19 @@ export const MatchesRecordedBalance: Story = {
 };
 
 export const UsingScheduledBalance: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       canvas.getByRole("button", { name: /use scheduled balance|naudoti likutį/i }),
     );
     await expect(
-      await within(document.body).findByText(/outstanding amount set to|likusi suma pakeista/i),
+      await screen.findByText(/outstanding amount set to|likusi suma pakeista/i),
     ).toBeInTheDocument();
   },
 };
 
 export const UpdatePending: Story = {
   parameters: withHandlers(getUpdateDebtMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       canvas.getByRole("button", { name: /use scheduled balance|naudoti likutį/i }),
     );
@@ -63,8 +60,7 @@ export const UpdatePending: Story = {
 
 export const UpdateFails: Story = {
   parameters: withHandlers(getUpdateDebtMockHandler(failWith(serverErrorProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       canvas.getByRole("button", { name: /use scheduled balance|naudoti likutį/i }),
     );

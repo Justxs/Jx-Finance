@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { z } from "zod";
 import { useAppForm } from "../app-form";
 
@@ -65,8 +65,7 @@ export const WithHint: Story = { args: { hint: "Members of the household see thi
 export const Disabled: Story = { args: { disabled: true } };
 
 export const Invalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     await expect(canvas.getByRole("combobox")).toHaveAttribute(
       "aria-describedby",

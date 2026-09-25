@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import {
   getRemoveMemberMockHandler,
   getUpdateHouseholdMockHandler,
@@ -7,6 +7,7 @@ import {
 import { withWidth } from "@/storybook/decorators";
 import { familyHousehold, gardenHousehold, householdMembers } from "@/storybook/fixtures";
 import { pending, withHandlers } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { HouseholdCard } from "./household-card";
 
 const meta = {
@@ -61,28 +62,25 @@ export const SlowMutations: Story = {
 };
 
 export const DeleteOffersUndo: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /^(delete|ištrinti): kazlauskų šeima$/i }),
     );
-    const page = within(document.body);
-    const dialog = await page.findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await expect(
       within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
     ).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
 
-    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    const undo = await screen.findByRole("button", { name: /^(undo|atšaukti)$/i });
     await userEvent.click(undo);
 
-    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+    await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
 
 export const OpensActivity: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const toggle = canvas.getByRole("button", { name: "Show activity" });
     await expect(toggle).toHaveAttribute("aria-expanded", "false");
 

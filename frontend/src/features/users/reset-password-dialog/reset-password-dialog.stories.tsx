@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, screen, userEvent, waitFor, within } from "storybook/test";
 import { getResetUserPasswordMockHandler } from "@/api/generated/users/users.msw";
 import {
   adminPassword,
@@ -67,7 +67,7 @@ export const ResetsPasswordAndTwoFactor: Story = {
     await submitReset();
 
     await expect(
-      await within(document.body).findByText(/Password reset\. Šarūnas Kazlauskas/u),
+      await screen.findByText(/Password reset\. Šarūnas Kazlauskas/u),
     ).toBeInTheDocument();
     await expect(args.onClose).toHaveBeenCalled();
   },

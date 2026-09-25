@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
 import {
   accounts,
@@ -56,9 +56,7 @@ export const Inactive: Story = { args: { bill: inactiveBill } };
 
 export const Income: Story = {
   args: { bill: incomeBill },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("Income")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Record income" })).toBeVisible();
   },
@@ -66,9 +64,7 @@ export const Income: Story = {
 
 export const Transfer: Story = {
   args: { bill: transferBill },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(canvas.getByText("Transfer")).toBeVisible();
     await expect(canvas.getByText(new RegExp(`→ ${savingsAccount.name}`, "u"))).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Record transfer" })).toBeVisible();
@@ -77,8 +73,7 @@ export const Transfer: Story = {
 
 export const RecordTransferRequestsConfirm: Story = {
   args: { bill: transferBill },
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     await userEvent.click(
       canvas.getByRole("button", { name: /^(record transfer|registruoti pervedimą)$/i }),
     );
@@ -99,8 +94,7 @@ export const DeletePending: Story = { args: { deletePending: true, deleteDisable
 export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 
 export const EditRequestsEdit: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti)(:|$)/i }));
     await expect(args.onEdit).toHaveBeenCalledOnce();
   },
@@ -108,8 +102,7 @@ export const EditRequestsEdit: Story = {
 
 export const InactiveCannotRecord: Story = {
   args: { bill: inactiveBill },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole("button", { name: /^(record payment|registruoti mokėjimą)$/i }),
     ).toBeDisabled();

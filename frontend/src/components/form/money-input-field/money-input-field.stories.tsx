@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, within } from "storybook/test";
+import { expect, fireEvent } from "storybook/test";
 import { z } from "zod";
 import { isPositiveMoney } from "@/lib/validation";
 import { useAppForm } from "../app-form";
@@ -44,8 +44,7 @@ export const Filled: Story = { args: { initial: "1084,20" } };
 export const WithHint: Story = { args: { hint: "Leave empty when there was no fee." } };
 
 export const Invalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "-5x" } });
     await expect(await canvas.findByText("Enter a positive amount.")).toHaveAttribute(
       "id",

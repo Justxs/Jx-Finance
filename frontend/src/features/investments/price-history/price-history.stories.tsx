@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import {
   getDeleteSecurityPriceMockHandler,
   getSecurityPricesMockHandler,
@@ -9,6 +9,7 @@ import { RowsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { withWidth } from "@/storybook/decorators";
 import { securityNotHeldProblem, securityPrices, worldEtf } from "@/storybook/fixtures";
 import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
+import { openedDialog, type Canvas } from "@/storybook/interactions";
 import { PriceHistory } from "./price-history";
 
 const meta = {
@@ -27,8 +28,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findAllByRole("listitem")).toHaveLength(securityPrices.length);
     await expect(canvas.getByText("Last price")).toBeVisible();
   },
@@ -36,8 +36,8 @@ export const Default: Story = {
 
 export const Empty: Story = {
   parameters: withHandlers(getSecurityPricesMockHandler([])),
-  play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByText("No prices recorded yet.")).toBeVisible();
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("No prices recorded yet.")).toBeVisible();
   },
 };
 
@@ -47,33 +47,32 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
-async function confirmFirstDelete(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement);
+async function confirmFirstDelete(canvas: Canvas) {
   const buttons = await canvas.findAllByRole("button", { name: /^Delete: / });
   const first = buttons[0];
   if (!first) {
     throw new Error("The delete button is missing.");
   }
   await userEvent.click(first);
-  const dialog = within(await within(document.body).findByRole("alertdialog"));
+  const dialog = within(await openedDialog("alertdialog"));
   await expect(dialog.getByText(/VWCE/)).toBeVisible();
   await userEvent.click(dialog.getByRole("button", { name: "Delete" }));
 }
 
 export const DeletesPoint: Story = {
-  play: async ({ canvasElement }) => {
-    await confirmFirstDelete(canvasElement);
+  play: async ({ canvas }) => {
+    await confirmFirstDelete(canvas);
 
-    await waitFor(() => expect(within(document.body).queryByRole("alertdialog")).toBeNull());
-    await expect(within(canvasElement).queryByRole("alert")).toBeNull();
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
+    await expect(canvas.queryByRole("alert")).toBeNull();
   },
 };
 
 export const DeleteRefused: Story = {
   parameters: withHandlers(getDeleteSecurityPriceMockHandler(failWith(securityNotHeldProblem))),
-  play: async ({ canvasElement }) => {
-    await confirmFirstDelete(canvasElement);
+  play: async ({ canvas }) => {
+    await confirmFirstDelete(canvas);
 
-    await expect(await within(canvasElement).findByRole("alert")).toBeVisible();
+    await expect(await canvas.findByRole("alert")).toBeVisible();
   },
 };

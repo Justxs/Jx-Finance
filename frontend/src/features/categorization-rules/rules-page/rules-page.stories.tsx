@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import {
   getCategorizationRulesMockHandler,
   getDeleteCategorizationRuleMockHandler,
@@ -28,8 +28,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText(categorizationRules[0]!.name)).toBeInTheDocument();
     await expect(await canvas.findByText(categorizationRules[4]!.name)).toBeInTheDocument();
   },
@@ -43,8 +42,7 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const SingleRule: Story = {
   parameters: withHandlers(getCategorizationRulesMockHandler(categorizationRules.slice(0, 1))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const up = await canvas.findByRole("button", { name: /^(move up|pakelti):/i });
     const down = await canvas.findByRole("button", { name: /^(move down|nuleisti):/i });
     await expect(up).toBeDisabled();
@@ -53,8 +51,7 @@ export const SingleRule: Story = {
 };
 
 export const ReorderFirstRuleDown: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const down = await canvas.findAllByRole("button", { name: /^(move down|nuleisti):/i });
     await userEvent.click(down[0]!);
     await expect(
@@ -65,16 +62,14 @@ export const ReorderFirstRuleDown: Story = {
 
 export const ReorderPending: Story = {
   parameters: withHandlers(getMoveCategorizationRuleMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const down = await canvas.findAllByRole("button", { name: /^(move down|nuleisti):/i });
     await userEvent.click(down[0]!);
   },
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /add rule|pridėti taisyklę/i }),
     );
@@ -84,8 +79,7 @@ export const AddDialogOpen: Story = {
 };
 
 export const RunDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", {
         name: /run over existing transactions|paleisti esamoms operacijoms/i,
@@ -101,30 +95,27 @@ export const RunDialogOpen: Story = {
 };
 
 export const DeleteOffersUndo: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti):/i,
     });
     await userEvent.click(deleteButtons[0]!);
     const dialog = await openedDialog("alertdialog");
-    const page = within(document.body);
     await expect(
       within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
     ).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
 
-    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    const undo = await screen.findByRole("button", { name: /^(undo|atšaukti)$/i });
     await userEvent.click(undo);
 
-    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+    await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
 
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteCategorizationRuleMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti):/i,
     });

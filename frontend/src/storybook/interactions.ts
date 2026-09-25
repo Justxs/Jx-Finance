@@ -1,4 +1,7 @@
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import type { StoryContext } from "@storybook/react-vite";
+import { expect, screen, userEvent, waitFor } from "storybook/test";
+
+export type Canvas = StoryContext["canvas"];
 
 export function first<T>(items: readonly T[]): T {
   const [item] = items;
@@ -9,14 +12,13 @@ export function first<T>(items: readonly T[]): T {
 }
 
 export async function chooseOption(trigger: HTMLElement, option: string | RegExp) {
-  const body = within(document.body);
   await userEvent.click(trigger);
-  await userEvent.click(await body.findByRole("option", { name: option }));
-  await waitFor(() => expect(body.queryByRole("listbox")).toBeNull());
+  await userEvent.click(await screen.findByRole("option", { name: option }));
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
 }
 
 export async function openedDialog(role: "dialog" | "alertdialog" = "dialog") {
-  const dialog = await within(document.body).findByRole(role);
+  const dialog = await screen.findByRole(role);
   await waitFor(() => expect(dialog).toBeVisible());
   return dialog;
 }

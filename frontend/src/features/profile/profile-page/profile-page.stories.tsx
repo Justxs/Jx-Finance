@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -48,8 +48,7 @@ export const Unauthenticated: Story = {
 };
 
 export const SavesDisplayName: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByLabelText(/display name|rodomas vardas/i), {
       target: { value: "Rūta K." },
     });
@@ -58,14 +57,13 @@ export const SavesDisplayName: Story = {
     );
 
     await expect(
-      await within(document.body).findByText(/profile updated|profilis atnaujintas/i),
+      await screen.findByText(/profile updated|profilis atnaujintas/i),
     ).toBeInTheDocument();
   },
 };
 
 export const SwitchesToSecurity: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const link = await canvas.findByRole("link", {
       name: /two-factor authentication|dvigubas tapatybės patvirtinimas/i,
     });

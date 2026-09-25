@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -10,7 +10,7 @@ import {
   loadingHandlers,
   withHandlers,
 } from "@/storybook/handlers";
-import { chooseOption } from "@/storybook/interactions";
+import { chooseOption, openedDialog } from "@/storybook/interactions";
 import { ActivitySection } from "./activity-section";
 
 const meta = {
@@ -55,8 +55,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const FilteredByType: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(await canvas.findByLabelText("Entry type"), "Sell");
     await waitFor(() => expect(canvas.queryByText("Interest")).not.toBeInTheDocument());
     await expect(canvas.getByText("+$1,405.70")).toBeInTheDocument();
@@ -64,16 +63,14 @@ export const FilteredByType: Story = {
 };
 
 export const DeleteOffersUndo: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const page = within(document.body);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Delete: Sell · MSFT, / }));
-    const dialog = await page.findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await expect(within(dialog).getByText(/You can undo this straight away/)).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: "Delete" }));
 
-    await userEvent.click(await page.findByRole("button", { name: "Undo" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Undo" }));
 
-    await expect(await page.findByText("Brought back")).toBeInTheDocument();
+    await expect(await screen.findByText("Brought back")).toBeInTheDocument();
   },
 };

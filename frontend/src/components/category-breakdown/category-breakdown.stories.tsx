@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import type { CategoryBreakdownItem } from "@/api/generated/model";
 import { Card } from "@/components/ui/card/card";
 import { categoryBreakdownItems } from "@/storybook/fixtures";
@@ -62,9 +62,7 @@ export const LongNamesAndLargeAmounts: Story = { args: { items: longItems } };
 
 export const SyntheticInvestmentGroup: Story = {
   args: { items: withInvestmentGroup },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByText(/^(investment taxes and fees|investicijų mokesčiai ir rinkliavos)$/i),
     ).toBeVisible();
@@ -95,9 +93,7 @@ export const IncomeLinksFilterByIncome: Story = {
       },
     ],
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("link", { name: "Salary" })).toHaveAttribute(
       "href",
       expect.stringContaining("type=income"),
@@ -122,9 +118,7 @@ export const ComparedWithAnEarlierPeriod: Story = {
       },
     ],
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(await canvas.findByRole("link", { name: "Health" })).toBeVisible();
     await expect(canvas.getAllByText(/up from nothing|anksčiau nebuvo nieko/i)).toHaveLength(1);
     await expect(canvas.getAllByText(/the earlier period|ankstesni/i)).toHaveLength(3);

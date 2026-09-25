@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import { getCreateTransactionMockHandler } from "@/api/generated/transactions/transactions.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -17,6 +17,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { TransactionsPage } from "./transactions-page";
 
 const meta = {
@@ -55,21 +56,19 @@ export const AddDialogFromUrl: Story = { parameters: { route: "/transactions?new
 
 export const SaveAndAddAnother: Story = {
   parameters: { route: "/transactions?new=true" },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const dialog = within(await page.findByRole("dialog"));
+  play: async () => {
+    const dialog = within(await openedDialog());
     const amount = await dialog.findByLabelText("Amount");
     await fireEvent.change(amount, { target: { value: "12,50" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save and add another" }));
     await waitFor(() => expect(amount).toHaveValue(""));
-    await expect(page.getByRole("dialog")).not.toHaveAttribute("data-closed");
+    await expect(screen.getByRole("dialog")).not.toHaveAttribute("data-closed");
     await waitFor(() => expect(amount).toHaveFocus());
   },
 };
 
 export const BulkSelection: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const boxes = await canvas.findAllByRole("checkbox", { name: /^Select: / });
     const enabled = boxes.filter((box) => box.getAttribute("aria-disabled") !== "true");
     await userEvent.click(enabled[0]!);
@@ -81,16 +80,13 @@ export const BulkSelection: Story = {
 
 export const SavingAndApplyingAFilter: Story = {
   parameters: { route: "/transactions?type=expense&search=lidl" },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
     await userEvent.type(
-      await page.findByRole("textbox", { name: "Save filter" }),
+      await screen.findByRole("textbox", { name: "Save filter" }),
       "Lidl expenses",
     );
-    await userEvent.click(page.getByRole("button", { name: "Save filter" }));
+    await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
     await waitFor(() => expect(readSavedFilters()).toHaveLength(1));
     await expect(readSavedFilters()[0]?.filter).toEqual(
       expect.objectContaining({ search: "lidl", type: "expense" }),
@@ -103,7 +99,7 @@ export const SavingAndApplyingAFilter: Story = {
 
     await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
     await userEvent.click(
-      await page.findByRole("button", { name: "Apply saved filter: Lidl expenses" }),
+      await screen.findByRole("button", { name: "Apply saved filter: Lidl expenses" }),
     );
 
     await waitFor(() =>
@@ -116,14 +112,11 @@ export const SavedFilterNamingADeletedCategory: Story = {
   beforeEach: () => {
     saveFilter("Renovation", { categoryId: "44444444-0000-4000-8000-000000000099" });
   },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Saved filters/ }));
-    await expect(await page.findByText("Names something that no longer exists")).toBeVisible();
+    await expect(await screen.findByText("Names something that no longer exists")).toBeVisible();
 
-    await userEvent.click(page.getByRole("button", { name: "Apply saved filter: Renovation" }));
+    await userEvent.click(screen.getByRole("button", { name: "Apply saved filter: Renovation" }));
 
     await waitFor(() =>
       expect(canvas.getByRole("button", { name: "Clear filters" })).toBeVisible(),
@@ -133,16 +126,13 @@ export const SavedFilterNamingADeletedCategory: Story = {
 };
 
 export const DuplicatingASplitRow: Story = {
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     const duplicate = await canvas.findAllByRole("button", {
       name: `Duplicate: ${splitTransaction.description ?? ""}`,
     });
     await userEvent.click(duplicate[0]!);
 
-    const dialog = within(await page.findByRole("dialog"));
+    const dialog = within(await openedDialog());
     const amounts = await dialog.findAllByLabelText("Amount");
     await expect(amounts[0]).toHaveValue("128.40");
     await expect(amounts).toHaveLength(4);
@@ -164,16 +154,13 @@ export const CreatingFromATemplate: Story = {
       lines: null,
     });
   },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Templates/ }));
     await userEvent.click(
-      await page.findByRole("button", { name: "New transaction from template: Weekly shop" }),
+      await screen.findByRole("button", { name: "New transaction from template: Weekly shop" }),
     );
 
-    const dialog = within(await page.findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await expect(await dialog.findByLabelText("Amount")).toHaveValue("42.18");
     await expect(dialog.getByLabelText("Description")).toHaveValue("Maxima");
     await expect(dialog.getByRole("checkbox", { name: "Automobilis" })).toBeChecked();
@@ -182,9 +169,8 @@ export const CreatingFromATemplate: Story = {
 
 export const SavingATemplateFromTheForm: Story = {
   parameters: { route: "/transactions?new=true" },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const dialog = within(await page.findByRole("dialog"));
+  play: async () => {
+    const dialog = within(await openedDialog());
 
     await fireEvent.change(await dialog.findByLabelText("Amount"), { target: { value: "42,18" } });
     await userEvent.click(dialog.getByRole("button", { name: "Save as template" }));
@@ -211,16 +197,13 @@ export const TemplateStillValidates: Story = {
       lines: null,
     });
   },
-  play: async ({ canvasElement }) => {
-    const page = within(canvasElement.ownerDocument.body);
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^Templates/ }));
     await userEvent.click(
-      await page.findByRole("button", { name: "New transaction from template: Empty shape" }),
+      await screen.findByRole("button", { name: "New transaction from template: Empty shape" }),
     );
 
-    const dialog = within(await page.findByRole("dialog"));
+    const dialog = within(await openedDialog());
     const amount = await dialog.findByLabelText("Amount");
     await expect(amount).toHaveValue("");
 

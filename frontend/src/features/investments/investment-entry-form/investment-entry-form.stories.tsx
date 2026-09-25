@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor, within } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, securities, usStock, worldEtf } from "@/storybook/fixtures";
-import { chooseOption } from "@/storybook/interactions";
+import { type Canvas, chooseOption, openedDialog } from "@/storybook/interactions";
 import { InvestmentEntryForm } from "./investment-entry-form";
 
 const meta = {
@@ -22,8 +22,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-async function choose(canvasElement: HTMLElement, label: string | RegExp, option: string | RegExp) {
-  await chooseOption(await within(canvasElement).findByLabelText(label), option);
+async function choose(canvas: Canvas, label: string | RegExp, option: string | RegExp) {
+  await chooseOption(await canvas.findByLabelText(label), option);
 }
 
 export const Buy: Story = {};
@@ -50,26 +50,24 @@ export const NoSecurities: Story = { args: { securities: [] } };
 
 export const DefaultsToInvestmentAccount: Story = {
   args: { accountId: undefined },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Account")).toHaveTextContent(brokerAccount.name);
   },
 };
 
 export const SwitchingTypeChangesFields: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByLabelText("Quantity")).toBeInTheDocument();
     await expect(canvas.getByLabelText("Price per share")).toBeInTheDocument();
     await expect(canvas.queryByLabelText("Amount")).not.toBeInTheDocument();
 
-    await choose(canvasElement, "Entry type", "Interest");
+    await choose(canvas, "Entry type", "Interest");
     await expect(canvas.queryByLabelText("Quantity")).not.toBeInTheDocument();
     await expect(canvas.queryByLabelText("Price per share")).not.toBeInTheDocument();
     await expect(await canvas.findByLabelText("Amount")).toBeInTheDocument();
     await expect(canvas.getByLabelText("Security (optional)")).toBeInTheDocument();
 
-    await choose(canvasElement, "Entry type", "Split");
+    await choose(canvas, "Entry type", "Split");
     await expect(await canvas.findByLabelText("New shares per old share")).toBeInTheDocument();
     await expect(canvas.getByText("2 for a 2-for-1 split.")).toBeInTheDocument();
     await expect(canvas.getByText("No cash movement")).toBeInTheDocument();
@@ -77,9 +75,8 @@ export const SwitchingTypeChangesFields: Story = {
 };
 
 export const BuyShowsCashEffect: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
-    await choose(canvasElement, "Security", new RegExp(`^${worldEtf.symbol}`));
+  play: async ({ canvas, args }) => {
+    await choose(canvas, "Security", new RegExp(`^${worldEtf.symbol}`));
     await userEvent.type(await canvas.findByLabelText("Quantity"), "10");
     await userEvent.type(await canvas.findByLabelText("Price per share (EUR)"), "98,40");
     await userEvent.type(canvas.getByLabelText("Fee (optional)"), "1,25");
@@ -102,17 +99,15 @@ export const BuyShowsCashEffect: Story = {
 
 export const DividendUsesSecurityCurrency: Story = {
   args: { initialType: "dividend" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await choose(canvasElement, "Security", new RegExp(`^${usStock.symbol}`));
+  play: async ({ canvas }) => {
+    await choose(canvas, "Security", new RegExp(`^${usStock.symbol}`));
     await userEvent.type(await canvas.findByLabelText("Amount (USD)"), "9.96");
     await expect(await canvas.findByText("+$9.96")).toBeInTheDocument();
   },
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Add entry" }));
     await expect(args.onSubmit).not.toHaveBeenCalled();
     await expect(await canvas.findByText("Choose a security.")).toBeInTheDocument();
@@ -120,11 +115,10 @@ export const ValidationErrors: Story = {
 };
 
 export const AddedSecurityBecomesSelected: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Add security" }));
 
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await userEvent.type(await dialog.findByLabelText("Symbol"), "iwda");
     await userEvent.type(dialog.getByLabelText("Name"), "iShares Core MSCI World UCITS ETF");
     await userEvent.click(dialog.getByRole("button", { name: "Add security" }));

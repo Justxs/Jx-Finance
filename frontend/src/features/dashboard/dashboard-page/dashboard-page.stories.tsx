@@ -21,6 +21,7 @@ import {
   loadingHandlers,
   withHandlers,
 } from "@/storybook/handlers";
+import type { Canvas } from "@/storybook/interactions";
 import { DashboardPage } from "./dashboard-page";
 
 const meta = {
@@ -42,8 +43,7 @@ const accountsTitle = /^(balance by account|likutis pagal sąskaitą)$/i;
 const budgetsTitle = /^(budgets in their window|biudžetai savo lange)$/i;
 const customise = /^(customise|pritaikyti)$/i;
 
-async function cardHeadings(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement);
+async function cardHeadings(canvas: Canvas) {
   await canvas.findAllByRole("heading", { level: 2 });
   return canvas.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
 }
@@ -65,8 +65,7 @@ export const PartialFailure: Story = {
 };
 
 export const AllSectionsLoad: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const heading = await canvas.findByRole("heading", {
       name: /recent transactions|paskutinės operacijos/i,
     });
@@ -81,8 +80,7 @@ export const RetryRecoversFailedSection: Story = {
   parameters: withHandlers(
     getMonthlyTrendMockHandler(failWith(serverErrorProblem), { once: true }),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const failed = await canvas.findByRole("alert");
     await expect(failed).toHaveTextContent(/income vs\. expenses|pajamos ir išlaidos/i);
 
@@ -96,16 +94,15 @@ export const RetryRecoversFailedSection: Story = {
 
 export const CustomOrder: Story = {
   parameters: withHandlers(getDashboardLayoutMockHandler(customDashboardLayout)),
-  play: async ({ canvasElement }) => {
-    const headings = await cardHeadings(canvasElement);
+  play: async ({ canvas }) => {
+    const headings = await cardHeadings(canvas);
     await expect(headings[0]).toMatch(accountsTitle);
   },
 };
 
 export const HiddenCards: Story = {
   parameters: withHandlers(getDashboardLayoutMockHandler(hiddenCardsDashboardLayout)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
     await expect(canvas.queryByRole("heading", { name: trendTitle })).not.toBeInTheDocument();
     await expect(
@@ -116,8 +113,7 @@ export const HiddenCards: Story = {
 
 export const AllHidden: Story = {
   parameters: withHandlers(getDashboardLayoutMockHandler(allHiddenDashboardLayout)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByText(/every card is hidden|visos kortelės paslėptos/i);
     await expect(canvas.queryAllByRole("heading", { level: 2 })).toHaveLength(0);
 
@@ -133,8 +129,7 @@ export const AllHidden: Story = {
 
 export const FeatureSwitchedOff: Story = {
   parameters: withHandlers(withSettings({ budgets: false })),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
     await expect(canvas.queryByRole("heading", { name: budgetsTitle })).not.toBeInTheDocument();
 
@@ -147,8 +142,7 @@ export const FeatureSwitchedOff: Story = {
 };
 
 export const CustomiseAndSave: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByRole("heading", { level: 2, name: trendTitle });
 
     await userEvent.click(canvas.getByRole("button", { name: customise }));
@@ -161,7 +155,7 @@ export const CustomiseAndSave: Story = {
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
 
     await waitFor(async () => {
-      const headings = await cardHeadings(canvasElement);
+      const headings = await cardHeadings(canvas);
       await expect(headings[0]).toMatch(accountsTitle);
     });
     await expect(canvas.queryByRole("heading", { name: trendTitle })).not.toBeInTheDocument();
@@ -172,8 +166,7 @@ export const SaveError: Story = {
   parameters: withHandlers(
     getSaveDashboardLayoutMockHandler(failWith(dashboardCardUnknownProblem)),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: customise }));
     await userEvent.click(await canvas.findByRole("button", { name: /^(save|išsaugoti)$/i }));
 
@@ -187,8 +180,7 @@ export const SaveError: Story = {
 
 export const LayoutUnavailable: Story = {
   parameters: withHandlers(getDashboardLayoutMockHandler(failWith(serverErrorProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByRole("alert")).toHaveTextContent(
       /dashboard layout|suvestinės išdėstymas/i,
     );

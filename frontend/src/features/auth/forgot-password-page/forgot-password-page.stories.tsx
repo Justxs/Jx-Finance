@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { getForgotPasswordMockHandler } from "@/api/generated/auth/auth.msw";
 import { withWidth } from "@/storybook/decorators";
 import { pending, withHandlers } from "@/storybook/handlers";
@@ -18,8 +18,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const TheSameAnswerForAnyAddress: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(canvas.getByLabelText("Email"), "nobody@example.lt");
     await userEvent.click(canvas.getByRole("button", { name: "Send reset link" }));
     await expect(await canvas.findByRole("status")).toHaveTextContent(
@@ -30,8 +29,7 @@ export const TheSameAnswerForAnyAddress: Story = {
 };
 
 export const AnInvalidAddressIsCaughtBeforeSending: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(canvas.getByLabelText("Email"), "not-an-address");
     await userEvent.click(canvas.getByRole("button", { name: "Send reset link" }));
     await expect(await canvas.findByText("Enter a valid email address.")).toBeInTheDocument();

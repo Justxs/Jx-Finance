@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, waitFor } from "storybook/test";
 import type { ErrorCode, TrashEntryResponse } from "@/api/generated/model";
 import { getRestoreDeletedMockHandler, getTrashMockHandler } from "@/api/generated/trash/trash.msw";
 import { problemOf, recordedTrashEntries, trashEntries } from "@/storybook/fixtures";
@@ -47,8 +47,7 @@ function restorableHandlers() {
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Maxima, 42.18 EUR")).toBeVisible();
     await expect(canvas.getAllByText("Transaction")).toHaveLength(1);
     await expect(canvas.getByText("Currency conversion")).toBeVisible();
@@ -62,8 +61,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Valiutos keitimas")).toBeVisible();
     await expect(canvas.getByText("Investicijų įrašas")).toBeVisible();
     await expect(canvas.getAllByRole("button", { name: /^Atkurti:/u })).toHaveLength(10);
@@ -72,8 +70,7 @@ export const Lithuanian: Story = {
 
 export const Empty: Story = {
   parameters: { msw: { handlers: emptyHandlers } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText("You have not deleted anything in the last 30 days."),
     ).toBeVisible();
@@ -94,8 +91,7 @@ export const Paged: Story = {
       ),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Page 1 of 4")).toBeVisible();
     await userEvent.click(canvas.getByRole("button", { name: "Next" }));
     await waitFor(() => expect(canvas.getByText("Page 2 of 4")).toBeVisible());
@@ -108,8 +104,7 @@ export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers 
 
 export const RestoringTakesTheRowOut: Story = {
   parameters: { msw: { handlers: restorableHandlers() } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Restore: Maxima, 42.18 EUR" }),
     );
@@ -126,8 +121,7 @@ export const RestoreRefused: Story = {
       cannotRestore(400, "restore.referenceMissing", "The account this belonged to is archived."),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Restore: Maxima, 42.18 EUR" }),
     );
@@ -149,8 +143,7 @@ export const InvestmentRestoreRefused: Story = {
       ),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Restore: Sell 3 MSFT, 2026-07-15" }),
     );
@@ -167,8 +160,7 @@ export const RecordedKinds: Story = {
       cannotRestore(409, "restore.nameTaken", 'You already have another tag named "Atostogos".'),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Maistas, 42 transactions, 1 budget")).toBeVisible();
     await expect(canvas.getByText("Category")).toBeVisible();
     await expect(canvas.getByText("Tag")).toBeVisible();

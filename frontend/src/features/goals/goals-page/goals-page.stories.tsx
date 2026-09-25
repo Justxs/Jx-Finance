@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import {
   getDeleteGoalMockHandler,
   getGoalsMockHandler,
@@ -49,8 +49,7 @@ export const SingleCompletedGoal: Story = {
 
 export const WithUnavailableFunding: Story = {
   parameters: withHandlers(getGoalsMockHandler([...goals, unavailableFundedGoal])),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByText(/progress unavailable|pažanga nepasiekiama/i),
     ).toBeVisible();
@@ -62,16 +61,14 @@ export const LongList: Story = {
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /add goal|pridėti tikslą/i }));
     await openedDialog();
   },
 };
 
 export const EditDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
     );
@@ -80,57 +77,52 @@ export const EditDialogOpen: Story = {
 };
 
 export const EditInvalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
     );
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await userEvent.clear(dialog.getAllByRole("textbox")[0]!);
   },
 };
 
 export const EditSavePending: Story = {
   parameters: withHandlers(getUpdateGoalMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       (await canvas.findAllByRole("button", { name: /^(edit|redaguoti):/i }))[0]!,
     );
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await userEvent.click(dialog.getByRole("button", { name: /^(save|išsaugoti)$/i }));
   },
 };
 
 export const DeleteOffersUndo: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const page = within(document.body);
+  play: async ({ canvas }) => {
     await userEvent.click(
       (await canvas.findAllByRole("button", { name: /^(delete|ištrinti)(:|$)/i }))[0]!,
     );
-    const dialog = await page.findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await expect(
       within(dialog).getByText(/you can undo this straight away|veiksmą galėsite atšaukti/i),
     ).toBeVisible();
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
 
-    const undo = await page.findByRole("button", { name: /^(undo|atšaukti)$/i });
+    const undo = await screen.findByRole("button", { name: /^(undo|atšaukti)$/i });
     await userEvent.click(undo);
 
-    await expect(await page.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
+    await expect(await screen.findByText(/brought back|įrašas grąžintas/i)).toBeInTheDocument();
   },
 };
 
 export const DeletePending: Story = {
   parameters: withHandlers(getDeleteGoalMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deleteButtons = await canvas.findAllByRole("button", {
       name: /^(delete|ištrinti)(:|$)/i,
     });
     await userEvent.click(deleteButtons[0]!);
-    const dialog = await within(document.body).findByRole("alertdialog");
+    const dialog = await openedDialog("alertdialog");
     await userEvent.click(within(dialog).getByRole("button", { name: /delete|ištrinti/i }));
   },
 };

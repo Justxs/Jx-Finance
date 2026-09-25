@@ -9,6 +9,7 @@ import {
   loadingHandlers,
   withHandlers,
 } from "@/storybook/handlers";
+import { openedDialog } from "@/storybook/interactions";
 import { InvestmentsPage } from "./investments-page";
 
 const meta = {
@@ -35,8 +36,7 @@ export const Empty: Story = { parameters: { msw: { handlers: investmentsEmptyHan
 
 export const IncompletePrices: Story = {
   parameters: withHandlers(getPortfolioMockHandler(incompletePortfolio)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByRole("note")).toBeInTheDocument();
     await expect(
       (await canvas.findAllByRole("button", { name: /^Set price\s*: IGN1L$/ }))[0],
@@ -60,10 +60,9 @@ export const Mobile: Story = {
 };
 
 export const OpensEntryForm: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Add entry" }));
-    const dialog = within(await within(document.body).findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await expect(await dialog.findByLabelText("Entry type")).toBeInTheDocument();
   },
 };

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateTagMockHandler, getUpdateTagMockHandler } from "@/api/generated/tags/tags.msw";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
@@ -46,8 +46,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const ValidationError: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const name = await canvas.findByRole("textbox");
     await userEvent.type(name, "x");
     await userEvent.clear(name);
@@ -57,8 +56,7 @@ export const ValidationError: Story = {
 
 export const DuplicateName: Story = {
   parameters: withHandlers(getCreateTagMockHandler(failWith(duplicateTagProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Atostogos" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();
@@ -67,8 +65,7 @@ export const DuplicateName: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateTagMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Remontas" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
   },
@@ -76,8 +73,7 @@ export const SubmitPending: Story = {
 
 export const Renamed: Story = {
   args: { initial: personalTag },
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const name = await canvas.findByRole("textbox");
     await fireEvent.change(name, { target: { value: "Atostogos Ispanijoje" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
@@ -88,8 +84,7 @@ export const Renamed: Story = {
 export const RenameDuplicate: Story = {
   args: { initial: personalTag },
   parameters: withHandlers(getUpdateTagMockHandler(failWith(duplicateTagProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Vaikams" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();

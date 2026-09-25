@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, screen, userEvent, waitFor, within } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import {
   getDeactivateUserMockHandler,
@@ -76,9 +76,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const DeactivatesUserAfterConfirmation: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const deactivate = first(
       await canvas.findAllByRole("button", {
         name: `Deactivate: ${memberUser.displayName}`,
@@ -91,14 +89,12 @@ export const DeactivatesUserAfterConfirmation: Story = {
     await expect(confirm.getByText(/signed out everywhere/u)).toBeVisible();
     await userEvent.click(confirm.getByRole("button", { name: "Deactivate" }));
 
-    await expect(await body.findByText("User deactivated")).toBeInTheDocument();
+    await expect(await screen.findByText("User deactivated")).toBeInTheDocument();
   },
 };
 
 export const CancelsDeactivation: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const deactivate = first(
       await canvas.findAllByRole("button", {
         name: `Deactivate: ${memberUser.displayName}`,
@@ -108,15 +104,14 @@ export const CancelsDeactivation: Story = {
     const confirm = within(await openedDialog("alertdialog"));
     await userEvent.click(confirm.getByRole("button", { name: "Cancel" }));
 
-    await waitFor(() => expect(body.queryByRole("alertdialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("alertdialog")).toBeNull());
     await expect(deactivate).toBeEnabled();
   },
 };
 
 export const DeactivationFails: Story = {
   parameters: withHandlers(getDeactivateUserMockHandler(failWith(serverErrorProblem))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deactivate = first(
       await canvas.findAllByRole("button", {
         name: `Deactivate: ${memberUser.displayName}`,
@@ -126,9 +121,7 @@ export const DeactivationFails: Story = {
     const confirm = within(await openedDialog("alertdialog"));
     await userEvent.click(confirm.getByRole("button", { name: "Deactivate" }));
 
-    await expect(
-      await within(document.body).findByText(serverErrorProblem.title),
-    ).toBeInTheDocument();
+    await expect(await screen.findByText(serverErrorProblem.title)).toBeInTheDocument();
   },
 };
 
@@ -139,8 +132,7 @@ export const DeactivatingLastAdministratorRefused: Story = {
     getUsersMockHandler([secondAdmin]),
     getDeactivateUserMockHandler(failWith(lastAdministratorProblem)),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const deactivate = first(
       await canvas.findAllByRole("button", {
         name: `Deactivate: ${secondAdmin.displayName}`,
@@ -150,9 +142,7 @@ export const DeactivatingLastAdministratorRefused: Story = {
     const confirm = within(await openedDialog("alertdialog"));
     await userEvent.click(confirm.getByRole("button", { name: "Deactivate" }));
 
-    const refusals = await within(document.body).findAllByText(
-      "At least one active administrator must remain.",
-    );
+    const refusals = await screen.findAllByText("At least one active administrator must remain.");
     await expect(refusals.length).toBeGreaterThan(0);
   },
 };
@@ -162,8 +152,7 @@ export const DemotingLastAdministratorRefused: Story = {
     getUsersMockHandler([secondAdmin]),
     getUpdateUserRoleMockHandler(failWith(lastAdministratorProblem)),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const role = first(
       await canvas.findAllByRole("combobox", {
         name: new RegExp(`${secondAdmin.displayName}$`, "u"),
@@ -171,16 +160,13 @@ export const DemotingLastAdministratorRefused: Story = {
     );
     await chooseOption(role, "Member");
 
-    const refusals = await within(document.body).findAllByText(
-      "At least one active administrator must remain.",
-    );
+    const refusals = await screen.findAllByText("At least one active administrator must remain.");
     await expect(refusals.length).toBeGreaterThan(0);
   },
 };
 
 export const ReactivatesUser: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const reactivate = first(
       await canvas.findAllByRole("button", {
         name: `Reactivate: ${inactiveUser.displayName}`,
@@ -188,14 +174,13 @@ export const ReactivatesUser: Story = {
     );
     await userEvent.click(reactivate);
 
-    await expect(await within(document.body).findByText("User reactivated")).toBeInTheDocument();
+    await expect(await screen.findByText("User reactivated")).toBeInTheDocument();
   },
 };
 
 export const ReactivationPending: Story = {
   parameters: withHandlers(getReactivateUserMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const reactivate = first(
       await canvas.findAllByRole("button", {
         name: `Reactivate: ${inactiveUser.displayName}`,
@@ -208,9 +193,7 @@ export const ReactivationPending: Story = {
 };
 
 export const ResetsPassword: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const reset = first(
       await canvas.findAllByRole("button", {
         name: `Reset password: ${memberUser.displayName}`,
@@ -229,15 +212,13 @@ export const ResetsPassword: Story = {
     await waitFor(() => expect(submit).toBeEnabled());
     await userEvent.click(submit);
 
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
-    await expect(await body.findByText(/^Password reset\./u)).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    await expect(await screen.findByText(/^Password reset\./u)).toBeInTheDocument();
   },
 };
 
 export const ChangesRole: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     const role = first(
       await canvas.findAllByRole("combobox", {
         name: new RegExp(`${memberUser.displayName}$`),
@@ -245,18 +226,16 @@ export const ChangesRole: Story = {
     );
     await chooseOption(role, /^(admin|administratorius)/i);
 
-    await expect(await body.findByText(/role updated|rolė atnaujinta/i)).toBeInTheDocument();
+    await expect(await screen.findByText(/role updated|rolė atnaujinta/i)).toBeInTheDocument();
   },
 };
 
 export const CreatesUser: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: /create user|sukurti naudotoją/i }),
     );
-    const dialog = within(await body.findByRole("dialog"));
+    const dialog = within(await openedDialog());
     await fireEvent.change(dialog.getByLabelText(/display name|rodomas vardas/i), {
       target: { value: "Ona Petrauskienė" },
     });
@@ -268,6 +247,6 @@ export const CreatesUser: Story = {
     });
     await userEvent.click(dialog.getByRole("button", { name: /create user|sukurti naudotoją/i }));
 
-    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
   },
 };

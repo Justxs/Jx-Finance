@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, screen, userEvent, waitFor } from "storybook/test";
 import { errorHandlers, investmentsEmptyHandlers } from "@/storybook/handlers";
 import { SecuritiesDialog } from "./securities-dialog";
 
@@ -23,18 +23,16 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const Search: Story = {
   play: async () => {
-    const body = within(document.body);
-    await expect(await body.findByText("MSFT")).toBeInTheDocument();
-    await userEvent.type(body.getByRole("searchbox"), "vanguard");
-    await waitFor(() => expect(body.queryByText("MSFT")).not.toBeInTheDocument());
-    await expect(body.getByText("VWCE")).toBeInTheDocument();
+    await expect(await screen.findByText("MSFT")).toBeInTheDocument();
+    await userEvent.type(screen.getByRole("searchbox"), "vanguard");
+    await waitFor(() => expect(screen.queryByText("MSFT")).not.toBeInTheDocument());
+    await expect(screen.getByText("VWCE")).toBeInTheDocument();
   },
 };
 
 export const EditSecurity: Story = {
   play: async () => {
-    const body = within(document.body);
-    await userEvent.click(await body.findByRole("button", { name: "Edit: MSFT" }));
-    await expect(await body.findByLabelText("Symbol")).toHaveValue("MSFT");
+    await userEvent.click(await screen.findByRole("button", { name: "Edit: MSFT" }));
+    await expect(await screen.findByLabelText("Symbol")).toHaveValue("MSFT");
   },
 };

@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { fn, userEvent, within } from "storybook/test";
+import { fn, userEvent } from "storybook/test";
 import { Button } from "@/components/ui/button/button";
 import { withWidth } from "@/storybook/decorators";
 import { openedDialog } from "@/storybook/interactions";
@@ -73,8 +73,7 @@ export const DeletePending: Story = {
 };
 
 export const AddDialogOpen: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Add asset" }));
     await openedDialog();
   },

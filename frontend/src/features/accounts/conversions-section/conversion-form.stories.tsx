@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateConversionMockHandler } from "@/api/generated/conversions/conversions.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -35,8 +35,7 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const Pending: Story = {
   parameters: withHandlers(getCreateConversionMockHandler(pending)),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.type(canvas.getByLabelText("Sold"), "1000");
     await userEvent.type(canvas.getByLabelText("Bought"), "1084.20");
     const submit = canvas.getByRole("button", { name: "Convert" });
@@ -59,8 +58,7 @@ export const FilledWithFee: Story = {
       return conversionWithFee;
     }),
   ),
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.type(canvas.getByLabelText("Sold"), "1000");
     await userEvent.type(canvas.getByLabelText("Bought"), "1084.20");
     await userEvent.type(canvas.getByLabelText("Fee (optional)"), "2");
@@ -81,8 +79,7 @@ export const FilledWithFee: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.type(canvas.getByLabelText("Sold"), "abc");
     await expect(canvas.getByRole("button", { name: "Convert" })).toBeDisabled();
     await expect(args.onClose).not.toHaveBeenCalled();

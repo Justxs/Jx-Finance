@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, within } from "storybook/test";
+import { expect, fn } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
 import { nameById } from "@/lib/options";
 import { withWidth } from "@/storybook/decorators";
@@ -34,16 +34,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/IGNITIS/)).toBeInTheDocument();
   },
 };
 
 export const First: Story = {
   args: { rule: categorizationRules[0]! },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("button", { name: /^(move up|pakelti):/i })).toBeDisabled();
     await expect(canvas.getByRole("button", { name: /^(move down|nuleisti):/i })).toBeEnabled();
   },
@@ -51,8 +49,7 @@ export const First: Story = {
 
 export const Last: Story = {
   args: { rule: categorizationRules[4]! },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("button", { name: /^(move down|nuleisti):/i })).toBeDisabled();
   },
 };

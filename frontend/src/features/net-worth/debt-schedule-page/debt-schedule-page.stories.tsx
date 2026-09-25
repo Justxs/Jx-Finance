@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import {
   getDebtScheduleMockHandler,
   getDebtsMockHandler,
@@ -27,8 +27,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole("heading", { name: "Būsto paskola (Swedbank)" }),
     ).toBeInTheDocument();
@@ -47,8 +46,7 @@ export const Linear: Story = {
 };
 
 export const PayingExtra: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(
       await canvas.findByLabelText(/extra each month|papildomai kas mėnesį/i),
       "150",

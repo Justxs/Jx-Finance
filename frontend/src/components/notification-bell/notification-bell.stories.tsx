@@ -12,6 +12,7 @@ import {
 } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { query } from "@/storybook/handlers/http";
+import { openedDialog } from "@/storybook/interactions";
 import { QueryBoundary } from "../query-boundary/query-boundary";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { NotificationBell } from "./notification-bell";
@@ -86,11 +87,10 @@ export const ManyUnread: Story = {
 
 export const BudgetAlerts: Story = {
   parameters: withHandlers(notificationsHandler(budgetAlerts)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /2 unread/i }));
 
-    const panel = within(await within(document.body).findByRole("dialog"));
+    const panel = within(await openedDialog());
     const alerts = await panel.findAllByRole("link");
 
     await expect(alerts).toHaveLength(2);
@@ -102,11 +102,10 @@ export const BudgetAlerts: Story = {
 
 export const RecurringEntryReminders: Story = {
   parameters: withHandlers(notificationsHandler(recurringReminders)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /3 unread/i }));
 
-    const panel = within(await within(document.body).findByRole("dialog"));
+    const panel = within(await openedDialog());
     const entries = await panel.findAllByRole("link");
 
     await expect(entries[0]).toHaveTextContent("Payment due");

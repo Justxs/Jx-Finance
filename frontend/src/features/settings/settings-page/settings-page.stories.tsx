@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { settings } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
@@ -55,8 +55,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const LoadError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const UnsavedChanges: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const name = await canvas.findByLabelText("Installation name");
     await expect(canvas.queryByRole("button", { name: "Save" })).toBeNull();
     await userEvent.type(name, " Home");
@@ -66,8 +65,7 @@ export const UnsavedChanges: Story = {
 };
 
 export const ReportingCurrencyWarning: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(await canvas.findByLabelText("Reporting currency"), /^USD/);
     await expect(canvas.getByText(/revalues every transaction/)).toBeInTheDocument();
   },

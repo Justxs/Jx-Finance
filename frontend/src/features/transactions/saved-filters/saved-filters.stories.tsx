@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent } from "storybook/test";
 import { readSavedFilters, saveFilter } from "@/stores/transaction-views";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, categories, tags } from "@/storybook/fixtures";
@@ -31,11 +31,9 @@ export const NamesADeletedCategory: Story = {
     saveFilter("Renovation", { categoryId: "44444444-0000-4000-8000-000000000099" });
   },
   play: async () => {
-    const body = within(document.body);
-
-    await expect(await body.findByText("Names something that no longer exists")).toBeVisible();
+    await expect(await screen.findByText("Names something that no longer exists")).toBeVisible();
     await expect(
-      body.getByRole("button", { name: "Apply saved filter: Renovation" }),
+      screen.getByRole("button", { name: "Apply saved filter: Renovation" }),
     ).toBeEnabled();
   },
 };
@@ -44,10 +42,8 @@ export const SavingTheCurrentFilter: Story = {
   args: { defaultOpen: true },
   parameters: { route: "/transactions?type=expense&search=lidl" },
   play: async () => {
-    const body = within(document.body);
-
-    await userEvent.type(await body.findByRole("textbox", { name: "Save filter" }), "September");
-    await userEvent.click(body.getByRole("button", { name: "Save filter" }));
+    await userEvent.type(await screen.findByRole("textbox", { name: "Save filter" }), "September");
+    await userEvent.click(screen.getByRole("button", { name: "Save filter" }));
 
     await expect(readSavedFilters().map((row) => row.name)).toEqual(["September"]);
     await expect(readSavedFilters()[0]?.filter).toEqual({
@@ -65,10 +61,8 @@ export const SavingTheCurrentFilter: Story = {
 export const NothingToSave: Story = {
   args: { defaultOpen: true },
   play: async () => {
-    const body = within(document.body);
-
     await expect(
-      await body.findByText("Filter the list first; sorting and the page number are not saved."),
+      await screen.findByText("Filter the list first; sorting and the page number are not saved."),
     ).toBeVisible();
   },
 };

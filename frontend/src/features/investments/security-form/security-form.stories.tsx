@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { ApiError } from "@/api/client";
 import { withWidth } from "@/storybook/decorators";
 import { duplicateSecurityProblem, unpricedStock, usStock } from "@/storybook/fixtures";
@@ -28,8 +28,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const SubmitsNormalisedValues: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     await userEvent.type(await canvas.findByLabelText("Symbol"), "iwda");
     await userEvent.type(canvas.getByLabelText("Name"), "iShares Core MSCI World UCITS ETF");
     await userEvent.type(canvas.getByLabelText("ISIN (optional)"), "ie00b4l5y983");
@@ -48,8 +47,7 @@ export const SubmitsNormalisedValues: Story = {
 };
 
 export const InvalidIsin: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByLabelText("ISIN (optional)"), "NOT-AN-ISIN");
     await userEvent.tab();
     await expect(await canvas.findByText(/Enter a valid ISIN/)).toBeInTheDocument();
@@ -58,9 +56,7 @@ export const InvalidIsin: Story = {
 
 export const SymbolAlreadyExists: Story = {
   args: { error: new ApiError(duplicateSecurityProblem) },
-  play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByRole("alert")).toHaveTextContent(
-      "This already exists.",
-    );
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("This already exists.");
   },
 };

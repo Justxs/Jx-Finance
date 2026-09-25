@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useAppForm } from "../app-form";
 
@@ -43,8 +43,7 @@ export const Default: Story = {};
 export const Grid: Story = { args: { grid: true } };
 
 export const Submits: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     await waitFor(() => expect(args.onSubmit).toHaveBeenCalledWith("Groceries"));
   },

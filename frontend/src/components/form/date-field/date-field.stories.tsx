@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { z } from "zod";
 import { useAppForm } from "../app-form";
 
@@ -53,8 +53,7 @@ export const Filled: Story = { args: { initial: "2026-09-18" } };
 export const WithHint: Story = { args: { hint: "The day the money left the account." } };
 
 export const Invalid: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     await expect(canvas.getByText("This field is required.")).toHaveAttribute(
       "id",

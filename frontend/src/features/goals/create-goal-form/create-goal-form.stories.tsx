@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateGoalMockHandler } from "@/api/generated/goals/goals.msw";
 import { withWidth } from "@/storybook/decorators";
 import { accounts, sharedFundedGoal, unavailableFundedGoal } from "@/storybook/fixtures";
@@ -20,8 +20,7 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Filled: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, target, current] = canvas.getAllByRole("textbox");
     await userEvent.type(name!, "Summer holiday in Madeira for the whole family");
     await userEvent.type(target!, "3200.00");
@@ -30,8 +29,7 @@ export const Filled: Story = {
 };
 
 export const ValidationErrors: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, target, current] = canvas.getAllByRole("textbox");
     await userEvent.type(name!, "x");
     await userEvent.clear(name!);
@@ -41,8 +39,7 @@ export const ValidationErrors: Story = {
 };
 
 export const FundedFromAccount: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(
       canvas.getByRole("combobox", { name: /progress comes from|pažanga/i }),
       /an account balance|sąskaitos likučio/i,
@@ -57,8 +54,7 @@ export const FundedFromAccount: Story = {
 };
 
 export const FundingAccountMissing: Story = {
-  play: async ({ canvasElement, args }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, args }) => {
     const [name, target] = canvas.getAllByRole("textbox");
     await fireEvent.change(name!, { target: { value: "House deposit" } });
     await fireEvent.change(target!, { target: { value: "25000" } });
@@ -75,8 +71,7 @@ export const FundingAccountMissing: Story = {
 
 export const NoAccounts: Story = {
   args: { accounts: [] },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(
       canvas.getByRole("combobox", { name: /progress comes from|pažanga/i }),
       /an account balance|sąskaitos likučio/i,
@@ -88,8 +83,7 @@ export const NoAccounts: Story = {
 
 export const EditFundedGoal: Story = {
   args: { initial: sharedFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByLabelText(/share of the balance|likučio dalis/i)).toHaveValue(40);
     await expect(canvas.queryByLabelText(/current amount|dabartinė suma/i)).toBeNull();
   },
@@ -97,8 +91,7 @@ export const EditFundedGoal: Story = {
 
 export const EditGoalWithUnavailableAccount: Story = {
   args: { initial: unavailableFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       canvas.getByRole("combobox", { name: /funding account|finansuojanti/i }),
     ).toHaveTextContent(/unavailable account|nepasiekiama sąskaita/i);
@@ -107,8 +100,7 @@ export const EditGoalWithUnavailableAccount: Story = {
 
 export const BackToManualKeepsTheStoredAmount: Story = {
   args: { initial: sharedFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await chooseOption(
       canvas.getByRole("combobox", { name: /progress comes from|pažanga/i }),
       /an amount i type|mano įvedamos/i,
@@ -122,8 +114,7 @@ export const BackToManualKeepsTheStoredAmount: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateGoalMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const [name, target] = canvas.getAllByRole("textbox");
     await fireEvent.change(name!, { target: { value: "New bicycle" } });
     await fireEvent.change(target!, { target: { value: "900" } });

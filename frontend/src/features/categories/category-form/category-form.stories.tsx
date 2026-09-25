@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, waitFor, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import {
   getCreateCategoryMockHandler,
   getUpdateCategoryMockHandler,
@@ -54,16 +54,14 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const FilledWithIcon: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(await canvas.findByRole("textbox"), "Pets and veterinary care");
     await userEvent.click(canvas.getByRole("button", { name: "coffee" }));
   },
 };
 
 export const ValidationError: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const name = await canvas.findByRole("textbox");
     await userEvent.type(name, "x");
     await userEvent.clear(name);
@@ -73,8 +71,7 @@ export const ValidationError: Story = {
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateCategoryMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Pets" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(add|pridėti)$/i }));
   },
@@ -82,8 +79,7 @@ export const SubmitPending: Story = {
 
 export const EditHidesType: Story = {
   args: { initial: personalCategory },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas, canvasElement }) => {
     await canvas.findByRole("textbox");
     await expect(canvasElement.querySelector("#category-type")).toBeNull();
   },
@@ -92,8 +88,7 @@ export const EditHidesType: Story = {
 export const SavePending: Story = {
   args: { initial: personalCategory },
   parameters: withHandlers(getUpdateCategoryMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(await canvas.findByRole("textbox"), { target: { value: "Maistas" } });
     await userEvent.click(canvas.getByRole("button", { name: /^(save|išsaugoti)$/i }));
   },

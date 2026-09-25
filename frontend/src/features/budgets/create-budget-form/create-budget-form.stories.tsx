@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, fn, userEvent, within } from "storybook/test";
+import { expect, fireEvent, fn, userEvent } from "storybook/test";
 import { getCreateBudgetMockHandler } from "@/api/generated/budgets/budgets.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -29,8 +29,7 @@ export const Edit: Story = { args: { initial: budgets[2] } };
 
 export const EditWeeklyWithRollover: Story = {
   args: { initial: weeklyRolloverBudget },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByRole("checkbox", { name: /carry|perkelti/i })).toBeChecked();
     await expect(canvas.getByRole("combobox", { name: /period|laikotarpis/i })).toHaveTextContent(
       /weekly|savaitinis/i,
@@ -45,16 +44,14 @@ export const NoExpenseCategories: Story = { args: { categories: incomeCategories
 export const NoCategories: Story = { args: { categories: [] } };
 
 export const ValidationError: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.type(canvas.getByRole("textbox"), "-5,5x");
   },
 };
 
 export const SubmitPending: Story = {
   parameters: withHandlers(getCreateBudgetMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByRole("textbox"), { target: { value: "250.00" } });
     await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));
   },
@@ -71,8 +68,7 @@ export const ServerFieldError: Story = {
       ),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const limit = canvas.getByRole("textbox");
     await fireEvent.change(limit, { target: { value: "250.00" } });
     await userEvent.click(canvas.getByRole("button", { name: /add budget|pridėti biudžetą/i }));

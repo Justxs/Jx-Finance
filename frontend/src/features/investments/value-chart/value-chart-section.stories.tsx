@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, waitFor, within } from "storybook/test";
+import { expect, waitFor } from "storybook/test";
 import { getValueHistoryMockHandler } from "@/api/generated/investments/investments.msw";
 import { withWidth } from "@/storybook/decorators";
 import { partialValueHistory, valueHistory } from "@/storybook/fixtures";
@@ -19,8 +19,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(
       await canvas.findByRole("img", {
         name: "Portfolio market value and invested cost over time",
@@ -33,19 +32,15 @@ export const Default: Story = {
 
 export const Partial: Story = {
   parameters: withHandlers(getValueHistoryMockHandler(partialValueHistory)),
-  play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByText(/had no price or exchange rate yet/),
-    ).toBeVisible();
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText(/had no price or exchange rate yet/)).toBeVisible();
   },
 };
 
 export const Empty: Story = {
   parameters: { msw: { handlers: emptyHandlers } },
-  play: async ({ canvasElement }) => {
-    await expect(
-      await within(canvasElement).findByText("Nothing was held in this range."),
-    ).toBeVisible();
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Nothing was held in this range.")).toBeVisible();
   },
 };
 
@@ -66,8 +61,7 @@ export const ChangesRange: Story = {
       return valueHistory;
     }),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await canvas.findByRole("img");
     await expect(requested.some((from) => /^20\d{2}-\d{2}-\d{2}$/u.test(from))).toBe(true);
     await chooseOption(canvas.getByRole("combobox", { name: "Range" }), "All time");

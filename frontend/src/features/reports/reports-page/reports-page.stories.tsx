@@ -50,9 +50,7 @@ export const ComparedWithThePreviousPeriod: Story = {
   parameters: {
     route: routeFor({ dateFrom: "2026-09-01", dateTo: "2026-09-30" }, "previousPeriod"),
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText(/compared with|palyginta su/i)).toBeVisible();
     await expect(
       canvas.getByRole("combobox", { name: /compare with|palyginti su/i }),
@@ -68,8 +66,7 @@ export const ComparedWithTheSamePeriodLastYear: Story = {
 };
 
 export const ChoosesAComparison: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const select = await canvas.findByRole("combobox", { name: /compare with|palyginti su/i });
 
     await chooseOption(select, /same period last year|tuo pačiu laikotarpiu pernai/i);
@@ -92,8 +89,7 @@ export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers }
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const ChangesPreset: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const preset = await canvas.findByRole("combobox", { name: /^(range|laikotarpis)$/i });
     await expect(preset).toHaveTextContent(/this month|šis mėnuo/i);
 
@@ -107,8 +103,7 @@ export const ChangesPreset: Story = {
 };
 
 export const InvestmentIncomeIsAGroupWithoutALink: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const heading = await canvas.findByRole("heading", {
       name: /income by category|pajamos pagal kategoriją/i,
     });
@@ -125,8 +120,7 @@ export const InvestmentIncomeIsAGroupWithoutALink: Story = {
 
 export const CategoryLinksCarryTheRange: Story = {
   parameters: { route: routeFor({ dateFrom: "2026-08-10", dateTo: "2026-09-12" }) },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const section = await canvas.findByRole("heading", {
       name: /expense by category|išlaidos pagal kategoriją/i,
     });

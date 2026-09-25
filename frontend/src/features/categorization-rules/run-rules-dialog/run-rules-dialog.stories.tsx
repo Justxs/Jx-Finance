@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import {
   getPreviewCategorizationRunMockHandler,
   getRunCategorizationRulesMockHandler,
@@ -27,8 +27,7 @@ export const Default: Story = {};
 export const WithoutRules: Story = { args: { hasRules: false } };
 
 export const PreviewShowsWhatEachRuleWouldTouch: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await expect(
       await canvas.findByText(/27 transactions in total|iš viso 27/i),
@@ -39,8 +38,7 @@ export const PreviewShowsWhatEachRuleWouldTouch: Story = {
 
 export const PreviewFindsNothing: Story = {
   parameters: withHandlers(getPreviewCategorizationRunMockHandler(rulesRunNothing)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await expect(
       await canvas.findByText(/no transaction matches|nė viena operacija nesutampa/i),
@@ -50,15 +48,13 @@ export const PreviewFindsNothing: Story = {
 
 export const PreviewPending: Story = {
   parameters: withHandlers(getPreviewCategorizationRunMockHandler(pending)),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
   },
 };
 
 export const RecategorizeChangesThePreview: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const toggle = await canvas.findByRole("checkbox", {
       name: /also replace categories|taip pat pakeisti/i,
     });
@@ -72,8 +68,7 @@ export const RecategorizeChangesThePreview: Story = {
 };
 
 export const ApplyRuns: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await userEvent.click(await canvas.findByRole("button", { name: /apply to|pritaikyti/i }));
   },
@@ -81,8 +76,7 @@ export const ApplyRuns: Story = {
 
 export const ApplyFails: Story = {
   parameters: withHandlers(getRunCategorizationRulesMockHandler(failWithStatus(500))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: /^(preview|peržiūrėti)$/i }));
     await userEvent.click(await canvas.findByRole("button", { name: /apply to|pritaikyti/i }));
     await expect(await canvas.findByRole("alert")).toBeInTheDocument();

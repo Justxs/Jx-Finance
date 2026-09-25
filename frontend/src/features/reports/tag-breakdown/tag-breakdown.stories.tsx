@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, within } from "storybook/test";
+import { expect } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import {
   buildTagBreakdownItems,
@@ -23,8 +23,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText(/untagged|be žymos/i)).toBeInTheDocument();
   },
 };
@@ -39,9 +38,7 @@ export const Empty: Story = { args: { items: [] } };
 
 export const ComparedWithAnEarlierPeriod: Story = {
   args: { items: reportSummaryMonthCompared.expenseByTag },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect((await canvas.findAllByText(/^(was|buvo) /i)).length).toBeGreaterThan(0);
   },
 };
@@ -54,9 +51,7 @@ export const ATagOnlyTheEarlierPeriodHad: Story = {
       { tagId: null, tagName: "Untagged", amount: "18.00", comparisonAmount: "0.00" },
     ],
   },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ canvas }) => {
     await expect(await canvas.findByRole("link", { name: "Holiday" })).toBeVisible();
     await expect(canvas.getAllByText(/up from nothing|anksčiau nebuvo nieko/i)).toHaveLength(1);
   },

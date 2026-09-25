@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, screen, userEvent } from "storybook/test";
 import { getHouseholdsMockHandler } from "@/api/generated/households/households.msw";
 import { setActiveHousehold } from "@/stores/active-household-store";
 import { familyHousehold } from "@/storybook/fixtures";
@@ -54,12 +54,9 @@ export const NoHouseholds: Story = {
 };
 
 export const Switching: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    const body = within(document.body);
-
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("combobox", { name: "Active household: Everything" }));
-    await userEvent.click(await body.findByRole("option", { name: familyHousehold.name }));
+    await userEvent.click(await screen.findByRole("option", { name: familyHousehold.name }));
 
     await expect(
       await canvas.findByRole("combobox", { name: `Active household: ${familyHousehold.name}` }),

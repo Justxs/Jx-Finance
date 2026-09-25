@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { Rows } from "@/components/ui/rows/rows";
 import { nameById } from "@/lib/options";
 import {
@@ -54,24 +54,21 @@ export const NotStarted: Story = {
 
 export const FundedFromAccount: Story = {
   args: { goal: accountFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/from taupomoji sąskaita/i)).toBeVisible();
   },
 };
 
 export const FundedFromAShareOfAnAccount: Story = {
   args: { goal: sharedFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/40%/u)).toBeVisible();
   },
 };
 
 export const ProgressUnavailable: Story = {
   args: { goal: unavailableFundedGoal },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(canvas.getByText(/progress unavailable|pažanga nepasiekiama/i)).toBeVisible();
     await expect(canvas.queryByRole("meter")).toBeNull();
   },
@@ -82,8 +79,7 @@ export const DeletePending: Story = { args: { deletePending: true, deleteDisable
 export const DeleteDisabled: Story = { args: { deleteDisabled: true } };
 
 export const EditRequested: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: /^(edit|redaguoti):/i }));
     await expect(args.onEdit).toHaveBeenCalledOnce();
   },

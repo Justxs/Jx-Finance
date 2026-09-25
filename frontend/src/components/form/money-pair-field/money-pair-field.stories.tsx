@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, within } from "storybook/test";
+import { expect, fireEvent } from "storybook/test";
 import type { Currency } from "@/api/generated/model";
 import { useAppForm } from "../app-form";
 import { MoneyPairField } from "./money-pair-field";
@@ -42,8 +42,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await fireEvent.change(canvas.getByLabelText("Amount sent"), { target: { value: "12.50" } });
     await expect(canvas.getByLabelText("Amount sent")).toHaveValue("12.50");
   },

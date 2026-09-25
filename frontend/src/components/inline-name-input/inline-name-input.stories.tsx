@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Check } from "lucide-react";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, userEvent } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import { InlineNameInput } from "./inline-name-input";
 
@@ -38,8 +38,7 @@ export const Renaming: Story = {
 };
 
 export const SubmitsOnEnter: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ args, canvas }) => {
     const field = canvas.getByRole("textbox", { name: "Save filter" });
 
     await userEvent.type(field, "September{Enter}");
@@ -50,9 +49,7 @@ export const SubmitsOnEnter: Story = {
 };
 
 export const IgnoresBlankName: Story = {
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ args, canvas }) => {
     await userEvent.type(canvas.getByRole("textbox", { name: "Save filter" }), "   {Enter}");
 
     await expect(args.onSubmit).not.toHaveBeenCalled();
@@ -62,9 +59,7 @@ export const IgnoresBlankName: Story = {
 
 export const Cancelling: Story = {
   args: { ...Renaming.args },
-  play: async ({ args, canvasElement }) => {
-    const canvas = within(canvasElement);
-
+  play: async ({ args, canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Cancel" }));
 
     await expect(args.onCancel).toHaveBeenCalled();

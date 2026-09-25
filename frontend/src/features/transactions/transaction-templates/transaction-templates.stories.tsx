@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fn, userEvent, within } from "storybook/test";
+import { expect, fn, screen, userEvent } from "storybook/test";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
 import { withWidth } from "@/storybook/decorators";
 import { ids } from "@/storybook/fixtures";
@@ -42,10 +42,8 @@ export const StartingFromATemplate: Story = {
     saveTransactionTemplate("Weekly shop", weeklyShop);
   },
   play: async ({ args }) => {
-    const body = within(document.body);
-
     await userEvent.click(
-      await body.findByRole("button", { name: "New transaction from template: Weekly shop" }),
+      await screen.findByRole("button", { name: "New transaction from template: Weekly shop" }),
     );
 
     await expect(args.onUse).toHaveBeenCalledWith(

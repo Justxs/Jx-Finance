@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent, within } from "storybook/test";
+import { expect, userEvent } from "storybook/test";
 import { withWidth } from "@/storybook/decorators";
 import {
   mortgageSchedule,
@@ -33,8 +33,7 @@ export const NotStartedYet: Story = {
 };
 
 export const PagingForward: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     const before = canvas.getByText(/page \d+ of \d+|puslapis/i).textContent;
     await userEvent.click(canvas.getByRole("button", { name: /^(next|kitas)$/i }));
     await expect(canvas.getByText(/page \d+ of \d+|puslapis/i).textContent).not.toBe(before);

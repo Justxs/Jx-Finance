@@ -41,8 +41,7 @@ function revocableHandlers() {
 }
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Chrome 140 on Windows")).toBeVisible();
     await expect(canvas.getByText("This browser")).toBeVisible();
     await expect(canvas.getByText("Safari 18 on iOS")).toBeVisible();
@@ -60,8 +59,7 @@ export const Dark: Story = { globals: { theme: "dark" } };
 
 export const Lithuanian: Story = {
   globals: { locale: "lt" },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("Ši naršyklė")).toBeVisible();
     await expect(canvas.getByText("Chrome 140, Windows")).toBeVisible();
   },
@@ -69,8 +67,7 @@ export const Lithuanian: Story = {
 
 export const OnlyCurrentSession: Story = {
   parameters: withHandlers(getSessionsMockHandler(sessions.filter((session) => session.isCurrent))),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await expect(await canvas.findByText("This browser")).toBeVisible();
     await expect(canvas.queryByRole("button", { name: /^Sign out:/u })).toBeNull();
     await expect(canvas.getByRole("button", { name: "Sign out everywhere else" })).toBeDisabled();
@@ -83,8 +80,7 @@ export const LoadFailed: Story = { parameters: { msw: { handlers: errorHandlers 
 
 export const RevokeAsksFirstThenRemovesTheRow: Story = {
   parameters: { msw: { handlers: revocableHandlers() } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Sign out: Safari 18 on iOS" }),
     );
@@ -101,8 +97,7 @@ export const RevokeAsksFirstThenRemovesTheRow: Story = {
 
 export const SignOutEverywhereElse: Story = {
   parameters: { msw: { handlers: revocableHandlers() } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(await canvas.findByRole("button", { name: "Sign out everywhere else" }));
     const dialog = within(await openedDialog("alertdialog"));
     await expect(dialog.getByText("Sign out everywhere else?")).toBeVisible();
@@ -121,8 +116,7 @@ export const RevokeFailed: Story = {
       failWith({ ...serverErrorProblem, instance: "/api/auth/sessions" }),
     ),
   ),
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(
       await canvas.findByRole("button", { name: "Sign out: Firefox 143 on Linux" }),
     );

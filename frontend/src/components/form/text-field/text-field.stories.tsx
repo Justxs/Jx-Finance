@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, fireEvent, userEvent, within, waitFor } from "storybook/test";
+import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { z } from "zod";
 import { useAppForm } from "../app-form";
 
@@ -67,8 +67,7 @@ export const Disabled: Story = { args: { disabled: true } };
 
 export const Invalid: Story = {
   args: { hint: "Shown on every report." },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
+  play: async ({ canvas }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     const input = canvas.getByLabelText("Name");
     await expect(input).toHaveAttribute("aria-invalid", "true");
