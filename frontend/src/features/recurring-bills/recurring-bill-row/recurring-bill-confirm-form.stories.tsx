@@ -29,7 +29,7 @@ const crossCurrencyAccounts: AccountResponse[] = accounts.map((account) =>
 const meta = {
   title: "Features/RecurringBills/RecurringBillConfirmForm",
   component: RecurringBillConfirmForm,
-  args: { bill: dueSoonBill, accounts, onDone: fn() },
+  args: { bill: dueSoonBill, accounts, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof RecurringBillConfirmForm>;
 
@@ -98,14 +98,14 @@ export const CrossCurrencyTransferNeedsTheReceivedAmount: Story = {
     const canvas = await confirm(canvasElement);
 
     await expect(await canvas.findByText(/Enter an amount greater than 0/u)).toBeVisible();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
 
     await fireEvent.change(canvas.getByLabelText("Amount received"), {
       target: { value: "324.60" },
     });
     await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -129,7 +129,7 @@ export const ConfirmsFixedBill: Story = {
   play: async ({ canvasElement, args }) => {
     await confirm(canvasElement);
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -140,13 +140,13 @@ export const RequiresAmountAndAccount: Story = {
 
     await expect(await canvas.findByText(/Enter an amount greater than 0/u)).toBeVisible();
     await expect(canvas.getByText("This field is required.")).toBeVisible();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
 
     await fireEvent.change(canvas.getByLabelText("Amount"), { target: { value: "48,73" } });
     await chooseOption(canvas.getByRole("combobox", { name: "Account" }), checkingAccount.name);
     await userEvent.click(canvas.getByRole("button", { name: "Confirm" }));
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -168,7 +168,7 @@ export const StaleConfirmation: Story = {
 
     await expect(await canvas.findByText(/already confirmed/u)).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Confirm" })).toBeEnabled();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 

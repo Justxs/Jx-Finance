@@ -61,20 +61,13 @@ export function GoalsPage() {
     <div className="space-y-5">
       <PageHeader title={t("goals.title")}>
         <CreateDialog label={t("goals.add")} title={t("goals.add")}>
-          {(close) => <CreateGoalForm accounts={accountList} onCreated={close} onCancel={close} />}
+          {(close) => <CreateGoalForm accounts={accountList} onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
       {content}
       <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
-        {(goal) => (
-          <CreateGoalForm
-            initial={goal}
-            accounts={accountList}
-            onCreated={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        )}
+        {(goal, close) => <CreateGoalForm initial={goal} accounts={accountList} onClose={close} />}
       </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>

@@ -16,7 +16,7 @@ import { CreateBudgetForm } from "./create-budget-form";
 const meta = {
   title: "Features/Budgets/CreateBudgetForm",
   component: CreateBudgetForm,
-  args: { categories, onCreated: fn(), onCancel: fn() },
+  args: { categories, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof CreateBudgetForm>;
 

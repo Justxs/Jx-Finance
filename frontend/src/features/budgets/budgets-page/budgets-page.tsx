@@ -141,20 +141,13 @@ export function BudgetsPage() {
     <div className="space-y-5">
       <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
         <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
-          {(close) => (
-            <CreateBudgetForm categories={categoryList} onCreated={close} onCancel={close} />
-          )}
+          {(close) => <CreateBudgetForm categories={categoryList} onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
       <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
-        {(budget) => (
-          <CreateBudgetForm
-            initial={budget}
-            categories={categoryList}
-            onCreated={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
+        {(budget, close) => (
+          <CreateBudgetForm initial={budget} categories={categoryList} onClose={close} />
         )}
       </EditModal>
       {budgetList.length > 0 ? (

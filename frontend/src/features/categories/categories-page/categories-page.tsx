@@ -48,18 +48,12 @@ export function CategoriesPage() {
     <div className="space-y-5">
       <PageHeader title={t("categories.title")}>
         <CreateDialog label={t("categories.add")} title={t("categories.addTitle")}>
-          {(close) => <CategoryForm onDone={close} onCancel={close} />}
+          {(close) => <CategoryForm onClose={close} />}
         </CreateDialog>
       </PageHeader>
 
       <EditModal item={editing} title={t("categories.editTitle")} onClose={() => setEditing(null)}>
-        {(category) => (
-          <CategoryForm
-            initial={category}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
-          />
-        )}
+        {(category, close) => <CategoryForm initial={category} onClose={close} />}
       </EditModal>
 
       <div className="grid gap-5 lg:grid-cols-2">

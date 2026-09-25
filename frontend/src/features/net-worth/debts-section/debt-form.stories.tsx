@@ -11,7 +11,7 @@ const [mortgage] = debts;
 const meta = {
   title: "Features/NetWorth/DebtForm",
   component: DebtForm,
-  args: { onCreated: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
 } satisfies Meta<typeof DebtForm>;
 

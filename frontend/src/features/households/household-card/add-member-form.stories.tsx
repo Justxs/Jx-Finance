@@ -11,7 +11,7 @@ const meta = {
   title: "Features/Households/AddMemberForm",
   component: AddMemberForm,
   parameters: { route: "/households" },
-  args: { householdId: familyHousehold.id ?? "", onAdded: fn(), onCancel: fn() },
+  args: { householdId: familyHousehold.id ?? "", onClose: fn() },
   render: (args) => (
     <Card className="w-[36rem] max-w-full p-6">
       <AddMemberForm {...args} />
@@ -23,8 +23,6 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
-
-export const WithoutCancel: Story = { args: { onCancel: undefined } };
 
 export const Narrow: Story = {
   render: (args) => (

@@ -81,8 +81,7 @@ export function RulesPage() {
               accounts={accounts.data}
               categories={categories.data}
               tags={tags.data}
-              onSaved={close}
-              onCancel={close}
+              onClose={close}
             />
           )}
         </CreateDialog>
@@ -93,14 +92,13 @@ export function RulesPage() {
         title={t("categorizationRules.editTitle")}
         onClose={() => setEditing(null)}
       >
-        {(rule) => (
+        {(rule, close) => (
           <RuleForm
             accounts={accounts.data}
             categories={categories.data}
             tags={tags.data}
             initial={rule}
-            onSaved={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
+            onClose={close}
           />
         )}
       </EditModal>
@@ -114,8 +112,7 @@ export function RulesPage() {
         <RunRulesDialog
           accounts={accounts.data}
           hasRules={ruleList.length > 0}
-          onDone={() => setRunOpen(false)}
-          onCancel={() => setRunOpen(false)}
+          onClose={() => setRunOpen(false)}
         />
       </Modal>
 

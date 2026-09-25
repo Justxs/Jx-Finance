@@ -22,8 +22,7 @@ const meta = {
     accounts,
     categories,
     tags,
-    onSaved: fn(),
-    onCancel: fn(),
+    onClose: fn(),
   },
   render: (args) => (
     <div className="w-[min(40rem,calc(100vw-3rem))]">

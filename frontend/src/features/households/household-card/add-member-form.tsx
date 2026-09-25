@@ -15,11 +15,10 @@ interface FormValues {
 
 interface Props {
   householdId: string;
-  onAdded: () => void;
-  onCancel?: () => void;
+  onClose: () => void;
 }
 
-export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props>) {
+export function AddMemberForm({ householdId, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -27,7 +26,7 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
     role: z.enum(HouseholdRole),
   });
 
-  const addMutation = useAddMember({ mutation: { onSuccess: onAdded } });
+  const addMutation = useAddMember({ mutation: { onSuccess: onClose } });
 
   const defaultValues: FormValues = { email: "", role: "member" };
 
@@ -66,11 +65,9 @@ export function AddMemberForm({ householdId, onAdded, onCancel }: Readonly<Props
           )}
         </form.Field>
 
-        {onCancel ? (
-          <Button type="button" variant="outline" size="sm" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-        ) : null}
+        <Button type="button" variant="outline" size="sm" onClick={onClose}>
+          {t("actions.cancel")}
+        </Button>
 
         <form.SubmitButton size="sm" pending={addMutation.isPending}>
           {t("households.addMember")}

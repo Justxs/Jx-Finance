@@ -6,11 +6,11 @@ import { HoldingForm, type HoldingFormProps } from "../holdings-section";
 
 const assetTypes = Object.values(AssetType);
 
-export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingFormProps>) {
+export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps>) {
   const { t } = useTranslation();
   const { create, update, pending, error } = upsert(
-    useCreateAsset(silent({ onSuccess: onCreated })),
-    useUpdateAsset(silent({ onSuccess: onCreated })),
+    useCreateAsset(silent({ onSuccess: onClose })),
+    useUpdateAsset(silent({ onSuccess: onClose })),
   );
 
   return (
@@ -41,7 +41,7 @@ export function AssetForm({ editing, onCreated, onCancel }: Readonly<HoldingForm
 
         return create({ data });
       }}
-      onCancel={onCancel}
+      onCancel={onClose}
     />
   );
 }

@@ -11,7 +11,7 @@ const meta = {
   title: "Features/Households/CreateHouseholdForm",
   component: CreateHouseholdForm,
   parameters: { route: "/households" },
-  args: { onCreated: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   render: (args) => (
     <Card className="w-[28rem] max-w-full p-6">
       <CreateHouseholdForm {...args} />
@@ -34,7 +34,7 @@ export const Narrow: Story = {
 
 export const InModal: Story = {
   render: (args) => (
-    <Modal open onOpenChange={args.onCancel} title="Add household">
+    <Modal open onOpenChange={args.onClose} title="Add household">
       <CreateHouseholdForm {...args} />
     </Modal>
   ),

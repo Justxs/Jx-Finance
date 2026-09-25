@@ -14,11 +14,10 @@ interface FormValues {
 
 interface Props {
   initial?: HouseholdResponse;
-  onCreated: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<Props>) {
+export function CreateHouseholdForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z.object({
@@ -26,8 +25,8 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
   });
 
   const { create, update, pending, error } = upsert(
-    useCreateHousehold(silent({ onSuccess: onCreated })),
-    useUpdateHousehold(silent({ onSuccess: onCreated })),
+    useCreateHousehold(silent({ onSuccess: onClose })),
+    useUpdateHousehold(silent({ onSuccess: onClose })),
   );
 
   const form = useServerForm({
@@ -59,7 +58,7 @@ export function CreateHouseholdForm({ initial, onCreated, onCancel }: Readonly<P
         <form.FormActions
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("households.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

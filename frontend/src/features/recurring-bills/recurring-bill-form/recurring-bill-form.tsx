@@ -43,18 +43,10 @@ interface Props {
   draft?: RecurringBillDraft;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
-  onDone: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function RecurringBillForm({
-  bill,
-  draft,
-  accounts,
-  categories,
-  onDone,
-  onCancel,
-}: Readonly<Props>) {
+export function RecurringBillForm({ bill, draft, accounts, categories, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
   const fieldId = bill ? `bill-${bill.id}` : "bill";
@@ -99,8 +91,8 @@ export function RecurringBillForm({
     });
 
   const { create, update, pending, error } = upsert(
-    useCreateRecurringBill(silent({ onSuccess: onDone })),
-    useUpdateRecurringBill(silent({ onSuccess: onDone })),
+    useCreateRecurringBill(silent({ onSuccess: onClose })),
+    useUpdateRecurringBill(silent({ onSuccess: onClose })),
   );
 
   const seed: RecurringBillDraft = bill ?? draft ?? {};
@@ -319,7 +311,7 @@ export function RecurringBillForm({
           span
           pending={pending}
           submitLabel={bill ? t("actions.save") : t("recurringBills.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

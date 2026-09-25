@@ -71,12 +71,7 @@ export function RecurringBillsPage() {
       <PageHeader title={t("recurringBills.title")}>
         <CreateDialog label={t("recurringBills.add")} title={t("recurringBills.add")}>
           {(close) => (
-            <RecurringBillForm
-              accounts={accountList}
-              categories={categoryList}
-              onDone={close}
-              onCancel={close}
-            />
+            <RecurringBillForm accounts={accountList} categories={categoryList} onClose={close} />
           )}
         </CreateDialog>
       </PageHeader>
@@ -99,13 +94,12 @@ export function RecurringBillsPage() {
         title={t("recurringBills.editTitle")}
         description={(bill) => bill.name}
       >
-        {(bill) => (
+        {(bill, close) => (
           <RecurringBillForm
             bill={bill}
             accounts={accountList}
             categories={categoryList}
-            onDone={() => setEditing(null)}
-            onCancel={() => setEditing(null)}
+            onClose={close}
           />
         )}
       </EditModal>
@@ -114,12 +108,8 @@ export function RecurringBillsPage() {
         onClose={() => setConfirming(null)}
         title={t("recurringBills.confirmTitle")}
       >
-        {(bill) => (
-          <RecurringBillConfirmForm
-            bill={bill}
-            accounts={accountList}
-            onDone={() => setConfirming(null)}
-          />
+        {(bill, close) => (
+          <RecurringBillConfirmForm bill={bill} accounts={accountList} onClose={close} />
         )}
       </EditModal>
       <ConfirmDeleteDialog {...remove.dialogProps} />

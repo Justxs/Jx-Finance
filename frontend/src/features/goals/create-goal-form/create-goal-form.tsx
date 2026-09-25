@@ -33,11 +33,10 @@ interface FormValues {
 interface Props {
   initial?: GoalResponse;
   accounts: AccountResponse[];
-  onCreated: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function CreateGoalForm({ initial, accounts, onCreated, onCancel }: Readonly<Props>) {
+export function CreateGoalForm({ initial, accounts, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
 
   const schema = z
@@ -61,8 +60,8 @@ export function CreateGoalForm({ initial, accounts, onCreated, onCancel }: Reado
     });
 
   const { create, update, pending, error } = upsert(
-    useCreateGoal(silent({ onSuccess: onCreated })),
-    useUpdateGoal(silent({ onSuccess: onCreated })),
+    useCreateGoal(silent({ onSuccess: onClose })),
+    useUpdateGoal(silent({ onSuccess: onClose })),
   );
 
   const defaultValues: FormValues = {
@@ -189,7 +188,7 @@ export function CreateGoalForm({ initial, accounts, onCreated, onCancel }: Reado
         <form.FormActions
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("goals.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

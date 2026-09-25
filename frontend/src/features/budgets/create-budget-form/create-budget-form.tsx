@@ -19,11 +19,10 @@ interface FormValues {
 interface Props {
   categories: CategoryResponse[];
   initial?: BudgetResponse;
-  onCreated: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: Readonly<Props>) {
+export function CreateBudgetForm({ categories, initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const expenseCategories = categories.filter((c) => c.type === "expense");
 
@@ -35,8 +34,8 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
   });
 
   const { create, update, pending, error } = upsert(
-    useCreateBudget(silent({ onSuccess: onCreated })),
-    useUpdateBudget(silent({ onSuccess: onCreated })),
+    useCreateBudget(silent({ onSuccess: onClose })),
+    useUpdateBudget(silent({ onSuccess: onClose })),
   );
 
   const defaultValues: FormValues = {
@@ -113,7 +112,7 @@ export function CreateBudgetForm({ categories, initial, onCreated, onCancel }: R
         <form.FormActions
           pending={pending}
           submitLabel={t(initial ? "actions.save" : "budgets.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

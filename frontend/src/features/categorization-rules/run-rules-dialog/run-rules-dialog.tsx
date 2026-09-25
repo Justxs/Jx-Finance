@@ -16,11 +16,10 @@ import { namedOptions } from "@/lib/options";
 interface Props {
   accounts: AccountResponse[];
   hasRules: boolean;
-  onDone: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function RunRulesDialog({ accounts, hasRules, onDone, onCancel }: Readonly<Props>) {
+export function RunRulesDialog({ accounts, hasRules, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const [accountId, setAccountId] = useState("");
   const [recategorize, setRecategorize] = useState(false);
@@ -34,7 +33,7 @@ export function RunRulesDialog({ accounts, hasRules, onDone, onCancel }: Readonl
     silent({
       onSuccess: (data: RunRulesResponse) => {
         toast.success(t("categorizationRules.runDone", { count: data.total }));
-        onDone();
+        onClose();
       },
     }),
   );
@@ -116,7 +115,7 @@ export function RunRulesDialog({ accounts, hasRules, onDone, onCancel }: Readonl
       {hasRules ? null : <EmptyText>{t("categorizationRules.runNeedsRules")}</EmptyText>}
 
       <div className="flex flex-wrap justify-end gap-2 pt-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onClose}>
           {t("actions.cancel")}
         </Button>
         <Button

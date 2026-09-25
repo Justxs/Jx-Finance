@@ -22,7 +22,7 @@ test("a 400 problem naming limitAmount lands under the limit input and clears on
     vi.fn(() => Promise.resolve(problemResponse())),
   );
 
-  render(<CreateBudgetForm categories={categories} onCreated={vi.fn()} onCancel={vi.fn()} />, {
+  render(<CreateBudgetForm categories={categories} onClose={vi.fn()} />, {
     wrapper: Wrapper,
   });
 

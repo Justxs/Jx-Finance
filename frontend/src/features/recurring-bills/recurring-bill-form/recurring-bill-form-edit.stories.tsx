@@ -24,7 +24,7 @@ const longNameBill = recurringBills.find((bill) => bill.accountId === null) ?? d
 const meta = {
   title: "Features/RecurringBills/RecurringBillForm/Edit",
   component: RecurringBillForm,
-  args: { bill: dueSoonBill, accounts, categories, onDone: fn(), onCancel: fn() },
+  args: { bill: dueSoonBill, accounts, categories, onClose: fn() },
   decorators: [withWidth("form")],
 } satisfies Meta<typeof RecurringBillForm>;
 
@@ -62,12 +62,12 @@ export const SwitchesAnExpenseToATransfer: Story = {
     await expect(canvas.queryByRole("combobox", { name: "Category" })).toBeNull();
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
     await expect(await canvas.findByText("This field is required.")).toBeVisible();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
 
     await chooseOption(canvas.getByRole("combobox", { name: "To account" }), savingsAccount.name);
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -82,7 +82,7 @@ export const SwitchesATransferToAnIncome: Story = {
 
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -101,7 +101,7 @@ export const InvalidValues: Story = {
     await expect(canvas.getByText("Enter a whole number from 0 to 365.")).toBeVisible();
     await expect(canvas.getByText("This field is required.")).toBeVisible();
     await expect(canvas.getByRole("button", { name: "Save" })).toBeDisabled();
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 
@@ -120,7 +120,7 @@ export const ChangesEverything: Story = {
     await userEvent.click(canvas.getByRole("checkbox", { name: "Active" }));
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => expect(args.onDone).toHaveBeenCalled());
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };
 
@@ -146,7 +146,7 @@ export const ServerFieldError: Story = {
       "aria-invalid",
       "true",
     );
-    await expect(args.onDone).not.toHaveBeenCalled();
+    await expect(args.onClose).not.toHaveBeenCalled();
   },
 };
 

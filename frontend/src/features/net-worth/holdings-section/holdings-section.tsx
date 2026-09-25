@@ -27,8 +27,7 @@ export interface HoldingItem<TValues = HoldingFormValues> {
 
 export interface HoldingFormProps<TValues = HoldingFormValues> {
   editing?: { id: string; values: TValues };
-  onCreated: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
 interface Props<TValues> {
@@ -107,20 +106,14 @@ export function HoldingsSection<TValues = HoldingFormValues>({
         </Button>
       </div>
       <Modal open={addOpen} onOpenChange={setAddOpen} title={addLabel}>
-        <Form onCreated={() => setAddOpen(false)} onCancel={() => setAddOpen(false)} />
+        <Form onClose={() => setAddOpen(false)} />
       </Modal>
       <EditModal
         item={editItem ?? null}
         title={(item) => `${t("actions.edit")}: ${item.name}`}
         onClose={() => setEditTarget(null)}
       >
-        {(item) => (
-          <Form
-            editing={{ id: item.id, values: item.values }}
-            onCreated={() => setEditTarget(null)}
-            onCancel={() => setEditTarget(null)}
-          />
-        )}
+        {(item, close) => <Form editing={{ id: item.id, values: item.values }} onClose={close} />}
       </EditModal>
       {content}
       <ConfirmDeleteDialog {...remove.dialogProps} />

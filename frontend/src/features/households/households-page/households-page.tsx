@@ -30,7 +30,7 @@ export function HouseholdsPage() {
     <div className="space-y-5">
       <PageHeader title={t("households.title")}>
         <CreateDialog label={t("households.add")} title={t("households.add")}>
-          {(close) => <CreateHouseholdForm onCreated={close} onCancel={close} />}
+          {(close) => <CreateHouseholdForm onClose={close} />}
         </CreateDialog>
       </PageHeader>
 

@@ -23,11 +23,10 @@ interface FormValues {
 
 interface Props {
   initial?: CategoryResponse;
-  onDone: () => void;
-  onCancel: () => void;
+  onClose: () => void;
 }
 
-export function CategoryForm({ initial, onDone, onCancel }: Readonly<Props>) {
+export function CategoryForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data;
@@ -44,8 +43,8 @@ export function CategoryForm({ initial, onDone, onCancel }: Readonly<Props>) {
   );
 
   const { create, update, pending, error } = upsert(
-    useCreateCategory(silent({ onSuccess: onDone })),
-    useUpdateCategory(silent({ onSuccess: onDone })),
+    useCreateCategory(silent({ onSuccess: onClose })),
+    useUpdateCategory(silent({ onSuccess: onClose })),
   );
 
   const defaultValues: FormValues = {
@@ -128,7 +127,7 @@ export function CategoryForm({ initial, onDone, onCancel }: Readonly<Props>) {
         <form.FormActions
           pending={pending}
           submitLabel={initial ? t("actions.save") : t("actions.add")}
-          onCancel={onCancel}
+          onCancel={onClose}
         />
       </form.FormShell>
     </form.AppForm>

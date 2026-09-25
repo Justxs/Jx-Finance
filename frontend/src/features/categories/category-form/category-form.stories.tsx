@@ -24,7 +24,7 @@ const incomeCategory = categories.find((item) => item.type === "income")!;
 const meta = {
   title: "Features/Categories/CategoryForm",
   component: CategoryForm,
-  args: { onDone: fn(), onCancel: fn() },
+  args: { onClose: fn() },
   render: (args) => (
     <div className="w-[min(32rem,calc(100vw-3rem))]">
       <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
