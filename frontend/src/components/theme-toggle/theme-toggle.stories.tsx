@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent } from "storybook/test";
 import { ThemeToggle } from "./theme-toggle";
 
 const meta = {
@@ -9,7 +10,17 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async ({ canvas }) => {
+    const toggle = canvas.getByRole("button", { name: "Toggle theme" });
+
+    await userEvent.click(toggle);
+    await expect(document.documentElement).toHaveClass("dark");
+
+    await userEvent.click(toggle);
+    await expect(document.documentElement).not.toHaveClass("dark");
+  },
+};
 
 export const InToolbar: Story = {
   render: () => (

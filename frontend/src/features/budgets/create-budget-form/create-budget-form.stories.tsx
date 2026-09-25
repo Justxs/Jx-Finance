@@ -81,5 +81,6 @@ export const ServerFieldError: Story = {
 
     await fireEvent.change(limit, { target: { value: "260.00" } });
     await expect(limit).toHaveAttribute("aria-invalid", "false");
+    await expect(message).not.toBeInTheDocument();
   },
 };

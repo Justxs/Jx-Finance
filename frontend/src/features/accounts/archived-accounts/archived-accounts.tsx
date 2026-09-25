@@ -25,7 +25,7 @@ interface ListProps {
   onRestore: (id: string) => void;
 }
 
-export function ArchivedAccountsList({
+function ArchivedAccountsList({
   accounts,
   householdNames,
   restoringId,

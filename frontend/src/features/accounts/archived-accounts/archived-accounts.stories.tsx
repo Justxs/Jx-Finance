@@ -12,6 +12,7 @@ import {
   failWith,
   handlers,
   loadingHandlers,
+  pending,
   withHandlers,
 } from "@/storybook/handlers";
 import { ArchivedAccounts } from "./archived-accounts";
@@ -44,8 +45,11 @@ export const Default: Story = {
 
     await expect(await canvas.findByText("Senoji SEB kortelė")).toBeVisible();
     await expect(canvas.getByText("Sodo išlaidos")).toBeVisible();
+    await expect(canvas.getAllByRole("listitem")).toHaveLength(2);
     await expect(canvas.getAllByRole("button", { name: /^Restore:/u })).toHaveLength(1);
+    await expect(canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" })).toBeEnabled();
     await expect(canvas.getByText("Only its owner can restore it")).toBeVisible();
+    await expect(canvas.getByText(/Kazlauskų šeima/u)).toBeVisible();
   },
 };
 
@@ -80,6 +84,17 @@ export const RestoringTakesTheRowOut: Story = {
     await expect(await screen.findByText("Account restored")).toBeInTheDocument();
     await waitFor(() => expect(canvas.queryByText("Senoji SEB kortelė")).toBeNull());
     await expect(canvas.getByText("Archived accounts (1)")).toBeVisible();
+  },
+};
+
+export const RestorePending: Story = {
+  parameters: withHandlers(getRestoreAccountMockHandler(pending)),
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByText("Archived accounts (2)"));
+    const restore = canvas.getByRole("button", { name: "Restore: Senoji SEB kortelė" });
+    await userEvent.click(restore);
+
+    await waitFor(() => expect(restore).toBeDisabled());
   },
 };
 
