@@ -15,7 +15,6 @@ namespace JxFinance.Tests.Integration.Transactions;
 [Collection<IntegrationCollection>]
 public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ScopeHeader = "X-Active-Household";
     private const string Date = "2026-06-05";
 
     private static readonly byte[] PngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
@@ -237,9 +236,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var theirs = await UploadOkAsync(memberClient, transaction, Png(64), "member.png", "image/png");
         var listed = await ListAsync(memberClient, transaction);
         var download = await memberClient.GetAsync($"/api/attachments/{mine.Id}/content", TestContext.Current.CancellationToken);
-        using var scoped = new HttpRequestMessage(HttpMethod.Get, $"/api/attachments/{mine.Id}/content");
-        scoped.Headers.Add(ScopeHeader, elsewhere.ToString());
-        var outOfScope = await memberClient.SendAsync(scoped, TestContext.Current.CancellationToken);
+        var outOfScope = await SendScopedAsync(memberClient, HttpMethod.Get, $"/api/attachments/{mine.Id}/content", elsewhere);
 
         Assert.Equal([mine.Id, theirs.Id], listed.Select(a => a.Id));
         Assert.Equal(member.Id, theirs.UploadedById);

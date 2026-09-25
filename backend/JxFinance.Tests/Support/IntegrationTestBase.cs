@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using FastEndpoints.Testing;
 using JxFinance.Domain.Common;
+using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -153,6 +154,33 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     protected static Task<T> PostAsync<T>(HttpClient client, string url, object body) =>
         Seed.PostAsync<T>(client, url, body);
+
+    protected static Task<HttpResponseMessage> SendScopedAsync(
+        HttpClient client,
+        HttpMethod method,
+        string url,
+        Guid? household,
+        object? body = null)
+    {
+        var request = new HttpRequestMessage(method, url) { Content = body is null ? null : JsonContent.Create(body) };
+        if (household is { } active)
+        {
+            request.Headers.Add(ActiveHousehold.HeaderName, active.ToString());
+        }
+
+        return client.SendAsync(request, TestContext.Current.CancellationToken);
+    }
+
+    protected static async Task<T> GetScopedAsync<T>(HttpClient client, string url, Guid? household) =>
+        await ReadOkAsync<T>(await SendScopedAsync(client, HttpMethod.Get, url, household));
+
+    protected static async Task<T> ReadOkAsync<T>(HttpResponseMessage response)
+    {
+        Assert.True(
+            response.IsSuccessStatusCode,
+            $"{(int)response.StatusCode}: {await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken)}");
+        return (await response.Content.ReadFromJsonAsync<T>(TestContext.Current.CancellationToken))!;
+    }
 
     protected async Task<IAsyncDisposable> OverrideSettingsAsync(Action<JsonObject> change)
     {

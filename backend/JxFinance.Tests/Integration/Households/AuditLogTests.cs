@@ -13,8 +13,6 @@ namespace JxFinance.Tests.Integration.Households;
 [Collection<IntegrationCollection>]
 public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixture)
 {
-    private const string ScopeHeader = "X-Active-Household";
-
     [Fact]
     public async Task Creating_editing_deleting_and_restoring_a_shared_transaction_is_logged_with_old_and_new_values()
     {
@@ -138,9 +136,9 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             "resource.notFound");
         Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync($"/api/households/{Guid.NewGuid()}/audit", TestContext.Current.CancellationToken)).StatusCode);
 
-        Assert.Equal(HttpStatusCode.OK, (await SendScopedAsync(memberClient, household, household)).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await SendScopedAsync(memberClient, HttpMethod.Get, $"/api/households/{household}/audit", household)).StatusCode);
         await AssertProblemAsync(
-            await SendScopedAsync(memberClient, household, other),
+            await SendScopedAsync(memberClient, HttpMethod.Get, $"/api/households/{household}/audit", other),
             HttpStatusCode.NotFound,
             "resource.notFound");
     }
@@ -358,16 +356,8 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
     private static async Task<PageDto<AuditDto>> AuditAsync(HttpClient client, Guid household, string query = "")
     {
         var paging = query.Contains("pageSize=", StringComparison.Ordinal) ? "" : "pageSize=50&";
-        var response = await client.GetAsync($"/api/households/{household}/audit?{paging}{query}");
-        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
-        return (await response.Content.ReadFromJsonAsync<PageDto<AuditDto>>())!;
-    }
-
-    private static async Task<HttpResponseMessage> SendScopedAsync(HttpClient client, Guid household, Guid active)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/households/{household}/audit");
-        request.Headers.Add(ScopeHeader, active.ToString());
-        return await client.SendAsync(request);
+        return await ReadOkAsync<PageDto<AuditDto>>(
+            await client.GetAsync($"/api/households/{household}/audit?{paging}{query}", TestContext.Current.CancellationToken));
     }
 
     private sealed record CategoryDto(Guid Id, string Name);

@@ -113,8 +113,8 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
     public async Task An_active_household_hides_a_transaction_the_tag_filter_would_otherwise_find()
     {
         using var member = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(member, "Scope first");
-        var second = await NewHouseholdAsync(member, "Scope second");
+        var first = await Seed.HouseholdAsync(member);
+        var second = await Seed.HouseholdAsync(member);
         var account = await CreateAccountAsync("100.00", householdId: second, client: member);
         var tag = await CreateTagAsync("Scoped", second, member);
         var entry = await PostAsync<TransactionDto>(
@@ -250,9 +250,6 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
         Assert.Equal("55.00", report.TotalExpense);
     }
 
-    private static async Task<Guid> NewHouseholdAsync(HttpClient client, string name) =>
-        (await PostAsync<IdDto>(client, "/api/households", new { name = $"{name} {Guid.NewGuid():N}" })).Id;
-
     private static Task<TransactionDto> TaggedAsync(
         HttpClient client,
         Guid accountId,
@@ -267,14 +264,8 @@ public sealed class TransactionTagEndpointTests(ApiFixture fixture) : Integratio
     private static async Task<PageDto<TransactionDto>> ListAsync(HttpClient client, string query) =>
         (await client.GetFromJsonAsync<PageDto<TransactionDto>>($"/api/transactions?pageSize=200&{query}"))!;
 
-    private static async Task<PageDto<TransactionDto>> ScopedListAsync(HttpClient client, string query, Guid household)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/transactions?pageSize=200&{query}");
-        request.Headers.Add("X-Active-Household", household.ToString());
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<PageDto<TransactionDto>>())!;
-    }
+    private static Task<PageDto<TransactionDto>> ScopedListAsync(HttpClient client, string query, Guid household) =>
+        GetScopedAsync<PageDto<TransactionDto>>(client, $"/api/transactions?pageSize=200&{query}", household);
 
     private sealed record SummaryDto(int Count, string TotalIncome, string TotalExpense);
 

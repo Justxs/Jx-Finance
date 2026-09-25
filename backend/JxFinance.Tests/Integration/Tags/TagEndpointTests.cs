@@ -120,8 +120,8 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
     public async Task An_active_household_hides_the_tags_of_the_other_household_and_keeps_personal_ones()
     {
         using var member = await CreateUserClientAsync();
-        var first = await NewHouseholdAsync(member, "Tag first");
-        var second = await NewHouseholdAsync(member, "Tag second");
+        var first = await Seed.HouseholdAsync(member);
+        var second = await Seed.HouseholdAsync(member);
         var firstTag = await CreateTagAsync("First tag", first, member);
         var secondTag = await CreateTagAsync("Second tag", second, member);
         var personalTag = await CreateTagAsync("Personal tag", client: member);
@@ -151,21 +151,8 @@ public sealed class TagEndpointTests(ApiFixture fixture) : IntegrationTestBase(f
         await AssertProblemAsync(notAMember, HttpStatusCode.BadRequest, "household.notMember");
     }
 
-    private static async Task<Guid> NewHouseholdAsync(HttpClient client, string name) =>
-        (await PostAsync<IdDto>(client, "/api/households", new { name = $"{name} {Guid.NewGuid():N}" })).Id;
-
-    private static async Task<List<TagDto>> TagsAsync(HttpClient client, Guid? household)
-    {
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/tags");
-        if (household is not null)
-        {
-            request.Headers.Add("X-Active-Household", household.Value.ToString());
-        }
-
-        var response = await client.SendAsync(request);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<List<TagDto>>())!;
-    }
+    private static Task<List<TagDto>> TagsAsync(HttpClient client, Guid? household) =>
+        GetScopedAsync<List<TagDto>>(client, "/api/tags", household);
 
     private sealed record TagDto(Guid Id, string Name, string Scope, Guid? HouseholdId);
 }
