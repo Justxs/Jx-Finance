@@ -18,8 +18,6 @@ public sealed class UpdateUserRoleEndpoint(IUserService userService, ICurrentUse
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateUserRoleRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateUserRoleRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await userService.ChangeRoleAsync(req.Id, req, currentUser.Id, ct), ct);
-    }
 }

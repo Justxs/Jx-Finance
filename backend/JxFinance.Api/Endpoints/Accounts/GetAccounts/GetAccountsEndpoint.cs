@@ -14,9 +14,6 @@ public sealed class GetAccountsEndpoint(IAccountService accountService)
         Group<AccountsGroup>();
     }
 
-    public override async Task HandleAsync(GetAccountsRequest req, CancellationToken ct)
-    {
-        var accounts = await accountService.GetAllAsync(req, ct);
-        await Send.OkAsync(accounts, ct);
-    }
+    public override async Task HandleAsync(GetAccountsRequest req, CancellationToken ct) =>
+        await Send.OkAsync(await accountService.GetAllAsync(req, ct), ct);
 }

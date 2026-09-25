@@ -13,8 +13,6 @@ public sealed class GetSettingsEndpoint(ISettingsService settingsService) : Endp
         Group<SettingsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await settingsService.GetAsync(ct), ct);
-    }
 }

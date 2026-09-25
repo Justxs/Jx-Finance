@@ -13,8 +13,6 @@ public sealed class GetAssetsEndpoint(INetWorthService netWorthService) : Endpoi
         Group<NetWorthGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await netWorthService.GetAssetsAsync(ct), ct);
-    }
 }

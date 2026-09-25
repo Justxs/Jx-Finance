@@ -14,8 +14,6 @@ public sealed class GetRecurringBillsEndpoint(IRecurringBillService recurringBil
         Group<RecurringBillsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await recurringBillService.GetAllAsync(ct), ct);
-    }
 }

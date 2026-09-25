@@ -14,9 +14,6 @@ public sealed class GetHouseholdsEndpoint(IHouseholdService householdService)
         Group<HouseholdsGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
-        var households = await householdService.GetAllAsync(ct);
-        await Send.OkAsync(households, ct);
-    }
+    public override async Task HandleAsync(CancellationToken ct) =>
+        await Send.OkAsync(await householdService.GetAllAsync(ct), ct);
 }

@@ -16,8 +16,6 @@ public sealed class UpdateBackupEndpoint(IBackupService backupService) : Endpoin
         Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateBackupRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateBackupRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await backupService.UpdateAsync(req.Id, req.Note, ct), ct);
-    }
 }

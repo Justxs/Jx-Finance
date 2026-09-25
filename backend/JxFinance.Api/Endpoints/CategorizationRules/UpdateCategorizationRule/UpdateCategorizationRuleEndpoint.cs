@@ -15,8 +15,6 @@ public sealed class UpdateCategorizationRuleEndpoint(ICategorizationRuleService 
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateCategorizationRuleRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateCategorizationRuleRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await ruleService.UpdateAsync(req, ct), ct);
-    }
 }

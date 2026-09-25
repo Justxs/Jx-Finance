@@ -15,8 +15,6 @@ public sealed class GetHouseholdEndpoint(IHouseholdService householdService)
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkOrProblemAsync(await householdService.GetByIdAsync(Route<Guid>("id"), ct), ct);
-    }
 }

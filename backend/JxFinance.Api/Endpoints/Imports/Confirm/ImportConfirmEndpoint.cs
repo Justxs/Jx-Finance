@@ -13,8 +13,6 @@ public sealed class ImportConfirmEndpoint(IImportService importService)
         Group<ImportsGroup>();
     }
 
-    public override async Task HandleAsync(ImportConfirmRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(ImportConfirmRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await importService.ConfirmAsync(req, ct), ct);
-    }
 }

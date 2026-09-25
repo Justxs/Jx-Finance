@@ -14,8 +14,6 @@ public sealed class GetCategorizationRulesEndpoint(ICategorizationRuleService ru
         Group<CategorizationRulesGroup>();
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkAsync(await ruleService.GetAllAsync(ct), ct);
-    }
 }

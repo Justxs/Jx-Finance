@@ -15,8 +15,6 @@ public sealed class VerifyEmailEndpoint(IAccountEmailService accountEmails) : En
         Description(d => d.Produces(429));
     }
 
-    public override async Task HandleAsync(VerifyEmailRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(VerifyEmailRequest req, CancellationToken ct) =>
         await Send.NoContentOrProblemAsync(await accountEmails.ConfirmEmailAsync(req.Email.Trim(), req.Token, ct), ct);
-    }
 }

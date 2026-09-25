@@ -14,8 +14,6 @@ public sealed class UpdateAssetEndpoint(INetWorthService netWorthService) : Endp
         Description(d => d.ProducesProblemDetails(404));
     }
 
-    public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(UpdateAssetRequest req, CancellationToken ct) =>
         await Send.OkOrProblemAsync(await netWorthService.UpdateAssetAsync(req, ct), ct);
-    }
 }

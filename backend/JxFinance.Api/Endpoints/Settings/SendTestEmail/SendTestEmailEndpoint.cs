@@ -18,8 +18,6 @@ public sealed class SendTestEmailEndpoint(ISettingsService settingsService)
         Description(d => d.Produces(429).ProducesProblemDetails(403));
     }
 
-    public override async Task HandleAsync(CancellationToken ct)
-    {
+    public override async Task HandleAsync(CancellationToken ct) =>
         await Send.OkOrProblemAsync(await settingsService.SendTestEmailAsync(ct), ct);
-    }
 }

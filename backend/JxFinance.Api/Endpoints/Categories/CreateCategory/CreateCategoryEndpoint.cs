@@ -15,8 +15,6 @@ public sealed class CreateCategoryEndpoint(ICategoryService categoryService)
         Description(d => d.ProducesCreated<CategoryResponse>());
     }
 
-    public override async Task HandleAsync(CreateCategoryRequest req, CancellationToken ct)
-    {
+    public override async Task HandleAsync(CreateCategoryRequest req, CancellationToken ct) =>
         await Send.CreatedOrProblemAsync(await categoryService.CreateAsync(req, ct), category => $"{ApiRoutes.CategoriesPath}/{category.Id}", ct);
-    }
 }
