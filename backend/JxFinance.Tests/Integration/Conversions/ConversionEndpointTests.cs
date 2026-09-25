@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Conversions;
@@ -112,14 +111,8 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
     {
         var account = await CreateAccountAsync("1000.00", currency: "eur");
         var existing = await CreateAsync(Client, account);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["multiCurrency"] = false;
-
-        try
+        await using (await FeatureOffAsync("multiCurrency"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var list = await Client.GetAsync("/api/conversions", TestContext.Current.CancellationToken);
             var create = await Client.PostAsJsonAsync("/api/conversions", Body(account, null, null), TestContext.Current.CancellationToken);
             var delete = await Client.DeleteAsync($"/api/conversions/{existing.Id}", TestContext.Current.CancellationToken);
@@ -128,10 +121,6 @@ public sealed class ConversionEndpointTests(ApiFixture fixture) : IntegrationTes
             {
                 await AssertProblemAsync(response, HttpStatusCode.NotFound, "feature.disabled");
             }
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         var listed = await Client.GetFromJsonAsync<PageDto<ConversionDto>>($"/api/conversions?accountId={account}", TestContext.Current.CancellationToken);
