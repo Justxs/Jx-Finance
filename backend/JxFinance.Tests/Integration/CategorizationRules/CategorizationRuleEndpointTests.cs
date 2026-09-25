@@ -3,7 +3,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.CategorizationRules;
@@ -394,14 +393,8 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
         var account = await CreateAccountAsync(client: member);
         var category = await CreateCategoryAsync(client: member);
         await Seed.RuleAsync(member, "contains", "MAXIMA", categoryId: category);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["categorizationRules"] = false;
-
-        try
+        await using (await FeatureOffAsync("categorizationRules"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-
             var list = await member.GetAsync("/api/categorization-rules", TestContext.Current.CancellationToken);
             var run = await member.PostAsJsonAsync("/api/categorization-rules/run", new { }, TestContext.Current.CancellationToken);
             var preview = await ImportPreviewAsync(member, account);
@@ -409,10 +402,6 @@ public sealed class CategorizationRuleEndpointTests(ApiFixture fixture) : Integr
             await AssertProblemAsync(list, HttpStatusCode.NotFound, "feature.disabled");
             await AssertProblemAsync(run, HttpStatusCode.NotFound, "feature.disabled");
             Assert.All(preview, row => Assert.Null(row.MatchedRuleName));
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
 
         var rules = await member.GetFromJsonAsync<List<RuleDto>>("/api/categorization-rules", TestContext.Current.CancellationToken);

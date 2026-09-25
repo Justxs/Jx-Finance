@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using FastEndpoints.Testing;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Data;
@@ -141,6 +142,21 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
     protected static Task<T> PostAsync<T>(HttpClient client, string url, object body) =>
         Seed.PostAsync<T>(client, url, body);
 
+    protected async Task<IAsyncDisposable> OverrideSettingsAsync(Action<JsonObject> change)
+    {
+        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
+        var changed = original.DeepClone().AsObject();
+        change(changed);
+        await SaveSettingsAsync(changed);
+        return new SettingsOverride(() => SaveSettingsAsync(original));
+    }
+
+    protected Task<IAsyncDisposable> FeatureOffAsync(string feature) =>
+        OverrideSettingsAsync(settings => settings["features"]![feature] = false);
+
+    protected Task<IAsyncDisposable> OnlyCurrenciesAsync(params string[] codes) =>
+        OverrideSettingsAsync(settings => settings["enabledCurrencies"] = JsonSerializer.SerializeToNode(codes));
+
     protected async Task WithDbAsync(Func<AppDbContext, Task> work)
     {
         await using var scope = Services.CreateAsyncScope();
@@ -188,10 +204,21 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
         Assert.Contains($"\"{code}\"", body);
     }
 
+    private async Task SaveSettingsAsync(JsonObject settings)
+    {
+        var response = await Client.PutAsJsonAsync("/api/settings", settings, TestContext.Current.CancellationToken);
+        Assert.True(response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
     private static AppDbContext OpenAs(AsyncServiceScope scope, Guid userId) => new(
         scope.ServiceProvider.GetRequiredService<DbContextOptions<AppDbContext>>(),
         new TestCurrentUser(userId),
         scope.ServiceProvider.GetRequiredService<IClock>());
+
+    private sealed class SettingsOverride(Func<Task> restore) : IAsyncDisposable
+    {
+        public ValueTask DisposeAsync() => new(restore());
+    }
 }
 
 public sealed record TestUser(Guid Id, string Email, string Password);

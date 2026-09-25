@@ -228,27 +228,18 @@ public sealed class ConversionUpdateTests(ApiFixture fixture) : IntegrationTestB
         var account = await CreateAccountAsync("1000.00", currency: "eur");
         var pounds = await CreateAsync(Client, account, body: Body("100.00", "eur", "80.00", "gbp", "2026-06-05"));
         var dollars = await CreateAsync(Client, account);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var restricted = original.DeepClone().AsObject();
-        restricted["enabledCurrencies"] = new JsonArray("usd");
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["multiCurrency"] = false;
-
-        try
+        await using (await OnlyCurrenciesAsync("usd"))
         {
-            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
             var kept = await Client.PutAsJsonAsync($"/api/conversions/{pounds.Id}", Body("200.00", "eur", "160.00", "gbp", "2026-06-05"), TestContext.Current.CancellationToken);
             var introduced = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "80.00", "gbp", "2026-06-05"), TestContext.Current.CancellationToken);
             kept.EnsureSuccessStatusCode();
             await AssertRejectedAsync(introduced, "currency.disabled");
+        }
 
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await using (await FeatureOffAsync("multiCurrency"))
+        {
             var gated = await Client.PutAsJsonAsync($"/api/conversions/{dollars.Id}", Body("100.00", "eur", "110.00", "usd", "2026-06-05"), TestContext.Current.CancellationToken);
             await AssertProblemAsync(gated, HttpStatusCode.NotFound, "feature.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         }
     }
 

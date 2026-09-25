@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Budgets;
@@ -35,51 +34,35 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
     [Fact]
     public async Task The_weekly_window_starts_on_the_configured_first_day_of_week()
     {
-        var original = await ReadSettingsAsync();
-        try
-        {
-            await SaveSettingAsync("firstDayOfWeek", "monday");
-            var fromMonday = await CreateBudgetAsync("weekly", "50.00");
-            Assert.Equal(DayOfWeek.Monday, fromMonday.WindowStart.DayOfWeek);
-            Assert.Equal(StartOfWeek(Today, DayOfWeek.Monday), fromMonday.WindowStart);
+        await using var monday = await OverrideSettingsAsync(settings => settings["firstDayOfWeek"] = "monday");
+        var fromMonday = await CreateBudgetAsync("weekly", "50.00");
+        Assert.Equal(DayOfWeek.Monday, fromMonday.WindowStart.DayOfWeek);
+        Assert.Equal(StartOfWeek(Today, DayOfWeek.Monday), fromMonday.WindowStart);
 
-            await SaveSettingAsync("firstDayOfWeek", "sunday");
-            var fromSunday = await ReadBudgetAsync(fromMonday.Id);
-            Assert.Equal(DayOfWeek.Sunday, fromSunday.WindowStart.DayOfWeek);
-            Assert.Equal(StartOfWeek(Today, DayOfWeek.Sunday), fromSunday.WindowStart);
+        await using var sunday = await OverrideSettingsAsync(settings => settings["firstDayOfWeek"] = "sunday");
+        var fromSunday = await ReadBudgetAsync(fromMonday.Id);
+        Assert.Equal(DayOfWeek.Sunday, fromSunday.WindowStart.DayOfWeek);
+        Assert.Equal(StartOfWeek(Today, DayOfWeek.Sunday), fromSunday.WindowStart);
 
-            Assert.NotEqual(fromMonday.WindowStart, fromSunday.WindowStart);
-        }
-        finally
-        {
-            await ApplySettingsAsync(original);
-        }
+        Assert.NotEqual(fromMonday.WindowStart, fromSunday.WindowStart);
     }
 
     [Fact]
     public async Task The_window_moves_with_the_installation_time_zone()
     {
-        var original = await ReadSettingsAsync();
-        try
-        {
-            await SaveSettingAsync("timeZone", "Pacific/Kiritimati");
-            var budget = await CreateBudgetAsync("weekly", "50.00");
-            var farEast = TodayIn("Pacific/Kiritimati");
-            Assert.InRange(farEast, budget.WindowStart, budget.WindowEnd);
-            Assert.Equal(StartOfWeek(farEast, DayOfWeek.Monday), budget.WindowStart);
+        await using var east = await OverrideSettingsAsync(settings => settings["timeZone"] = "Pacific/Kiritimati");
+        var budget = await CreateBudgetAsync("weekly", "50.00");
+        var farEast = TodayIn("Pacific/Kiritimati");
+        Assert.InRange(farEast, budget.WindowStart, budget.WindowEnd);
+        Assert.Equal(StartOfWeek(farEast, DayOfWeek.Monday), budget.WindowStart);
 
-            await SaveSettingAsync("timeZone", "Etc/GMT+12");
-            var farWest = TodayIn("Etc/GMT+12");
-            var shifted = await ReadBudgetAsync(budget.Id);
-            Assert.InRange(farWest, shifted.WindowStart, shifted.WindowEnd);
-            Assert.Equal(StartOfWeek(farWest, DayOfWeek.Monday), shifted.WindowStart);
+        await using var west = await OverrideSettingsAsync(settings => settings["timeZone"] = "Etc/GMT+12");
+        var farWest = TodayIn("Etc/GMT+12");
+        var shifted = await ReadBudgetAsync(budget.Id);
+        Assert.InRange(farWest, shifted.WindowStart, shifted.WindowEnd);
+        Assert.Equal(StartOfWeek(farWest, DayOfWeek.Monday), shifted.WindowStart);
 
-            Assert.NotEqual(farEast, farWest);
-        }
-        finally
-        {
-            await ApplySettingsAsync(original);
-        }
+        Assert.NotEqual(farEast, farWest);
     }
 
     [Fact]
@@ -198,20 +181,4 @@ public sealed class BudgetPeriodTests(ApiFixture fixture) : IntegrationTestBase(
                     new { categoryId = (Guid?)null, amount = "8.00" },
                 },
             });
-
-    private async Task<JsonObject> ReadSettingsAsync() =>
-        (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
-
-    private async Task SaveSettingAsync(string name, string value)
-    {
-        var settings = await ReadSettingsAsync();
-        settings[name] = value;
-        await ApplySettingsAsync(settings);
-    }
-
-    private async Task ApplySettingsAsync(JsonObject settings)
-    {
-        var response = await Client.PutAsJsonAsync("/api/settings", settings);
-        response.EnsureSuccessStatusCode();
-    }
 }

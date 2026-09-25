@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Investments;
@@ -196,24 +195,14 @@ public sealed class SecurityPriceHistoryTests(ApiFixture fixture) : IntegrationT
     public async Task With_the_investments_feature_off_the_price_and_value_history_routes_answer_not_found()
     {
         var id = await CreateSecurityAsync(Client);
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var switchedOff = original.DeepClone().AsObject();
-        switchedOff["features"]!["investments"] = false;
-        try
-        {
-            (await Client.PutAsJsonAsync("/api/settings", switchedOff, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await using var _ = await FeatureOffAsync("investments");
 
-            await AssertProblemAsync(await Client.GetAsync($"/api/investments/securities/{id}/prices", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
-            await AssertProblemAsync(await Client.GetAsync("/api/investments/value-history", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
-            await AssertProblemAsync(
-                await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-01", TestContext.Current.CancellationToken),
-                HttpStatusCode.NotFound,
-                "feature.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        }
+        await AssertProblemAsync(await Client.GetAsync($"/api/investments/securities/{id}/prices", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+        await AssertProblemAsync(await Client.GetAsync("/api/investments/value-history", TestContext.Current.CancellationToken), HttpStatusCode.NotFound, "feature.disabled");
+        await AssertProblemAsync(
+            await Client.DeleteAsync($"/api/investments/securities/{id}/prices/2026-06-01", TestContext.Current.CancellationToken),
+            HttpStatusCode.NotFound,
+            "feature.disabled");
     }
 
     private static async Task SetPriceAsync(HttpClient client, Guid id, string lastPrice, string lastPriceDate)

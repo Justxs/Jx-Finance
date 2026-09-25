@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 using Npgsql;
 
@@ -18,12 +17,9 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
         var loan = await PostAsync<DebtDto>(member, "/api/debts", Debt("400.00"));
         Assert.Equal(("eur", "eur"), (car.Currency, loan.Currency));
 
-        var original = await ReadSettingsAsync();
         AssetDto boat;
-        try
+        await using (await OverrideSettingsAsync(settings => settings["reportingCurrency"] = "usd"))
         {
-            await SaveSettingsAsync(original, "usd");
-
             Assert.Equal(new NetWorthDto("550.00", "1100.00", "440.00", "1210.00", true), await NetWorthAsync(member));
 
             boat = await PostAsync<AssetDto>(member, "/api/assets", Asset("200.00"));
@@ -32,10 +28,6 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
             Assert.Equal("eur", (await revalued.Content.ReadFromJsonAsync<AssetDto>(TestContext.Current.CancellationToken))!.Currency);
 
             Assert.Equal(new NetWorthDto("550.00", "2400.00", "440.00", "2510.00", true), await NetWorthAsync(member));
-        }
-        finally
-        {
-            await SaveSettingsAsync(original, "eur");
         }
 
         Assert.Equal("usd", boat.Currency);
@@ -51,21 +43,14 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
         var earlier = new DateOnly(2026, 6, 1);
         await StoreSnapshotAsync(user.Id, earlier, 100.00m, "EUR");
 
-        var original = await ReadSettingsAsync();
-        try
+        await using (await OverrideSettingsAsync(settings => settings["reportingCurrency"] = "usd"))
         {
-            await SaveSettingsAsync(original, "usd");
-
             Assert.Equal("1100.00", (await NetWorthAsync(member)).NetWorth);
             Assert.Equal("USD", await StoredSnapshotCurrencyAsync(user.Id, Today));
 
             var inDollars = await HistoryAsync(member);
             Assert.Equal("110.00", inDollars.Single(i => i.Date == earlier).NetWorth);
             Assert.Equal("1100.00", inDollars.Single(i => i.Date == Today).NetWorth);
-        }
-        finally
-        {
-            await SaveSettingsAsync(original, "eur");
         }
 
         var inEuros = await HistoryAsync(member);
@@ -96,17 +81,6 @@ public sealed class NetWorthCurrencyTests(ApiFixture fixture) : IntegrationTestB
 
     private static async Task<List<NetWorthSnapshotItemDto>> HistoryAsync(HttpClient client) =>
         (await client.GetFromJsonAsync<NetWorthHistoryDto>("/api/networth/history"))!.Items;
-
-    private async Task<JsonObject> ReadSettingsAsync() =>
-        (await Client.GetFromJsonAsync<JsonObject>("/api/settings"))!;
-
-    private async Task SaveSettingsAsync(JsonObject settings, string reportingCurrency)
-    {
-        var changed = settings.DeepClone().AsObject();
-        changed["reportingCurrency"] = reportingCurrency;
-        var response = await Client.PutAsJsonAsync("/api/settings", changed);
-        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-    }
 
     private async Task StoreSnapshotAsync(Guid userId, DateOnly date, decimal amount, string currency)
     {

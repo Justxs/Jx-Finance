@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Transfers;
@@ -232,28 +231,17 @@ public sealed class TransferUpdateTests(ApiFixture fixture) : IntegrationTestBas
         var moreEuros = await CreateAccountAsync("0.00", currency: "eur");
         var foreign = await CreateAsync(Client, euros, pounds, "100.00", receivedAmount: "80.00");
         var domestic = await CreateAsync(Client, euros, moreEuros, "10.00");
-        var original = (await Client.GetFromJsonAsync<JsonObject>("/api/settings", TestContext.Current.CancellationToken))!;
-        var restricted = original.DeepClone().AsObject();
-        restricted["enabledCurrencies"] = new JsonArray("usd");
+        await using var _ = await OnlyCurrenciesAsync("usd");
 
-        try
-        {
-            (await Client.PutAsJsonAsync("/api/settings", restricted, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var kept = await Client.PutAsJsonAsync(
+            $"/api/transfers/{foreign.Id}",
+            new { fromAccountId = euros, toAccountId = pounds, amount = "110.00", receivedAmount = "88.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
+        var introduced = await Client.PutAsJsonAsync(
+            $"/api/transfers/{domestic.Id}",
+            new { fromAccountId = euros, toAccountId = pounds, amount = "10.00", receivedAmount = "8.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
 
-            var kept = await Client.PutAsJsonAsync(
-                $"/api/transfers/{foreign.Id}",
-                new { fromAccountId = euros, toAccountId = pounds, amount = "110.00", receivedAmount = "88.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
-            var introduced = await Client.PutAsJsonAsync(
-                $"/api/transfers/{domestic.Id}",
-                new { fromAccountId = euros, toAccountId = pounds, amount = "10.00", receivedAmount = "8.00", date = "2026-09-01" }, TestContext.Current.CancellationToken);
-
-            kept.EnsureSuccessStatusCode();
-            await AssertRejectedAsync(introduced, "currency.disabled");
-        }
-        finally
-        {
-            (await Client.PutAsJsonAsync("/api/settings", original, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        }
+        kept.EnsureSuccessStatusCode();
+        await AssertRejectedAsync(introduced, "currency.disabled");
     }
 
     private static Task<TransferDto> CreateAsync(HttpClient client, Guid from, Guid to, string amount, string? receivedAmount = null) =>

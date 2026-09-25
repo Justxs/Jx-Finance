@@ -2,7 +2,6 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json.Nodes;
 using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Integration.Trash;
@@ -234,30 +233,16 @@ public sealed class InvestmentTrashTests(ApiFixture fixture) : IntegrationTestBa
         var interest = await RecordInvestmentAsync(member, new { accountId = account, type = "interest", date = "2026-06-02", amount = "1.00" });
         await member.DeleteAsync($"/api/investments/transactions/{interest}", TestContext.Current.CancellationToken);
 
-        var settings = (await Client.GetFromJsonAsync<JsonNode>("/api/settings", TestContext.Current.CancellationToken))!;
-        try
+        await using (await FeatureOffAsync("investments"))
         {
-            await SwitchInvestmentsAsync(settings, false);
-
             var listed = await TrashAsync(member);
             var restore = await RestoreAsync(member, interest);
 
             Assert.DoesNotContain(listed.Items, row => row.EntityId == interest);
             await AssertProblemAsync(restore, HttpStatusCode.NotFound, "feature.disabled");
         }
-        finally
-        {
-            await SwitchInvestmentsAsync(settings, true);
-        }
 
         Assert.Contains((await TrashAsync(member)).Items, row => row.EntityId == interest);
-    }
-
-    private async Task SwitchInvestmentsAsync(JsonNode settings, bool enabled)
-    {
-        settings["features"]!["investments"] = enabled;
-        var response = await Client.PutAsJsonAsync("/api/settings", settings);
-        response.EnsureSuccessStatusCode();
     }
 
     private async Task UploadAsync(Guid accountId)
