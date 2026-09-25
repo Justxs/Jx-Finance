@@ -84,14 +84,14 @@ public sealed class RetentionTests
         await Retention.PruneDeletionEntriesAsync(capture.Db, Clock.UtcNow, TestContext.Current.CancellationToken);
 
         var statement = capture.OnlyStatement;
-        Assert.Contains("FROM \"DeletionEntries\"", statement, StringComparison.Ordinal);
+        Assert.StartsWith("DELETE FROM \"DeletionEntries\"", statement, StringComparison.Ordinal);
         Assert.Contains("\"DeletedAt\" < @", statement, StringComparison.Ordinal);
         Assert.DoesNotContain("\"UserId\" = @", statement, StringComparison.Ordinal);
         Assert.Contains("LIMIT @", statement, StringComparison.Ordinal);
     }
 
     [Fact]
-    public async Task The_purge_reads_every_kind_it_owns_and_frees_fee_transactions_first()
+    public async Task The_purge_deletes_every_kind_it_owns_in_batches_and_frees_fee_transactions_first()
     {
         await using var capture = new SqlCapture();
         using var store = new AttachmentDirectory();
@@ -102,7 +102,9 @@ public sealed class RetentionTests
         Assert.Equal(
             [
                 "CurrencyConversions",
+                "TransferImports",
                 "Transfers",
+                "TransactionAttachments",
                 "Transactions",
                 "Budgets",
                 "Goals",
@@ -119,6 +121,13 @@ public sealed class RetentionTests
             {
                 Assert.Contains("\"IsDeleted\"", statement, StringComparison.Ordinal);
                 Assert.Contains("\"UpdatedAt\" < @", statement, StringComparison.Ordinal);
+                Assert.DoesNotContain("\"UserId\" = @", statement, StringComparison.Ordinal);
+            });
+        Assert.All(
+            capture.Statements.Where(statement => Table(statement) != "TransactionAttachments"),
+            statement =>
+            {
+                Assert.StartsWith("DELETE FROM", statement, StringComparison.Ordinal);
                 Assert.Contains("LIMIT @", statement, StringComparison.Ordinal);
             });
     }

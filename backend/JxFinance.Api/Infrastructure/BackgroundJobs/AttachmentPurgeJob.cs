@@ -19,27 +19,19 @@ public sealed class AttachmentPurgeJob(IServiceScopeFactory scopes, ILogger<Atta
         var files = services.GetRequiredService<AttachmentStore>();
         var cutoff = DeletionEntry.WindowStart(services.GetRequiredService<IClock>().UtcNow);
 
-        var expired = await db.TransactionAttachments
-            .IgnoreQueryFilters()
-            .Where(a => (a.IsDeleted && a.UpdatedAt < cutoff)
-                || db.Transactions.IgnoreQueryFilters().Any(t => t.Id == a.TransactionId && t.IsDeleted && t.UpdatedAt < cutoff))
-            .Select(a => a.Id)
-            .ToListAsync(ct);
-
-        if (expired.Count > 0)
-        {
-            await db.TransactionAttachments
+        var expired = await Retention.DeleteAttachmentsAsync(
+            db,
+            files,
+            db.TransactionAttachments
                 .IgnoreQueryFilters()
-                .Where(a => expired.Contains(a.Id))
-                .ExecuteDeleteAsync(ct);
-            foreach (var id in expired)
-            {
-                files.Delete(id.Value);
-            }
-
+                .Where(a => (a.IsDeleted && a.UpdatedAt < cutoff)
+                    || db.Transactions.IgnoreQueryFilters().Any(t => t.Id == a.TransactionId && t.IsDeleted && t.UpdatedAt < cutoff)),
+            ct);
+        if (expired > 0)
+        {
             Logger.LogInformation(
                 "Purged {Count} attachments deleted more than {Days} days ago.",
-                expired.Count,
+                expired,
                 DeletionEntry.RetentionDays);
         }
 

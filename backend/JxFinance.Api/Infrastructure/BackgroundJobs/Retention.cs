@@ -1,6 +1,6 @@
-using System.Linq.Expressions;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Infrastructure.Attachments;
 using JxFinance.Infrastructure.Data;
@@ -51,11 +51,7 @@ internal static class Retention
     internal static Task<int> PruneDeletionEntriesAsync(AppDbContext db, DateTimeOffset now, CancellationToken ct)
     {
         var cutoff = PurgeStart(now);
-        return PurgeAsync(
-            db.DeletionEntries.IgnoreQueryFilters().Where(e => e.DeletedAt < cutoff),
-            e => e.Id,
-            ids => db.DeletionEntries.IgnoreQueryFilters().Where(e => ids.Contains(e.Id)),
-            ct);
+        return PurgeAsync(db.DeletionEntries.IgnoreQueryFilters().Where(e => e.DeletedAt < cutoff), ct);
     }
 
     internal static async Task<int> PurgeDeletedAsync(
@@ -65,142 +61,63 @@ internal static class Retention
         CancellationToken ct)
     {
         var cutoff = PurgeStart(now);
+        var transfers = Expired(db.Transfers, cutoff);
+        var transactions = Expired(db.Transactions, cutoff)
+            .Where(t => !db.CurrencyConversions.IgnoreQueryFilters().Any(c => c.FeeTransactionId == t.Id));
 
-        var purged = await PurgeAsync(
-            Expired(db.CurrencyConversions, cutoff),
-            c => c.Id,
-            ids => db.CurrencyConversions.IgnoreQueryFilters().Where(c => ids.Contains(c.Id)),
+        var purged = await PurgeAsync(Expired(db.CurrencyConversions, cutoff), ct);
+        await PurgeAsync(db.TransferImports.Where(r => transfers.Any(t => t.Id == r.TransferId)), ct);
+        purged += await PurgeAsync(transfers, ct);
+        await DeleteAttachmentsAsync(
+            db,
+            files,
+            db.TransactionAttachments.IgnoreQueryFilters().Where(a => transactions.Any(t => t.Id == a.TransactionId)),
             ct);
-        purged += await PurgeTransfersAsync(db, cutoff, ct);
-        purged += await PurgeTransactionsAsync(db, files, cutoff, ct);
-        purged += await PurgeAsync(
-            Expired(db.Budgets, cutoff),
-            b => b.Id,
-            ids => db.Budgets.IgnoreQueryFilters().Where(b => ids.Contains(b.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.Goals, cutoff),
-            g => g.Id,
-            ids => db.Goals.IgnoreQueryFilters().Where(g => ids.Contains(g.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.Assets, cutoff),
-            a => a.Id,
-            ids => db.Assets.IgnoreQueryFilters().Where(a => ids.Contains(a.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.Debts, cutoff),
-            d => d.Id,
-            ids => db.Debts.IgnoreQueryFilters().Where(d => ids.Contains(d.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.RecurringBills, cutoff),
-            b => b.Id,
-            ids => db.RecurringBills.IgnoreQueryFilters().Where(b => ids.Contains(b.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.InvestmentTransactions, cutoff),
-            t => t.Id,
-            ids => db.InvestmentTransactions.IgnoreQueryFilters().Where(t => ids.Contains(t.Id)),
-            ct);
-        purged += await PurgeAsync(
-            Expired(db.CategorizationRules, cutoff),
-            r => r.Id,
-            ids => db.CategorizationRules.IgnoreQueryFilters().Where(r => ids.Contains(r.Id)),
-            ct);
-
+        purged += await PurgeAsync(transactions, ct);
+        purged += await PurgeAsync(Expired(db.Budgets, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.Goals, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.Assets, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.Debts, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.RecurringBills, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.InvestmentTransactions, cutoff), ct);
+        purged += await PurgeAsync(Expired(db.CategorizationRules, cutoff), ct);
         return purged;
+    }
+
+    internal static async Task<int> DeleteAttachmentsAsync(
+        AppDbContext db,
+        AttachmentStore files,
+        IQueryable<TransactionAttachment> attachments,
+        CancellationToken ct)
+    {
+        var ids = await attachments.Select(a => a.Id).ToListAsync(ct);
+        if (ids.Count == 0)
+        {
+            return 0;
+        }
+
+        await db.TransactionAttachments.IgnoreQueryFilters().Where(a => ids.Contains(a.Id)).ExecuteDeleteAsync(ct);
+        foreach (var id in ids)
+        {
+            files.Delete(id.Value);
+        }
+
+        return ids.Count;
     }
 
     private static IQueryable<TEntity> Expired<TEntity>(IQueryable<TEntity> rows, DateTimeOffset cutoff)
         where TEntity : EntityBase =>
         rows.IgnoreQueryFilters().Where(e => e.IsDeleted && e.UpdatedAt < cutoff);
 
-    private static async Task<int> PurgeTransfersAsync(AppDbContext db, DateTimeOffset cutoff, CancellationToken ct)
+    private static async Task<int> PurgeAsync<TEntity>(IQueryable<TEntity> expired, CancellationToken ct)
     {
-        var purged = 0;
-        while (true)
+        int deleted, purged = 0;
+        do
         {
-            var batch = await Expired(db.Transfers, cutoff).Select(t => t.Id).Take(BatchSize).ToListAsync(ct);
-            if (batch.Count == 0)
-            {
-                return purged;
-            }
-
-            await db.TransferImports.Where(r => batch.Contains(r.TransferId)).ExecuteDeleteAsync(ct);
-            purged += await db.Transfers.IgnoreQueryFilters().Where(t => batch.Contains(t.Id)).ExecuteDeleteAsync(ct);
-            if (batch.Count < BatchSize)
-            {
-                return purged;
-            }
+            purged += deleted = await expired.Take(BatchSize).ExecuteDeleteAsync(ct);
         }
-    }
+        while (deleted == BatchSize);
 
-    private static async Task<int> PurgeTransactionsAsync(
-        AppDbContext db,
-        AttachmentStore files,
-        DateTimeOffset cutoff,
-        CancellationToken ct)
-    {
-        var purged = 0;
-        while (true)
-        {
-            var batch = await Expired(db.Transactions, cutoff)
-                .Where(t => !db.CurrencyConversions.IgnoreQueryFilters().Any(c => c.FeeTransactionId == t.Id))
-                .Select(t => t.Id)
-                .Take(BatchSize)
-                .ToListAsync(ct);
-            if (batch.Count == 0)
-            {
-                return purged;
-            }
-
-            var attachments = await db.TransactionAttachments
-                .IgnoreQueryFilters()
-                .Where(a => batch.Contains(a.TransactionId))
-                .Select(a => a.Id)
-                .ToListAsync(ct);
-            if (attachments.Count > 0)
-            {
-                await db.TransactionAttachments
-                    .IgnoreQueryFilters()
-                    .Where(a => attachments.Contains(a.Id))
-                    .ExecuteDeleteAsync(ct);
-                foreach (var id in attachments)
-                {
-                    files.Delete(id.Value);
-                }
-            }
-
-            purged += await db.Transactions.IgnoreQueryFilters().Where(t => batch.Contains(t.Id)).ExecuteDeleteAsync(ct);
-            if (batch.Count < BatchSize)
-            {
-                return purged;
-            }
-        }
-    }
-
-    private static async Task<int> PurgeAsync<TEntity, TId>(
-        IQueryable<TEntity> expired,
-        Expression<Func<TEntity, TId>> id,
-        Func<List<TId>, IQueryable<TEntity>> byIds,
-        CancellationToken ct)
-        where TEntity : class
-    {
-        var purged = 0;
-        while (true)
-        {
-            var batch = await expired.Select(id).Take(BatchSize).ToListAsync(ct);
-            if (batch.Count == 0)
-            {
-                return purged;
-            }
-
-            purged += await byIds(batch).ExecuteDeleteAsync(ct);
-            if (batch.Count < BatchSize)
-            {
-                return purged;
-            }
-        }
+        return purged;
     }
 }
