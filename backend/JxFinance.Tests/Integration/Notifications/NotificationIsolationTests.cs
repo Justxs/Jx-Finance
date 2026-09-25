@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
@@ -18,7 +16,7 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
         var bill = await CreateDueBillAsync(ownerClient);
         var partnerBill = await CreateDueBillAsync(partnerClient);
 
-        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
+        await Job<RecurringBillReminderJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         var reminder = Assert.Single(await Seed.UnreadNotificationsAsync(ownerClient));
         Assert.Equal(bill, reminder.RelatedId);
@@ -38,20 +36,17 @@ public sealed class NotificationIsolationTests(ApiFixture fixture) : Integration
         using var member = await CreateUserClientAsync();
         var first = await CreateDueBillAsync(member);
         var second = await CreateDueBillAsync(member);
-        var job = NewJob();
+        var job = Job<RecurringBillReminderJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         (await member.PostAsync("/api/notifications/read-all", null, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var all = await member.GetFromJsonAsync<List<NotificationDto>>("/api/notifications", TestContext.Current.CancellationToken);
         Assert.Equal(new[] { first, second }.Order(), all!.Select(n => n.RelatedId!.Value).Order());
         Assert.All(all!, n => Assert.True(n.IsRead));
     }
-
-    private RecurringBillReminderJob NewJob() =>
-        new(Services.GetRequiredService<IServiceScopeFactory>(), NullLogger<RecurringBillReminderJob>.Instance);
 
     private Task<Guid> CreateDueBillAsync(HttpClient client) => Seed.RecurringBillAsync(client, Today);
 }

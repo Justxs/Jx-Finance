@@ -7,8 +7,6 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.Transactions;
 
@@ -283,9 +281,7 @@ public sealed class AttachmentEndpointTests(ApiFixture fixture) : IntegrationTes
         var oldOrphan = WriteOrphan(TimeSpan.FromHours(2));
         var newOrphan = WriteOrphan(TimeSpan.Zero);
 
-        await new AttachmentPurgeJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<AttachmentPurgeJob>.Instance).RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<AttachmentPurgeJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.True(FileExists(kept.Id));
         Assert.True(FileExists(recent.Id));

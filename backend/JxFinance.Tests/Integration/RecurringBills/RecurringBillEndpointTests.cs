@@ -2,8 +2,6 @@ using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
@@ -155,11 +153,9 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
     {
         var account = await CreateAccountAsync("100.00");
         var bill = await CreateFixedBillAsync("Reminder", "5.00", "2026-01-01", account);
-        var job = new RecurringBillReminderJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RecurringBillReminderJob>.Instance);
+        var job = Job<RecurringBillReminderJob>();
 
-        await Task.WhenAll(job.ScanAsync(TestContext.Current.CancellationToken), job.ScanAsync(TestContext.Current.CancellationToken));
+        await Task.WhenAll(job.RunOnceAsync(TestContext.Current.CancellationToken), job.RunOnceAsync(TestContext.Current.CancellationToken));
 
         Assert.Single(await UnreadRemindersAsync(bill.Id));
 
@@ -178,11 +174,9 @@ public sealed class RecurringBillEndpointTests(ApiFixture fixture) : Integration
             Client,
             "/api/recurring-bills",
             new { name = $"Window {Guid.NewGuid():N}", kind = "fixed", amount = "5.00", cadence = "monthly", nextDueDate = Today.AddDays(dueInDays), remindDaysBefore });
-        var job = new RecurringBillReminderJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RecurringBillReminderJob>.Instance);
+        var job = Job<RecurringBillReminderJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(expected, (await UnreadRemindersAsync(bill.Id)).Count == 1);
     }

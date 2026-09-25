@@ -25,6 +25,8 @@ public abstract class IntegrationTestBase(ApiFixture fixture)
 
     protected DateOnly Today => Services.GetRequiredService<IClock>().Today;
 
+    protected TJob Job<TJob>(params object[] overrides) => ActivatorUtilities.CreateInstance<TJob>(Services, overrides);
+
     protected HttpClient CreateClient(bool handleCookies = true)
     {
         var client = fixture.CreateClient(new ClientOptions { HandleCookies = handleCookies, AllowAutoRedirect = false });

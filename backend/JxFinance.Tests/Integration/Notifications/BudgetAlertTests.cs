@@ -7,7 +7,6 @@ using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.Notifications;
 
@@ -25,7 +24,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         var budget = await WeeklyBudgetAsync(member, "100.00");
         await SpendAsync(member, budget, "79.00");
 
-        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
+        await Job<BudgetAlertJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Empty(await AlertsAsync(member));
     }
@@ -36,15 +35,15 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         using var member = await CreateUserClientAsync();
         var budget = await WeeklyBudgetAsync(member, "100.00");
         await SpendAsync(member, budget, "80.00");
-        var job = NewJob();
+        var job = Job<BudgetAlertJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         var warned = await AlertsAsync(member);
 
         await SpendAsync(member, budget, "20.00");
-        await job.ScanAsync(TestContext.Current.CancellationToken);
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         var both = await AlertsAsync(member);
 
         var warning = Assert.Single(warned);
@@ -62,11 +61,11 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         using var member = await CreateUserClientAsync();
         var budget = await WeeklyBudgetAsync(member, "100.00");
         await SpendAsync(member, budget, "100.00");
-        var job = NewJob();
+        var job = Job<BudgetAlertJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         await MoveAlertsIntoThePreviousWindowAsync(budget);
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(4, (await AlertsAsync(member)).Count);
     }
@@ -81,7 +80,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         await SpendAsync(spender, overspent, "100.00");
         await SpendAsync(saver, within, "10.00");
 
-        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
+        await Job<BudgetAlertJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, (await AlertsAsync(spender)).Count);
         Assert.Empty(await AlertsAsync(saver));
@@ -101,7 +100,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             disabled.Features = disabled.Features with { Budgets = false };
             store.Set(disabled);
 
-            await NewJob().ScanAsync(TestContext.Current.CancellationToken);
+            await Job<BudgetAlertJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
             Assert.Empty(await AlertsAsync(member));
         }
@@ -110,7 +109,7 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
             store.Set(await StoredSettingsAsync());
         }
 
-        await NewJob().ScanAsync(TestContext.Current.CancellationToken);
+        await Job<BudgetAlertJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         Assert.Equal(2, (await AlertsAsync(member)).Count);
     }
@@ -122,21 +121,18 @@ public sealed class BudgetAlertTests(ApiFixture fixture) : IntegrationTestBase(f
         var budget = await WeeklyBudgetAsync(member, "100.00", rollover: true);
         await BackdateBudgetAsync(budget.Budget.Id, budget.Budget.WindowStart.AddDays(-7));
         await SpendAsync(member, budget, "90.00");
-        var job = NewJob();
+        var job = Job<BudgetAlertJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         var quiet = await AlertsAsync(member);
 
         await SpendAsync(member, budget, "80.00");
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
         var alerts = await AlertsAsync(member);
 
         Assert.Empty(quiet);
         Assert.Equal("budgetWarning", Assert.Single(alerts).Type);
     }
-
-    private BudgetAlertJob NewJob() =>
-        new(Services.GetRequiredService<IServiceScopeFactory>(), NullLogger<BudgetAlertJob>.Instance);
 
     private async Task<BudgetSetup> WeeklyBudgetAsync(HttpClient client, string limit, bool rollover = false)
     {
