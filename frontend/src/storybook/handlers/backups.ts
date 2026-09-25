@@ -44,10 +44,10 @@ export const backupHandlers = [
   getRestoreBackupMockHandler(async ({ request }) => {
     const password = text((await readBody(request)).password) ?? "";
     if (password === "") {
-      throw problem(backupPasswordRequiredProblem, 400);
+      throw problem(backupPasswordRequiredProblem);
     }
     if (password !== backupRestorePassword) {
-      throw problem(backupWrongPasswordProblem, 400);
+      throw problem(backupWrongPasswordProblem);
     }
     return backupRestored;
   }),

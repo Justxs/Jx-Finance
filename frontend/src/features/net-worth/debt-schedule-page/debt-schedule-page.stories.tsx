@@ -79,5 +79,5 @@ export const ScheduleLoading: Story = {
 export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers } } };
 
 export const ScheduleFails: Story = {
-  parameters: withHandlers(getDebtScheduleMockHandler(failWith(serverErrorProblem, 500))),
+  parameters: withHandlers(getDebtScheduleMockHandler(failWith(serverErrorProblem))),
 };

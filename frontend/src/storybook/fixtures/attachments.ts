@@ -1,5 +1,6 @@
-import type { AttachmentResponse, ProblemDetails } from "@/api/generated/model";
+import type { AttachmentResponse } from "@/api/generated/model";
 import { ids, uid } from "./base";
+import { problemOf } from "./problems";
 import { currentUser, memberUser } from "./users";
 
 function attachment(
@@ -67,19 +68,12 @@ export const fullAttachments: AttachmentResponse[] = Array.from({ length: 10 }, 
   ),
 );
 
-export const attachmentContentMismatchProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  instance: `/api/transactions/${ids.transactions.maxima}/attachments`,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The file's content does not match its type.",
-      code: "attachment.contentMismatch",
-    },
-  ],
-};
+export const attachmentContentMismatchProblem = problemOf(
+  400,
+  "attachment.contentMismatch",
+  "The file's content does not match its type.",
+  { instance: `/api/transactions/${ids.transactions.maxima}/attachments` },
+);
 
 export const tinyPng = Uint8Array.from([
   0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,

@@ -74,7 +74,7 @@ export const TermAndPaymentTogether: Story = {
 };
 
 export const PaymentTooSmall: Story = {
-  parameters: withHandlers(getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem, 400))),
+  parameters: withHandlers(getCreateDebtMockHandler(failWith(debtPaymentTooSmallProblem))),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await fireEvent.change(canvas.getByLabelText(/^(name|pavadinimas)$/i), {

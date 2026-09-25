@@ -60,7 +60,7 @@ export const Narrow: Story = {
 export const InvalidCodeAfterSubmit: Story = {
   parameters: withHandlers(
     getEnableTwoFactorMockHandler(
-      failWith({ ...validationProblem, detail: "The verification code is invalid." }, 400),
+      failWith({ ...validationProblem, detail: "The verification code is invalid." }),
     ),
   ),
 };

@@ -78,7 +78,7 @@ export const UploadResultWithWarnings: Story = {
 };
 
 export const UploadWhileDatabaseBusy: Story = {
-  parameters: withHandlers(getImportBrokerReportMockHandler(failWith(databaseBusyProblem, 409))),
+  parameters: withHandlers(getImportBrokerReportMockHandler(failWith(databaseBusyProblem))),
   play: async () => {
     await uploadReport();
     const dialog = within(await within(document.body).findByRole("dialog"));
@@ -91,7 +91,7 @@ export const UploadWhileDatabaseBusy: Story = {
 
 export const SyncWhileDatabaseBusy: Story = {
   args: { initialTab: "sync" },
-  parameters: withHandlers(getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem, 409))),
+  parameters: withHandlers(getSyncBrokerConnectionMockHandler(failWith(databaseBusyProblem))),
   play: async () => {
     const dialog = within(await within(document.body).findByRole("dialog"));
     await userEvent.click(await dialog.findByRole("button", { name: "Sync now" }));
@@ -169,7 +169,7 @@ export const ConnectionError: Story = {
   args: { initialTab: "sync" },
   parameters: withHandlers(
     getBrokerConnectionsMockHandler([failedBrokerConnection]),
-    getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem, 400)),
+    getSyncBrokerConnectionMockHandler(failWith(brokerSyncProblem)),
   ),
   play: async () => {
     const body = within(document.body);

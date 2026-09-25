@@ -1,4 +1,5 @@
-import type { BackupResponse, ProblemDetails, RestoreBackupResponse } from "@/api/generated/model";
+import type { BackupResponse, RestoreBackupResponse } from "@/api/generated/model";
+import { problemOf } from "./problems";
 
 export const backups: BackupResponse[] = [
   {
@@ -43,94 +44,50 @@ export const backupRestored: RestoreBackupResponse = {
   attachments: 38,
 };
 
-export const backupSchemaProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The backup was taken at another database version.",
-      code: "backup.schemaMismatch",
-    },
-  ],
-};
+export const backupSchemaProblem = problemOf(
+  400,
+  "backup.schemaMismatch",
+  "The backup was taken at another database version.",
+  { instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore" },
+);
 
-export const backupInvalidFileProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  instance: "/api/backups/upload",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The file is not a Jx Finance backup.",
-      code: "backup.invalidFile",
-    },
-  ],
-};
+export const backupInvalidFileProblem = problemOf(
+  400,
+  "backup.invalidFile",
+  "The file is not a Jx Finance backup.",
+  { instance: "/api/backups/upload" },
+);
 
 export const backupRestorePassword = "Correct-horse-42";
 
-export const backupWrongPasswordProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
+export const backupWrongPasswordProblem = problemOf(
+  400,
+  "password.incorrect",
+  "The current password is incorrect.",
+  { instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore" },
+);
+
+export const backupPasswordRequiredProblem = problemOf(400, "required", "Password is required.", {
+  name: "password",
   instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The current password is incorrect.",
-      code: "password.incorrect",
-    },
-  ],
-};
+});
 
-export const backupPasswordRequiredProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  instance: "/api/backups/5f0c1a52-7d7e-4a39-9a55-1f2f6f1b0a01/restore",
-  errors: [{ name: "password", reason: "Password is required.", code: "required" }],
-};
+export const backupTooLargeProblem = problemOf(
+  400,
+  "backup.tooLarge",
+  "The backup holds more rows than this installation accepts.",
+  { instance: "/api/backups/upload" },
+);
 
-export const backupTooLargeProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.1",
-  title: "One or more validation errors occurred.",
-  status: 400,
-  instance: "/api/backups/upload",
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The backup holds more rows than this installation accepts.",
-      code: "backup.tooLarge",
-    },
-  ],
-};
+export const lockedOutProblem = problemOf(
+  429,
+  "credentials.lockedOut",
+  "The account is locked for 15 minutes.",
+);
 
-export const lockedOutProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc6585#section-4",
-  title: "Too many failed attempts.",
-  status: 429,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "The account is locked for 15 minutes.",
-      code: "credentials.lockedOut",
-    },
-  ],
-};
-
-export const databaseBusyProblem: ProblemDetails = {
-  type: "https://www.rfc-editor.org/rfc/rfc7231#section-6.5.8",
-  title: "The database was busy.",
-  status: 409,
-  errors: [
-    {
-      name: "generalErrors",
-      reason: "Another operation held the database. Nothing was changed.",
-      code: "conflict.busy",
-    },
-  ],
-};
+export const databaseBusyProblem = problemOf(
+  409,
+  "conflict.busy",
+  "Another operation held the database. Nothing was changed.",
+  { title: "The database was busy." },
+);

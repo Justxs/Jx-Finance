@@ -49,7 +49,7 @@ export const assetHandlers = [
 export const debtScheduleHandler = getDebtScheduleMockHandler(({ params, request }) => {
   const debt = found(byId(scheduledDebts, params.id));
   if (debt.payoffDate === null) {
-    throw problem(scheduleIncompleteProblem, 400);
+    throw problem(scheduleIncompleteProblem);
   }
   const query = new URL(request.url).searchParams;
   return buildDebtSchedule(debt, {

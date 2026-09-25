@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
-import type { TrashEntryResponse } from "@/api/generated/model";
+import type { ErrorCode, TrashEntryResponse } from "@/api/generated/model";
 import { getRestoreDeletedMockHandler, getTrashMockHandler } from "@/api/generated/trash/trash.msw";
-import { recordedTrashEntries, serverErrorProblem, trashEntries } from "@/storybook/fixtures";
+import { problemOf, recordedTrashEntries, trashEntries } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -23,6 +23,16 @@ const meta = {
 
 export default meta;
 type Story = StoryObj<typeof meta>;
+
+function cannotRestore(status: 400 | 409, code: ErrorCode, reason: string) {
+  return failWith(
+    problemOf(status, code, reason, {
+      name: "GeneralErrors",
+      title: "Cannot restore",
+      instance: "/api/trash/restore",
+    }),
+  );
+}
 
 function restorableHandlers() {
   let live: TrashEntryResponse[] = trashEntries;
@@ -113,22 +123,7 @@ export const RestoringTakesTheRowOut: Story = {
 export const RestoreRefused: Story = {
   parameters: withHandlers(
     getRestoreDeletedMockHandler(
-      failWith(
-        {
-          ...serverErrorProblem,
-          status: 400,
-          title: "Cannot restore",
-          instance: "/api/trash/restore",
-          errors: [
-            {
-              name: "GeneralErrors",
-              reason: "The account this belonged to is archived.",
-              code: "restore.referenceMissing" as const,
-            },
-          ],
-        },
-        400,
-      ),
+      cannotRestore(400, "restore.referenceMissing", "The account this belonged to is archived."),
     ),
   ),
   play: async ({ canvasElement }) => {
@@ -147,21 +142,10 @@ export const RestoreRefused: Story = {
 export const InvestmentRestoreRefused: Story = {
   parameters: withHandlers(
     getRestoreDeletedMockHandler(
-      failWith(
-        {
-          ...serverErrorProblem,
-          status: 400,
-          title: "Cannot restore",
-          instance: "/api/trash/restore",
-          errors: [
-            {
-              name: "GeneralErrors",
-              reason: "Later sales now depend on the shares this entry would take back.",
-              code: "holding.dependentSales" as const,
-            },
-          ],
-        },
+      cannotRestore(
         400,
+        "holding.dependentSales",
+        "Later sales now depend on the shares this entry would take back.",
       ),
     ),
   ),
@@ -182,22 +166,7 @@ export const RecordedKinds: Story = {
       paginate(recordedTrashEntries, new URL(request.url).searchParams),
     ),
     getRestoreDeletedMockHandler(
-      failWith(
-        {
-          ...serverErrorProblem,
-          status: 409,
-          title: "Cannot restore",
-          instance: "/api/trash/restore",
-          errors: [
-            {
-              name: "GeneralErrors",
-              reason: 'You already have another tag named "Atostogos".',
-              code: "restore.nameTaken" as const,
-            },
-          ],
-        },
-        409,
-      ),
+      cannotRestore(409, "restore.nameTaken", 'You already have another tag named "Atostogos".'),
     ),
   ),
   play: async ({ canvasElement }) => {

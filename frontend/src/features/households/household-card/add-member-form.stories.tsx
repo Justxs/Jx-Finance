@@ -45,7 +45,7 @@ export const InModal: Story = {
 export const UnknownEmailAfterSubmit: Story = {
   parameters: withHandlers(
     getAddMemberMockHandler(
-      failWith({ ...notFoundProblem, detail: "No user with this email exists." }, 404),
+      failWith({ ...notFoundProblem, detail: "No user with this email exists." }),
     ),
   ),
 };

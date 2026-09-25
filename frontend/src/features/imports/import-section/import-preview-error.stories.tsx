@@ -7,7 +7,7 @@ import { ImportPreviewError } from "./import-preview-error";
 const meta = {
   title: "Features/Imports/ImportPreviewError",
   component: ImportPreviewError,
-  args: { error: new ApiError({ status: 400, detail: importFormatProblem.detail ?? undefined }) },
+  args: { error: new ApiError({ status: 400, detail: importFormatProblem.detail }) },
   decorators: [withWidth("panel")],
 } satisfies Meta<typeof ImportPreviewError>;
 
@@ -26,5 +26,5 @@ export const FileRejected: Story = {
 };
 
 export const ServerError: Story = {
-  args: { error: new ApiError({ status: 500, title: serverErrorProblem.title ?? undefined }) },
+  args: { error: new ApiError({ status: 500, title: serverErrorProblem.title }) },
 };

@@ -27,12 +27,12 @@ export function text(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-export function problem(body: ProblemDetails, status: number) {
-  return HttpResponse.json(body, { status, headers: PROBLEM_HEADERS });
+export function problem(body: ProblemDetails) {
+  return HttpResponse.json(body, { status: body.status, headers: PROBLEM_HEADERS });
 }
 
 export function notFound() {
-  return problem(notFoundProblem, 404);
+  return problem(notFoundProblem);
 }
 
 export function found<T>(item: T | undefined): T {
@@ -42,9 +42,9 @@ export function found<T>(item: T | undefined): T {
   return item;
 }
 
-export function failWith(body: ProblemDetails, status: number) {
+export function failWith(body: ProblemDetails) {
   return function fail(): never {
-    throw problem(body, status);
+    throw problem(body);
   };
 }
 

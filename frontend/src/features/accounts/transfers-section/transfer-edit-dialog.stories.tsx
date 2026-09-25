@@ -148,7 +148,7 @@ export const Pending: Story = {
 };
 
 export const LockedValueRefused: Story = {
-  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferLockedProblem, 400))),
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferLockedProblem))),
   play: async ({ args }) => {
     const dialog = await saveWithAmount("410");
 
@@ -160,9 +160,7 @@ export const LockedValueRefused: Story = {
 
 export const AmountMismatch: Story = {
   args: { transfer: crossCurrencyTransfer },
-  parameters: withHandlers(
-    getUpdateTransferMockHandler(failWith(transferAmountMismatchProblem, 400)),
-  ),
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferAmountMismatchProblem))),
   play: async () => {
     const dialog = await saveWithAmount("1000");
 
@@ -173,7 +171,7 @@ export const AmountMismatch: Story = {
 };
 
 export const Forbidden: Story = {
-  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferForbiddenProblem, 403))),
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(transferForbiddenProblem))),
   play: async () => {
     const dialog = await saveWithAmount("410");
 
@@ -182,7 +180,7 @@ export const Forbidden: Story = {
 };
 
 export const TransferNoLongerExists: Story = {
-  parameters: withHandlers(getUpdateTransferMockHandler(failWith(notFoundProblem, 404))),
+  parameters: withHandlers(getUpdateTransferMockHandler(failWith(notFoundProblem))),
   play: async () => {
     const dialog = await saveWithAmount("410");
 
