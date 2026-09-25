@@ -1,22 +1,8 @@
-import { expect, type Page, test } from "@playwright/test";
-import { z } from "zod";
-import { readJson } from "./support";
-
-const admin = {
-  displayName: "E2E Admin",
-  email: "e2e-admin@localhost.test",
-  password: "E2e-Smoke-Password-123!",
-};
+import { expect, test } from "@playwright/test";
+import { AccountsResponse, CategoriesResponse } from "../src/api/schemas/index.zod";
+import { admin, fillSignIn, readJson, signIn, today } from "./support";
 
 test.describe.configure({ mode: "serial" });
-
-async function signIn(page: Page) {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(admin.email);
-  await page.getByLabel("Password", { exact: true }).fill(admin.password);
-  await page.getByRole("button", { name: "Sign in" }).click();
-  await expect(page.getByRole("link", { name: "Transactions" }).first()).toBeVisible();
-}
 
 test("a fresh install asks for the administrator, then for a sign in", async ({ page }) => {
   await page.goto("/");
@@ -38,10 +24,7 @@ test("setup is closed once an administrator exists", async ({ page }) => {
 });
 
 test("a wrong password is refused with a translated message", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel("Email").fill(admin.email);
-  await page.getByLabel("Password", { exact: true }).fill("not-the-password");
-  await page.getByRole("button", { name: "Sign in" }).click();
+  await fillSignIn(page, admin.email, "not-the-password");
 
   await expect(page.getByText("Wrong email or password.")).toBeVisible();
   await expect(page).toHaveURL(/\/login/);
@@ -68,14 +51,14 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
 }) => {
   await signIn(page);
   const accounts = await page.request.get("/api/accounts");
-  const account = (
-    await readJson(accounts, z.array(z.object({ id: z.string(), name: z.string() })))
-  ).find((candidate) => candidate.name === "E2E checking");
+  const account = (await readJson(accounts, AccountsResponse)).find(
+    (candidate) => candidate.name === "E2E checking",
+  );
   expect(account).toBeDefined();
   const categories = await page.request.get("/api/categories");
-  const category = (
-    await readJson(categories, z.array(z.object({ id: z.string(), type: z.string() })))
-  ).find((candidate) => candidate.type === "expense");
+  const category = (await readJson(categories, CategoriesResponse)).find(
+    (candidate) => candidate.type === "expense",
+  );
   expect(category).toBeDefined();
 
   const created = await page.request.post("/api/transactions", {
@@ -84,7 +67,7 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
       categoryId: category?.id,
       type: "expense",
       amount: "12.50",
-      date: new Date().toISOString().slice(0, 10),
+      date: today(),
       description: "E2E smoke lunch",
     },
   });
@@ -94,9 +77,9 @@ test("a transaction posted to the API appears in the ledger and moves the balanc
   await expect(page.getByRole("row", { name: /E2E smoke lunch/ })).toBeVisible();
 
   const refreshed = await page.request.get("/api/accounts");
-  const balance = (
-    await readJson(refreshed, z.array(z.object({ id: z.string(), currentBalance: z.string() })))
-  ).find((candidate) => candidate.id === account?.id)?.currentBalance;
+  const balance = (await readJson(refreshed, AccountsResponse)).find(
+    (candidate) => candidate.id === account?.id,
+  )?.currentBalance;
   expect(balance).toBe("987.50");
 });
 

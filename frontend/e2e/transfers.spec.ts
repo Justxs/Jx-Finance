@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { AccountsResponse } from "../src/api/schemas/index.zod";
 import { choose, createAccount, expect, readJson, test, unique } from "./support";
 
 test("a transfer between currencies is recorded and then corrected", async ({ page }) => {
@@ -35,15 +35,7 @@ test("a transfer between currencies is recorded and then corrected", async ({ pa
   await expect(row).toContainText("109.25");
   await expect(row).toContainText("Broker top-up, corrected");
 
-  const accounts = await readJson(
-    await page.request.get("/api/accounts"),
-    z.array(
-      z.object({
-        name: z.string(),
-        balances: z.array(z.object({ currency: z.string(), amount: z.string() })),
-      }),
-    ),
-  );
+  const accounts = await readJson(await page.request.get("/api/accounts"), AccountsResponse);
   const received = accounts.find((account) => account.name === dollars);
   expect(received?.balances).toEqual([{ currency: "usd", amount: "109.25" }]);
 });

@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { AccountsResponse, TransfersResponse } from "../src/api/schemas/index.zod";
 import { choose, createAccount, expect, readJson, test, today, unique } from "./support";
 
 function statement(reference: string, date: string) {
@@ -69,11 +69,7 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
 
   const transfers = await readJson(
     await page.request.get(`/api/transfers?date=${date}&page=1&pageSize=200`),
-    z.object({
-      items: z.array(
-        z.object({ description: z.string().nullable(), fromAccountImported: z.boolean() }),
-      ),
-    }),
+    TransfersResponse,
   );
   const matched = transfers.items.filter((item) => item.description?.includes(reference));
   expect(matched).toHaveLength(1);
@@ -85,9 +81,6 @@ test("a Swedbank statement is imported and one row is matched to an existing tra
     page.getByRole("row", { name: new RegExp(`Atlyginimas ${reference}`) }),
   ).toBeVisible();
 
-  const accounts = await readJson(
-    await page.request.get("/api/accounts"),
-    z.array(z.object({ id: z.string(), currentBalance: z.string() })),
-  );
+  const accounts = await readJson(await page.request.get("/api/accounts"), AccountsResponse);
   expect(accounts.find((account) => account.id === checkingId)?.currentBalance).toBe("1934.23");
 });

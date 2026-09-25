@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { RecurringBillsResponse } from "../src/api/schemas/index.zod";
 import { choose, createAccount, expect, readJson, test, today, unique } from "./support";
 
 test("a recurring bill is created and its payment confirmed", async ({ page }) => {
@@ -28,7 +28,7 @@ test("a recurring bill is created and its payment confirmed", async ({ page }) =
 
   const bills = await readJson(
     await page.request.get("/api/recurring-bills"),
-    z.array(z.object({ name: z.string(), nextDueDate: z.string() })),
+    RecurringBillsResponse,
   );
   expect((bills.find((item) => item.name === bill)?.nextDueDate ?? "") > today()).toBe(true);
 
