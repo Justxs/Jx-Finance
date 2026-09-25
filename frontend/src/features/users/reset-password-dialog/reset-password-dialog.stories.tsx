@@ -36,7 +36,17 @@ async function submitReset(currentPassword = adminPassword) {
   return dialog;
 }
 
-export const Default: Story = {};
+export const Default: Story = {
+  play: async () => {
+    const dialog = within(await openedDialog());
+
+    await expect(dialog.getByRole("heading", { name: "Set a temporary password" })).toBeVisible();
+    await expect(dialog.getByText(/pass it on yourself/u)).toHaveTextContent(
+      memberUser.displayName,
+    );
+    await expect(dialog.getByRole("checkbox", { name: /two-factor/u })).not.toBeChecked();
+  },
+};
 
 export const Dark: Story = { globals: { theme: "dark" } };
 
@@ -44,7 +54,12 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 
 export const LongName: Story = { args: { user: longNameUser } };
 
-export const Closed: Story = { args: { user: null } };
+export const Closed: Story = {
+  args: { user: null },
+  play: async () => {
+    await expect(screen.queryByRole("dialog")).toBeNull();
+  },
+};
 
 export const RejectsShortPassword: Story = {
   play: async () => {

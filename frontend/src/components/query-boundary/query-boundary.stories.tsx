@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
+import { expect, userEvent } from "storybook/test";
 import { useAccountsSuspense } from "@/api/generated";
+import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
 import { Card } from "@/components/ui/card/card";
 import { withWidth } from "@/storybook/decorators";
-import { errorHandlers, loadingHandlers } from "@/storybook/handlers";
+import { checkingAccount, serverErrorProblem } from "@/storybook/fixtures";
+import { errorHandlers, failWith, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton/skeleton";
 import { QueryBoundary } from "./query-boundary";
 
@@ -70,15 +73,57 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+const skeleton = '[data-slot="skeleton"]';
 
-export const Loading: Story = { parameters: { msw: { handlers: loadingHandlers } } };
+export const Default: Story = {
+  play: async ({ canvas, canvasElement }) => {
+    await expect(await canvas.findByText(checkingAccount.name)).toBeVisible();
+    await expect(canvasElement.querySelector(skeleton)).toBeNull();
+  },
+};
+
+export const Loading: Story = {
+  parameters: { msw: { handlers: loadingHandlers } },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.querySelector(skeleton)).toBeInTheDocument();
+  },
+};
 
 export const ErrorWithRetry: Story = { parameters: { msw: { handlers: errorHandlers } } };
+
+export const RetryRefetches: Story = {
+  parameters: withHandlers(getAccountsMockHandler(failWith(serverErrorProblem), { once: true })),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("alert")).toHaveTextContent("Could not load this.");
+
+    await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
+
+    await expect(await canvas.findByText(checkingAccount.name)).toBeVisible();
+  },
+};
+
+export const CustomErrorFallback: Story = {
+  args: { errorFallback: <p className="px-6 py-8 text-sm">Unavailable</p> },
+  parameters: { msw: { handlers: errorHandlers } },
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByText("Unavailable")).toBeVisible();
+    await expect(canvas.queryByRole("alert")).toBeNull();
+  },
+};
 
 export const CustomErrorClassName: Story = {
   args: { errorClassName: "px-2 py-2 text-expense" },
   parameters: { msw: { handlers: errorHandlers } },
 };
 
-export const RenderErrorRecovers: Story = { render: () => <RenderErrorExample /> };
+export const RenderErrorRecovers: Story = {
+  render: () => <RenderErrorExample />,
+  play: async ({ canvas }) => {
+    await expect(await canvas.findByRole("alert")).toBeVisible();
+
+    await userEvent.click(canvas.getByRole("checkbox"));
+    await userEvent.click(canvas.getByRole("button", { name: "Try again" }));
+
+    await expect(await canvas.findByText("Recovered after retry.")).toBeVisible();
+  },
+};

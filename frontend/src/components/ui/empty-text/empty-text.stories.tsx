@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect } from "storybook/test";
 import { EmptyText } from "./empty-text";
 
 const meta = {
@@ -10,6 +11,16 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Empty: Story = {};
+export const Empty: Story = {
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText("No goals yet.")).toBeVisible();
+  },
+};
 
-export const Filtered: Story = { args: { filtered: true } };
+export const Filtered: Story = {
+  args: { filtered: true },
+  play: async ({ canvas }) => {
+    await expect(canvas.queryByText("No goals yet.")).toBeNull();
+    await expect(canvas.getByText("No rows match these filters.")).toBeVisible();
+  },
+};
