@@ -5,8 +5,6 @@ using JxFinance.Domain.Households;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.Households;
 
@@ -341,9 +339,7 @@ public sealed class AuditLogTests(ApiFixture fixture) : IntegrationTestBase(fixt
             await db.SaveChangesAsync(TestContext.Current.CancellationToken);
         });
 
-        await new RetentionJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RetentionJob>.Instance).RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         var descriptions = (await AuditAsync(Client, household)).Items.Select(e => e.Description).ToList();
         Assert.DoesNotContain("Old", descriptions);

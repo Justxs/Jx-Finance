@@ -3,7 +3,6 @@ using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.NetWorth;
 
@@ -36,11 +35,7 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
     public async Task Scheduled_snapshot_and_concurrent_views_keep_one_point_per_day()
     {
         using var member = await CreateUserClientAsync();
-        var job = new NetWorthSnapshotJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            Services.GetRequiredService<INetWorthSnapshotter>(),
-            NullLogger<NetWorthSnapshotJob>.Instance);
-        await job.RunOnceAsync(TestContext.Current.CancellationToken);
+        await Job<NetWorthSnapshotJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
         var responses = await Task.WhenAll(member.GetAsync("/api/networth", TestContext.Current.CancellationToken), member.GetAsync("/api/networth", TestContext.Current.CancellationToken));
         Assert.All(responses, r => r.EnsureSuccessStatusCode());
@@ -72,12 +67,7 @@ public sealed class NetWorthEndpointTests(ApiFixture fixture) : IntegrationTestB
             }
 
             var snapshotter = new FailingSnapshotter(failing.Id, Services.GetRequiredService<INetWorthSnapshotter>());
-            var job = new NetWorthSnapshotJob(
-                Services.GetRequiredService<IServiceScopeFactory>(),
-                snapshotter,
-                NullLogger<NetWorthSnapshotJob>.Instance);
-
-            await job.RunOnceAsync(TestContext.Current.CancellationToken);
+            await Job<NetWorthSnapshotJob>(snapshotter).RunOnceAsync(TestContext.Current.CancellationToken);
 
             Assert.True(snapshotter.Failed);
             foreach (var client in healthy)

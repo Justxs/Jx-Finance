@@ -19,8 +19,6 @@ public sealed class EmailOutboxJob(
     protected override TimeSpan Interval =>
         TimeSpan.FromSeconds(Math.Max(options.Value.Email.OutboxIntervalSeconds, 5));
 
-    public Task DrainAsync(CancellationToken cancellationToken) => RunOnceAsync(cancellationToken);
-
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
         var delivery = services.GetRequiredService<IEmailDelivery>();

@@ -6,8 +6,6 @@ using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.Trash;
 
@@ -110,10 +108,7 @@ public sealed class RetentionJobTests(ApiFixture fixture) : IntegrationTestBase(
         (await member.GetAsync("/api/auth/sessions", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
     }
 
-    private Task RunAsync() =>
-        new RetentionJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RetentionJob>.Instance).RunOnceAsync(TestContext.Current.CancellationToken);
+    private Task RunAsync() => Job<RetentionJob>().RunOnceAsync(TestContext.Current.CancellationToken);
 
     private Task BackdateAsync(Guid entityId)
     {

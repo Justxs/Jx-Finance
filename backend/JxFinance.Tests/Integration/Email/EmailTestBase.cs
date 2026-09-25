@@ -1,11 +1,8 @@
 using System.Net.Http.Json;
 using System.Web;
 using JxFinance.Infrastructure.BackgroundJobs;
-using JxFinance.Infrastructure.Configuration;
 using JxFinance.Tests.Support;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace JxFinance.Tests.Integration.Email;
 
@@ -52,16 +49,9 @@ public abstract class EmailTestBase(ApiFixture fixture) : IntegrationTestBase(fi
         Transport.Reset();
     }
 
-    protected Task DrainAsync() =>
-        new EmailOutboxJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            Services.GetRequiredService<IOptions<AppOptions>>(),
-            NullLogger<EmailOutboxJob>.Instance).DrainAsync(default);
+    protected Task DrainAsync() => Job<EmailOutboxJob>().RunOnceAsync(default);
 
-    protected Task ScanBillsAsync() =>
-        new RecurringBillReminderJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RecurringBillReminderJob>.Instance).ScanAsync(default);
+    protected Task ScanBillsAsync() => Job<RecurringBillReminderJob>().RunOnceAsync(default);
 
     protected static string TokenFrom(string body, string path)
     {

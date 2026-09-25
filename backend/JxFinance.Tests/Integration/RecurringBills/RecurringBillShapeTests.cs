@@ -4,8 +4,6 @@ using System.Net.Http.Json;
 using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Tests.Support;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace JxFinance.Tests.Integration.RecurringBills;
 
@@ -273,11 +271,9 @@ public sealed class RecurringBillShapeTests(ApiFixture fixture) : IntegrationTes
         var expense = await CreateEntryAsync("expense", "5.00", accountId: account, nextDueDate: due);
         var income = await CreateEntryAsync("income", "6.00", accountId: account, nextDueDate: due);
         var transfer = await CreateEntryAsync("transfer", "7.00", accountId: account, toAccountId: destination, nextDueDate: due);
-        var job = new RecurringBillReminderJob(
-            Services.GetRequiredService<IServiceScopeFactory>(),
-            NullLogger<RecurringBillReminderJob>.Instance);
+        var job = Job<RecurringBillReminderJob>();
 
-        await job.ScanAsync(TestContext.Current.CancellationToken);
+        await job.RunOnceAsync(TestContext.Current.CancellationToken);
 
         var unread = (await Client.GetFromJsonAsync<List<NotificationDto>>("/api/notifications?unread=true", TestContext.Current.CancellationToken))!;
         Assert.Equal("expense", Reminder(unread, expense.Id).Payload.Shape);

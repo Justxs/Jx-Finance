@@ -22,8 +22,6 @@ public sealed class RecurringBillReminderJob(
 
     protected override Feature? RequiredFeature => Feature.RecurringBills;
 
-    public Task ScanAsync(CancellationToken cancellationToken) => RunOnceAsync(cancellationToken);
-
     protected override async Task RunAsync(IServiceProvider services, CancellationToken ct)
     {
         var db = services.GetRequiredService<AppDbContext>();

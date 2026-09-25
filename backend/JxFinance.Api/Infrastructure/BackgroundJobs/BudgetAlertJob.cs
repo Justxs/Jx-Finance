@@ -26,8 +26,6 @@ public sealed class BudgetAlertJob(
 
     protected override Feature? RequiredFeature => Feature.Budgets;
 
-    public Task ScanAsync(CancellationToken cancellationToken) => RunOnceAsync(cancellationToken);
-
     protected override Task RunAsync(IServiceProvider services, CancellationToken ct) =>
         ForEachActiveUserAsync(services, userId => ScanUserAsync(services, userId, ct), ct);
 
