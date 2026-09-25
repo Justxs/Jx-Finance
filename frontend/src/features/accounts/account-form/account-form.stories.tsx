@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fn, userEvent, waitFor } from "storybook/test";
 import { getUpdateAccountMockHandler } from "@/api/generated/accounts/accounts.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { checkingAccount, sharedAccount } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -17,13 +16,7 @@ const meta = {
   title: "Features/Accounts/AccountForm",
   component: AccountForm,
   args: { onClose: fn() },
-  render: (args) => (
-    <div className="w-[min(36rem,90vw)]">
-      <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
-        <AccountForm {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof AccountForm>;
 
 export default meta;

@@ -16,7 +16,7 @@ const meta = {
     onSubmit: fn(),
     onCancel: fn(),
   },
-  decorators: [withWidth("w-[min(36rem,90vw)]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof InvestmentEntryForm>;
 
 export default meta;

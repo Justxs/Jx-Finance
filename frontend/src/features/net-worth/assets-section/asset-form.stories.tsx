@@ -9,7 +9,7 @@ const meta = {
   title: "Features/NetWorth/AssetForm",
   component: AssetForm,
   args: { onClose: fn() },
-  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof AssetForm>;
 
 export default meta;

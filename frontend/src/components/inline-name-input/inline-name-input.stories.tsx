@@ -15,7 +15,7 @@ const meta = {
     className: "gap-2",
     onSubmit: fn(),
   },
-  decorators: [withWidth("w-72")],
+  decorators: [withWidth("field")],
 } satisfies Meta<typeof InlineNameInput>;
 
 export default meta;

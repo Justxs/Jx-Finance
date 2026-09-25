@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, waitFor, within } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { presetRange } from "../report-filters";
@@ -18,13 +17,7 @@ const meta = {
   title: "Features/Reports/ReportsPage",
   component: ReportsPage,
   parameters: { layout: "fullscreen", route: "/reports" },
-  render: () => (
-    <div className="p-6">
-      <QueryBoundary fallback={<Skeleton className="h-[40rem] w-full" />}>
-        <ReportsPage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof ReportsPage>;
 
 export default meta;

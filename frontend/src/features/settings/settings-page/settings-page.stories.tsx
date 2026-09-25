@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { withPageFrame } from "@/storybook/decorators";
 import { settings } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
@@ -10,11 +11,7 @@ const meta = {
   title: "Features/Settings/SettingsPage",
   component: SettingsPage,
   parameters: { layout: "fullscreen", route: "/settings" },
-  render: () => (
-    <div className="p-6">
-      <SettingsPage />
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof SettingsPage>;
 
 export default meta;

@@ -6,7 +6,7 @@ const meta = {
   title: "Features/Settings/SettingsNav",
   component: SettingsNav,
   parameters: { route: "/settings" },
-  decorators: [withWidth("w-[min(16rem,90vw)]")],
+  decorators: [withWidth("narrow")],
   args: { current: "general", sections: settingsSections },
 } satisfies Meta<typeof SettingsNav>;
 

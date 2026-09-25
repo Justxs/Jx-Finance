@@ -6,7 +6,7 @@ import { AllocationSection } from "./allocation-section";
 const meta = {
   title: "Features/Investments/AllocationSection",
   component: AllocationSection,
-  decorators: [withWidth("w-[min(32rem,90vw)]")],
+  decorators: [withWidth("form")],
   args: { holdings: portfolio.holdings, currency: portfolio.reportingCurrency },
 } satisfies Meta<typeof AllocationSection>;
 

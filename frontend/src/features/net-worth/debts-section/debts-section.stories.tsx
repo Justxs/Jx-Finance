@@ -4,8 +4,7 @@ import {
   getDeleteDebtMockHandler,
   getDebtsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { debts, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -17,23 +16,13 @@ import {
 import { openedDialog } from "@/storybook/interactions";
 import { DebtsSection } from "./debts-section";
 
-function DebtsSectionStory() {
-  return (
-    <div className="w-[min(48rem,calc(100vw-3rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <DebtsSection />
-      </QueryBoundary>
-    </div>
-  );
-}
-
 const manyItems = many(debts, 15);
 
 const meta = {
   title: "Features/NetWorth/DebtsSection",
   component: DebtsSection,
   parameters: { route: "/net-worth" },
-  render: () => <DebtsSectionStory />,
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof DebtsSection>;
 
 export default meta;

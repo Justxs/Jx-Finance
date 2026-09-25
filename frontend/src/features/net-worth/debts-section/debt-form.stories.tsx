@@ -12,7 +12,7 @@ const meta = {
   title: "Features/NetWorth/DebtForm",
   component: DebtForm,
   args: { onClose: fn() },
-  decorators: [withWidth("w-[min(36rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("dialog")],
 } satisfies Meta<typeof DebtForm>;
 
 export default meta;

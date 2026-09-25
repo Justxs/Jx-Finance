@@ -6,7 +6,7 @@ import { FormError } from "./form-error";
 const meta = {
   title: "Components/FormError",
   component: FormError,
-  decorators: [withWidth("w-[min(90vw,28rem)]")],
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof FormError>;
 
 export default meta;

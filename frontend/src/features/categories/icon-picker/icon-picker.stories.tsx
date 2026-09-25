@@ -19,7 +19,7 @@ const meta = {
   title: "Features/Categories/IconPicker",
   component: IconPicker,
   args: { value: null, onChange: fn() },
-  decorators: [withWidth("w-[min(28rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof IconPicker>;
 
 export default meta;

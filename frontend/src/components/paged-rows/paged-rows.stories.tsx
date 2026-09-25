@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { withWidth } from "@/storybook/decorators";
 import { PagedRows } from "./paged-rows";
 
 const names = ["Everyday → Savings", "Savings → Everyday", "Everyday → Investments"];
@@ -18,11 +19,7 @@ const meta = {
       </li>
     )),
   },
-  render: (args) => (
-    <div className="w-[min(40rem,calc(100vw-3rem))]">
-      <PagedRows {...args} />
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof PagedRows>;
 
 export default meta;

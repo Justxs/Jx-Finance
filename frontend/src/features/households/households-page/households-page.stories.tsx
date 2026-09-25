@@ -5,8 +5,7 @@ import {
   getHouseholdsMockHandler,
 } from "@/api/generated/households/households.msw";
 import type { HouseholdResponse } from "@/api/generated/model";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import {
   familyHousehold,
   gardenHousehold,
@@ -28,13 +27,7 @@ const meta = {
   title: "Features/Households/HouseholdsPage",
   component: HouseholdsPage,
   parameters: { layout: "fullscreen", route: "/households" },
-  render: () => (
-    <div className="p-6">
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-        <HouseholdsPage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof HouseholdsPage>;
 
 export default meta;

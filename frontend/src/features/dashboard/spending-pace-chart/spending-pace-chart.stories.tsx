@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { SpendingPaceChart } from "./spending-pace-chart";
 
 const meta = {
   title: "Features/Dashboard/SpendingPaceChart",
   component: SpendingPaceChart,
-  render: () => (
-    <div className="w-[min(40rem,90vw)]">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <SpendingPaceChart />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof SpendingPaceChart>;
 
 export default meta;

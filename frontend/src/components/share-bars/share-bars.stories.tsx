@@ -5,7 +5,7 @@ import { ShareBars } from "./share-bars";
 const meta = {
   title: "Components/ShareBars",
   component: ShareBars,
-  decorators: [withWidth("w-[min(28rem,90vw)]")],
+  decorators: [withWidth("column")],
   args: {
     rows: [
       { id: "broker", name: "Interactive Brokers", amount: 15987.62 },

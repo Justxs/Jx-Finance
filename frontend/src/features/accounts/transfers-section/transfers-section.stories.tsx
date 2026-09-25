@@ -5,8 +5,7 @@ import {
   getCreateTransferMockHandler,
   getTransfersMockHandler,
 } from "@/api/generated/transfers/transfers.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { accounts, ids, transfers, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -54,13 +53,8 @@ const meta = {
   component: TransfersSection,
   parameters: { layout: "fullscreen" },
   args: { accounts, addOpen: false, onAddOpenChange: fn() },
-  render: (args) => (
-    <div className="mx-auto max-w-5xl p-6">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <StatefulTransfersSection {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
+  render: (args) => <StatefulTransfersSection {...args} />,
 } satisfies Meta<typeof TransfersSection>;
 
 export default meta;

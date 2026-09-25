@@ -7,9 +7,8 @@ import {
   getUpdateUserRoleMockHandler,
   getUsersMockHandler,
 } from "@/api/generated/users/users.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { UserRole } from "@/lib/user-role";
+import { withPageFrame } from "@/storybook/decorators";
 import {
   adminPassword,
   inactiveUser,
@@ -33,13 +32,7 @@ const meta = {
   title: "Features/Users/UsersPage",
   component: UsersPage,
   parameters: { layout: "fullscreen", route: "/users" },
-  render: () => (
-    <div className="p-6">
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
-        <UsersPage />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof UsersPage>;
 
 export default meta;

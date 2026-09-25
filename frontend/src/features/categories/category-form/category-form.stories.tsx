@@ -4,8 +4,7 @@ import {
   getCreateCategoryMockHandler,
   getUpdateCategoryMockHandler,
 } from "@/api/generated/categories/categories.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { categories, ids } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -25,13 +24,7 @@ const meta = {
   title: "Features/Categories/CategoryForm",
   component: CategoryForm,
   args: { onClose: fn() },
-  render: (args) => (
-    <div className="w-[min(32rem,calc(100vw-3rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-72 w-full" />}>
-        <CategoryForm {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof CategoryForm>;
 
 export default meta;

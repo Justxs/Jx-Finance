@@ -1,7 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { userEvent } from "storybook/test";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withPageFrame } from "@/storybook/decorators";
 import { accounts, checkingAccount, ids } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -19,13 +18,7 @@ const meta = {
   component: ImportSection,
   parameters: { layout: "fullscreen" },
   args: { accounts },
-  render: (args) => (
-    <div className="p-6 lg:p-10">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <ImportSection {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof ImportSection>;
 
 export default meta;

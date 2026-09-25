@@ -1,20 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { NetWorthResponse } from "@/api/generated/model";
 import { getNetWorthMockHandler } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthStats } from "./net-worth-stats";
-
-function NetWorthStatsStory() {
-  return (
-    <div className="w-[min(64rem,calc(100vw-5rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
-        <NetWorthStats />
-      </QueryBoundary>
-    </div>
-  );
-}
 
 function netWorthHandlers(body: NetWorthResponse) {
   return [getNetWorthMockHandler(body), ...handlers];
@@ -24,7 +13,7 @@ const meta = {
   title: "Features/NetWorth/NetWorthStats",
   component: NetWorthStats,
   parameters: { route: "/net-worth" },
-  render: () => <NetWorthStatsStory />,
+  decorators: [withWidth("full")],
 } satisfies Meta<typeof NetWorthStats>;
 
 export default meta;

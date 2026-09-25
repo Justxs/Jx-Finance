@@ -7,7 +7,7 @@ import { IncomeExpenseChart } from "./income-expense-chart";
 const meta = {
   title: "Components/Chart",
   component: IncomeExpenseChart,
-  decorators: [withWidth("w-[min(40rem,calc(100vw-5rem))]")],
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof IncomeExpenseChart>;
 
 export default meta;

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, within } from "storybook/test";
 import type { NotificationResponse } from "@/api/generated/model";
 import { getNotificationsMockHandler } from "@/api/generated/notifications/notifications.msw";
+import { withWidth } from "@/storybook/decorators";
 import {
   budgetExceededNotification,
   budgetWarningNotification,
@@ -13,8 +14,6 @@ import {
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { query } from "@/storybook/handlers/http";
 import { openedDialog } from "@/storybook/interactions";
-import { QueryBoundary } from "../query-boundary/query-boundary";
-import { Skeleton } from "../ui/skeleton/skeleton";
 import { NotificationBell } from "./notification-bell";
 
 function notificationsHandler(items: NotificationResponse[]) {
@@ -59,15 +58,7 @@ const manyUnread: NotificationResponse[] = Array.from({ length: 14 }, (_, index)
 const meta = {
   title: "Components/NotificationBell",
   component: NotificationBell,
-  decorators: [
-    (Story) => (
-      <div className="flex h-96 w-[min(90vw,24rem)] items-start justify-end">
-        <QueryBoundary fallback={<Skeleton className="size-9" />} errorClassName="p-0">
-          <Story />
-        </QueryBoundary>
-      </div>
-    ),
-  ],
+  decorators: [withWidth("flex h-96 w-[min(90vw,24rem)] items-start justify-end")],
 } satisfies Meta<typeof NotificationBell>;
 
 export default meta;

@@ -1,22 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getNetWorthHistoryMockHandler } from "@/api/generated/net-worth/net-worth.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Section } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { netWorthHistoryItems } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, handlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthHistoryChart } from "./net-worth-history-chart";
-
-function NetWorthHistoryChartStory() {
-  return (
-    <Section className="w-[min(48rem,calc(100vw-3rem))]">
-      <h2 className="mb-4 font-semibold">Net worth trend</h2>
-      <QueryBoundary fallback={<Skeleton className="h-56 w-full" />}>
-        <NetWorthHistoryChart />
-      </QueryBoundary>
-    </Section>
-  );
-}
 
 function historyHandlers(items: typeof netWorthHistoryItems) {
   return [getNetWorthHistoryMockHandler({ items }), ...handlers];
@@ -45,7 +33,15 @@ const meta = {
   title: "Features/NetWorth/NetWorthHistoryChart",
   component: NetWorthHistoryChart,
   parameters: { route: "/net-worth" },
-  render: () => <NetWorthHistoryChartStory />,
+  decorators: [
+    (Story) => (
+      <Section>
+        <h2 className="mb-4 font-semibold">Net worth trend</h2>
+        <Story />
+      </Section>
+    ),
+    withWidth("wide"),
+  ],
 } satisfies Meta<typeof NetWorthHistoryChart>;
 
 export default meta;

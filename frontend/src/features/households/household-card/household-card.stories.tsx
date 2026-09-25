@@ -15,7 +15,7 @@ const meta = {
   component: HouseholdCard,
   parameters: { route: "/households" },
   args: { household: familyHousehold },
-  decorators: [withWidth("w-[40rem] max-w-full")],
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof HouseholdCard>;
 
 export default meta;

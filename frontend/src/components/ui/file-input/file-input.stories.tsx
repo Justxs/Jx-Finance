@@ -25,7 +25,7 @@ const meta = {
   title: "UI/FileInput",
   component: FileInput,
   args: { id: "file-input-story", placeholder: "Choose a Swedbank CSV export" },
-  decorators: [withWidth("w-[min(90vw,28rem)]")],
+  decorators: [withWidth("column")],
 } satisfies Meta<typeof FileInput>;
 
 export default meta;

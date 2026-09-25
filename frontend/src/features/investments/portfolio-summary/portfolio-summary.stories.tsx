@@ -7,7 +7,7 @@ const meta = {
   title: "Features/Investments/PortfolioSummary",
   component: PortfolioSummary,
   args: { portfolio },
-  decorators: [withWidth("w-[min(64rem,calc(100vw-5rem))]")],
+  decorators: [withWidth("full")],
 } satisfies Meta<typeof PortfolioSummary>;
 
 export default meta;

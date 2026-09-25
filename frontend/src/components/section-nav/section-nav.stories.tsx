@@ -30,7 +30,7 @@ const meta = {
   title: "Components/SectionNav",
   component: ProfileSectionNav,
   parameters: { route: "/profile" },
-  decorators: [withWidth("w-[min(16rem,90vw)]")],
+  decorators: [withWidth("narrow")],
   args: { current: "account" },
 } satisfies Meta<typeof ProfileSectionNav>;
 

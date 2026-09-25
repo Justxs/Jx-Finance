@@ -8,7 +8,7 @@ const meta = {
   title: "Features/Investments/PriceForm",
   component: PriceForm,
   args: { security: usStock, pending: false, onSubmit: fn(), onCancel: fn() },
-  decorators: [withWidth("w-[min(32rem,90vw)]")],
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof PriceForm>;
 
 export default meta;

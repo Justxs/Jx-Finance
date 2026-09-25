@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, screen, userEvent, waitFor, within } from "storybook/test";
 import { getInvestmentTransactionsMockHandler } from "@/api/generated/investments/investments.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { accounts, brokerAccount, investmentTransactions, splitEntry } from "@/storybook/fixtures";
 import {
   errorHandlers,
@@ -17,13 +16,7 @@ const meta = {
   title: "Features/Investments/ActivitySection",
   component: ActivitySection,
   args: { accounts },
-  render: (args) => (
-    <div className="w-[min(48rem,calc(100vw-3rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
-        <ActivitySection {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("wide")],
 } satisfies Meta<typeof ActivitySection>;
 
 export default meta;

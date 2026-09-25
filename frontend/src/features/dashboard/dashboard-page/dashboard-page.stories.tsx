@@ -6,6 +6,7 @@ import {
   getSaveDashboardLayoutMockHandler,
 } from "@/api/generated/dashboard/dashboard.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
+import { withPageFrame } from "@/storybook/decorators";
 import {
   allHiddenDashboardLayout,
   customDashboardLayout,
@@ -28,11 +29,7 @@ const meta = {
   title: "Features/Dashboard/DashboardPage",
   component: DashboardPage,
   parameters: { layout: "fullscreen" },
-  render: () => (
-    <div className="p-6 lg:p-10">
-      <DashboardPage />
-    </div>
-  ),
+  decorators: [withPageFrame],
 } satisfies Meta<typeof DashboardPage>;
 
 export default meta;

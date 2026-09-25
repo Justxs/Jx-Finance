@@ -18,7 +18,7 @@ const meta = {
   title: "Features/NetWorth/DebtScheduleSummary",
   component: DebtScheduleSummary,
   args: { debt: mortgage ?? linearDebt, schedule: mortgageSchedule },
-  decorators: [withWidth("w-[min(64rem,calc(100vw-3rem))]")],
+  decorators: [withWidth("full")],
 } satisfies Meta<typeof DebtScheduleSummary>;
 
 export default meta;

@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { getCategoryBreakdownMockHandler } from "@/api/generated/dashboard/dashboard.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Card } from "@/components/ui/card/card";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { categoryBreakdown } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
@@ -10,13 +9,14 @@ import { CategoryBreakdownChart } from "./category-breakdown-chart";
 const meta = {
   title: "Features/Dashboard/CategoryBreakdownChart",
   component: CategoryBreakdownChart,
-  render: () => (
-    <Card className="w-[min(36rem,90vw)] p-6">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <CategoryBreakdownChart />
-      </QueryBoundary>
-    </Card>
-  ),
+  decorators: [
+    (Story) => (
+      <Card className="p-6">
+        <Story />
+      </Card>
+    ),
+    withWidth("dialog"),
+  ],
 } satisfies Meta<typeof CategoryBreakdownChart>;
 
 export default meta;

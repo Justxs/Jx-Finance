@@ -1,19 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { emptyHandlers, errorHandlers, loadingHandlers } from "@/storybook/handlers";
 import { NetWorthCompositionChart } from "./net-worth-composition-chart";
 
 const meta = {
   title: "Features/NetWorth/NetWorthCompositionChart",
   component: NetWorthCompositionChart,
-  render: () => (
-    <div className="w-[min(40rem,90vw)]">
-      <QueryBoundary fallback={<Skeleton className="h-64 w-full" />}>
-        <NetWorthCompositionChart />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("panel")],
 } satisfies Meta<typeof NetWorthCompositionChart>;
 
 export default meta;

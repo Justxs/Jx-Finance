@@ -13,6 +13,7 @@ import { type FunctionComponent, useState } from "react";
 import { toast } from "sonner";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RoutePending } from "@/components/route-pending/route-pending";
+import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
@@ -55,11 +56,15 @@ const STORY_ROUTES = [
 
 const STORY_WIDTHS = {
   auth: "flex w-96 max-w-full justify-center",
+  narrow: "w-[min(16rem,90vw)]",
   field: "w-72",
   card: "w-80",
+  column: "w-[min(28rem,90vw)]",
   form: "w-[min(32rem,calc(100vw-3rem))]",
+  dialog: "w-[min(36rem,calc(100vw-3rem))]",
   panel: "w-[min(40rem,90vw)]",
   wide: "w-[min(48rem,calc(100vw-3rem))]",
+  full: "w-[min(64rem,calc(100vw-3rem))]",
 } as const;
 
 type StoryWidth = keyof typeof STORY_WIDTHS;
@@ -109,14 +114,26 @@ export function disposeStoryState() {
   toast.dismiss();
 }
 
-function createStoryRouter(Story: FunctionComponent, initialPath: string) {
+function BoundedStory({ Story }: Readonly<{ Story: FunctionComponent }>) {
+  return (
+    <QueryBoundary fallback={<Skeleton className="h-40 w-full min-w-72" />}>
+      <Story />
+    </QueryBoundary>
+  );
+}
+
+function createStoryRouter(Story: FunctionComponent, initialPath: string, bounded: boolean) {
+  function StoryRoute() {
+    return bounded ? <BoundedStory Story={Story} /> : <Story />;
+  }
+
   const rootRoute = createRootRoute({ component: Outlet });
   const children = STORY_ROUTES.map((route) =>
     createRoute({
       getParentRoute: () => rootRoute,
       path: route.path,
       validateSearch: "validateSearch" in route ? route.validateSearch : undefined,
-      component: Story,
+      component: StoryRoute,
     }),
   );
 
@@ -143,9 +160,10 @@ function ProviderTree({
 function StoryProviders({
   Story,
   initialPath,
-}: Readonly<{ Story: FunctionComponent; initialPath: string }>) {
+  bounded,
+}: Readonly<{ Story: FunctionComponent; initialPath: string; bounded: boolean }>) {
   const [queryClient] = useState(createStoryQueryClient);
-  const [router] = useState(() => createStoryRouter(Story, initialPath));
+  const [router] = useState(() => createStoryRouter(Story, initialPath, bounded));
 
   return <ProviderTree queryClient={queryClient} router={router} />;
 }
@@ -158,7 +176,11 @@ export function withAppProviders(...[Story, context]: Parameters<Decorator>) {
   return context.parameters.providers === "none" ? (
     <Story />
   ) : (
-    <StoryProviders Story={Story} initialPath={storyRoute(context.parameters.route)} />
+    <StoryProviders
+      Story={Story}
+      initialPath={storyRoute(context.parameters.route)}
+      bounded={context.parameters.boundary !== false}
+    />
   );
 }
 

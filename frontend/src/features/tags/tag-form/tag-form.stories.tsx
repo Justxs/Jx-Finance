@@ -1,8 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
 import { getCreateTagMockHandler, getUpdateTagMockHandler } from "@/api/generated/tags/tags.msw";
-import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { withWidth } from "@/storybook/decorators";
 import { duplicateTagProblem, ids, tags } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -21,13 +20,7 @@ const meta = {
   title: "Features/Tags/TagForm",
   component: TagForm,
   args: { onClose: fn() },
-  render: (args) => (
-    <div className="w-[min(32rem,calc(100vw-3rem))]">
-      <QueryBoundary fallback={<Skeleton className="h-52 w-full" />}>
-        <TagForm {...args} />
-      </QueryBoundary>
-    </div>
-  ),
+  decorators: [withWidth("form")],
 } satisfies Meta<typeof TagForm>;
 
 export default meta;
