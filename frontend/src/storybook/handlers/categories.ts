@@ -6,18 +6,12 @@ import {
 } from "@/api/generated/categories/categories.msw";
 import type { CategoryResponse } from "@/api/generated/model";
 import { categories } from "@/storybook/fixtures";
-import { found, readBody, withScope } from "./http";
-import type { Body } from "./http";
+import { mergeScoped, readBody } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
+import { updateFrom } from "./lists";
 
 export function categoryName(id: string | null): string {
   return categories.find((item) => item.id === id)?.name ?? "";
-}
-
-function mergeCategory(base: CategoryResponse, body: Body): CategoryResponse {
-  const merged: CategoryResponse = { ...base, ...body };
-  return withScope(merged);
 }
 
 export const categoryHandlers = [
@@ -32,10 +26,8 @@ export const categoryHandlers = [
       scope: "personal",
       householdId: null,
     };
-    return mergeCategory(base, await readBody(request));
+    return mergeScoped(base, await readBody(request));
   }),
-  getUpdateCategoryMockHandler(async ({ params, request }) =>
-    mergeCategory(found(byId(categories, params.id)), await readBody(request)),
-  ),
+  getUpdateCategoryMockHandler(updateFrom(categories, mergeScoped)),
   getDeleteCategoryMockHandler(),
 ];

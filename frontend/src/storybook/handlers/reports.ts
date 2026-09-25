@@ -8,6 +8,7 @@ import {
   reportSummaryYear,
   withComparison,
 } from "@/storybook/fixtures";
+import { query } from "./http";
 
 function daysBetween(dateFrom: string, dateTo: string): number {
   return (Date.parse(`${dateTo}T00:00:00Z`) - Date.parse(`${dateFrom}T00:00:00Z`)) / 86_400_000;
@@ -51,5 +52,5 @@ function resolveReport(params: URLSearchParams): ReportSummaryResponse {
 }
 
 export const reportHandlers = [
-  getReportSummaryMockHandler(({ request }) => resolveReport(new URL(request.url).searchParams)),
+  getReportSummaryMockHandler(({ request }) => resolveReport(query(request))),
 ];

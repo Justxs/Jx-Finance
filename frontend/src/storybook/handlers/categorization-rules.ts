@@ -11,13 +11,8 @@ import {
 import type { CategorizationRuleResponse } from "@/api/generated/model";
 import { categorizationRules, rulesRunPreview } from "@/storybook/fixtures";
 import { found, readBody, text } from "./http";
-import type { Body } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
-
-function mergeRule(base: CategorizationRuleResponse, body: Body): CategorizationRuleResponse {
-  return { ...base, ...body };
-}
+import { byId, updateFrom } from "./lists";
 
 function renumber(rules: CategorizationRuleResponse[]): CategorizationRuleResponse[] {
   return rules.map((rule, position) => ({ ...rule, position }));
@@ -36,6 +31,11 @@ function moved(id: unknown, direction: unknown): CategorizationRuleResponse[] {
   return renumber(ordered);
 }
 
+async function runPreview({ request }: { request: Request }) {
+  const body = await readBody(request);
+  return { ...rulesRunPreview, recategorize: body.recategorize === true };
+}
+
 export const categorizationRuleHandlers = [
   getCategorizationRulesMockHandler(categorizationRules),
   getCreateCategorizationRuleMockHandler(async ({ request }) => {
@@ -51,11 +51,9 @@ export const categorizationRuleHandlers = [
       categoryId: null,
       tagIds: [],
     };
-    return mergeRule(base, await readBody(request));
+    return { ...base, ...(await readBody(request)) };
   }),
-  getUpdateCategorizationRuleMockHandler(async ({ params, request }) =>
-    mergeRule(found(byId(categorizationRules, params.id)), await readBody(request)),
-  ),
+  getUpdateCategorizationRuleMockHandler(updateFrom(categorizationRules)),
   getDeleteCategorizationRuleMockHandler(),
   getMoveCategorizationRuleMockHandler(async ({ params, request }) => {
     found(byId(categorizationRules, params.id));
@@ -85,12 +83,6 @@ export const categorizationRuleHandlers = [
         (maxAmount === null || Number(amount) <= Number(maxAmount)));
     return { matches: descriptionMatches && amountMatches, descriptionMatches, amountMatches };
   }),
-  getPreviewCategorizationRunMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    return { ...rulesRunPreview, recategorize: body.recategorize === true };
-  }),
-  getRunCategorizationRulesMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    return { ...rulesRunPreview, recategorize: body.recategorize === true };
-  }),
+  getPreviewCategorizationRunMockHandler(runPreview),
+  getRunCategorizationRulesMockHandler(runPreview),
 ];

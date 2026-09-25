@@ -6,24 +6,16 @@ import {
   getUpdateTagMockHandler,
 } from "@/api/generated/tags/tags.msw";
 import { tags } from "@/storybook/fixtures";
-import { found, readBody, withScope } from "./http";
-import type { Body } from "./http";
+import { mergeScoped, readBody } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
-
-function mergeTag(base: TagResponse, body: Body): TagResponse {
-  const merged: TagResponse = { ...base, ...body };
-  return withScope(merged);
-}
+import { updateFrom } from "./lists";
 
 export const tagHandlers = [
   getTagsMockHandler(tags),
   getCreateTagMockHandler(async ({ request }) => {
     const base: TagResponse = { id: NEW_ID, name: "", scope: "personal", householdId: null };
-    return mergeTag(base, await readBody(request));
+    return mergeScoped(base, await readBody(request));
   }),
-  getUpdateTagMockHandler(async ({ params, request }) =>
-    mergeTag(found(byId(tags, params.id)), await readBody(request)),
-  ),
+  getUpdateTagMockHandler(updateFrom(tags, mergeScoped)),
   getDeleteTagMockHandler(),
 ];

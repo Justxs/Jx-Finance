@@ -3,12 +3,12 @@ import {
   getExchangeRateMockHandler,
 } from "@/api/generated/currencies/currencies.msw";
 import { FIXTURE_TODAY, currencies, ratesPerEuro } from "@/storybook/fixtures";
-import { currencyCode, notFound } from "./http";
+import { currencyCode, notFound, query } from "./http";
 
 export const currencyHandlers = [
   getCurrenciesMockHandler(currencies),
   getExchangeRateMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     const from = currencyCode.safeParse(params.get("from"));
     const to = currencyCode.safeParse(params.get("to"));
     const fromRate = from.success ? ratesPerEuro[from.data] : undefined;

@@ -6,13 +6,19 @@ import {
   getUpdateTransferMockHandler,
 } from "@/api/generated/transfers/transfers.msw";
 import { FIXTURE_TODAY, checkingAccount, transfers } from "@/storybook/fixtures";
-import { found, readBody } from "./http";
+import { query, readBody } from "./http";
+import type { Body } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
-import { byId, paginate } from "./lists";
+import { paginate, updateFrom } from "./lists";
+
+function mergeTransfer(base: TransferResponse, body: Body): TransferResponse {
+  const merged: TransferResponse = { ...base, ...body };
+  return { ...merged, receivedAmount: merged.receivedAmount ?? merged.amount };
+}
 
 export const transferHandlers = [
   getTransfersMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     const date = params.get("date");
     return paginate(
       transfers.filter((item) => !date || item.date === date),
@@ -20,7 +26,7 @@ export const transferHandlers = [
     );
   }),
   getCreateTransferMockHandler(async ({ request }) => {
-    const created: TransferResponse = {
+    const base: TransferResponse = {
       id: NEW_ID,
       fromAccountId: checkingAccount.id,
       toAccountId: checkingAccount.id,
@@ -33,16 +39,9 @@ export const transferHandlers = [
       createdAt: CREATED_AT,
       fromAccountImported: false,
       toAccountImported: false,
-      ...(await readBody(request)),
     };
-    return { ...created, receivedAmount: created.receivedAmount ?? created.amount };
+    return mergeTransfer(base, await readBody(request));
   }),
-  getUpdateTransferMockHandler(async ({ params, request }) => {
-    const updated: TransferResponse = {
-      ...found(byId(transfers, params.id)),
-      ...(await readBody(request)),
-    };
-    return { ...updated, receivedAmount: updated.receivedAmount ?? updated.amount };
-  }),
+  getUpdateTransferMockHandler(updateFrom(transfers, mergeTransfer)),
   getDeleteTransferMockHandler(),
 ];

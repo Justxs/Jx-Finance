@@ -59,9 +59,15 @@ export async function pending(): Promise<never> {
   throw new HttpResponse(null, { status: 204 });
 }
 
-export function withScope<T extends { householdId?: string | null }>(
-  merged: T,
+export function query(request: Request): URLSearchParams {
+  return new URL(request.url).searchParams;
+}
+
+export function mergeScoped<T extends { householdId?: string | null }>(
+  base: T,
+  body: Body,
 ): T & { scope: Scope } {
+  const merged: T = { ...base, ...body };
   return { ...merged, scope: merged.householdId ? "shared" : "personal" };
 }
 

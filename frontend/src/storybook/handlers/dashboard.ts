@@ -22,7 +22,7 @@ import {
   monthlyTrendItems,
   transactionsBetween,
 } from "@/storybook/fixtures";
-import { readBody } from "./http";
+import { query, readBody } from "./http";
 
 function monthBounds(month: string): { start: string; end: string } {
   const [year, monthNumber] = month.split("-").map(Number);
@@ -63,10 +63,8 @@ async function savedLayout(request: Request): Promise<DashboardLayoutResponse> {
 
 export const dashboardHandlers = [
   getDashboardSummaryMockHandler(dashboardSummary),
-  getMonthlyTrendMockHandler(({ request }) => resolveTrend(new URL(request.url).searchParams)),
-  getCategoryBreakdownMockHandler(({ request }) =>
-    resolveBreakdown(new URL(request.url).searchParams),
-  ),
+  getMonthlyTrendMockHandler(({ request }) => resolveTrend(query(request))),
+  getCategoryBreakdownMockHandler(({ request }) => resolveBreakdown(query(request))),
   getDashboardLayoutMockHandler(defaultDashboardLayout),
   getSaveDashboardLayoutMockHandler(({ request }) => savedLayout(request)),
   getResetDashboardLayoutMockHandler(defaultDashboardLayout),

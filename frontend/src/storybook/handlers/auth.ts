@@ -13,6 +13,7 @@ import {
   getSetupTwoFactorMockHandler,
   getVerifyEmailMockHandler,
 } from "@/api/generated/auth/auth.msw";
+import type { ProblemDetails } from "@/api/generated/model";
 import {
   currentUser,
   loginSuccess,
@@ -27,6 +28,15 @@ import {
   verificationTokenInvalidProblem,
 } from "@/storybook/fixtures";
 import { found, problem, readBody, text } from "./http";
+
+function requireLinkToken(rejection: ProblemDetails) {
+  return async function check({ request }: { request: Request }) {
+    const body = await readBody(request);
+    if (text(body.token) !== resetLink.token) {
+      throw problem(rejection);
+    }
+  };
+}
 
 export const authHandlers = [
   getMeMockHandler(currentUser),
@@ -54,17 +64,7 @@ export const authHandlers = [
   }),
   getRevokeOtherSessionsMockHandler(),
   getForgotPasswordMockHandler(),
-  getResetPasswordMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    if (text(body.token) !== resetLink.token) {
-      throw problem(resetTokenInvalidProblem);
-    }
-  }),
-  getVerifyEmailMockHandler(async ({ request }) => {
-    const body = await readBody(request);
-    if (text(body.token) !== resetLink.token) {
-      throw problem(verificationTokenInvalidProblem);
-    }
-  }),
+  getResetPasswordMockHandler(requireLinkToken(resetTokenInvalidProblem)),
+  getVerifyEmailMockHandler(requireLinkToken(verificationTokenInvalidProblem)),
   getSendVerificationEmailMockHandler(),
 ];

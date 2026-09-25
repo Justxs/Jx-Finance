@@ -10,10 +10,9 @@ import {
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import { accounts, archivedAccounts, checkingAccount } from "@/storybook/fixtures";
-import { found, readBody, withScope } from "./http";
-import type { Body } from "./http";
+import { found, mergeScoped, query, readBody } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
-import { applyDirection, byId, compareText, includesText } from "./lists";
+import { applyDirection, byId, byIdFrom, compareText, includesText, updateFrom } from "./lists";
 
 function filterAccounts(params: URLSearchParams): AccountResponse[] {
   const search = params.get("search");
@@ -48,14 +47,9 @@ function filterAccounts(params: URLSearchParams): AccountResponse[] {
   return applyDirection(sorted, params, "asc");
 }
 
-function mergeAccount(base: AccountResponse, body: Body): AccountResponse {
-  const merged: AccountResponse = { ...base, ...body };
-  return withScope(merged);
-}
-
 export const accountHandlers = [
   getArchivedAccountsMockHandler(archivedAccounts),
-  getAccountsMockHandler(({ request }) => filterAccounts(new URL(request.url).searchParams)),
+  getAccountsMockHandler(({ request }) => filterAccounts(query(request))),
   getCreateAccountMockHandler(async ({ request }) => {
     const created: AccountResponse = {
       ...checkingAccount,
@@ -64,7 +58,7 @@ export const accountHandlers = [
       iban: null,
       createdAt: CREATED_AT,
     };
-    const merged = mergeAccount(created, await readBody(request));
+    const merged = mergeScoped(created, await readBody(request));
     return {
       ...merged,
       currentBalance: merged.startingBalance,
@@ -73,10 +67,8 @@ export const accountHandlers = [
       balances: [{ currency: merged.currency, amount: merged.startingBalance }],
     };
   }),
-  getAccountMockHandler(({ params }) => found(byId(accounts, params.id))),
-  getUpdateAccountMockHandler(async ({ params, request }) =>
-    mergeAccount(found(byId(accounts, params.id)), await readBody(request)),
-  ),
+  getAccountMockHandler(byIdFrom(accounts)),
+  getUpdateAccountMockHandler(updateFrom(accounts, mergeScoped)),
   getDeleteAccountMockHandler(),
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));

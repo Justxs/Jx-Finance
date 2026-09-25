@@ -1,5 +1,28 @@
+import type { PathParams } from "msw";
+import { found, query, readBody } from "./http";
+import type { Body } from "./http";
+
 export function byId<T extends { id: string }>(items: T[], id: unknown): T | undefined {
   return items.find((item) => item.id === id);
+}
+
+export function byIdFrom<T extends { id: string }>(items: T[]) {
+  return function get({ params }: { params: PathParams }): T {
+    return found(byId(items, params.id));
+  };
+}
+
+function mergeBody<T>(base: T, body: Body): T {
+  return { ...base, ...body };
+}
+
+export function updateFrom<T extends { id: string }>(
+  items: T[],
+  merge: (base: T, body: Body) => T = mergeBody,
+) {
+  return async function update({ params, request }: { params: PathParams; request: Request }) {
+    return merge(found(byId(items, params.id)), await readBody(request));
+  };
 }
 
 export function paginate<T>(items: T[], params: URLSearchParams) {
@@ -10,7 +33,7 @@ export function paginate<T>(items: T[], params: URLSearchParams) {
 }
 
 export function emptyPage({ request }: { request: Request }) {
-  return paginate<never>([], new URL(request.url).searchParams);
+  return paginate<never>([], query(request));
 }
 
 export function includesText(value: string | null | undefined, search: string): boolean {

@@ -9,10 +9,10 @@ import type { BudgetResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
 import { budgets, budgetWindows } from "@/storybook/fixtures";
 import { categoryName } from "./categories";
-import { found, readBody, text } from "./http";
+import { readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_ID } from "./ids";
-import { byId } from "./lists";
+import { updateFrom } from "./lists";
 
 function periodOf(value: string | null, fallback: BudgetPeriod): BudgetPeriod {
   return Object.values(BudgetPeriod).find((period) => period === value) ?? fallback;
@@ -62,8 +62,6 @@ export const budgetHandlers = [
     };
     return mergeBudget(base, await readBody(request));
   }),
-  getUpdateBudgetMockHandler(async ({ params, request }) =>
-    mergeBudget(found(byId(budgets, params.id)), await readBody(request)),
-  ),
+  getUpdateBudgetMockHandler(updateFrom(budgets, mergeBudget)),
   getDeleteBudgetMockHandler(),
 ];

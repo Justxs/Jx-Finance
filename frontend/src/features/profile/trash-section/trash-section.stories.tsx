@@ -11,7 +11,7 @@ import {
   loadingHandlers,
   withHandlers,
 } from "@/storybook/handlers";
-import { readBody } from "@/storybook/handlers/http";
+import { query, readBody } from "@/storybook/handlers/http";
 import { paginate } from "@/storybook/handlers/lists";
 import { TrashSection } from "./trash-section";
 
@@ -37,7 +37,7 @@ function cannotRestore(status: 400 | 409, code: ErrorCode, reason: string) {
 function restorableHandlers() {
   let live: TrashEntryResponse[] = trashEntries;
   return [
-    getTrashMockHandler(({ request }) => paginate(live, new URL(request.url).searchParams)),
+    getTrashMockHandler(({ request }) => paginate(live, query(request))),
     getRestoreDeletedMockHandler(async ({ request }) => {
       const body = await readBody(request);
       live = live.filter((entry) => entry.entityId !== body.entityId);
@@ -90,7 +90,7 @@ export const Paged: Story = {
             id: `${entry.id}-${index}-${copy}`,
           })),
         ),
-        new URL(request.url).searchParams,
+        query(request),
       ),
     ),
   ),
@@ -162,9 +162,7 @@ export const InvestmentRestoreRefused: Story = {
 
 export const RecordedKinds: Story = {
   parameters: withHandlers(
-    getTrashMockHandler(({ request }) =>
-      paginate(recordedTrashEntries, new URL(request.url).searchParams),
-    ),
+    getTrashMockHandler(({ request }) => paginate(recordedTrashEntries, query(request))),
     getRestoreDeletedMockHandler(
       cannotRestore(409, "restore.nameTaken", 'You already have another tag named "Atostogos".'),
     ),

@@ -15,6 +15,7 @@ import {
   pending,
   withHandlers,
 } from "@/storybook/handlers";
+import { query } from "@/storybook/handlers/http";
 import { first, openedDialog } from "@/storybook/interactions";
 import { TransfersSection } from "./transfers-section";
 
@@ -26,7 +27,7 @@ const manyTransfers = many(transfers, 34, "99999999").map((item, index) => ({
 }));
 
 function manyTransfersPage({ request }: { request: Request }) {
-  const params = new URL(request.url).searchParams;
+  const params = query(request);
   const page = Number(params.get("page") ?? "1");
   const pageSize = Number(params.get("pageSize") ?? "10");
   return {

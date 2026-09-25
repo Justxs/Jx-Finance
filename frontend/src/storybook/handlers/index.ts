@@ -63,7 +63,7 @@ import { currencyHandlers } from "./currencies";
 import { dashboardHandlers } from "./dashboard";
 import { goalHandlers } from "./goals";
 import { householdHandlers } from "./households";
-import { failWith, onRouteOf, pending, problem } from "./http";
+import { failWith, onRouteOf, pending, problem, query } from "./http";
 import { importHandlers } from "./imports";
 import { emptyInvestmentHandlers, investmentHandlers } from "./investments";
 import { emptyPage } from "./lists";
@@ -162,7 +162,7 @@ export const emptyHandlers: RequestHandler[] = [
   getNetWorthMockHandler(emptyNetWorth),
   getNetWorthHistoryMockHandler({ items: [] }),
   getReportSummaryMockHandler(({ request }) => {
-    const params = new URL(request.url).searchParams;
+    const params = query(request);
     return {
       ...emptyReportSummary,
       periodStart: params.get("dateFrom") ?? emptyReportSummary.periodStart,
