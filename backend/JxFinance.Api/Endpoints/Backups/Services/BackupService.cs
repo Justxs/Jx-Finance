@@ -30,7 +30,6 @@ public sealed class BackupService(
     IInstanceSettingsStore store,
     IClock clock,
     IAuthService authService,
-    ICurrentUser currentUser,
     IOptions<AppOptions> options,
     ILogger<BackupService> logger) : IBackupService
 {
@@ -168,15 +167,14 @@ public sealed class BackupService(
 
     public async Task<Result<RestoreBackupResponse>> RestoreAsync(Guid id, string password, CancellationToken cancellationToken)
     {
-        if (await authService.FindByIdAsync(currentUser.Id, cancellationToken) is not { } administrator)
+        var reauthenticated = await authService.ReauthenticateAsync(
+            password,
+            ErrorCodes.PasswordIncorrect,
+            new DomainError(ErrorCodes.AccessForbidden, "Only administrators can restore a backup."),
+            cancellationToken);
+        if (reauthenticated.IsFailure)
         {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only administrators can restore a backup.");
-        }
-
-        var confirmed = await authService.ConfirmPasswordAsync(administrator, password, ErrorCodes.PasswordIncorrect);
-        if (confirmed.IsFailure)
-        {
-            return confirmed.Error;
+            return reauthenticated.Error;
         }
 
         if (await backups.FindAsync(id, cancellationToken) is null)

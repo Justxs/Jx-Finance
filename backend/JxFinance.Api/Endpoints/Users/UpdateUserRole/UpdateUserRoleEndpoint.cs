@@ -1,13 +1,12 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.UpdateUserRole;
 
-public sealed class UpdateUserRoleEndpoint(IUserService userService, ICurrentUser currentUser)
+public sealed class UpdateUserRoleEndpoint(IUserService userService)
     : Endpoint<UpdateUserRoleRequest, UserProfileResponse>
 {
     public override void Configure()
@@ -19,5 +18,5 @@ public sealed class UpdateUserRoleEndpoint(IUserService userService, ICurrentUse
     }
 
     public override async Task HandleAsync(UpdateUserRoleRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await userService.ChangeRoleAsync(req.Id, req, currentUser.Id, ct), ct);
+        await Send.OkOrProblemAsync(await userService.ChangeRoleAsync(req, ct), ct);
 }

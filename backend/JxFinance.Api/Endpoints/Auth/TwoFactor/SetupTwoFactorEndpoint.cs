@@ -7,7 +7,7 @@ using JxFinance.Endpoints.Auth.Shared;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, ISessionService sessions)
+public sealed class SetupTwoFactorEndpoint(IAuthService authService, ISessionService sessions)
     : Endpoint<ReauthenticateRequest, TwoFactorSetupResponse>
 {
     public override void Configure()
@@ -20,8 +20,7 @@ public sealed class SetupTwoFactorEndpoint(IAuthService authService, ICurrentUse
 
     public override async Task HandleAsync(ReauthenticateRequest req, CancellationToken ct)
     {
-        var user = await authService.FindByIdAsync(currentUser.Id, ct);
-        if (user is null)
+        if (await authService.CurrentAsync(ct) is not { } user)
         {
             await Send.NotFoundAsync(ct);
             return;

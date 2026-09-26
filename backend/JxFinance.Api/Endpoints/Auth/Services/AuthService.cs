@@ -13,7 +13,11 @@ using Microsoft.EntityFrameworkCore;
 namespace JxFinance.Endpoints.Auth.Services;
 
 [RegisterService<IAuthService>(LifeTime.Scoped)]
-public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<AppRole> roleManager, AppDbContext db) : IAuthService
+public sealed class AuthService(
+    UserManager<AppUser> userManager,
+    RoleManager<AppRole> roleManager,
+    AppDbContext db,
+    ICurrentUser currentUser) : IAuthService
 {
     public Task<bool> IsSetupNeededAsync(CancellationToken cancellationToken) =>
         userManager.Users.AllAsync(u => u.PasswordHash == null, cancellationToken);
@@ -97,6 +101,21 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         return failure ?? Result.Success();
     }
 
+    public async Task<Result<AppUser>> ReauthenticateAsync(
+        string? password,
+        string rejectedCode,
+        DomainError missing,
+        CancellationToken cancellationToken)
+    {
+        if (await CurrentAsync(cancellationToken) is not { } user)
+        {
+            return missing;
+        }
+
+        var confirmed = await ConfirmPasswordAsync(user, password, rejectedCode);
+        return confirmed.IsSuccess ? user : confirmed.Error;
+    }
+
     public async Task<UserProfileResponse> ToProfileAsync(AppUser user)
     {
         var roles = await userManager.GetRolesAsync(user);
@@ -113,14 +132,14 @@ public sealed class AuthService(UserManager<AppUser> userManager, RoleManager<Ap
         user.EmailConfirmed,
         user.BillReminderEmails);
 
-    public async Task<UserProfileResponse?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken)
-    {
-        var user = await userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-        return user is null ? null : await ToProfileAsync(user);
-    }
+    public async Task<UserProfileResponse?> GetCurrentProfileAsync(CancellationToken cancellationToken) =>
+        await CurrentAsync(cancellationToken) is { } user ? await ToProfileAsync(user) : null;
 
-    public Task<AppUser?> FindByIdAsync(Guid userId, CancellationToken cancellationToken) =>
-        userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+    public Task<AppUser?> CurrentAsync(CancellationToken cancellationToken)
+    {
+        var userId = currentUser.Id;
+        return userManager.Users.FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+    }
 
     public async Task<Result> ConsumeTwoFactorCodeAsync(AppUser user, string code)
     {

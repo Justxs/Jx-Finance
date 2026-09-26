@@ -28,7 +28,6 @@ public sealed class SettingsService(
     IExchangeRateService rates,
     IEmailDelivery emails,
     IAuthService authService,
-    ICurrentUser currentUser,
     IDataProtectionProvider protection,
     IOptions<AppOptions> options) : ISettingsService
 {
@@ -157,7 +156,7 @@ public sealed class SettingsService(
 
     public async Task<Result<SmtpTestResponse>> SendTestEmailAsync(CancellationToken cancellationToken)
     {
-        if (await authService.FindByIdAsync(currentUser.Id, cancellationToken) is not { Email: { } address } administrator)
+        if (await authService.CurrentAsync(cancellationToken) is not { Email: { } address } administrator)
         {
             return EntityLookup.NotFound("User not found.");
         }

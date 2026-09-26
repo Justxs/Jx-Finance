@@ -1,11 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 
 namespace JxFinance.Endpoints.Auth.TwoFactor;
 
-public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUser currentUser, ISessionService sessions)
+public sealed class EnableTwoFactorEndpoint(IAuthService authService, ISessionService sessions)
     : Endpoint<EnableTwoFactorRequest, EnableTwoFactorResponse>
 {
     public override void Configure()
@@ -17,8 +16,7 @@ public sealed class EnableTwoFactorEndpoint(IAuthService authService, ICurrentUs
 
     public override async Task HandleAsync(EnableTwoFactorRequest req, CancellationToken ct)
     {
-        var user = await authService.FindByIdAsync(currentUser.Id, ct);
-        if (user is null)
+        if (await authService.CurrentAsync(ct) is not { } user)
         {
             await Send.NotFoundAsync(ct);
             return;
