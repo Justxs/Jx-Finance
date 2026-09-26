@@ -65,7 +65,7 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
   const householdList = households.data;
   const reportingCurrency = useReportingCurrency();
   const multiCurrency = useFeature("multiCurrency");
-  const sharing = useSharingDefaults(householdList);
+  const sharing = useSharingDefaults(householdList, initial);
 
   const schema = refineSharing(
     z.object({
@@ -93,8 +93,7 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
       type: initial?.type ?? "checking",
       startingBalance: initial?.startingBalance ?? "0.00",
       currency: initial?.currency ?? reportingCurrency,
-      scope: initial?.scope ?? sharing.scope,
-      householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
+      ...sharing,
     } satisfies FormValues,
     schema,
     submit: (value) => {

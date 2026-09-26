@@ -30,7 +30,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const households = useHouseholdsSuspense();
   const householdList = households.data;
-  const sharing = useSharingDefaults(householdList);
+  const sharing = useSharingDefaults(householdList, initial);
 
   const schema = refineSharing(
     z.object({
@@ -51,8 +51,7 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
     name: initial?.name ?? "",
     type: initial?.type ?? "expense",
     icon: initial?.icon ?? null,
-    scope: initial?.scope ?? sharing.scope,
-    householdId: initial ? (initial.householdId ?? "") : sharing.householdId,
+    ...sharing,
   };
 
   const form = useServerForm({
