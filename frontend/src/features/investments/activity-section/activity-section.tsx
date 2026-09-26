@@ -12,8 +12,7 @@ import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { Tag } from "@/components/ui/tag/tag";
-import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { HintTag } from "@/components/ui/tag/tag";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
@@ -135,16 +134,9 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                     <span className="font-medium">{t(`investments.types.${entry.type}`)}</span>
                     {entry.symbol ? <span className="font-semibold">{entry.symbol}</span> : null}
                     {entry.source === "interactiveBrokers" ? (
-                      <Tooltip content={t("investments.activity.importedLocked")}>
-                        <span className="inline-flex">
-                          <Tag>
-                            {t("investments.activity.imported")}
-                            <span className="sr-only">
-                              . {t("investments.activity.importedLocked")}
-                            </span>
-                          </Tag>
-                        </span>
-                      </Tooltip>
+                      <HintTag hint={t("investments.activity.importedLocked")}>
+                        {t("investments.activity.imported")}
+                      </HintTag>
                     ) : null}
                   </p>
                   <p className="text-xs wrap-break-word text-muted-foreground tabular-nums">

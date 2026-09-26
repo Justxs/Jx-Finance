@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { cn } from "@/lib/utils";
 
 const tones = {
@@ -25,5 +26,24 @@ export function Tag({ tone = "neutral", className, children }: Readonly<Props>) 
     >
       {children}
     </span>
+  );
+}
+
+interface HintTagProps {
+  hint: string;
+  tone?: keyof typeof tones;
+  children: ReactNode;
+}
+
+export function HintTag({ hint, tone, children }: Readonly<HintTagProps>) {
+  return (
+    <Tooltip content={hint}>
+      <span className="inline-flex">
+        <Tag tone={tone}>
+          {children}
+          <span className="sr-only">. {hint}</span>
+        </Tag>
+      </span>
+    </Tooltip>
   );
 }

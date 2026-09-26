@@ -5,8 +5,7 @@ import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { TableCell, TableRow } from "@/components/ui/table/table";
-import { Tag } from "@/components/ui/tag/tag";
-import { Tooltip } from "@/components/ui/tooltip/tooltip";
+import { HintTag, Tag } from "@/components/ui/tag/tag";
 import { EMPTY_VALUE, useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { namedOptions } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
@@ -112,26 +111,12 @@ export function ImportRow({
     <div className="flex flex-wrap gap-1">
       {row.isDuplicate ? <Tag>{t("imports.duplicate")}</Tag> : null}
       {filledByRule ? (
-        <Tooltip content={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
-          <span className="inline-flex">
-            <Tag tone="accent">
-              {t("imports.ruleFilled")}
-              <span className="sr-only">
-                . {t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}
-              </span>
-            </Tag>
-          </span>
-        </Tooltip>
+        <HintTag tone="accent" hint={t("imports.ruleFilledHint", { rule: row.ruleName ?? "" })}>
+          {t("imports.ruleFilled")}
+        </HintTag>
       ) : null}
       {recalled ? (
-        <Tooltip content={t("imports.suggestedHint")}>
-          <span className="inline-flex">
-            <Tag>
-              {t("imports.suggested")}
-              <span className="sr-only">. {t("imports.suggestedHint")}</span>
-            </Tag>
-          </span>
-        </Tooltip>
+        <HintTag hint={t("imports.suggestedHint")}>{t("imports.suggested")}</HintTag>
       ) : null}
       {row.looksLikeTransfer ? <Tag tone="accent">{t("imports.looksLikeTransfer")}</Tag> : null}
     </div>
