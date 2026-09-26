@@ -1,14 +1,12 @@
-import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useUploadBackup } from "@/api/generated";
 import { FormError } from "@/components/form-error/form-error";
-import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
-import type { TranslationKey } from "@/lib/i18n";
+import { useFileField } from "@/hooks/use-file-field";
 import { silent } from "@/lib/mutations";
-import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 
 const MAX_FILE_BYTES = 2 * 1024 * 1024 * 1024;
 
@@ -16,32 +14,26 @@ const uploadProblemKeys = {
   required: "backup.fileRequired",
   empty: "backup.fileEmpty",
   tooLarge: "backup.fileTooLarge",
-} as const satisfies Record<UploadProblem, TranslationKey>;
+} as const;
 
 export function BackupUploadForm() {
   const { t } = useTranslation();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileError, setFileError] = useState<string | undefined>(undefined);
-  const [uploadKey, setUploadKey] = useState(0);
+  const fileField = useFileField("backup-file", MAX_FILE_BYTES, uploadProblemKeys);
 
   const uploadMutation = useUploadBackup(
     silent({
       onSuccess: () => {
         toast.success(t("backup.uploaded"));
-        setUploadKey((key) => key + 1);
+        fileField.reset();
       },
     }),
   );
 
   function handleUpload() {
-    const file = fileInputRef.current?.files?.[0];
-    const problem = validateUpload(file, MAX_FILE_BYTES);
-    if (!file || problem) {
-      setFileError(t(uploadProblemKeys[problem ?? "required"]));
-      return;
+    const file = fileField.take();
+    if (file) {
+      uploadMutation.mutate({ data: { file } });
     }
-    setFileError(undefined);
-    uploadMutation.mutate({ data: { file } });
   }
 
   return (
@@ -57,19 +49,17 @@ export function BackupUploadForm() {
       <p id="backup-file-hint" className="text-sm text-muted-foreground">
         {t("backup.uploadHint")}
       </p>
-      <FieldShell id="backup-file" label={t("backup.file")} error={fileError}>
+      <FieldShell id="backup-file" label={t("backup.file")} error={fileField.error}>
         <FileInput
-          key={uploadKey}
-          id="backup-file"
-          ref={fileInputRef}
+          key={fileField.key}
+          {...fileField.inputProps}
           accept=".zip,.gz,.json,application/zip,application/gzip,application/json"
           disabled={uploadMutation.isPending}
           onChange={() => {
-            setFileError(undefined);
+            fileField.clearError();
             uploadMutation.reset();
           }}
           placeholder={t("backup.chooseFile")}
-          {...shellAria({ id: "backup-file", hint: true, error: fileError })}
         />
       </FieldShell>
       <FormError error={uploadMutation.error} />
