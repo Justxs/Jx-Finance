@@ -1,28 +1,14 @@
 using JxFinance.Common;
 using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Transactions.Interfaces;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactions;
 
-public sealed class GetTransactionsRequest : ITransactionFilter, IPagedRequest
+public sealed class GetTransactionsRequest : TransactionFilterRequest, IPagedRequest
 {
     public int Page { get; init; } = 1;
 
     public int PageSize { get; init; } = 20;
-
-    public Guid? AccountId { get; init; }
-
-    public Guid? CategoryId { get; init; }
-
-    public string? TagIds { get; init; }
-
-    public FlowType? Type { get; init; }
-
-    public string? Search { get; init; }
-
-    public DateOnly? DateFrom { get; init; }
-
-    public DateOnly? DateTo { get; init; }
 
     public TransactionSortField? Sort { get; init; }
 

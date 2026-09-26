@@ -2,10 +2,7 @@ using JxFinance.Common;
 
 namespace JxFinance.Endpoints.Transfers.GetTransfers;
 
-public sealed class GetTransfersRequest : IPagedRequest
+public sealed class GetTransfersRequest : PagedRequest
 {
-    public int Page { get; init; } = 1;
-
-    public int PageSize { get; init; } = 20;
     public DateOnly? Date { get; init; }
 }

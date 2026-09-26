@@ -1,6 +1,5 @@
 using FastEndpoints;
 using JxFinance.Common.OpenApi;
-using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
 
@@ -20,14 +19,14 @@ public static class TransactionFilterSummary
         string category = CategoryWithSplitLines,
         string dateFrom = DateFrom,
         string dateTo = DateTo)
-        where TRequest : ITransactionFilter
+        where TRequest : TransactionFilterRequest
     {
-        summary.Describe(nameof(ITransactionFilter.AccountId), "Keep only transactions on this account.");
-        summary.Describe(nameof(ITransactionFilter.CategoryId), category);
-        summary.Describe(nameof(ITransactionFilter.TagIds), Tags);
-        summary.Describe(nameof(ITransactionFilter.Type), SummaryText.FlowType);
-        summary.Describe(nameof(ITransactionFilter.Search), "Case-insensitive match against the description.");
-        summary.Describe(nameof(ITransactionFilter.DateFrom), dateFrom);
-        summary.Describe(nameof(ITransactionFilter.DateTo), dateTo);
+        summary.Describe(nameof(TransactionFilterRequest.AccountId), "Keep only transactions on this account.");
+        summary.Describe(nameof(TransactionFilterRequest.CategoryId), category);
+        summary.Describe(nameof(TransactionFilterRequest.TagIds), Tags);
+        summary.Describe(nameof(TransactionFilterRequest.Type), SummaryText.FlowType);
+        summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description.");
+        summary.Describe(nameof(TransactionFilterRequest.DateFrom), dateFrom);
+        summary.Describe(nameof(TransactionFilterRequest.DateTo), dateTo);
     }
 }

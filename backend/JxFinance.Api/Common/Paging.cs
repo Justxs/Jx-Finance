@@ -9,6 +9,13 @@ public interface IPagedRequest
     int PageSize { get; }
 }
 
+public abstract class PagedRequest : IPagedRequest
+{
+    public int Page { get; init; } = 1;
+
+    public int PageSize { get; init; } = 20;
+}
+
 public static class Paging
 {
     public const int MaxPageSize = 200;

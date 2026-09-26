@@ -3,12 +3,11 @@ using FluentValidation;
 using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
-using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
 
 public abstract class TransactionFilterValidator<TRequest> : Validator<TRequest>
-    where TRequest : ITransactionFilter
+    where TRequest : TransactionFilterRequest
 {
     protected TransactionFilterValidator()
     {

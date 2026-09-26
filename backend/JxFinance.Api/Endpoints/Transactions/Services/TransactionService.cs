@@ -145,7 +145,7 @@ public sealed class TransactionService(
             ? query.OrderByDescending(key).ThenByDescending(t => t.CreatedAt)
             : query.OrderBy(key).ThenByDescending(t => t.CreatedAt);
 
-    private IQueryable<Transaction> Filtered(ITransactionFilter request)
+    private IQueryable<Transaction> Filtered(TransactionFilterRequest request)
     {
         var query = db.Transactions.AsQueryable();
         if (request.AccountId is { } accountId)
@@ -519,7 +519,7 @@ public sealed class TransactionService(
     }
 
     private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsOfFilteredAsync(
-        ITransactionFilter request,
+        TransactionFilterRequest request,
         CancellationToken cancellationToken)
     {
         var matching = Filtered(request);
