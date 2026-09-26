@@ -18,6 +18,7 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
+import { metaLine } from "@/lib/utils";
 import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
 import { TransferForm } from "./transfer-form";
 
@@ -73,7 +74,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
         <RecordRow
           key={transfer.id}
           title={transferRoute(transfer)}
-          subtitle={`${formatDate(transfer.date)}${transfer.description ? ` · ${transfer.description}` : ""}`}
+          subtitle={metaLine(formatDate(transfer.date), transfer.description)}
           amount={transferAmount(transfer)}
           label={`${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
           onEdit={() => setEditTarget(transfer.id)}

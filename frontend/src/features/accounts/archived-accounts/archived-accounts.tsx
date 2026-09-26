@@ -6,6 +6,7 @@ import {
   useRestoreAccount,
 } from "@/api/generated";
 import type { ArchivedAccountResponse } from "@/api/generated/model";
+import { Disclosure } from "@/components/disclosure/disclosure";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
@@ -107,19 +108,14 @@ export function ArchivedAccounts() {
 
   return (
     <Section>
-      <details className="group">
-        <summary className="w-fit cursor-pointer rounded-sm py-1 text-sm font-medium text-muted-foreground outline-none hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50">
-          {t("accounts.archivedList.summary", { count: accounts.length })}
-        </summary>
-        <div className="mt-2">
-          <ArchivedAccountsList
-            accounts={accounts}
-            householdNames={nameById(households.data)}
-            restoringId={restoringId}
-            onRestore={(id) => restoreMutation.mutate({ id })}
-          />
-        </div>
-      </details>
+      <Disclosure summary={t("accounts.archivedList.summary", { count: accounts.length })}>
+        <ArchivedAccountsList
+          accounts={accounts}
+          householdNames={nameById(households.data)}
+          restoringId={restoringId}
+          onRestore={(id) => restoreMutation.mutate({ id })}
+        />
+      </Disclosure>
     </Section>
   );
 }

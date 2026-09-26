@@ -14,6 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table/table";
 import { useIsoDate } from "@/hooks/use-formatters";
+import { metaLine } from "@/lib/utils";
 
 interface Props {
   label: string;
@@ -46,9 +47,7 @@ export function TaxCashTable({
   }
 
   function source(entry: TaxCashEntryResponse) {
-    return [entry.symbol, entry.description, accountNames.get(entry.accountId)]
-      .filter(Boolean)
-      .join(" · ");
+    return metaLine(entry.symbol, entry.description, accountNames.get(entry.accountId));
   }
 
   return (
@@ -89,8 +88,7 @@ export function TaxCashTable({
             <div className="min-w-0">
               <p className="font-medium">{t(`investments.types.${entry.type}`)}</p>
               <p className="truncate text-xs text-muted-foreground">
-                {formatDate(entry.date)}
-                {source(entry) ? ` · ${source(entry)}` : ""}
+                {metaLine(formatDate(entry.date), source(entry))}
               </p>
             </div>
             <div className="shrink-0 text-right">{amount(entry)}</div>

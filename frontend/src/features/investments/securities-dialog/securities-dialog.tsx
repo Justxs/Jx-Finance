@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input/input";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { UserRole } from "@/lib/user-role";
+import { metaLine } from "@/lib/utils";
 import { SecurityModal } from "../security-form";
 import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
@@ -49,7 +50,7 @@ function SecuritiesList({ search, onEdit }: Readonly<ListProps>) {
   return (
     <Rows aria-label={t("investments.securities.title")}>
       {shown.map((security) => {
-        const meta = [security.name, security.exchange, security.isin].filter(Boolean).join(" · ");
+        const meta = metaLine(security.name, security.exchange, security.isin);
 
         return (
           <li key={security.id} className="flex items-center gap-3 py-2 text-sm">

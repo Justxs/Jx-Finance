@@ -7,6 +7,7 @@ import type { DebtResponse } from "@/api/generated/model";
 import { buttonVariants } from "@/components/ui/button/button";
 import { useIsoDate, useRatePercent } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
+import { metaLine } from "@/lib/utils";
 import { HoldingsSection } from "../holdings-section";
 import { DebtForm, type DebtFormValues, debtFormValues } from "./debt-form";
 
@@ -50,16 +51,14 @@ export function DebtsSection() {
       items={debtList.map((debt) => ({
         id: debt.id,
         name: debt.name ?? "",
-        details: [
+        details: metaLine(
           t(`netWorth.debtTypes.${debt.type}`),
           formatDate(debt.asOf),
           debt.interestRate ? formatRate(debt.interestRate) : null,
           debt.payoffDate
             ? t("netWorth.repayment.paidOff", { date: formatDate(debt.payoffDate) })
             : null,
-        ]
-          .filter(Boolean)
-          .join(" · "),
+        ),
         amount: Number(debt.outstandingAmount),
         values: debtFormValues(debt),
         action: scheduleLink(debt),
