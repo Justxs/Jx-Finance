@@ -35,7 +35,9 @@
     "previous": "Previous",
     "next": "Next",
     "close": "Close",
-    "rename": "Rename"
+    "rename": "Rename",
+    "moveUp": "Move up",
+    "moveDown": "Move down"
   },
   "common": {
     "actions": "Actions"
@@ -96,8 +98,6 @@
       "title": "Customise the dashboard",
       "intro": "Choose which cards to show and in what order. The layout is saved to your account, so it follows you to every browser and device.",
       "cards": "Dashboard cards",
-      "moveUp": "Move up: {{card}}",
-      "moveDown": "Move down: {{card}}",
       "moved": "{{card}} moved to position {{position}} of {{total}}.",
       "switchedOff": "Cards of features an administrator switched off are not listed. They keep their place for when the feature comes back.",
       "reset": "Reset to default",
@@ -273,8 +273,6 @@
     "testerSets": "It would set: {{action}}",
     "testerNothing": "nothing yet",
     "positionLabel": "{{position}} of {{total}}",
-    "moveUp": "Move up: {{rule}}",
-    "moveDown": "Move down: {{rule}}",
     "orderHint": "Rules are tried from the top. The first one that matches decides the row and the rest are skipped.",
     "moved": "Order changed",
     "onAccount": "on {{account}}",

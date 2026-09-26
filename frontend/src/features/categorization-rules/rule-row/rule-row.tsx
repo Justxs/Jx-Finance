@@ -1,10 +1,10 @@
-import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
+import { MoveButtons } from "@/components/move-buttons/move-buttons";
 import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
-import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
+import type { MoveDirection } from "@/lib/reorder";
 import { actionText, conditionText, ruleActionNames } from "../rule-form/rule-summary";
 
 interface Props extends DeleteProps {
@@ -14,7 +14,7 @@ interface Props extends DeleteProps {
   categoryNames: ReadonlyMap<string, string>;
   tagNames: ReadonlyMap<string, string>;
   movePending: boolean;
-  onMove: (direction: "up" | "down") => void;
+  onMove: (direction: MoveDirection) => void;
   onEdit: () => void;
 }
 
@@ -64,24 +64,13 @@ export function RuleRow({
           </div>
         </div>
         <RowActions label={rule.name} onEdit={onEdit} {...deleteProps}>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={rule.position === 0 || movePending}
-            onClick={() => onMove("up")}
-            aria-label={t("categorizationRules.moveUp", { rule: rule.name })}
-          >
-            <ArrowUp />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            disabled={rule.position === total - 1 || movePending}
-            onClick={() => onMove("down")}
-            aria-label={t("categorizationRules.moveDown", { rule: rule.name })}
-          >
-            <ArrowDown />
-          </Button>
+          <MoveButtons
+            label={rule.name}
+            first={rule.position === 0}
+            last={rule.position === total - 1}
+            disabled={movePending}
+            onMove={onMove}
+          />
         </RowActions>
       </li>
     </RowTransition>
