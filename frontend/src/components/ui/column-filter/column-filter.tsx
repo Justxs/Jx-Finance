@@ -1,27 +1,55 @@
 import { ListFilter } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SelectField, type SelectOption } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
 import { cn } from "@/lib/utils";
 
-interface Props {
+function sameValue(a: unknown, b: unknown) {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+interface Props<T> {
   label: string;
-  active: boolean;
-  onClear: () => void;
-  children: ReactNode;
+  value: T;
+  empty: T;
+  onApply: (value: T) => void;
+  children: (draft: T, setDraft: (value: T) => void) => ReactNode;
   shortcut?: string;
 }
 
-export function ColumnFilter({ label, active, onClear, children, shortcut }: Readonly<Props>) {
+export function ColumnFilter<T>({
+  label,
+  value,
+  empty,
+  onApply,
+  children,
+  shortcut,
+}: Readonly<Props<T>>) {
   const { t } = useTranslation();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const active = !sameValue(value, empty);
+
+  function handleOpenChange(next: boolean) {
+    if (next) {
+      setDraft(value);
+    }
+    setOpen(next);
+  }
+
+  function apply(next: T) {
+    if (!sameValue(next, value)) {
+      onApply(next);
+    }
+    setOpen(false);
+  }
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <Tooltip content={t("filters.filterBy", { column: label })}>
         <PopoverTrigger
           aria-label={t("filters.filterBy", { column: label })}
@@ -35,12 +63,29 @@ export function ColumnFilter({ label, active, onClear, children, shortcut }: Rea
         </PopoverTrigger>
       </Tooltip>
       <PopoverContent align="start" aria-label={label} className="w-64 font-normal tracking-normal">
-        <div className="space-y-2">{children}</div>
-        <div className="flex justify-end border-t pt-2">
-          <Button type="button" variant="ghost" size="sm" disabled={!active} onClick={onClear}>
-            {t("filters.clear")}
-          </Button>
-        </div>
+        <form
+          className="flex flex-col gap-2.5"
+          onSubmit={(event) => {
+            event.preventDefault();
+            apply(draft);
+          }}
+        >
+          <div className="space-y-2">{children(draft, setDraft)}</div>
+          <div className="flex justify-end gap-2 border-t pt-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!active && sameValue(draft, empty)}
+              onClick={() => apply(empty)}
+            >
+              {t("filters.clear")}
+            </Button>
+            <Button type="submit" size="sm" disabled={sameValue(draft, value)}>
+              {t("filters.apply")}
+            </Button>
+          </div>
+        </form>
       </PopoverContent>
     </Popover>
   );
@@ -51,7 +96,6 @@ interface TextFilterProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  debounceMs?: number;
   shortcut?: string;
 }
 
@@ -60,26 +104,17 @@ export function TextColumnFilter({
   value,
   onChange,
   placeholder,
-  debounceMs = 0,
   shortcut,
 }: Readonly<TextFilterProps>) {
-  const text = useDebouncedDraft(value, onChange, debounceMs);
-
   return (
-    <ColumnFilter
-      label={label}
-      active={Boolean(value)}
-      shortcut={shortcut}
-      onClear={() => {
-        text.cancel();
-        onChange("");
-      }}
-    >
-      <Input
-        placeholder={placeholder ?? label}
-        value={text.draft}
-        onChange={(e) => text.change(e.target.value)}
-      />
+    <ColumnFilter label={label} value={value} empty="" shortcut={shortcut} onApply={onChange}>
+      {(draft, setDraft) => (
+        <Input
+          placeholder={placeholder ?? label}
+          value={draft}
+          onChange={(event) => setDraft(event.target.value)}
+        />
+      )}
     </ColumnFilter>
   );
 }
@@ -98,8 +133,10 @@ export function SelectColumnFilter<T extends string>({
   onChange,
 }: Readonly<SelectFilterProps<T>>) {
   return (
-    <ColumnFilter label={label} active={value !== ""} onClear={() => onChange("")}>
-      <SelectField aria-label={label} value={value} onChange={onChange} options={options} />
+    <ColumnFilter<T | ""> label={label} value={value} empty="" onApply={onChange}>
+      {(draft, setDraft) => (
+        <SelectField aria-label={label} value={draft} onChange={setDraft} options={options} />
+      )}
     </ColumnFilter>
   );
 }

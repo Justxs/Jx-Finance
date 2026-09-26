@@ -7,7 +7,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { RowsSkeleton, SectionSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useDateFormat } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
 import { DashboardCard } from "../dashboard-card/dashboard-card";
@@ -18,9 +18,17 @@ const grid = "grid gap-4 lg:grid-cols-6 xl:grid-cols-12 xl:gap-5";
 
 function DashboardSkeleton() {
   return (
-    <div className={grid}>
-      <Skeleton className="h-72 w-full rounded-lg lg:col-span-6 xl:col-span-4" />
-      <Skeleton className="h-72 w-full rounded-lg lg:col-span-6 xl:col-span-8" />
+    <div className={grid} aria-hidden="true">
+      <SectionSkeleton className="lg:col-span-6 xl:col-span-4">
+        <Skeleton className="h-11 w-52 max-w-full rounded-sm" />
+        <RowsSkeleton rows={3} className="mt-8" />
+      </SectionSkeleton>
+      <SectionSkeleton className="lg:col-span-6 xl:col-span-8">
+        <Skeleton className="h-64 w-full rounded-sm" />
+      </SectionSkeleton>
+      {["categories", "pace", "budgets"].map((key) => (
+        <SectionSkeleton key={key} rows={5} className="lg:col-span-3 xl:col-span-4" />
+      ))}
     </div>
   );
 }

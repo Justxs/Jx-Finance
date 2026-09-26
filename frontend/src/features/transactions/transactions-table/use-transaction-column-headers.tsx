@@ -47,10 +47,11 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
       "date",
       <ColumnFilter
         label={fields.date.label}
-        active={fields.date.active}
-        onClear={fields.date.clear}
+        value={fields.date.value}
+        empty={{ from: "", to: "" }}
+        onApply={fields.date.set}
       >
-        <DateRangePicker value={fields.date.value} onChange={fields.date.set} />
+        {(draft, setDraft) => <DateRangePicker value={draft} onChange={setDraft} />}
       </ColumnFilter>,
     ),
     description: header(
@@ -59,7 +60,6 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
         label={fields.search.label}
         value={fields.search.value}
         placeholder={fields.search.placeholder}
-        debounceMs={fields.search.debounceMs}
         shortcut={SEARCH_SHORTCUT_TARGET}
         onChange={fields.search.set}
       />,
@@ -77,18 +77,21 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
       <ColumnHeader<string>
         label={fields.tags.label}
         filter={
-          <ColumnFilter
+          <ColumnFilter<string[]>
             label={fields.tags.label}
-            active={fields.tags.active}
-            onClear={fields.tags.clear}
+            value={fields.tags.value}
+            empty={[]}
+            onApply={fields.tags.set}
           >
-            <TagPicker
-              tags={tags}
-              value={fields.tags.value}
-              onChange={fields.tags.set}
-              aria-label={fields.tags.label}
-              hint={fields.tags.hint}
-            />
+            {(draft, setDraft) => (
+              <TagPicker
+                tags={tags}
+                value={draft}
+                onChange={setDraft}
+                aria-label={fields.tags.label}
+                hint={fields.tags.hint}
+              />
+            )}
           </ColumnFilter>
         }
       />

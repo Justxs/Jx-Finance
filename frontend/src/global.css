@@ -300,7 +300,7 @@
 }
 
 @utility stale {
-  @apply relative cursor-progress after:pointer-events-none after:absolute after:inset-x-0 after:top-0 after:h-0.5 after:bg-rule motion-safe:after:animate-pulse;
+  @apply cursor-progress opacity-55 transition-opacity delay-150 duration-200;
 }
 
 @utility bg-dashed-swatch {

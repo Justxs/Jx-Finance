@@ -29,7 +29,7 @@ const columnWidth: Record<string, string> = {
   tagIds: "w-36",
   accountId: "w-36",
   amount: "w-30",
-  actions: "w-24",
+  actions: "w-32 pointer-coarse:w-41",
 };
 
 interface Props {
@@ -150,7 +150,7 @@ export function TransactionsTable({
           <Table
             className={cn(
               "table-fixed",
-              selection ? "min-w-220" : "min-w-212",
+              selection ? "min-w-228" : "min-w-220",
               isPlaceholder && "stale",
             )}
             aria-busy={isPlaceholder}

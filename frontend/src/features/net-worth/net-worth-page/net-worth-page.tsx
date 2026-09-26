@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { SectionSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { AssetsSection } from "../assets-section";
 import { DebtsSection } from "../debts-section";
 import { NetWorthCompositionChart } from "../net-worth-composition-chart";
@@ -16,7 +16,7 @@ export function NetWorthPage() {
     <div className="space-y-5">
       <PageHeader title={t("netWorth.title")} />
 
-      <QueryBoundary fallback={<Skeleton className="h-28 w-full" />}>
+      <QueryBoundary fallback={<StatsSkeleton />}>
         <NetWorthStats />
       </QueryBoundary>
 
@@ -40,10 +40,10 @@ export function NetWorthPage() {
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+        <QueryBoundary fallback={<SectionSkeleton rows={3} />}>
           <AssetsSection />
         </QueryBoundary>
-        <QueryBoundary fallback={<Skeleton className="h-40 w-full" />}>
+        <QueryBoundary fallback={<SectionSkeleton rows={3} />}>
           <DebtsSection />
         </QueryBoundary>
       </div>

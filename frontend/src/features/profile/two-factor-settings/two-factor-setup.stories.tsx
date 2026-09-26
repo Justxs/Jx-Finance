@@ -28,7 +28,7 @@ const meta = {
     onCancel: fn(),
   },
   render: (args) => (
-    <div className="w-[28rem] max-w-full">
+    <div className="w-md max-w-full">
       <Suspense fallback={<Skeleton className="h-96 w-full" />}>
         <SetupWithGeneratedQr {...args} />
       </Suspense>

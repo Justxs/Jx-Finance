@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Section } from "@/components/ui/section/section";
 import { RowsSkeleton, Skeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 
 export function RoutePending() {
@@ -12,10 +13,10 @@ export function RoutePending() {
         <Skeleton className="h-4 w-28 rounded-sm" />
       </div>
       <StatsSkeleton />
-      <div className="space-y-4">
-        <Skeleton className="h-6 w-40 rounded-sm" />
+      <Section className="space-y-4">
+        <Skeleton className="h-5 w-40 rounded-sm" />
         <RowsSkeleton rows={6} />
-      </div>
+      </Section>
     </div>
   );
 }

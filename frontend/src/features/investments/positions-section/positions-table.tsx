@@ -146,7 +146,7 @@ export function PositionsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="align-bottom">{t("investments.holdings.security")}</TableHead>
+              <TableHead wrap>{t("investments.holdings.security")}</TableHead>
               {closed ? null : (
                 <>
                   <TableHead numeric wrap>

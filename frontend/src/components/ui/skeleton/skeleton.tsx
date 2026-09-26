@@ -1,4 +1,4 @@
-import type { ComponentProps } from "react";
+import type { ComponentProps, ReactNode } from "react";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
@@ -8,7 +8,7 @@ function Skeleton({ className, ...props }: ComponentProps<"div">) {
   return (
     <div
       data-slot="skeleton"
-      className={cn("animate-pulse rounded-md bg-muted", className)}
+      className={cn("animate-pulse rounded-md bg-border", className)}
       {...props}
     />
   );
@@ -63,4 +63,19 @@ function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
   );
 }
 
-export { Skeleton, RowsSkeleton, StatsSkeleton };
+interface SectionSkeletonProps {
+  rows?: number;
+  className?: string;
+  children?: ReactNode;
+}
+
+function SectionSkeleton({ rows = 4, className, children }: Readonly<SectionSkeletonProps>) {
+  return (
+    <Section data-slot="section-skeleton" aria-hidden="true" className={className}>
+      <Skeleton className="mb-5 h-5 w-40 max-w-full rounded-sm" />
+      {children ?? <RowsSkeleton rows={rows} />}
+    </Section>
+  );
+}
+
+export { Skeleton, RowsSkeleton, StatsSkeleton, SectionSkeleton };
