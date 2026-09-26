@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useTodayDate } from "@/hooks/use-settings";
+import { optionsOf } from "@/lib/options";
 import { VALUE_RANGES, type ValueRange, valueHistoryParams } from "../investment-queries";
 import { ValueChart } from "./index";
 
@@ -28,10 +29,7 @@ export function ValueChartSection({ accountId }: Readonly<Props>) {
           className="w-36"
           value={range}
           onChange={setRange}
-          options={VALUE_RANGES.map((value) => ({
-            value,
-            label: t(`investments.valueChart.ranges.${value}`),
-          }))}
+          options={optionsOf(VALUE_RANGES, (value) => t(`investments.valueChart.ranges.${value}`))}
         />
       </SectionHeader>
       <QueryBoundary

@@ -7,6 +7,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { optionsOf } from "@/lib/options";
 import { optionalText, requiredValue } from "@/lib/validation";
 
 interface FormValues {
@@ -132,10 +133,7 @@ export function SmtpForm({
               <field.SelectFieldControl
                 id="smtp-encryption"
                 label={t("settings.smtp.encryption")}
-                options={encryptions.map((value) => ({
-                  value,
-                  label: t(`settings.smtp.encryptions.${value}`),
-                }))}
+                options={optionsOf(encryptions, (value) => t(`settings.smtp.encryptions.${value}`))}
               />
             )}
           </form.Field>

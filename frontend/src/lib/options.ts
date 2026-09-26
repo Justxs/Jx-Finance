@@ -39,3 +39,7 @@ export function withMissingOption(
 
   return [...options, { value: id, label }];
 }
+
+export function optionsOf<T extends string>(values: readonly T[], label: (value: T) => string) {
+  return values.map((value) => ({ value, label: label(value) }));
+}

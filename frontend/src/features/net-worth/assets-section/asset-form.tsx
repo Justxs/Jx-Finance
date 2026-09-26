@@ -8,6 +8,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
+import { optionsOf } from "@/lib/options";
 import { money, requiredText, requiredValue } from "@/lib/validation";
 import type { HoldingFormProps } from "../holdings-section";
 
@@ -71,10 +72,7 @@ export function AssetForm({ editing, onClose }: Readonly<HoldingFormProps<AssetF
             <field.SelectFieldControl
               id={`${idPrefix}-type`}
               label={t("netWorth.type")}
-              options={assetTypes.map((type) => ({
-                value: type,
-                label: t(`netWorth.assetTypes.${type}`),
-              }))}
+              options={optionsOf(assetTypes, (type) => t(`netWorth.assetTypes.${type}`))}
             />
           )}
         </form.Field>

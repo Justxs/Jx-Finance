@@ -18,6 +18,7 @@ import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
 import { useFeature } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
+import { optionsOf } from "@/lib/options";
 import {
   isIban,
   money,
@@ -120,10 +121,7 @@ export function AccountForm({ initial, onClose }: Readonly<Props>) {
             <field.SelectFieldControl
               id="account-type"
               label={t("accounts.type")}
-              options={accountTypes.map((accountType) => ({
-                value: accountType,
-                label: t(`accounts.types.${accountType}`),
-              }))}
+              options={optionsOf(accountTypes, (accountType) => t(`accounts.types.${accountType}`))}
             />
           )}
         </form.Field>

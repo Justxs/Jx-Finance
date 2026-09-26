@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { nameById, namedOptions, withMissingOption } from "./options";
+import { nameById, namedOptions, optionsOf, withMissingOption } from "./options";
 
 const accounts = [
   { id: "a1", name: "Everyday" },
@@ -50,5 +50,14 @@ describe("withMissingOption", () => {
     expect(withMissingOption(namedOptions(accounts), "a1", "Unavailable")).toHaveLength(2);
     expect(withMissingOption(namedOptions(accounts), undefined, "Unavailable")).toHaveLength(2);
     expect(withMissingOption(namedOptions(accounts), "", "Unavailable")).toHaveLength(2);
+  });
+});
+
+describe("optionsOf", () => {
+  test("labels each value in order", () => {
+    expect(optionsOf(["expense", "income"], (value) => value.toUpperCase())).toEqual([
+      { value: "expense", label: "EXPENSE" },
+      { value: "income", label: "INCOME" },
+    ]);
   });
 });

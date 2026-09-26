@@ -17,7 +17,7 @@ import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { silent, upsert } from "@/lib/mutations";
-import { nameById, namedOptions } from "@/lib/options";
+import { nameById, namedOptions, optionsOf } from "@/lib/options";
 import { normalizeMoney, optionalNonNegativeMoney, requiredText } from "@/lib/validation";
 import { actionText, ruleActionNames } from "./rule-summary";
 import { RuleTester } from "./rule-tester";
@@ -143,11 +143,9 @@ export function RuleForm({ accounts, categories, tags, initial, onClose }: Reado
                 <field.SelectFieldControl
                   id="rule-match"
                   label={t("categorizationRules.match")}
-                  options={[
-                    { value: "contains", label: t("categorizationRules.matches.contains") },
-                    { value: "startsWith", label: t("categorizationRules.matches.startsWith") },
-                    { value: "exact", label: t("categorizationRules.matches.exact") },
-                  ]}
+                  options={optionsOf(Object.values(DescriptionMatch), (match) =>
+                    t(`categorizationRules.matches.${match}`),
+                  )}
                 />
               )}
             </form.Field>

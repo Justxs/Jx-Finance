@@ -10,6 +10,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useReportingCurrency } from "@/hooks/use-formatters";
+import { optionsOf } from "@/lib/options";
 import { optionalQuantity, optionalText, requiredText } from "@/lib/validation";
 import { securityTypes } from "../investment-types";
 
@@ -116,10 +117,7 @@ export function SecurityForm({ initial, pending, error, onSubmit, onCancel }: Re
             <field.SelectFieldControl
               id="security-type"
               label={t("investments.securities.type")}
-              options={securityTypes.map((type) => ({
-                value: type,
-                label: t(`investments.securityTypes.${type}`),
-              }))}
+              options={optionsOf(securityTypes, (type) => t(`investments.securityTypes.${type}`))}
             />
           )}
         </form.Field>

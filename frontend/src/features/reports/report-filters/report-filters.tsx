@@ -4,6 +4,7 @@ import { SelectField } from "@/components/select-field/select-field";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Label } from "@/components/ui/label/label";
 import { useTodayDate } from "@/hooks/use-settings";
+import { optionsOf } from "@/lib/options";
 import { detectPreset, presetRange, type ReportPreset } from "./date-range-presets";
 
 interface Props {
@@ -74,10 +75,7 @@ export function ReportFilters({
           className="sm:w-52"
           value={comparison}
           onChange={onComparisonChange}
-          options={COMPARISONS.map((mode) => ({
-            value: mode,
-            label: t(`reports.comparison.modes.${mode}`),
-          }))}
+          options={optionsOf(COMPARISONS, (mode) => t(`reports.comparison.modes.${mode}`))}
         />
       </div>
     </div>

@@ -4,6 +4,7 @@ import { defineAppFieldGroup } from "@/components/form";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { optionsOf } from "@/lib/options";
 
 const regionalFieldGroup = defineAppFieldGroup(({ strict }) => ({
   defaultLanguage: strict<string>(),
@@ -49,10 +50,9 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
             id="settings-language"
             label={t("settings.regional.language")}
             hint={t("settings.regional.languageHint")}
-            options={languages.map((language) => ({
-              value: language,
-              label: t(`settings.regional.languages.${language}`),
-            }))}
+            options={optionsOf(languages, (language) =>
+              t(`settings.regional.languages.${language}`),
+            )}
           />
         )}
       </fields.Field>
@@ -75,10 +75,10 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
                       field.handleChange(first);
                     }
                   }}
-                  options={zoneRegions(zones).map((region) => ({
-                    value: region,
-                    label: region || t("settings.regional.timeZoneOther"),
-                  }))}
+                  options={optionsOf(
+                    zoneRegions(zones),
+                    (region) => region || t("settings.regional.timeZoneOther"),
+                  )}
                 />
               </div>
               <div className="min-w-0 flex-1">
@@ -103,10 +103,9 @@ function RegionalFieldsGroup({ fields, savedTimeZone }: Readonly<Props>) {
           <field.SelectFieldControl
             id="settings-first-day"
             label={t("settings.regional.firstDayOfWeek")}
-            options={Object.values(FirstDayOfWeek).map((day) => ({
-              value: day,
-              label: t(`settings.regional.days.${day}`),
-            }))}
+            options={optionsOf(Object.values(FirstDayOfWeek), (day) =>
+              t(`settings.regional.days.${day}`),
+            )}
           />
         )}
       </fields.Field>
