@@ -1,6 +1,5 @@
 using FastEndpoints;
 using FluentValidation;
-using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 
@@ -21,8 +20,7 @@ public sealed class SaveSecurityValidator : Validator<SaveSecurityRequest>
             .IsNonNegativeQuantity()
             .WithMessage("Price must be a decimal of 0 or more with at most 8 decimal places.");
         RuleFor(r => r.LastPriceDate)
-            .Must(date => date is null || date <= Resolve<IClock>().Today)
-            .WithErrorCode(ErrorCodes.RangeInvalid)
+            .IsNotInFuture(() => Resolve<IClock>().Today)
             .WithMessage("The price date cannot be in the future.");
     }
 }

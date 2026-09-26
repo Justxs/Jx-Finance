@@ -9,6 +9,6 @@ public sealed class ResetPasswordValidator : Validator<ResetPasswordRequest>
     {
         RuleFor(r => r.Email).IsRequired().IsEmail().HasMaxLength(320);
         RuleFor(r => r.Token).IsRequired().HasMaxLength(1000);
-        RuleFor(r => r.NewPassword).IsRequired().HasMinLength(8).HasMaxLength(100);
+        RuleFor(r => r.NewPassword).IsNewPassword();
     }
 }

@@ -17,10 +17,7 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.Currency).IsKnownEnum();
         RuleFor(r => r.Date).IsRequired();
         RuleFor(r => r.Description).HasMaxLength(500);
-        RuleFor(r => r.TagIds)
-            .Must(ids => ids is null || ids.Distinct().Count() <= TagRules.MaxTags)
-            .WithErrorCode(ErrorCodes.CollectionInvalidSize)
-            .WithMessage($"A transaction carries at most {TagRules.MaxTags} tags.");
+        RuleFor(r => r.TagIds).HasAtMostTags();
         RuleForEach(r => r.TagIds).IsRequired();
 
         RuleForEach(r => r.Lines)

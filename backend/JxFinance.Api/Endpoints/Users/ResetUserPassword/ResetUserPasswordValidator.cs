@@ -7,7 +7,7 @@ public sealed class ResetUserPasswordValidator : Validator<ResetUserPasswordRequ
 {
     public ResetUserPasswordValidator()
     {
-        RuleFor(r => r.NewPassword).IsRequired().HasMinLength(8).HasMaxLength(100);
+        RuleFor(r => r.NewPassword).IsNewPassword();
         RuleFor(r => r.CurrentPassword).IsRequired().HasMaxLength(100);
     }
 }

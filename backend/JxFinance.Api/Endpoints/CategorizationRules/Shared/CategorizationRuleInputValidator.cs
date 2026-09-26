@@ -16,13 +16,11 @@ public abstract class CategorizationRuleInputValidator<TRequest> : Validator<TRe
         RuleFor(r => r.MinAmount).IsNonNegativeMoney();
         RuleFor(r => r.MaxAmount).IsNonNegativeMoney();
         RuleFor(r => r.MaxAmount)
-            .Must((request, maximum) => request.MinAmount is not { } minimum || maximum is not { } value || value >= minimum)
-            .WithErrorCode(ErrorCodes.RangeInvalid)
+            .IsNotBefore(r => r.MinAmount)
             .WithMessage("The highest amount cannot be below the lowest one.");
         RuleFor(r => r.TagIds)
             .IsPresent()
-            .Must(ids => ids is null || ids.Distinct().Count() <= TagRules.MaxTags)
-            .WithErrorCode(ErrorCodes.CollectionInvalidSize)
+            .HasAtMostTags()
             .WithMessage($"A rule adds at most {TagRules.MaxTags} tags.");
         RuleForEach(r => r.TagIds).IsRequired();
         RuleFor(r => r.CategoryId)
