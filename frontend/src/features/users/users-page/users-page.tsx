@@ -11,7 +11,7 @@ import {
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { notify, pendingId } from "@/lib/mutations";
@@ -43,7 +43,7 @@ export function UsersPage() {
         </CreateDialog>
       </PageHeader>
 
-      <Panel>
+      <Section as="div">
         <UsersTable
           users={list}
           stale={stale}
@@ -56,7 +56,7 @@ export function UsersPage() {
           reactivatePendingId={pendingId(reactivateMutation)}
           onResetPassword={setResetId}
         />
-      </Panel>
+      </Section>
 
       <ConfirmDeleteDialog
         {...deactivate.dialogProps}

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Button } from "../button/button";
-import { Panel, Section, SectionHeader, SectionTitle, TitledSection } from "./section";
+import { Section, SectionHeader, SectionTitle, TitledSection } from "./section";
 
 const meta = {
   title: "UI/Section",
@@ -34,9 +34,9 @@ export const WithHeaderAction: Story = {
 
 export const PanelSurface: Story = {
   render: () => (
-    <Panel className="w-[min(90vw,32rem)]">
+    <Section as="div" className="w-[min(90vw,32rem)]">
       <p className="text-sm">A panel is the same surface without a heading of its own.</p>
-    </Panel>
+    </Section>
   ),
 };
 

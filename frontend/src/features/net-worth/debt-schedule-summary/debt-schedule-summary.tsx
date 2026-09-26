@@ -3,7 +3,7 @@ import { useUpdateDebt } from "@/api/generated";
 import type { DebtResponse, DebtScheduleResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { useIsoDate, useMoney, useRatePercent } from "@/hooks/use-formatters";
 import { silent } from "@/lib/mutations";
 import { debtFormValues, debtRequest } from "../debts-section/debt-form";
@@ -52,7 +52,10 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
   ];
 
   return (
-    <Panel className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end">
+    <Section
+      as="div"
+      className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end"
+    >
       <dl className="min-w-0">
         <dt className="text-sm text-muted-foreground">{t("netWorth.schedule.payoffDate")}</dt>
         <dd className="mt-1 font-serif text-stat font-semibold lining-nums tabular-nums">
@@ -103,6 +106,6 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
         </div>
         <FormError error={update.error} />
       </div>
-    </Panel>
+    </Section>
   );
 }
