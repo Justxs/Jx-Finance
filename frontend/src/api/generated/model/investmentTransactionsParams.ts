@@ -8,8 +8,6 @@
 import type { InvestmentTransactionType } from "./investmentTransactionType";
 
 export type InvestmentTransactionsParams = {
-  page: number;
-  pageSize: number;
   /**
    * Only entries on this account.
    * @nullable
@@ -24,4 +22,6 @@ export type InvestmentTransactionsParams = {
    * Only entries of this type.
    */
   type?: InvestmentTransactionType;
+  page: number;
+  pageSize: number;
 };

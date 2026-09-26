@@ -18,6 +18,8 @@ export type TransactionsParams = {
    * Rows per page. Defaults to 20.
    */
   pageSize: number;
+  sort?: TransactionSortField;
+  direction?: SortDirection;
   /**
    * Keep only transactions on this account.
    * @nullable
@@ -52,6 +54,4 @@ export type TransactionsParams = {
    * @nullable
    */
   dateTo?: string | null;
-  sort?: TransactionSortField;
-  direction?: SortDirection;
 };

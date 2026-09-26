@@ -126,8 +126,8 @@ export const getUpdateBackupMockHandler = (
 
 export const getDownloadBackupMockHandler = (
   overrideResponse?:
-    | ArrayBuffer
-    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<ArrayBuffer> | ArrayBuffer),
+    | Blob
+    | ((info: Parameters<Parameters<typeof http.get>[1]>[0]) => Promise<Blob> | Blob),
   options?: RequestHandlerOptions,
 ) => {
   return http.get(
@@ -139,10 +139,10 @@ export const getDownloadBackupMockHandler = (
             ? await overrideResponse(info)
             : overrideResponse
           : undefined;
-      return HttpResponse.arrayBuffer(
-        binaryBody instanceof ArrayBuffer ? binaryBody : new ArrayBuffer(0),
-        { status: 200, headers: { "Content-Type": "application/octet-stream" } },
-      );
+      return new HttpResponse(binaryBody, {
+        status: 200,
+        headers: { "Content-Type": "application/octet-stream" },
+      });
     },
     options,
   );

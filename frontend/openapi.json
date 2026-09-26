@@ -3925,6 +3925,18 @@
         "operationId": "GetConversions",
         "parameters": [
           {
+            "name": "accountId",
+            "in": "query",
+            "description": "Only conversions on this account.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "uuid"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": true,
@@ -3940,18 +3952,6 @@
             "schema": {
               "type": "integer",
               "format": "int32"
-            }
-          },
-          {
-            "name": "accountId",
-            "in": "query",
-            "description": "Only conversions on this account.",
-            "schema": {
-              "type": [
-                "null",
-                "string"
-              ],
-              "format": "uuid"
             }
           }
         ],
@@ -5652,26 +5652,6 @@
             }
           },
           {
-            "name": "page",
-            "in": "query",
-            "description": "One-based page number. Defaults to 1.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "description": "Rows per page. Defaults to 20.",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "memberId",
             "in": "query",
             "description": "Only rows by this member.",
@@ -5713,6 +5693,26 @@
                 "string"
               ],
               "format": "date"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "description": "One-based page number. Defaults to 1.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "Rows per page. Defaults to 20.",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -7457,24 +7457,6 @@
         "operationId": "GetInvestmentTransactions",
         "parameters": [
           {
-            "name": "page",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "format": "int32"
-            }
-          },
-          {
             "name": "accountId",
             "in": "query",
             "description": "Only entries on this account.",
@@ -7504,6 +7486,24 @@
             "description": "Only entries of this type.",
             "schema": {
               "$ref": "#/components/schemas/InvestmentTransactionType"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],
@@ -9897,6 +9897,20 @@
             }
           },
           {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
             "name": "accountId",
             "in": "query",
             "description": "Keep only transactions on this account.",
@@ -9972,20 +9986,6 @@
                 "string"
               ],
               "format": "date"
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TransactionSortField"
-            }
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/SortDirection"
             }
           }
         ],
@@ -10234,6 +10234,20 @@
             }
           },
           {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
             "name": "accountId",
             "in": "query",
             "description": "Keep only transactions on this account.",
@@ -10309,20 +10323,6 @@
                 "string"
               ],
               "format": "date"
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TransactionSortField"
-            }
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/SortDirection"
             }
           }
         ],
@@ -10404,6 +10404,20 @@
             }
           },
           {
+            "name": "sort",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TransactionSortField"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/SortDirection"
+            }
+          },
+          {
             "name": "accountId",
             "in": "query",
             "description": "Keep only transactions on this account.",
@@ -10479,20 +10493,6 @@
                 "string"
               ],
               "format": "date"
-            }
-          },
-          {
-            "name": "sort",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/TransactionSortField"
-            }
-          },
-          {
-            "name": "direction",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/SortDirection"
             }
           }
         ],
@@ -11195,6 +11195,18 @@
         "operationId": "GetTransfers",
         "parameters": [
           {
+            "name": "date",
+            "in": "query",
+            "description": "Keep only transfers on this date, as YYYY-MM-DD.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "description": "One-based page number. Defaults to 1.",
@@ -11212,18 +11224,6 @@
             "schema": {
               "type": "integer",
               "format": "int32"
-            }
-          },
-          {
-            "name": "date",
-            "in": "query",
-            "description": "Keep only transfers on this date, as YYYY-MM-DD.",
-            "schema": {
-              "type": [
-                "null",
-                "string"
-              ],
-              "format": "date"
             }
           }
         ],
@@ -15269,7 +15269,7 @@
         "type": "object",
         "properties": {
           "email": {
-            "maxLength": 320,
+            "maxLength": 256,
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
@@ -15842,7 +15842,8 @@
         "type": "object",
         "properties": {
           "email": {
-            "minLength": 1,
+            "maxLength": 256,
+            "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
             "format": "email",
@@ -16823,7 +16824,7 @@
         "type": "object",
         "properties": {
           "email": {
-            "maxLength": 320,
+            "maxLength": 256,
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",
@@ -19600,7 +19601,7 @@
         "type": "object",
         "properties": {
           "email": {
-            "maxLength": 320,
+            "maxLength": 256,
             "minLength": 0,
             "pattern": "^[^@]+@[^@]+$",
             "type": "string",

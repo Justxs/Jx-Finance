@@ -5,7 +5,11 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  queryOptions as queryOptionsBuilder,
+  useQuery,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type {
   DataTag,
   DefinedInitialDataOptions,
@@ -173,11 +177,15 @@ export const getCurrenciesSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof currencies>>> = ({ signal }) =>
     currencies({ signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof currencies>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof currencies>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type CurrenciesSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof currencies>>>;
@@ -390,11 +398,15 @@ export const getExchangeRateSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof exchangeRate>>> = ({ signal }) =>
     exchangeRate(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof exchangeRate>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof exchangeRate>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type ExchangeRateSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof exchangeRate>>>;

@@ -5,7 +5,11 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  queryOptions as queryOptionsBuilder,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type {
   DataTag,
   MutationFunction,
@@ -212,11 +216,15 @@ export const getTransactionsSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof transactions>>> = ({ signal }) =>
     transactions(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof transactions>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type TransactionsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transactions>>>;
@@ -559,11 +567,15 @@ export const getExportTransactionsSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactions>>> = ({ signal }) =>
     exportTransactions(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof exportTransactions>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof exportTransactions>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type ExportTransactionsSuspenseQueryResult = NonNullable<
@@ -690,11 +702,17 @@ export const getExportTransactionsPdfSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof exportTransactionsPdf>>> = ({ signal }) =>
     exportTransactionsPdf(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
     Awaited<ReturnType<typeof exportTransactionsPdf>>,
     TError,
     TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type ExportTransactionsPdfSuspenseQueryResult = NonNullable<
@@ -821,11 +839,15 @@ export const getTransactionsSummarySuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof transactionsSummary>>> = ({ signal }) =>
     transactionsSummary(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof transactionsSummary>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof transactionsSummary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type TransactionsSummarySuspenseQueryResult = NonNullable<
@@ -1025,11 +1047,15 @@ export const getTransactionSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof transaction>>> = ({ signal }) =>
     transaction(id, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof transaction>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof transaction>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type TransactionSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof transaction>>>;

@@ -9,14 +9,6 @@ import type { AuditEntityKind } from "./auditEntityKind";
 
 export type HouseholdAuditParams = {
   /**
-   * One-based page number. Defaults to 1.
-   */
-  page: number;
-  /**
-   * Rows per page. Defaults to 20.
-   */
-  pageSize: number;
-  /**
    * Only rows by this member.
    * @nullable
    */
@@ -35,4 +27,12 @@ export type HouseholdAuditParams = {
    * @nullable
    */
   dateTo?: string | null;
+  /**
+   * One-based page number. Defaults to 1.
+   */
+  page: number;
+  /**
+   * Rows per page. Defaults to 20.
+   */
+  pageSize: number;
 };

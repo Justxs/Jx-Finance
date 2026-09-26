@@ -7,7 +7,7 @@
  */
 
 export interface ImportBrokerReportRequest {
-  file?: Blob;
+  file?: Blob | File;
   /** The account that mirrors the broker account. */
   accountId?: string;
   /**
