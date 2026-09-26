@@ -1,14 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, expect, test } from "vitest";
-import {
-  isCommandPaletteOpen,
-  readCommandRecents,
-  rememberCommand,
-  setCommandPaletteOpen,
-  toggleCommandPalette,
-  useCommandPaletteOpen,
-  useCommandRecents,
-} from "./command-palette-store";
+import { beforeEach, expect, test } from "vitest";
+import { readCommandRecents, rememberCommand, useCommandRecents } from "./command-palette-store";
 import { COMMAND_RECENTS_MAX, preferencesCollection } from "./preferences";
 
 const ROW_ID = "browser";
@@ -17,30 +9,6 @@ beforeEach(() => {
   if (preferencesCollection.has(ROW_ID)) {
     preferencesCollection.delete(ROW_ID);
   }
-});
-
-afterEach(() => {
-  setCommandPaletteOpen(false);
-});
-
-test("starts closed and toggles", () => {
-  expect(isCommandPaletteOpen()).toBe(false);
-
-  toggleCommandPalette();
-  expect(isCommandPaletteOpen()).toBe(true);
-
-  toggleCommandPalette();
-  expect(isCommandPaletteOpen()).toBe(false);
-});
-
-test("the open hook follows the store and can set it", () => {
-  const { result } = renderHook(() => useCommandPaletteOpen());
-
-  act(() => toggleCommandPalette());
-  expect(result.current.open).toBe(true);
-
-  act(() => result.current.setOpen(false));
-  expect(result.current.open).toBe(false);
 });
 
 test("remembering puts an entry first, without repeating it", () => {

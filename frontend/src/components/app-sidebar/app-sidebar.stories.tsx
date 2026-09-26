@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { Suspense } from "react";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
-import { setSidebarCollapsed } from "@/stores/sidebar-store";
+import { savePreferences } from "@/stores/preferences";
 import { longNameUser, memberUser } from "@/storybook/fixtures";
 import { withHandlers } from "@/storybook/handlers";
 import { Skeleton } from "../ui/skeleton/skeleton";
@@ -26,7 +26,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   render: () => <SidebarExample />,
   beforeEach: () => {
-    setSidebarCollapsed(false);
+    savePreferences({ sidebarCollapsed: false });
   },
 } satisfies Meta<typeof AppSidebar>;
 
@@ -39,8 +39,8 @@ export const ActiveRoute: Story = { parameters: { route: "/transactions" } };
 
 export const Collapsed: Story = {
   beforeEach: () => {
-    setSidebarCollapsed(true);
-    return () => setSidebarCollapsed(false);
+    savePreferences({ sidebarCollapsed: true });
+    return () => savePreferences({ sidebarCollapsed: false });
   },
 };
 
