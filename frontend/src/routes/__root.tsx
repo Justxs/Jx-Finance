@@ -16,17 +16,14 @@ import {
   type NavItem,
   navLinkActiveClass,
   navLinkClass,
-  visibleNav,
+  useVisibleNav,
 } from "@/components/app-sidebar/app-sidebar";
 import { Brand } from "@/components/brand/brand";
+import { HeaderActions } from "@/components/header-actions/header-actions";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
 import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { LogoutButton } from "@/components/logout-button/logout-button";
-import {
-  NotificationBell,
-  NotificationBellUnavailable,
-  unreadParams,
-} from "@/components/notification-bell/notification-bell";
+import { unreadParams } from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { RouteError } from "@/components/route-error/route-error";
 import { RoutePending } from "@/components/route-pending/route-pending";
@@ -35,11 +32,10 @@ import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { CommandPalette } from "@/features/command-palette/command-palette/command-palette";
 import { EmailVerificationBanner } from "@/features/profile/email-verification-banner/email-verification-banner";
-import { settingsQueryOptions, usePublicSettings, useSettings } from "@/hooks/use-settings";
+import { settingsQueryOptions, usePublicSettings } from "@/hooks/use-settings";
 import { checkIsAuthenticated, checkSetupNeeded } from "@/lib/auth-gate";
 import { PUBLIC_PATHS, profileNavPage } from "@/lib/navigation";
 import { type RouterContext, warm } from "@/lib/route-prefetch";
-import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
 
 export const Route = createRootRouteWithContext<RouterContext>()({
@@ -92,11 +88,10 @@ function RootLayout() {
   const { t } = useTranslation();
   const authenticatedArea = !PUBLIC_PATHS.has(location.pathname);
   const me = useMe({ query: { enabled: authenticatedArea } });
-  const settings = useSettings({ enabled: authenticatedArea });
   const instanceName = usePublicSettings()?.instanceName;
 
   const mobileNavItems: readonly MobileNavItem[] = [
-    ...visibleNav(settings.features, me.data?.role === UserRole.admin),
+    ...useVisibleNav(me.data?.role, authenticatedArea),
     profileNavPage,
   ];
 
@@ -143,14 +138,7 @@ function RootLayout() {
           <QueryBoundary fallback={null} errorFallback={null}>
             <HouseholdSwitcher className="w-28" />
           </QueryBoundary>
-          <QueryBoundary
-            fallback={<Skeleton className="size-9 rounded-md" />}
-            errorFallback={<NotificationBellUnavailable />}
-          >
-            <NotificationBell />
-          </QueryBoundary>
-          <LanguageToggle />
-          <ThemeToggle />
+          <HeaderActions />
           <LogoutButton />
         </header>
 

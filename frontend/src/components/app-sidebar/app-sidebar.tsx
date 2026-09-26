@@ -4,16 +4,11 @@ import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
 import type { FeatureFlags } from "@/api/generated/model";
 import { Brand } from "@/components/brand/brand";
+import { HeaderActions } from "@/components/header-actions/header-actions";
 import { HouseholdSwitcher } from "@/components/household-switcher/household-switcher";
-import { LanguageToggle } from "@/components/language-toggle/language-toggle";
 import { LogoutButton } from "@/components/logout-button/logout-button";
-import {
-  NotificationBell,
-  NotificationBellUnavailable,
-} from "@/components/notification-bell/notification-bell";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { ShortcutsHelp } from "@/components/shortcuts-help/shortcuts-help";
-import { ThemeToggle } from "@/components/theme-toggle/theme-toggle";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
@@ -43,6 +38,10 @@ export function visibleNav(features: FeatureFlags, isAdmin: boolean): readonly N
   return isAdmin ? [...enabled, ...adminNavPages] : enabled;
 }
 
+export function useVisibleNav(role: string | undefined, enabled = true) {
+  return visibleNav(useSettings({ enabled }).features, role === UserRole.admin);
+}
+
 export const navLinkClass =
   "rounded-md border border-transparent text-sm text-muted-foreground transition-colors hover:text-foreground";
 
@@ -52,9 +51,7 @@ export function AppSidebar() {
   const { t } = useTranslation();
   const { collapsed, toggleSidebar } = useSidebarCollapsed();
   const me = useMeSuspense();
-
-  const settings = useSettings();
-  const visibleNavItems = visibleNav(settings.features, me.data?.role === UserRole.admin);
+  const visibleNavItems = useVisibleNav(me.data?.role);
 
   return (
     <aside
@@ -110,14 +107,7 @@ export function AppSidebar() {
           collapsed ? "flex-col items-center" : "items-center",
         )}
       >
-        <QueryBoundary
-          fallback={<Skeleton className="size-9 rounded-md" />}
-          errorFallback={<NotificationBellUnavailable />}
-        >
-          <NotificationBell placement="above" />
-        </QueryBoundary>
-        <LanguageToggle />
-        <ThemeToggle />
+        <HeaderActions placement="above" />
         <ShortcutsHelp />
         <Button
           type="button"
