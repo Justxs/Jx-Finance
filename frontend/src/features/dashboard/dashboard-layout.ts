@@ -20,14 +20,13 @@ import type {
   SettingsResponse,
 } from "@/api/generated/model";
 import type { FeatureKey } from "@/hooks/use-settings";
+import { type MoveDirection, adjacentIndex, swapItems } from "@/lib/reorder";
 import { todayDateIn, warm, warmWithSettings } from "@/lib/route-prefetch";
 import {
   monthlyTrendParams,
   recentTransactionsParams,
   spendingPaceRanges,
 } from "./dashboard-queries";
-
-export type MoveDirection = "up" | "down";
 
 export interface LayoutDraft {
   order: DashboardCard[];
@@ -68,16 +67,12 @@ export function moveCard(
 ): LayoutDraft {
   const available = availableCards(draft, features);
   const position = available.indexOf(card);
-  const neighbour = available[direction === "up" ? position - 1 : position + 1];
+  const neighbour = available[adjacentIndex(position, direction)];
   if (position < 0 || neighbour === undefined) {
     return draft;
   }
-  const from = draft.order.indexOf(card);
-  const to = draft.order.indexOf(neighbour);
-  const order = [...draft.order];
-  order[from] = neighbour;
-  order[to] = card;
-  return { ...draft, order };
+  const order = swapItems(draft.order, draft.order.indexOf(card), draft.order.indexOf(neighbour));
+  return { ...draft, order: order ?? draft.order };
 }
 
 export function setCardShown(draft: LayoutDraft, card: DashboardCard, shown: boolean): LayoutDraft {

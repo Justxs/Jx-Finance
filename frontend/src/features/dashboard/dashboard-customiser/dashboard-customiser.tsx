@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { useId, useState } from "react";
 import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -11,19 +11,15 @@ import {
 } from "@/api/generated";
 import type { DashboardCard, DashboardLayoutResponse, FeatureFlags } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
+import { MoveButtons } from "@/components/move-buttons/move-buttons";
 import { Button } from "@/components/ui/button/button";
 import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionTitle } from "@/components/ui/section/section";
 import { silent } from "@/lib/mutations";
+import type { MoveDirection } from "@/lib/reorder";
 import { dashboardCardTitle } from "../dashboard-card/dashboard-card";
-import {
-  type LayoutDraft,
-  type MoveDirection,
-  availableCards,
-  moveCard,
-  setCardShown,
-} from "../dashboard-layout";
+import { type LayoutDraft, availableCards, moveCard, setCardShown } from "../dashboard-layout";
 
 interface Props {
   layout: DashboardLayoutResponse;
@@ -59,10 +55,6 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
   const cards = availableCards(draft, features);
   const someSwitchedOff = cards.length < draft.order.length;
 
-  function buttonId(card: DashboardCard, direction: MoveDirection) {
-    return `${titleId}-${card}-${direction}`;
-  }
-
   function move(card: DashboardCard, direction: MoveDirection) {
     const next = moveCard(draft, card, direction, features);
     const nextCards = availableCards(next, features);
@@ -70,7 +62,7 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
     const atEdge = direction === "up" ? position === 0 : position === nextCards.length - 1;
     flushSync(() => setDraft(next));
     const opposite = direction === "up" ? "down" : "up";
-    document.getElementById(buttonId(card, atEdge ? opposite : direction))?.focus();
+    document.getElementById(`${titleId}-${card}-${atEdge ? opposite : direction}`)?.focus();
     setAnnouncement(
       t("dashboard.layout.moved", {
         card: dashboardCardTitle(t, card),
@@ -108,26 +100,14 @@ export function DashboardCustomiser({ layout, features, onDone }: Readonly<Props
                 />
                 <span className="min-w-0 wrap-break-word">{title}</span>
               </label>
-              <Button
-                id={buttonId(card, "up")}
-                variant="ghost"
-                size="icon-sm"
-                disabled={index === 0 || busy}
-                onClick={() => move(card, "up")}
-                aria-label={t("dashboard.layout.moveUp", { card: title })}
-              >
-                <ArrowUp />
-              </Button>
-              <Button
-                id={buttonId(card, "down")}
-                variant="ghost"
-                size="icon-sm"
-                disabled={index === cards.length - 1 || busy}
-                onClick={() => move(card, "down")}
-                aria-label={t("dashboard.layout.moveDown", { card: title })}
-              >
-                <ArrowDown />
-              </Button>
+              <MoveButtons
+                label={title}
+                idPrefix={`${titleId}-${card}`}
+                first={index === 0}
+                last={index === cards.length - 1}
+                disabled={busy}
+                onMove={(direction) => move(card, direction)}
+              />
             </li>
           );
         })}

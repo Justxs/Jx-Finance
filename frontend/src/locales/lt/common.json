@@ -35,7 +35,9 @@
     "previous": "Ankstesnis",
     "next": "Kitas",
     "close": "Uždaryti",
-    "rename": "Pervadinti"
+    "rename": "Pervadinti",
+    "moveUp": "Pakelti",
+    "moveDown": "Nuleisti"
   },
   "common": {
     "actions": "Veiksmai"
@@ -96,8 +98,6 @@
       "title": "Pritaikyti suvestinę",
       "intro": "Pasirinkite, kurias korteles rodyti ir kokia tvarka. Išdėstymas saugomas jūsų paskyroje, todėl jis toks pat kiekvienoje naršyklėje ir įrenginyje.",
       "cards": "Suvestinės kortelės",
-      "moveUp": "Pakelti: {{card}}",
-      "moveDown": "Nuleisti: {{card}}",
       "moved": "Kortelė „{{card}}“ perkelta į {{position}} vietą iš {{total}}.",
       "switchedOff": "Funkcijų, kurias administratorius išjungė, kortelės nerodomos. Jos išlaiko savo vietą, kol funkcija vėl bus įjungta.",
       "reset": "Atkurti numatytąjį",
@@ -277,8 +277,6 @@
     "testerSets": "Nustatytų: {{action}}",
     "testerNothing": "kol kas nieko",
     "positionLabel": "{{position}} iš {{total}}",
-    "moveUp": "Pakelti: {{rule}}",
-    "moveDown": "Nuleisti: {{rule}}",
     "orderHint": "Taisyklės tikrinamos iš viršaus. Eilutę nulemia pirmoji sutapusi, likusios praleidžiamos.",
     "moved": "Eilės tvarka pakeista",
     "onAccount": "sąskaitoje {{account}}",
