@@ -12,11 +12,12 @@ import {
 import { AppearancePicker } from "@/components/appearance-picker/appearance-picker";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SectionLayout } from "@/components/section-layout/section-layout";
+import { useNavSections } from "@/components/section-nav/section-nav";
 import { Button } from "@/components/ui/button/button";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
-import { useSettings, useSettingsSuspense } from "@/hooks/use-settings";
+import { useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
 import { SettingsForm } from "../settings-form/settings-form";
 import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav/settings-nav";
@@ -103,9 +104,7 @@ function SettingsContent({ section }: Readonly<{ section: SettingsSection }>) {
 export function SettingsPage() {
   const { t } = useTranslation();
   const search = useSearch({ from: "/settings" });
-  const { features } = useSettings();
-  const sections = settingsSections.filter((item) => item !== "import" || features.import);
-  const section = sections.find((item) => item === search.section) ?? "general";
+  const { sections, section } = useNavSections(settingsSections, search.section, "general");
 
   return (
     <SectionLayout

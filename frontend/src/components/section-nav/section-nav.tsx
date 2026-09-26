@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Fragment, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useFeature } from "@/hooks/use-settings";
 import type { TranslationKey } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,17 @@ interface Props<TSection extends string> {
   sections: readonly TSection[];
   items: Readonly<Record<TSection, SectionNavItem>>;
   renderLink: (section: TSection, props: SectionLinkProps) => ReactNode;
+}
+
+export function useNavSections<TSection extends string>(
+  all: readonly TSection[],
+  requested: TSection | undefined,
+  fallback: TSection,
+) {
+  const importEnabled = useFeature("import");
+  const sections = all.filter((item) => item !== "import" || importEnabled);
+
+  return { sections, section: sections.find((item) => item === requested) ?? fallback };
 }
 
 export function SectionNav<TSection extends string>({
