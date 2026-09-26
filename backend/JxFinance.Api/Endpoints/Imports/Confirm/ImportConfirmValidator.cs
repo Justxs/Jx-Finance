@@ -2,7 +2,6 @@ using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
-using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Imports.Confirm;
 
@@ -24,9 +23,9 @@ public sealed class ImportConfirmValidator : Validator<ImportConfirmRequest>
             row.RuleFor(r => r.Description).HasMaxLength(500);
             row.RuleFor(r => r.Amount).IsPositiveMoney();
             row.RuleFor(r => r.TagIds)
-                .Must(ids => ids is null || ids.Distinct().Count() <= TagFilter.MaxTags)
+                .Must(ids => ids is null || ids.Distinct().Count() <= TagRules.MaxTags)
                 .WithErrorCode(ErrorCodes.CollectionInvalidSize)
-                .WithMessage($"A transaction carries at most {TagFilter.MaxTags} tags.");
+                .WithMessage($"A transaction carries at most {TagRules.MaxTags} tags.");
         });
     }
 }

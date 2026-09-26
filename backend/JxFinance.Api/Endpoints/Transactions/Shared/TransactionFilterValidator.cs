@@ -1,6 +1,8 @@
 using FastEndpoints;
 using FluentValidation;
+using JxFinance.Common;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Validation;
 using JxFinance.Endpoints.Transactions.Interfaces;
 
 namespace JxFinance.Endpoints.Transactions.Shared;
@@ -11,8 +13,8 @@ public abstract class TransactionFilterValidator<TRequest> : Validator<TRequest>
     protected TransactionFilterValidator()
     {
         RuleFor(r => r.TagIds)
-            .Must(TagFilter.IsWellFormed)
+            .Must(ids => GuidList.IsWellFormed(ids, TagRules.MaxTags))
             .WithErrorCode(ErrorCodes.TextInvalidFormat)
-            .WithMessage($"tagIds must be up to {TagFilter.MaxTags} tag ids separated by commas.");
+            .WithMessage($"tagIds must be up to {TagRules.MaxTags} tag ids separated by commas.");
     }
 }

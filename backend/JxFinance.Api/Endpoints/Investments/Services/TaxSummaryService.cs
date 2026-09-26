@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -29,7 +30,7 @@ public sealed class TaxSummaryService(AppDbContext db, IExchangeRateService rate
             .Select(a => new { a.Id, a.Name })
             .ToDictionaryAsync(a => a.Id, a => a.Name, cancellationToken);
 
-        var wanted = AccountSelection.Parse(request.AccountIds).Select(id => new AccountId(id)).ToList();
+        var wanted = GuidList.Parse(request.AccountIds).Select(id => new AccountId(id)).ToList();
         var selected = (wanted.Count == 0 ? visible.Keys : wanted.Where(visible.ContainsKey)).ToList();
 
         List<InvestmentTransaction> entries = selected.Count == 0

@@ -18,9 +18,9 @@ public abstract class TransactionInputValidator<TRequest> : Validator<TRequest>
         RuleFor(r => r.Date).IsRequired();
         RuleFor(r => r.Description).HasMaxLength(500);
         RuleFor(r => r.TagIds)
-            .Must(ids => ids is null || ids.Distinct().Count() <= TagFilter.MaxTags)
+            .Must(ids => ids is null || ids.Distinct().Count() <= TagRules.MaxTags)
             .WithErrorCode(ErrorCodes.CollectionInvalidSize)
-            .WithMessage($"A transaction carries at most {TagFilter.MaxTags} tags.");
+            .WithMessage($"A transaction carries at most {TagRules.MaxTags} tags.");
         RuleForEach(r => r.TagIds).IsRequired();
 
         RuleForEach(r => r.Lines)
