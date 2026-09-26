@@ -1,4 +1,4 @@
-import { type ReactNode, useDeferredValue, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getRecurringBillsQueryKey,
@@ -13,9 +13,8 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
-import { Section, TitledSection } from "@/components/ui/section/section";
+import { PanelRows } from "@/components/panel-rows/panel-rows";
+import { TitledSection } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
@@ -43,27 +42,6 @@ export function RecurringBillsPage() {
   const candidateList = useDeferredValue(candidates.data);
   const remove = useConfirmedDelete(deleteMutation, billList, (bill) => bill.name, "recurringBill");
 
-  let content: ReactNode;
-  if (billList.length === 0) {
-    content = <EmptyText>{t("recurringBills.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Section as={Rows} className="py-2 sm:py-3">
-        {billList.map((bill) => (
-          <RecurringBillRow
-            key={bill.id}
-            bill={bill}
-            accounts={accountList}
-            categories={categoryList}
-            onEdit={() => setEditing(bill)}
-            onConfirm={() => setConfirming(bill)}
-            {...remove.deleteProps(bill.id)}
-          />
-        ))}
-      </Section>
-    );
-  }
-
   return (
     <div className="space-y-5">
       <PageHeader title={t("recurringBills.title")}>
@@ -79,7 +57,19 @@ export function RecurringBillsPage() {
           <BillsForecastChart bills={billList} />
         </TitledSection>
       ) : null}
-      {content}
+      <PanelRows count={billList.length} emptyText={t("recurringBills.empty")}>
+        {billList.map((bill) => (
+          <RecurringBillRow
+            key={bill.id}
+            bill={bill}
+            accounts={accountList}
+            categories={categoryList}
+            onEdit={() => setEditing(bill)}
+            onConfirm={() => setConfirming(bill)}
+            {...remove.deleteProps(bill.id)}
+          />
+        ))}
+      </PanelRows>
       <SubscriptionSuggestions
         candidates={candidateList}
         accounts={accountList}

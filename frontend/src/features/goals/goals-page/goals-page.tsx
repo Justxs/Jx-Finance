@@ -1,4 +1,4 @@
-import { type ReactNode, useDeferredValue, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getGoalsQueryKey,
@@ -11,9 +11,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
-import { Section } from "@/components/ui/section/section";
+import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
@@ -36,12 +34,15 @@ export function GoalsPage() {
   const goalList = useDeferredValue(goals.data);
   const remove = useConfirmedDelete(deleteMutation, goalList, (goal) => goal.name, "goal");
 
-  let content: ReactNode;
-  if (goalList.length === 0) {
-    content = <EmptyText>{t("goals.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Section as={Rows} className="py-2 sm:py-3">
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("goals.title")}>
+        <CreateDialog label={t("goals.add")} title={t("goals.add")}>
+          {(close) => <CreateGoalForm accounts={accountList} onClose={close} />}
+        </CreateDialog>
+      </PageHeader>
+
+      <PanelRows count={goalList.length} emptyText={t("goals.empty")}>
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}
@@ -51,19 +52,7 @@ export function GoalsPage() {
             {...remove.deleteProps(goal.id)}
           />
         ))}
-      </Section>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      <PageHeader title={t("goals.title")}>
-        <CreateDialog label={t("goals.add")} title={t("goals.add")}>
-          {(close) => <CreateGoalForm accounts={accountList} onClose={close} />}
-        </CreateDialog>
-      </PageHeader>
-
-      {content}
+      </PanelRows>
       <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
         {(goal, close) => <CreateGoalForm initial={goal} accounts={accountList} onClose={close} />}
       </EditModal>

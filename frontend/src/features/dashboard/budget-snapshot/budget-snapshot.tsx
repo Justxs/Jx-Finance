@@ -3,9 +3,8 @@ import { useBudgetsSuspense } from "@/api/generated";
 import { ShareRow } from "@/components/breakdown-list/share-row";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { TextLink } from "@/components/ui/text-link/text-link";
+import { BudgetRemaining, budgetFigures } from "@/features/budgets/budget-remaining";
 import { useMoney } from "@/hooks/use-formatters";
-import { EXPENSE_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 
 const MAX_ROWS = 5;
 
@@ -34,29 +33,16 @@ export function BudgetSnapshot() {
   return (
     <ul className="space-y-3.5">
       {rows.map((budget) => {
-        const spent = Number(budget.spent);
-        const limit = Number(budget.effectiveLimit);
-        const overBudget = spent > limit;
+        const { spent, limit, over } = budgetFigures(budget);
         return (
           <ShareRow
             key={budget.id}
             name={<span className="min-w-0 flex-1 wrap-break-word">{budget.categoryName}</span>}
-            note={
-              <span
-                className={cn(
-                  "shrink-0 text-right text-xs tabular-nums",
-                  overBudget ? EXPENSE_TONE : "text-muted-foreground",
-                )}
-              >
-                {overBudget
-                  ? t("budgets.over", { amount: money.format(spent - limit) })
-                  : t("budgets.left", { amount: money.format(limit - spent) })}
-              </span>
-            }
+            note={<BudgetRemaining spent={spent} limit={limit} className="shrink-0 text-right" />}
             amount={money.format(spent)}
             value={spent}
             max={limit}
-            tone={overBudget ? "negative" : "primary"}
+            tone={over ? "negative" : "primary"}
             meterLabel={budget.categoryName}
           />
         );
