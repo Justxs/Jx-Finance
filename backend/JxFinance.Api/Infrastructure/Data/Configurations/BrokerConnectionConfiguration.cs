@@ -1,4 +1,3 @@
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Investments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,6 +12,5 @@ public sealed class BrokerConnectionConfiguration : IEntityTypeConfiguration<Bro
         builder.Property(c => c.ProtectedToken).HasMaxLength(1000);
         builder.Property(c => c.LastError).HasMaxLength(500);
         builder.HasIndex(c => c.AccountId).IsUnique().HasFilter(DbSchema.NotDeletedFilter);
-        builder.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

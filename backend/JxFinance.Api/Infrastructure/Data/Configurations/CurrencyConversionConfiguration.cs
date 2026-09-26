@@ -1,6 +1,4 @@
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Conversions;
-using JxFinance.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -16,7 +14,5 @@ public sealed class CurrencyConversionConfiguration : IEntityTypeConfiguration<C
         builder.Property(c => c.ImportRef).HasMaxLength(64);
         builder.HasIndex(c => new { c.AccountId, c.Date });
         builder.HasIndex(c => new { c.AccountId, c.ImportRef }).IsUnique();
-        builder.HasOne<Account>().WithMany().HasForeignKey(c => c.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Transaction>().WithMany().HasForeignKey(c => c.FeeTransactionId).OnDelete(DeleteBehavior.Restrict);
     }
 }

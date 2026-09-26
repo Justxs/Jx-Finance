@@ -1,5 +1,3 @@
-using JxFinance.Domain.Accounts;
-using JxFinance.Domain.Categories;
 using JxFinance.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -18,7 +16,5 @@ public sealed class TransactionConfiguration : IEntityTypeConfiguration<Transact
         builder.HasIndex(t => new { t.AccountId, t.ImportRef })
             .IsUnique()
             .HasFilter("\"ImportRef\" IS NOT NULL");
-        builder.HasOne<Account>().WithMany().HasForeignKey(t => t.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Category>().WithMany().HasForeignKey(t => t.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
 }
