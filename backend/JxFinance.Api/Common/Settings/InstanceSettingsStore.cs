@@ -1,5 +1,4 @@
 using FastEndpoints;
-using JxFinance.Common.Localization;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Infrastructure.Data;

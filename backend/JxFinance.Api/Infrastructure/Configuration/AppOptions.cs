@@ -1,5 +1,5 @@
-using JxFinance.Common.Localization;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 
 namespace JxFinance.Infrastructure.Configuration;
 

@@ -1,4 +1,4 @@
-namespace JxFinance.Common.Localization;
+namespace JxFinance.Domain.Settings;
 
 public static class AppLanguages
 {

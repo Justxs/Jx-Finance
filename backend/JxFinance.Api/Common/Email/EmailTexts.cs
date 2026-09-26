@@ -1,7 +1,7 @@
 using System.Globalization;
 using JxFinance.Common.Formats;
-using JxFinance.Common.Localization;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 
 namespace JxFinance.Common.Email;
 

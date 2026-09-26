@@ -1,4 +1,3 @@
-using JxFinance.Common.Localization;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
 
