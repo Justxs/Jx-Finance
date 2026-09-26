@@ -5,6 +5,16 @@ import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { isOptimistic } from "./transaction-row";
 
+type Transaction = Pick<TransactionResponse, "amount" | "type" | "currency">;
+
+export function signedAmount(money: ReturnType<typeof useMoney>, transaction: Transaction) {
+  return money.formatSigned(
+    Number(transaction.amount),
+    transaction.type === "income" ? "+" : "−",
+    transaction.currency,
+  );
+}
+
 interface Props {
   transaction: TransactionResponse;
   showReporting?: boolean;
@@ -30,7 +40,7 @@ export function TransactionAmount({
         className,
       )}
     >
-      {money.formatSigned(Number(transaction.amount), isIncome ? "+" : "−", transaction.currency)}
+      {signedAmount(money, transaction)}
       {reportingVisible ? (
         <ApproximateAmount
           value={Number(transaction.reportingAmount)}

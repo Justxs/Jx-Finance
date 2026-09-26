@@ -1,6 +1,6 @@
 import { useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
-import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/generated/model";
+import type { TransactionResponse } from "@/api/generated/model";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
@@ -15,18 +15,12 @@ import {
   transactionName,
 } from "../transaction-amount";
 import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
+import type { TransactionRowHandlers } from "../transactions-table/use-transaction-columns";
 
-interface Props {
+interface Props extends TransactionRowHandlers {
   data: TransactionResponse[];
-  accountNames: Map<string | undefined, string | undefined>;
-  categoryById: Map<string | undefined, CategoryResponse | undefined>;
-  tagById: ReadonlyMap<string, TagResponse>;
   isPlaceholder: boolean;
   filtered: boolean;
-  onEdit: (transaction: TransactionResponse) => void;
-  onDuplicate: (transaction: TransactionResponse) => void;
-  onDelete: (id: string) => void;
-  deletingId: string | null;
 }
 
 export function TransactionsList({

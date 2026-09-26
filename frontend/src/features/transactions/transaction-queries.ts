@@ -15,14 +15,8 @@ interface TransactionsView {
 
 export function transactionView(search: TransactionsView): TransactionsView {
   return {
+    ...transactionFilterParams(search),
     page: search.page,
-    search: search.search,
-    accountId: search.accountId,
-    categoryId: search.categoryId,
-    tagIds: search.tagIds,
-    type: search.type,
-    dateFrom: search.dateFrom,
-    dateTo: search.dateTo,
     sort: search.sort,
     direction: search.direction,
   };

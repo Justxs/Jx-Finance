@@ -48,26 +48,6 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   const sorts = sortOptions(t);
   const sortValue: TransactionSortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
 
-  function setSearchText(next: string) {
-    patchSearch({ search: next || undefined });
-  }
-
-  function setType(next: TransactionTypeFilter) {
-    patchSearch({ type: next || undefined });
-  }
-
-  function setDateRange(range: { from: string; to: string }) {
-    patchSearch({ dateFrom: range.from || undefined, dateTo: range.to || undefined });
-  }
-
-  function setCategoryId(next: string) {
-    patchSearch({ categoryId: next || undefined });
-  }
-
-  function setAccountId(next: string) {
-    patchSearch({ accountId: next || undefined });
-  }
-
   function setTagIds(next: string[]) {
     patchSearch({ tagIds: formatTagIds(next) });
   }
@@ -85,32 +65,33 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       placeholder: t("transactions.searchPlaceholder"),
       value: search.search ?? "",
       debounceMs: SEARCH_DEBOUNCE_MS,
-      set: setSearchText,
+      set: (next: string) => patchSearch({ search: next || undefined }),
     },
     type: {
       label: t("transactions.type"),
       value: typeValue,
       options: typeOptions(t),
-      set: setType,
+      set: (next: TransactionTypeFilter) => patchSearch({ type: next || undefined }),
     },
     date: {
       label: columnLabels.date,
       value: dateRange,
       active: Boolean(search.dateFrom) || Boolean(search.dateTo),
-      set: setDateRange,
+      set: (range: { from: string; to: string }) =>
+        patchSearch({ dateFrom: range.from || undefined, dateTo: range.to || undefined }),
       clear: () => patchSearch({ dateFrom: undefined, dateTo: undefined }),
     },
     category: {
       label: columnLabels.category,
       value: search.categoryId ?? "",
       options: namedOptions(categories, t("transactions.allCategories")),
-      set: setCategoryId,
+      set: (next: string) => patchSearch({ categoryId: next || undefined }),
     },
     account: {
       label: columnLabels.account,
       value: search.accountId ?? "",
       options: namedOptions(accounts, t("transactions.allAccounts")),
-      set: setAccountId,
+      set: (next: string) => patchSearch({ accountId: next || undefined }),
     },
     tags: {
       label: t("tags.field"),

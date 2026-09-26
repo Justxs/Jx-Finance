@@ -24,7 +24,7 @@ export function isSelectableTransaction(row: TransactionResponse) {
   return !row.isSplit && !isOptimistic(row);
 }
 
-interface UseTransactionColumnsArgs {
+export interface TransactionRowHandlers {
   accountNames: Map<string | undefined, string | undefined>;
   categoryById: Map<string | undefined, CategoryResponse | undefined>;
   tagById: ReadonlyMap<string, TagResponse>;
@@ -42,7 +42,7 @@ export function useTransactionColumns({
   onDuplicate,
   onDelete,
   deletingId,
-}: UseTransactionColumnsArgs) {
+}: TransactionRowHandlers) {
   const { t } = useTranslation();
   const formatDate = useIsoDate();
 
