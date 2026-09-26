@@ -132,10 +132,6 @@ export const importPreviewAllDuplicates: ImportPreviewResponse = {
   rows: importPreviewRows.map((row) => ({ ...row, isDuplicate: true })),
 };
 
-export const importPreviewWithoutRules: ImportPreviewResponse = {
-  rows: importPreviewRows.map((row) => ({ ...row, ...noSuggestion })),
-};
-
 export const importFormatProblem = {
   ...statusProblem(400),
   instance: "/api/import/swedbank/preview",

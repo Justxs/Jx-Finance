@@ -13,12 +13,12 @@ import { Section, SectionTitle } from "@/components/ui/section/section";
 import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
 import { type UploadProblem, validateUpload } from "@/lib/upload-file";
+import { ImportPreviewTable } from "../import-preview-table/import-preview-table";
 import {
   importDateRange,
-  ImportPreviewTable,
   type PreviewRowState,
   toPreviewRows,
-} from "../import-preview-table";
+} from "../import-preview-table/preview-rows";
 import { recallParams } from "../import-queries";
 import { ImportPreviewError } from "./import-preview-error";
 import { type ImportResult, ImportResultLine } from "./import-result";

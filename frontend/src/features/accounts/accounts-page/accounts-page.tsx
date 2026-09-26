@@ -19,8 +19,8 @@ import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table/accounts-table";
 import { ArchivedAccounts } from "../archived-accounts/archived-accounts";
-import { ConversionsSection } from "../conversions-section";
-import { TransfersSection } from "../transfers-section";
+import { ConversionsSection } from "../conversions-section/conversions-section";
+import { TransfersSection } from "../transfers-section/transfers-section";
 
 export function AccountsPage() {
   const { t } = useTranslation();

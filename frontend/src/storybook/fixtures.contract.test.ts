@@ -55,8 +55,6 @@ const contracts: Record<string, Contract> = {
   duplicateTagProblem: { schema: schemas.ProblemDetailsResponse },
   securityNotHeldProblem: { schema: schemas.ProblemDetailsResponse },
   brokerSyncProblem: { schema: schemas.ProblemDetailsResponse },
-  smtpPasswordRequiredProblem: { schema: schemas.ProblemDetailsResponse },
-  smtpInsecureConnectionProblem: { schema: schemas.ProblemDetailsResponse },
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
   unverifiedUser: { schema: schemas.MeResponse },
@@ -93,7 +91,6 @@ const contracts: Record<string, Contract> = {
   categorizationRules: { schema: schemas.CategorizationRulesResponse },
   rulesRunPreview: { schema: schemas.PreviewCategorizationRunResponse },
   rulesRunNothing: { schema: schemas.PreviewCategorizationRunResponse },
-  ruleTestMatch: { schema: schemas.TestCategorizationRuleResponse },
   ruleTestNoMatch: { schema: schemas.TestCategorizationRuleResponse },
   ruleTestAmountOnly: { schema: schemas.TestCategorizationRuleResponse },
   incomeCategories: { schema: schemas.CategoriesResponse },
@@ -190,12 +187,10 @@ const contracts: Record<string, Contract> = {
   reportSummaryMonth: { schema: schemas.ReportSummaryResponse },
   reportSummaryYear: { schema: schemas.ReportSummaryResponse },
   reportSummaryMonthCompared: { schema: schemas.ReportSummaryResponse },
-  reportSummaryYearCompared: { schema: schemas.ReportSummaryResponse },
   emptyReportSummary: { schema: schemas.ReportSummaryResponse },
   importPreviewRows: { schema: schemas.ImportPreviewResponse, toResponse: asImportPreview },
   importPreview: { schema: schemas.ImportPreviewResponse },
   importPreviewAllDuplicates: { schema: schemas.ImportPreviewResponse },
-  importPreviewWithoutRules: { schema: schemas.ImportPreviewResponse },
   backups: { schema: schemas.BackupsResponse },
   backupRestored: { schema: schemas.RestoreBackupResponse },
   backupInvalidFileProblem: { schema: schemas.ProblemDetailsResponse },
@@ -244,9 +239,7 @@ const contracts: Record<string, Contract> = {
   fullAttachments: { schema: schemas.AttachmentsResponse },
   attachmentContentMismatchProblem: { schema: schemas.ProblemDetailsResponse },
   recordedTrashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
-  trashPage: { schema: schemas.TrashResponse },
   householdAuditEvents: { schema: schemas.HouseholdAuditResponse, toResponse: asPage },
-  householdAuditPage: { schema: schemas.HouseholdAuditResponse },
 };
 
 function buildSummary() {
@@ -317,8 +310,6 @@ const notApiResponses = [
   "monthExpenseCents",
 ];
 
-const schemaExclusions: Record<string, string> = {};
-
 function describeIssues(name: string, schema: ZodType, value: unknown): string[] {
   const result = schema.safeParse(value);
   if (result.success) {
@@ -334,7 +325,7 @@ function fixtureNames(): string[] {
 }
 
 describe("storybook fixtures match the generated response schemas", () => {
-  test.each(Object.keys(contracts).filter((name) => !(name in schemaExclusions)))("%s", (name) => {
+  test.each(Object.keys(contracts))("%s", (name) => {
     const contract = contracts[name]!;
     expect(name in exported, `${name} is no longer exported by the fixtures`).toBe(true);
     const fixture = exported[name];
@@ -353,7 +344,6 @@ describe("storybook fixtures match the generated response schemas", () => {
   });
 
   test("the lists of unchecked names only hold existing exports", () => {
-    const listed = [...notApiResponses, ...Object.keys(schemaExclusions)];
-    expect(listed.filter((name) => !(name in exported))).toEqual([]);
+    expect(notApiResponses.filter((name) => !(name in exported))).toEqual([]);
   });
 });

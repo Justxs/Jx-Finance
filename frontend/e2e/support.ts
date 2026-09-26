@@ -25,7 +25,7 @@ export const admin = {
   password: "E2e-Smoke-Password-123!",
 };
 
-export function clientAddress(testInfo: TestInfo, salt = "") {
+function clientAddress(testInfo: TestInfo, salt = "") {
   const hash = createHash("sha256")
     .update(`${testInfo.titlePath.join("/")}/${salt}`)
     .digest();

@@ -70,8 +70,6 @@ export const rulesRunNothing: RunRulesResponse = {
   recategorize: false,
 };
 
-export const ruleTestMatch = { matches: true, descriptionMatches: true, amountMatches: true };
-
 export const ruleTestNoMatch = {
   matches: false,
   descriptionMatches: false,

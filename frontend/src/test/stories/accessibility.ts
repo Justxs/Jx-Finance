@@ -6,9 +6,9 @@ export interface AccessibilityParameters {
   options?: axe.RunOptions;
 }
 
-export const RULES_DISABLED_FOR_COMPONENTS = ["region"] as const;
+const RULES_DISABLED_FOR_COMPONENTS = ["region"] as const;
 
-export const RULES_DISABLED_IN_JSDOM = [
+const RULES_DISABLED_IN_JSDOM = [
   "color-contrast",
   "color-contrast-enhanced",
   "link-in-text-block",
@@ -16,7 +16,7 @@ export const RULES_DISABLED_IN_JSDOM = [
   "scrollable-region-focusable",
 ] as const;
 
-export const HIDDEN_AT_DESKTOP_WIDTH = [
+const HIDDEN_AT_DESKTOP_WIDTH = [
   '[class~="sm:hidden"]',
   '[class~="md:hidden"]',
   '[class~="lg:hidden"]',

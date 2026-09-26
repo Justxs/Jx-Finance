@@ -7,7 +7,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { ImportSection } from "../import-section";
+import { ImportSection } from "../import-section/import-section";
 
 const providers = [
   { id: "swedbank", name: "Swedbank", formatKey: "imports.providers.swedbankFormat" },
