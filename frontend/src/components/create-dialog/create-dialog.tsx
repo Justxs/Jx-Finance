@@ -7,10 +7,17 @@ interface Props {
   label: string;
   title: string;
   className?: string;
+  secondary?: boolean;
   children: (close: () => void) => ReactNode;
 }
 
-export function CreateDialog({ label, title, className, children }: Readonly<Props>) {
+export function CreateDialog({
+  label,
+  title,
+  className,
+  secondary = false,
+  children,
+}: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
   function close() {
@@ -19,7 +26,11 @@ export function CreateDialog({ label, title, className, children }: Readonly<Pro
 
   return (
     <>
-      <Button onClick={() => setOpen(true)}>
+      <Button
+        variant={secondary ? "outline" : "default"}
+        size={secondary ? "sm" : "default"}
+        onClick={() => setOpen(true)}
+      >
         <Plus />
         {label}
       </Button>

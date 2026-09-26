@@ -16,7 +16,7 @@ function StubForm({ onClose }: Readonly<HoldingFormProps<unknown>>) {
   );
 }
 
-function holding(id: string, name: string, details: string, amount: number): HoldingItem {
+function holding(id: string, name: string, details: string, amount: number): HoldingItem<unknown> {
   return {
     id,
     name,
@@ -31,7 +31,7 @@ function holding(id: string, name: string, details: string, amount: number): Hol
   };
 }
 
-const items: HoldingItem[] = [
+const items: HoldingItem<unknown>[] = [
   holding("1", "Apartment in Zirmunai", "Real estate · Sep 1, 2026", 145000),
   holding("2", "Index fund portfolio", "Investment · Sep 1, 2026", 38250.4),
   holding(
