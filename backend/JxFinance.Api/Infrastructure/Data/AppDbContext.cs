@@ -30,11 +30,6 @@ namespace JxFinance.Infrastructure.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, IClock clock)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
-    private static readonly (Type Entity, string Property)[] UnconstrainedReferences =
-    [
-        (typeof(BrokerConnection), nameof(BrokerConnection.FundingAccountId)),
-    ];
-
     private Guid CurrentUserId => currentUser.Id;
 
     private HouseholdId? ActiveHouseholdId => currentUser.ActiveHouseholdId;
@@ -159,9 +154,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
         foreach (var entityType in entityTypes)
         {
-            var candidates = entityType.GetDeclaredProperties()
-                .Where(property => !property.IsForeignKey() && !UnconstrainedReferences.Contains((entityType.ClrType, property.Name)))
-                .ToList();
+            var candidates = entityType.GetDeclaredProperties().Where(property => !property.IsForeignKey()).ToList();
             foreach (var property in candidates)
             {
                 if (principals.TryGetValue(Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType, out var principal)
