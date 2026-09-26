@@ -1,4 +1,3 @@
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Transfers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,7 +10,5 @@ public sealed class TransferImportConfiguration : IEntityTypeConfiguration<Trans
     {
         builder.Property(r => r.ImportRef).HasMaxLength(64);
         builder.HasIndex(r => new { r.AccountId, r.ImportRef }).IsUnique();
-        builder.HasOne<Account>().WithMany().HasForeignKey(r => r.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Transfer>().WithMany().HasForeignKey(r => r.TransferId).OnDelete(DeleteBehavior.Restrict);
     }
 }

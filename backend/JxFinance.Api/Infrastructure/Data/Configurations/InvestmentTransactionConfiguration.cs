@@ -1,4 +1,3 @@
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Investments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -16,7 +15,5 @@ public sealed class InvestmentTransactionConfiguration : IEntityTypeConfiguratio
         builder.Property(t => t.ExternalId).HasMaxLength(64);
         builder.HasIndex(t => new { t.AccountId, t.Date });
         builder.HasIndex(t => new { t.AccountId, t.ExternalId }).IsUnique();
-        builder.HasOne<Account>().WithMany().HasForeignKey(t => t.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Security>().WithMany().HasForeignKey(t => t.SecurityId).OnDelete(DeleteBehavior.Restrict);
     }
 }

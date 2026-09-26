@@ -1,4 +1,3 @@
-using JxFinance.Domain.Categories;
 using JxFinance.Domain.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -11,6 +10,5 @@ public sealed class TransactionLineConfiguration : IEntityTypeConfiguration<Tran
     {
         builder.Property(l => l.Description).HasMaxLength(500);
         builder.HasOne<Transaction>().WithMany().HasForeignKey(l => l.TransactionId).OnDelete(DeleteBehavior.Cascade);
-        builder.HasOne<Category>().WithMany().HasForeignKey(l => l.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
 }

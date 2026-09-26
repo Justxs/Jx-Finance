@@ -1,4 +1,3 @@
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Transfers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -13,7 +12,5 @@ public sealed class TransferConfiguration : IEntityTypeConfiguration<Transfer>
         builder.ComplexProperty(t => t.ReceivedAmount, money => money.HasColumns("ReceivedAmount", "ReceivedCurrency"));
         builder.Property(t => t.Description).HasMaxLength(500);
         builder.HasIndex(t => new { t.UserId, t.Date });
-        builder.HasOne<Account>().WithMany().HasForeignKey(t => t.FromAccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Account>().WithMany().HasForeignKey(t => t.ToAccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

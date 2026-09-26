@@ -1,5 +1,3 @@
-using JxFinance.Domain.Accounts;
-using JxFinance.Domain.Categories;
 using JxFinance.Domain.CategorizationRules;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,7 +12,5 @@ public sealed class CategorizationRuleConfiguration : IEntityTypeConfiguration<C
         builder.Property(r => r.Pattern).HasMaxLength(200);
         builder.Property(r => r.Match).HasConversion<string>().HasMaxLength(20);
         builder.HasIndex(r => new { r.UserId, r.Position });
-        builder.HasOne<Account>().WithMany().HasForeignKey(r => r.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Category>().WithMany().HasForeignKey(r => r.CategoryId).OnDelete(DeleteBehavior.Restrict);
     }
 }

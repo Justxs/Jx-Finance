@@ -1,5 +1,3 @@
-using JxFinance.Domain.Accounts;
-using JxFinance.Domain.Categories;
 using JxFinance.Domain.RecurringBills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -12,8 +10,5 @@ public sealed class RecurringBillConfiguration : IEntityTypeConfiguration<Recurr
     {
         builder.Property(b => b.Name).HasMaxLength(100);
         builder.Property(b => b.NextDueDate).IsConcurrencyToken();
-        builder.HasOne<Category>().WithMany().HasForeignKey(b => b.CategoryId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Account>().WithMany().HasForeignKey(b => b.AccountId).OnDelete(DeleteBehavior.Restrict);
-        builder.HasOne<Account>().WithMany().HasForeignKey(b => b.ToAccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

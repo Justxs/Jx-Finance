@@ -12,6 +12,5 @@ public sealed class TransactionAttachmentConfiguration : IEntityTypeConfiguratio
         builder.Property(a => a.ContentType).HasMaxLength(TransactionAttachment.ContentTypeMaxLength);
         builder.Property(a => a.Sha256).HasMaxLength(TransactionAttachment.Sha256Length).IsFixedLength();
         builder.HasIndex(a => new { a.TransactionId, a.CreatedAt });
-        builder.HasOne<Transaction>().WithMany().HasForeignKey(a => a.TransactionId).OnDelete(DeleteBehavior.Restrict);
     }
 }

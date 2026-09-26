@@ -1,5 +1,4 @@
 using JxFinance.Common.Subscriptions;
-using JxFinance.Domain.Accounts;
 using JxFinance.Domain.RecurringBills;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -14,6 +13,5 @@ public sealed class SubscriptionDismissalConfiguration : IEntityTypeConfiguratio
         builder.HasIndex(d => new { d.UserId, d.AccountId, d.Description })
             .IsUnique()
             .HasFilter(DbSchema.NotDeletedFilter);
-        builder.HasOne<Account>().WithMany().HasForeignKey(d => d.AccountId).OnDelete(DeleteBehavior.Restrict);
     }
 }

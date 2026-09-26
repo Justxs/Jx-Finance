@@ -30,6 +30,11 @@ namespace JxFinance.Infrastructure.Data;
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, IClock clock)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
+    private static readonly (Type Entity, string Property)[] UnconstrainedReferences =
+    [
+        (typeof(BrokerConnection), nameof(BrokerConnection.FundingAccountId)),
+    ];
+
     private Guid CurrentUserId => currentUser.Id;
 
     private HouseholdId? ActiveHouseholdId => currentUser.ActiveHouseholdId;
@@ -126,6 +131,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         ConfigureOwnership(builder);
+        ConfigureReferences(builder);
         ApplyQueryFilters(builder);
     }
 
@@ -141,14 +147,33 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 .HasForeignKey(nameof(OwnableEntity.UserId))
                 .OnDelete(DeleteBehavior.Restrict);
         }
+    }
 
-        foreach (var clrType in clrTypes.Where(typeof(IShareable).IsAssignableFrom))
+    private static void ConfigureReferences(ModelBuilder builder)
+    {
+        var entityTypes = builder.Model.GetEntityTypes().Where(entityType => !entityType.IsOwned()).ToList();
+        var principals = entityTypes
+            .Select(entityType => (entityType.ClrType, Key: entityType.FindPrimaryKey()?.Properties))
+            .Where(entity => entity.Key is [var key] && typeof(IStronglyTypedId).IsAssignableFrom(key.ClrType))
+            .ToDictionary(entity => entity.Key![0].ClrType, entity => entity.ClrType);
+
+        foreach (var entityType in entityTypes)
         {
-            builder.Entity(clrType)
-                .HasOne(typeof(Household))
-                .WithMany()
-                .HasForeignKey(nameof(IShareable.HouseholdId))
-                .OnDelete(DeleteBehavior.Restrict);
+            var candidates = entityType.GetDeclaredProperties()
+                .Where(property => !property.IsForeignKey() && !UnconstrainedReferences.Contains((entityType.ClrType, property.Name)))
+                .ToList();
+            foreach (var property in candidates)
+            {
+                if (principals.TryGetValue(Nullable.GetUnderlyingType(property.ClrType) ?? property.ClrType, out var principal)
+                    && principal != entityType.ClrType)
+                {
+                    builder.Entity(entityType.ClrType)
+                        .HasOne(principal)
+                        .WithMany()
+                        .HasForeignKey(property.Name)
+                        .OnDelete(DeleteBehavior.Restrict);
+                }
+            }
         }
     }
 
