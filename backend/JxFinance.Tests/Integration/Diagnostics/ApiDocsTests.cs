@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Net;
-using System.Runtime.CompilerServices;
 using System.Text.Json.Nodes;
 using JxFinance.Common.Errors;
 using JxFinance.Tests.Support;
@@ -24,7 +23,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     [Fact]
     public async Task OpenApi_document_matches_the_approved_contract()
     {
-        var path = SnapshotPath();
+        var path = RepoPath.Of(Path.Combine("frontend", "openapi.json"));
         Assert.True(File.Exists(path), "No approved contract. Run 'just gen'.");
         var actual = WithoutServers(JsonNode.Parse(await Client.GetStringAsync("/openapi/v1.json", TestContext.Current.CancellationToken))!);
         var approved = WithoutServers(JsonNode.Parse(await File.ReadAllTextAsync(path, TestContext.Current.CancellationToken))!);
@@ -81,7 +80,7 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
     {
         var start = new ProcessStartInfo("dotnet")
         {
-            WorkingDirectory = ToolManifestDirectory(),
+            WorkingDirectory = Path.GetDirectoryName(RepoPath.Of("dotnet-tools.json"))!,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
@@ -96,25 +95,9 @@ public sealed class ApiDocsTests(ApiFixture fixture) : IntegrationTestBase(fixtu
         return (process.ExitCode, await output + await error);
     }
 
-    private static string ToolManifestDirectory([CallerFilePath] string testFile = "")
-    {
-        var directory = new DirectoryInfo(Path.GetDirectoryName(testFile)!);
-        while (!File.Exists(Path.Combine(directory.FullName, "dotnet-tools.json")))
-            directory = directory.Parent ?? throw new InvalidOperationException("dotnet-tools.json was not found above the test project.");
-        return directory.FullName;
-    }
-
     private static JsonNode WithoutServers(JsonNode document)
     {
         document.AsObject().Remove("servers");
         return document;
-    }
-
-    private static string SnapshotPath([CallerFilePath] string testFile = "")
-    {
-        var directory = new DirectoryInfo(Path.GetDirectoryName(testFile)!);
-        while (!File.Exists(Path.Combine(directory.FullName, "frontend", "openapi.json")))
-            directory = directory.Parent ?? throw new InvalidOperationException("frontend/openapi.json was not found above the test project. Run 'just gen'.");
-        return Path.Combine(directory.FullName, "frontend", "openapi.json");
     }
 }

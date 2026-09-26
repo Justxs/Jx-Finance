@@ -1,4 +1,5 @@
 using JxFinance.Common.Settings;
+using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
 using JxFinance.Infrastructure.Time;
 
@@ -6,7 +7,7 @@ namespace JxFinance.Tests.Unit;
 
 public sealed class SystemClockTests
 {
-    private static SystemClock CreateClock(string timeZone) =>
+    private static IClock CreateClock(string timeZone) =>
         new(new FixedSettings(new InstanceSettings { TimeZone = timeZone }));
 
     private sealed class FixedSettings(InstanceSettings settings) : IInstanceSettingsStore

@@ -28,14 +28,8 @@ public static class ApiServiceExtensions
         builder.Services.RegisterServicesFromJxFinanceApi();
         builder.Services.AddApiOpenApiDocument();
 
-        var connectionString = builder.Configuration.GetConnectionString(ConfigKeys.DefaultConnectionName);
-        if (string.IsNullOrWhiteSpace(connectionString))
-        {
-            throw new InvalidOperationException("Connection string 'Default' is not configured.");
-        }
-
         builder.Services.AddHealthChecks()
-            .AddNpgSql(connectionString);
+            .AddNpgSql(builder.Configuration.DefaultConnectionString());
 
         var rateOptions = builder.Configuration.GetSection($"{AppOptions.SectionName}:ExchangeRates").Get<ExchangeRateOptions>() ?? new ExchangeRateOptions();
         builder.Services.AddHttpClient<IExchangeRateProvider, FrankfurterRateProvider>(client =>

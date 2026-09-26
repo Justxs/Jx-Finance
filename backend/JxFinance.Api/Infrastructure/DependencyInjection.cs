@@ -1,3 +1,4 @@
+using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Configuration;
@@ -17,12 +18,11 @@ public static class DependencyInjection
     {
         PdfFontResolver.Register();
 
-        var connectionString = configuration.GetConnectionString(ConfigKeys.DefaultConnectionName)
-            ?? throw new InvalidOperationException("Connection string 'Default' is not configured.");
+        var connectionString = configuration.DefaultConnectionString();
 
         services.AddOptions<AppOptions>()
             .Bind(configuration.GetSection(AppOptions.SectionName))
-            .Validate(options => IsValidTimeZone(options.TimeZone), "App:TimeZone is not a valid time zone id.")
+            .Validate(options => InstanceSettingsSnapshot.IsValidTimeZone(options.TimeZone), "App:TimeZone is not a valid time zone id.")
             .Validate(options => options.BackupMaxDecompressedBytes > 0, "App:BackupMaxDecompressedBytes must be positive.")
             .Validate(options => options.BackupLockTimeoutSeconds > 0, "App:BackupLockTimeoutSeconds must be positive.")
             .ValidateOnStart();
@@ -66,22 +66,5 @@ public static class DependencyInjection
         services.AddAuthorizationBuilder();
 
         return services;
-    }
-
-    private static bool IsValidTimeZone(string id)
-    {
-        try
-        {
-            TimeZoneInfo.FindSystemTimeZoneById(id);
-            return true;
-        }
-        catch (TimeZoneNotFoundException)
-        {
-            return false;
-        }
-        catch (InvalidTimeZoneException)
-        {
-            return false;
-        }
     }
 }
