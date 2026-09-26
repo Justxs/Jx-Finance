@@ -9,8 +9,7 @@ import {
   useSyncExchangeRates,
   useUpdateSettings,
 } from "@/api/generated";
-import { FontPicker } from "@/components/font-picker/font-picker";
-import { PalettePicker } from "@/components/palette-picker/palette-picker";
+import { AppearancePicker } from "@/components/appearance-picker/appearance-picker";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SectionLayout } from "@/components/section-layout/section-layout";
 import { Button } from "@/components/ui/button/button";
@@ -120,12 +119,7 @@ export function SettingsPage() {
       {section === "email" ? <SmtpSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
-      {section === "appearance" ? (
-        <>
-          <PalettePicker />
-          <FontPicker />
-        </>
-      ) : null}
+      {section === "appearance" ? <AppearancePicker /> : null}
     </SectionLayout>
   );
 }

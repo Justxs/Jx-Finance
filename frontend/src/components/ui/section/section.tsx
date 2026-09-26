@@ -57,18 +57,27 @@ export function SectionHeader({ title, titleClassName, children }: Readonly<Sect
 
 interface TitledSectionProps {
   title: ReactNode;
+  titleId?: string;
   description?: ReactNode;
   children: ReactNode;
 }
 
-export function TitledSection({ title, description, children }: Readonly<TitledSectionProps>) {
-  const titleId = useId();
+export function TitledSection({
+  title,
+  titleId,
+  description,
+  children,
+}: Readonly<TitledSectionProps>) {
+  const generatedId = useId();
+  const id = titleId ?? generatedId;
 
   return (
-    <Section aria-labelledby={titleId}>
-      <SectionTitle id={titleId}>{title}</SectionTitle>
+    <Section aria-labelledby={id}>
+      <SectionTitle id={id}>{title}</SectionTitle>
       {description ? (
-        <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p>
+        <p id={`${id}-description`} className="mt-1 max-w-prose text-sm text-muted-foreground">
+          {description}
+        </p>
       ) : null}
       {children}
     </Section>

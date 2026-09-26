@@ -1,8 +1,7 @@
 import { useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { useMeSuspense } from "@/api/generated";
-import { FontPicker } from "@/components/font-picker/font-picker";
-import { PalettePicker } from "@/components/palette-picker/palette-picker";
+import { AppearancePicker } from "@/components/appearance-picker/appearance-picker";
 import { SectionLayout } from "@/components/section-layout/section-layout";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useSettings } from "@/hooks/use-settings";
@@ -31,12 +30,7 @@ export function ProfilePage() {
       {section === "sessions" ? <SessionsSection /> : null}
       {section === "trash" ? <TrashSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
-      {section === "appearance" ? (
-        <>
-          <PalettePicker />
-          <FontPicker />
-        </>
-      ) : null}
+      {section === "appearance" ? <AppearancePicker /> : null}
     </SectionLayout>
   );
 }
