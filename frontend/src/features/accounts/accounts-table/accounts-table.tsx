@@ -26,7 +26,7 @@ import {
 import { EMPTY_VALUE, useMoney, useUsableCurrencies } from "@/hooks/use-formatters";
 import { useSearchTable } from "@/hooks/use-search-table";
 import { AccountTypeIcon } from "@/lib/account-icons";
-import { nameById } from "@/lib/options";
+import { nameById, optionsOf } from "@/lib/options";
 import { EXPENSE_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
 import { accountTypes } from "../account-types";
@@ -254,10 +254,7 @@ export function AccountsTable({
                           onChange={(value) => patchSearch({ type: value || undefined })}
                           options={[
                             { value: "", label: t("accounts.allTypes") },
-                            ...accountTypes.map((type) => ({
-                              value: type,
-                              label: t(`accounts.types.${type}`),
-                            })),
+                            ...optionsOf(accountTypes, (type) => t(`accounts.types.${type}`)),
                           ]}
                         />
                       </ColumnFilter>

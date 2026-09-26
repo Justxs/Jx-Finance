@@ -18,7 +18,7 @@ import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useIsoDate, useMoney, usePriceFormat, useQuantityFormat } from "@/hooks/use-formatters";
 import { usePageClamp } from "@/hooks/use-paged-list";
-import { nameById } from "@/lib/options";
+import { nameById, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn, metaLine } from "@/lib/utils";
 import { InvestmentEntryModal } from "../investment-entry-form";
@@ -112,10 +112,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
             }}
             options={[
               { value: "", label: t("investments.activity.allTypes") },
-              ...entryTypes.map((entryType) => ({
-                value: entryType,
-                label: t(`investments.types.${entryType}`),
-              })),
+              ...optionsOf(entryTypes, (entryType) => t(`investments.types.${entryType}`)),
             ]}
           />
         </div>

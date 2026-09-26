@@ -11,6 +11,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
+import { optionsOf } from "@/lib/options";
 import {
   isRate,
   money,
@@ -141,10 +142,7 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
             <field.SelectFieldControl
               id={`${idPrefix}-type`}
               label={t("netWorth.type")}
-              options={debtTypes.map((type) => ({
-                value: type,
-                label: t(`netWorth.debtTypes.${type}`),
-              }))}
+              options={optionsOf(debtTypes, (type) => t(`netWorth.debtTypes.${type}`))}
             />
           )}
         </form.Field>
@@ -221,10 +219,9 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
               <field.SelectFieldControl
                 id={`${idPrefix}-amortization`}
                 label={t("netWorth.repayment.amortizationType")}
-                options={amortizationTypes.map((type) => ({
-                  value: type,
-                  label: t(`netWorth.repayment.amortizationTypes.${type}`),
-                }))}
+                options={optionsOf(amortizationTypes, (type) =>
+                  t(`netWorth.repayment.amortizationTypes.${type}`),
+                )}
               />
             )}
           </form.Field>

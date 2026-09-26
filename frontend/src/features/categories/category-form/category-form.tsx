@@ -9,6 +9,7 @@ import { SharingFields } from "@/components/sharing-fields/sharing-fields";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { silent, upsert } from "@/lib/mutations";
+import { optionsOf } from "@/lib/options";
 import { refineSharing, requiredText, sharedHouseholdId, sharingShape } from "@/lib/validation";
 import { useSharingDefaults } from "@/stores/active-household-store";
 import { IconPicker } from "../icon-picker/icon-picker";
@@ -91,10 +92,9 @@ export function CategoryForm({ initial, onClose }: Readonly<Props>) {
                 <field.SelectFieldControl
                   id="category-type"
                   label={t("transactions.type")}
-                  options={[
-                    { value: "expense", label: t("categories.expense") },
-                    { value: "income", label: t("categories.income") },
-                  ]}
+                  options={optionsOf(["expense", "income"] as const, (type) =>
+                    t(`categories.${type}`),
+                  )}
                 />
               )}
             </form.Field>

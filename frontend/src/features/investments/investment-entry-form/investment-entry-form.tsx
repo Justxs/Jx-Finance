@@ -13,7 +13,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { EMPTY_VALUE, useMoney } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
-import { namedOptions } from "@/lib/options";
+import { namedOptions, optionsOf } from "@/lib/options";
 import { INCOME_TONE } from "@/lib/tone";
 import { cn } from "@/lib/utils";
 import { type CashEffectInput, cashEffect } from "../cash-effect";
@@ -103,10 +103,7 @@ export function InvestmentEntryForm({
             <field.SelectFieldControl
               id="entry-type"
               label={t("investments.entry.type")}
-              options={entryTypes.map((type) => ({
-                value: type,
-                label: t(`investments.types.${type}`),
-              }))}
+              options={optionsOf(entryTypes, (type) => t(`investments.types.${type}`))}
             />
           )}
         </form.Field>

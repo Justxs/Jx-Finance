@@ -10,7 +10,7 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silent, upsert } from "@/lib/mutations";
-import { namedOptions, withMissingOption } from "@/lib/options";
+import { namedOptions, optionsOf, withMissingOption } from "@/lib/options";
 import {
   optionalNonNegativeMoney,
   positiveMoney,
@@ -128,10 +128,9 @@ export function CreateGoalForm({ initial, accounts, onClose }: Readonly<Props>) 
               <field.SelectFieldControl
                 id="goal-funding"
                 label={t("goals.funding")}
-                options={[
-                  { value: "manual", label: t("goals.fundingModes.manual") },
-                  { value: "account", label: t("goals.fundingModes.account") },
-                ]}
+                options={optionsOf(["manual", "account"] as const, (mode) =>
+                  t(`goals.fundingModes.${mode}`),
+                )}
               />
             )}
           </form.Field>
