@@ -1,21 +1,5 @@
-using JxFinance.Domain.Common;
-using JxFinance.Endpoints.Transactions.Interfaces;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.GetTransactionsSummary;
 
-public sealed class GetTransactionsSummaryRequest : ITransactionFilter
-{
-    public Guid? AccountId { get; init; }
-
-    public Guid? CategoryId { get; init; }
-
-    public string? TagIds { get; init; }
-
-    public FlowType? Type { get; init; }
-
-    public string? Search { get; init; }
-
-    public DateOnly? DateFrom { get; init; }
-
-    public DateOnly? DateTo { get; init; }
-}
+public sealed class GetTransactionsSummaryRequest : TransactionFilterRequest;

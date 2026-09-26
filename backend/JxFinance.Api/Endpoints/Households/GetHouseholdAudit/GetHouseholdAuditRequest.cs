@@ -3,13 +3,9 @@ using JxFinance.Domain.Audit;
 
 namespace JxFinance.Endpoints.Households.GetHouseholdAudit;
 
-public sealed class GetHouseholdAuditRequest : IPagedRequest
+public sealed class GetHouseholdAuditRequest : PagedRequest
 {
     public Guid Id { get; init; }
-
-    public int Page { get; init; } = 1;
-
-    public int PageSize { get; init; } = 20;
 
     public Guid? MemberId { get; init; }
 
