@@ -423,22 +423,13 @@ public sealed class CategorizationRuleService(
             return accountError;
         }
 
-        if (input.CategoryId is { } rawCategoryId)
+        if (input.CategoryId is { } categoryId
+            && await references.CategoryExistsAsync(new CategoryId(categoryId), cancellationToken) is { } categoryError)
         {
-            var categoryId = new CategoryId(rawCategoryId);
-            if (!await db.Categories.AnyAsync(c => c.Id == categoryId, cancellationToken))
-            {
-                return new DomainError(ErrorCodes.ReferenceNotFound, "Category does not exist.");
-            }
+            return categoryError;
         }
 
-        var wanted = input.TagIds.Distinct().Select(id => new TagId(id)).ToList();
-        if (wanted.Count > 0 && await db.Tags.CountAsync(t => wanted.Contains(t.Id), cancellationToken) != wanted.Count)
-        {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
-        }
-
-        return null;
+        return await references.TagsExistAsync(input.TagIds, cancellationToken);
     }
 
     private sealed record LedgerMatch(CategorizationRuleWithTags Item, IReadOnlyList<LedgerEntry> Rows);

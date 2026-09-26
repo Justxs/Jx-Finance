@@ -222,7 +222,7 @@ public sealed class TransactionService(
             return referenceError;
         }
 
-        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        var tagError = await references.TagsExistAsync(request.TagIds ?? [], cancellationToken);
         if (tagError is not null)
         {
             return tagError;
@@ -286,7 +286,7 @@ public sealed class TransactionService(
             return referenceError;
         }
 
-        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        var tagError = await references.TagsExistAsync(request.TagIds ?? [], cancellationToken);
         if (tagError is not null)
         {
             return tagError;
@@ -408,7 +408,7 @@ public sealed class TransactionService(
             return loaded.Error;
         }
 
-        var tagError = await ValidateTagsAsync(request.TagIds, cancellationToken);
+        var tagError = await references.TagsExistAsync(request.TagIds ?? [], cancellationToken);
         if (tagError is not null)
         {
             return tagError;
@@ -508,23 +508,6 @@ public sealed class TransactionService(
             type,
             "Category type does not match the transaction type.",
             cancellationToken);
-    }
-
-    private async Task<DomainError?> ValidateTagsAsync(
-        IReadOnlyList<Guid>? tagIds,
-        CancellationToken cancellationToken)
-    {
-        var wanted = (tagIds ?? []).Distinct().Select(id => new TagId(id)).ToList();
-        if (wanted.Count == 0)
-        {
-            return null;
-        }
-
-        var visible = await db.Tags.CountAsync(t => wanted.Contains(t.Id), cancellationToken);
-
-        return visible == wanted.Count
-            ? null
-            : new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
     }
 
     private async Task<DomainError?> ValidateLinesAsync(
