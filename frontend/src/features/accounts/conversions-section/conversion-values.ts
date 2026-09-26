@@ -1,7 +1,7 @@
 import type { AccountResponse, ConversionResponse, Currency } from "@/api/generated/model";
 import { heldCurrencies } from "../held-currencies";
 
-export interface ConversionFormValues {
+interface ConversionFormValues {
   accountId: string;
   fromAmount: string;
   fromCurrency: Currency;

@@ -12,7 +12,7 @@ import { ActivityFilterBar } from "./activity-filter-bar";
 import { ALL, type ActivityFilters, NO_FILTERS, filterKey } from "./activity-filters";
 import { sentenceKey, useChangeText } from "./activity-sentences";
 
-export const ACTIVITY_PAGE_SIZE = 10;
+const ACTIVITY_PAGE_SIZE = 10;
 const AUDIT_RETENTION_DAYS = 400;
 
 interface EventProps {
