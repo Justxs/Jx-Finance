@@ -1,4 +1,4 @@
-import type { PublicSettingsResponse, SettingsResponse } from "@/api/generated/model";
+import type { FeatureFlags, PublicSettingsResponse, SettingsResponse } from "@/api/generated/model";
 
 export const settings: SettingsResponse = {
   instanceName: null,
@@ -30,3 +30,11 @@ export const publicSettings: PublicSettingsResponse = {
   defaultLanguage: settings.defaultLanguage,
   emailEnabled: false,
 };
+
+export interface SettingsPatch extends Partial<Omit<SettingsResponse, "features">> {
+  features?: Partial<FeatureFlags>;
+}
+
+export function settingsWith({ features, ...patch }: SettingsPatch = {}): SettingsResponse {
+  return { ...settings, ...patch, features: { ...settings.features, ...features } };
+}

@@ -2,8 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, screen, userEvent } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { currentUserWithTwoFactor, longNameUser, serverErrorProblem } from "@/storybook/fixtures";
-import { failWith, pending, unauthenticatedHandlers, withHandlers } from "@/storybook/handlers";
+import {
+  currentUserWithTwoFactor,
+  longNameUser,
+  serverErrorProblem,
+  unauthorizedProblem,
+} from "@/storybook/fixtures";
+import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { ProfilePage } from "./profile-page";
 
 const meta = {
@@ -37,7 +42,7 @@ export const ServerError: Story = {
 };
 
 export const Unauthenticated: Story = {
-  parameters: { msw: { handlers: unauthenticatedHandlers } },
+  parameters: withHandlers(getMeMockHandler(failWith(unauthorizedProblem))),
 };
 
 export const SavesDisplayName: Story = {

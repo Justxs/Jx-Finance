@@ -13,7 +13,7 @@ import {
   dashboardCardUnknownProblem,
   hiddenCardsDashboardLayout,
   serverErrorProblem,
-  settings,
+  settingsWith,
 } from "@/storybook/fixtures";
 import {
   emptyHandlers,
@@ -43,10 +43,6 @@ const customise = /^(customise|pritaikyti)$/i;
 async function cardHeadings(canvas: Canvas) {
   await canvas.findAllByRole("heading", { level: 2 });
   return canvas.getAllByRole("heading", { level: 2 }).map((heading) => heading.textContent);
-}
-
-function withSettings(features: Partial<typeof settings.features>) {
-  return getSettingsMockHandler({ ...settings, features: { ...settings.features, ...features } });
 }
 
 export const Default: Story = {};
@@ -125,7 +121,7 @@ export const AllHidden: Story = {
 };
 
 export const FeatureSwitchedOff: Story = {
-  parameters: withHandlers(withSettings({ budgets: false })),
+  parameters: withHandlers(getSettingsMockHandler(settingsWith({ features: { budgets: false } }))),
   play: async ({ canvas }) => {
     await canvas.findByRole("heading", { level: 2, name: accountsTitle });
     await expect(canvas.queryByRole("heading", { name: budgetsTitle })).not.toBeInTheDocument();

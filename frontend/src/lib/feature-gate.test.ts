@@ -8,7 +8,7 @@ import { queryClient } from "./query-client";
 const gateArgs = { context: { queryClient } };
 
 function settingsWith(budgets: boolean) {
-  return settingsFixture({ features: { ...settingsFixture().features, budgets } });
+  return settingsFixture({ features: { budgets } });
 }
 
 async function thrownBy(run: () => Promise<void>): Promise<unknown> {

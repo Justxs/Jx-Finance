@@ -8,8 +8,13 @@ import {
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
 } from "@/api/generated/users/users.msw";
-import { UserRole } from "@/lib/user-role";
-import { adminPassword, currentUser, users, wrongAdminPasswordProblem } from "@/storybook/fixtures";
+import {
+  adminPassword,
+  currentUser,
+  userProfile,
+  users,
+  wrongAdminPasswordProblem,
+} from "@/storybook/fixtures";
 import { found, problem, query, readBody, text } from "./http";
 import type { Body } from "./http";
 import { NEW_USER_ID } from "./ids";
@@ -56,16 +61,12 @@ export function mergeProfile(base: UserProfileResponse, body: Body): UserProfile
 export const userHandlers = [
   getUsersMockHandler(({ request }) => filterUsers(query(request))),
   getCreateUserMockHandler(async ({ request }) => {
-    const base: UserProfileResponse = {
+    const base = userProfile({
       id: NEW_USER_ID,
       email: "",
       displayName: "",
-      role: UserRole.member,
-      twoFactorEnabled: false,
-      isActive: true,
       emailConfirmed: false,
-      billReminderEmails: false,
-    };
+    });
     return mergeProfile(base, await readBody(request));
   }),
   getUpdateMyProfileMockHandler(async ({ request }) => {

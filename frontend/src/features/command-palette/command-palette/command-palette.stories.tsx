@@ -3,17 +3,16 @@ import { expect, fireEvent, screen, waitFor, within } from "storybook/test";
 import { getMeMockHandler } from "@/api/generated/auth/auth.msw";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { rememberCommand, setCommandPaletteOpen } from "@/stores/command-palette-store";
-import { memberUser, settings } from "@/storybook/fixtures";
+import { memberUser, settingsWith } from "@/storybook/fixtures";
 import { handlers } from "@/storybook/handlers";
 import { openedDialog } from "@/storybook/interactions";
 import { CommandPalette } from "./command-palette";
 
 const memberHandlers = [
   getMeMockHandler(memberUser),
-  getSettingsMockHandler({
-    ...settings,
-    features: { ...settings.features, investments: false, categorizationRules: false },
-  }),
+  getSettingsMockHandler(
+    settingsWith({ features: { investments: false, categorizationRules: false } }),
+  ),
   ...handlers,
 ];
 
