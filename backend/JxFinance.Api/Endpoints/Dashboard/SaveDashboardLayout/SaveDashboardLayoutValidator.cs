@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
@@ -8,27 +9,22 @@ namespace JxFinance.Endpoints.Dashboard.SaveDashboardLayout;
 
 public sealed class SaveDashboardLayoutValidator : Validator<SaveDashboardLayoutRequest>
 {
-    private const string UnknownMessage = "'{PropertyValue}' is not a dashboard card.";
-    private const string DuplicateMessage = "A dashboard card may appear only once.";
-
     public SaveDashboardLayoutValidator()
     {
-        RuleFor(r => r.Order).IsPresent();
-        RuleFor(r => r.Hidden).IsPresent();
-        RuleForEach(r => r.Order).Must(IsKnown).WithErrorCode(ErrorCodes.DashboardCardUnknown).WithMessage(UnknownMessage);
-        RuleForEach(r => r.Hidden).Must(IsKnown).WithErrorCode(ErrorCodes.DashboardCardUnknown).WithMessage(UnknownMessage);
-        RuleFor(r => r.Order).Must(IsDistinct)
-            .WithErrorCode(ErrorCodes.DashboardCardDuplicate)
-            .WithMessage(DuplicateMessage)
-            .When(r => r.Order is not null);
-        RuleFor(r => r.Hidden).Must(IsDistinct)
-            .WithErrorCode(ErrorCodes.DashboardCardDuplicate)
-            .WithMessage(DuplicateMessage)
-            .When(r => r.Hidden is not null);
+        CardList(r => r.Order);
+        CardList(r => r.Hidden);
     }
 
-    private static bool IsKnown(string? id) => DashboardLayout.TryParse(id, out _);
-
-    private static bool IsDistinct(IReadOnlyList<string> ids) =>
-        ids.Distinct(StringComparer.Ordinal).Count() == ids.Count;
+    private void CardList(Expression<Func<SaveDashboardLayoutRequest, IEnumerable<string>>> cards)
+    {
+        RuleFor(cards).IsPresent();
+        RuleForEach(cards)
+            .Must(id => DashboardLayout.TryParse(id, out _))
+            .WithErrorCode(ErrorCodes.DashboardCardUnknown)
+            .WithMessage("'{PropertyValue}' is not a dashboard card.");
+        RuleFor(cards)
+            .Must(ids => ids is null || ids.Distinct(StringComparer.Ordinal).Count() == ids.Count())
+            .WithErrorCode(ErrorCodes.DashboardCardDuplicate)
+            .WithMessage("A dashboard card may appear only once.");
+    }
 }

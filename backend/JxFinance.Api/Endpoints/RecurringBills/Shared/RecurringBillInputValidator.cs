@@ -24,6 +24,10 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             .IsPresent()
             .WithMessage("A fixed entry must have an amount.")
             .When(r => r.Kind == RecurringBillKind.Fixed);
+        RuleFor(r => r.Amount)
+            .IsAbsent()
+            .WithMessage("A variable entry's amount is entered when it's confirmed, not set upfront.")
+            .When(r => r.Kind == RecurringBillKind.Variable);
 
         When(r => r.Shape == RecurringBillShape.Transfer, () =>
         {

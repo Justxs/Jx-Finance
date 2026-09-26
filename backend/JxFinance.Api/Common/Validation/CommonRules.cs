@@ -38,6 +38,20 @@ public static class CommonRules
         where TProperty : struct, IComparable<TProperty>, IComparable =>
         rule.InclusiveBetween(from, to).WithErrorCode(ErrorCodes.RangeInvalid);
 
+    public static IRuleBuilderOptions<T, TProperty?> IsNotAfter<T, TProperty>(this IRuleBuilder<T, TProperty?> rule, Func<T, TProperty?> end)
+        where TProperty : struct, IComparable<TProperty> =>
+        rule.Must((request, value) => value is not { } start || end(request) is not { } limit || start.CompareTo(limit) <= 0)
+            .WithErrorCode(ErrorCodes.RangeInvalid)
+            .WithMessage("The start of the range must not be after its end.");
+
+    public static IRuleBuilderOptions<T, TProperty?> IsNotBefore<T, TProperty>(this IRuleBuilder<T, TProperty?> rule, Func<T, TProperty?> start)
+        where TProperty : struct, IComparable<TProperty> =>
+        rule.Must((request, value) => value is not { } end || start(request) is not { } limit || end.CompareTo(limit) >= 0)
+            .WithErrorCode(ErrorCodes.RangeInvalid);
+
+    public static IRuleBuilderOptions<T, DateOnly?> IsNotInFuture<T>(this IRuleBuilder<T, DateOnly?> rule, Func<DateOnly> today) =>
+        rule.Must(date => date is null || date <= today()).WithErrorCode(ErrorCodes.RangeInvalid);
+
     public static IRuleBuilderOptions<T, TProperty> DiffersFrom<T, TProperty>(
         this IRuleBuilder<T, TProperty> rule,
         Expression<Func<T, TProperty>> other) =>

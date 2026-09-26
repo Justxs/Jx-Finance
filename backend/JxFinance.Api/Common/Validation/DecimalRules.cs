@@ -33,6 +33,11 @@ public static class DecimalRules
     public static IRuleBuilderOptions<T, decimal?> IsNonNegativeQuantity<T>(this IRuleBuilder<T, decimal?> rule) =>
         rule.Must(value => value is null || (value >= 0 && FitsQuantity(value.Value))).WithErrorCode(ErrorCodes.QuantityNonNegative);
 
+    public static IRuleBuilderOptions<T, string?> IsNonNegativeMoneyText<T>(this IRuleBuilder<T, string?> rule) =>
+        rule.Must(text => text is null || ParseMoneyText(text) is >= 0)
+            .WithErrorCode(ErrorCodes.MoneyNonNegative)
+            .WithMessage("Must be a non-negative decimal string with at most 2 decimal places, such as \"150.00\".");
+
     public static decimal? ParseMoneyText(string? text) =>
         decimal.TryParse(text, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint, CultureInfo.InvariantCulture, out var value)
         && FitsMoney(value)
