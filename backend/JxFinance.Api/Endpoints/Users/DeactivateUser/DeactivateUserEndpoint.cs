@@ -1,12 +1,11 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.DeactivateUser;
 
-public sealed class DeactivateUserEndpoint(IUserService userService, ICurrentUser currentUser) : EndpointWithoutRequest
+public sealed class DeactivateUserEndpoint(IUserService userService) : EndpointWithoutRequest
 {
     public override void Configure()
     {
@@ -17,5 +16,5 @@ public sealed class DeactivateUserEndpoint(IUserService userService, ICurrentUse
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>
-        await Send.NoContentOrProblemAsync(await userService.DeactivateAsync(Route<Guid>("id"), currentUser.Id, ct), ct);
+        await Send.NoContentOrProblemAsync(await userService.DeactivateAsync(Route<Guid>("id"), ct), ct);
 }

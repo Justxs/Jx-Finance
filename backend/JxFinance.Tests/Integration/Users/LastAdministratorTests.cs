@@ -1,7 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using JxFinance.Common.Errors;
-using JxFinance.Endpoints.Users.Interfaces;
+using JxFinance.Endpoints.Users.Services;
 using JxFinance.Endpoints.Users.UpdateUserRole;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Tests.Support;
@@ -23,11 +23,11 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
         try
         {
             using var scope = Services.CreateScope();
-            var users = scope.ServiceProvider.GetRequiredService<IUserService>();
+            var users = ActivatorUtilities.CreateInstance<UserService>(scope.ServiceProvider, new FixedUser(actor.Id));
 
-            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), actor.Id, TestContext.Current.CancellationToken);
-            var deactivated = await users.DeactivateAsync(last.Id, actor.Id, TestContext.Current.CancellationToken);
-            var kept = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Admin), actor.Id, TestContext.Current.CancellationToken);
+            var demoted = await users.ChangeRoleAsync(new UpdateUserRoleRequest(last.Id, AppRoles.Member), TestContext.Current.CancellationToken);
+            var deactivated = await users.DeactivateAsync(last.Id, TestContext.Current.CancellationToken);
+            var kept = await users.ChangeRoleAsync(new UpdateUserRoleRequest(last.Id, AppRoles.Admin), TestContext.Current.CancellationToken);
 
             Assert.Equal(ErrorCodes.UserLastAdministrator, demoted.ErrorCode);
             Assert.Equal(ErrorCodes.UserLastAdministrator, deactivated.ErrorCode);
@@ -50,9 +50,9 @@ public sealed class LastAdministratorTests(ApiFixture fixture) : IntegrationTest
         try
         {
             using var scope = Services.CreateScope();
-            var users = scope.ServiceProvider.GetRequiredService<IUserService>();
+            var users = ActivatorUtilities.CreateInstance<UserService>(scope.ServiceProvider, new FixedUser(inactive.Id));
 
-            var demoted = await users.ChangeRoleAsync(last.Id, new UpdateUserRoleRequest(last.Id, AppRoles.Member), inactive.Id, TestContext.Current.CancellationToken);
+            var demoted = await users.ChangeRoleAsync(new UpdateUserRoleRequest(last.Id, AppRoles.Member), TestContext.Current.CancellationToken);
 
             Assert.Equal(ErrorCodes.UserLastAdministrator, demoted.ErrorCode);
         }

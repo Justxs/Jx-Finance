@@ -1,13 +1,12 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Domain.Common;
 using JxFinance.Endpoints.Auth.Shared;
 using JxFinance.Endpoints.Users.Interfaces;
 using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Users.ResetUserPassword;
 
-public sealed class ResetUserPasswordEndpoint(IUserService userService, ICurrentUser currentUser)
+public sealed class ResetUserPasswordEndpoint(IUserService userService)
     : Endpoint<ResetUserPasswordRequest, UserProfileResponse>
 {
     public override void Configure()
@@ -20,5 +19,5 @@ public sealed class ResetUserPasswordEndpoint(IUserService userService, ICurrent
     }
 
     public override async Task HandleAsync(ResetUserPasswordRequest req, CancellationToken ct) =>
-        await Send.OkOrProblemAsync(await userService.ResetPasswordAsync(req.Id, req, currentUser.Id, ct), ct);
+        await Send.OkOrProblemAsync(await userService.ResetPasswordAsync(req, ct), ct);
 }

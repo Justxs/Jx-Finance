@@ -23,11 +23,17 @@ public interface IAuthService
 
     UserProfileResponse ToProfile(AppUser user, string role);
 
-    Task<UserProfileResponse?> GetProfileByIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<UserProfileResponse?> GetCurrentProfileAsync(CancellationToken cancellationToken);
 
-    Task<AppUser?> FindByIdAsync(Guid userId, CancellationToken cancellationToken);
+    Task<AppUser?> CurrentAsync(CancellationToken cancellationToken);
 
     Task<Result> ConfirmPasswordAsync(AppUser user, string? password, string rejectedCode);
+
+    Task<Result<AppUser>> ReauthenticateAsync(
+        string? password,
+        string rejectedCode,
+        DomainError missing,
+        CancellationToken cancellationToken);
 
     Task<Result> ConsumeTwoFactorCodeAsync(AppUser user, string code);
 

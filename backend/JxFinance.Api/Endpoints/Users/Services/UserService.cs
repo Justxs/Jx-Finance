@@ -23,8 +23,12 @@ public sealed class UserService(
     UserManager<AppUser> userManager,
     IAuthService authService,
     IAccountEmailService accountEmails,
+    ICurrentUser currentUser,
+    ISessionService sessions,
     AppDbContext db) : IUserService
 {
+    private static readonly DomainError NotFound = EntityLookup.NotFound("User not found.");
+
     public async Task<IReadOnlyList<UserProfileResponse>> GetAllAsync(
         GetUsersRequest request,
         CancellationToken cancellationToken)
@@ -107,21 +111,19 @@ public sealed class UserService(
     }
 
     public async Task<Result<UserProfileResponse>> ChangeRoleAsync(
-        Guid id,
         UpdateUserRoleRequest request,
-        Guid currentUserId,
         CancellationToken cancellationToken)
     {
-        if (id == currentUserId)
+        var id = request.Id;
+        if (id == currentUser.Id)
         {
             return new DomainError(ErrorCodes.UserSelfChange, "You cannot change your own role.");
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
-        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
-        if (!found.TryGetValue(out var user))
+        if (await FindAsync(id, cancellationToken) is not { } user)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (request.Role != AppRoles.Admin && await IsLastAdministratorAsync(id, cancellationToken))
@@ -138,18 +140,17 @@ public sealed class UserService(
         return await authService.ToProfileAsync(user);
     }
 
-    public async Task<Result<Guid>> DeactivateAsync(Guid id, Guid currentUserId, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> DeactivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        if (id == currentUserId)
+        if (id == currentUser.Id)
         {
             return new DomainError(ErrorCodes.UserSelfChange, "You cannot deactivate your own account.");
         }
 
         await using var transaction = await BeginAdministratorChangeAsync(cancellationToken);
-        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
-        if (!found.TryGetValue(out var user))
+        if (await FindAsync(id, cancellationToken) is not { } user)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (await IsLastAdministratorAsync(id, cancellationToken))
@@ -185,10 +186,9 @@ public sealed class UserService(
 
     public async Task<Result<Guid>> ReactivateAsync(Guid id, CancellationToken cancellationToken)
     {
-        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
-        if (!found.TryGetValue(out var user))
+        if (await FindAsync(id, cancellationToken) is not { } user)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (!user.IsDeactivated)
@@ -204,32 +204,27 @@ public sealed class UserService(
     }
 
     public async Task<Result<UserProfileResponse>> ResetPasswordAsync(
-        Guid id,
         ResetUserPasswordRequest request,
-        Guid currentUserId,
         CancellationToken cancellationToken)
     {
-        if (id == currentUserId)
+        if (request.Id == currentUser.Id)
         {
             return new DomainError(ErrorCodes.UserSelfChange, "Change your own password on your profile.");
         }
 
-        var administrator = await userManager.Users.FirstOrDefaultAsync(u => u.Id == currentUserId, cancellationToken);
-        if (administrator is null)
+        var reauthenticated = await authService.ReauthenticateAsync(
+            request.CurrentPassword,
+            ErrorCodes.PasswordIncorrect,
+            new DomainError(ErrorCodes.AccessForbidden, "Only administrators can reset a password."),
+            cancellationToken);
+        if (reauthenticated.IsFailure)
         {
-            return new DomainError(ErrorCodes.AccessForbidden, "Only administrators can reset a password.");
+            return reauthenticated.Error;
         }
 
-        var confirmed = await authService.ConfirmPasswordAsync(administrator, request.CurrentPassword, ErrorCodes.PasswordIncorrect);
-        if (confirmed.IsFailure)
+        if (await FindAsync(request.Id, cancellationToken) is not { } user)
         {
-            return confirmed.Error;
-        }
-
-        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == id, "User not found.", cancellationToken);
-        if (!found.TryGetValue(out var user))
-        {
-            return found.Error;
+            return NotFound;
         }
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
@@ -260,14 +255,12 @@ public sealed class UserService(
     }
 
     public async Task<Result<UserProfileResponse>> UpdateOwnProfileAsync(
-        Guid userId,
         UpdateMyProfileRequest request,
         CancellationToken cancellationToken)
     {
-        var found = await userManager.Users.FindOrNotFoundAsync(u => u.Id == userId, "User not found.", cancellationToken);
-        if (!found.TryGetValue(out var user))
+        if (await FindAsync(currentUser.Id, cancellationToken) is not { } user)
         {
-            return found.Error;
+            return NotFound;
         }
 
         if (request.NewPassword is not null)
@@ -299,6 +292,15 @@ public sealed class UserService(
         }
 
         await transaction.CommitAsync(cancellationToken);
-        return await authService.ToProfileAsync(user);
+        var profile = await authService.ToProfileAsync(user);
+        if (request.NewPassword is not null)
+        {
+            await sessions.RenewAsync(user, cancellationToken);
+        }
+
+        return profile;
     }
+
+    private Task<AppUser?> FindAsync(Guid id, CancellationToken cancellationToken) =>
+        userManager.Users.FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
 }
