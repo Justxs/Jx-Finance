@@ -64,6 +64,10 @@ export function ImportPreviewTable({
   const offset = (page - 1) * PREVIEW_PAGE_SIZE;
   const pageRows = rows.slice(offset, offset + PREVIEW_PAGE_SIZE);
 
+  function rowProps(row: PreviewRowState, index: number) {
+    return { row, index: offset + index, accountId, accounts, categories, tags, onRowChange };
+  }
+
   const selectAll = (
     <Tooltip content={t("imports.selectAllHint")}>
       <Checkbox
@@ -98,13 +102,7 @@ export function ImportPreviewTable({
             <ImportRow
               key={`${row.importRef}-${offset + index}`}
               variant="list"
-              row={row}
-              index={offset + index}
-              accountId={accountId}
-              accounts={accounts}
-              categories={categories}
-              tags={tags}
-              onRowChange={onRowChange}
+              {...rowProps(row, index)}
             />
           ))}
         </Rows>
@@ -118,7 +116,7 @@ export function ImportPreviewTable({
                 <TableHead className="w-10">{selectAll}</TableHead>
                 <TableHead>{t("transactions.date")}</TableHead>
                 <TableHead>{t("transactions.description")}</TableHead>
-                <TableHead className="text-right">{t("transactions.amount")}</TableHead>
+                <TableHead numeric>{t("transactions.amount")}</TableHead>
                 <TableHead>{t("transactions.category")}</TableHead>
                 <TableHead>{t("tags.field")}</TableHead>
                 <TableHead>{t("imports.recordAs")}</TableHead>
@@ -130,13 +128,7 @@ export function ImportPreviewTable({
                 <ImportRow
                   key={`${row.importRef}-${offset + index}`}
                   variant="table"
-                  row={row}
-                  index={offset + index}
-                  accountId={accountId}
-                  accounts={accounts}
-                  categories={categories}
-                  tags={tags}
-                  onRowChange={onRowChange}
+                  {...rowProps(row, index)}
                 />
               ))}
             </TableBody>
