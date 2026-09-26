@@ -5,7 +5,6 @@ import { useRevokeOtherSessions, useRevokeSession, useSessionsSuspense } from "@
 import type { SessionResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { TitledSection } from "@/components/ui/section/section";
@@ -15,6 +14,7 @@ import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { notify } from "@/lib/mutations";
 import { describeUserAgent } from "@/lib/user-agent";
+import { ActionRow } from "../action-row/action-row";
 
 function useSessionLabel() {
   const { t } = useTranslation();
@@ -40,45 +40,37 @@ function SessionRow({ session, pending, disabled, onSignOut }: Readonly<SessionR
   const formatDateTime = useDateTime();
   const label = useSessionLabel()(session);
 
+  const times = [
+    ["lastActive", session.lastSeenAt],
+    ["signedIn", session.createdAt],
+    ["expires", session.expiresAt],
+  ] as const;
+
   return (
-    <RowTransition>
-      <li className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0 space-y-1">
-          <p className="flex flex-wrap items-center gap-2 text-sm font-medium wrap-break-word">
-            {label}
-            {session.isCurrent ? <Tag tone="accent">{t("profile.sessions.current")}</Tag> : null}
-          </p>
-          <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-            <div className="flex gap-1">
-              <dt>{t("profile.sessions.lastActive")}</dt>
-              <dd className="tabular-nums">{formatDateTime(session.lastSeenAt)}</dd>
+    <ActionRow
+      title={
+        <>
+          {label}
+          {session.isCurrent ? <Tag tone="accent">{t("profile.sessions.current")}</Tag> : null}
+        </>
+      }
+      details={
+        <dl className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
+          {times.map(([key, at]) => (
+            <div key={key} className="flex gap-1">
+              <dt>{t(`profile.sessions.${key}`)}</dt>
+              <dd className="tabular-nums">{formatDateTime(at)}</dd>
             </div>
-            <div className="flex gap-1">
-              <dt>{t("profile.sessions.signedIn")}</dt>
-              <dd className="tabular-nums">{formatDateTime(session.createdAt)}</dd>
-            </div>
-            <div className="flex gap-1">
-              <dt>{t("profile.sessions.expires")}</dt>
-              <dd className="tabular-nums">{formatDateTime(session.expiresAt)}</dd>
-            </div>
-          </dl>
-        </div>
-        {session.isCurrent ? null : (
-          <Button
-            variant="outline"
-            size="sm"
-            className="self-start sm:self-auto"
-            pending={pending}
-            disabled={disabled}
-            onClick={onSignOut}
-            aria-label={`${t("profile.sessions.signOut")}: ${label}`}
-          >
-            <LogOut />
-            {t("profile.sessions.signOut")}
-          </Button>
-        )}
-      </li>
-    </RowTransition>
+          ))}
+        </dl>
+      }
+      icon={LogOut}
+      actionLabel={t("profile.sessions.signOut")}
+      itemLabel={label}
+      pending={pending}
+      disabled={disabled}
+      onAction={session.isCurrent ? undefined : onSignOut}
+    />
   );
 }
 
