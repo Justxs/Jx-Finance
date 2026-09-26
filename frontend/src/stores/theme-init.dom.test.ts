@@ -7,7 +7,6 @@ import {
   DEFAULT_FONT,
   DEFAULT_PALETTE,
   DEFAULT_TEXT_SIZE,
-  LEGACY_PREFERENCE_KEYS,
   PREFERENCES_STORAGE_KEY,
   fonts,
   palettes,
@@ -54,16 +53,6 @@ test("a stored light theme wins over a dark system", () => {
   runThemeInit();
 
   expect(root()).not.toHaveClass("dark");
-});
-
-test("reads the old single-value keys until the bundle has migrated them", () => {
-  localStorage.setItem(LEGACY_PREFERENCE_KEYS.theme, "dark");
-  localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "sepia");
-
-  runThemeInit();
-
-  expect(root()).toHaveClass("dark");
-  expect(root().dataset.palette).toBe("sepia");
 });
 
 test("ignores values it does not know", () => {

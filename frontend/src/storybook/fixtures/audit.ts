@@ -129,10 +129,3 @@ export const householdAuditEvents: AuditEventResponse[] = [
     description: "Šeima",
   }),
 ];
-
-export const householdAuditPage = {
-  items: householdAuditEvents,
-  page: 1,
-  pageSize: 10,
-  total: householdAuditEvents.length,
-};

@@ -5,7 +5,7 @@ import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { CreateHouseholdForm } from "../create-household-form/create-household-form";
-import { HouseholdCard } from "../household-card";
+import { HouseholdCard } from "../household-card/household-card";
 
 export function HouseholdsPage() {
   const { t } = useTranslation();

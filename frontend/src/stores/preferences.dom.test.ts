@@ -6,7 +6,6 @@ import {
   DEFAULT_FONT,
   DEFAULT_PALETTE,
   DEFAULT_TEXT_SIZE,
-  LEGACY_PREFERENCE_KEYS,
   PREFERENCES_STORAGE_KEY,
 } from "./preferences";
 
@@ -102,51 +101,6 @@ describe("writing", () => {
     });
 
     expect(result.current.palette).toBe("graphite");
-  });
-});
-
-describe("migration from the single-value keys", () => {
-  test("moves every old key into the row and removes it", async () => {
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.theme, "dark");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "plum");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.font, "plex");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.textSize, "small");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.sidebarCollapsed, "true");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.locale, "lt");
-
-    const preferences = await loadPreferences();
-
-    const migrated = {
-      id: "browser",
-      theme: "dark",
-      palette: "plum",
-      font: "plex",
-      textSize: "small",
-      sidebarCollapsed: true,
-      locale: "lt",
-    };
-    expect(preferences.readPreferences()).toEqual(migrated);
-    expect(storedPreferences()).toEqual(migrated);
-    expect(localStorage.getItem(LEGACY_PREFERENCE_KEYS.theme)).toBeNull();
-    expect(localStorage.getItem(LEGACY_PREFERENCE_KEYS.locale)).toBeNull();
-  });
-
-  test("drops old values that are no longer valid", async () => {
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.theme, "neon");
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "sepia");
-
-    const preferences = await loadPreferences();
-
-    expect(preferences.readPreferences()).toEqual({ ...defaults, palette: "sepia" });
-  });
-
-  test("an existing row wins over leftover old keys", async () => {
-    seedPreferences({ palette: "graphite" });
-    localStorage.setItem(LEGACY_PREFERENCE_KEYS.palette, "plum");
-
-    const preferences = await loadPreferences();
-
-    expect(preferences.readPreferences().palette).toBe("graphite");
   });
 });
 

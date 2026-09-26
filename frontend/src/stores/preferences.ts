@@ -1,6 +1,5 @@
 import { useLiveQuery } from "@tanstack/react-db";
 import { z } from "zod";
-import { browserStorage } from "@/lib/browser-storage";
 import { localCollection } from "./local-collection";
 
 export const PREFERENCES_STORAGE_KEY = "jx-preferences";
@@ -43,47 +42,11 @@ const preferencesSchema = z.object({
 export type Preferences = z.output<typeof preferencesSchema>;
 type PreferencesPatch = Partial<Omit<Preferences, "id">>;
 
-export const LEGACY_PREFERENCE_KEYS = {
-  theme: "jx-theme",
-  palette: "jx-palette",
-  font: "jx-font",
-  textSize: "jx-text-size",
-  sidebarCollapsed: "jx-sidebar-collapsed",
-  locale: "jx.locale",
-} as const;
-
-const storage = browserStorage();
-
 export const preferencesCollection = localCollection(
   "preferences",
   PREFERENCES_STORAGE_KEY,
   preferencesSchema,
 );
-
-function legacyPreferences(): PreferencesPatch | null {
-  const stored = Object.entries(LEGACY_PREFERENCE_KEYS).flatMap(([name, key]) => {
-    const value = storage.getItem(key);
-    return value === null ? [] : [[name, name === "sidebarCollapsed" ? value === "true" : value]];
-  });
-
-  return stored.length === 0 ? null : Object.fromEntries(stored);
-}
-
-function migrateLegacyKeys() {
-  if (preferencesCollection.has(ROW_ID)) {
-    return;
-  }
-  const legacy = legacyPreferences();
-  if (!legacy) {
-    return;
-  }
-  preferencesCollection.insert(preferencesSchema.parse({ ...legacy, id: ROW_ID }));
-  for (const key of Object.values(LEGACY_PREFERENCE_KEYS)) {
-    storage.removeItem(key);
-  }
-}
-
-migrateLegacyKeys();
 
 function parsedPreferences(row: Preferences | undefined): Preferences {
   return preferencesSchema.parse({ ...row, id: ROW_ID });

@@ -43,20 +43,6 @@ export const emailNotConfiguredProblem = problemOf(
   { type: validationType },
 );
 
-export const smtpPasswordRequiredProblem = problemOf(
-  400,
-  "email.passwordRequired",
-  "Enter the password again: the stored one is only kept for the same mail server and user name.",
-  { type: validationType },
-);
-
-export const smtpInsecureConnectionProblem = problemOf(
-  400,
-  "email.insecureConnection",
-  "A user name and password are only sent over an encrypted connection. Choose STARTTLS or SSL/TLS.",
-  { name: "encryption", type: validationType },
-);
-
 export const emailAlreadyVerifiedProblem = problemOf(
   400,
   "email.alreadyVerified",

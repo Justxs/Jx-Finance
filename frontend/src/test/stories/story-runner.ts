@@ -1,7 +1,7 @@
 import { it } from "vitest";
 import type { StoryModule } from "./story-session";
 
-export const SHARD_COUNT = 6;
+const SHARD_COUNT = 6;
 
 const storyFiles = import.meta.glob<StoryModule>("/src/**/*.stories.tsx");
 

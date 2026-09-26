@@ -260,13 +260,6 @@ export const reportSummaryMonthCompared: ReportSummaryResponse = withComparison(
   "2026-08-31",
 );
 
-export const reportSummaryYearCompared: ReportSummaryResponse = withComparison(
-  reportSummaryYear,
-  "previousYear",
-  "2024-10-01",
-  "2025-09-30",
-);
-
 export const emptyReportSummary: ReportSummaryResponse = {
   periodStart: FIXTURE_MONTH_START,
   periodEnd: FIXTURE_MONTH_END,

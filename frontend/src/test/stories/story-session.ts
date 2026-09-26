@@ -23,7 +23,7 @@ export interface StoryFile {
   load: () => Promise<StoryModule>;
 }
 
-export const BROWSER_ONLY_TAG = "browser-only";
+const BROWSER_ONLY_TAG = "browser-only";
 
 const server = setupServer();
 const teardownStory = composeStory({}, { title: "Teardown", render: () => null }, {}, {});

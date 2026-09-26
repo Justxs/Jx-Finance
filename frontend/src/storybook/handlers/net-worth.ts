@@ -43,7 +43,7 @@ export const assetHandlers = [
   getDeleteAssetMockHandler(),
 ];
 
-export const debtScheduleHandler = getDebtScheduleMockHandler(({ params, request }) => {
+const debtScheduleHandler = getDebtScheduleMockHandler(({ params, request }) => {
   const debt = found(byId(scheduledDebts, params.id));
   if (debt.payoffDate === null) {
     throw problem(scheduleIncompleteProblem);

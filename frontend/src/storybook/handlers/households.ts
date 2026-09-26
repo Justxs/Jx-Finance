@@ -16,7 +16,7 @@ import type { Body } from "./http";
 import { NEW_ID, NEW_USER_ID } from "./ids";
 import { byId, byIdFrom, paginate } from "./lists";
 
-export function filterAudit(events: AuditEventResponse[], params: URLSearchParams) {
+function filterAudit(events: AuditEventResponse[], params: URLSearchParams) {
   const memberId = params.get("memberId");
   const kind = params.get("kind");
   const dateFrom = params.get("dateFrom");

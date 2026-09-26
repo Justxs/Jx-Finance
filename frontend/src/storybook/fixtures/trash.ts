@@ -66,10 +66,3 @@ export const trashEntries: TrashEntryResponse[] = [
 export const recordedTrashEntries = trashEntries.filter((item) =>
   ["category", "tag", "categorizationRule", "household"].includes(item.kind),
 );
-
-export const trashPage = {
-  items: trashEntries,
-  page: 1,
-  pageSize: 10,
-  total: trashEntries.length,
-};

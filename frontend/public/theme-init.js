@@ -1,19 +1,11 @@
 (function () {
-  function read(key) {
-    try {
-      return localStorage.getItem(key);
-    } catch {
-      return null;
-    }
-  }
-
   function storedPreferences() {
     try {
-      var rows = JSON.parse(read("jx-preferences") || "{}");
+      var rows = JSON.parse(localStorage.getItem("jx-preferences") || "{}");
       var row = rows && rows["s:browser"];
-      return (row && row.data) || null;
+      return (row && row.data) || {};
     } catch {
-      return null;
+      return {};
     }
   }
 
@@ -26,12 +18,7 @@
   }
 
   var root = document.documentElement;
-  var preferences = storedPreferences() || {
-    theme: read("jx-theme"),
-    palette: read("jx-palette"),
-    font: read("jx-font"),
-    textSize: read("jx-text-size"),
-  };
+  var preferences = storedPreferences();
 
   var theme = preferences.theme;
   var isDark = theme === "light" || theme === "dark" ? theme === "dark" : prefersDark();
