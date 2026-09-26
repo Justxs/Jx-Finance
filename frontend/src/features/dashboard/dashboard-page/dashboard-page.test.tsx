@@ -1,30 +1,15 @@
 import { fireEvent, screen, waitFor, within } from "@testing-library/react";
 import { beforeEach, expect, test, vi } from "vitest";
-import type {
-  DashboardLayoutResponse,
-  FeatureFlags,
-  UserProfileResponse,
-} from "@/api/generated/model";
+import type { DashboardLayoutResponse, FeatureFlags } from "@/api/generated/model";
 import { DashboardLayoutResponse as layoutSchema } from "@/api/schemas/dashboard/dashboard.zod";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
-import { UserRole } from "@/lib/user-role";
+import { memberUser } from "@/storybook/fixtures";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
 
 await import("@/features/net-worth/net-worth-history-chart/net-worth-history-chart");
 
 vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
-
-const me: UserProfileResponse = {
-  id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
-  email: "ruta@example.lt",
-  displayName: "Ruta",
-  role: UserRole.member,
-  twoFactorEnabled: false,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
 
 const everyCard: DashboardLayoutResponse["order"] = [
   "summary",
@@ -48,7 +33,7 @@ let saved: unknown[] = [];
 function bodyFor(url: URL): unknown {
   switch (url.pathname) {
     case "/api/auth/me":
-      return me;
+      return memberUser;
     case "/api/settings":
     case "/api/settings/public":
       return settingsFixture({ features });

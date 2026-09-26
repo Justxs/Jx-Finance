@@ -44,17 +44,6 @@ function asPortfolio(fixture: unknown) {
 }
 
 const contracts: Record<string, Contract> = {
-  importFormatProblem: { schema: schemas.ProblemDetailsResponse },
-  serverErrorProblem: { schema: schemas.ProblemDetailsResponse },
-  unauthorizedProblem: { schema: schemas.ProblemDetailsResponse },
-  notFoundProblem: { schema: schemas.ProblemDetailsResponse },
-  validationProblem: { schema: schemas.ProblemDetailsResponse },
-  exportTooManyRowsProblem: { schema: schemas.ProblemDetailsResponse },
-  oversellProblem: { schema: schemas.ProblemDetailsResponse },
-  duplicateSecurityProblem: { schema: schemas.ProblemDetailsResponse },
-  duplicateTagProblem: { schema: schemas.ProblemDetailsResponse },
-  securityNotHeldProblem: { schema: schemas.ProblemDetailsResponse },
-  brokerSyncProblem: { schema: schemas.ProblemDetailsResponse },
   currentUser: { schema: schemas.MeResponse },
   currentUserWithTwoFactor: { schema: schemas.MeResponse },
   unverifiedUser: { schema: schemas.MeResponse },
@@ -62,18 +51,10 @@ const contracts: Record<string, Contract> = {
   smtpSettings: { schema: schemas.SmtpSettingsResponse },
   smtpSettingsOff: { schema: schemas.SmtpSettingsResponse },
   smtpTestSent: { schema: schemas.SendTestEmailResponse },
-  smtpSendFailedProblem: { schema: schemas.ProblemDetailsResponse },
-  emailNotConfiguredProblem: { schema: schemas.ProblemDetailsResponse },
-  emailAlreadyVerifiedProblem: { schema: schemas.ProblemDetailsResponse },
-  resetTokenInvalidProblem: { schema: schemas.ProblemDetailsResponse },
-  verificationTokenInvalidProblem: { schema: schemas.ProblemDetailsResponse },
   memberUser: { schema: schemas.UsersResponseItem },
   longNameUser: { schema: schemas.UsersResponseItem },
   inactiveUser: { schema: schemas.UsersResponseItem },
   users: { schema: schemas.UsersResponse },
-  wrongAdminPasswordProblem: { schema: schemas.ProblemDetailsResponse },
-  weakPasswordProblem: { schema: schemas.ProblemDetailsResponse },
-  lastAdministratorProblem: { schema: schemas.ProblemDetailsResponse },
   householdMembers: { schema: schemas.HouseholdResponse, toResponse: asHousehold },
   familyHousehold: { schema: schemas.HouseholdResponse },
   gardenHousehold: { schema: schemas.HouseholdResponse },
@@ -109,16 +90,10 @@ const contracts: Record<string, Contract> = {
   importedFromTransfer: { schema: schemas.UpdateTransferResponse },
   importedToCrossCurrencyTransfer: { schema: schemas.UpdateTransferResponse },
   importedBothTransfer: { schema: schemas.UpdateTransferResponse },
-  transferLockedProblem: { schema: schemas.ProblemDetailsResponse },
-  transferAmountMismatchProblem: { schema: schemas.ProblemDetailsResponse },
-  transferForbiddenProblem: { schema: schemas.ProblemDetailsResponse },
   conversions: { schema: schemas.ConversionsResponse, toResponse: asPage },
   conversionWithFee: { schema: schemas.UpdateConversionResponse },
   conversionWithoutFee: { schema: schemas.UpdateConversionResponse },
   importedConversion: { schema: schemas.UpdateConversionResponse },
-  conversionFeeSplitProblem: { schema: schemas.ProblemDetailsResponse },
-  conversionRateUnavailableProblem: { schema: schemas.ProblemDetailsResponse },
-  conversionReadOnlyProblem: { schema: schemas.ProblemDetailsResponse },
   settings: { schema: schemas.SettingsResponse },
   publicSettings: { schema: schemas.PublicSettingsResponse },
   currencies: { schema: schemas.CurrenciesResponse },
@@ -145,10 +120,6 @@ const contracts: Record<string, Contract> = {
   domainCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   waterCandidate: { schema: schemas.SubscriptionCandidatesResponseItem },
   subscriptionCandidates: { schema: schemas.SubscriptionCandidatesResponse },
-  billStaleProblem: { schema: schemas.ProblemDetailsResponse },
-  billInactiveProblem: { schema: schemas.ProblemDetailsResponse },
-  billCategoryProblem: { schema: schemas.ProblemDetailsResponse },
-  billReceivedAmountProblem: { schema: schemas.ProblemDetailsResponse },
   budgetWarningNotification: { schema: schemas.NotificationsResponseItem },
   budgetExceededNotification: { schema: schemas.NotificationsResponseItem },
   expenseDueNotification: { schema: schemas.NotificationsResponseItem },
@@ -163,9 +134,6 @@ const contracts: Record<string, Contract> = {
   mortgageScheduleWithExtra: { schema: schemas.DebtScheduleResponse },
   zeroRateSchedule: { schema: schemas.DebtScheduleResponse },
   linearSchedule: { schema: schemas.DebtScheduleResponse },
-  debtPaymentTooSmallProblem: { schema: schemas.ProblemDetailsResponse },
-  dashboardCardUnknownProblem: { schema: schemas.ProblemDetailsResponse },
-  scheduleIncompleteProblem: { schema: schemas.ProblemDetailsResponse },
   netWorth: { schema: schemas.NetWorthResponse },
   emptyNetWorth: { schema: schemas.NetWorthResponse },
   netWorthHistoryItems: { schema: schemas.NetWorthHistoryResponse, toResponse: asItems },
@@ -193,19 +161,11 @@ const contracts: Record<string, Contract> = {
   importPreviewAllDuplicates: { schema: schemas.ImportPreviewResponse },
   backups: { schema: schemas.BackupsResponse },
   backupRestored: { schema: schemas.RestoreBackupResponse },
-  backupInvalidFileProblem: { schema: schemas.ProblemDetailsResponse },
-  backupSchemaProblem: { schema: schemas.ProblemDetailsResponse },
-  backupWrongPasswordProblem: { schema: schemas.ProblemDetailsResponse },
-  backupPasswordRequiredProblem: { schema: schemas.ProblemDetailsResponse },
-  backupTooLargeProblem: { schema: schemas.ProblemDetailsResponse },
-  lockedOutProblem: { schema: schemas.ProblemDetailsResponse },
-  databaseBusyProblem: { schema: schemas.ProblemDetailsResponse },
   twoFactorSetup: { schema: schemas.SetupTwoFactorResponse },
   twoFactorRecoveryCodes: { schema: schemas.EnableTwoFactorResponse },
   loginSuccess: { schema: schemas.LoginResponse },
   loginTwoFactorRequired: { schema: schemas.LoginResponse },
   sessions: { schema: schemas.SessionsResponse },
-  sessionCurrentProblem: { schema: schemas.ProblemDetailsResponse },
   setupStatus: { schema: schemas.SetupStatusResponse },
   worldEtf: { schema: schemas.SecuritiesResponseItem },
   usStock: { schema: schemas.SecuritiesResponseItem },
@@ -237,7 +197,6 @@ const contracts: Record<string, Contract> = {
   maximaAttachments: { schema: schemas.AttachmentsResponse },
   splitAttachments: { schema: schemas.AttachmentsResponse },
   fullAttachments: { schema: schemas.AttachmentsResponse },
-  attachmentContentMismatchProblem: { schema: schemas.ProblemDetailsResponse },
   recordedTrashEntries: { schema: schemas.TrashResponse, toResponse: asPage },
   householdAuditEvents: { schema: schemas.HouseholdAuditResponse, toResponse: asPage },
 };
@@ -324,6 +283,8 @@ function fixtureNames(): string[] {
   return Object.keys(exported).filter((name) => typeof exported[name] !== "function");
 }
 
+const problems = fixtureNames().filter((name) => name.endsWith("Problem"));
+
 describe("storybook fixtures match the generated response schemas", () => {
   test.each(Object.keys(contracts))("%s", (name) => {
     const contract = contracts[name]!;
@@ -333,13 +294,17 @@ describe("storybook fixtures match the generated response schemas", () => {
     expect(describeIssues(name, contract.schema, response)).toEqual([]);
   });
 
+  test.each(problems)("%s", (name) => {
+    expect(describeIssues(name, schemas.ProblemDetailsResponse, exported[name])).toEqual([]);
+  });
+
   test.each(Object.keys(builtResponses))("%s result", (name) => {
     const built = builtResponses[name]!;
     expect(describeIssues(name, built.schema, built.build())).toEqual([]);
   });
 
   test("every exported fixture is checked or explicitly listed as not checkable", () => {
-    const accounted = new Set([...Object.keys(contracts), ...notApiResponses]);
+    const accounted = new Set([...Object.keys(contracts), ...problems, ...notApiResponses]);
     expect(fixtureNames().filter((name) => !accounted.has(name))).toEqual([]);
   });
 
