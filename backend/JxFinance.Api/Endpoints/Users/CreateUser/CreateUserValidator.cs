@@ -7,7 +7,7 @@ public sealed class CreateUserValidator : Validator<CreateUserRequest>
 {
     public CreateUserValidator()
     {
-        RuleFor(r => r.Email).IsRequired().IsEmail().HasMaxLength(256);
+        RuleFor(r => r.Email).IsEmailAddress();
         RuleFor(r => r.DisplayName).IsRequired().HasMaxLength(100);
         RuleFor(r => r.Password).IsNewPassword();
         RuleFor(r => r.Role).IsAppRole();

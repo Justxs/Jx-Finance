@@ -7,7 +7,7 @@ public sealed class LoginValidator : Validator<LoginRequest>
 {
     public LoginValidator()
     {
-        RuleFor(r => r.Email).IsRequired().IsEmail();
+        RuleFor(r => r.Email).IsEmailAddress();
         RuleFor(r => r.Password).IsRequired();
     }
 }

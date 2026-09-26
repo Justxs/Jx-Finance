@@ -6,6 +6,9 @@ namespace JxFinance.Common.Validation;
 
 public static class UserRules
 {
+    public static IRuleBuilderOptions<T, string?> IsEmailAddress<T>(this IRuleBuilder<T, string?> rule) =>
+        rule.IsRequired().IsEmail().HasMaxLength(256);
+
     public static IRuleBuilderOptions<T, string?> IsNewPassword<T>(this IRuleBuilder<T, string?> rule) =>
         rule.IsRequired().HasMinLength(8).HasMaxLength(100);
 

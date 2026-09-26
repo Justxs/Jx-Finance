@@ -7,6 +7,6 @@ public sealed class ForgotPasswordValidator : Validator<ForgotPasswordRequest>
 {
     public ForgotPasswordValidator()
     {
-        RuleFor(r => r.Email).IsRequired().IsEmail().HasMaxLength(320);
+        RuleFor(r => r.Email).IsEmailAddress();
     }
 }
