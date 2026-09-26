@@ -19,7 +19,7 @@ import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { TRANSFERS_PAGE_SIZE as pageSize, transfersPageParams } from "../account-queries";
+import { MOVEMENTS_PAGE_SIZE as pageSize, movementsPageParams } from "../account-queries";
 import { TransferForm } from "./transfer-form";
 
 interface Props {
@@ -34,7 +34,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
   const formatDate = useIsoDate();
 
   const paging = usePagedList();
-  const listParams = transfersPageParams(paging.shownPage);
+  const listParams = movementsPageParams(paging.shownPage);
   const transfers = useTransfersSuspense(listParams);
   const { items, pages } = usePagedItems(paging, transfers.data, pageSize);
   const accountNames = nameById(accounts);

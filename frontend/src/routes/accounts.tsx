@@ -9,11 +9,7 @@ import {
   getTransfersSuspenseQueryOptions,
 } from "@/api/generated";
 import { AccountSortField } from "@/api/generated/model";
-import {
-  accountListParams,
-  conversionsPageParams,
-  transfersPageParams,
-} from "@/features/accounts/account-queries";
+import { accountListParams, movementsPageParams } from "@/features/accounts/account-queries";
 import { accountTypes } from "@/features/accounts/account-types";
 import { AccountsPage } from "@/features/accounts/accounts-page/accounts-page";
 import { warm, warmWithSettings } from "@/lib/route-prefetch";
@@ -35,10 +31,10 @@ export const Route = createFileRoute("/accounts")({
     warm(queryClient, getAccountsSuspenseQueryOptions());
     warm(queryClient, getArchivedAccountsSuspenseQueryOptions());
     warm(queryClient, getHouseholdsSuspenseQueryOptions());
-    warm(queryClient, getTransfersSuspenseQueryOptions(transfersPageParams(1)));
+    warm(queryClient, getTransfersSuspenseQueryOptions(movementsPageParams(1)));
     warmWithSettings(queryClient, (settings) => {
       if (settings.features.multiCurrency) {
-        warm(queryClient, getConversionsSuspenseQueryOptions(conversionsPageParams(1)));
+        warm(queryClient, getConversionsSuspenseQueryOptions(movementsPageParams(1)));
         warm(queryClient, getCategoriesSuspenseQueryOptions());
       }
     });

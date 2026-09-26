@@ -41,12 +41,7 @@ export function buildValues(value: ConversionFieldValues): ConversionFormValues 
   const hasFee = value.feeAmount.trim() !== "";
 
   return {
-    accountId: value.accountId,
-    fromAmount: value.fromAmount,
-    fromCurrency: value.fromCurrency,
-    toAmount: value.toAmount,
-    toCurrency: value.toCurrency,
-    date: value.date,
+    ...value,
     description: value.description.trim() || null,
     feeAmount: hasFee ? value.feeAmount : null,
     feeCurrency: hasFee ? value.feeCurrency : null,

@@ -31,13 +31,8 @@ interface Props {
 
 function buildValues(value: FormValues) {
   return {
-    fromAccountId: value.fromAccountId,
-    toAccountId: value.toAccountId,
-    amount: value.amount,
-    currency: value.currency,
+    ...value,
     receivedAmount: value.currency === value.receivedCurrency ? null : value.receivedAmount,
-    receivedCurrency: value.receivedCurrency,
-    date: value.date,
     description: value.description.trim() || null,
   };
 }

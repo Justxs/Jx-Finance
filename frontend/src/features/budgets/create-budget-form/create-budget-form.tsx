@@ -4,6 +4,7 @@ import { useCreateBudget, useUpdateBudget } from "@/api/generated";
 import { BudgetPeriod, type CategoryResponse, type BudgetResponse } from "@/api/generated/model";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { silent, upsert } from "@/lib/mutations";
 import { positiveMoney, requiredValue } from "@/lib/validation";
@@ -48,20 +49,12 @@ export function CreateBudgetForm({ categories, initial, onClose }: Readonly<Prop
   const form = useServerForm({
     defaultValues,
     schema,
-    submit: (value) => {
-      const data = {
-        categoryId: value.categoryId,
-        limitAmount: value.limitAmount,
-        period: value.period,
-        rolloverEnabled: value.rolloverEnabled,
-      };
-
-      return initial?.id ? update({ id: initial.id, data }) : create({ data });
-    },
+    submit: (value) =>
+      initial?.id ? update({ id: initial.id, data: value }) : create({ data: value }),
   });
 
   if (expenseCategories.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("budgets.needCategory")}</p>;
+    return <EmptyText size="sm">{t("budgets.needCategory")}</EmptyText>;
   }
 
   return (

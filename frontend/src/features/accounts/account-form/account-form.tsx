@@ -49,13 +49,10 @@ interface Props {
 
 function buildValues(value: FormValues) {
   return {
+    ...value,
     name: value.name.trim(),
     description: value.description.trim() || null,
     iban: value.iban.trim() || null,
-    type: value.type,
-    startingBalance: value.startingBalance,
-    currency: value.currency,
-    scope: value.scope,
     householdId: sharedHouseholdId(value),
   };
 }

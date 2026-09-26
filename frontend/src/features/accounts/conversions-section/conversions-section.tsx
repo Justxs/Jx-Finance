@@ -24,7 +24,7 @@ import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
 import { optimisticPagedRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
-import { CONVERSIONS_PAGE_SIZE as pageSize, conversionsPageParams } from "../account-queries";
+import { MOVEMENTS_PAGE_SIZE as pageSize, movementsPageParams } from "../account-queries";
 import { ConversionForm } from "./conversion-form";
 
 interface Props {
@@ -45,12 +45,12 @@ export function ConversionsSection({
   const canConvert = useUsableCurrencies().length >= 2;
 
   const paging = usePagedList();
-  const listParams = conversionsPageParams(paging.shownPage);
+  const listParams = movementsPageParams(paging.shownPage);
   const conversions = useConversionsSuspense(listParams);
   const { items, pages } = usePagedItems(paging, conversions.data, pageSize);
   const accountNames = nameById(accounts);
 
-  const categories = useCategoriesSuspense().data ?? [];
+  const categories = useCategoriesSuspense().data;
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const deleteMutation = useDeleteConversion({
     mutation: optimisticPagedRemoval<PagedResponseOfConversionResponse>(
