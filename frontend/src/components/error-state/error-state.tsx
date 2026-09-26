@@ -1,4 +1,5 @@
 import { CircleAlert, RotateCw } from "lucide-react";
+import { createContext, use } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
 import { cn } from "@/lib/utils";
@@ -9,8 +10,12 @@ interface Props {
   className?: string;
 }
 
+export const RetryContext = createContext<(() => void) | undefined>(undefined);
+
 export function ErrorState({ onRetry, subject, className }: Readonly<Props>) {
   const { t } = useTranslation();
+  const boundaryRetry = use(RetryContext);
+  const retry = onRetry ?? boundaryRetry;
 
   return (
     <div
@@ -24,8 +29,8 @@ export function ErrorState({ onRetry, subject, className }: Readonly<Props>) {
         </p>
         <p className="mt-0.5 text-muted-foreground">{t("errors.loadHint")}</p>
       </div>
-      {onRetry ? (
-        <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+      {retry ? (
+        <Button type="button" variant="outline" size="sm" onClick={retry}>
           <RotateCw aria-hidden="true" />
           {t("errors.retry")}
           {subject ? <span className="sr-only">: {subject}</span> : null}

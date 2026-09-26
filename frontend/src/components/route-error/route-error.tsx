@@ -1,25 +1,27 @@
 import { useRouter } from "@tanstack/react-router";
 import { RotateCw } from "lucide-react";
+import { use } from "react";
 import { useTranslation } from "react-i18next";
 import { BrandMark } from "@/components/brand/brand";
+import { RetryContext } from "@/components/error-state/error-state";
 import { PageHeader } from "@/components/page-header/page-header";
 import { Button } from "@/components/ui/button/button";
 
 interface Props {
   title?: string;
-  onRetry?: () => void;
 }
 
 function reloadPage() {
   globalThis.location.reload();
 }
 
-export function RouteError({ title, onRetry }: Readonly<Props>) {
+export function RouteError({ title }: Readonly<Props>) {
   const router = useRouter();
   const { t } = useTranslation();
+  const boundaryRetry = use(RetryContext);
 
   function retry() {
-    onRetry?.();
+    boundaryRetry?.();
     void router.invalidate();
   }
 

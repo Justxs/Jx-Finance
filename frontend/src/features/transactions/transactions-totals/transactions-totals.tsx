@@ -80,7 +80,6 @@ export function TransactionsTotals({ params, stale }: Readonly<Props>) {
           <Skeleton className="h-4 w-72 max-w-full" />
         </div>
       }
-      errorClassName="py-2"
     >
       <LoadedTotals params={params} stale={stale} />
     </QueryBoundary>

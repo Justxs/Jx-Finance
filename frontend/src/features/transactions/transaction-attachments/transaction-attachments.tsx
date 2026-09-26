@@ -280,7 +280,7 @@ export function TransactionAttachments({ transactionId, className }: Readonly<Pr
       </div>
       <QueryBoundary
         fallback={<Skeleton className="h-24 w-full" />}
-        errorFallback={
+        error={
           <p role="alert" className="text-sm text-expense">
             {t("transactions.attachments.loadError")}
           </p>

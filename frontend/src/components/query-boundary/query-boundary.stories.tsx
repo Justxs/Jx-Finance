@@ -3,6 +3,7 @@ import { useState } from "react";
 import { expect, userEvent } from "storybook/test";
 import { useAccountsSuspense } from "@/api/generated";
 import { getAccountsMockHandler } from "@/api/generated/accounts/accounts.msw";
+import { ErrorState } from "@/components/error-state/error-state";
 import { Card } from "@/components/ui/card/card";
 import { withWidth } from "@/storybook/decorators";
 import { checkingAccount, serverErrorProblem } from "@/storybook/fixtures";
@@ -103,7 +104,7 @@ export const RetryRefetches: Story = {
 };
 
 export const CustomErrorFallback: Story = {
-  args: { errorFallback: <p className="px-6 py-8 text-sm">Unavailable</p> },
+  args: { error: <p className="px-6 py-8 text-sm">Unavailable</p> },
   parameters: { msw: { handlers: errorHandlers } },
   play: async ({ canvas }) => {
     await expect(await canvas.findByText("Unavailable")).toBeVisible();
@@ -111,9 +112,14 @@ export const CustomErrorFallback: Story = {
   },
 };
 
-export const CustomErrorClassName: Story = {
-  args: { errorClassName: "px-2 py-2 text-expense" },
-  parameters: { msw: { handlers: errorHandlers } },
+export const CustomErrorRetries: Story = {
+  args: { error: <ErrorState subject="Accounts" className="px-2 text-expense" /> },
+  parameters: withHandlers(getAccountsMockHandler(failWith(serverErrorProblem), { once: true })),
+  play: async ({ canvas }) => {
+    await userEvent.click(await canvas.findByRole("button", { name: /Try again/ }));
+
+    await expect(await canvas.findByText(checkingAccount.name)).toBeVisible();
+  },
 };
 
 export const RenderErrorRecovers: Story = {

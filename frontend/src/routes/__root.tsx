@@ -125,7 +125,7 @@ function RootLayout() {
         >
           <AppSidebar />
         </QueryBoundary>
-        <QueryBoundary fallback={null} errorFallback={null}>
+        <QueryBoundary fallback={null} error={null}>
           <CommandPalette />
         </QueryBoundary>
       </div>
@@ -135,7 +135,7 @@ function RootLayout() {
           <Link to="/" className="mr-auto flex items-center">
             <Brand size="sm" />
           </Link>
-          <QueryBoundary fallback={null} errorFallback={null}>
+          <QueryBoundary fallback={null} error={null}>
             <HouseholdSwitcher className="w-28" />
           </QueryBoundary>
           <HeaderActions />
@@ -163,7 +163,7 @@ function RootLayout() {
           className="w-full min-w-0 flex-1 space-y-5 px-4 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 2xl:px-14 print:px-0 print:py-0"
         >
           <div className="contents print:hidden">
-            <QueryBoundary fallback={null} errorFallback={null}>
+            <QueryBoundary fallback={null} error={null}>
               <EmailVerificationBanner />
             </QueryBoundary>
           </div>
@@ -171,7 +171,7 @@ function RootLayout() {
             key={location.pathname}
             fallback={<RoutePending />}
             reveal={false}
-            renderError={(retry) => <RouteError title={currentTitle} onRetry={retry} />}
+            error={<RouteError title={currentTitle} />}
           >
             <div className="page-transition">
               <Outlet />

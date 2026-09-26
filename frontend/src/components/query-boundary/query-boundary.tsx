@@ -1,13 +1,11 @@
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 import { Component, type ErrorInfo, type ReactNode, Suspense, ViewTransition } from "react";
-import { ErrorState } from "@/components/error-state/error-state";
+import { ErrorState, RetryContext } from "@/components/error-state/error-state";
 
 interface FallbackProps {
   onReset: () => void;
-  className?: string;
   subject?: string;
-  errorFallback?: ReactNode;
-  renderError?: (retry: () => void) => ReactNode;
+  error?: ReactNode;
 }
 
 interface BoundaryProps extends FallbackProps {
@@ -39,16 +37,14 @@ class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
       this.props.onReset();
     };
 
-    if (this.props.renderError) {
-      return this.props.renderError(retry);
-    }
-
-    if (this.props.errorFallback !== undefined) {
-      return this.props.errorFallback;
-    }
-
     return (
-      <ErrorState className={this.props.className} subject={this.props.subject} onRetry={retry} />
+      <RetryContext value={retry}>
+        {this.props.error === undefined ? (
+          <ErrorState subject={this.props.subject} />
+        ) : (
+          this.props.error
+        )}
+      </RetryContext>
     );
   }
 }
@@ -56,32 +52,22 @@ class ErrorBoundary extends Component<BoundaryProps, BoundaryState> {
 interface Props {
   fallback: ReactNode;
   children: ReactNode;
-  errorClassName?: string;
   errorSubject?: string;
-  errorFallback?: ReactNode;
-  renderError?: (retry: () => void) => ReactNode;
+  error?: ReactNode;
   reveal?: boolean;
 }
 
 export function QueryBoundary({
   fallback,
   children,
-  errorClassName,
   errorSubject,
-  errorFallback,
-  renderError,
+  error,
   reveal = true,
 }: Readonly<Props>) {
   return (
     <QueryErrorResetBoundary>
       {({ reset }) => (
-        <ErrorBoundary
-          onReset={reset}
-          className={errorClassName}
-          subject={errorSubject}
-          errorFallback={errorFallback}
-          renderError={renderError}
-        >
+        <ErrorBoundary onReset={reset} subject={errorSubject} error={error}>
           {reveal ? (
             <Suspense
               fallback={
