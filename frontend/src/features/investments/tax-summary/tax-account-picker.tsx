@@ -1,8 +1,8 @@
 import { ChevronDown } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
+import { CheckboxList } from "@/components/checkbox-list/checkbox-list";
 import { Button } from "@/components/ui/button/button";
-import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
 
 interface Props {
@@ -13,15 +13,10 @@ interface Props {
 
 export function TaxAccountPicker({ accounts, value, onChange }: Readonly<Props>) {
   const { t } = useTranslation();
-  const chosen = new Set(value);
   const label =
-    chosen.size === 0
+    value.length === 0
       ? t("investments.tax.allAccounts")
-      : t("investments.tax.someAccounts", { count: chosen.size });
-
-  function toggle(accountId: string, selected: boolean) {
-    onChange(selected ? [...value, accountId] : value.filter((id) => id !== accountId));
-  }
+      : t("investments.tax.someAccounts", { count: value.length });
 
   return (
     <Popover>
@@ -34,21 +29,13 @@ export function TaxAccountPicker({ accounts, value, onChange }: Readonly<Props>)
       </PopoverTrigger>
       <PopoverContent align="end" aria-label={t("investments.tax.accounts")} className="w-72">
         <p className="mb-2 text-xs text-muted-foreground">{t("investments.tax.accountsHint")}</p>
-        <div
-          role="group"
+        <CheckboxList
+          items={accounts}
+          value={value}
+          onChange={onChange}
           aria-label={t("investments.tax.accounts")}
-          className="max-h-60 space-y-1.5 overflow-y-auto"
-        >
-          {accounts.map((account) => (
-            <label key={account.id} className="flex items-center gap-2.5 text-sm">
-              <Checkbox
-                checked={chosen.has(account.id)}
-                onCheckedChange={(next) => toggle(account.id, next)}
-              />
-              <span className="min-w-0 wrap-break-word">{account.name}</span>
-            </label>
-          ))}
-        </div>
+          className="max-h-60"
+        />
       </PopoverContent>
     </Popover>
   );

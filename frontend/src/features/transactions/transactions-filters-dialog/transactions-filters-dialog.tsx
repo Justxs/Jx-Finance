@@ -95,14 +95,14 @@ export function TransactionsFiltersDialog({
           <FilterSelect id="tx-filter-category" field={fields.category} />
 
           {tags.length > 0 ? (
-            <FieldShell id="tx-filter-tags" label={fields.tags.label} hint={fields.tags.hint}>
+            <FieldShell id="tx-filter-tags" label={fields.tags.label}>
               <TagPicker
                 id="tx-filter-tags"
                 tags={tags}
                 value={fields.tags.value}
                 onChange={fields.tags.set}
                 aria-label={fields.tags.label}
-                aria-describedby="tx-filter-tags-hint"
+                hint={fields.tags.hint}
               />
             </FieldShell>
           ) : null}
