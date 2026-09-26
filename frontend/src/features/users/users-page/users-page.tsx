@@ -1,7 +1,6 @@
 import { useSearch } from "@tanstack/react-router";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   useDeactivateUser,
   useReactivateUser,
@@ -15,7 +14,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { Panel } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
-import { pendingId } from "@/lib/mutations";
+import { notify, pendingId } from "@/lib/mutations";
 import { CreateUserForm } from "../create-user-form/create-user-form";
 import { ResetPasswordDialog } from "../reset-password-dialog/reset-password-dialog";
 import { userListParams, userName } from "../user-queries";
@@ -29,21 +28,9 @@ export function UsersPage() {
   const [shown, stale] = useDeferredParams(useSearch({ from: "/users" }));
   const users = useUsersSuspense(userListParams(shown));
 
-  const roleMutation = useUpdateUserRole({
-    mutation: {
-      onSuccess: () => toast.success(t("users.roleUpdated")),
-    },
-  });
-  const deactivateMutation = useDeactivateUser({
-    mutation: {
-      onSuccess: () => toast.success(t("users.deactivated_toast")),
-    },
-  });
-  const reactivateMutation = useReactivateUser({
-    mutation: {
-      onSuccess: () => toast.success(t("users.reactivated_toast")),
-    },
-  });
+  const roleMutation = useUpdateUserRole(notify(t("users.roleUpdated")));
+  const deactivateMutation = useDeactivateUser(notify(t("users.deactivated_toast")));
+  const reactivateMutation = useReactivateUser(notify(t("users.reactivated_toast")));
 
   const list = users.data;
   const deactivate = useConfirmedDelete(deactivateMutation, list, userName);

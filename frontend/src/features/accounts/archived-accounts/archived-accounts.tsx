@@ -1,6 +1,5 @@
 import { Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   useArchivedAccountsSuspense,
   useHouseholdsSuspense,
@@ -14,7 +13,7 @@ import { Rows } from "@/components/ui/rows/rows";
 import { Section } from "@/components/ui/section/section";
 import { useDate, useMoney } from "@/hooks/use-formatters";
 import { AccountTypeIcon } from "@/lib/account-icons";
-import { pendingId } from "@/lib/mutations";
+import { notify, pendingId } from "@/lib/mutations";
 import { nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
 
@@ -98,9 +97,7 @@ export function ArchivedAccounts() {
   const { t } = useTranslation();
   const archived = useArchivedAccountsSuspense();
   const households = useHouseholdsSuspense();
-  const restoreMutation = useRestoreAccount({
-    mutation: { onSuccess: () => toast.success(t("accounts.restored")) },
-  });
+  const restoreMutation = useRestoreAccount(notify(t("accounts.restored")));
   const restoringId = pendingId(restoreMutation);
   const accounts = archived.data;
 

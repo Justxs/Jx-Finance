@@ -18,7 +18,7 @@ import { Toaster } from "@/components/ui/sonner/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip/tooltip";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
 import { pageViewTransition } from "@/lib/page-transition";
-import { createToastingMutationCache } from "@/lib/query-client";
+import { createMutationCache } from "@/lib/query-client";
 import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
@@ -99,7 +99,7 @@ const storyQueryClients = new Set<QueryClient>();
 function createStoryQueryClient() {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
-    mutationCache: createToastingMutationCache(),
+    mutationCache: createMutationCache(),
   });
   storyQueryClients.add(client);
   return client;

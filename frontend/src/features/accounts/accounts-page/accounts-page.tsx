@@ -2,7 +2,6 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useDeleteAccount, useAccountsSuspense } from "@/api/generated";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { EditModal, Modal } from "@/components/modal";
@@ -15,6 +14,7 @@ import { AccountBalances } from "@/features/dashboard/account-balances/account-b
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useSettings } from "@/hooks/use-settings";
+import { notify } from "@/lib/mutations";
 import { AccountForm } from "../account-form/account-form";
 import { accountListParams } from "../account-queries";
 import { AccountsTable } from "../accounts-table/accounts-table";
@@ -48,11 +48,7 @@ export function AccountsPage() {
 
   const createOpen = creating === "account";
 
-  const deleteMutation = useDeleteAccount({
-    mutation: {
-      onSuccess: () => toast.success(t("accounts.archived")),
-    },
-  });
+  const deleteMutation = useDeleteAccount(notify(t("accounts.archived")));
 
   const accountList = accounts.data;
   const remove = useConfirmedDelete(deleteMutation, accountList, (account) => account.name);

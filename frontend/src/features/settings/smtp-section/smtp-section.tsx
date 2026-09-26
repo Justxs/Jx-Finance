@@ -4,20 +4,14 @@ import { useSendTestEmail, useSmtpSettingsSuspense, useUpdateSmtpSettings } from
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { silent } from "@/lib/mutations";
+import { notify, silent } from "@/lib/mutations";
 import { SmtpForm } from "./smtp-form";
 
 function SmtpSettings() {
   const { t } = useTranslation();
   const settings = useSmtpSettingsSuspense();
 
-  const saveMutation = useUpdateSmtpSettings({
-    mutation: {
-      onSuccess: () => {
-        toast.success(t("settings.smtp.saved"));
-      },
-    },
-  });
+  const saveMutation = useUpdateSmtpSettings(notify(t("settings.smtp.saved")));
 
   const testMutation = useSendTestEmail(
     silent({
