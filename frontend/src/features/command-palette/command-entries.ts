@@ -148,134 +148,115 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
   const { t, features, isAdmin, theme, locale, activeHouseholdId, households } = sources;
   const run = t("commandPalette.run");
 
+  function action(
+    id: string,
+    label: string,
+    keywords: string,
+    target: CommandTarget,
+    hint = run,
+  ): CommandEntry {
+    return { id: `action-${id}`, group: "actions", label, hint, keywords, target };
+  }
+
   const entries: CommandEntry[] = [
-    {
-      id: "action-new-transaction",
-      group: "actions",
-      label: t("shortcuts.newTransaction"),
-      hint: run,
-      keywords: t("nav.transactions"),
-      target: { kind: "navigate", to: "/transactions", search: { new: true } },
-    },
-    {
-      id: "action-new-transfer",
-      group: "actions",
-      label: t("commandPalette.newTransfer"),
-      hint: run,
-      keywords: t("transfers.heading"),
-      target: { kind: "navigate", to: "/accounts", search: { new: "transfer" } },
-    },
-    {
-      id: "action-new-account",
-      group: "actions",
-      label: t("accounts.add"),
-      hint: run,
-      keywords: t("nav.accounts"),
-      target: { kind: "navigate", to: "/accounts", search: { new: "account" } },
-    },
-    {
-      id: "action-theme",
-      group: "actions",
-      label: t(theme === "dark" ? "commandPalette.theme.light" : "commandPalette.theme.dark"),
-      hint: t("theme.toggle"),
-      keywords: t("theme.toggle"),
-      target: { kind: "theme", theme: theme === "dark" ? "light" : "dark" },
-    },
-    {
-      id: "action-locale",
-      group: "actions",
-      label: localeNames[nextLocale[locale]],
-      hint: t("commandPalette.language"),
-      keywords: t("commandPalette.language"),
-      target: { kind: "locale", locale: nextLocale[locale] },
-    },
+    action("new-transaction", t("shortcuts.newTransaction"), t("nav.transactions"), {
+      kind: "navigate",
+      to: "/transactions",
+      search: { new: true },
+    }),
+    action("new-transfer", t("commandPalette.newTransfer"), t("transfers.heading"), {
+      kind: "navigate",
+      to: "/accounts",
+      search: { new: "transfer" },
+    }),
+    action("new-account", t("accounts.add"), t("nav.accounts"), {
+      kind: "navigate",
+      to: "/accounts",
+      search: { new: "account" },
+    }),
+    action(
+      "theme",
+      t(theme === "dark" ? "commandPalette.theme.light" : "commandPalette.theme.dark"),
+      t("theme.toggle"),
+      { kind: "theme", theme: theme === "dark" ? "light" : "dark" },
+      t("theme.toggle"),
+    ),
+    action(
+      "locale",
+      localeNames[nextLocale[locale]],
+      t("commandPalette.language"),
+      { kind: "locale", locale: nextLocale[locale] },
+      t("commandPalette.language"),
+    ),
   ];
 
   if (isAdmin) {
-    entries.push({
-      id: "action-backup",
-      group: "actions",
-      label: t("backup.create"),
-      hint: run,
-      keywords: t("backup.title"),
-      target: { kind: "backup" },
-    });
+    entries.push(action("backup", t("backup.create"), t("backup.title"), { kind: "backup" }));
   }
 
   if (features.households && households.length > 0) {
     const scope = t("households.scope.label");
     if (activeHouseholdId !== undefined) {
-      entries.push({
-        id: "action-household-everything",
-        group: "actions",
-        label: t("households.scope.everything"),
-        hint: scope,
-        keywords: scope,
-        target: { kind: "household", householdId: undefined },
-      });
+      entries.push(
+        action(
+          "household-everything",
+          t("households.scope.everything"),
+          scope,
+          { kind: "household", householdId: undefined },
+          scope,
+        ),
+      );
     }
     for (const household of households) {
       if (household.id !== activeHouseholdId) {
-        entries.push({
-          id: `action-household-${household.id}`,
-          group: "actions",
-          label: household.name,
-          hint: scope,
-          keywords: scope,
-          target: { kind: "household", householdId: household.id },
-        });
+        entries.push(
+          action(
+            `household-${household.id}`,
+            household.name,
+            scope,
+            { kind: "household", householdId: household.id },
+            scope,
+          ),
+        );
       }
     }
   }
 
-  entries.push({
-    id: "action-sign-out",
-    group: "actions",
-    label: t("auth.logout"),
-    hint: run,
-    keywords: "",
-    target: { kind: "signOut" },
-  });
+  entries.push(action("sign-out", t("auth.logout"), "", { kind: "signOut" }));
 
   return entries;
 }
 
+type RecordGroup = "accounts" | "categories" | "tags";
+
 function recordEntries({ t, accounts, categories, tags }: CommandSources): CommandEntry[] {
   const open = t("commandPalette.openTransactions");
 
+  function record(
+    group: RecordGroup,
+    prefix: string,
+    item: { id: string; name: string },
+    search: Record<string, unknown>,
+    keywords = "",
+  ): CommandEntry {
+    return {
+      id: `${prefix}-${item.id}`,
+      group,
+      label: item.name,
+      hint: `${open} · ${t(`nav.${group}`)}`,
+      keywords,
+      target: { kind: "navigate", to: "/transactions", search },
+    };
+  }
+
   return [
-    ...accounts.map((account): CommandEntry => ({
-      id: `account-${account.id}`,
-      group: "accounts" as const,
-      label: account.name,
-      hint: `${open} · ${t("nav.accounts")}`,
-      keywords: account.iban ?? "",
-      target: {
-        kind: "navigate" as const,
-        to: "/transactions",
-        search: { accountId: account.id },
-      },
-    })),
-    ...categories.map((category): CommandEntry => ({
-      id: `category-${category.id}`,
-      group: "categories" as const,
-      label: category.name,
-      hint: `${open} · ${t("nav.categories")}`,
-      keywords: "",
-      target: {
-        kind: "navigate" as const,
-        to: "/transactions",
-        search: { categoryId: category.id },
-      },
-    })),
-    ...tags.map((tag): CommandEntry => ({
-      id: `tag-${tag.id}`,
-      group: "tags" as const,
-      label: tag.name,
-      hint: `${open} · ${t("nav.tags")}`,
-      keywords: "",
-      target: { kind: "navigate" as const, to: "/transactions", search: { tagIds: tag.id } },
-    })),
+    ...accounts.map((account) =>
+      record("accounts", "account", account, { accountId: account.id }, account.iban ?? ""),
+    ),
+    ...categories.map((category) =>
+      record("categories", "category", category, { categoryId: category.id }),
+    ),
+    ...tags.map((tag) => record("tags", "tag", tag, { tagIds: tag.id })),
   ];
 }
 
