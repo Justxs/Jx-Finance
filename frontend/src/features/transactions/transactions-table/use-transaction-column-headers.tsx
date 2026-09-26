@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field/select-field";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import {
+  ColumnFilter,
+  SelectColumnFilter,
+  TextColumnFilter,
+} from "@/components/ui/column-filter/column-filter";
 import { ColumnHeader } from "@/components/ui/column-header/column-header";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
@@ -63,18 +66,12 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
     ),
     categoryId: header(
       "category",
-      <ColumnFilter
+      <SelectColumnFilter
         label={fields.category.label}
-        active={fields.category.active}
-        onClear={fields.category.clear}
-      >
-        <SelectField
-          aria-label={fields.category.label}
-          value={fields.category.value}
-          onChange={fields.category.set}
-          options={fields.category.options}
-        />
-      </ColumnFilter>,
+        value={fields.category.value}
+        onChange={fields.category.set}
+        options={fields.category.options}
+      />,
     ),
     tagIds: (
       <ColumnHeader<string>
@@ -101,33 +98,21 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
     ),
     accountId: header(
       "account",
-      <ColumnFilter
+      <SelectColumnFilter
         label={fields.account.label}
-        active={fields.account.active}
-        onClear={fields.account.clear}
-      >
-        <SelectField
-          aria-label={fields.account.label}
-          value={fields.account.value}
-          onChange={fields.account.set}
-          options={fields.account.options}
-        />
-      </ColumnFilter>,
+        value={fields.account.value}
+        onChange={fields.account.set}
+        options={fields.account.options}
+      />,
     ),
     amount: header(
       "amount",
-      <ColumnFilter
+      <SelectColumnFilter
         label={columnLabels.amount}
-        active={fields.type.active}
-        onClear={fields.type.clear}
-      >
-        <SelectField
-          aria-label={columnLabels.amount}
-          value={fields.type.value}
-          onChange={fields.type.set}
-          options={fields.type.options}
-        />
-      </ColumnFilter>,
+        value={fields.type.value}
+        onChange={fields.type.set}
+        options={fields.type.options}
+      />,
     ),
   };
 

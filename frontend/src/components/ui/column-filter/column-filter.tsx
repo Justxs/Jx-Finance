@@ -1,6 +1,7 @@
 import { ListFilter } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { SelectField, type SelectOption } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { Input } from "@/components/ui/input/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover/popover";
@@ -79,6 +80,26 @@ export function TextColumnFilter({
         value={text.draft}
         onChange={(e) => text.change(e.target.value)}
       />
+    </ColumnFilter>
+  );
+}
+
+interface SelectFilterProps<T extends string> {
+  label: string;
+  value: T;
+  options: SelectOption<T>[];
+  onChange: (value: T | "") => void;
+}
+
+export function SelectColumnFilter<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: Readonly<SelectFilterProps<T>>) {
+  return (
+    <ColumnFilter label={label} active={value !== ""} onClear={() => onChange("")}>
+      <SelectField aria-label={label} value={value} onChange={onChange} options={options} />
     </ColumnFilter>
   );
 }

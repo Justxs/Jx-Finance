@@ -91,9 +91,7 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       label: t("transactions.type"),
       value: typeValue,
       options: typeOptions(t),
-      active: Boolean(search.type),
       set: setType,
-      clear: () => patchSearch({ type: undefined }),
     },
     date: {
       label: columnLabels.date,
@@ -106,17 +104,13 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       label: columnLabels.category,
       value: search.categoryId ?? "",
       options: namedOptions(categories, t("transactions.allCategories")),
-      active: Boolean(search.categoryId),
       set: setCategoryId,
-      clear: () => patchSearch({ categoryId: undefined }),
     },
     account: {
       label: columnLabels.account,
       value: search.accountId ?? "",
       options: namedOptions(accounts, t("transactions.allAccounts")),
-      active: Boolean(search.accountId),
       set: setAccountId,
-      clear: () => patchSearch({ accountId: undefined }),
     },
     tags: {
       label: t("tags.field"),
