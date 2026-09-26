@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog/alert-dialog";
 import { Button } from "@/components/ui/button/button";
 import { useRetained } from "@/hooks/use-retained";
-import { hasServerErrorCode } from "@/lib/form-server-errors";
+import { clearingWrongPassword } from "@/lib/form-server-errors";
 import { requiredMax } from "@/lib/validation";
 
 interface FormProps {
@@ -39,16 +39,8 @@ function RestoreBackupForm({ error, pending, onRestore }: Readonly<FormProps>) {
   const form = useServerForm({
     defaultValues: { confirmation: "", password: "" },
     schema,
-    submit: async (value, formApi) => {
-      try {
-        await onRestore(value.password);
-      } catch (failure) {
-        if (hasServerErrorCode(failure, "password.incorrect")) {
-          formApi.setFieldValue("password", "");
-        }
-        throw failure;
-      }
-    },
+    submit: (value, formApi) =>
+      clearingWrongPassword(formApi, "password", () => onRestore(value.password)),
   });
 
   return (

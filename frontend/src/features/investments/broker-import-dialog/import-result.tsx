@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { BrokerImportResponse } from "@/api/generated/model";
+import { FormError } from "@/components/form-error/form-error";
 import { ScrollRegion } from "@/components/ui/table/table";
 import { useQuantityFormat } from "@/hooks/use-formatters";
 import type { TranslationKey } from "@/lib/i18n";
@@ -135,5 +136,24 @@ export function BrokerImportResult({ result }: Readonly<Props>) {
         </div>
       ) : null}
     </div>
+  );
+}
+
+interface StatusProps {
+  pending: boolean;
+  pendingText: string;
+  result: BrokerImportResponse | undefined;
+  error: unknown;
+}
+
+export function BrokerImportStatus({ pending, pendingText, result, error }: Readonly<StatusProps>) {
+  return (
+    <>
+      <div role="status" aria-live="polite">
+        {pending ? <p className="text-sm text-muted-foreground">{pendingText}</p> : null}
+        {!pending && result ? <BrokerImportResult result={result} /> : null}
+      </div>
+      <FormError error={error} />
+    </>
   );
 }

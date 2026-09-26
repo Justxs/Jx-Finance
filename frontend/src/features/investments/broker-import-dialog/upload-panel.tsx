@@ -1,14 +1,13 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
-import { FormError } from "@/components/form-error/form-error";
 import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { useFileField } from "@/hooks/use-file-field";
 import { namedOptions } from "@/lib/options";
-import { BrokerImportResult } from "./import-result";
+import { BrokerImportStatus } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
 const MAX_FILE_BYTES = 20 * 1024 * 1024;
@@ -93,13 +92,12 @@ export function UploadPanel({ accounts, accountId, mutations }: Readonly<Props>)
         />
       </FieldShell>
 
-      <div role="status" aria-live="polite">
-        {importMutation.isPending ? (
-          <p className="text-sm text-muted-foreground">{t("investments.import.uploading")}</p>
-        ) : null}
-        {!importMutation.isPending && result ? <BrokerImportResult result={result} /> : null}
-      </div>
-      <FormError error={failure} />
+      <BrokerImportStatus
+        pending={importMutation.isPending}
+        pendingText={t("investments.import.uploading")}
+        result={result}
+        error={failure}
+      />
 
       <div className="flex justify-end">
         <Button
