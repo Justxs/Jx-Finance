@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { type ReactNode, useState, useDeferredValue } from "react";
+import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import {
   getBudgetsQueryKey,
@@ -12,19 +12,18 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
 import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
+import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { fromCents, toCents } from "@/lib/money";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { EXPENSE_TONE } from "@/lib/tone";
-import { cn } from "@/lib/utils";
 import { budgetPeriodLabel } from "../budget-periods";
+import { BudgetRemaining, budgetFigures } from "../budget-remaining";
 import { BudgetUsageChart } from "../budget-usage-chart";
 import { CreateBudgetForm } from "../create-budget-form/create-budget-form";
 
@@ -54,16 +53,42 @@ export function BudgetsPage() {
   const limitCents = budgetList.reduce((sum, budget) => sum + toCents(budget.effectiveLimit), 0);
   const remainingCents = limitCents - spentCents;
 
-  let content: ReactNode;
-  if (budgetList.length === 0) {
-    content = <EmptyText>{t("budgets.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Section as={Rows} className="py-2 sm:py-3">
+  return (
+    <div className="space-y-5">
+      <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
+        <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
+          {(close) => <CreateBudgetForm categories={categoryList} onClose={close} />}
+        </CreateDialog>
+      </PageHeader>
+
+      <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
+        {(budget, close) => (
+          <CreateBudgetForm initial={budget} categories={categoryList} onClose={close} />
+        )}
+      </EditModal>
+      {budgetList.length > 0 ? (
+        <SummaryStats
+          items={[
+            { label: t("budgets.spentInWindow"), value: fromCents(spentCents), lead: true },
+            { label: t("budgets.budgeted"), value: fromCents(limitCents) },
+            remainingCents < 0
+              ? {
+                  label: t("budgets.overBy"),
+                  value: fromCents(-remainingCents),
+                  tone: EXPENSE_TONE,
+                }
+              : { label: t("budgets.remaining"), value: fromCents(remainingCents) },
+          ]}
+        />
+      ) : null}
+      {budgetList.length > 1 ? (
+        <TitledSection title={t("budgets.usage")} bodyGap="md">
+          <BudgetUsageChart budgets={budgetList} />
+        </TitledSection>
+      ) : null}
+      <PanelRows count={budgetList.length} emptyText={t("budgets.empty")}>
         {budgetList.map((budget) => {
-          const limit = Number(budget.effectiveLimit);
-          const spent = Number(budget.spent);
-          const overBudget = spent > limit;
+          const { spent, limit, over } = budgetFigures(budget);
           return (
             <ProgressRow
               key={budget.id}
@@ -104,16 +129,7 @@ export function BudgetsPage() {
               }
               secondary={
                 <>
-                  <p
-                    className={cn(
-                      "text-xs tabular-nums",
-                      overBudget ? EXPENSE_TONE : "text-muted-foreground",
-                    )}
-                  >
-                    {overBudget
-                      ? t("budgets.over", { amount: money.format(spent - limit) })
-                      : t("budgets.left", { amount: money.format(limit - spent) })}
-                  </p>
+                  <BudgetRemaining spent={spent} limit={limit} className="block" />
                   {budget.rolloverEnabled ? (
                     <p className="text-xs text-muted-foreground tabular-nums">
                       {t("budgets.carryLabel", {
@@ -125,51 +141,13 @@ export function BudgetsPage() {
                   ) : null}
                 </>
               }
-              meter={{ value: spent, max: limit, tone: overBudget ? "negative" : "primary" }}
+              meter={{ value: spent, max: limit, tone: over ? "negative" : "primary" }}
               onEdit={() => setEditing(budget)}
               {...remove.deleteProps(budget.id)}
             />
           );
         })}
-      </Section>
-    );
-  }
-
-  return (
-    <div className="space-y-5">
-      <PageHeader title={t("budgets.title")} description={t("budgets.subtitle")}>
-        <CreateDialog label={t("budgets.add")} title={t("budgets.add")}>
-          {(close) => <CreateBudgetForm categories={categoryList} onClose={close} />}
-        </CreateDialog>
-      </PageHeader>
-
-      <EditModal item={editing} title={t("actions.edit")} onClose={() => setEditing(null)}>
-        {(budget, close) => (
-          <CreateBudgetForm initial={budget} categories={categoryList} onClose={close} />
-        )}
-      </EditModal>
-      {budgetList.length > 0 ? (
-        <SummaryStats
-          items={[
-            { label: t("budgets.spentInWindow"), value: fromCents(spentCents), lead: true },
-            { label: t("budgets.budgeted"), value: fromCents(limitCents) },
-            remainingCents < 0
-              ? {
-                  label: t("budgets.overBy"),
-                  value: fromCents(-remainingCents),
-                  tone: EXPENSE_TONE,
-                }
-              : { label: t("budgets.remaining"), value: fromCents(remainingCents) },
-          ]}
-        />
-      ) : null}
-      {budgetList.length > 1 ? (
-        <Section>
-          <SectionTitle className="mb-4">{t("budgets.usage")}</SectionTitle>
-          <BudgetUsageChart budgets={budgetList} />
-        </Section>
-      ) : null}
-      {content}
+      </PanelRows>
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>
   );

@@ -1,4 +1,3 @@
-import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import { CreateDialog } from "@/components/create-dialog/create-dialog";
@@ -13,19 +12,6 @@ export function HouseholdsPage() {
   const households = useHouseholdsSuspense();
   const householdList = households.data;
 
-  let content: ReactNode;
-  if (householdList.length === 0) {
-    content = <EmptyText>{t("households.empty")}</EmptyText>;
-  } else {
-    content = (
-      <div className="space-y-5">
-        {householdList.map((household) => (
-          <HouseholdCard key={household.id} household={household} />
-        ))}
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-5">
       <PageHeader title={t("households.title")}>
@@ -34,7 +20,11 @@ export function HouseholdsPage() {
         </CreateDialog>
       </PageHeader>
 
-      {content}
+      {householdList.length === 0 ? (
+        <EmptyText>{t("households.empty")}</EmptyText>
+      ) : (
+        householdList.map((household) => <HouseholdCard key={household.id} household={household} />)
+      )}
     </div>
   );
 }
