@@ -1,3 +1,6 @@
+using System.Globalization;
+using JxFinance.Common.Formats;
+
 namespace JxFinance.Common;
 
 public static class CsvCell
@@ -9,6 +12,10 @@ public static class CsvCell
     public static string Text(string? value) => Escape(Neutralize(value ?? string.Empty));
 
     public static string Value(string? value) => Escape(value ?? string.Empty);
+
+    public static string Date(DateOnly date) => Value(DateFormats.Iso(date));
+
+    public static string Money(decimal amount) => Value(amount.ToString("0.00", CultureInfo.InvariantCulture));
 
     private static string Neutralize(string value) =>
         value.Length > 0 && FormulaTriggers.Contains(value[0]) ? $"'{value}" : value;

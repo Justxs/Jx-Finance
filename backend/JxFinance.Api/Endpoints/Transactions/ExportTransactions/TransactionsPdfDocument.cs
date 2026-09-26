@@ -98,8 +98,8 @@ public sealed class TransactionsPdfDocument(
             return "All time";
         }
 
-        var from = dateFrom?.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture) ?? "…";
-        var to = dateTo?.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture) ?? "…";
+        var from = dateFrom is { } start ? DateFormats.Iso(start) : "…";
+        var to = dateTo is { } end ? DateFormats.Iso(end) : "…";
         return $"{from} — {to}";
     }
 
@@ -146,7 +146,7 @@ public sealed class TransactionsPdfDocument(
             row.Borders.Bottom.Width = Unit.FromPoint(0.5);
             row.Borders.Bottom.Color = RowBorderColor;
 
-            row.Cells[0].AddParagraph(transaction.Date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture));
+            row.Cells[0].AddParagraph(DateFormats.Iso(transaction.Date));
             row.Cells[1].AddParagraph(transaction.Description ?? "");
             row.Cells[2].AddParagraph(names.Accounts.GetValueOrDefault(transaction.AccountId) ?? "");
             row.Cells[3].AddParagraph(category ?? "");

@@ -11,7 +11,7 @@ public static class TrashLabel
         $"{Name(description, date)}, {Amount(amount)}";
 
     public static string Exchanged(Money from, Money to, DateOnly date) =>
-        $"{Amount(from)} → {Amount(to)}, {Iso(date)}";
+        $"{Amount(from)} → {Amount(to)}, {DateFormats.Iso(date)}";
 
     public static string Amount(Money amount) => $"{amount} {amount.Currency.ToCode()}";
 
@@ -33,7 +33,7 @@ public static class TrashLabel
             InvestmentTransactionType.Split => $"{Verb(entry.Type)}{security}, ratio {Quantity(entry.Quantity)}",
             _ => $"{Verb(entry.Type)}{security}, {Amount(new Money(Math.Abs(entry.CashAmount.Amount), entry.CashAmount.Currency))}",
         };
-        return $"{what}, {Iso(entry.Date)}";
+        return $"{what}, {DateFormats.Iso(entry.Date)}";
     }
 
     private static string Verb(InvestmentTransactionType type) => type switch
@@ -51,7 +51,6 @@ public static class TrashLabel
     private static string Quantity(decimal quantity) => quantity.ToString("0.########", CultureInfo.InvariantCulture);
 
     private static string Name(string? description, DateOnly date) =>
-        OptionalText.Normalize(description) ?? Iso(date);
+        OptionalText.Normalize(description) ?? DateFormats.Iso(date);
 
-    private static string Iso(DateOnly date) => date.ToString(DateFormats.IsoDate, CultureInfo.InvariantCulture);
 }
