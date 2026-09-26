@@ -10,7 +10,7 @@ pre-commit:
     - name: lint
       root: frontend/
       glob: "*.{ts,tsx}"
-      run: node_modules/.bin/oxlint {staged_files}
+      run: node_modules/.bin/oxlint --no-error-on-unmatched-pattern {staged_files}
     - name: backend format
       glob: "backend/**/*.cs"
       exclude: "backend/JxFinance.Api/Infrastructure/Data/Migrations/*"
