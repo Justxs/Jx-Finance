@@ -1,11 +1,14 @@
 import { describe, expect, test } from "vitest";
-import type {
-  AccountResponse,
-  CategoryResponse,
-  FeatureFlags,
-  HouseholdResponse,
-  TagResponse,
-} from "@/api/generated/model";
+import {
+  accounts,
+  categories,
+  checkingAccount,
+  familyHousehold,
+  households,
+  ids as fixtureIds,
+  settings,
+  tags,
+} from "@/storybook/fixtures";
 import { type CommandEntry, type CommandSources, buildCommandEntries } from "./command-entries";
 import { filterCommandEntries, foldText, matchScore } from "./command-search";
 
@@ -13,59 +16,11 @@ function t(key: string) {
   return key;
 }
 
-const allFeatures: FeatureFlags = {
-  budgets: true,
-  goals: true,
-  recurringBills: true,
-  netWorth: true,
-  reports: true,
-  import: true,
-  households: true,
-  multiCurrency: true,
-  investments: true,
-  categorizationRules: true,
-};
-
-const account: AccountResponse = {
-  id: "account-1",
-  name: "Swedbank einamoji",
-  description: null,
-  iban: "LT127300010123456789",
-  type: "checking",
-  startingBalance: "0.00",
-  currentBalance: "0.00",
-  createdAt: "2026-01-01T00:00:00Z",
-  scope: "personal",
-  currency: "eur",
-  balances: [],
-  reportingBalance: "0.00",
-  holdingsValue: "0.00",
-  householdId: null,
-};
-
-const category: CategoryResponse = {
-  id: "category-1",
-  name: "Kavinės ir restoranai",
-  type: "expense",
-  icon: null,
-  isDefault: false,
-  scope: "personal",
-  householdId: null,
-};
-
-const tag: TagResponse = {
-  id: "tag-1",
-  name: "Atostogos",
-  scope: "personal",
-  householdId: null,
-};
-
-const household: HouseholdResponse = {
-  id: "household-1",
-  name: "Kazlauskų šeima",
-  myRole: "owner",
-  members: [],
-};
+const allFeatures = settings.features;
+const accountEntry = `account-${checkingAccount.id}`;
+const categoryEntry = `category-${fixtureIds.categories.food}`;
+const tagEntry = `tag-${fixtureIds.tags.holiday}`;
+const familyEntry = `action-household-${familyHousehold.id}`;
 
 function sources(overrides: Partial<CommandSources> = {}): CommandSources {
   return {
@@ -75,10 +30,10 @@ function sources(overrides: Partial<CommandSources> = {}): CommandSources {
     theme: "light",
     locale: "en",
     activeHouseholdId: undefined,
-    accounts: [account],
-    categories: [category],
-    tags: [tag],
-    households: [household],
+    accounts,
+    categories,
+    tags,
+    households,
     ...overrides,
   };
 }
@@ -104,9 +59,9 @@ describe("buildCommandEntries", () => {
         "action-theme",
         "action-locale",
         "action-sign-out",
-        "account-account-1",
-        "category-category-1",
-        "tag-tag-1",
+        accountEntry,
+        categoryEntry,
+        tagEntry,
       ]),
     );
   });
@@ -161,14 +116,14 @@ describe("buildCommandEntries", () => {
     const off = ids(
       buildCommandEntries(sources({ features: { ...allFeatures, households: false } })),
     );
-    expect(off).not.toContain("action-household-household-1");
+    expect(off).not.toContain(familyEntry);
 
     const none = ids(buildCommandEntries(sources({ households: [] })));
     expect(none).not.toContain("action-household-everything");
 
-    const active = ids(buildCommandEntries(sources({ activeHouseholdId: household.id })));
+    const active = ids(buildCommandEntries(sources({ activeHouseholdId: familyHousehold.id })));
     expect(active).toContain("action-household-everything");
-    expect(active).not.toContain("action-household-household-1");
+    expect(active).not.toContain(familyEntry);
   });
 
   test("the theme and language entries name the choice they would make", () => {
@@ -188,10 +143,10 @@ describe("buildCommandEntries", () => {
   test("a record entry opens the ledger filtered by that record", () => {
     const entries = buildCommandEntries(sources());
 
-    expect(entries.find((entry) => entry.id === "tag-tag-1")?.target).toEqual({
+    expect(entries.find((entry) => entry.id === tagEntry)?.target).toEqual({
       kind: "navigate",
       to: "/transactions",
-      search: { tagIds: "tag-1" },
+      search: { tagIds: fixtureIds.tags.holiday },
     });
   });
 });
@@ -246,11 +201,11 @@ describe("filterCommandEntries", () => {
   test("an empty query keeps every entry and puts the recent ones first", () => {
     const built = buildCommandEntries(sources({ isAdmin: true }));
     const plain = filterCommandEntries(built, "");
-    const recent = filterCommandEntries(built, "", ["tag-tag-1", "page-trash"]);
+    const recent = filterCommandEntries(built, "", [tagEntry, "page-trash"]);
 
     expect(plain).toHaveLength(built.length);
     expect(recent).toHaveLength(built.length);
-    expect(ids(recent).slice(0, 2)).toEqual(["tag-tag-1", "page-trash"]);
+    expect(ids(recent).slice(0, 2)).toEqual([tagEntry, "page-trash"]);
   });
 
   test("closer matches come first", () => {

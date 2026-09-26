@@ -4,25 +4,13 @@ import type {
   CurrenciesResponse,
   PagedResponseOfTransactionResponse,
   TransactionsSummaryResponse,
-  UserProfileResponse,
 } from "@/api/generated/model";
 import { setAuthenticated, setSetupNeeded } from "@/lib/auth-gate";
-import { UserRole } from "@/lib/user-role";
+import { currentUser } from "@/storybook/fixtures";
 import { APP_TEST_TIMEOUT, appWait, mountApp, settled } from "@/test/app-router";
 import { settingsFixture } from "@/test/settings";
 
 vi.setConfig({ testTimeout: APP_TEST_TIMEOUT });
-
-const me: UserProfileResponse = {
-  id: "0b0e6c1e-6f0f-4b57-9a53-0d5a3f1f0001",
-  email: "ruta@example.lt",
-  displayName: "Ruta",
-  role: UserRole.admin,
-  twoFactorEnabled: false,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
 
 const currencies: CurrenciesResponse = {
   reportingCurrency: "eur",
@@ -48,7 +36,7 @@ function emptyPage(url: URL): PagedResponseOfTransactionResponse {
 function bodyFor(url: URL): unknown {
   switch (url.pathname) {
     case "/api/auth/me":
-      return me;
+      return currentUser;
     case "/api/settings":
     case "/api/settings/public":
       return settingsFixture();
