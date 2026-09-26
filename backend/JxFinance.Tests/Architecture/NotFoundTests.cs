@@ -1,5 +1,5 @@
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using JxFinance.Tests.Support;
 
 namespace JxFinance.Tests.Architecture;
 
@@ -14,7 +14,7 @@ public partial class NotFoundTests
     [Fact]
     public void Not_found_errors_are_built_only_by_the_shared_lookup_helpers()
     {
-        var apiDirectory = ApiSourceDirectory();
+        var apiDirectory = RepoPath.Of("JxFinance.Api");
         var offenders = Directory
             .EnumerateFiles(apiDirectory, "*.cs", SearchOption.AllDirectories)
             .Select(file => Path.GetRelativePath(apiDirectory, file))
@@ -32,14 +32,6 @@ public partial class NotFoundTests
     {
         var root = relativePath.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)[0];
         return root is "bin" or "obj";
-    }
-
-    private static string ApiSourceDirectory([CallerFilePath] string testFile = "")
-    {
-        var directory = new DirectoryInfo(Path.GetDirectoryName(testFile)!);
-        while (!Directory.Exists(Path.Combine(directory.FullName, "JxFinance.Api")))
-            directory = directory.Parent ?? throw new InvalidOperationException("JxFinance.Api was not found above the test project.");
-        return Path.Combine(directory.FullName, "JxFinance.Api");
     }
 
     [GeneratedRegex(@"\bResourceNotFound\b")]

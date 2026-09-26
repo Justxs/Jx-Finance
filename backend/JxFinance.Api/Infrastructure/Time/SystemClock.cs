@@ -3,20 +3,11 @@ using JxFinance.Domain.Common;
 
 namespace JxFinance.Infrastructure.Time;
 
-public sealed class SystemClock : IClock
+public sealed class SystemClock(IInstanceSettingsStore settings) : IClock
 {
-    private readonly IInstanceSettingsStore settings;
-
-    public SystemClock(IInstanceSettingsStore settings)
-    {
-        this.settings = settings;
-    }
-
     public TimeZoneInfo TimeZone => settings.Current.TimeZone;
 
     public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
-
-    public DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(UtcNow, TimeZone).DateTime);
 
     public DateTimeOffset StartOfDay(DateOnly date)
     {

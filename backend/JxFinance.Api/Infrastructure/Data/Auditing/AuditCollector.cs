@@ -154,7 +154,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
     private List<EntityEntry> ScopedEntries(List<EntityEntry> entries)
     {
         var feeIds = db.ChangeTracker.Entries<CurrencyConversion>()
-            .SelectMany(e => new[] { (TransactionId?)Read(e, nameof(CurrencyConversion.FeeTransactionId), true), e.Entity.FeeTransactionId })
+            .SelectMany(e => BothValues<TransactionId>(e, nameof(CurrencyConversion.FeeTransactionId)))
             .OfType<TransactionId>()
             .ToHashSet();
         var trackedTransactions = db.ChangeTracker.Entries<Transaction>()
@@ -183,23 +183,18 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             .Concat(attachedTo.Values.Select(t => t.AccountId))
             .Distinct()
             .ToList();
-        if (ids.Count > 0)
-        {
-            var stored = await db.Accounts
+        var stored = ids.Count == 0
+            ? []
+            : await db.Accounts
                 .IgnoreQueryFilters()
                 .AsNoTracking()
                 .Where(a => ids.Contains(a.Id))
                 .Select(a => new { a.Id, a.Scope, a.HouseholdId, a.Name })
                 .ToListAsync(cancellationToken);
-            foreach (var account in stored)
-            {
-                accounts[account.Id] = new AccountInfo(account.Scope, account.HouseholdId, account.Name);
-            }
-        }
-
-        foreach (var entry in db.ChangeTracker.Entries<Account>())
+        var tracked = db.ChangeTracker.Entries<Account>()
+            .Select(e => new { e.Entity.Id, e.Entity.Scope, e.Entity.HouseholdId, e.Entity.Name });
+        foreach (var account in stored.Concat(tracked))
         {
-            var account = entry.Entity;
             accounts[account.Id] = new AccountInfo(account.Scope, account.HouseholdId, account.Name);
         }
     }
@@ -432,34 +427,36 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             .Select(d => ((Transaction)d.Entry.Entity).Id)
             .Distinct()
             .ToList();
-        var withTags = transactionIds.Where(id => tagChanges.Contains(id)).ToList();
-        if (withTags.Count > 0)
+        await LoadStoredAsync(storedTags, tagChanges, transactionIds, async ids => (await db.TransactionTags
+            .AsNoTracking()
+            .Where(x => ids.Contains(x.TransactionId))
+            .Select(x => new { x.TransactionId, x.TagId })
+            .ToListAsync(cancellationToken))
+            .ToLookup(p => p.TransactionId, p => p.TagId));
+        await LoadStoredAsync(storedLines, lineChanges, transactionIds, async ids => (await db.TransactionLines
+            .AsNoTracking()
+            .Where(l => ids.Contains(l.TransactionId))
+            .Select(l => new { l.TransactionId, l.Id, l.CategoryId, l.Amount })
+            .ToListAsync(cancellationToken))
+            .ToLookup(l => l.TransactionId, l => new LineInfo(l.Id, l.CategoryId, l.Amount.Amount)));
+    }
+
+    private static async Task LoadStoredAsync<TItem>(
+        Dictionary<TransactionId, List<TItem>> stored,
+        ILookup<TransactionId, EntityEntry> changes,
+        List<TransactionId> transactionIds,
+        Func<List<TransactionId>, Task<ILookup<TransactionId, TItem>>> load)
+    {
+        var ids = transactionIds.Where(id => changes.Contains(id)).ToList();
+        if (ids.Count == 0)
         {
-            var pairs = (await db.TransactionTags
-                .AsNoTracking()
-                .Where(x => withTags.Contains(x.TransactionId))
-                .Select(x => new { x.TransactionId, x.TagId })
-                .ToListAsync(cancellationToken))
-                .ToLookup(p => p.TransactionId, p => p.TagId);
-            foreach (var id in withTags)
-            {
-                storedTags[id] = [.. pairs[id]];
-            }
+            return;
         }
 
-        var withLines = transactionIds.Where(id => lineChanges.Contains(id)).ToList();
-        if (withLines.Count > 0)
+        var items = await load(ids);
+        foreach (var id in ids)
         {
-            var lines = (await db.TransactionLines
-                .AsNoTracking()
-                .Where(l => withLines.Contains(l.TransactionId))
-                .Select(l => new { l.TransactionId, l.Id, l.CategoryId, l.Amount })
-                .ToListAsync(cancellationToken))
-                .ToLookup(l => l.TransactionId, l => new LineInfo(l.Id, l.CategoryId, l.Amount.Amount));
-            foreach (var id in withLines)
-            {
-                storedLines[id] = [.. lines[id]];
-            }
+            stored[id] = [.. items[id]];
         }
     }
 
@@ -469,11 +466,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         var categoryIds = entries
             .Where(e => e.Entity is Transaction)
-            .SelectMany(e => new[]
-            {
-                (CategoryId?)Read(e, nameof(Transaction.CategoryId), true),
-                (CategoryId?)Read(e, nameof(Transaction.CategoryId), false),
-            })
+            .SelectMany(e => BothValues<CategoryId>(e, nameof(Transaction.CategoryId)))
             .Concat(storedLines.Values.SelectMany(lines => lines.Select(l => l.CategoryId)))
             .Concat(lineChanges.SelectMany(g => g).Select(e => ((TransactionLine)e.Entity).CategoryId))
             .OfType<CategoryId>()
@@ -503,11 +496,7 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
         var securityIds = entries
             .Where(e => e.Entity is InvestmentTransaction)
-            .SelectMany(e => new[]
-            {
-                (SecurityId?)Read(e, nameof(InvestmentTransaction.SecurityId), true),
-                (SecurityId?)Read(e, nameof(InvestmentTransaction.SecurityId), false),
-            })
+            .SelectMany(e => BothValues<SecurityId>(e, nameof(InvestmentTransaction.SecurityId)))
             .OfType<SecurityId>()
             .Distinct()
             .ToList();
@@ -607,49 +596,46 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
         return changes;
     }
 
-    private AuditChange? TagChange(TransactionId transactionId)
+    private AuditChange? TagChange(TransactionId transactionId) => ChildChange(
+        TagsField,
+        storedTags.GetValueOrDefault(transactionId),
+        tagChanges[transactionId],
+        e => ((TransactionTag)e.Entity).TagId,
+        id => id,
+        TagNames);
+
+    private AuditChange? LineChange(TransactionId transactionId) => ChildChange(
+        SplitField,
+        storedLines.GetValueOrDefault(transactionId),
+        lineChanges[transactionId],
+        e => LineInfo.Of((TransactionLine)e.Entity),
+        line => line.Id,
+        LineSummary);
+
+    private static AuditChange? ChildChange<TItem, TKey>(
+        string field,
+        List<TItem>? stored,
+        IEnumerable<EntityEntry> changed,
+        Func<EntityEntry, TItem> itemOf,
+        Func<TItem, TKey> keyOf,
+        Func<IEnumerable<TItem>, string?> summarise)
     {
-        if (!storedTags.TryGetValue(transactionId, out var stored))
+        if (stored is null)
         {
             return null;
         }
 
-        var removed = tagChanges[transactionId].Where(e => e.State == EntityState.Deleted)
-            .Select(e => ((TransactionTag)e.Entity).TagId)
-            .ToHashSet();
-        var added = tagChanges[transactionId].Where(e => e.State == EntityState.Added)
-            .Select(e => ((TransactionTag)e.Entity).TagId);
-        var after = stored.Where(id => !removed.Contains(id)).Concat(added).Distinct().ToList();
-
-        var from = TagNames(stored);
-        var to = TagNames(after);
-        return from == to ? null : new AuditChange(TagsField, from, to);
+        var removed = changed.Where(e => e.State == EntityState.Deleted).Select(e => keyOf(itemOf(e))).ToHashSet();
+        var added = changed.Where(e => e.State == EntityState.Added).Select(itemOf);
+        var from = summarise(stored);
+        var to = summarise(stored.Where(item => !removed.Contains(keyOf(item))).Concat(added).ToList());
+        return from == to ? null : new AuditChange(field, from, to);
     }
 
     private string? TagNames(IEnumerable<TagId> ids)
     {
-        var names = ids.Select(id => tags.GetValueOrDefault(id) ?? "").Order(StringComparer.CurrentCultureIgnoreCase).ToList();
+        var names = ids.Distinct().Select(id => tags.GetValueOrDefault(id) ?? "").Order(StringComparer.CurrentCultureIgnoreCase).ToList();
         return names.Count == 0 ? null : string.Join(", ", names);
-    }
-
-    private AuditChange? LineChange(TransactionId transactionId)
-    {
-        if (!storedLines.TryGetValue(transactionId, out var stored))
-        {
-            return null;
-        }
-
-        var removed = lineChanges[transactionId].Where(e => e.State == EntityState.Deleted)
-            .Select(e => ((TransactionLine)e.Entity).Id)
-            .ToHashSet();
-        var added = lineChanges[transactionId].Where(e => e.State == EntityState.Added)
-            .Select(e => (TransactionLine)e.Entity)
-            .Select(l => new LineInfo(l.Id, l.CategoryId, l.Amount.Amount));
-        var after = stored.Where(l => !removed.Contains(l.Id)).Concat(added).ToList();
-
-        var from = LineSummary(stored);
-        var to = LineSummary(after);
-        return from == to ? null : new AuditChange(SplitField, from, to);
     }
 
     private string? LineSummary(IEnumerable<LineInfo> lines)
@@ -709,6 +695,10 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
             ? (HouseholdId?)Read(entry, nameof(IShareable.HouseholdId), original)
             : null;
 
+    private static IEnumerable<T?> BothValues<T>(EntityEntry entry, string name)
+        where T : struct =>
+        [(T?)Read(entry, name, true), (T?)Read(entry, name, false)];
+
     private static object? Read(EntityEntry entry, string name, bool original)
     {
         if (entry.Metadata.FindComplexProperty(name) is not null)
@@ -756,5 +746,8 @@ internal sealed class AuditCollector(AppDbContext db, Guid actorId, DateTimeOffs
 
     private sealed record AttachedTo(AccountId AccountId, string Description);
 
-    private sealed record LineInfo(Guid Id, CategoryId? CategoryId, decimal Amount);
+    private sealed record LineInfo(Guid Id, CategoryId? CategoryId, decimal Amount)
+    {
+        public static LineInfo Of(TransactionLine line) => new(line.Id, line.CategoryId, line.Amount.Amount);
+    }
 }

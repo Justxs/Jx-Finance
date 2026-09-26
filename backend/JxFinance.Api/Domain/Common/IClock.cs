@@ -6,7 +6,7 @@ public interface IClock
 
     TimeZoneInfo TimeZone { get; }
 
-    DateOnly Today { get; }
+    DateOnly Today => DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(UtcNow, TimeZone).DateTime);
 
     DateTimeOffset StartOfDay(DateOnly date);
 }

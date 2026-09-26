@@ -12,20 +12,16 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-var recoveryIndex = Array.IndexOf(args, "--recover-admin");
-if (recoveryIndex >= 0)
+if (EmailAfter("--recover-admin", "administrator") is { } adminEmail)
 {
-    if (recoveryIndex + 1 >= args.Length) throw new ArgumentException("Provide the administrator email after --recover-admin.");
-    await RecoveryCommand.RunAsync(app.Services, args[recoveryIndex + 1]);
+    await RecoveryCommand.RunAsync(app.Services, adminEmail);
     return;
 }
 
-var demoIndex = Array.IndexOf(args, "--seed-demo");
-if (demoIndex >= 0)
+if (EmailAfter("--seed-demo", "user") is { } demoEmail)
 {
-    if (demoIndex + 1 >= args.Length) throw new ArgumentException("Provide the user email after --seed-demo.");
     await app.ApplyMigrationsAsync();
-    await DemoDataCommand.RunAsync(app.Services, args[demoIndex + 1]);
+    await DemoDataCommand.RunAsync(app.Services, demoEmail);
     return;
 }
 
@@ -34,6 +30,17 @@ await app.ExportOpenApiDocsAndExitAsync(OpenApiExtensions.DocumentName);
 await app.ApplyMigrationsAsync();
 
 await app.RunAsync();
+
+string? EmailAfter(string flag, string whose)
+{
+    var index = Array.IndexOf(args, flag);
+    if (index < 0)
+    {
+        return null;
+    }
+
+    return index + 1 < args.Length ? args[index + 1] : throw new ArgumentException($"Provide the {whose} email after {flag}.");
+}
 
 public partial class Program
 {

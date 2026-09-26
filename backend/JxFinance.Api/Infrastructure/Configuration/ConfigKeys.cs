@@ -17,4 +17,12 @@ public static class ConfigKeys
     public const string OtelServiceName = "OTEL_SERVICE_NAME";
 
     private const string AppPrefix = AppOptions.SectionName + ":";
+
+    public static string DefaultConnectionString(this IConfiguration configuration)
+    {
+        var connectionString = configuration.GetConnectionString(DefaultConnectionName);
+        return string.IsNullOrWhiteSpace(connectionString)
+            ? throw new InvalidOperationException($"Connection string '{DefaultConnectionName}' is not configured.")
+            : connectionString;
+    }
 }
