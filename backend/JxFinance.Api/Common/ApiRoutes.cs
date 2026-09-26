@@ -33,16 +33,13 @@ public static class ApiRoutes
     public const string ConversionsPath = Base + "/" + Conversions;
 
     public const string Currencies = "currencies";
-    public const string CurrenciesPath = Base + "/" + Currencies;
 
     public const string Dashboard = "dashboard";
-    public const string DashboardPath = Base + "/" + Dashboard;
 
     public const string Debts = "debts";
     public const string DebtsPath = Base + "/" + Debts;
 
     public const string ExchangeRates = "exchange-rates";
-    public const string ExchangeRatesPath = Base + "/" + ExchangeRates;
 
     public const string Goals = "goals";
     public const string GoalsPath = Base + "/" + Goals;
@@ -60,10 +57,8 @@ public static class ApiRoutes
     public const string NetWorthPath = Base + "/" + NetWorth;
 
     public const string Notifications = "notifications";
-    public const string NotificationsPath = Base + "/" + Notifications;
 
     public const string Ping = "ping";
-    public const string PingPath = Base + "/" + Ping;
 
     public const string RecurringBills = "recurring-bills";
     public const string RecurringBillsPath = Base + "/" + RecurringBills;
@@ -72,10 +67,8 @@ public static class ApiRoutes
     public const string ReportsPath = Base + "/" + Reports;
 
     public const string Settings = "settings";
-    public const string SettingsPath = Base + "/" + Settings;
 
     public const string Setup = "setup";
-    public const string SetupPath = Base + "/" + Setup;
 
     public const string Tags = "tags";
     public const string TagsPath = Base + "/" + Tags;
@@ -87,7 +80,6 @@ public static class ApiRoutes
     public const string TransfersPath = Base + "/" + Transfers;
 
     public const string Trash = "trash";
-    public const string TrashPath = Base + "/" + Trash;
 
     public const string Users = "users";
     public const string UsersPath = Base + "/" + Users;

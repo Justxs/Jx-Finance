@@ -7,6 +7,7 @@ using JxFinance.Common.Settings;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Settings.Interfaces;
@@ -60,12 +61,7 @@ public sealed class SettingsService(
 
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var settings = await db.InstanceSettings.FirstOrDefaultAsync(cancellationToken);
-        if (settings is null)
-        {
-            settings = store.Defaults();
-            db.InstanceSettings.Add(settings);
-        }
+        var settings = await LoadOrCreateAsync(cancellationToken);
 
         if (settings.ReportingCurrency != request.ReportingCurrency)
         {
@@ -107,12 +103,7 @@ public sealed class SettingsService(
     {
         await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var settings = await db.InstanceSettings.FirstOrDefaultAsync(cancellationToken);
-        if (settings is null)
-        {
-            settings = store.Defaults();
-            db.InstanceSettings.Add(settings);
-        }
+        var settings = await LoadOrCreateAsync(cancellationToken);
 
         var userName = OptionalText.Normalize(request.UserName);
         var host = OptionalText.Normalize(request.Host);
@@ -293,6 +284,18 @@ public sealed class SettingsService(
         settings.FirstDayOfWeek,
         settings.DefaultAccountId,
         settings.DefaultPageSize);
+
+    private async Task<InstanceSettings> LoadOrCreateAsync(CancellationToken cancellationToken)
+    {
+        if (await db.InstanceSettings.FirstOrDefaultAsync(cancellationToken) is { } stored)
+        {
+            return stored;
+        }
+
+        var created = store.Defaults();
+        db.InstanceSettings.Add(created);
+        return created;
+    }
 
     private static bool SameText(string? requested, string? stored, StringComparison comparison) =>
         string.Equals(requested, OptionalText.Normalize(stored), comparison);

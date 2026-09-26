@@ -23,9 +23,8 @@ public sealed class DashboardService(
 {
     public async Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken)
     {
-        var nowLocal = clock.Today;
-        var monthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
-        var monthEnd = monthStart.AddMonths(1);
+        var month = DateWindow.MonthOf(clock.Today);
+        var (monthStart, monthEnd) = month;
 
         var (totalBalance, isComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
 
@@ -35,10 +34,7 @@ public sealed class DashboardService(
             .Select(g => new { Type = g.Key, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
-        var investmentFlows = await investmentCashFlows.GetFlowsAsync(
-            new DateWindow(monthStart, monthEnd),
-            null,
-            cancellationToken);
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(month, null, cancellationToken);
 
         var monthIncome = (monthTotals.FirstOrDefault(t => t.Type == FlowType.Income)?.Total ?? 0m)
             + investmentFlows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount);
@@ -50,7 +46,7 @@ public sealed class DashboardService(
             monthIncome,
             monthExpense,
             monthStart,
-            monthEnd.AddDays(-1),
+            month.InclusiveEnd,
             isComplete);
     }
 
@@ -58,10 +54,7 @@ public sealed class DashboardService(
         string? month,
         CancellationToken cancellationToken)
     {
-        var nowLocal = clock.Today;
-        var (periodStart, periodEnd) = ResolveMonth(month, nowLocal);
-
-        var period = new DateWindow(periodStart, periodEnd);
+        var period = ResolveMonth(month, clock.Today);
 
         var categoryAttributions = await attributions.GetAttributionsAsync(
             period,
@@ -74,26 +67,23 @@ public sealed class DashboardService(
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, null, cancellationToken);
         var items = CategoryBreakdownBuilder.Build(categoryAttributions, categories, investmentFlows, FlowType.Expense);
 
-        return new CategoryBreakdownResponse(items, periodStart, periodEnd.AddDays(-1));
+        return new CategoryBreakdownResponse(items, period.Start, period.InclusiveEnd);
     }
 
     public async Task<MonthlyTrendResponse> GetMonthlyTrendAsync(int months, CancellationToken cancellationToken)
     {
         var clamped = Math.Clamp(months, 1, 24);
-        var nowLocal = clock.Today;
-        var currentMonthStart = new DateOnly(nowLocal.Year, nowLocal.Month, 1);
-        var earliestStart = currentMonthStart.AddMonths(-(clamped - 1));
+        var currentMonth = DateWindow.MonthOf(clock.Today);
+        var earliestStart = currentMonth.Start.AddMonths(-(clamped - 1));
+        var end = currentMonth.ExclusiveEnd;
 
         var totals = await db.Transactions
-            .Where(t => t.Date >= earliestStart && t.Date < currentMonthStart.AddMonths(1))
+            .Where(t => t.Date >= earliestStart && t.Date < end)
             .GroupBy(t => new { t.Date.Year, t.Date.Month, t.Type })
             .Select(g => new { g.Key.Year, g.Key.Month, g.Key.Type, Total = g.Sum(t => t.ReportingAmount) })
             .ToListAsync(cancellationToken);
 
-        var investmentFlows = await investmentCashFlows.GetFlowsAsync(
-            new DateWindow(earliestStart, currentMonthStart.AddMonths(1)),
-            null,
-            cancellationToken);
+        var investmentFlows = await investmentCashFlows.GetFlowsAsync(new DateWindow(earliestStart, end), null, cancellationToken);
 
         var items = new List<MonthlyTrendItem>();
         for (var i = 0; i < clamped; i++)
@@ -121,19 +111,10 @@ public sealed class DashboardService(
         return new MonthlyTrendResponse(items);
     }
 
-    private static (DateOnly Start, DateOnly End) ResolveMonth(string? month, DateOnly fallbackToday)
-    {
-        DateOnly start;
-        if (!string.IsNullOrWhiteSpace(month)
-            && DateTime.TryParseExact(month, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
-        {
-            start = new DateOnly(parsed.Year, parsed.Month, 1);
-        }
-        else
-        {
-            start = new DateOnly(fallbackToday.Year, fallbackToday.Month, 1);
-        }
-
-        return (start, start.AddMonths(1));
-    }
+    private static DateWindow ResolveMonth(string? month, DateOnly fallbackToday) =>
+        DateWindow.MonthOf(
+            !string.IsNullOrWhiteSpace(month)
+            && DateTime.TryParseExact(month, "yyyy-MM", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed)
+                ? DateOnly.FromDateTime(parsed)
+                : fallbackToday);
 }

@@ -122,7 +122,7 @@ public sealed class SessionService(
 
     public async Task RenewAsync(AppUser user, CancellationToken cancellationToken)
     {
-        var session = Guid.TryParse(Http.User.FindFirstValue(AuthClaims.SessionId), out var sessionId)
+        var session = CurrentSessionId() is { } sessionId
             ? await db.UserSessions.FirstOrDefaultAsync(s => s.Id == sessionId && s.UserId == user.Id, cancellationToken)
             : null;
         if (session is null)
@@ -136,7 +136,7 @@ public sealed class SessionService(
 
     public async Task SignOutAsync(CancellationToken cancellationToken)
     {
-        if (Guid.TryParse(Http.User.FindFirstValue(AuthClaims.SessionId), out var sessionId))
+        if (CurrentSessionId() is { } sessionId)
             await db.UserSessions.Where(s => s.Id == sessionId).ExecuteDeleteAsync(cancellationToken);
 
         ClearCookies();
