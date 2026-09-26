@@ -24,9 +24,10 @@ import { useIsoDate, useMoney } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { TRANSACTIONS_EXPORT_CSV_PATH, TRANSACTIONS_EXPORT_PDF_PATH } from "@/lib/export-url";
 import { byId, nameById } from "@/lib/options";
+import { metaLine } from "@/lib/utils";
 import { saveTransactionTemplate } from "@/stores/transaction-views";
 import { SelectionToolbar } from "../selection-toolbar/selection-toolbar";
-import { transactionName } from "../transaction-amount";
+import { signedAmount, transactionName } from "../transaction-amount";
 import {
   type TransactionDraft,
   type TransactionFormValues,
@@ -38,6 +39,7 @@ import { transactionFilterParams, transactionListParams } from "../transaction-q
 import { TransactionsFiltersDialog } from "../transactions-filters-dialog/transactions-filters-dialog";
 import { TransactionsList } from "../transactions-list/transactions-list";
 import {
+  type TransactionRowHandlers,
   TransactionsTable,
   isSelectableTransaction,
   useTransactionColumns,
@@ -127,14 +129,13 @@ export function TransactionsPage() {
     deleteMutation,
     items,
     (item) =>
-      `${formatDate(item.date)} · ${transactionName(item, categoryById, t)} · ${money.formatSigned(
-        Number(item.amount),
-        item.type === "income" ? "+" : "−",
-        item.currency,
-      )}`,
+      metaLine(
+        formatDate(item.date),
+        transactionName(item, categoryById, t),
+        signedAmount(money, item),
+      ),
     "transaction",
   );
-  const deletingId = remove.pendingId;
 
   const columnHeaders = useTransactionColumnHeaders({
     accounts: accountList,
@@ -142,15 +143,16 @@ export function TransactionsPage() {
     tags: tagList,
   });
 
-  const columns = useTransactionColumns({
+  const rowHandlers: TransactionRowHandlers = {
     accountNames,
     categoryById,
     tagById,
     onEdit: startEditing,
     onDuplicate: (transaction) => startFromDraft(duplicateDraft(transaction)),
     onDelete: remove.request,
-    deletingId,
-  });
+    deletingId: remove.pendingId,
+  };
+  const columns = useTransactionColumns(rowHandlers);
 
   const total = transactions.data.total;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
@@ -276,15 +278,9 @@ export function TransactionsPage() {
         <div className="md:hidden">
           <TransactionsList
             data={items}
-            accountNames={accountNames}
-            categoryById={categoryById}
-            tagById={tagById}
             isPlaceholder={stale}
             filtered={columnHeaders.active}
-            onEdit={startEditing}
-            onDuplicate={(transaction) => startFromDraft(duplicateDraft(transaction))}
-            onDelete={remove.request}
-            deletingId={deletingId}
+            {...rowHandlers}
           />
         </div>
 
