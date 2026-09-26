@@ -16,7 +16,8 @@ import {
   transactionName,
 } from "@/features/transactions/transaction-amount";
 import { useShortDayIso } from "@/hooks/use-formatters";
-import { nameById } from "@/lib/options";
+import { byId, nameById } from "@/lib/options";
+import { metaLine } from "@/lib/utils";
 import { recentTransactionsParams } from "../dashboard-queries";
 import { DashboardSection } from "../dashboard-section/dashboard-section";
 
@@ -59,7 +60,7 @@ function RecentRows() {
   const categories = useCategoriesSuspense();
   const accounts = useAccountsSuspense();
 
-  const categoryById = new Map(categories.data.map((c) => [c.id, c]));
+  const categoryById = byId(categories.data);
   const accountNames = nameById(accounts.data);
   const recentItems = recent.data.items;
 
@@ -73,22 +74,18 @@ function RecentRows() {
 
   return (
     <Rows>
-      {recentItems.map((transaction) => {
-        const name = transactionName(transaction, categoryById, t);
-        const meta = [
-          transaction.description ? transactionCategoryLabel(transaction, categoryById, t) : null,
-          accountNames.get(transaction.accountId),
-        ].filter(Boolean);
-        return (
-          <TimelineRow
-            key={transaction.id}
-            day={formatDay(transaction.date)}
-            title={name}
-            subtitle={meta.join(" · ")}
-            amount={<TransactionAmount transaction={transaction} className="shrink-0" />}
-          />
-        );
-      })}
+      {recentItems.map((transaction) => (
+        <TimelineRow
+          key={transaction.id}
+          day={formatDay(transaction.date)}
+          title={transactionName(transaction, categoryById, t)}
+          subtitle={metaLine(
+            transaction.description ? transactionCategoryLabel(transaction, categoryById, t) : null,
+            accountNames.get(transaction.accountId),
+          )}
+          amount={<TransactionAmount transaction={transaction} className="shrink-0" />}
+        />
+      ))}
     </Rows>
   );
 }

@@ -82,15 +82,13 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
         ? t("conversions.feeLine", { fee: money.format(Number(entry.fee), entry.currency) })
         : null;
 
-    return [
+    return metaLine(
       formatDate(entry.date),
       volume(entry),
       fee,
       severalAccounts ? accountNames.get(entry.accountId) : null,
       entry.description,
-    ]
-      .filter(Boolean)
-      .join(" · ");
+    );
   }
 
   function cash(entry: InvestmentTransactionResponse) {

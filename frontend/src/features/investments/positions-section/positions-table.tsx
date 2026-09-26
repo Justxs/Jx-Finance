@@ -20,7 +20,7 @@ import {
   useQuantityFormat,
 } from "@/hooks/use-formatters";
 import { gainTone } from "@/lib/tone";
-import { cn } from "@/lib/utils";
+import { cn, metaLine } from "@/lib/utils";
 import { PriceWithDate, SecurityIdentity } from "../security-identity";
 
 interface Props {
@@ -214,7 +214,7 @@ export function PositionsTable({
         {holdings.map((holding) => {
           const { security } = holding;
           const account = accountName(holding);
-          const secondary = [security.name, account].filter(Boolean).join(" · ");
+          const secondary = metaLine(security.name, account);
 
           return (
             <li key={rowKey(holding)} className="py-2.5 text-sm">
