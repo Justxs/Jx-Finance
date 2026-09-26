@@ -30,7 +30,7 @@ export const Open: Story = {
 
 export const PdfTooManyRows: Story = {
   parameters: withHandlers(
-    onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
+    onRouteOf(getExportTransactionsPdfMockHandler(new Blob()), () =>
       problem(exportTooManyRowsProblem),
     ),
   ),
