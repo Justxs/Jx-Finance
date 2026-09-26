@@ -1,9 +1,9 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
-using JxFinance.Common.Localization;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Validation;
+using JxFinance.Domain.Settings;
 
 namespace JxFinance.Endpoints.Settings.UpdateSettings;
 
