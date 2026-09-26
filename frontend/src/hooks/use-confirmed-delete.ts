@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TrashKind } from "@/api/generated/model";
+import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { useUndoToast } from "@/hooks/use-undo-toast";
 import { pendingId } from "@/lib/mutations";
 
@@ -34,10 +35,17 @@ export function useConfirmedDelete<T extends { id: string }>(
     mutation.mutate({ id }, { onSuccess: () => showUndoToast(undoKind, id, itemLabel) });
   }
 
+  const pending = pendingId(mutation);
+
   return {
     request: (id: string) => setTarget(id),
-    pendingId: pendingId(mutation),
+    pendingId: pending,
     busy: mutation.isPending,
+    deleteProps: (id: string): DeleteProps => ({
+      onDelete: () => setTarget(id),
+      deletePending: pending === id,
+      deleteDisabled: mutation.isPending,
+    }),
     dialogProps: {
       target,
       itemLabel,

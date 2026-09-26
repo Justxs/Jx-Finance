@@ -1,18 +1,15 @@
 import type { ReactNode } from "react";
 import type { Scope } from "@/api/generated/model";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 
-interface Props {
+interface Props extends DeleteProps {
   name: string;
   scope: Scope;
   householdName: string | undefined;
   leading?: ReactNode;
   onEdit: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
-  deleteDisabled: boolean;
 }
 
 export function NamedRow({
@@ -21,9 +18,7 @@ export function NamedRow({
   householdName,
   leading,
   onEdit,
-  onDelete,
-  deletePending,
-  deleteDisabled,
+  ...deleteProps
 }: Readonly<Props>) {
   return (
     <RowTransition>
@@ -35,13 +30,7 @@ export function NamedRow({
             <SharedScopeTag scope={scope} householdName={householdName} />
           </div>
         </div>
-        <RowActions
-          label={name}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          deletePending={deletePending}
-          deleteDisabled={deleteDisabled}
-        />
+        <RowActions label={name} onEdit={onEdit} {...deleteProps} />
       </li>
     </RowTransition>
   );

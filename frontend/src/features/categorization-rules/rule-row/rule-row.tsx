@@ -1,24 +1,21 @@
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { CategorizationRuleResponse } from "@/api/generated/model";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { actionText, conditionText, ruleActionNames } from "../rule-form/rule-summary";
 
-interface Props {
+interface Props extends DeleteProps {
   rule: CategorizationRuleResponse;
   total: number;
   accountNames: ReadonlyMap<string, string>;
   categoryNames: ReadonlyMap<string, string>;
   tagNames: ReadonlyMap<string, string>;
   movePending: boolean;
-  deletePending: boolean;
-  deleteDisabled: boolean;
   onMove: (direction: "up" | "down") => void;
   onEdit: () => void;
-  onDelete: () => void;
 }
 
 export function RuleRow({
@@ -28,11 +25,9 @@ export function RuleRow({
   categoryNames,
   tagNames,
   movePending,
-  deletePending,
-  deleteDisabled,
   onMove,
   onEdit,
-  onDelete,
+  ...deleteProps
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const names = ruleActionNames(rule, categoryNames, tagNames);
@@ -68,13 +63,7 @@ export function RuleRow({
             </p>
           </div>
         </div>
-        <RowActions
-          label={rule.name}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          deletePending={deletePending}
-          deleteDisabled={deleteDisabled}
-        >
+        <RowActions label={rule.name} onEdit={onEdit} {...deleteProps}>
           <Button
             variant="ghost"
             size="icon-sm"

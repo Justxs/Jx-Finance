@@ -9,15 +9,18 @@ const removeKinds = {
   archive: { icon: Archive, labelKey: "actions.archive" },
 } as const;
 
-interface Props {
+export interface DeleteProps {
+  onDelete?: () => void;
+  deletePending?: boolean;
+  deleteDisabled?: boolean;
+}
+
+interface Props extends DeleteProps {
   label: string;
   size?: "icon-sm" | "icon";
   removeKind?: keyof typeof removeKinds;
   onEdit?: () => void;
-  onDelete?: () => void;
   editDisabled?: boolean;
-  deletePending?: boolean;
-  deleteDisabled?: boolean;
   className?: string;
   children?: ReactNode;
 }

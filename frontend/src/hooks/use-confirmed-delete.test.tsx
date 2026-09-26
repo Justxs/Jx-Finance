@@ -61,6 +61,11 @@ test("reports which row is being deleted", () => {
   const busy = setup({ isPending: true, variables: { id: "g1" } });
   expect(busy.result.current.pendingId).toBe("g1");
   expect(busy.result.current.busy).toBe(true);
+  expect(busy.result.current.deleteProps("g1")).toMatchObject({
+    deletePending: true,
+    deleteDisabled: true,
+  });
+  expect(busy.result.current.deleteProps("g2").deletePending).toBe(false);
 });
 
 test("a restorable kind offers an undo toast once the delete succeeded", () => {

@@ -104,9 +104,7 @@ export function ConversionsSection({
           amount={amounts(conversion)}
           label={`${amounts(conversion)}, ${formatDate(conversion.date)}`}
           onEdit={conversion.isImported ? undefined : () => setEditTarget(conversion.id)}
-          onDelete={() => remove.request(conversion.id)}
-          deletePending={remove.pendingId === conversion.id}
-          deleteDisabled={remove.busy}
+          {...remove.deleteProps(conversion.id)}
         />
       ))}
     </PagedRows>

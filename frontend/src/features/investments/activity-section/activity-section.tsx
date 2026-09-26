@@ -151,9 +151,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
                   label={label}
                   className="-mr-2 gap-3"
                   onEdit={entry.source === "manual" ? () => setEditing(entry) : undefined}
-                  onDelete={() => remove.request(entry.id)}
-                  deletePending={remove.pendingId === entry.id}
-                  deleteDisabled={remove.busy}
+                  {...remove.deleteProps(entry.id)}
                 >
                   {entry.source === "manual" ? null : (
                     <span className="size-8 shrink-0 max-sm:hidden" aria-hidden="true" />
