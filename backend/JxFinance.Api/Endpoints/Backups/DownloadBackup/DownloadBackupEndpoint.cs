@@ -14,8 +14,7 @@ public sealed class DownloadBackupEndpoint(IBackupService backupService) : Endpo
         Group<BackupsGroup>();
         Roles(AppRoles.Admin);
         Description(d => d
-            .ClearDefaultProduces(200)
-            .Produces<byte[]>(200, MediaTypeNames.Application.Zip, MediaTypeNames.Application.GZip)
+            .ProducesFile(MediaTypeNames.Application.Zip, MediaTypeNames.Application.GZip)
             .ProducesProblemDetails(403)
             .ProducesProblemDetails(404));
     }

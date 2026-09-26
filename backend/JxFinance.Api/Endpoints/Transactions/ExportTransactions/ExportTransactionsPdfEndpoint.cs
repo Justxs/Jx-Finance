@@ -21,7 +21,7 @@ public sealed class ExportTransactionsPdfEndpoint(
     {
         Get(ApiRoutes.Transactions + "/export/pdf");
         Group<TransactionsGroup>();
-        Description(d => d.ClearDefaultProduces(200).Produces<byte[]>(200, MediaTypeNames.Application.Pdf));
+        Description(d => d.ProducesFile(MediaTypeNames.Application.Pdf));
     }
 
     public override async Task HandleAsync(GetTransactionsRequest req, CancellationToken ct)
@@ -33,7 +33,7 @@ public sealed class ExportTransactionsPdfEndpoint(
             return;
         }
 
-        var names = await ExportTransactionsEndpoint.LoadNamesAsync(accountService, categoryService, tagService, ct);
+        var names = await ExportNames.LoadAsync(accountService, categoryService, tagService, ct);
 
         var pdf = new TransactionsPdfDocument(
             transactions,

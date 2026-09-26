@@ -13,9 +13,7 @@ public sealed class DownloadAttachmentEndpoint(IAttachmentService attachmentServ
         Get(ApiRoutes.Attachments + "/{id}/content");
         Group<AttachmentsGroup>();
         Description(d => d
-            .ClearDefaultProduces(200)
-            .Produces<byte[]>(
-                200,
+            .ProducesFile(
                 AttachmentContent.Jpeg,
                 AttachmentContent.Png,
                 AttachmentContent.Webp,
