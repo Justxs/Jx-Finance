@@ -1,4 +1,4 @@
-import { Store, useSelector } from "@tanstack/react-store";
+import { openStore } from "./open-store";
 import {
   COMMAND_RECENTS_MAX,
   readPreferences,
@@ -6,24 +6,12 @@ import {
   usePreferences,
 } from "./preferences";
 
-const commandPaletteStore = new Store<{ open: boolean }>({ open: false });
-
-export function setCommandPaletteOpen(open: boolean) {
-  commandPaletteStore.setState((state) => ({ ...state, open }));
-}
-
-export function toggleCommandPalette() {
-  commandPaletteStore.setState((state) => ({ ...state, open: !state.open }));
-}
-
-export function isCommandPaletteOpen() {
-  return commandPaletteStore.state.open;
-}
-
-export function useCommandPaletteOpen() {
-  const open = useSelector(commandPaletteStore, (state) => state.open);
-  return { open, setOpen: setCommandPaletteOpen };
-}
+export const {
+  setOpen: setCommandPaletteOpen,
+  toggle: toggleCommandPalette,
+  isOpen: isCommandPaletteOpen,
+  useOpen: useCommandPaletteOpen,
+} = openStore();
 
 const NO_RECENTS: readonly string[] = [];
 

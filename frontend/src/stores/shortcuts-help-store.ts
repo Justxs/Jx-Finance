@@ -1,20 +1,8 @@
-import { Store, useSelector } from "@tanstack/react-store";
+import { openStore } from "./open-store";
 
-const shortcutsHelpStore = new Store<{ open: boolean }>({ open: false });
-
-export function setShortcutsHelpOpen(open: boolean) {
-  shortcutsHelpStore.setState((state) => ({ ...state, open }));
-}
-
-export function toggleShortcutsHelp() {
-  shortcutsHelpStore.setState((state) => ({ ...state, open: !state.open }));
-}
-
-export function isShortcutsHelpOpen() {
-  return shortcutsHelpStore.state.open;
-}
-
-export function useShortcutsHelpOpen() {
-  const open = useSelector(shortcutsHelpStore, (state) => state.open);
-  return { open, setOpen: setShortcutsHelpOpen };
-}
+export const {
+  setOpen: setShortcutsHelpOpen,
+  toggle: toggleShortcutsHelp,
+  isOpen: isShortcutsHelpOpen,
+  useOpen: useShortcutsHelpOpen,
+} = openStore();
