@@ -5,7 +5,11 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  queryOptions as queryOptionsBuilder,
+  useMutation,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import type {
   DataTag,
   MutationFunction,
@@ -185,11 +189,15 @@ export const getBackupsSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof backups>>> = ({ signal }) =>
     backups({ signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof backups>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof backups>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type BackupsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof backups>>>;
@@ -570,11 +578,15 @@ export const getDownloadBackupSuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadBackup>>> = ({ signal }) =>
     downloadBackup(id, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof downloadBackup>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof downloadBackup>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type DownloadBackupSuspenseQueryResult = NonNullable<

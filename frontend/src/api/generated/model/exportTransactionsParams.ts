@@ -12,6 +12,8 @@ import type { TransactionSortField } from "./transactionSortField";
 export type ExportTransactionsParams = {
   page: number;
   pageSize: number;
+  sort?: TransactionSortField;
+  direction?: SortDirection;
   /**
    * Keep only transactions on this account.
    * @nullable
@@ -46,6 +48,4 @@ export type ExportTransactionsParams = {
    * @nullable
    */
   dateTo?: string | null;
-  sort?: TransactionSortField;
-  direction?: SortDirection;
 };

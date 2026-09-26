@@ -8,6 +8,11 @@
 
 export type TransfersParams = {
   /**
+   * Keep only transfers on this date, as YYYY-MM-DD.
+   * @nullable
+   */
+  date?: string | null;
+  /**
    * One-based page number. Defaults to 1.
    */
   page: number;
@@ -15,9 +20,4 @@ export type TransfersParams = {
    * Rows per page. Defaults to 20.
    */
   pageSize: number;
-  /**
-   * Keep only transfers on this date, as YYYY-MM-DD.
-   * @nullable
-   */
-  date?: string | null;
 };

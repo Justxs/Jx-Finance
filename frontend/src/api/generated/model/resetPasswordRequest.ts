@@ -9,7 +9,7 @@
 export interface ResetPasswordRequest {
   /**
    * @minLength 0
-   * @maxLength 320
+   * @maxLength 256
    * @pattern ^[^@]+@[^@]+$
    */
   email: string;

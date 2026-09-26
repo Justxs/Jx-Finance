@@ -7,7 +7,7 @@
  */
 
 export interface ImportPreviewRequest {
-  file?: Blob;
+  file?: Blob | File;
   /** The account the statement belongs to. */
   accountId?: string;
 }

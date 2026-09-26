@@ -51,7 +51,7 @@ export const SetupTwoFactorResponse = zod.object({
  * @summary Ask for a password reset link
  */
 export const forgotPasswordBodyEmailMin = 0;
-export const forgotPasswordBodyEmailMax = 320;
+export const forgotPasswordBodyEmailMax = 256;
 
 export const forgotPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 
@@ -69,11 +69,13 @@ export const ForgotPasswordResponse = zod.void();
  * Exchanges an email and password for a short-lived access token and a refresh token, both set as HttpOnly cookies. When the account has two-factor authentication enabled and no code is supplied, the response is 200 with twoFactorRequired set and no cookie issued; repeat the call with twoFactorCode filled in. The code may be a six-digit authenticator code or an unused recovery code. Rate limited to 10 attempts per five minutes per client. Five wrong passwords or codes in a row lock the account for 15 minutes; until then every attempt answers 429 with code credentials.lockedOut.
  * @summary Sign in
  */
+export const loginBodyEmailMin = 0;
+export const loginBodyEmailMax = 256;
 
 export const loginBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 
 export const LoginBody = zod.object({
-  email: zod.email().min(1).regex(loginBodyEmailRegExp),
+  email: zod.email().min(loginBodyEmailMin).max(loginBodyEmailMax).regex(loginBodyEmailRegExp),
   password: zod.string().min(1),
   rememberMe: zod.boolean().describe("Keeps the session for 30 days instead of one day."),
   twoFactorCode: zod
@@ -131,7 +133,7 @@ export const RefreshResponse = zod.void();
  * @summary Set a new password from a reset link
  */
 export const resetPasswordBodyEmailMin = 0;
-export const resetPasswordBodyEmailMax = 320;
+export const resetPasswordBodyEmailMax = 256;
 
 export const resetPasswordBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 export const resetPasswordBodyTokenMin = 0;
@@ -197,7 +199,7 @@ export const RevokeSessionResponse = zod.void();
  * @summary Confirm an email address
  */
 export const verifyEmailBodyEmailMin = 0;
-export const verifyEmailBodyEmailMax = 320;
+export const verifyEmailBodyEmailMax = 256;
 
 export const verifyEmailBodyEmailRegExp = new RegExp("^[^@]+@[^@]+$");
 export const verifyEmailBodyTokenMin = 0;

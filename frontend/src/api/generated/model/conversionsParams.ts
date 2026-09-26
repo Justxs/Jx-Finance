@@ -7,11 +7,11 @@
  */
 
 export type ConversionsParams = {
-  page: number;
-  pageSize: number;
   /**
    * Only conversions on this account.
    * @nullable
    */
   accountId?: string | null;
+  page: number;
+  pageSize: number;
 };

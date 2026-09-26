@@ -5,7 +5,7 @@
  * Personal and household finance ledger. Every route lives under /api and answers JSON. Money is carried as a decimal string with at most two decimal places so nothing is lost to floating point; dates are YYYY-MM-DD in the instance time zone. Collections that can grow are paged with page and pageSize and answer with items, page, pageSize, and total. Authentication is a session cookie from POST /api/auth/login, so browser clients must send credentials. Failures answer application/problem+json with a machine-readable code per error; see the ProblemDetails schema.
  * OpenAPI spec version: v1
  */
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions as queryOptionsBuilder, useSuspenseQuery } from "@tanstack/react-query";
 import type {
   DataTag,
   QueryClient,
@@ -88,11 +88,15 @@ export const getReportSummarySuspenseQueryOptions = <
   const queryFn: QueryFunction<Awaited<ReturnType<typeof reportSummary>>> = ({ signal }) =>
     reportSummary(params, { signal, ...requestOptions });
 
-  return { queryKey, queryFn, ...queryOptions } as UseSuspenseQueryOptions<
-    Awaited<ReturnType<typeof reportSummary>>,
-    TError,
-    TData
-  > & { queryKey: DataTag<QueryKey, TData, TError> };
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof reportSummary>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
 };
 
 export type ReportSummarySuspenseQueryResult = NonNullable<

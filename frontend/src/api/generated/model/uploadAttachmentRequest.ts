@@ -7,5 +7,5 @@
  */
 
 export interface UploadAttachmentRequest {
-  file: Blob;
+  file: Blob | File;
 }

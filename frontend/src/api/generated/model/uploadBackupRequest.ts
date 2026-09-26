@@ -7,7 +7,7 @@
  */
 
 export interface UploadBackupRequest {
-  file?: Blob;
+  file?: Blob | File;
   /**
    * Optional reminder, at most 200 characters.
    * @minLength 0
