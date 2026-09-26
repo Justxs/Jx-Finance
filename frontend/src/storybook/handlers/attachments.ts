@@ -49,5 +49,5 @@ export const attachmentHandlers = [
     );
   }),
   getDeleteAttachmentMockHandler(),
-  getDownloadAttachmentMockHandler(tinyPng.slice().buffer),
+  getDownloadAttachmentMockHandler(new Blob([tinyPng], { type: "image/png" })),
 ];

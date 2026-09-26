@@ -120,7 +120,7 @@ async function bulkUpdate({ request }: { request: Request }) {
 }
 
 export const transactionHandlers = [
-  onRouteOf(getExportTransactionsPdfMockHandler(new ArrayBuffer(0)), () =>
+  onRouteOf(getExportTransactionsPdfMockHandler(new Blob()), () =>
     HttpResponse.arrayBuffer(new TextEncoder().encode("%PDF-1.4\n%%EOF\n").buffer, {
       headers: {
         "Content-Type": "application/pdf",
@@ -128,7 +128,7 @@ export const transactionHandlers = [
       },
     }),
   ),
-  onRouteOf(getExportTransactionsMockHandler(new ArrayBuffer(0)), () =>
+  onRouteOf(getExportTransactionsMockHandler(new Blob()), () =>
     HttpResponse.text(transactionsCsv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",

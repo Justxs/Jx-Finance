@@ -86,8 +86,8 @@ export function TextColumnFilter({
 
 interface SelectFilterProps<T extends string> {
   label: string;
-  value: T;
-  options: SelectOption<T>[];
+  value: T | "";
+  options: SelectOption<T | "">[];
   onChange: (value: T | "") => void;
 }
 
