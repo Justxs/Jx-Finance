@@ -2,7 +2,6 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Backups.Interfaces;
-using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Backups.RestoreBackup;
 
@@ -13,9 +12,8 @@ public sealed class RestoreBackupEndpoint(IBackupService backupService, ISession
     {
         Post(ApiRoutes.Backups + "/{id}/restore");
         Group<BackupsGroup>();
-        Roles(AppRoles.Admin);
         Throttle(hitLimit: 5, durationSeconds: 300);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404).ProducesProblemDetails(409).Produces(429));
+        Description(d => d.ProducesProblemDetails(404).ProducesProblemDetails(409).Produces(429));
     }
 
     public override async Task HandleAsync(RestoreBackupRequest req, CancellationToken ct)
