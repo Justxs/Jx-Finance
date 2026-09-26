@@ -7,13 +7,12 @@ import {
   setupBodyPasswordMax,
   setupBodyPasswordMin,
 } from "@/api/schemas/setup/setup.zod";
-import { Brand } from "@/components/brand/brand";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { Card } from "@/components/ui/card/card";
 import { setSetupNeeded } from "@/lib/auth-gate";
 import { silent } from "@/lib/mutations";
 import { password, requiredEmail, requiredText } from "@/lib/validation";
+import { AuthCard } from "../auth-card/auth-card";
 
 interface FormValues {
   email: string;
@@ -56,57 +55,49 @@ export function SetupPage() {
   });
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="mb-6 flex justify-center">
-        <Brand size="lg" stacked />
-      </div>
-      <Card className="p-6 sm:p-8">
-        <h1 className="text-lg font-semibold">{t("auth.setupTitle")}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{t("auth.setupSubtitle")}</p>
+    <AuthCard title={t("auth.setupTitle")} subtitle={t("auth.setupSubtitle")}>
+      <form.AppForm>
+        <form.FormShell className="mt-6 space-y-4">
+          <form.Field name="displayName">
+            {(field) => (
+              <field.TextField
+                id="setup-display-name"
+                label={t("auth.displayName")}
+                autoComplete="name"
+                placeholder={t("auth.displayNamePlaceholder")}
+              />
+            )}
+          </form.Field>
 
-        <form.AppForm>
-          <form.FormShell className="mt-6 space-y-4">
-            <form.Field name="displayName">
-              {(field) => (
-                <field.TextField
-                  id="setup-display-name"
-                  label={t("auth.displayName")}
-                  autoComplete="name"
-                  placeholder={t("auth.displayNamePlaceholder")}
-                />
-              )}
-            </form.Field>
+          <form.Field name="email">
+            {(field) => (
+              <field.TextField
+                id="setup-email"
+                label={t("auth.email")}
+                autoComplete="email"
+                type="email"
+              />
+            )}
+          </form.Field>
 
-            <form.Field name="email">
-              {(field) => (
-                <field.TextField
-                  id="setup-email"
-                  label={t("auth.email")}
-                  autoComplete="email"
-                  type="email"
-                />
-              )}
-            </form.Field>
+          <form.Field name="password">
+            {(field) => (
+              <field.TextField
+                id="setup-password"
+                label={t("auth.password")}
+                autoComplete="new-password"
+                type="password"
+              />
+            )}
+          </form.Field>
 
-            <form.Field name="password">
-              {(field) => (
-                <field.TextField
-                  id="setup-password"
-                  label={t("auth.password")}
-                  autoComplete="new-password"
-                  type="password"
-                />
-              )}
-            </form.Field>
+          <FormError error={setupMutation.error} />
 
-            <FormError error={setupMutation.error} />
-
-            <form.SubmitButton pending={setupMutation.isPending} className="w-full">
-              {t("auth.createAdmin")}
-            </form.SubmitButton>
-          </form.FormShell>
-        </form.AppForm>
-      </Card>
-    </div>
+          <form.SubmitButton pending={setupMutation.isPending} className="w-full">
+            {t("auth.createAdmin")}
+          </form.SubmitButton>
+        </form.FormShell>
+      </form.AppForm>
+    </AuthCard>
   );
 }
