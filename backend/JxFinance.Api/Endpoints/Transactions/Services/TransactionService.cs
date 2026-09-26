@@ -212,30 +212,9 @@ public sealed class TransactionService(
         CreateTransactionRequest request,
         CancellationToken cancellationToken)
     {
-        var referenceError = await ValidateReferencesAsync(
-            request.AccountId,
-            request.CategoryId,
-            request.Type,
-            cancellationToken);
-        if (referenceError is not null)
+        if (await ValidateInputAsync(request, cancellationToken) is { } inputError)
         {
-            return referenceError;
-        }
-
-        var tagError = await references.TagsExistAsync(request.TagIds ?? [], cancellationToken);
-        if (tagError is not null)
-        {
-            return tagError;
-        }
-
-        var isSplit = request.Lines is { Count: > 0 };
-        if (isSplit)
-        {
-            var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
-            if (linesError is not null)
-            {
-                return linesError;
-            }
+            return inputError;
         }
 
         var valuation = await ValueAsync(request.AccountId, request.Currency, null, request.Amount, request.Date, cancellationToken);
@@ -248,22 +227,10 @@ public sealed class TransactionService(
         var transaction = request.ToEntity(currency, reportingAmount);
 
         db.Transactions.Add(transaction);
-
-        var lines = isSplit ? request.Lines!.ToLines(transaction.Id, currentUser.Id, currency) : [];
-        if (isSplit)
-        {
-            db.TransactionLines.AddRange(lines);
-        }
-
-        var tags = request.TagIds.ToTransactionTags(transaction.Id);
-        if (tags.Count > 0)
-        {
-            db.TransactionTags.AddRange(tags);
-        }
-
+        var (lines, tagIds) = AddChildren(request, transaction.Id, currency);
         await db.SaveChangesAsync(cancellationToken);
 
-        return transaction.ToResponse(lines, tags.Select(tag => tag.TagId).ToList());
+        return transaction.ToResponse(lines, tagIds);
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -276,30 +243,9 @@ public sealed class TransactionService(
             return NotFound;
         }
 
-        var referenceError = await ValidateReferencesAsync(
-            request.AccountId,
-            request.CategoryId,
-            request.Type,
-            cancellationToken);
-        if (referenceError is not null)
+        if (await ValidateInputAsync(request, cancellationToken) is { } inputError)
         {
-            return referenceError;
-        }
-
-        var tagError = await references.TagsExistAsync(request.TagIds ?? [], cancellationToken);
-        if (tagError is not null)
-        {
-            return tagError;
-        }
-
-        var isSplit = request.Lines is { Count: > 0 };
-        if (isSplit)
-        {
-            var linesError = await ValidateLinesAsync(request.Lines!, request.Type, cancellationToken);
-            if (linesError is not null)
-            {
-                return linesError;
-            }
+            return inputError;
         }
 
         var valuation = await ValueAsync(
@@ -316,40 +262,18 @@ public sealed class TransactionService(
 
         var (currency, reportingAmount) = valuation.Value;
 
-        var existingLines = await db.TransactionLines
-            .Where(l => l.TransactionId == transactionId)
-            .ToListAsync(cancellationToken);
-        if (existingLines.Count > 0)
-        {
-            db.TransactionLines.RemoveRange(existingLines);
-        }
-
-        var existingTags = await db.TransactionTags
-            .Where(x => x.TransactionId == transactionId)
-            .ToListAsync(cancellationToken);
-        if (existingTags.Count > 0)
-        {
-            db.TransactionTags.RemoveRange(existingTags);
-        }
+        db.TransactionLines.RemoveRange(
+            await db.TransactionLines.Where(l => l.TransactionId == transactionId).ToListAsync(cancellationToken));
+        db.TransactionTags.RemoveRange(
+            await db.TransactionTags.Where(x => x.TransactionId == transactionId).ToListAsync(cancellationToken));
 
         request.ApplyTo(transaction, currency, reportingAmount);
-
-        var lines = isSplit ? request.Lines!.ToLines(transactionId, currentUser.Id, currency) : [];
-        if (isSplit)
-        {
-            db.TransactionLines.AddRange(lines);
-        }
-
-        var tags = request.TagIds.ToTransactionTags(transactionId);
-        if (tags.Count > 0)
-        {
-            db.TransactionTags.AddRange(tags);
-        }
+        var (lines, tagIds) = AddChildren(request, transactionId, currency);
 
         await db.SaveChangesAsync(cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return transaction.ToResponse(lines, tags.Select(tag => tag.TagId).ToList(), attachmentCount);
+        return transaction.ToResponse(lines, tagIds, attachmentCount);
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(
@@ -481,6 +405,24 @@ public sealed class TransactionService(
             existing is { } inUse ? [inUse] : [],
             cancellationToken);
         return value.Map(valued => (valued.Amount.Currency, valued.ReportingAmount));
+    }
+
+    private async Task<DomainError?> ValidateInputAsync(ITransactionInput input, CancellationToken cancellationToken) =>
+        await ValidateReferencesAsync(input.AccountId, input.CategoryId, input.Type, cancellationToken)
+        ?? await references.TagsExistAsync(input.TagIds ?? [], cancellationToken)
+        ?? (input.Lines is { Count: > 0 } lines ? await ValidateLinesAsync(lines, input.Type, cancellationToken) : null);
+
+    private (List<TransactionLine> Lines, List<TagId> TagIds) AddChildren(
+        ITransactionInput input,
+        TransactionId transactionId,
+        Currency currency)
+    {
+        var lines = input.Lines is { Count: > 0 } requested ? requested.ToLines(transactionId, currentUser.Id, currency) : [];
+        var tags = input.TagIds.ToTransactionTags(transactionId);
+        db.TransactionLines.AddRange(lines);
+        db.TransactionTags.AddRange(tags);
+
+        return (lines, tags.Select(tag => tag.TagId).ToList());
     }
 
     private async Task<DomainError?> ValidateReferencesAsync(
