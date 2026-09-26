@@ -1,6 +1,5 @@
 import { MailWarning } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useMe, useSendVerificationEmail } from "@/api/generated";
 import { Button } from "@/components/ui/button/button";
 import { useEmailEnabled } from "@/hooks/use-settings";
@@ -12,11 +11,7 @@ export function EmailVerificationBanner() {
   const me = useMe({ query: { throwOnError: false, meta: { silent: true } } });
 
   const resendMutation = useSendVerificationEmail(
-    silent({
-      onSuccess: () => {
-        toast.success(t("profile.verificationSent"));
-      },
-    }),
+    silent({ meta: { success: t("profile.verificationSent") } }),
   );
 
   const profile = me.data;

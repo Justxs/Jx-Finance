@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useUpdateDebt } from "@/api/generated";
 import type { DebtResponse, DebtScheduleResponse } from "@/api/generated/model";
 import { FormError } from "@/components/form-error/form-error";
@@ -21,9 +20,7 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
   const formatRate = useRatePercent();
   const scheduled = money.format(Number(schedule.scheduledBalance));
   const update = useUpdateDebt(
-    silent({
-      onSuccess: () => toast.success(t("netWorth.schedule.balanceUpdated", { amount: scheduled })),
-    }),
+    silent({ meta: { success: t("netWorth.schedule.balanceUpdated", { amount: scheduled }) } }),
   );
   const differs = Number(schedule.scheduledBalance) !== Number(debt.outstandingAmount);
 

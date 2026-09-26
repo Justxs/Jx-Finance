@@ -84,9 +84,8 @@ export function useTransactionMutations({ listKey, onUpdated, onBulkApplied }: R
 
   const create = useCreateTransaction({
     mutation: {
-      meta: { silent: true },
+      meta: { silent: true, success: t("transactions.created") },
       ...optimisticCreate,
-      onSuccess: () => toast.success(t("transactions.created")),
     },
   });
 

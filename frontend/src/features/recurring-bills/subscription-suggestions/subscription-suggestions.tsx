@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useDismissSubscriptionCandidate } from "@/api/generated";
 import type {
   AccountResponse,
@@ -33,7 +32,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
   const [creating, setCreating] = useState<Selected | null>(null);
 
   const dismiss = useDismissSubscriptionCandidate(
-    silent({ onSuccess: () => toast.success(t("subscriptions.dismissed")) }),
+    silent({ meta: { success: t("subscriptions.dismissed") } }),
   );
 
   const pending = dismiss.isPending ? dismiss.variables?.data : undefined;

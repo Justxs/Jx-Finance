@@ -26,6 +26,7 @@ import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useDate } from "@/hooks/use-formatters";
 import { type FeatureKey, useSettings } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
+import { pendingId } from "@/lib/mutations";
 import { optimisticRemoval, optimisticUpdate } from "@/lib/optimistic";
 import { cn } from "@/lib/utils";
 
@@ -118,10 +119,7 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   }
 
   function entryState(notification: NotificationResponse) {
-    return cn(
-      entryClassName,
-      markReadMutation.isPending && markReadMutation.variables?.id === notification.id && "stale",
-    );
+    return cn(entryClassName, pendingId(markReadMutation) === notification.id && "stale");
   }
 
   function body(notification: NotificationResponse) {

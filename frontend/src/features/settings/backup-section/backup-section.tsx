@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
 import { endSession } from "@/lib/auth-gate";
-import { pendingId, silent } from "@/lib/mutations";
+import { notify, pendingId, silent } from "@/lib/mutations";
 import { BackupNoteForm } from "./backup-note-form";
 import { BackupUploadForm } from "./backup-upload-form";
 import { BackupsTable } from "./backups-table";
@@ -30,13 +30,7 @@ function BackupList() {
   const [editing, setEditing] = useState<BackupResponse | null>(null);
   const [restoring, setRestoring] = useState<BackupResponse | null>(null);
 
-  const deleteMutation = useDeleteBackup({
-    mutation: {
-      onSuccess: () => {
-        toast.success(t("backup.deleted"));
-      },
-    },
-  });
+  const deleteMutation = useDeleteBackup(notify(t("backup.deleted")));
 
   const remove = useConfirmedDelete(deleteMutation, list, (backup) =>
     formatDateTime(backup.createdAt),

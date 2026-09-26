@@ -1,7 +1,6 @@
 import { LogOut } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useRevokeOtherSessions, useRevokeSession, useSessionsSuspense } from "@/api/generated";
 import type { SessionResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -14,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDateTime } from "@/hooks/use-formatters";
+import { notify } from "@/lib/mutations";
 import { describeUserAgent } from "@/lib/user-agent";
 
 function useSessionLabel() {
@@ -89,22 +89,12 @@ function SessionList() {
   const sessionLabel = useSessionLabel();
   const [confirmingOthers, setConfirmingOthers] = useState<true | null>(null);
 
-  const revokeMutation = useRevokeSession({
-    mutation: {
-      onSuccess: () => {
-        toast.success(t("profile.sessions.signedOut"));
-      },
-    },
-  });
+  const revokeMutation = useRevokeSession(notify(t("profile.sessions.signedOut")));
   const revoke = useConfirmedDelete(revokeMutation, list, sessionLabel);
 
-  const revokeOthersMutation = useRevokeOtherSessions({
-    mutation: {
-      onSuccess: () => {
-        toast.success(t("profile.sessions.othersSignedOut"));
-      },
-    },
-  });
+  const revokeOthersMutation = useRevokeOtherSessions(
+    notify(t("profile.sessions.othersSignedOut")),
+  );
 
   const busy = revoke.busy || revokeOthersMutation.isPending;
   const hasOthers = list.some((session) => !session.isCurrent);

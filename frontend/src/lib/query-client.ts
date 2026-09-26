@@ -33,26 +33,25 @@ declare module "@tanstack/react-query" {
   interface Register {
     defaultError: ApiError;
     queryMeta: { silent?: boolean };
-    mutationMeta: { silent?: boolean };
+    mutationMeta: { silent?: boolean; success?: string };
   }
 }
 
-function createMutationCache(onError?: (error: unknown, silent: boolean) => void) {
+export function createMutationCache() {
   return new MutationCache({
+    onSuccess: (_data, _variables, _result, mutation) => {
+      if (mutation.meta?.success) {
+        toast.success(mutation.meta.success);
+      }
+    },
     onError: (error, _variables, _result, mutation) => {
-      onError?.(error, mutation.meta?.silent === true);
+      if (mutation.meta?.silent !== true) {
+        toastError(error);
+      }
     },
     onSettled: (_data, _error, _variables, _result, _mutation, context) => {
       void invalidateAfterMutation(context.client, context.mutationKey);
     },
-  });
-}
-
-export function createToastingMutationCache() {
-  return createMutationCache((error, silent) => {
-    if (!silent) {
-      toastError(error);
-    }
   });
 }
 
@@ -83,5 +82,5 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-  mutationCache: createToastingMutationCache(),
+  mutationCache: createMutationCache(),
 });

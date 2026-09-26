@@ -5,6 +5,7 @@ import { queryClient, throwWithoutData } from "./query-client";
 
 const generic = "Something went wrong. Please try again.";
 const toastError = vi.fn();
+const toastSuccess = vi.fn();
 let queryCount = 0;
 
 interface FailingQuery {
@@ -31,6 +32,13 @@ async function failingQuery(failure: unknown, { silent, cached = true }: Failing
   throw new Error("expected the query to fail");
 }
 
+async function succeedingMutation(meta?: { silent?: boolean; success?: string }) {
+  const mutation = queryClient
+    .getMutationCache()
+    .build(queryClient, { mutationFn: () => Promise.resolve("done"), meta });
+  await mutation.execute(undefined);
+}
+
 async function failingMutation(failure: unknown) {
   const mutation = queryClient
     .getMutationCache()
@@ -45,7 +53,9 @@ async function failingMutation(failure: unknown) {
 
 beforeEach(() => {
   toastError.mockReset();
+  toastSuccess.mockReset();
   vi.spyOn(toast, "error").mockImplementation(toastError);
+  vi.spyOn(toast, "success").mockImplementation(toastSuccess);
 });
 
 afterEach(() => {
@@ -140,6 +150,20 @@ describe("mutation errors", () => {
       description: "Bad amount.",
       duration: 12_000,
     });
+  });
+});
+
+describe("mutation success", () => {
+  test("toasts the success message the mutation carries", async () => {
+    await succeedingMutation({ silent: true, success: "Saved" });
+
+    expect(toastSuccess).toHaveBeenCalledExactlyOnceWith("Saved");
+  });
+
+  test("stays quiet without one", async () => {
+    await succeedingMutation();
+
+    expect(toastSuccess).not.toHaveBeenCalled();
   });
 });
 

@@ -1,6 +1,5 @@
 import { DatabaseBackup } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { z } from "zod";
 import { useCreateBackup } from "@/api/generated";
 import { createBackupBodyNoteMax } from "@/api/schemas/backups/backups.zod";
@@ -13,13 +12,7 @@ export function CreateBackupForm() {
   const { t } = useTranslation();
   const schema = z.object({ note: optionalText(t, createBackupBodyNoteMax) });
 
-  const createMutation = useCreateBackup(
-    silent({
-      onSuccess: () => {
-        toast.success(t("backup.created"));
-      },
-    }),
-  );
+  const createMutation = useCreateBackup(silent({ meta: { success: t("backup.created") } }));
 
   const form = useServerForm({
     defaultValues: { note: "" },

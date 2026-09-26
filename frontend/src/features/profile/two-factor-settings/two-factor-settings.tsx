@@ -1,7 +1,6 @@
 import QRCode from "qrcode";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { z } from "zod";
 import { useDisableTwoFactor, useMeSuspense, useSetupTwoFactor } from "@/api/generated";
 import type { TwoFactorSetupResponse } from "@/api/generated/model";
@@ -103,11 +102,7 @@ export function TwoFactorSettings() {
   );
 
   const disableMutation = useDisableTwoFactor(
-    silent({
-      onSuccess: () => {
-        toast.success(t("profile.twoFactorDisabled"));
-      },
-    }),
+    silent({ meta: { success: t("profile.twoFactorDisabled") } }),
   );
 
   function cancelSetup() {

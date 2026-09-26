@@ -1,6 +1,5 @@
 import { Undo2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import { useRestoreDeleted, useTrashSuspense } from "@/api/generated";
 import type { TrashEntryResponse } from "@/api/generated/model";
 import { PagedRows } from "@/components/paged-rows/paged-rows";
@@ -12,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tag } from "@/components/ui/tag/tag";
 import { useDateTime } from "@/hooks/use-formatters";
 import { usePagedItems, usePagedList } from "@/hooks/use-paged-list";
+import { notify } from "@/lib/mutations";
 
 const TRASH_PAGE_SIZE = 10;
 const TRASH_RETENTION_DAYS = 30;
@@ -62,9 +62,7 @@ function TrashList() {
   const trash = useTrashSuspense({ page: paging.shownPage, pageSize: TRASH_PAGE_SIZE });
   const { items: entries, pages } = usePagedItems(paging, trash.data, TRASH_PAGE_SIZE);
 
-  const restoreMutation = useRestoreDeleted({
-    mutation: { onSuccess: () => toast.success(t("trash.restored")) },
-  });
+  const restoreMutation = useRestoreDeleted(notify(t("trash.restored")));
   const restoringId = restoreMutation.isPending
     ? restoreMutation.variables?.data.entityId
     : undefined;

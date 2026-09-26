@@ -3,7 +3,6 @@ import { useRouter } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { type KeyboardEvent, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
 import {
   getAccountsSuspenseQueryOptions,
   getCategoriesSuspenseQueryOptions,
@@ -21,6 +20,7 @@ import {
 } from "@/components/ui/dialog/dialog";
 import { useSettings } from "@/hooks/use-settings";
 import { endSession } from "@/lib/auth-gate";
+import { notify } from "@/lib/mutations";
 import type { ShortcutRouter } from "@/lib/shortcuts";
 import { UserRole } from "@/lib/user-role";
 import { cn } from "@/lib/utils";
@@ -82,9 +82,7 @@ function CommandPaletteContent({ onClose }: Readonly<ContentProps>) {
     },
   });
 
-  const backupMutation = useCreateBackup({
-    mutation: { onSuccess: () => toast.success(t("backup.created")) },
-  });
+  const backupMutation = useCreateBackup(notify(t("backup.created")));
 
   const entries = buildCommandEntries({
     t,

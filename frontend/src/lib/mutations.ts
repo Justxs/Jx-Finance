@@ -9,6 +9,11 @@ interface PendingState {
   variables?: { id: string };
 }
 
+interface Meta {
+  silent?: true;
+  success?: string;
+}
+
 interface SilentMeta {
   meta: { silent: true };
 }
@@ -19,9 +24,13 @@ export function silent(): { mutation: SilentMeta };
 export function silent<TOptions extends object>(
   options: TOptions,
 ): { mutation: TOptions & SilentMeta };
-export function silent(options?: object) {
-  const meta: SilentMeta["meta"] = { silent: true };
+export function silent(options: { meta?: Meta } = {}) {
+  const meta: Meta = { ...options.meta, silent: true };
   return { mutation: { ...options, meta } };
+}
+
+export function notify(success: string) {
+  return { mutation: { meta: { success } } };
 }
 
 export function pendingId(mutation: PendingState): string | null {
