@@ -7,7 +7,7 @@ public sealed class AddMemberValidator : Validator<AddMemberRequest>
 {
     public AddMemberValidator()
     {
-        RuleFor(r => r.Email).IsRequired().HasMaxLength(256).IsEmail();
+        RuleFor(r => r.Email).IsEmailAddress();
         RuleFor(r => r.Role).IsKnownEnum();
     }
 }

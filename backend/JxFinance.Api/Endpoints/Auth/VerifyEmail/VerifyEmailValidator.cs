@@ -7,7 +7,7 @@ public sealed class VerifyEmailValidator : Validator<VerifyEmailRequest>
 {
     public VerifyEmailValidator()
     {
-        RuleFor(r => r.Email).IsRequired().IsEmail().HasMaxLength(320);
+        RuleFor(r => r.Email).IsEmailAddress();
         RuleFor(r => r.Token).IsRequired().HasMaxLength(1000);
     }
 }
