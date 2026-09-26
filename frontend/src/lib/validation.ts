@@ -26,8 +26,12 @@ export function isNonNegativeMoney(value: string): boolean {
   return isMoney(value) && Number(normalizeMoney(value)) >= 0;
 }
 
+function blankOr(check: (value: string) => boolean) {
+  return (value: string) => value.trim() === "" || check(value);
+}
+
 export function isRate(value: string): boolean {
-  return value.trim() === "" || /^\d+(\.\d+)?$/.test(normalizeMoney(value));
+  return blankOr((rate) => /^\d+(\.\d+)?$/.test(normalizeMoney(rate)))(value);
 }
 
 export function isEmail(value: string): boolean {
@@ -86,7 +90,7 @@ function moneyRule(t: Translate, sign: MoneySign, optional: boolean) {
   return z
     .string()
     .refine(
-      (value) => (optional && value.trim() === "") || check(value),
+      optional ? blankOr(check) : check,
       t(sign === "positive" ? "validation.positiveMoney" : "validation.money"),
     );
 }
@@ -112,30 +116,26 @@ export function quantity(t: Translate, messageKey: TranslationKey) {
 }
 
 export function optionalQuantity(t: Translate, messageKey: TranslationKey) {
-  return z.string().refine((value) => value.trim() === "" || isQuantity(value), t(messageKey));
+  return z.string().refine(blankOr(isQuantity), t(messageKey));
 }
 
-function isWholeNumberBetween(value: string, min: number, max: number): boolean {
-  const trimmed = value.trim();
-  return /^\d+$/.test(trimmed) && Number(trimmed) >= min && Number(trimmed) <= max;
+function wholeNumberIn(min: number, max: number) {
+  return (value: string) => {
+    const trimmed = value.trim();
+    return /^\d+$/.test(trimmed) && Number(trimmed) >= min && Number(trimmed) <= max;
+  };
 }
 
 export function wholeNumberBetween(t: Translate, min: number, max: number) {
   return z
     .string()
-    .refine(
-      (value) => isWholeNumberBetween(value, min, max),
-      t("validation.wholeNumberBetween", { min, max }),
-    );
+    .refine(wholeNumberIn(min, max), t("validation.wholeNumberBetween", { min, max }));
 }
 
 export function optionalWholeNumberBetween(t: Translate, min: number, max: number) {
   return z
     .string()
-    .refine(
-      (value) => value.trim() === "" || isWholeNumberBetween(value, min, max),
-      t("validation.wholeNumberBetween", { min, max }),
-    );
+    .refine(blankOr(wholeNumberIn(min, max)), t("validation.wholeNumberBetween", { min, max }));
 }
 
 interface SharingValues {

@@ -2,9 +2,6 @@ export const CHART_COLOR_PRIMARY = "var(--chart-1)";
 export const CHART_COLOR_POSITIVE = "var(--chart-2)";
 export const CHART_COLOR_NEGATIVE = "var(--chart-3)";
 
-export const CHART_COLOR_INCOME = CHART_COLOR_POSITIVE;
-export const CHART_COLOR_EXPENSE = CHART_COLOR_NEGATIVE;
-
 const axisTick = {
   fill: "var(--muted-foreground)",
   fontSize: 12,

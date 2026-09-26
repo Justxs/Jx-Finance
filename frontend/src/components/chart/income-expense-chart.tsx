@@ -3,7 +3,7 @@ import { Bar, Line, ReferenceLine } from "recharts";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { INCOME_TONE } from "@/lib/tone";
 import { BarChartFrame } from "./bar-chart-frame";
-import { CHART_COLOR_EXPENSE, CHART_COLOR_INCOME } from "./chart-theme";
+import { CHART_COLOR_NEGATIVE, CHART_COLOR_POSITIVE } from "./chart-theme";
 import type { ChartSeries } from "./chart-tooltip";
 
 interface IncomeExpensePoint {
@@ -28,24 +28,24 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
     {
       key: "income",
       label: t("charts.income"),
-      color: CHART_COLOR_INCOME,
+      color: CHART_COLOR_POSITIVE,
       sign: "+",
       tone: INCOME_TONE,
     },
-    { key: "expense", label: t("charts.expense"), color: CHART_COLOR_EXPENSE, sign: "−" },
+    { key: "expense", label: t("charts.expense"), color: CHART_COLOR_NEGATIVE, sign: "−" },
     ...(compared
       ? ([
           {
             key: "comparisonIncome",
             label: t("charts.earlierIncome"),
-            color: CHART_COLOR_INCOME,
+            color: CHART_COLOR_POSITIVE,
             sign: "+",
             shape: "dashed",
           },
           {
             key: "comparisonExpense",
             label: t("charts.earlierExpense"),
-            color: CHART_COLOR_EXPENSE,
+            color: CHART_COLOR_NEGATIVE,
             sign: "−",
             shape: "dashed",
           },
@@ -90,14 +90,14 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
         isAnimationActive={false}
         maxBarSize={14}
         dataKey="income"
-        fill={CHART_COLOR_INCOME}
+        fill={CHART_COLOR_POSITIVE}
         radius={[1, 1, 0, 0]}
       />
       <Bar
         isAnimationActive={false}
         maxBarSize={14}
         dataKey="expense"
-        fill={CHART_COLOR_EXPENSE}
+        fill={CHART_COLOR_NEGATIVE}
         radius={[1, 1, 0, 0]}
       />
       {compared ? (
@@ -105,11 +105,11 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
           isAnimationActive={false}
           type="linear"
           dataKey="comparisonIncome"
-          stroke={CHART_COLOR_INCOME}
+          stroke={CHART_COLOR_POSITIVE}
           strokeWidth={1.5}
           strokeDasharray="4 3"
           dot={false}
-          activeDot={{ r: 3, fill: CHART_COLOR_INCOME }}
+          activeDot={{ r: 3, fill: CHART_COLOR_POSITIVE }}
         />
       ) : null}
       {compared ? (
@@ -117,11 +117,11 @@ export function IncomeExpenseChart({ data, height = 280 }: Readonly<Props>) {
           isAnimationActive={false}
           type="linear"
           dataKey="comparisonExpense"
-          stroke={CHART_COLOR_EXPENSE}
+          stroke={CHART_COLOR_NEGATIVE}
           strokeWidth={1.5}
           strokeDasharray="4 3"
           dot={false}
-          activeDot={{ r: 3, fill: CHART_COLOR_EXPENSE }}
+          activeDot={{ r: 3, fill: CHART_COLOR_NEGATIVE }}
         />
       ) : null}
       <Line

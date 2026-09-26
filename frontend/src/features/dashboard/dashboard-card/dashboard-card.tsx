@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { DashboardCard as DashboardCardId } from "@/api/generated/model";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { RowsSkeleton, Skeleton } from "@/components/ui/skeleton/skeleton";
 import { NetWorthHistoryChart } from "@/features/net-worth/net-worth-history-chart";
 import type { Translate, TranslationKey } from "@/lib/i18n";
@@ -98,11 +98,11 @@ export function DashboardCard({ card }: Readonly<Props>) {
 
   if (card === "summary") {
     return (
-      <Panel as="section" className={narrow} aria-label={title}>
+      <Section className={narrow} aria-label={title}>
         <QueryBoundary fallback={chartFallback} errorSubject={title}>
           <DashboardStats />
         </QueryBoundary>
-      </Panel>
+      </Section>
     );
   }
 

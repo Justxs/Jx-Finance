@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { useDateFormat } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
@@ -44,13 +44,13 @@ function DashboardContent({ customising, onCustomise, onDone }: Readonly<Content
 
   if (cards.length === 0) {
     return (
-      <Panel className="flex flex-wrap items-center justify-between gap-3">
+      <Section as="div" className="flex flex-wrap items-center justify-between gap-3">
         <EmptyText>{t("dashboard.layout.allHidden")}</EmptyText>
         <Button variant="outline" onClick={onCustomise}>
           <SlidersHorizontal />
           {t("dashboard.layout.chooseCards")}
         </Button>
-      </Panel>
+      </Section>
     );
   }
 

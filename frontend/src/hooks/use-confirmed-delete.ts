@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { useRestoreDeleted } from "@/api/generated";
 import type { TrashKind } from "@/api/generated/model";
 import type { DeleteProps } from "@/components/row-actions/row-actions";
-import { useUndoToast } from "@/hooks/use-undo-toast";
 import { pendingId } from "@/lib/mutations";
 
 interface DeleteOptions {
@@ -23,16 +24,29 @@ export function useConfirmedDelete<T extends { id: string }>(
 ) {
   const { t } = useTranslation();
   const [target, setTarget] = useState<string | null>(null);
-  const showUndoToast = useUndoToast();
+  const restore = useRestoreDeleted();
   const item = items.find((candidate) => candidate.id === target);
   const itemLabel = (item ? labelOf(item) : undefined) ?? undefined;
+
+  function showUndoToast(kind: TrashKind, entityId: string) {
+    toast.success(itemLabel ? t("trash.deletedNamed", { name: itemLabel }) : t("trash.deleted"), {
+      action: {
+        label: t("trash.undo"),
+        onClick: () =>
+          restore.mutate(
+            { data: { kind, entityId } },
+            { onSuccess: () => toast.success(t("trash.restored")) },
+          ),
+      },
+    });
+  }
 
   function confirm(id: string) {
     if (!undoKind) {
       mutation.mutate({ id });
       return;
     }
-    mutation.mutate({ id }, { onSuccess: () => showUndoToast(undoKind, id, itemLabel) });
+    mutation.mutate({ id }, { onSuccess: () => showUndoToast(undoKind, id) });
   }
 
   const pending = pendingId(mutation);

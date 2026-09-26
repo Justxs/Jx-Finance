@@ -7,7 +7,7 @@ export const PREFERENCES_STORAGE_KEY = "jx-preferences";
 
 const ROW_ID = "browser";
 
-export const themes = ["light", "dark"] as const;
+const themes = ["light", "dark"] as const;
 export const palettes = ["ledger", "plum", "sepia", "graphite"] as const;
 export const fonts = [
   "ledger",

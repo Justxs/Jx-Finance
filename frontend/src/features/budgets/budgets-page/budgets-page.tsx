@@ -16,7 +16,7 @@ import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-
 import { SummaryStats } from "@/components/summary-stats/summary-stats";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
@@ -59,7 +59,7 @@ export function BudgetsPage() {
     content = <EmptyText>{t("budgets.empty")}</EmptyText>;
   } else {
     content = (
-      <Panel as={Rows} className="py-2 sm:py-3">
+      <Section as={Rows} className="py-2 sm:py-3">
         {budgetList.map((budget) => {
           const limit = Number(budget.effectiveLimit);
           const spent = Number(budget.spent);
@@ -131,7 +131,7 @@ export function BudgetsPage() {
             />
           );
         })}
-      </Panel>
+      </Section>
     );
   }
 

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { EMPTY_VALUE, type MoneySign, useMoney } from "@/hooks/use-formatters";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,7 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
   }
 
   return (
-    <Panel as={SplitColumns} className="gap-y-6 lg:items-end">
+    <Section as={SplitColumns} className="gap-y-6 lg:items-end">
       {lead ? (
         <dl className="min-w-0">
           <dt className="text-sm text-muted-foreground">{lead.label}</dt>
@@ -70,6 +70,6 @@ export function SummaryStats({ items, currency }: Readonly<Props>) {
           </div>
         ))}
       </dl>
-    </Panel>
+    </Section>
   );
 }

@@ -15,7 +15,7 @@ import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
@@ -48,7 +48,7 @@ export function RecurringBillsPage() {
     content = <EmptyText>{t("recurringBills.empty")}</EmptyText>;
   } else {
     content = (
-      <Panel as={Rows} className="py-2 sm:py-3">
+      <Section as={Rows} className="py-2 sm:py-3">
         {billList.map((bill) => (
           <RecurringBillRow
             key={bill.id}
@@ -60,7 +60,7 @@ export function RecurringBillsPage() {
             {...remove.deleteProps(bill.id)}
           />
         ))}
-      </Panel>
+      </Section>
     );
   }
 

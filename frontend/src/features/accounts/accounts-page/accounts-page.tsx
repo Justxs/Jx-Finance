@@ -8,7 +8,7 @@ import { EditModal, Modal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { Button } from "@/components/ui/button/button";
-import { Panel, Section, SectionTitle } from "@/components/ui/section/section";
+import { Section, SectionTitle } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { AccountBalances } from "@/features/dashboard/account-balances/account-balances";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
@@ -76,7 +76,7 @@ export function AccountsPage() {
         {(account, close) => <AccountForm initial={account} onClose={close} />}
       </EditModal>
 
-      <Panel>
+      <Section as="div">
         <AccountsTable
           accounts={accountList}
           stale={stale}
@@ -85,7 +85,7 @@ export function AccountsPage() {
           onDelete={remove.request}
           onConvert={features.multiCurrency ? setConvertAccountId : undefined}
         />
-      </Panel>
+      </Section>
 
       <QueryBoundary fallback={<Skeleton className="h-8 w-48" />}>
         <ArchivedAccounts />

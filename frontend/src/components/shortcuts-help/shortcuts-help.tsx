@@ -10,7 +10,13 @@ import {
 } from "@/components/ui/popover/popover";
 import { useSettings } from "@/hooks/use-settings";
 import { type Shortcut, shortcutKeyLabel, visibleShortcuts } from "@/lib/shortcuts";
+import { cn } from "@/lib/utils";
 import { useShortcutsHelpOpen } from "@/stores/shortcuts-help-store";
+
+const groups = [
+  { group: "actions", listClassName: undefined },
+  { group: "goTo", listClassName: "grid gap-x-6 sm:grid-cols-2" },
+] as const;
 
 interface RowProps {
   shortcut: Shortcut;
@@ -47,8 +53,6 @@ export function ShortcutsHelp({ className }: Readonly<Props>) {
   const { open, setOpen } = useShortcutsHelpOpen();
   const { features } = useSettings();
   const available = visibleShortcuts((feature) => features[feature]);
-  const actionShortcuts = available.filter((shortcut) => shortcut.group === "actions");
-  const goToShortcuts = available.filter((shortcut) => shortcut.group === "goTo");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -71,26 +75,20 @@ export function ShortcutsHelp({ className }: Readonly<Props>) {
         className="w-[min(30rem,calc(100vw-2rem))] gap-4 p-4"
       >
         <PopoverTitle className="text-lg leading-6">{t("shortcuts.title")}</PopoverTitle>
-        <section aria-labelledby="shortcuts-actions">
-          <h3 id="shortcuts-actions" className="text-xs font-medium text-muted-foreground">
-            {t("shortcuts.actions")}
-          </h3>
-          <ul className="mt-1.5 border-t border-t-rule">
-            {actionShortcuts.map((shortcut) => (
-              <ShortcutRow key={shortcut.id} shortcut={shortcut} />
-            ))}
-          </ul>
-        </section>
-        <section aria-labelledby="shortcuts-go-to">
-          <h3 id="shortcuts-go-to" className="text-xs font-medium text-muted-foreground">
-            {t("shortcuts.goTo")}
-          </h3>
-          <ul className="mt-1.5 grid gap-x-6 border-t border-t-rule sm:grid-cols-2">
-            {goToShortcuts.map((shortcut) => (
-              <ShortcutRow key={shortcut.id} shortcut={shortcut} />
-            ))}
-          </ul>
-        </section>
+        {groups.map(({ group, listClassName }) => (
+          <section key={group} aria-labelledby={`shortcuts-${group}`}>
+            <h3 id={`shortcuts-${group}`} className="text-xs font-medium text-muted-foreground">
+              {t(`shortcuts.${group}`)}
+            </h3>
+            <ul className={cn("mt-1.5 border-t border-t-rule", listClassName)}>
+              {available
+                .filter((shortcut) => shortcut.group === group)
+                .map((shortcut) => (
+                  <ShortcutRow key={shortcut.id} shortcut={shortcut} />
+                ))}
+            </ul>
+          </section>
+        ))}
       </PopoverContent>
     </Popover>
   );

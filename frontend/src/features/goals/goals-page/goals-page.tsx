@@ -13,7 +13,7 @@ import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { nameById } from "@/lib/options";
@@ -41,7 +41,7 @@ export function GoalsPage() {
     content = <EmptyText>{t("goals.empty")}</EmptyText>;
   } else {
     content = (
-      <Panel as={Rows} className="py-2 sm:py-3">
+      <Section as={Rows} className="py-2 sm:py-3">
         {goalList.map((goal) => (
           <GoalRow
             key={goal.id}
@@ -51,7 +51,7 @@ export function GoalsPage() {
             {...remove.deleteProps(goal.id)}
           />
         ))}
-      </Panel>
+      </Section>
     );
   }
 

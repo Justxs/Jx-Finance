@@ -15,7 +15,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
 import { useExportUrl } from "@/hooks/use-export-url";
@@ -217,7 +217,7 @@ export function TransactionsPage() {
         onUpdate={handleUpdate}
       />
 
-      <Panel as="section" className="space-y-2">
+      <Section className="space-y-2">
         {selectedItems.length > 0 ? (
           <SelectionToolbar
             selected={selectedItems}
@@ -292,7 +292,7 @@ export function TransactionsPage() {
           pages={pageCount}
           onPageChange={(nextPage) => navigate({ search: (prev) => ({ ...prev, page: nextPage }) })}
         />
-      </Panel>
+      </Section>
 
       <ConfirmDeleteDialog {...remove.dialogProps} />
     </div>

@@ -1,6 +1,6 @@
 import type { ComponentProps } from "react";
 import { Rows } from "@/components/ui/rows/rows";
-import { Panel } from "@/components/ui/section/section";
+import { Section } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +39,7 @@ function RowsSkeleton({ rows = 5, className }: Readonly<RowsSkeletonProps>) {
 
 function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
   return (
-    <Panel
+    <Section
       as={SplitColumns}
       data-slot="stats-skeleton"
       aria-hidden="true"
@@ -59,7 +59,7 @@ function StatsSkeleton({ className }: Readonly<{ className?: string }>) {
           <Skeleton className="h-6 w-24 rounded-sm" />
         </div>
       </div>
-    </Panel>
+    </Section>
   );
 }
 
