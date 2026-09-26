@@ -4,11 +4,10 @@ import { toast } from "sonner";
 import { useBrokerConnectionsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { FormError } from "@/components/form-error/form-error";
 import { Button } from "@/components/ui/button/button";
 import { useDateTime } from "@/hooks/use-formatters";
 import { ConnectionForm } from "./connection-form";
-import { BrokerImportResult } from "./import-result";
+import { BrokerImportStatus } from "./import-result";
 import type { BrokerImportMutations } from "./use-broker-import-mutations";
 
 interface Props {
@@ -110,13 +109,12 @@ export function ConnectionPanel({ accounts, accountId, mutations }: Readonly<Pro
         }
       />
 
-      <div role="status" aria-live="polite">
-        {syncMutation.isPending ? (
-          <p className="text-sm text-muted-foreground">{t("investments.connection.syncing")}</p>
-        ) : null}
-        {!syncMutation.isPending && syncResult ? <BrokerImportResult result={syncResult} /> : null}
-      </div>
-      <FormError error={syncFailure} />
+      <BrokerImportStatus
+        pending={syncMutation.isPending}
+        pendingText={t("investments.connection.syncing")}
+        result={syncResult}
+        error={syncFailure}
+      />
 
       <ConfirmDeleteDialog
         target={removeTarget}

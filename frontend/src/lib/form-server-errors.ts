@@ -1,4 +1,4 @@
-import type { CreateValidationErrorFn, ValidationErrorMap } from "@tanstack/react-form";
+import type { AnyFormApi, CreateValidationErrorFn, ValidationErrorMap } from "@tanstack/react-form";
 import { type ApiError, isApiError } from "@/api/client";
 import type { ErrorCode } from "@/api/generated/model";
 import { i18n } from "@/lib/i18n";
@@ -124,4 +124,19 @@ export function hasServerErrorCode(error: unknown, code: ErrorCode): boolean {
     isApiError(error) &&
     (error.code === code || (error.errors ?? []).some((detail) => detail.code === code))
   );
+}
+
+export async function clearingWrongPassword(
+  formApi: AnyFormApi,
+  field: string,
+  send: () => Promise<unknown>,
+) {
+  try {
+    await send();
+  } catch (failure) {
+    if (hasServerErrorCode(failure, "password.incorrect")) {
+      formApi.setFieldValue(field, "");
+    }
+    throw failure;
+  }
 }

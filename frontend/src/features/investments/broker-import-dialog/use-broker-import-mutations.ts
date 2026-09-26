@@ -26,11 +26,7 @@ export function useBrokerImportMutations() {
   const deleteConnection = useDeleteBrokerConnection();
   const syncConnection = useSyncBrokerConnection(silent());
 
-  const busy =
-    importReport.isPending ||
-    saveConnection.isPending ||
-    deleteConnection.isPending ||
-    syncConnection.isPending;
+  const busy = useBrokerImportBusy();
 
   return { importReport, saveConnection, deleteConnection, syncConnection, busy };
 }

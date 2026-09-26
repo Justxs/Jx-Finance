@@ -8,10 +8,10 @@ import {
   resetUserPasswordBodyNewPasswordMax,
   resetUserPasswordBodyNewPasswordMin,
 } from "@/api/schemas/users/users.zod";
-import { useAppForm } from "@/components/form";
+import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { EditModal } from "@/components/modal";
-import { hasServerErrorCode, submitToServer } from "@/lib/form-server-errors";
+import { clearingWrongPassword } from "@/lib/form-server-errors";
 import { silent } from "@/lib/mutations";
 import { password, requiredMax } from "@/lib/validation";
 import { userName } from "../user-queries";
@@ -49,20 +49,13 @@ function ResetPasswordForm({ user, onClose }: Readonly<FormProps>) {
     }),
   );
 
-  const form = useAppForm({
+  const form = useServerForm({
     defaultValues: { newPassword: "", resetTwoFactor: false, currentPassword: "" },
-    validators: [{ run: schema, triggers: ["change"] }],
-    onSubmit: (submission) =>
-      submitToServer(submission, async () => {
-        try {
-          await resetMutation.mutateAsync({ id: user.id, data: submission.value });
-        } catch (failure) {
-          if (hasServerErrorCode(failure, "password.incorrect")) {
-            submission.formApi.setFieldValue("currentPassword", "");
-          }
-          throw failure;
-        }
-      }),
+    schema,
+    submit: (value, formApi) =>
+      clearingWrongPassword(formApi, "currentPassword", () =>
+        resetMutation.mutateAsync({ id: user.id, data: value }),
+      ),
   });
 
   return (
