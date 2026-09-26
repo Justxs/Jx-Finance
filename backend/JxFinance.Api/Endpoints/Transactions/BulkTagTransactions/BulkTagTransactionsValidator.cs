@@ -2,7 +2,6 @@ using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
 using JxFinance.Common.Validation;
-using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.Transactions.BulkTagTransactions;
 
@@ -20,9 +19,9 @@ public sealed class BulkTagTransactionsValidator : Validator<BulkTagTransactions
         RuleForEach(r => r.TransactionIds).IsRequired();
         RuleFor(r => r.TagIds)
             .IsPresent()
-            .Must(ids => ids is null || ids.Distinct().Count() <= TagFilter.MaxTags)
+            .Must(ids => ids is null || ids.Distinct().Count() <= TagRules.MaxTags)
             .WithErrorCode(ErrorCodes.CollectionInvalidSize)
-            .WithMessage($"A transaction carries at most {TagFilter.MaxTags} tags.");
+            .WithMessage($"A transaction carries at most {TagRules.MaxTags} tags.");
         RuleForEach(r => r.TagIds).IsRequired();
     }
 }

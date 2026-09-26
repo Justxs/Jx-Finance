@@ -161,7 +161,7 @@ public sealed class TransactionService(
                 (t.IsSplit && db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == typedCategoryId)));
         }
 
-        foreach (var tagId in TagFilter.Parse(request.TagIds))
+        foreach (var tagId in GuidList.Parse(request.TagIds))
         {
             var typedTagId = new TagId(tagId);
             query = query.Where(t => db.TransactionTags.Any(x => x.TransactionId == t.Id && x.TagId == typedTagId));
