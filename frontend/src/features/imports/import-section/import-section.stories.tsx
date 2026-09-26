@@ -1,14 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { userEvent } from "storybook/test";
+import { getImportPreviewMockHandler } from "@/api/generated/imports/imports.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { accounts, checkingAccount, ids } from "@/storybook/fixtures";
+import {
+  accounts,
+  checkingAccount,
+  ids,
+  importFormatProblem,
+  importPreviewAllDuplicates,
+} from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
-  importAllDuplicatesHandlers,
-  importFormatErrorHandlers,
-  importPendingHandlers,
+  failWith,
   loadingHandlers,
+  pending,
+  withHandlers,
 } from "@/storybook/handlers";
 import { uploadAndPreview } from "@/storybook/import-play";
 import { ImportSection } from "./import-section";
@@ -46,7 +53,7 @@ export const PreviewedEmptyFile: Story = {
 };
 
 export const PreviewPending: Story = {
-  parameters: { msw: { handlers: importPendingHandlers } },
+  parameters: withHandlers(getImportPreviewMockHandler(pending)),
   play: async ({ canvasElement }) => {
     await uploadAndPreview(canvasElement);
   },
@@ -55,7 +62,7 @@ export const PreviewPending: Story = {
 export const PreselectedAccount: Story = { args: { initialAccountId: ids.accounts.savings } };
 
 export const FormatError: Story = {
-  parameters: { msw: { handlers: importFormatErrorHandlers } },
+  parameters: withHandlers(getImportPreviewMockHandler(failWith(importFormatProblem))),
   play: async ({ canvasElement }) => {
     await uploadAndPreview(canvasElement);
   },
@@ -74,7 +81,7 @@ export const NoFileChosen: Story = {
 };
 
 export const AllDuplicates: Story = {
-  parameters: { msw: { handlers: importAllDuplicatesHandlers } },
+  parameters: withHandlers(getImportPreviewMockHandler(importPreviewAllDuplicates)),
   play: async ({ canvasElement }) => {
     await uploadAndPreview(canvasElement);
   },

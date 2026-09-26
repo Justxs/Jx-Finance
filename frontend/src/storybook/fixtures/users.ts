@@ -5,54 +5,51 @@ import { problemOf } from "./problems";
 
 const validationType = "https://tools.ietf.org/html/rfc9110#section-15.5.1";
 
-export const currentUser: UserProfileResponse = {
+type UserSeed = Pick<UserProfileResponse, "id" | "email" | "displayName"> &
+  Partial<UserProfileResponse>;
+
+export function userProfile(seed: UserSeed): UserProfileResponse {
+  return {
+    role: UserRole.member,
+    twoFactorEnabled: false,
+    isActive: true,
+    emailConfirmed: true,
+    billReminderEmails: false,
+    ...seed,
+  };
+}
+
+export const currentUser = userProfile({
   id: ids.users.ruta,
   email: "ruta.kazlauskiene@example.lt",
   displayName: "Rūta Kazlauskienė",
   role: UserRole.admin,
-  twoFactorEnabled: false,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
+});
 
 export const currentUserWithTwoFactor: UserProfileResponse = {
   ...currentUser,
   twoFactorEnabled: true,
 };
 
-export const memberUser: UserProfileResponse = {
+export const memberUser = userProfile({
   id: ids.users.sarunas,
   email: "sarunas.kazlauskas@example.lt",
   displayName: "Šarūnas Kazlauskas",
-  role: UserRole.member,
   twoFactorEnabled: true,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
+});
 
-export const longNameUser: UserProfileResponse = {
+export const longNameUser = userProfile({
   id: ids.users.zygimantas,
   email: "zygimantas.ciurlionis-zemaitaitis.labai.ilgas.adresas@pavyzdine-imone.example.lt",
   displayName: "Žygimantas Augustinas Čiurlionis-Žemaitaitis",
-  role: UserRole.member,
-  twoFactorEnabled: false,
-  isActive: true,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
+});
 
-export const inactiveUser: UserProfileResponse = {
+export const inactiveUser = userProfile({
   id: ids.users.egle,
   email: "egle.butkute@example.lt",
   displayName: "Eglė Butkutė",
-  role: UserRole.member,
-  twoFactorEnabled: false,
   isActive: false,
-  emailConfirmed: true,
-  billReminderEmails: false,
-};
+});
 
 export const unverifiedUser: UserProfileResponse = {
   ...currentUser,

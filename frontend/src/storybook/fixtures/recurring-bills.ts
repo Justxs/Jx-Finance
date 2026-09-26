@@ -2,101 +2,92 @@ import type { RecurringBillResponse } from "@/api/generated/model";
 import { ids } from "./base";
 import { problemOf } from "./problems";
 
-export const dueSoonBill: RecurringBillResponse = {
+type Defaulted = "shape" | "kind" | "toAccountId" | "cadence" | "isActive";
+
+type BillSeed = Omit<RecurringBillResponse, Defaulted> &
+  Partial<Pick<RecurringBillResponse, Defaulted>>;
+
+function bill(seed: BillSeed): RecurringBillResponse {
+  return {
+    shape: "expense",
+    kind: "fixed",
+    toAccountId: null,
+    cadence: "monthly",
+    isActive: true,
+    ...seed,
+  };
+}
+
+export const dueSoonBill = bill({
   id: ids.bills.telia,
   name: "Telia – mobilusis ryšys ir internetas",
-  shape: "expense",
-  kind: "fixed",
   amount: "24.99",
   categoryId: ids.categories.telecom,
   accountId: ids.accounts.checking,
-  toAccountId: null,
-  cadence: "monthly",
   nextDueDate: "2026-09-20",
   remindDaysBefore: 3,
-  isActive: true,
-};
+});
 
-export const variableBill: RecurringBillResponse = {
+export const variableBill = bill({
   id: ids.bills.ignitis,
   name: "Ignitis – elektra",
-  shape: "expense",
   kind: "variable",
   amount: null,
   categoryId: ids.categories.utilities,
   accountId: ids.accounts.shared,
-  toAccountId: null,
-  cadence: "monthly",
   nextDueDate: "2026-09-25",
   remindDaysBefore: 5,
-  isActive: true,
-};
+});
 
-export const overdueBill: RecurringBillResponse = {
+export const overdueBill = bill({
   id: ids.bills.water,
   name: "Vilniaus vandenys",
-  shape: "expense",
   kind: "variable",
   amount: null,
   categoryId: ids.categories.utilities,
   accountId: ids.accounts.shared,
-  toAccountId: null,
-  cadence: "monthly",
   nextDueDate: "2026-09-16",
   remindDaysBefore: 2,
-  isActive: true,
-};
+});
 
-export const inactiveBill: RecurringBillResponse = {
+export const inactiveBill = bill({
   id: ids.bills.netflix,
   name: "Netflix",
-  shape: "expense",
-  kind: "fixed",
   amount: "13.99",
   categoryId: ids.categories.entertainment,
   accountId: ids.accounts.checking,
-  toAccountId: null,
-  cadence: "monthly",
   nextDueDate: "2026-07-01",
   remindDaysBefore: 0,
   isActive: false,
-};
+});
 
-export const incomeBill: RecurringBillResponse = {
+export const incomeBill = bill({
   id: ids.bills.salary,
   name: "Atlyginimas",
   shape: "income",
-  kind: "fixed",
   amount: "2180.00",
   categoryId: ids.categories.salary,
   accountId: ids.accounts.checking,
-  toAccountId: null,
-  cadence: "monthly",
   nextDueDate: "2026-10-10",
   remindDaysBefore: 1,
-  isActive: true,
-};
+});
 
-export const transferBill: RecurringBillResponse = {
+export const transferBill = bill({
   id: ids.bills.savingsOrder,
   name: "Periodinis pavedimas į taupomąją",
   shape: "transfer",
-  kind: "fixed",
   amount: "250.00",
   categoryId: null,
   accountId: ids.accounts.checking,
   toAccountId: ids.accounts.savings,
-  cadence: "monthly",
   nextDueDate: "2026-10-12",
   remindDaysBefore: 2,
-  isActive: true,
-};
+});
 
-export const crossCurrencyTransferBill: RecurringBillResponse = {
+export const crossCurrencyTransferBill = bill({
   id: ids.bills.brokerTopUp,
   name: "Papildymas doleriais į brokerio sąskaitą",
   shape: "transfer",
-  kind: "fixed",
   amount: "300.00",
   categoryId: null,
   accountId: ids.accounts.checking,
@@ -104,8 +95,7 @@ export const crossCurrencyTransferBill: RecurringBillResponse = {
   cadence: "quarterly",
   nextDueDate: "2026-11-02",
   remindDaysBefore: 5,
-  isActive: true,
-};
+});
 
 export const recurringBills: RecurringBillResponse[] = [
   overdueBill,
@@ -114,34 +104,25 @@ export const recurringBills: RecurringBillResponse[] = [
   incomeBill,
   transferBill,
   crossCurrencyTransferBill,
-  {
+  bill({
     id: ids.bills.mortgage,
     name: "Būsto paskolos įmoka",
-    shape: "expense",
-    kind: "fixed",
     amount: "612.00",
     categoryId: ids.categories.housing,
     accountId: ids.accounts.shared,
-    toAccountId: null,
-    cadence: "monthly",
     nextDueDate: "2026-10-05",
     remindDaysBefore: 3,
-    isActive: true,
-  },
-  {
+  }),
+  bill({
     id: ids.bills.insurance,
     name: "Privalomasis ir KASKO automobilio draudimas (Lietuvos draudimas), metinė įmoka",
-    shape: "expense",
-    kind: "fixed",
     amount: "286.40",
     categoryId: ids.categories.transport,
     accountId: null,
-    toAccountId: null,
     cadence: "yearly",
     nextDueDate: "2027-03-14",
     remindDaysBefore: 14,
-    isActive: true,
-  },
+  }),
   inactiveBill,
 ];
 

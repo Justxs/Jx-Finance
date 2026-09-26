@@ -45,11 +45,8 @@ import {
   emptyNetWorth,
   emptyReportSummary,
   emptyTransactionsSummary,
-  importFormatProblem,
-  importPreviewAllDuplicates,
   serverErrorProblem,
   setupStatus,
-  unauthorizedProblem,
 } from "@/storybook/fixtures";
 import { accountHandlers } from "./accounts";
 import { attachmentHandlers } from "./attachments";
@@ -63,7 +60,7 @@ import { currencyHandlers } from "./currencies";
 import { dashboardHandlers } from "./dashboard";
 import { goalHandlers } from "./goals";
 import { householdHandlers } from "./households";
-import { failWith, onRouteOf, pending, problem, query } from "./http";
+import { onRouteOf, pending, problem, query } from "./http";
 import { importHandlers } from "./imports";
 import { emptyInvestmentHandlers, investmentHandlers } from "./investments";
 import { emptyPage } from "./lists";
@@ -185,26 +182,6 @@ export const errorHandlers: RequestHandler[] = [
 
 export const loadingHandlers: RequestHandler[] = [
   ...dataGetHandlers().map((handler) => onRouteOf(handler, pending)),
-  ...handlers,
-];
-
-export const importFormatErrorHandlers: RequestHandler[] = [
-  getImportPreviewMockHandler(failWith(importFormatProblem)),
-  ...handlers,
-];
-
-export const importAllDuplicatesHandlers: RequestHandler[] = [
-  getImportPreviewMockHandler(importPreviewAllDuplicates),
-  ...handlers,
-];
-
-export const importPendingHandlers: RequestHandler[] = [
-  getImportPreviewMockHandler(pending),
-  ...handlers,
-];
-
-export const unauthenticatedHandlers: RequestHandler[] = [
-  getMeMockHandler(failWith(unauthorizedProblem)),
   ...handlers,
 ];
 

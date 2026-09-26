@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent } from "storybook/test";
 import { getSettingsMockHandler } from "@/api/generated/settings/settings.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { settings } from "@/storybook/fixtures";
+import { type SettingsPatch, settingsWith } from "@/storybook/fixtures";
 import { errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { chooseOption } from "@/storybook/interactions";
 import { SettingsPage } from "./settings-page";
@@ -17,10 +17,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-function withSettings(patch: Partial<typeof settings>) {
-  return {
-    ...withHandlers(getSettingsMockHandler({ ...settings, ...patch })),
-  };
+function withSettings(patch: SettingsPatch) {
+  return withHandlers(getSettingsMockHandler(settingsWith(patch)));
 }
 
 export const Default: Story = {};
@@ -32,7 +30,7 @@ export const Lithuanian: Story = { globals: { locale: "lt" } };
 export const Customized: Story = {
   parameters: withSettings({
     instanceName: "Pranauskai",
-    features: { ...settings.features, goals: false, households: false },
+    features: { goals: false, households: false },
     enabledCurrencies: ["eur", "usd"],
     firstDayOfWeek: "sunday",
     defaultPageSize: 50,
@@ -40,7 +38,7 @@ export const Customized: Story = {
 };
 
 export const MultiCurrencyOff: Story = {
-  parameters: withSettings({ features: { ...settings.features, multiCurrency: false } }),
+  parameters: withSettings({ features: { multiCurrency: false } }),
 };
 
 export const NoRatesYet: Story = {

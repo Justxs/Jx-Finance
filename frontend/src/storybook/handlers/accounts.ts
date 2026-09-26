@@ -9,7 +9,7 @@ import {
 } from "@/api/generated/accounts/accounts.msw";
 import type { AccountResponse } from "@/api/generated/model";
 import { toCents } from "@/lib/money";
-import { accounts, archivedAccounts, checkingAccount } from "@/storybook/fixtures";
+import { accounts, archivedAccounts, checkingAccount, withBalance } from "@/storybook/fixtures";
 import { found, mergeScoped, query, readBody } from "./http";
 import { CREATED_AT, NEW_ID } from "./ids";
 import { applyDirection, byId, byIdFrom, compareText, includesText, updateFrom } from "./lists";
@@ -59,27 +59,13 @@ export const accountHandlers = [
       createdAt: CREATED_AT,
     };
     const merged = mergeScoped(created, await readBody(request));
-    return {
-      ...merged,
-      currentBalance: merged.startingBalance,
-      reportingBalance: merged.startingBalance,
-      holdingsValue: "0.00",
-      balances: [{ currency: merged.currency, amount: merged.startingBalance }],
-    };
+    return withBalance(merged, merged.startingBalance);
   }),
   getAccountMockHandler(byIdFrom(accounts)),
   getUpdateAccountMockHandler(updateFrom(accounts, mergeScoped)),
   getDeleteAccountMockHandler(),
   getRestoreAccountMockHandler(({ params }) => {
     const archived = found(byId(archivedAccounts, params.id));
-    return {
-      ...checkingAccount,
-      ...archived,
-      createdAt: CREATED_AT,
-      currentBalance: archived.startingBalance,
-      reportingBalance: archived.startingBalance,
-      holdingsValue: "0.00",
-      balances: [{ currency: archived.currency, amount: archived.startingBalance }],
-    };
+    return withBalance({ ...archived, createdAt: CREATED_AT }, archived.startingBalance);
   }),
 ];
