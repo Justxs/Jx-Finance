@@ -13,7 +13,7 @@ export function HeaderActions(props: Readonly<ComponentProps<typeof Notification
     <>
       <QueryBoundary
         fallback={<Skeleton className="size-9 rounded-md" />}
-        errorFallback={<NotificationBellUnavailable />}
+        error={<NotificationBellUnavailable />}
       >
         <NotificationBell {...props} />
       </QueryBoundary>

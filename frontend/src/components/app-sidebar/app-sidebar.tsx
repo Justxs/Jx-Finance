@@ -68,10 +68,7 @@ export function AppSidebar() {
       </Link>
 
       <div className={cn("px-3 pb-3", collapsed && "px-2")}>
-        <QueryBoundary
-          fallback={<Skeleton className="h-8 w-full rounded-lg" />}
-          errorFallback={null}
-        >
+        <QueryBoundary fallback={<Skeleton className="h-8 w-full rounded-lg" />} error={null}>
           <HouseholdSwitcher collapsed={collapsed} />
         </QueryBoundary>
       </div>
