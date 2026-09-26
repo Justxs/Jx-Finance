@@ -83,18 +83,13 @@ export function SelectionToolbar({
           {t("tags.bulkApply")}
         </PopoverTrigger>
         <PopoverContent align="start" aria-label={t("tags.field")} className="w-72">
-          <div className="space-y-2">
-            <TagPicker
-              tags={tags}
-              value={tagChoice}
-              onChange={setTagChoice}
-              aria-label={t("tags.field")}
-              aria-describedby="tx-bulk-tags-hint"
-            />
-            <p id="tx-bulk-tags-hint" className="text-xs text-muted-foreground">
-              {t("tags.bulkReplaceHint")}
-            </p>
-          </div>
+          <TagPicker
+            tags={tags}
+            value={tagChoice}
+            onChange={setTagChoice}
+            aria-label={t("tags.field")}
+            hint={t("tags.bulkReplaceHint")}
+          />
           <div className="flex justify-end border-t pt-2">
             <Button
               type="button"

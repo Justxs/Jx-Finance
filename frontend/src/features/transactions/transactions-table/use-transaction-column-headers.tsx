@@ -87,11 +87,8 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
               value={fields.tags.value}
               onChange={fields.tags.set}
               aria-label={fields.tags.label}
-              aria-describedby="tx-tag-filter-hint"
+              hint={fields.tags.hint}
             />
-            <p id="tx-tag-filter-hint" className="text-xs text-muted-foreground">
-              {fields.tags.hint}
-            </p>
           </ColumnFilter>
         }
       />

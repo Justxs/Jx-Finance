@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TagResponse } from "@/api/generated/model";
-import { Checkbox } from "@/components/ui/checkbox/checkbox";
+import { CheckboxList } from "@/components/checkbox-list/checkbox-list";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { Hint } from "@/components/ui/field-error";
 import { Input } from "@/components/ui/input/input";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ interface Props {
   value: string[];
   onChange: (next: string[]) => void;
   "aria-label"?: string;
-  "aria-describedby"?: string;
+  hint?: ReactNode;
   className?: string;
 }
 
@@ -24,22 +25,18 @@ export function TagPicker({
   value,
   onChange,
   "aria-label": ariaLabel,
-  "aria-describedby": ariaDescribedBy,
+  hint,
   className,
 }: Readonly<Props>) {
   const { t } = useTranslation();
+  const hintId = useId();
   const [query, setQuery] = useState("");
 
-  const chosen = new Set(value);
   const showSearch = tags.length >= SEARCH_FROM;
   const needle = query.trim().toLocaleLowerCase("lt");
   const shown = needle
     ? tags.filter((tag) => tag.name.toLocaleLowerCase("lt").includes(needle))
     : tags;
-
-  function toggle(tagId: string, selected: boolean) {
-    onChange(selected ? [...value, tagId] : value.filter((chosenId) => chosenId !== tagId));
-  }
 
   if (tags.length === 0) {
     return <EmptyText size="sm">{t("tags.empty")}</EmptyText>;
@@ -57,27 +54,17 @@ export function TagPicker({
           onChange={(event) => setQuery(event.target.value)}
         />
       ) : null}
-      <div
-        role="group"
+      <CheckboxList
         id={showSearch ? undefined : id}
+        items={shown}
+        value={value}
+        onChange={onChange}
         aria-label={ariaLabel ?? t("tags.field")}
-        aria-describedby={ariaDescribedBy}
-        className="max-h-44 space-y-1.5 overflow-y-auto"
-      >
-        {shown.length === 0 ? (
-          <EmptyText size="sm">{t("tags.noMatches")}</EmptyText>
-        ) : (
-          shown.map((tag) => (
-            <label key={tag.id} className="flex items-center gap-2.5 text-sm">
-              <Checkbox
-                checked={chosen.has(tag.id)}
-                onCheckedChange={(next) => toggle(tag.id, next)}
-              />
-              <span className="min-w-0 wrap-break-word">{tag.name}</span>
-            </label>
-          ))
-        )}
-      </div>
+        aria-describedby={hint ? hintId : undefined}
+        emptyText={t("tags.noMatches")}
+        className="max-h-44"
+      />
+      {hint ? <Hint id={hintId}>{hint}</Hint> : null}
     </div>
   );
 }
