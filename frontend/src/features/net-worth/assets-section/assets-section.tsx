@@ -5,7 +5,7 @@ import type { AssetResponse } from "@/api/generated/model";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { HoldingsSection } from "../holdings-section";
-import { AssetForm } from "./asset-form";
+import { AssetForm, type AssetFormValues } from "./asset-form";
 
 export function AssetsSection() {
   const { t } = useTranslation();
@@ -18,7 +18,7 @@ export function AssetsSection() {
   const assetList = useDeferredValue(assets.data);
 
   return (
-    <HoldingsSection
+    <HoldingsSection<AssetFormValues>
       title={t("netWorth.assets")}
       addLabel={t("netWorth.addAsset")}
       emptyLabel={t("netWorth.noAssets")}
