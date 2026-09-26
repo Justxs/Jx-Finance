@@ -148,12 +148,11 @@ export function SessionsSection() {
     <TitledSection
       title={t("profile.sessions.title")}
       description={t("profile.sessions.description")}
+      bodyGap="md"
     >
-      <div className="mt-4">
-        <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
-          <SessionList />
-        </QueryBoundary>
-      </div>
+      <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
+        <SessionList />
+      </QueryBoundary>
     </TitledSection>
   );
 }

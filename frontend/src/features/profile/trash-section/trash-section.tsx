@@ -91,12 +91,11 @@ export function TrashSection() {
     <TitledSection
       title={t("trash.title")}
       description={t("trash.description", { days: TRASH_RETENTION_DAYS })}
+      bodyGap="md"
     >
-      <div className="mt-4">
-        <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
-          <TrashList />
-        </QueryBoundary>
-      </div>
+      <QueryBoundary fallback={<Skeleton className="h-32 w-full" />}>
+        <TrashList />
+      </QueryBoundary>
     </TitledSection>
   );
 }

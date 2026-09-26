@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { getDownloadBackupUrl } from "@/api/generated";
 import type { BackupResponse } from "@/api/generated/model";
 import { Button, buttonVariants } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import {
   Table,
   TableBody,
@@ -35,7 +36,7 @@ export function BackupsTable({
   const count = useNumberFormat();
 
   if (backups.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("backup.empty")}</p>;
+    return <EmptyText size="sm">{t("backup.empty")}</EmptyText>;
   }
 
   return (
@@ -44,9 +45,9 @@ export function BackupsTable({
         <TableRow>
           <TableHead>{t("backup.date")}</TableHead>
           <TableHead>{t("backup.note")}</TableHead>
-          <TableHead className="text-right">{t("backup.size")}</TableHead>
-          <TableHead className="text-right">{t("backup.rows")}</TableHead>
-          <TableHead className="text-right">{t("backup.attachments")}</TableHead>
+          <TableHead numeric>{t("backup.size")}</TableHead>
+          <TableHead numeric>{t("backup.rows")}</TableHead>
+          <TableHead numeric>{t("backup.attachments")}</TableHead>
           <TableHead>
             <span className="sr-only">{t("common.actions")}</span>
           </TableHead>
@@ -72,13 +73,9 @@ export function BackupsTable({
               <TableCell className="max-w-64 whitespace-normal text-muted-foreground">
                 {backup.note}
               </TableCell>
-              <TableCell className="text-right tabular-nums">
-                {formatBytes(backup.sizeBytes)}
-              </TableCell>
-              <TableCell className="text-right tabular-nums">{count.format(backup.rows)}</TableCell>
-              <TableCell className="text-right tabular-nums">
-                {count.format(backup.attachments)}
-              </TableCell>
+              <TableCell numeric>{formatBytes(backup.sizeBytes)}</TableCell>
+              <TableCell numeric>{count.format(backup.rows)}</TableCell>
+              <TableCell numeric>{count.format(backup.attachments)}</TableCell>
               <TableCell>
                 <div className="flex justify-end gap-1">
                   <a

@@ -16,6 +16,7 @@ import {
 } from "@/api/schemas/recurring-bills/recurring-bills.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
@@ -135,7 +136,7 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
   });
 
   if (!bill && accounts.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("recurringBills.needAccount")}</p>;
+    return <EmptyText size="sm">{t("recurringBills.needAccount")}</EmptyText>;
   }
 
   const accountOptions = namedOptions(accounts, t("recurringBills.noAccount"));

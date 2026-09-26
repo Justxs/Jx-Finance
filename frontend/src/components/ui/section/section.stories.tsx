@@ -67,8 +67,12 @@ export const InsideDialog: Story = {
 export const Titled: Story = {
   render: () => (
     <div className="w-[min(90vw,32rem)]">
-      <TitledSection title="Signed-in devices" description="Sign out a device you no longer use.">
-        <p className="mt-4 text-sm">Firefox on Windows, active now</p>
+      <TitledSection
+        title="Signed-in devices"
+        description="Sign out a device you no longer use."
+        bodyGap="md"
+      >
+        <p className="text-sm">Firefox on Windows, active now</p>
       </TitledSection>
     </div>
   ),

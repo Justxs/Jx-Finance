@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button, buttonVariants } from "@/components/ui/button/button";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { RowsSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -50,11 +50,10 @@ function InvestmentsOverview({
 
   if (firstRun) {
     return (
-      <Section>
-        <SectionTitle>{t("investments.empty.title")}</SectionTitle>
-        <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-          {t("investments.empty.description")}
-        </p>
+      <TitledSection
+        title={t("investments.empty.title")}
+        description={t("investments.empty.description")}
+      >
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" onClick={onAddEntry} disabled={accounts.length === 0}>
             <Plus />
@@ -68,7 +67,7 @@ function InvestmentsOverview({
         {accounts.length === 0 ? (
           <p className="mt-3 text-sm text-muted-foreground">{t("investments.import.noAccounts")}</p>
         ) : null}
-      </Section>
+      </TitledSection>
     );
   }
 
