@@ -8,7 +8,7 @@ namespace JxFinance.Tests.Unit;
 public sealed class SystemClockTests
 {
     private static IClock CreateClock(string timeZone) =>
-        new(new FixedSettings(new InstanceSettings { TimeZone = timeZone }));
+        new SystemClock(new FixedSettings(new InstanceSettings { TimeZone = timeZone }));
 
     private sealed class FixedSettings(InstanceSettings settings) : IInstanceSettingsStore
     {
