@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import {
@@ -10,9 +10,8 @@ import {
 } from "@/api/generated";
 import type { AccountResponse, ImportPreviewResponse } from "@/api/generated/model";
 import { Section, SectionTitle } from "@/components/ui/section/section";
-import type { TranslationKey } from "@/lib/i18n";
+import { useFileField } from "@/hooks/use-file-field";
 import { silent } from "@/lib/mutations";
-import { type UploadProblem, validateUpload } from "@/lib/upload-file";
 import { ImportPreviewTable } from "../import-preview-table/import-preview-table";
 import {
   importDateRange,
@@ -22,7 +21,7 @@ import {
 import { recallParams } from "../import-queries";
 import { ImportPreviewError } from "./import-preview-error";
 import { type ImportResult, ImportResultLine } from "./import-result";
-import { ImportUploadForm } from "./import-upload-form";
+import { IMPORT_FILE_INPUT_ID, ImportUploadForm } from "./import-upload-form";
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
@@ -30,7 +29,7 @@ const uploadProblemKeys = {
   required: "imports.fileRequired",
   empty: "imports.fileEmpty",
   tooLarge: "imports.fileTooLarge",
-} as const satisfies Record<UploadProblem, TranslationKey>;
+} as const;
 
 interface Props {
   accounts: AccountResponse[];
@@ -39,14 +38,12 @@ interface Props {
 
 export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const { t } = useTranslation();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileField = useFileField(IMPORT_FILE_INPUT_ID, MAX_FILE_BYTES, uploadProblemKeys);
 
   const [accountId, setAccountId] = useState(
     accounts.find((account) => account.id === initialAccountId)?.id ?? accounts[0]?.id ?? "",
   );
-  const [fileError, setFileError] = useState<string | undefined>(undefined);
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [uploadKey, setUploadKey] = useState(0);
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
   const categories = useCategoriesSuspense();
@@ -77,28 +74,25 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
           ...importDateRange(confirmed),
         });
         setRows(null);
-        setUploadKey((key) => key + 1);
+        fileField.reset();
       },
     },
   });
 
   function clearPreview() {
     setRows(null);
-    setFileError(undefined);
+    fileField.clearError();
     previewMutation.reset();
   }
 
   function handlePreview() {
-    const file = fileInputRef.current?.files?.[0];
     if (!accountId) {
       return;
     }
-    const problem = validateUpload(file, MAX_FILE_BYTES);
-    if (!file || problem) {
-      setFileError(t(uploadProblemKeys[problem ?? "required"]));
+    const file = fileField.take();
+    if (!file) {
       return;
     }
-    setFileError(undefined);
     setResult(null);
     previewMutation.mutate({ data: { file, accountId } });
   }
@@ -135,19 +129,19 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
     <div className="space-y-5">
       <Section className="space-y-4">
         <ImportUploadForm
-          key={uploadKey}
+          key={fileField.key}
           accounts={accounts}
           accountId={accountId}
           onAccountChange={(id) => {
             setAccountId(id);
             clearPreview();
           }}
-          fileInputRef={fileInputRef}
+          fileInputRef={fileField.inputProps.ref}
           onPreview={handlePreview}
           onFileChange={clearPreview}
           previewPending={previewMutation.isPending}
           disabled={confirmMutation.isPending}
-          fileError={fileError}
+          fileError={fileField.error}
           secondary={Boolean(rows?.length)}
         />
         {previewMutation.isError ? <ImportPreviewError error={previewMutation.error} /> : null}
@@ -168,7 +162,7 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
             onConfirm={handleConfirm}
             onCancel={() => {
               clearPreview();
-              setUploadKey((key) => key + 1);
+              fileField.reset();
             }}
             confirmPending={confirmMutation.isPending}
           />
