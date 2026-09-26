@@ -5,6 +5,7 @@ import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SelectField } from "@/components/select-field/select-field";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs/tabs";
 import { namedOptions } from "@/lib/options";
@@ -43,7 +44,7 @@ function BrokerImportContent({
   const [tab, setTab] = useState<BrokerImportTab>(initialTab);
 
   if (accounts.length === 0) {
-    return <p className="text-sm text-muted-foreground">{t("investments.import.noAccounts")}</p>;
+    return <EmptyText size="sm">{t("investments.import.noAccounts")}</EmptyText>;
   }
 
   return (

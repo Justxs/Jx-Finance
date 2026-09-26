@@ -16,7 +16,7 @@ import {
 import { useServerForm } from "@/components/form";
 import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { namedOptions } from "@/lib/options";
 import { optionalText, requiredValue } from "@/lib/validation";
 import type { SettingsSection } from "../settings-nav/settings-nav";
@@ -107,8 +107,7 @@ export function SettingsForm({
   return (
     <form.AppForm>
       <form.FormShell className="space-y-5">
-        <Section aria-labelledby="settings-general" hidden={section !== "general"}>
-          <SectionTitle id="settings-general">{t("settings.general.title")}</SectionTitle>
+        <TitledSection title={t("settings.general.title")} hidden={section !== "general"}>
           <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="instanceName">
               {(field) => (
@@ -121,18 +120,17 @@ export function SettingsForm({
               )}
             </form.Field>
           </FormGrid>
-        </Section>
+        </TitledSection>
 
-        <Section aria-labelledby="settings-features" hidden={section !== "features"}>
-          <SectionTitle id="settings-features">{t("settings.features.title")}</SectionTitle>
-          <p className="mt-1 max-w-prose text-sm text-muted-foreground">
-            {t("settings.features.description")}
-          </p>
+        <TitledSection
+          title={t("settings.features.title")}
+          description={t("settings.features.description")}
+          hidden={section !== "features"}
+        >
           <FeaturesFields form={form} fields={{ features: "features" }} />
-        </Section>
+        </TitledSection>
 
-        <Section aria-labelledby="settings-currencies" hidden={section !== "currencies"}>
-          <SectionTitle id="settings-currencies">{t("settings.currencies.title")}</SectionTitle>
+        <TitledSection title={t("settings.currencies.title")} hidden={section !== "currencies"}>
           <CurrenciesFields
             form={form}
             fields={{
@@ -142,10 +140,9 @@ export function SettingsForm({
             }}
             savedReportingCurrency={settings.reportingCurrency}
           />
-        </Section>
+        </TitledSection>
 
-        <Section aria-labelledby="settings-rates" hidden={section !== "currencies"}>
-          <SectionTitle id="settings-rates">{t("settings.rates.title")}</SectionTitle>
+        <TitledSection title={t("settings.rates.title")} hidden={section !== "currencies"}>
           <form.Field name="exchangeRateSyncEnabled">
             {(field) => (
               <field.CheckboxField
@@ -157,10 +154,9 @@ export function SettingsForm({
             )}
           </form.Field>
           {exchangeRates}
-        </Section>
+        </TitledSection>
 
-        <Section aria-labelledby="settings-regional" hidden={section !== "regional"}>
-          <SectionTitle id="settings-regional">{t("settings.regional.title")}</SectionTitle>
+        <TitledSection title={t("settings.regional.title")} hidden={section !== "regional"}>
           <RegionalFields
             form={form}
             fields={{
@@ -170,10 +166,9 @@ export function SettingsForm({
             }}
             savedTimeZone={settings.timeZone}
           />
-        </Section>
+        </TitledSection>
 
-        <Section aria-labelledby="settings-defaults" hidden={section !== "defaults"}>
-          <SectionTitle id="settings-defaults">{t("settings.defaults.title")}</SectionTitle>
+        <TitledSection title={t("settings.defaults.title")} hidden={section !== "defaults"}>
           <FormGrid className="mt-4 max-w-3xl">
             <form.Field name="defaultAccountId">
               {(field) => (
@@ -197,7 +192,7 @@ export function SettingsForm({
               )}
             </form.Field>
           </FormGrid>
-        </Section>
+        </TitledSection>
 
         <form.Subscribe selector={(state) => [state.isDirty, state.canSubmit] as const}>
           {([isDirty, canSubmit]) =>

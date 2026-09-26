@@ -6,7 +6,7 @@ import type { ReportComparisonMode } from "@/api/generated/model";
 import { CategoryBreakdown } from "@/components/category-breakdown/category-breakdown";
 import { ExportMenu } from "@/components/export-menu/export-menu";
 import { PageHeader } from "@/components/page-header/page-header";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import { SplitColumns } from "@/components/ui/split-columns/split-columns";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -88,36 +88,32 @@ export function ReportsPage() {
 
           <SplitColumns className="gap-y-5">
             <div className="space-y-5">
-              <Section>
-                <SectionTitle className="mb-4">{t("reports.expenseByCategory")}</SectionTitle>
+              <TitledSection title={t("reports.expenseByCategory")} bodyGap="md">
                 <CategoryBreakdown
                   items={summary.data.expenseByCategory}
                   dateFrom={shown.dateFrom}
                   dateTo={shown.dateTo}
                 />
-              </Section>
-              <Section>
-                <SectionTitle className="mb-4">{t("reports.incomeByCategory")}</SectionTitle>
+              </TitledSection>
+              <TitledSection title={t("reports.incomeByCategory")} bodyGap="md">
                 <CategoryBreakdown
                   items={summary.data.incomeByCategory}
                   type="income"
                   dateFrom={shown.dateFrom}
                   dateTo={shown.dateTo}
                 />
-              </Section>
-              <Section>
-                <SectionTitle className="mb-4">{t("tags.byTag")}</SectionTitle>
+              </TitledSection>
+              <TitledSection title={t("tags.byTag")} bodyGap="md">
                 <TagBreakdown
                   items={summary.data.expenseByTag}
                   dateFrom={shown.dateFrom}
                   dateTo={shown.dateTo}
                 />
-              </Section>
+              </TitledSection>
             </div>
-            <Section>
-              <SectionTitle className="mb-4">{t("reports.trend")}</SectionTitle>
+            <TitledSection title={t("reports.trend")} bodyGap="md">
               <ReportTrendChart items={summary.data.trend} bucket={summary.data.trendBucket} />
-            </Section>
+            </TitledSection>
           </SplitColumns>
         </StaleRegion>
       </ViewTransition>

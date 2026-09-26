@@ -15,6 +15,7 @@ import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-
 import { PageHeader } from "@/components/page-header/page-header";
 import { Pagination } from "@/components/pagination/pagination";
 import { Button } from "@/components/ui/button/button";
+import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -195,7 +196,7 @@ export function TransactionsPage() {
       </PageHeader>
 
       {accountList.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{t("transactions.needAccount")}</p>
+        <EmptyText size="sm">{t("transactions.needAccount")}</EmptyText>
       ) : null}
 
       <TransactionFormSection

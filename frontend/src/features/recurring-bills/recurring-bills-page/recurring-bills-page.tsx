@@ -15,7 +15,7 @@ import { EditModal } from "@/components/modal";
 import { PageHeader } from "@/components/page-header/page-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { Section, TitledSection } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
@@ -75,10 +75,9 @@ export function RecurringBillsPage() {
       </PageHeader>
 
       {billList.length > 0 ? (
-        <Section>
-          <SectionTitle className="mb-4">{t("recurringBills.forecast")}</SectionTitle>
+        <TitledSection title={t("recurringBills.forecast")} bodyGap="md">
           <BillsForecastChart bills={billList} />
-        </Section>
+        </TitledSection>
       ) : null}
       {content}
       <SubscriptionSuggestions

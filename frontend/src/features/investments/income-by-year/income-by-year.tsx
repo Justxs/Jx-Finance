@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import type { Currency, PortfolioYear } from "@/api/generated/model";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { TitledSection } from "@/components/ui/section/section";
 import {
   Table,
   TableBody,
@@ -31,8 +31,7 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
   }
 
   return (
-    <Section>
-      <SectionTitle className="mb-2">{t("investments.years.title")}</SectionTitle>
+    <TitledSection title={t("investments.years.title")} bodyGap="sm">
       {rows.length === 0 ? (
         <EmptyText>{t("investments.years.empty")}</EmptyText>
       ) : (
@@ -42,32 +41,22 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("investments.years.year")}</TableHead>
-                  <TableHead className="text-right">{t("investments.years.dividends")}</TableHead>
-                  <TableHead className="text-right">
-                    {t("investments.years.withholdingTax")}
-                  </TableHead>
-                  <TableHead className="text-right">{t("investments.years.interest")}</TableHead>
-                  <TableHead className="text-right">{t("investments.years.fees")}</TableHead>
-                  <TableHead className="text-right">
-                    {t("investments.years.realizedGain")}
-                  </TableHead>
+                  <TableHead numeric>{t("investments.years.dividends")}</TableHead>
+                  <TableHead numeric>{t("investments.years.withholdingTax")}</TableHead>
+                  <TableHead numeric>{t("investments.years.interest")}</TableHead>
+                  <TableHead numeric>{t("investments.years.fees")}</TableHead>
+                  <TableHead numeric>{t("investments.years.realizedGain")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {rows.map((row) => (
                   <TableRow key={row.year}>
                     <TableCell className="font-medium tabular-nums">{row.year}</TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {money.format(Number(row.dividends), currency)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {charge(row.withholdingTax)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {money.format(Number(row.interest), currency)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">{charge(row.fees)}</TableCell>
-                    <TableCell className="text-right font-semibold tabular-nums">
+                    <TableCell numeric>{money.format(Number(row.dividends), currency)}</TableCell>
+                    <TableCell numeric>{charge(row.withholdingTax)}</TableCell>
+                    <TableCell numeric>{money.format(Number(row.interest), currency)}</TableCell>
+                    <TableCell numeric>{charge(row.fees)}</TableCell>
+                    <TableCell numeric className="font-semibold">
                       <span className={gainTone(Number(row.realizedGain))}>
                         {money.formatSigned(Number(row.realizedGain), "auto", currency)}
                       </span>
@@ -112,6 +101,6 @@ export function IncomeByYear({ years, currency }: Readonly<Props>) {
           </Rows>
         </>
       )}
-    </Section>
+    </TitledSection>
   );
 }

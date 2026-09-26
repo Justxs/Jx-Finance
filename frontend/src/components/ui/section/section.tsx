@@ -46,10 +46,14 @@ export function SectionHeader({ title, titleClassName, children }: Readonly<Sect
   );
 }
 
+const bodyGaps = { sm: "mt-2", md: "mt-4" } as const;
+
 interface TitledSectionProps {
   title: ReactNode;
   titleId?: string;
   description?: ReactNode;
+  bodyGap?: keyof typeof bodyGaps;
+  hidden?: boolean;
   children: ReactNode;
 }
 
@@ -57,20 +61,22 @@ export function TitledSection({
   title,
   titleId,
   description,
+  bodyGap,
+  hidden,
   children,
 }: Readonly<TitledSectionProps>) {
   const generatedId = useId();
   const id = titleId ?? generatedId;
 
   return (
-    <Section aria-labelledby={id}>
+    <Section aria-labelledby={id} hidden={hidden}>
       <SectionTitle id={id}>{title}</SectionTitle>
       {description ? (
         <p id={`${id}-description`} className="mt-1 max-w-prose text-sm text-muted-foreground">
           {description}
         </p>
       ) : null}
-      {children}
+      {bodyGap ? <div className={bodyGaps[bodyGap]}>{children}</div> : children}
     </Section>
   );
 }

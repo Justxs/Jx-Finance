@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteInvestmentTransaction, useInvestmentTransactionsSuspense } from "@/api/generated";
 import type {
@@ -7,14 +7,11 @@ import type {
   InvestmentTransactionType,
 } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
-import { Pagination } from "@/components/pagination/pagination";
+import { PagedRows } from "@/components/paged-rows/paged-rows";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
-import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
-import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { Tag } from "@/components/ui/tag/tag";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
@@ -102,12 +99,33 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
     "investmentTransaction",
   );
 
-  let content: ReactNode;
-  if (items.length === 0) {
-    content = <EmptyText filtered={type !== ""}>{t("investments.activity.empty")}</EmptyText>;
-  } else {
-    content = (
-      <Rows>
+  return (
+    <Section>
+      <SectionHeader title={t("investments.activity.title")}>
+        <div className="w-full sm:w-52">
+          <SelectField
+            aria-label={t("investments.activity.typeFilter")}
+            value={type}
+            onChange={(value) => {
+              setType(value);
+              setPage(1);
+            }}
+            options={[
+              { value: "", label: t("investments.activity.allTypes") },
+              ...entryTypes.map((entryType) => ({
+                value: entryType,
+                label: t(`investments.types.${entryType}`),
+              })),
+            ]}
+          />
+        </div>
+      </SectionHeader>
+      <PagedRows
+        paging={{ page, setPage, stale }}
+        pages={pages}
+        count={items.length}
+        emptyText={type === "" ? t("investments.activity.empty") : t("filters.noMatches")}
+      >
         {items.map((entry) => {
           const amount = Number(entry.cashAmount);
           const label = `${title(entry)}, ${formatDate(entry.date)}`;
@@ -159,33 +177,7 @@ export function ActivitySection({ accounts, accountId }: Readonly<Props>) {
             </RowTransition>
           );
         })}
-      </Rows>
-    );
-  }
-
-  return (
-    <Section>
-      <SectionHeader title={t("investments.activity.title")}>
-        <div className="w-full sm:w-52">
-          <SelectField
-            aria-label={t("investments.activity.typeFilter")}
-            value={type}
-            onChange={(value) => {
-              setType(value);
-              setPage(1);
-            }}
-            options={[
-              { value: "", label: t("investments.activity.allTypes") },
-              ...entryTypes.map((entryType) => ({
-                value: entryType,
-                label: t(`investments.types.${entryType}`),
-              })),
-            ]}
-          />
-        </div>
-      </SectionHeader>
-      <StaleRegion stale={stale}>{content}</StaleRegion>
-      <Pagination page={page} pages={pages} onPageChange={setPage} />
+      </PagedRows>
       <InvestmentEntryModal
         open={editing !== null}
         onOpenChange={(open) => {

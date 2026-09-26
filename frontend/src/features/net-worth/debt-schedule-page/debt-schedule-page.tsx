@@ -6,7 +6,7 @@ import type { DebtResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
-import { Section, SectionTitle } from "@/components/ui/section/section";
+import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { TextLink } from "@/components/ui/text-link/text-link";
@@ -81,28 +81,26 @@ function DebtScheduleView({ debt }: Readonly<{ debt: DebtResponse }>) {
     <StaleRegion stale={stale} className="space-y-5">
       <DebtScheduleSummary debt={debt} schedule={schedule} />
 
-      <Section>
-        <SectionTitle>{t("netWorth.schedule.extraTitle")}</SectionTitle>
-        <p className="mt-1 mb-4 text-sm text-muted-foreground">
-          {t("netWorth.schedule.extraHint")}
-        </p>
+      <TitledSection
+        title={t("netWorth.schedule.extraTitle")}
+        description={t("netWorth.schedule.extraHint")}
+        bodyGap="md"
+      >
         <DebtExtraPayments
           idPrefix={`extra-${debt.id}`}
           draft={draft}
           schedule={schedule}
           onChange={change}
         />
-      </Section>
+      </TitledSection>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <Section>
-          <SectionTitle className="mb-4">{t("netWorth.schedule.balanceChart")}</SectionTitle>
+        <TitledSection title={t("netWorth.schedule.balanceChart")} bodyGap="md">
           <DebtBalanceChart plan={schedule.plan} withExtra={schedule.withExtra} />
-        </Section>
-        <Section>
-          <SectionTitle className="mb-4">{t("netWorth.schedule.splitChart")}</SectionTitle>
+        </TitledSection>
+        <TitledSection title={t("netWorth.schedule.splitChart")} bodyGap="md">
           <DebtPaymentSplitChart plan={shownPlan} />
-        </Section>
+        </TitledSection>
       </div>
 
       <Section>
