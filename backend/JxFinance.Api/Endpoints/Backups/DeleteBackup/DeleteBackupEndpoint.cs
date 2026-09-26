@@ -1,7 +1,6 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
-using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Backups.DeleteBackup;
 
@@ -11,8 +10,7 @@ public sealed class DeleteBackupEndpoint(IBackupService backupService) : Endpoin
     {
         Delete(ApiRoutes.Backups + "/{id}");
         Group<BackupsGroup>();
-        Roles(AppRoles.Admin);
-        Description(d => d.ProducesProblemDetails(403).ProducesProblemDetails(404));
+        Description(d => d.ProducesProblemDetails(404));
     }
 
     public override async Task HandleAsync(CancellationToken ct) =>

@@ -2,7 +2,6 @@ using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
-using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Backups.CreateBackup;
 
@@ -12,9 +11,8 @@ public sealed class CreateBackupEndpoint(IBackupService backupService) : Endpoin
     {
         Post(ApiRoutes.Backups);
         Group<BackupsGroup>();
-        Roles(AppRoles.Admin);
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ProducesCreated<BackupResponse>().ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ProducesCreated<BackupResponse>().Produces(429));
     }
 
     public override async Task HandleAsync(CreateBackupRequest req, CancellationToken ct)

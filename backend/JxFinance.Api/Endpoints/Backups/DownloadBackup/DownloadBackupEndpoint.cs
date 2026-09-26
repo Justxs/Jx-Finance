@@ -2,7 +2,6 @@ using System.Net.Mime;
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Endpoints.Backups.Interfaces;
-using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Backups.DownloadBackup;
 
@@ -12,10 +11,8 @@ public sealed class DownloadBackupEndpoint(IBackupService backupService) : Endpo
     {
         Get(ApiRoutes.Backups + "/{id}/download");
         Group<BackupsGroup>();
-        Roles(AppRoles.Admin);
         Description(d => d
             .ProducesFile(MediaTypeNames.Application.Zip, MediaTypeNames.Application.GZip)
-            .ProducesProblemDetails(403)
             .ProducesProblemDetails(404));
     }
 

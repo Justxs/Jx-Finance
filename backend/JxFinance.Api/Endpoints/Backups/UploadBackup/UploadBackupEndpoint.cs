@@ -3,7 +3,6 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Endpoints.Backups.Interfaces;
 using JxFinance.Endpoints.Backups.Shared;
-using JxFinance.Infrastructure.Auth;
 
 namespace JxFinance.Endpoints.Backups.UploadBackup;
 
@@ -15,11 +14,10 @@ public sealed class UploadBackupEndpoint(IBackupService backupService) : Endpoin
     {
         Post(ApiRoutes.Backups + "/upload");
         Group<BackupsGroup>();
-        Roles(AppRoles.Admin);
         AllowFileUploads();
         MaxRequestBodySize(MaxFileBytes + (1024 * 1024));
         Throttle(hitLimit: 10, durationSeconds: 300);
-        Description(d => d.ProducesCreated<BackupResponse>().ProducesProblemDetails(403).Produces(429));
+        Description(d => d.ProducesCreated<BackupResponse>().Produces(429));
     }
 
     public override async Task HandleAsync(UploadBackupRequest req, CancellationToken ct)
