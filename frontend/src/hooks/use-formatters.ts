@@ -63,6 +63,42 @@ function currencyFormatter(language: string, currency: string, compact: boolean)
 
 export type MoneySign = "+" | "−" | "auto";
 
+export function signed(
+  value: number,
+  format: (magnitude: number) => string,
+  sign: MoneySign = "auto",
+) {
+  const magnitude = format(Math.abs(value));
+  if (value === 0) {
+    return magnitude;
+  }
+  if (sign !== "auto") {
+    return sign + magnitude;
+  }
+  return (value < 0 ? "−" : "+") + magnitude;
+}
+
+export function useNumberFormat(options: Intl.NumberFormatOptions = {}) {
+  const { i18n } = useTranslation();
+
+  return numberFormat(i18n.language, options);
+}
+
+export function useDateFormat(options: Intl.DateTimeFormatOptions) {
+  const { i18n } = useTranslation();
+
+  return dateFormat(i18n.language, options);
+}
+
+function isoFormatter(format: Intl.DateTimeFormat) {
+  return function formatIso(value?: string | null) {
+    const parsed = value ? parseIso(value) : null;
+    return parsed ? format.format(parsed) : "";
+  };
+}
+
+const shortDay: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
 function useCurrencyFormat(compact: boolean) {
   const { i18n } = useTranslation();
   const reportingCurrency = useReportingCurrency();
@@ -72,12 +108,7 @@ function useCurrencyFormat(compact: boolean) {
   }
 
   function formatSigned(value: number, sign: MoneySign = "auto", currency?: string) {
-    if (value === 0) {
-      return format(value, currency);
-    }
-
-    const autoSign = value < 0 ? "−" : "+";
-    return (sign === "auto" ? autoSign : sign) + format(Math.abs(value), currency);
+    return signed(value, (magnitude) => format(magnitude, currency), sign);
   }
 
   return { format, formatSigned };
@@ -101,15 +132,12 @@ export function useCurrencyName() {
 }
 
 export function useDate() {
-  const { i18n } = useTranslation();
-
-  return dateFormat(i18n.language, { dateStyle: "medium" });
+  return useDateFormat({ dateStyle: "medium" });
 }
 
 export function useDateTime() {
-  const { i18n } = useTranslation();
   const timeZone = safeTimeZone(useSettings().timeZone);
-  const dateTime = dateFormat(i18n.language, { dateStyle: "medium", timeStyle: "short", timeZone });
+  const dateTime = useDateFormat({ dateStyle: "medium", timeStyle: "short", timeZone });
 
   return function formatDateTime(value?: string | null) {
     const parsed = value ? new Date(value) : null;
@@ -118,21 +146,11 @@ export function useDateTime() {
 }
 
 export function useIsoDate() {
-  const date = useDate();
-
-  return function formatIsoDate(value?: string | null) {
-    const parsed = value ? parseIso(value) : null;
-    return parsed ? date.format(parsed) : "";
-  };
+  return isoFormatter(useDate());
 }
 
 export function useShortDayIso() {
-  const shortDay = useShortDay();
-
-  return function formatShortDayIso(value?: string | null) {
-    const parsed = value ? parseIso(value) : null;
-    return parsed ? shortDay.format(parsed) : "";
-  };
+  return isoFormatter(useDateFormat(shortDay));
 }
 
 export function useCalendarLocale() {
@@ -141,54 +159,28 @@ export function useCalendarLocale() {
   return i18n.language.startsWith("lt") ? lt : enUS;
 }
 
-function decimalFormatter(language: string, minimum: number, maximum: number, currency?: string) {
-  return numberFormat(language, {
-    ...(currency ? currencyOptions(currency) : {}),
-    minimumFractionDigits: minimum,
-    maximumFractionDigits: maximum,
-  });
-}
-
 export function useRateFormat() {
-  const { i18n } = useTranslation();
-
-  return decimalFormatter(i18n.language, 4, 4);
+  return useNumberFormat({ minimumFractionDigits: 4, maximumFractionDigits: 4 });
 }
 
 export function useQuantityFormat() {
-  const { i18n } = useTranslation();
-
-  return decimalFormatter(i18n.language, 0, 8);
+  return useNumberFormat({ minimumFractionDigits: 0, maximumFractionDigits: 8 });
 }
 
 export function usePriceFormat() {
   const { i18n } = useTranslation();
 
   return function formatPrice(value: number, currency: string) {
-    return decimalFormatter(i18n.language, 2, 4, currency).format(value);
-  };
-}
-
-export function useSignedPercent() {
-  const { i18n } = useTranslation();
-  const percent = numberFormat(i18n.language, {
-    style: "percent",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-  return function formatSignedPercent(value: number) {
-    if (value === 0) {
-      return percent.format(0);
-    }
-
-    return (value < 0 ? "−" : "+") + percent.format(Math.abs(value) / 100);
+    return numberFormat(i18n.language, {
+      ...currencyOptions(currency),
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 4,
+    }).format(value);
   };
 }
 
 export function useRatePercent() {
-  const { i18n } = useTranslation();
-  const percent = numberFormat(i18n.language, { style: "percent", maximumFractionDigits: 2 });
+  const percent = useNumberFormat({ style: "percent", maximumFractionDigits: 2 });
 
   return function formatRatePercent(value: number) {
     return percent.format(value / 100);
@@ -198,54 +190,26 @@ export function useRatePercent() {
 export const EMPTY_VALUE = "—";
 
 export function usePercent() {
-  const { i18n } = useTranslation();
-
-  return numberFormat(i18n.language, { style: "percent", maximumFractionDigits: 0 });
-}
-
-export function useMonthLabel() {
-  const { i18n } = useTranslation();
-  const month = dateFormat(i18n.language, { month: "long", year: "numeric" });
-
-  return function monthLabel(date: Date) {
-    return month.format(date);
-  };
+  return useNumberFormat({ style: "percent", maximumFractionDigits: 0 });
 }
 
 export function useShortMonth() {
-  const { i18n } = useTranslation();
-
-  return dateFormat(i18n.language, { month: "short", year: "numeric" });
-}
-
-export function useShortDay() {
-  const { i18n } = useTranslation();
-
-  return dateFormat(i18n.language, { month: "short", day: "numeric" });
+  return useDateFormat({ month: "short", year: "numeric" });
 }
 
 export function useAxisDateTick(shortSpan: boolean) {
-  const { i18n } = useTranslation();
-  const shortDay = useShortDay();
-  const tick = shortSpan
-    ? shortDay
-    : dateFormat(i18n.language, { month: "short", year: "2-digit" });
+  const formatIso = isoFormatter(
+    useDateFormat(shortSpan ? shortDay : { month: "short", year: "2-digit" }),
+  );
 
   return function formatTick(value: string) {
-    const parsed = parseIso(value);
-    return parsed ? tick.format(parsed) : value;
+    return formatIso(value) || value;
   };
-}
-
-export function useNumberFormat(maximumFractionDigits?: number) {
-  const { i18n } = useTranslation();
-
-  return numberFormat(i18n.language, { maximumFractionDigits });
 }
 
 export function useBytes() {
   const { t } = useTranslation();
-  const number = useNumberFormat(1);
+  const number = useNumberFormat({ maximumFractionDigits: 1 });
 
   return function formatBytes(bytes: number) {
     const { value, unit } = splitBytes(bytes);

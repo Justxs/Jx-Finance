@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/table/table";
 import {
   EMPTY_VALUE,
+  signed,
   useMoney,
+  useNumberFormat,
   usePriceFormat,
   useQuantityFormat,
-  useSignedPercent,
 } from "@/hooks/use-formatters";
 import { gainTone } from "@/lib/tone";
 import { cn } from "@/lib/utils";
@@ -52,7 +53,11 @@ export function PositionsTable({
   const money = useMoney();
   const formatPrice = usePriceFormat();
   const quantityFormat = useQuantityFormat();
-  const formatPercent = useSignedPercent();
+  const percent = useNumberFormat({
+    style: "percent",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   function accountName(holding: HoldingResponse) {
     return sharedSecurityIds.has(holding.security.id)
@@ -115,7 +120,11 @@ export function PositionsTable({
       <span className={cn("whitespace-nowrap tabular-nums", gainTone(gain))}>
         {money.formatSigned(gain, "auto", holding.security.currency)}
         {holding.unrealizedPercent === null ? null : (
-          <span className="block text-xs">{formatPercent(Number(holding.unrealizedPercent))}</span>
+          <span className="block text-xs">
+            {signed(Number(holding.unrealizedPercent), (magnitude) =>
+              percent.format(magnitude / 100),
+            )}
+          </span>
         )}
       </span>
     );
