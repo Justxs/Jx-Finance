@@ -8,12 +8,12 @@ export type TransactionTypeFilter = "" | "income" | "expense";
 
 export type TransactionSortValue = `${TransactionSortField}:${SortDirection}`;
 
-export interface FilterOption<T extends string> {
+interface FilterOption<T extends string> {
   value: T;
   label: string;
 }
 
-export interface SortOption extends FilterOption<TransactionSortValue> {
+interface SortOption extends FilterOption<TransactionSortValue> {
   sort: TransactionSortField;
   direction: SortDirection;
 }
