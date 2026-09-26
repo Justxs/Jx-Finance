@@ -47,15 +47,15 @@ export function ImportSection({ accounts, initialAccountId }: Readonly<Props>) {
   const [rows, setRows] = useState<PreviewRowState[] | null>(null);
 
   const categories = useCategoriesSuspense();
-  const categoryList = categories.data ?? [];
+  const categoryList = categories.data;
   const tags = useTagsSuspense();
-  const tagList = tags.data ?? [];
+  const tagList = tags.data;
   const history = useTransactionsSuspense(recallParams);
 
   const previewMutation = useImportPreview(
     silent({
       onSuccess: (data: ImportPreviewResponse) => {
-        setRows(toPreviewRows(data.rows ?? [], history.data?.items ?? [], categoryList));
+        setRows(toPreviewRows(data.rows, history.data.items, categoryList));
       },
     }),
   );

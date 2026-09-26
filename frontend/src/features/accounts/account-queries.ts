@@ -1,7 +1,6 @@
-import type { AccountsParams, ConversionsParams, TransfersParams } from "@/api/generated/model";
+import type { AccountsParams } from "@/api/generated/model";
 
-export const TRANSFERS_PAGE_SIZE = 10;
-export const CONVERSIONS_PAGE_SIZE = 10;
+export const MOVEMENTS_PAGE_SIZE = 10;
 
 export function accountListParams(search: AccountsParams): AccountsParams {
   return {
@@ -13,10 +12,6 @@ export function accountListParams(search: AccountsParams): AccountsParams {
   };
 }
 
-export function transfersPageParams(page: number): TransfersParams {
-  return { page, pageSize: TRANSFERS_PAGE_SIZE };
-}
-
-export function conversionsPageParams(page: number): ConversionsParams {
-  return { page, pageSize: CONVERSIONS_PAGE_SIZE };
+export function movementsPageParams(page: number) {
+  return { page, pageSize: MOVEMENTS_PAGE_SIZE };
 }
