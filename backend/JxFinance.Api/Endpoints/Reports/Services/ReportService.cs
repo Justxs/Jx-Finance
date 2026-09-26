@@ -32,40 +32,29 @@ public sealed class ReportService(
     {
         var nowLocal = clock.Today;
         var periodEnd = dateTo ?? nowLocal;
-        var periodStart = dateFrom ?? new DateOnly(periodEnd.Year, periodEnd.Month, 1);
+        var periodStart = dateFrom ?? DateWindow.MonthOf(periodEnd).Start;
         var period = DateWindow.Inclusive(periodStart, periodEnd);
         var earlier = ComparisonWindow.For(comparison, period);
 
         var flows = await ReadTransactionFlowsAsync(period, earlier, cancellationToken);
         var investmentFlows = await investmentCashFlows.GetFlowsAsync(period, earlier, cancellationToken);
 
-        var expenseAttributions = await attributions.GetAttributionsAsync(
-            period,
-            earlier,
-            FlowType.Expense,
-            cancellationToken);
-        var incomeAttributions = await attributions.GetAttributionsAsync(
-            period,
-            earlier,
-            FlowType.Income,
-            cancellationToken);
+        var expenseAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Expense, cancellationToken);
+        var incomeAttributions = await attributions.GetAttributionsAsync(period, earlier, FlowType.Income, cancellationToken);
 
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
 
-        var expenseByCategory = CategoryBreakdownBuilder.Build(
-            expenseAttributions.Where(a => period.Contains(a.Date)),
-            categories,
-            investmentFlows.Where(f => period.Contains(f.Date)),
-            FlowType.Expense,
-            earlier is null ? null : expenseAttributions.Where(a => earlier.Value.Contains(a.Date)),
-            earlier is null ? null : investmentFlows.Where(f => earlier.Value.Contains(f.Date)));
-        var incomeByCategory = CategoryBreakdownBuilder.Build(
-            incomeAttributions.Where(a => period.Contains(a.Date)),
-            categories,
-            investmentFlows.Where(f => period.Contains(f.Date)),
-            FlowType.Income,
-            earlier is null ? null : incomeAttributions.Where(a => earlier.Value.Contains(a.Date)),
-            earlier is null ? null : investmentFlows.Where(f => earlier.Value.Contains(f.Date)));
+        IReadOnlyList<CategoryBreakdownItem> Breakdown(IReadOnlyList<CategoryAttribution> attributed, FlowType type) =>
+            CategoryBreakdownBuilder.Build(
+                attributed.Where(a => period.Contains(a.Date)),
+                categories,
+                investmentFlows.Where(f => period.Contains(f.Date)),
+                type,
+                earlier is null ? null : attributed.Where(a => earlier.Value.Contains(a.Date)),
+                earlier is null ? null : investmentFlows.Where(f => earlier.Value.Contains(f.Date)));
+
+        var expenseByCategory = Breakdown(expenseAttributions, FlowType.Expense);
+        var incomeByCategory = Breakdown(incomeAttributions, FlowType.Income);
 
         var everything = flows
             .Concat(investmentFlows.Select(f => new DatedFlow(f.Date, f.Type, f.Amount)))
@@ -99,13 +88,12 @@ public sealed class ReportService(
         return new ReportComparisonTotals(mode, window.Start, window.InclusiveEnd, income, expense, income - expense);
     }
 
-    private static (decimal Income, decimal Expense) Totals(IEnumerable<DatedFlow> flows, DateWindow window)
-    {
-        var inside = flows.Where(f => window.Contains(f.Date)).ToList();
-        return (
-            inside.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount),
-            inside.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount));
-    }
+    private static (decimal Income, decimal Expense) Totals(IEnumerable<DatedFlow> flows, DateWindow window) =>
+        Sum(flows.Where(f => window.Contains(f.Date)).ToList());
+
+    private static (decimal Income, decimal Expense) Sum(IReadOnlyList<DatedFlow> flows) => (
+        flows.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount),
+        flows.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount));
 
     private async Task<IReadOnlyList<DatedFlow>> ReadTransactionFlowsAsync(
         DateWindow period,
@@ -198,16 +186,13 @@ public sealed class ReportService(
     private static List<Bucket> BucketsOf(IReadOnlyList<DatedFlow> flows, DateWindow window, bool monthly)
     {
         var buckets = new List<Bucket>();
-        var cursor = monthly ? new DateOnly(window.Start.Year, window.Start.Month, 1) : window.Start;
+        var cursor = monthly ? DateWindow.MonthOf(window.Start).Start : window.Start;
 
         while (cursor < window.ExclusiveEnd)
         {
             var next = monthly ? cursor.AddMonths(1) : cursor.AddDays(1);
-            var inside = flows.Where(f => f.Date >= cursor && f.Date < next && window.Contains(f.Date)).ToList();
-            buckets.Add(new Bucket(
-                cursor,
-                inside.Where(f => f.Type == FlowType.Income).Sum(f => f.Amount),
-                inside.Where(f => f.Type == FlowType.Expense).Sum(f => f.Amount)));
+            var (income, expense) = Sum(flows.Where(f => f.Date >= cursor && f.Date < next && window.Contains(f.Date)).ToList());
+            buckets.Add(new Bucket(cursor, income, expense));
             cursor = next;
         }
 

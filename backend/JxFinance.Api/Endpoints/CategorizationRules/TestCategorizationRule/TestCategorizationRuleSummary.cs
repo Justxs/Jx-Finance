@@ -1,4 +1,5 @@
 using FastEndpoints;
+using JxFinance.Common.OpenApi;
 using JxFinance.Domain.CategorizationRules;
 
 namespace JxFinance.Endpoints.CategorizationRules.TestCategorizationRule;
@@ -26,6 +27,6 @@ public sealed class TestCategorizationRuleSummary
         RequestParam(r => r.MinAmount, "The draft rule's lowest amount.");
         RequestParam(r => r.MaxAmount, "The draft rule's highest amount.");
         Responses[200] = "Whether the whole condition matches, and each half of it separately.";
-        Responses[400] = "Validation failed.";
+        Responses[400] = SummaryText.ValidationFailed;
     }
 }

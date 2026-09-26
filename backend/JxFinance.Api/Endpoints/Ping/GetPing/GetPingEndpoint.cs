@@ -1,10 +1,10 @@
 using FastEndpoints;
 using JxFinance.Common;
-using JxFinance.Endpoints.Ping.Interfaces;
+using JxFinance.Domain.Common;
 
 namespace JxFinance.Endpoints.Ping.GetPing;
 
-public sealed class GetPingEndpoint(IPingService pingService)
+public sealed class GetPingEndpoint(IClock clock)
     : EndpointWithoutRequest<GetPingResponse>
 {
     public override void Configure()
@@ -14,9 +14,6 @@ public sealed class GetPingEndpoint(IPingService pingService)
         AllowAnonymous();
     }
 
-    public override Task HandleAsync(CancellationToken ct)
-    {
-        var status = pingService.GetStatus();
-        return Send.OkAsync(new GetPingResponse(status.Message, status.TimestampUtc), ct);
-    }
+    public override Task HandleAsync(CancellationToken ct) =>
+        Send.OkAsync(new GetPingResponse("pong", clock.UtcNow), ct);
 }

@@ -6,28 +6,24 @@ using JxFinance.Domain.Conversions;
 using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Conversions.CreateConversion;
 using JxFinance.Endpoints.Conversions.Shared;
-using JxFinance.Endpoints.Conversions.UpdateConversion;
 
 namespace JxFinance.Endpoints.Conversions.Mappers;
 
 public static class ConversionMapper
 {
-    public static CurrencyConversion ToEntity(this CreateConversionRequest request, Transaction? fee) => new()
+    public static CurrencyConversion ToEntity(this CreateConversionRequest request, Transaction? fee)
     {
-        AccountId = new AccountId(request.AccountId),
-        FromAmount = new Money(request.FromAmount, request.FromCurrency),
-        ToAmount = new Money(request.ToAmount, request.ToCurrency),
-        Date = request.Date,
-        Description = OptionalText.Normalize(request.Description),
-        FeeTransactionId = fee?.Id,
-    };
+        var conversion = new CurrencyConversion { AccountId = new AccountId(request.AccountId) };
+        request.ApplyTo(conversion, fee);
+        return conversion;
+    }
 
-    public static void ApplyTo(this UpdateConversionRequest request, CurrencyConversion conversion, Transaction? fee)
+    public static void ApplyTo(this IConversionInput input, CurrencyConversion conversion, Transaction? fee)
     {
-        conversion.FromAmount = new Money(request.FromAmount, request.FromCurrency);
-        conversion.ToAmount = new Money(request.ToAmount, request.ToCurrency);
-        conversion.Date = request.Date;
-        conversion.Description = OptionalText.Normalize(request.Description);
+        conversion.FromAmount = new Money(input.FromAmount, input.FromCurrency);
+        conversion.ToAmount = new Money(input.ToAmount, input.ToCurrency);
+        conversion.Date = input.Date;
+        conversion.Description = OptionalText.Normalize(input.Description);
         conversion.FeeTransactionId = fee?.Id;
     }
 

@@ -51,13 +51,7 @@ public sealed class TransferService(
         CreateTransferRequest request,
         CancellationToken cancellationToken)
     {
-        var draft = new TransferDraft(
-            new AccountId(request.FromAccountId),
-            new AccountId(request.ToAccountId),
-            request.Amount,
-            request.Currency,
-            request.ReceivedAmount,
-            request.ReceivedCurrency);
+        var draft = ToDraft(request);
         var amounts = await amountResolver.ResolveAsync(draft, [], cancellationToken);
         if (!amounts.TryGetValue(out var resolved))
         {
@@ -87,13 +81,7 @@ public sealed class TransferService(
             return new DomainError(ErrorCodes.AccessForbidden, "Access to both accounts is required.");
         }
 
-        var draft = new TransferDraft(
-            new AccountId(request.FromAccountId),
-            new AccountId(request.ToAccountId),
-            request.Amount,
-            request.Currency,
-            request.ReceivedAmount,
-            request.ReceivedCurrency);
+        var draft = ToDraft(request);
         var amounts = await amountResolver.ResolveAsync(
             draft,
             [transfer.Amount.Currency, transfer.ReceivedAmount.Currency],
@@ -142,6 +130,14 @@ public sealed class TransferService(
 
         return id;
     }
+
+    private static TransferDraft ToDraft(ITransferInput input) => new(
+        new AccountId(input.FromAccountId),
+        new AccountId(input.ToAccountId),
+        input.Amount,
+        input.Currency,
+        input.ReceivedAmount,
+        input.ReceivedCurrency);
 
     private static string? LockedChange(
         Transfer transfer,

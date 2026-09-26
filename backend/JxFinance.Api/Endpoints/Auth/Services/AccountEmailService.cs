@@ -29,6 +29,10 @@ public sealed class AccountEmailService(
         ErrorCodes.PasswordResetTokenInvalid,
         "This link is no longer valid. Ask for a new one.");
 
+    private static readonly DomainError EmailTokenInvalid = new(
+        ErrorCodes.EmailTokenInvalid,
+        "This link is no longer valid. Ask for a new one.");
+
     public async Task RequestPasswordResetAsync(string email, CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(email);
@@ -125,7 +129,7 @@ public sealed class AccountEmailService(
         var user = await userManager.FindByEmailAsync(email);
         if (user is null)
         {
-            return new DomainError(ErrorCodes.EmailTokenInvalid, "This link is no longer valid. Ask for a new one.");
+            return EmailTokenInvalid;
         }
 
         if (user.EmailConfirmed)
@@ -136,6 +140,6 @@ public sealed class AccountEmailService(
         var result = await userManager.ConfirmEmailAsync(user, token);
         return result.Succeeded
             ? Result.Success()
-            : new DomainError(ErrorCodes.EmailTokenInvalid, "This link is no longer valid. Ask for a new one.");
+            : EmailTokenInvalid;
     }
 }

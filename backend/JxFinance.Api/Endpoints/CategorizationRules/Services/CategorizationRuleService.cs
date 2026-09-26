@@ -99,10 +99,7 @@ public sealed class CategorizationRuleService(
 
         await using var dbTransaction = await db.Database.BeginTransactionAsync(cancellationToken);
 
-        var rules = await db.CategorizationRules
-            .OrderBy(r => r.Position)
-            .ThenBy(r => r.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var rules = await Ordered(db.CategorizationRules).ToListAsync(cancellationToken);
         var rule = rules.Find(r => r.Id == ruleId);
         if (rule is null)
         {
@@ -136,10 +133,7 @@ public sealed class CategorizationRuleService(
         CancellationToken cancellationToken)
     {
         var ruleId = new CategorizationRuleId(id);
-        var rules = await db.CategorizationRules
-            .OrderBy(r => r.Position)
-            .ThenBy(r => r.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var rules = await Ordered(db.CategorizationRules).ToListAsync(cancellationToken);
 
         var index = rules.FindIndex(r => r.Id == ruleId);
         if (index < 0)
@@ -377,6 +371,9 @@ public sealed class CategorizationRuleService(
         }
     }
 
+    private static IOrderedQueryable<CategorizationRule> Ordered(IQueryable<CategorizationRule> rules) =>
+        rules.OrderBy(r => r.Position).ThenBy(r => r.CreatedAt);
+
     private static List<Guid> Distinct(IReadOnlyList<Guid> tagIds) => tagIds.Distinct().ToList();
 
     private async Task<IReadOnlyList<CategorizationRuleWithTags>> WithTagsAsync(
@@ -404,11 +401,7 @@ public sealed class CategorizationRuleService(
 
     private async Task<IReadOnlyList<CategorizationRuleWithTags>> LoadAllAsync(CancellationToken cancellationToken)
     {
-        var rules = await db.CategorizationRules
-            .AsNoTracking()
-            .OrderBy(r => r.Position)
-            .ThenBy(r => r.CreatedAt)
-            .ToListAsync(cancellationToken);
+        var rules = await Ordered(db.CategorizationRules.AsNoTracking()).ToListAsync(cancellationToken);
 
         return await WithTagsAsync(rules, cancellationToken);
     }

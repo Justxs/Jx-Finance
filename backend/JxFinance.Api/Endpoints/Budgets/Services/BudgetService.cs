@@ -32,17 +32,7 @@ public sealed class BudgetService(
     public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.ToListAsync(cancellationToken);
-        if (budgets.Count == 0)
-        {
-            return [];
-        }
-
-        var usage = await usageCalculator.CalculateAsync(budgets, cancellationToken);
-        var categories = await db.Categories.ToDictionaryAsync(c => c.Id, cancellationToken);
-
-        return budgets
-            .Select(b => b.ToResponse(categories.GetValueOrDefault(b.CategoryId)?.Name, usage[b.Id]))
-            .ToList();
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, cancellationToken);
     }
 
     public async Task<Result<BudgetResponse>> CreateAsync(
@@ -131,11 +121,17 @@ public sealed class BudgetService(
             : null;
     }
 
-    private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken)
-    {
-        var usage = await usageCalculator.CalculateAsync([budget], cancellationToken);
-        var category = await db.Categories.FirstOrDefaultAsync(c => c.Id == budget.CategoryId, cancellationToken);
+    private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken) =>
+        (await ToResponsesAsync([budget], cancellationToken))[0];
 
-        return budget.ToResponse(category?.Name, usage[budget.Id]);
+    private async Task<List<BudgetResponse>> ToResponsesAsync(List<Budget> budgets, CancellationToken cancellationToken)
+    {
+        var usage = await usageCalculator.CalculateAsync(budgets, cancellationToken);
+        var categoryIds = budgets.Select(b => b.CategoryId).Distinct().ToList();
+        var names = await db.Categories
+            .Where(c => categoryIds.Contains(c.Id))
+            .ToDictionaryAsync(c => c.Id, c => c.Name, cancellationToken);
+
+        return budgets.Select(b => b.ToResponse(names.GetValueOrDefault(b.CategoryId), usage[b.Id])).ToList();
     }
 }
