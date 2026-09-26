@@ -1,6 +1,6 @@
 import type { ReportTrendPoint } from "@/api/generated/model";
 import { IncomeExpenseChart } from "@/components/chart";
-import { useShortDay, useShortMonth } from "@/hooks/use-formatters";
+import { useDateFormat, useShortMonth } from "@/hooks/use-formatters";
 import { parseIso } from "@/lib/calendar";
 
 interface Props {
@@ -47,7 +47,7 @@ function toWeeks(points: readonly Point[]) {
 
 export function ReportTrendChart({ items, bucket }: Readonly<Props>) {
   const monthFormat = useShortMonth();
-  const dayFormat = useShortDay();
+  const dayFormat = useDateFormat({ month: "short", day: "numeric" });
   const labelFormat = bucket === "month" ? monthFormat : dayFormat;
 
   const points: Point[] = items.map((item) => ({

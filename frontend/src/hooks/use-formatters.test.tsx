@@ -13,19 +13,23 @@ import {
   useDate,
   useDateTime,
   useIsoDate,
+  signed,
+  useDateFormat,
   useMoney,
-  useMonthLabel,
   useNumberFormat,
   usePercent,
   usePriceFormat,
   useQuantityFormat,
   useRatePercent,
   useReportingCurrency,
-  useShortDay,
+  useShortDayIso,
   useShortMonth,
-  useSignedPercent,
   useUsableCurrencies,
 } from "./use-formatters";
+
+function fixed(magnitude: number) {
+  return magnitude.toFixed(2);
+}
 
 function hook<T>(
   callback: () => T,
@@ -141,8 +145,10 @@ describe("dates", () => {
     expect(hook(() => useDateTime())(value)).toBe("");
   });
 
-  test("useMonthLabel names the month and year", () => {
-    expect(hook(() => useMonthLabel())(new Date(2026, 8, 6))).toBe("September 2026");
+  test("useDateFormat formats with the given options", () => {
+    const month = hook(() => useDateFormat({ month: "long", year: "numeric" }));
+
+    expect(month.format(new Date(2026, 8, 6))).toBe("September 2026");
   });
 
   test("useCalendarLocale follows the language", async () => {
@@ -169,12 +175,11 @@ describe("numbers", () => {
     expect(formatPrice(0.12345, "usd")).toBe("$0.1235");
   });
 
-  test("signed percents take whole-number percentages", () => {
-    const formatSignedPercent = hook(() => useSignedPercent());
-
-    expect(formatSignedPercent(12.345)).toBe("+12.35%");
-    expect(formatSignedPercent(-3)).toBe("−3.00%");
-    expect(formatSignedPercent(0)).toBe("0.00%");
+  test("signed puts a real minus or a plus before the magnitude and leaves zero bare", () => {
+    expect(signed(12.345, fixed)).toBe("+12.35");
+    expect(signed(-3, fixed)).toBe("−3.00");
+    expect(signed(0, fixed)).toBe("0.00");
+    expect(signed(-3, fixed, "+")).toBe("+3.00");
   });
 
   test("rate percents trim trailing zeros", () => {
@@ -194,8 +199,9 @@ describe("short formats", () => {
     expect(hook(() => useShortMonth()).format(new Date(2026, 5, 9))).toBe("Jun 2026");
   });
 
-  test("useShortDay abbreviates the month and keeps the day", () => {
-    expect(hook(() => useShortDay()).format(new Date(2026, 5, 9))).toBe("Jun 9");
+  test("useShortDayIso abbreviates the month and keeps the day", () => {
+    expect(hook(() => useShortDayIso())("2026-06-09")).toBe("Jun 9");
+    expect(hook(() => useShortDayIso())(null)).toBe("");
   });
 
   test("useAxisDateTick shows days over a short span and months otherwise", () => {
@@ -209,6 +215,6 @@ describe("short formats", () => {
 
   test("useNumberFormat groups digits and caps decimals on request", () => {
     expect(hook(() => useNumberFormat()).format(12345)).toBe("12,345");
-    expect(hook(() => useNumberFormat(1)).format(1.26)).toBe("1.3");
+    expect(hook(() => useNumberFormat({ maximumFractionDigits: 1 })).format(1.26)).toBe("1.3");
   });
 });

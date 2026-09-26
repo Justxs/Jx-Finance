@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button/button";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Panel } from "@/components/ui/section/section";
 import { Skeleton } from "@/components/ui/skeleton/skeleton";
-import { useMonthLabel } from "@/hooks/use-formatters";
+import { useDateFormat } from "@/hooks/use-formatters";
 import { useSettingsSuspense, useTodayDate } from "@/hooks/use-settings";
 import { DashboardCard } from "../dashboard-card/dashboard-card";
 import { DashboardCustomiser } from "../dashboard-customiser/dashboard-customiser";
@@ -65,8 +65,7 @@ function DashboardContent({ customising, onCustomise, onDone }: Readonly<Content
 
 export function DashboardPage() {
   const { t } = useTranslation();
-  const monthLabel = useMonthLabel();
-  const month = monthLabel(useTodayDate());
+  const month = useDateFormat({ month: "long", year: "numeric" }).format(useTodayDate());
   const [customising, setCustomising] = useState(false);
 
   return (
