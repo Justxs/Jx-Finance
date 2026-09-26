@@ -1,12 +1,11 @@
 import { type RefObject, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse } from "@/api/generated/model";
+import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
-import { FieldError, Hint } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { Label } from "@/components/ui/label/label";
 import { SectionTitle } from "@/components/ui/section/section";
 import { namedOptions } from "@/lib/options";
 
@@ -69,8 +68,7 @@ export function ImportUploadForm({
         </p>
       ) : null}
       <FormGrid className={collapsed ? "hidden" : undefined}>
-        <div className="space-y-1.5">
-          <Label htmlFor="import-account">{t("transactions.account")}</Label>
+        <FieldShell id="import-account" label={t("transactions.account")}>
           <SelectField
             id="import-account"
             value={accountId}
@@ -78,9 +76,14 @@ export function ImportUploadForm({
             onChange={onAccountChange}
             options={namedOptions(accounts)}
           />
-        </div>
-        <div className="col-span-full space-y-1.5">
-          <Label htmlFor={IMPORT_FILE_INPUT_ID}>{t("imports.file")}</Label>
+        </FieldShell>
+        <FieldShell
+          id={IMPORT_FILE_INPUT_ID}
+          label={t("imports.file")}
+          hint={t("imports.fileHint")}
+          error={fileError}
+          className="col-span-full"
+        >
           <FileInput
             id={IMPORT_FILE_INPUT_ID}
             ref={fileInputRef}
@@ -91,16 +94,9 @@ export function ImportUploadForm({
               onFileChange();
             }}
             placeholder={t("imports.chooseFile")}
-            aria-invalid={fileError ? true : undefined}
-            aria-describedby={
-              fileError
-                ? `${IMPORT_FILE_INPUT_ID}-hint ${IMPORT_FILE_INPUT_ID}-error`
-                : `${IMPORT_FILE_INPUT_ID}-hint`
-            }
+            {...shellAria({ id: IMPORT_FILE_INPUT_ID, hint: true, error: fileError })}
           />
-          <Hint id={`${IMPORT_FILE_INPUT_ID}-hint`}>{t("imports.fileHint")}</Hint>
-          <FieldError id={`${IMPORT_FILE_INPUT_ID}-error`} message={fileError} />
-        </div>
+        </FieldShell>
       </FormGrid>
       <div className={collapsed ? "hidden" : "mt-4 flex justify-end"}>
         <Button

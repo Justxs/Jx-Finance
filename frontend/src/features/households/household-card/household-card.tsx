@@ -1,10 +1,11 @@
-import { History, Pencil, Plus, Trash2 } from "lucide-react";
+import { History, Plus } from "lucide-react";
 import { useState, useDeferredValue } from "react";
 import { useTranslation } from "react-i18next";
 import { useDeleteHousehold, useRemoveMember } from "@/api/generated";
 import type { HouseholdResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
 import { Modal } from "@/components/modal";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Rows } from "@/components/ui/rows/rows";
 import { Section, SectionHeader } from "@/components/ui/section/section";
@@ -38,25 +39,11 @@ export function HouseholdCard({ household }: Readonly<Props>) {
     <Section>
       <SectionHeader title={household.name} titleClassName="min-w-0 wrap-break-word">
         {isOwner ? (
-          <div className="flex gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={() => setRenaming(true)}
-              aria-label={`${t("actions.edit")}: ${household.name}`}
-            >
-              <Pencil />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              pending={remove.busy}
-              onClick={() => remove.request(household.id)}
-              aria-label={`${t("actions.delete")}: ${household.name}`}
-            >
-              <Trash2 />
-            </Button>
-          </div>
+          <RowActions
+            label={household.name}
+            onEdit={() => setRenaming(true)}
+            {...remove.deleteProps(household.id)}
+          />
         ) : null}
       </SectionHeader>
 

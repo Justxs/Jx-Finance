@@ -8,7 +8,6 @@ import {
 } from "@/api/schemas/net-worth/net-worth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
-import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
@@ -233,14 +232,12 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
 
         <FormError error={error} />
 
-        <div className="col-span-full flex items-end justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onClose}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={pending}>
-            {editing ? t("actions.save") : t("actions.add")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={editing ? t("actions.save") : t("actions.add")}
+          onCancel={onClose}
+        />
       </form.FormShell>
     </form.AppForm>
   );

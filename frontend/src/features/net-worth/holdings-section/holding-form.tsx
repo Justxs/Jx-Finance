@@ -4,7 +4,6 @@ import { createAssetBodyNameMax } from "@/api/schemas/net-worth/net-worth.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import type { SelectOption } from "@/components/select-field/select-field";
-import { Button } from "@/components/ui/button/button";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { useToday } from "@/hooks/use-settings";
 import type { FieldAliases } from "@/lib/form-server-errors";
@@ -97,14 +96,12 @@ export function HoldingForm({
 
         <FormError error={error} />
 
-        <div className="col-span-full flex items-end justify-end gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            {t("actions.cancel")}
-          </Button>
-          <form.SubmitButton pending={pending}>
-            {initialValues ? t("actions.save") : t("actions.add")}
-          </form.SubmitButton>
-        </div>
+        <form.FormActions
+          span
+          pending={pending}
+          submitLabel={initialValues ? t("actions.save") : t("actions.add")}
+          onCancel={onCancel}
+        />
       </form.FormShell>
     </form.AppForm>
   );

@@ -15,20 +15,31 @@ interface Props {
   children: ReactNode;
 }
 
+interface ShellAriaOptions {
+  id: string;
+  hint?: ReactNode;
+  error?: string;
+}
+
 interface FieldAriaOptions {
   id: string;
   hint?: ReactNode;
   touchedOnly?: boolean;
 }
 
-export function fieldAria(field: AnyFieldApi, { id, hint, touchedOnly }: FieldAriaOptions) {
-  const visible = !touchedOnly || field.meta.isTouched;
-  const error: string | undefined = visible ? field.errors[0]?.message : undefined;
+export function shellAria({ id, hint, error }: ShellAriaOptions) {
   const describedBy =
     [hint ? `${id}-hint` : null, error ? `${id}-error` : null].filter(Boolean).join(" ") ||
     undefined;
 
-  return { error, "aria-invalid": Boolean(error), "aria-describedby": describedBy };
+  return { "aria-invalid": Boolean(error), "aria-describedby": describedBy };
+}
+
+export function fieldAria(field: AnyFieldApi, { id, hint, touchedOnly }: FieldAriaOptions) {
+  const visible = !touchedOnly || field.meta.isTouched;
+  const error: string | undefined = visible ? field.errors[0]?.message : undefined;
+
+  return { error, ...shellAria({ id, hint, error }) };
 }
 
 export function FieldShell({

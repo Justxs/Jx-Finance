@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { DebtScheduleParams, DebtScheduleResponse } from "@/api/generated/model";
-import { FieldShell } from "@/components/form/field-shell/field-shell";
+import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
 import { DatePicker } from "@/components/ui/date-picker/date-picker";
 import { Input } from "@/components/ui/input/input";
 import { useDebouncedDraft } from "@/hooks/use-debounced-draft";
@@ -82,8 +82,7 @@ export function DebtExtraPayments({ idPrefix, draft, schedule, onChange }: Reado
             inputMode="decimal"
             placeholder="0.00"
             value={monthly.draft}
-            aria-invalid={Boolean(monthlyError)}
-            aria-describedby={monthlyError ? `${idPrefix}-monthly-error` : undefined}
+            {...shellAria({ id: `${idPrefix}-monthly`, error: monthlyError })}
             onChange={(event) => monthly.change(event.target.value)}
           />
         </FieldShell>
@@ -97,8 +96,7 @@ export function DebtExtraPayments({ idPrefix, draft, schedule, onChange }: Reado
             inputMode="decimal"
             placeholder="0.00"
             value={lumpSum.draft}
-            aria-invalid={Boolean(lumpSumError)}
-            aria-describedby={lumpSumError ? `${idPrefix}-lump-sum-error` : undefined}
+            {...shellAria({ id: `${idPrefix}-lump-sum`, error: lumpSumError })}
             onChange={(event) => lumpSum.change(event.target.value)}
           />
         </FieldShell>
@@ -110,8 +108,7 @@ export function DebtExtraPayments({ idPrefix, draft, schedule, onChange }: Reado
           <DatePicker
             id={`${idPrefix}-lump-sum-date`}
             value={draft.lumpSumDate}
-            aria-invalid={Boolean(dateError)}
-            aria-describedby={dateError ? `${idPrefix}-lump-sum-date-error` : undefined}
+            {...shellAria({ id: `${idPrefix}-lump-sum-date`, error: dateError })}
             onChange={(value) => onChange("lumpSumDate", value)}
           />
         </FieldShell>

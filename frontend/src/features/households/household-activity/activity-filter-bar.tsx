@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import type { HouseholdMemberResponse } from "@/api/generated/model";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { SelectField } from "@/components/select-field/select-field";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
-import { Label } from "@/components/ui/label/label";
 import { userName } from "@/features/users/user-queries";
 import { ALL, type ActivityFilters, KINDS } from "./activity-filters";
 
@@ -20,10 +20,9 @@ export function ActivityFilterBar({ idPrefix, members, value, onChange }: Readon
     <div
       role="group"
       aria-label={t("audit.filters.label")}
-      className="flex flex-wrap items-end gap-x-4 gap-y-3"
+      className="flex flex-wrap items-end gap-x-4 gap-y-3 *:w-full sm:*:w-auto"
     >
-      <div className="w-full space-y-1.5 sm:w-auto">
-        <Label htmlFor={`${idPrefix}-activity-member`}>{t("audit.filters.member")}</Label>
+      <FieldShell id={`${idPrefix}-activity-member`} label={t("audit.filters.member")}>
         <SelectField
           id={`${idPrefix}-activity-member`}
           className="sm:w-48"
@@ -34,9 +33,8 @@ export function ActivityFilterBar({ idPrefix, members, value, onChange }: Readon
             ...members.map((member) => ({ value: member.userId, label: userName(member) })),
           ]}
         />
-      </div>
-      <div className="w-full space-y-1.5 sm:w-auto">
-        <Label htmlFor={`${idPrefix}-activity-kind`}>{t("audit.filters.kind")}</Label>
+      </FieldShell>
+      <FieldShell id={`${idPrefix}-activity-kind`} label={t("audit.filters.kind")}>
         <SelectField<ActivityFilters["kind"]>
           id={`${idPrefix}-activity-kind`}
           className="sm:w-48"
@@ -47,16 +45,15 @@ export function ActivityFilterBar({ idPrefix, members, value, onChange }: Readon
             ...KINDS.map((kind) => ({ value: kind, label: t(`audit.kinds.${kind}`) })),
           ]}
         />
-      </div>
-      <div className="w-full space-y-1.5 sm:w-auto">
-        <Label htmlFor={`${idPrefix}-activity-dates`}>{t("audit.filters.dates")}</Label>
+      </FieldShell>
+      <FieldShell id={`${idPrefix}-activity-dates`} label={t("audit.filters.dates")}>
         <DateRangePicker
           id={`${idPrefix}-activity-dates`}
           className="sm:w-64"
           value={{ from: value.from, to: value.to }}
           onChange={(range) => onChange({ ...value, from: range.from, to: range.to })}
         />
-      </div>
+      </FieldShell>
     </div>
   );
 }

@@ -13,8 +13,8 @@ import {
 import { createCategorizationRuleBodyNameMax } from "@/api/schemas/categorization-rules/categorization-rules.zod";
 import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
+import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { Label } from "@/components/ui/label/label";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { silent, upsert } from "@/lib/mutations";
 import { nameById, namedOptions } from "@/lib/options";
@@ -211,8 +211,7 @@ export function RuleForm({ accounts, categories, tags, initial, onClose }: Reado
           </form.Field>
           <form.Field name="tagIds">
             {(field) => (
-              <div className="space-y-1.5">
-                <Label htmlFor="rule-tags">{t("categorizationRules.tags")}</Label>
+              <FieldShell id="rule-tags" label={t("categorizationRules.tags")}>
                 <TagPicker
                   id="rule-tags"
                   tags={tags}
@@ -220,7 +219,7 @@ export function RuleForm({ accounts, categories, tags, initial, onClose }: Reado
                   onChange={(next) => field.handleChange(next)}
                   aria-label={t("categorizationRules.tags")}
                 />
-              </div>
+              </FieldShell>
             )}
           </form.Field>
           <p className="max-w-prose text-sm text-muted-foreground">
