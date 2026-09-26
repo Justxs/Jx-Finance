@@ -1,14 +1,13 @@
 using FastEndpoints;
 using JxFinance.Common.Errors;
+using JxFinance.Common.References;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
-using JxFinance.Infrastructure.Data;
-using Microsoft.EntityFrameworkCore;
 
 namespace JxFinance.Common.ExchangeRates;
 
 [RegisterService<ITransactionValuation>(LifeTime.Scoped)]
-public sealed class TransactionValuation(AppDbContext db, IExchangeRateService rates) : ITransactionValuation
+public sealed class TransactionValuation(IReferenceGuard references, IExchangeRateService rates) : ITransactionValuation
 {
     public async Task<Result<TransactionValue>> ValueAsync(
         AccountId accountId,
@@ -18,13 +17,10 @@ public sealed class TransactionValuation(AppDbContext db, IExchangeRateService r
         IReadOnlyCollection<Currency> currenciesInUse,
         CancellationToken cancellationToken)
     {
-        var resolved = currency ?? await db.Accounts
-            .Where(a => a.Id == accountId)
-            .Select(a => (Currency?)a.StartingBalance.Currency)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (resolved is not { } valued)
+        var resolved = currency is { } requested ? requested : await references.AccountCurrencyAsync(accountId, cancellationToken);
+        if (!resolved.TryGetValue(out var valued))
         {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            return resolved.Error;
         }
 
         if (!currenciesInUse.Contains(valued) && rates.UnusableReason(valued) is { } currencyError)

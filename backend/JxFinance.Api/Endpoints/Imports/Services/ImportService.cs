@@ -15,7 +15,6 @@ using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Settings;
-using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Transfers;
 using JxFinance.Endpoints.CategorizationRules.Interfaces;
@@ -24,6 +23,7 @@ using JxFinance.Endpoints.Imports.Confirm;
 using JxFinance.Endpoints.Imports.Interfaces;
 using JxFinance.Endpoints.Imports.Preview;
 using JxFinance.Endpoints.Imports.Shared;
+using JxFinance.Endpoints.Transactions.Mappers;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -153,15 +153,9 @@ public sealed class ImportService(
     {
         var existingRefs = await ExistingRefsAsync(accountId, rows.Select(r => r.ImportRef), cancellationToken);
 
-        var wantedTagIds = rows
-            .SelectMany(r => r.TagIds ?? [])
-            .Distinct()
-            .Select(id => new TagId(id))
-            .ToList();
-        if (wantedTagIds.Count > 0
-            && await db.Tags.CountAsync(t => wantedTagIds.Contains(t.Id), cancellationToken) != wantedTagIds.Count)
+        if (await references.TagsExistAsync(rows.SelectMany(r => r.TagIds ?? []), cancellationToken) is { } tagError)
         {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Tag does not exist.");
+            return tagError;
         }
 
         var categoryIds = rows.Where(r => r.CategoryId is not null).Select(r => new CategoryId(r.CategoryId!.Value)).Distinct().ToList();
@@ -279,9 +273,7 @@ public sealed class ImportService(
                 ImportRef = row.ImportRef,
             };
             db.Transactions.Add(created);
-            db.TransactionTags.AddRange((row.TagIds ?? [])
-                .Distinct()
-                .Select(tagId => new TransactionTag { TransactionId = created.Id, TagId = new TagId(tagId) }));
+            db.TransactionTags.AddRange(row.TagIds.ToTransactionTags(created.Id));
             imported++;
         }
 

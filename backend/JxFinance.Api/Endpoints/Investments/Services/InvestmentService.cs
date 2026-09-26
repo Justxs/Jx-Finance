@@ -3,6 +3,7 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Holdings;
+using JxFinance.Common.References;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Common;
@@ -29,7 +30,8 @@ public sealed class InvestmentService(
     IExchangeRateService rates,
     IClock clock,
     IHoldingLedger ledger,
-    IDeletionRecorder deletions) : IInvestmentService
+    IDeletionRecorder deletions,
+    IReferenceGuard references) : IInvestmentService
 {
     private static readonly DomainError TransactionNotFound = EntityLookup.NotFound("Investment transaction not found.");
 
@@ -283,14 +285,10 @@ public sealed class InvestmentService(
         IInvestmentTransactionInput request,
         CancellationToken cancellationToken)
     {
-        var accountId = new AccountId(request.AccountId);
-        var accountCurrency = await db.Accounts
-            .Where(a => a.Id == accountId)
-            .Select(a => (Currency?)a.StartingBalance.Currency)
-            .FirstOrDefaultAsync(cancellationToken);
-        if (accountCurrency is null)
+        var accountFound = await references.AccountCurrencyAsync(new AccountId(request.AccountId), cancellationToken);
+        if (!accountFound.TryGetValue(out var accountCurrency))
         {
-            return new DomainError(ErrorCodes.ReferenceNotFound, "Account does not exist.");
+            return accountFound.Error;
         }
 
         Security? security = null;
@@ -305,7 +303,7 @@ public sealed class InvestmentService(
         }
 
         var isTrade = request.Type is InvestmentTransactionType.Buy or InvestmentTransactionType.Sell;
-        var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency.Value;
+        var currency = (isTrade ? null : request.Currency) ?? security?.Currency ?? request.Currency ?? accountCurrency;
         if (rates.UnusableReason(currency) is { } currencyError)
         {
             return new DomainError(ErrorCodes.CurrencyDisabled, currencyError);
