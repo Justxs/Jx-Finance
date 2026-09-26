@@ -1,10 +1,9 @@
-import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useUpdateMemberRole } from "@/api/generated";
 import type { HouseholdMemberResponse } from "@/api/generated/model";
+import { RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { SelectField } from "@/components/select-field/select-field";
-import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { userName } from "@/features/users/user-queries";
 import { cn } from "@/lib/utils";
@@ -55,16 +54,12 @@ export function MemberRow({
               }
               options={householdRoleOptions(t, ["owner", "member"])}
             />
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              pending={removePending}
-              disabled={removeDisabled}
-              onClick={onRemove}
-              aria-label={`${t("actions.delete")}: ${userName(member)}`}
-            >
-              <Trash2 />
-            </Button>
+            <RowActions
+              label={userName(member)}
+              onDelete={onRemove}
+              deletePending={removePending}
+              deleteDisabled={removeDisabled}
+            />
           </div>
         ) : (
           <Tag

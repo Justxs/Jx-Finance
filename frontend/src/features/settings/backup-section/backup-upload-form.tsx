@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { useUploadBackup } from "@/api/generated";
 import { FormError } from "@/components/form-error/form-error";
+import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
 import { Button } from "@/components/ui/button/button";
-import { FieldError } from "@/components/ui/field-error";
 import { FileInput } from "@/components/ui/file-input/file-input";
 import type { TranslationKey } from "@/lib/i18n";
 import { silent } from "@/lib/mutations";
@@ -57,10 +57,7 @@ export function BackupUploadForm() {
       <p id="backup-file-hint" className="text-sm text-muted-foreground">
         {t("backup.uploadHint")}
       </p>
-      <div className="space-y-1.5">
-        <label className="text-sm font-medium" htmlFor="backup-file">
-          {t("backup.file")}
-        </label>
+      <FieldShell id="backup-file" label={t("backup.file")} error={fileError}>
         <FileInput
           key={uploadKey}
           id="backup-file"
@@ -72,11 +69,9 @@ export function BackupUploadForm() {
             uploadMutation.reset();
           }}
           placeholder={t("backup.chooseFile")}
-          aria-invalid={fileError ? true : undefined}
-          aria-describedby={fileError ? "backup-file-hint backup-file-error" : "backup-file-hint"}
+          {...shellAria({ id: "backup-file", hint: true, error: fileError })}
         />
-        <FieldError id="backup-file-error" message={fileError} />
-      </div>
+      </FieldShell>
       <FormError error={uploadMutation.error} />
       <Button type="submit" variant="outline" pending={uploadMutation.isPending}>
         {t("backup.upload")}
