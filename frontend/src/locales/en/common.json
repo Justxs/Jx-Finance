@@ -1582,6 +1582,7 @@
   "filters": {
     "filterBy": "Filter by {{column}}",
     "clear": "Clear",
+    "apply": "Apply",
     "noMatches": "No rows match these filters.",
     "sortAsc": "Sort {{column}} ascending",
     "sortDesc": "Sort {{column}} descending"

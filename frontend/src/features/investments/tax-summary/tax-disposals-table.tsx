@@ -73,8 +73,8 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="align-bottom">{t("investments.tax.soldOn")}</TableHead>
-              <TableHead className="align-bottom">{t("investments.tax.security")}</TableHead>
+              <TableHead wrap>{t("investments.tax.soldOn")}</TableHead>
+              <TableHead wrap>{t("investments.tax.security")}</TableHead>
               <TableHead numeric wrap>
                 {t("investments.tax.quantity")}
               </TableHead>
@@ -87,7 +87,7 @@ export function TaxDisposalsTable({ disposals, reportingCurrency, accountNames }
               <TableHead numeric wrap>
                 {t("investments.tax.gain")}
               </TableHead>
-              <TableHead className="align-bottom">{t("investments.tax.lots")}</TableHead>
+              <TableHead wrap>{t("investments.tax.lots")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>

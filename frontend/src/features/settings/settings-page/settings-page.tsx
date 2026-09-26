@@ -14,7 +14,7 @@ import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { SectionLayout } from "@/components/section-layout/section-layout";
 import { useNavSections } from "@/components/section-nav/section-nav";
 import { Button } from "@/components/ui/button/button";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { SectionSkeleton } from "@/components/ui/skeleton/skeleton";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
@@ -112,7 +112,7 @@ export function SettingsPage() {
       description={t("settings.description")}
       nav={<SettingsNav current={section} sections={sections} />}
     >
-      <QueryBoundary fallback={<Skeleton className="h-96 w-full" />}>
+      <QueryBoundary fallback={<SectionSkeleton rows={6} />}>
         <SettingsContent section={section} />
       </QueryBoundary>
       {section === "email" ? <SmtpSection /> : null}

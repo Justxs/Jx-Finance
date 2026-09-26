@@ -90,7 +90,6 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                       <TextColumnFilter
                         label={t("users.displayName")}
                         value={search.search ?? ""}
-                        debounceMs={300}
                         onChange={(value) => patchSearch({ search: value || undefined })}
                       />
                     }

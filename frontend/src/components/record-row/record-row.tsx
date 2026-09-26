@@ -30,7 +30,14 @@ export function RecordRow({
         </div>
         <div className="flex flex-wrap items-center gap-1">
           <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">{amount}</span>
-          <RowActions label={label} onEdit={onEdit} {...deleteProps} />
+          <RowActions label={label} onEdit={onEdit} {...deleteProps}>
+            {onEdit ? null : (
+              <span
+                className="size-8 shrink-0 max-sm:hidden pointer-coarse:size-11"
+                aria-hidden="true"
+              />
+            )}
+          </RowActions>
         </div>
       </li>
     </RowTransition>

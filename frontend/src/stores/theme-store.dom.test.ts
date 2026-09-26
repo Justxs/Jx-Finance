@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
-import { describe, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { freshModuleLoader } from "@/test/fresh-module";
 import { blockStorage, seedPreferences, storedPreferences } from "@/test/preferences";
 
@@ -13,6 +13,12 @@ function preferDark() {
 
 function root() {
   return document.documentElement;
+}
+
+function themeColors() {
+  return [...document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')].map(
+    (meta) => meta.content,
+  );
 }
 
 describe("initial theme", () => {
@@ -101,6 +107,47 @@ describe("palette", () => {
     act(() => store.setPalette("ledger"));
     expect(root()).not.toHaveAttribute("data-palette");
     expect(storedPreferences().palette).toBe("ledger");
+  });
+});
+
+describe("browser theme color", () => {
+  afterEach(() => {
+    for (const node of document.head.querySelectorAll(
+      'style[data-test="theme"], meta[name="theme-color"]',
+    )) {
+      node.remove();
+    }
+  });
+
+  test("follows the sidebar color of the active theme and palette", async () => {
+    const style = document.createElement("style");
+    style.dataset.test = "theme";
+    style.textContent = `
+      :root { --sidebar: #f1f3f5; }
+      .dark { --sidebar: #0d1115; }
+      [data-palette="plum"] { --sidebar: #f4f2f4; }
+      [data-palette="plum"].dark { --sidebar: #130f14; }
+    `;
+    document.head.append(style);
+    for (const scheme of ["light", "dark"]) {
+      const meta = document.createElement("meta");
+      meta.name = "theme-color";
+      meta.media = `(prefers-color-scheme: ${scheme})`;
+      meta.content = "#000000";
+      document.head.append(meta);
+    }
+
+    const store = await loadStore();
+    expect(themeColors()).toEqual(["#f1f3f5", "#f1f3f5"]);
+
+    act(() => store.setTheme("dark"));
+    expect(themeColors()).toEqual(["#0d1115", "#0d1115"]);
+
+    act(() => store.setPalette("plum"));
+    expect(themeColors()).toEqual(["#130f14", "#130f14"]);
+
+    act(() => store.setTheme("light"));
+    expect(themeColors()).toEqual(["#f4f2f4", "#f4f2f4"]);
   });
 });
 

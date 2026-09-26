@@ -5,10 +5,7 @@ import { ColumnFilter, TextColumnFilter } from "./column-filter";
 
 const typeNames = ["Income", "Expense", "Transfer"];
 
-function TextFilterExample({
-  initialValue = "",
-  debounceMs,
-}: Readonly<{ initialValue?: string; debounceMs?: number }>) {
+function TextFilterExample({ initialValue = "" }: Readonly<{ initialValue?: string }>) {
   const [value, setValue] = useState(initialValue);
 
   return (
@@ -19,7 +16,6 @@ function TextFilterExample({
         value={value}
         onChange={setValue}
         placeholder="Search descriptions"
-        debounceMs={debounceMs}
       />
       <span className="text-muted-foreground">Applied: {value || "none"}</span>
     </div>
@@ -29,23 +25,23 @@ function TextFilterExample({
 function CustomFilterExample() {
   const [selected, setSelected] = useState<string[]>(["Expense"]);
 
-  function toggle(name: string, checked: boolean) {
-    setSelected(checked ? [...selected, name] : selected.filter((item) => item !== name));
-  }
-
   return (
     <div className="flex items-center gap-2 text-sm">
       <span>Type</span>
-      <ColumnFilter label="Type" active={selected.length > 0} onClear={() => setSelected([])}>
-        {typeNames.map((name) => (
-          <label key={name} className="flex items-center gap-2 text-sm">
-            <Checkbox
-              checked={selected.includes(name)}
-              onCheckedChange={(checked) => toggle(name, checked)}
-            />
-            {name}
-          </label>
-        ))}
+      <ColumnFilter<string[]> label="Type" value={selected} empty={[]} onApply={setSelected}>
+        {(draft, setDraft) =>
+          typeNames.map((name) => (
+            <label key={name} className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={draft.includes(name)}
+                onCheckedChange={(checked) =>
+                  setDraft(checked ? [...draft, name] : draft.filter((item) => item !== name))
+                }
+              />
+              {name}
+            </label>
+          ))
+        }
       </ColumnFilter>
       <span className="text-muted-foreground">Applied: {selected.join(", ") || "none"}</span>
     </div>
@@ -63,7 +59,5 @@ type Story = StoryObj;
 export const Default: Story = { render: () => <TextFilterExample /> };
 
 export const Active: Story = { render: () => <TextFilterExample initialValue="Maxima" /> };
-
-export const Debounced: Story = { render: () => <TextFilterExample debounceMs={600} /> };
 
 export const CustomContent: Story = { render: () => <CustomFilterExample /> };

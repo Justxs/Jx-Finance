@@ -165,7 +165,7 @@ export const WrappingNumericHeaders: Story = {
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead className="align-bottom">Security</TableHead>
+          <TableHead wrap>Security</TableHead>
           <TableHead numeric wrap>
             Average cost per share
           </TableHead>

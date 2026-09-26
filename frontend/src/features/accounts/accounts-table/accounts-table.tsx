@@ -5,10 +5,9 @@ import { useTranslation } from "react-i18next";
 import { useHouseholdsSuspense } from "@/api/generated";
 import type { AccountResponse } from "@/api/generated/model";
 import { RowActions } from "@/components/row-actions/row-actions";
-import { SelectField } from "@/components/select-field/select-field";
 import { SharedScopeTag } from "@/components/shared-scope-tag/shared-scope-tag";
 import { Button } from "@/components/ui/button/button";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
@@ -222,7 +221,6 @@ export function AccountsTable({
                       <TextColumnFilter
                         label={t("accounts.name")}
                         value={search.search ?? ""}
-                        debounceMs={300}
                         onChange={(value) => patchSearch({ search: value || undefined })}
                       />
                     }
@@ -234,7 +232,6 @@ export function AccountsTable({
                       <TextColumnFilter
                         label={t("accounts.iban")}
                         value={search.iban ?? ""}
-                        debounceMs={300}
                         onChange={(value) => patchSearch({ iban: value || undefined })}
                       />
                     }
@@ -243,21 +240,15 @@ export function AccountsTable({
                     label={t("accounts.type")}
                     {...table.sortProps("type")}
                     filter={
-                      <ColumnFilter
+                      <SelectColumnFilter
                         label={t("accounts.type")}
-                        active={Boolean(search.type)}
-                        onClear={() => patchSearch({ type: undefined })}
-                      >
-                        <SelectField
-                          aria-label={t("accounts.type")}
-                          value={search.type ?? ""}
-                          onChange={(value) => patchSearch({ type: value || undefined })}
-                          options={[
-                            { value: "", label: t("accounts.allTypes") },
-                            ...optionsOf(accountTypes, (type) => t(`accounts.types.${type}`)),
-                          ]}
-                        />
-                      </ColumnFilter>
+                        value={search.type ?? ""}
+                        onChange={(value) => patchSearch({ type: value || undefined })}
+                        options={[
+                          { value: "", label: t("accounts.allTypes") },
+                          ...optionsOf(accountTypes, (type) => t(`accounts.types.${type}`)),
+                        ]}
+                      />
                     }
                   />
                   <SortableTableHead

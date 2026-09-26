@@ -67,6 +67,9 @@ export function TimeSeriesLineChart({
   const lines = series.toSorted(
     (a, b) => Number(Boolean(b.comparison)) - Number(Boolean(a.comparison)),
   );
+  const swatchSeries = series.map((item) =>
+    item.comparison ? { ...item, shape: "dashed" as const } : item,
+  );
 
   const chart = (
     <div role="img" aria-label={ariaLabel}>
@@ -95,7 +98,7 @@ export function TimeSeriesLineChart({
           />
           <Tooltip
             cursor={chartCursor}
-            content={<ChartTooltip series={series} formatLabel={formatLabel ?? formatDate} />}
+            content={<ChartTooltip series={swatchSeries} formatLabel={formatLabel ?? formatDate} />}
             isAnimationActive={false}
             offset={12}
           />
@@ -127,7 +130,7 @@ export function TimeSeriesLineChart({
 
   return (
     <div className="space-y-3">
-      <ChartLegend series={series} />
+      <ChartLegend series={swatchSeries} />
       {chart}
     </div>
   );

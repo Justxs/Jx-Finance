@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, FileUp, Plus, ReceiptText } from "lucide-react";
+import { ArrowLeft, FileUp, Library, Plus, ReceiptText } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAccountsSuspense, usePortfolioSuspense } from "@/api/generated";
@@ -132,10 +132,11 @@ export function InvestmentsPage() {
               {t("investments.tax.open")}
             </Link>
             <Button variant="ghost" size="sm" onClick={() => setSecuritiesOpen(true)}>
+              <Library />
               {t("investments.securities.title")}
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               disabled={noAccounts}
               onClick={() => setImportOpen(true)}

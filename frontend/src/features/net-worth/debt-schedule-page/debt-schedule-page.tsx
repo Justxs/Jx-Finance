@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Section, SectionTitle, TitledSection } from "@/components/ui/section/section";
-import { Skeleton } from "@/components/ui/skeleton/skeleton";
+import { SectionSkeleton, StatsSkeleton } from "@/components/ui/skeleton/skeleton";
 import { StaleRegion } from "@/components/ui/stale-region/stale-region";
 import { TextLink } from "@/components/ui/text-link/text-link";
 import { useDeferredParams } from "@/hooks/use-deferred-params";
@@ -43,7 +43,12 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
   } else {
     content = (
       <QueryBoundary
-        fallback={<Skeleton className="h-96 w-full" />}
+        fallback={
+          <div className="space-y-5">
+            <StatsSkeleton />
+            <SectionSkeleton rows={6} />
+          </div>
+        }
         errorSubject={t("netWorth.schedule.table")}
       >
         <DebtScheduleView debt={debt} />

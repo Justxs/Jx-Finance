@@ -86,7 +86,7 @@ export function ReportsPage() {
             <NetWorthChangeCard dateFrom={dateFrom} dateTo={dateTo} />
           )}
 
-          <SplitColumns className="gap-y-5">
+          <SplitColumns className="gap-x-5 gap-y-5 lg:items-start">
             <div className="space-y-5">
               <TitledSection title={t("reports.expenseByCategory")} bodyGap="md">
                 <CategoryBreakdown

@@ -1636,6 +1636,7 @@
   "filters": {
     "filterBy": "Filtruoti pagal: {{column}}",
     "clear": "Išvalyti",
+    "apply": "Taikyti",
     "noMatches": "Nėra eilučių, atitinkančių filtrus.",
     "sortAsc": "Rikiuoti {{column}} didėjančiai",
     "sortDesc": "Rikiuoti {{column}} mažėjančiai"

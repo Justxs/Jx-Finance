@@ -28,6 +28,16 @@ function setDataAttribute(name: "palette" | "font" | "textSize", value: string, 
   }
 }
 
+function syncThemeColor() {
+  const sidebar = getComputedStyle(document.documentElement).getPropertyValue("--sidebar").trim();
+  if (!sidebar) {
+    return;
+  }
+  for (const meta of document.querySelectorAll<HTMLMetaElement>('meta[name="theme-color"]')) {
+    meta.content = sidebar;
+  }
+}
+
 function applyAppearance() {
   const preferences = readPreferences();
   document.documentElement.classList.toggle(
@@ -37,6 +47,7 @@ function applyAppearance() {
   setDataAttribute("palette", preferences.palette, "ledger");
   setDataAttribute("font", preferences.font, "ledger");
   setDataAttribute("textSize", preferences.textSize, "default");
+  syncThemeColor();
 }
 
 applyAppearance();
