@@ -2,8 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { type ReactNode, ViewTransition } from "react";
 import { useTranslation } from "react-i18next";
 import type { UserProfileResponse } from "@/api/generated/model";
-import { SelectField } from "@/components/select-field/select-field";
-import { ColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
+import { SelectColumnFilter, TextColumnFilter } from "@/components/ui/column-filter/column-filter";
 import { SortableTableHead } from "@/components/ui/column-header/column-header";
 import {
   Table,
@@ -100,42 +99,30 @@ export function UsersTable({ users, stale, ...controls }: Readonly<Props>) {
                     label={t("users.role")}
                     {...table.sortProps("role")}
                     filter={
-                      <ColumnFilter
+                      <SelectColumnFilter
                         label={t("users.role")}
-                        active={Boolean(search.role)}
-                        onClear={() => patchSearch({ role: undefined })}
-                      >
-                        <SelectField
-                          aria-label={t("users.role")}
-                          value={search.role ?? ""}
-                          onChange={(role) => patchSearch({ role: role || undefined })}
-                          options={[{ value: "", label: t("users.allRoles") }, ...options]}
-                        />
-                      </ColumnFilter>
+                        value={search.role ?? ""}
+                        onChange={(role) => patchSearch({ role: role || undefined })}
+                        options={[{ value: "", label: t("users.allRoles") }, ...options]}
+                      />
                     }
                   />
                   <SortableTableHead
                     label={t("users.status")}
                     {...table.sortProps("status")}
                     filter={
-                      <ColumnFilter
+                      <SelectColumnFilter
                         label={t("users.status")}
-                        active={search.isActive !== undefined}
-                        onClear={() => patchSearch({ isActive: undefined })}
-                      >
-                        <SelectField
-                          aria-label={t("users.status")}
-                          value={search.isActive === undefined ? "" : String(search.isActive)}
-                          onChange={(value) =>
-                            patchSearch({ isActive: value === "" ? undefined : value === "true" })
-                          }
-                          options={[
-                            { value: "", label: t("users.allStatuses") },
-                            { value: "true", label: t("users.active") },
-                            { value: "false", label: t("users.deactivated") },
-                          ]}
-                        />
-                      </ColumnFilter>
+                        value={search.isActive === undefined ? "" : String(search.isActive)}
+                        onChange={(value) =>
+                          patchSearch({ isActive: value === "" ? undefined : value === "true" })
+                        }
+                        options={[
+                          { value: "", label: t("users.allStatuses") },
+                          { value: "true", label: t("users.active") },
+                          { value: "false", label: t("users.deactivated") },
+                        ]}
+                      />
                     }
                   />
                   <TableHead>
