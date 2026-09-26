@@ -5,7 +5,7 @@ import type {
   RecurringBillResponse,
   RecurringBillShape,
 } from "@/api/generated/model";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney } from "@/hooks/use-formatters";
@@ -19,15 +19,12 @@ const shapeTone = {
   transfer: "accent",
 } as const satisfies Record<RecurringBillShape, "negative" | "positive" | "accent">;
 
-interface Props {
+interface Props extends DeleteProps {
   bill: RecurringBillResponse;
   accounts: AccountResponse[];
   categories: CategoryResponse[];
   onEdit: () => void;
   onConfirm: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
-  deleteDisabled: boolean;
 }
 
 export function RecurringBillRow({
@@ -36,9 +33,7 @@ export function RecurringBillRow({
   categories,
   onEdit,
   onConfirm,
-  onDelete,
-  deletePending,
-  deleteDisabled,
+  ...deleteProps
 }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
@@ -105,9 +100,7 @@ export function RecurringBillRow({
           label={bill.name}
           size="icon"
           onEdit={onEdit}
-          onDelete={onDelete}
-          deletePending={deletePending}
-          deleteDisabled={deleteDisabled}
+          {...deleteProps}
           className="gap-0"
         >
           <Button

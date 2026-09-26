@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 import { Meter } from "@/components/ui/meter/meter";
 import { cn } from "@/lib/utils";
@@ -10,7 +10,7 @@ interface ProgressMeter {
   tone: "primary" | "positive" | "negative";
 }
 
-interface Props {
+interface Props extends DeleteProps {
   label: string;
   title: ReactNode;
   titleHint?: string;
@@ -19,9 +19,6 @@ interface Props {
   secondary?: ReactNode;
   meter: ProgressMeter | null;
   onEdit?: () => void;
-  onDelete?: () => void;
-  deletePending?: boolean;
-  deleteDisabled?: boolean;
   children?: ReactNode;
 }
 
@@ -43,10 +40,8 @@ export function ProgressRow({
   secondary,
   meter,
   onEdit,
-  onDelete,
-  deletePending,
-  deleteDisabled,
   children,
+  ...deleteProps
 }: Readonly<Props>) {
   return (
     <RowTransition>
@@ -68,9 +63,7 @@ export function ProgressRow({
           <RowActions
             label={label}
             onEdit={onEdit}
-            onDelete={onDelete}
-            deletePending={deletePending}
-            deleteDisabled={deleteDisabled}
+            {...deleteProps}
             size="icon"
             className="col-start-2 row-start-1 gap-0 sm:col-start-3"
           />

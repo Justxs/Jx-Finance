@@ -131,11 +131,9 @@ export function RulesPage() {
             categoryNames={categoryNames}
             tagNames={tagNames}
             movePending={moveMutation.isPending}
-            deletePending={remove.pendingId === rule.id}
-            deleteDisabled={remove.busy}
             onMove={(direction) => moveMutation.mutate({ id: rule.id, data: { direction } })}
             onEdit={() => setEditing(rule)}
-            onDelete={() => remove.request(rule.id)}
+            {...remove.deleteProps(rule.id)}
           />
         ))}
       </ListSection>

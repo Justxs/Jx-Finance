@@ -48,9 +48,7 @@ export function GoalsPage() {
             goal={goal}
             accountNames={accountNames}
             onEdit={() => setEditing(goal)}
-            onDelete={() => remove.request(goal.id)}
-            deletePending={remove.pendingId === goal.id}
-            deleteDisabled={remove.busy}
+            {...remove.deleteProps(goal.id)}
           />
         ))}
       </Panel>

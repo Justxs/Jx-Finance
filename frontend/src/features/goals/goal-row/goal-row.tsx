@@ -1,26 +1,17 @@
 import { useTranslation } from "react-i18next";
 import type { GoalResponse } from "@/api/generated/model";
 import { ProgressAmount, ProgressRow } from "@/components/progress-row/progress-row";
+import type { DeleteProps } from "@/components/row-actions/row-actions";
 import { Tag } from "@/components/ui/tag/tag";
 import { useIsoDate, useMoney, usePercent } from "@/hooks/use-formatters";
 
-interface Props {
+interface Props extends DeleteProps {
   goal: GoalResponse;
   accountNames: ReadonlyMap<string, string>;
   onEdit: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
-  deleteDisabled: boolean;
 }
 
-export function GoalRow({
-  goal,
-  accountNames,
-  onEdit,
-  onDelete,
-  deletePending,
-  deleteDisabled,
-}: Readonly<Props>) {
+export function GoalRow({ goal, accountNames, onEdit, ...deleteProps }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -81,9 +72,7 @@ export function GoalRow({
       }
       meter={current === null ? null : { value: current, max: target, tone: "positive" }}
       onEdit={onEdit}
-      onDelete={onDelete}
-      deletePending={deletePending}
-      deleteDisabled={deleteDisabled}
+      {...deleteProps}
     />
   );
 }

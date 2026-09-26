@@ -127,9 +127,7 @@ export function BudgetsPage() {
               }
               meter={{ value: spent, max: limit, tone: overBudget ? "negative" : "primary" }}
               onEdit={() => setEditing(budget)}
-              onDelete={() => remove.request(budget.id)}
-              deletePending={remove.pendingId === budget.id}
-              deleteDisabled={remove.busy}
+              {...remove.deleteProps(budget.id)}
             />
           );
         })}

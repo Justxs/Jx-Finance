@@ -57,9 +57,7 @@ export function TagsPage() {
             scope={tag.scope}
             householdName={householdNames.get(tag.householdId ?? "")}
             onEdit={() => setEditing(tag)}
-            onDelete={() => remove.request(tag.id)}
-            deletePending={remove.pendingId === tag.id}
-            deleteDisabled={remove.busy}
+            {...remove.deleteProps(tag.id)}
           />
         ))}
       </ListSection>

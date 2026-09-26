@@ -77,9 +77,7 @@ export function TransfersSection({ accounts, addOpen, onAddOpenChange }: Readonl
           amount={transferAmount(transfer)}
           label={`${transferRoute(transfer)}, ${formatDate(transfer.date)}`}
           onEdit={() => setEditTarget(transfer.id)}
-          onDelete={() => remove.request(transfer.id)}
-          deletePending={remove.pendingId === transfer.id}
-          deleteDisabled={remove.busy}
+          {...remove.deleteProps(transfer.id)}
         />
       ))}
     </PagedRows>

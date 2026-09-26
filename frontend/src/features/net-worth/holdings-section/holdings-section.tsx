@@ -81,9 +81,7 @@ export function HoldingsSection<TValues = HoldingFormValues>({
                 label={item.name}
                 size="icon"
                 onEdit={() => setEditTarget(item.id)}
-                onDelete={() => remove.request(item.id)}
-                deletePending={remove.pendingId === item.id}
-                deleteDisabled={remove.busy}
+                {...remove.deleteProps(item.id)}
               >
                 <span className={cn("text-right", amountClass)}>{money.format(item.amount)}</span>
                 {item.action}

@@ -62,9 +62,7 @@ export function PriceHistory({ security }: Readonly<Props>) {
                 }
                 amount={formatPrice(Number(point.price), security.currency)}
                 label={label(point)}
-                onDelete={() => remove.request(point.id)}
-                deletePending={remove.pendingId === point.id}
-                deleteDisabled={remove.busy}
+                {...remove.deleteProps(point.id)}
               />
             ))}
           </Rows>

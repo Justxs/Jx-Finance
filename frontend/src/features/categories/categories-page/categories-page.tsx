@@ -77,9 +77,7 @@ export function CategoriesPage() {
                     <CategoryIcon icon={category.icon} className="shrink-0 text-muted-foreground" />
                   }
                   onEdit={() => setEditing(category)}
-                  onDelete={() => remove.request(category.id)}
-                  deletePending={remove.pendingId === category.id}
-                  deleteDisabled={remove.busy}
+                  {...remove.deleteProps(category.id)}
                 />
               ))}
             </ListSection>

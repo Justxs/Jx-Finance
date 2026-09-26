@@ -1,17 +1,14 @@
 import type { ReactNode } from "react";
-import { RowActions } from "@/components/row-actions/row-actions";
+import { type DeleteProps, RowActions } from "@/components/row-actions/row-actions";
 import { RowTransition } from "@/components/row-transition/row-transition";
 
-interface Props {
+interface Props extends DeleteProps {
   title: ReactNode;
   subtitle: ReactNode;
   note?: ReactNode;
   amount: ReactNode;
   label: string;
   onEdit?: () => void;
-  onDelete: () => void;
-  deletePending: boolean;
-  deleteDisabled: boolean;
 }
 
 export function RecordRow({
@@ -21,9 +18,7 @@ export function RecordRow({
   amount,
   label,
   onEdit,
-  onDelete,
-  deletePending,
-  deleteDisabled,
+  ...deleteProps
 }: Readonly<Props>) {
   return (
     <RowTransition>
@@ -35,13 +30,7 @@ export function RecordRow({
         </div>
         <div className="flex flex-wrap items-center gap-1">
           <span className="mr-2 font-semibold whitespace-nowrap tabular-nums">{amount}</span>
-          <RowActions
-            label={label}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            deletePending={deletePending}
-            deleteDisabled={deleteDisabled}
-          />
+          <RowActions label={label} onEdit={onEdit} {...deleteProps} />
         </div>
       </li>
     </RowTransition>

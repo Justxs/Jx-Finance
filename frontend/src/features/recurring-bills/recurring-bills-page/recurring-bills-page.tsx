@@ -57,9 +57,7 @@ export function RecurringBillsPage() {
             categories={categoryList}
             onEdit={() => setEditing(bill)}
             onConfirm={() => setConfirming(bill)}
-            onDelete={() => remove.request(bill.id)}
-            deletePending={remove.pendingId === bill.id}
-            deleteDisabled={remove.busy}
+            {...remove.deleteProps(bill.id)}
           />
         ))}
       </Panel>
