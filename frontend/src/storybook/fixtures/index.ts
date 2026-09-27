@@ -20,6 +20,7 @@ export * from "./notifications";
 export * from "./net-worth";
 export * from "./dashboard";
 export * from "./reports";
+export * from "./month-close";
 export * from "./imports";
 export * from "./backups";
 export * from "./auth";

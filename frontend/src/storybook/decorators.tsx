@@ -22,6 +22,7 @@ import { createMutationCache } from "@/lib/query-client";
 import { emailTokenSearchSchema } from "@/lib/search-schema";
 import { routeTree } from "@/route-tree.gen";
 import { accountsSearchSchema } from "@/routes/accounts";
+import { closeSearchSchema } from "@/routes/close";
 import { investmentsSearchSchema } from "@/routes/investments";
 import { profileSearchSchema } from "@/routes/profile";
 import { reportsSearchSchema } from "@/routes/reports";
@@ -52,6 +53,7 @@ const STORY_ROUTES = [
   { path: "/forgot-password" },
   { path: "/reset-password", validateSearch: emailTokenSearchSchema },
   { path: "/verify-email", validateSearch: emailTokenSearchSchema },
+  { path: "/close", validateSearch: closeSearchSchema },
 ] as const;
 
 const STORY_WIDTHS = {

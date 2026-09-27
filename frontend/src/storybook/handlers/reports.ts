@@ -1,6 +1,7 @@
 import type { ReportSummaryResponse } from "@/api/generated/model";
 import { ReportComparisonMode } from "@/api/generated/model";
 import { getReportSummaryMockHandler } from "@/api/generated/reports/reports.msw";
+import { monthBounds, parseIso, previousMonth } from "@/lib/calendar";
 import {
   FIXTURE_MONTH_END,
   FIXTURE_MONTH_START,
@@ -26,6 +27,10 @@ function modeOf(value: string | null): ReportComparisonMode {
 }
 
 function earlierRange(dateFrom: string, dateTo: string, mode: ReportComparisonMode) {
+  if (mode === "previousMonth") {
+    const earlier = monthBounds(previousMonth(parseIso(dateFrom) ?? new Date()));
+    return { periodStart: earlier.dateFrom, periodEnd: earlier.dateTo };
+  }
   if (mode === "previousYear") {
     return { periodStart: shiftDays(dateFrom, -365), periodEnd: shiftDays(dateTo, -365) };
   }

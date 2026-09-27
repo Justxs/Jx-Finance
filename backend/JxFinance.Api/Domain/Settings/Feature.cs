@@ -12,4 +12,6 @@ public enum Feature
     MultiCurrency,
     Investments,
     CategorizationRules,
+    UnusualAmounts,
+    MonthClose,
 }

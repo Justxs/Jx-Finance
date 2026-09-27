@@ -23,7 +23,8 @@
     "main": "Main navigation",
     "skip": "Skip to content",
     "settings": "Settings",
-    "investments": "Investments"
+    "investments": "Investments",
+    "monthClose": "Month-end close"
   },
   "actions": {
     "add": "Add",
@@ -722,6 +723,14 @@
         "categorizationRules": {
           "name": "Categorization rules",
           "hint": "Rules that fill a category and tags from a description, in the import preview and on demand."
+        },
+        "unusualAmounts": {
+          "name": "Unusual amounts",
+          "hint": "Flags expenses far above what their payee or category usually costs, and subscriptions charged more than expected. Off also stops the check and its notifications."
+        },
+        "monthClose": {
+          "name": "Month-end close",
+          "hint": "A page that walks through each finished month and freezes its figures when you close it. Later changes show as drift. Off also stops the monthly reminder."
         }
       }
     },
@@ -868,7 +877,8 @@
     "theme": {
       "dark": "Switch to the dark theme",
       "light": "Switch to the light theme"
-    }
+    },
+    "closeLastMonth": "Close last month"
   },
   "goals": {
     "title": "Goals",
@@ -1377,6 +1387,19 @@
     "title": "Notifications",
     "empty": "No new notifications.",
     "markAllRead": "Mark all as read",
+    "kinds": {
+      "billDue": "A recurring entry is due",
+      "budgetWarning": "A budget reaches 80%",
+      "budgetExceeded": "A budget limit is reached",
+      "unusualAmount": "An expense is far above its usual amount",
+      "unusualAmounts": "Several unusual expenses at once",
+      "recurringPriceRise": "A subscription is charged more than expected",
+      "monthReadyToClose": "A finished month is ready to close"
+    },
+    "unusualAmount": "{{amount}}: {{factor}}× the usual {{typical}}",
+    "unusualAmounts_one": "{{count}} expense is well above its usual amount",
+    "unusualAmounts_other": "{{count}} expenses are well above their usual amount",
+    "recurringPriceRise": "Charged {{amount}}, expected {{expected}}",
     "billDue": {
       "expense": "Payment due {{date}}",
       "income": "Expected {{date}}",
@@ -1385,7 +1408,8 @@
     "budgetWarning": "{{period}} limit: {{percent}}% used",
     "budgetExceeded": "{{period}} limit reached",
     "titleWithCount": "Notifications, {{count}} unread",
-    "unavailable": "Notifications could not be loaded"
+    "unavailable": "Notifications could not be loaded",
+    "monthReadyToClose": "{{month}} has ended and is ready to close"
   },
   "households": {
     "name": "Household name",
@@ -1517,6 +1541,7 @@
       "modes": {
         "none": "No comparison",
         "previousPeriod": "Previous period",
+        "previousMonth": "Same period last month",
         "previousYear": "Same period last year"
       },
       "against": "Compared with {{from}} – {{to}}",
@@ -1824,6 +1849,10 @@
       "locked": "This can no longer be changed.",
       "mustBeEmpty": "Leave this empty.",
       "mustDiffer": "Choose a different value."
+    },
+    "monthClose": {
+      "invalidMonth": "That is not a month this page can show.",
+      "notEnded": "Only a month that has ended can be closed."
     }
   },
   "export": {
@@ -1831,5 +1860,111 @@
     "chooseFormat": "Choose a format",
     "csvHint": "Rows for a spreadsheet",
     "pdfHint": "A printable statement"
+  },
+  "monthClose": {
+    "title": "Month-end close",
+    "description": "Review a finished month, fix what needs attention, and close it.",
+    "picker": {
+      "label": "Month",
+      "previous": "Previous month",
+      "next": "Next month",
+      "year": "Months of {{year}}",
+      "status": {
+        "notEnded": "Not ended",
+        "open": "Open",
+        "closed": "Closed",
+        "closedChanged": "Changed after close"
+      }
+    },
+    "status": {
+      "notEnded": "{{month}} has not ended yet. You can review it now and close it once it is over.",
+      "open": "{{month}} is open.",
+      "closed": "{{month}} was closed on {{date}}.",
+      "closedChanged": "{{month}} was closed on {{date}}. Something dated in it has changed since."
+    },
+    "checklist": {
+      "title": "What still needs attention",
+      "uncategorized_one": "{{count}} uncategorized transaction",
+      "uncategorized_other": "{{count}} uncategorized transactions",
+      "unusual_one": "{{count}} unusual expense",
+      "unusual_other": "{{count}} unusual expenses",
+      "recurring_one": "{{count}} recurring entry due by the end of the month",
+      "recurring_other": "{{count}} recurring entries due by the end of the month",
+      "noUncategorized": "Every transaction has a category",
+      "noUnusual": "No unusual expenses",
+      "noRecurring": "No recurring entry is waiting",
+      "imports": "Latest imported transaction",
+      "importCovered": "{{account}}: {{date}}",
+      "importBehind": "{{account}}: {{date}}, before the month ends",
+      "review": "Review"
+    },
+    "figures": {
+      "title": "What the month looked like",
+      "against": "Compared with {{from}} – {{to}}",
+      "savingsRate": "Savings rate",
+      "noIncome": "No income this month",
+      "movers": "Categories that moved most",
+      "noMovers": "No category changed against the previous month."
+    },
+    "budgets": {
+      "title": "Monthly budgets",
+      "description": "Usage as of the last day of the month, against today's limits.",
+      "empty": "There are no monthly budgets."
+    },
+    "netWorth": {
+      "title": "Net worth",
+      "change": "{{from}} → {{to}}",
+      "since": "Snapshots from {{start}} and {{end}}",
+      "noHistory": "There are not enough net worth snapshots around this month."
+    },
+    "drift": {
+      "title": "Changed since the close",
+      "description": "The figures you closed with, against the figures today.",
+      "currencyChanged": "The reporting currency has changed from {{currency}} since the close, so every figure moved. Re-close to take a new snapshot.",
+      "closed": "At close",
+      "now": "Now",
+      "difference": "Difference",
+      "figure": "Figure",
+      "income": "Income",
+      "expense": "Expenses",
+      "net": "Net",
+      "count": "Transactions",
+      "categories": "Categories",
+      "rows": "Changed rows",
+      "moreRows": "Showing the latest {{shown}} of {{count}} changed rows.",
+      "noRows": "No row changed since the close.",
+      "investmentEntry": "Investment entry",
+      "noDescription": "No description",
+      "figuresUnchanged": "The changes left the month's figures as they were.",
+      "changedOn": "Changed {{date}}",
+      "change": {
+        "created": "Added",
+        "edited": "Edited",
+        "deleted": "Deleted",
+        "movedOut": "Moved to another month"
+      }
+    },
+    "form": {
+      "title": "Close the month",
+      "note": "Note",
+      "noteHint": "Optional. For example: matched the bank statement.",
+      "close": "Close month",
+      "reclose": "Re-close",
+      "recloseHint": "Re-closing takes a new snapshot and accepts the changes.",
+      "reopen": "Reopen",
+      "saveNote": "Save note",
+      "notEnded": "You can close this month once it has ended.",
+      "confirmTitle": "Close with open items?",
+      "confirmDescription_one": "{{count}} item still needs attention. You can close anyway and fix it later; the change will show as drift.",
+      "confirmDescription_other": "{{count}} items still need attention. You can close anyway and fix them later; the changes will show as drift.",
+      "closeAnyway": "Close anyway",
+      "reopenTitle": "Reopen {{month}}?",
+      "reopenDescription": "The snapshot and its note are deleted. The transactions stay as they are.",
+      "closed": "{{month}} closed",
+      "reclosed": "{{month}} re-closed",
+      "reopened": "{{month}} reopened",
+      "noteSaved": "Note saved"
+    },
+    "editHint": "{{month}} is closed. Saving will show as a change after the close."
   }
 }

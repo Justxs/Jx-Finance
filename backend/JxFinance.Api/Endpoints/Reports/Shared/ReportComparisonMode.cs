@@ -5,4 +5,5 @@ public enum ReportComparisonMode
     None,
     PreviousPeriod,
     PreviousYear,
+    PreviousMonth,
 }

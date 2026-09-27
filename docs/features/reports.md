@@ -23,15 +23,17 @@ flowchart LR
 
 ## Comparing with an earlier period
 
-A report can carry a second period beside the one it was asked for. The client sends `comparison=previousPeriod` or `comparison=previousYear`; without the parameter nothing about the answer changes and nothing extra is read.
+A report can carry a second period beside the one it was asked for. The client sends `comparison=previousPeriod`, `comparison=previousMonth` or `comparison=previousYear`; without the parameter nothing about the answer changes and nothing extra is read.
 
 ```mermaid
 flowchart TB
     Chosen["Chosen range<br/>periodStart to periodEnd"] --> Mode{"comparison"}
     Mode -->|"none"| Plain["One window<br/>the response of before"]
     Mode -->|"previousPeriod"| Prev["Same number of days,<br/>ending the day before periodStart"]
+    Mode -->|"previousMonth"| Month["Both ends a month earlier;<br/>an end that is the last day of<br/>its month stays a month end"]
     Mode -->|"previousYear"| Year["Both ends a year earlier;<br/>an end that is the last day of<br/>its month stays a month end"]
     Prev --> Two["Two windows"]
+    Month --> Two
     Year --> Two
     Two --> Query["Every range query carries both windows<br/>in one predicate and returns the date"]
     Query --> Split["Rows split by date in memory"]
@@ -56,6 +58,17 @@ flowchart TB
 | 29 February 2024 alone | 28 February 2023 | `AddYears` clamps the start, and the end is the month end |
 | 10–20 April 2026 | 10–20 April 2025 | Mid-month, nothing snaps |
 | 1 January – 31 December 2026 | 1 January – 31 December 2025 | A whole year is a month end at each end |
+
+**The same period last month**, added with [month-end close](month-end-close.md), is the same rule one month back instead of twelve: both ends move back a month with `DateOnly.AddMonths`, which clamps a day the earlier month lacks, and an end on a month end stays on a month end. It is what `PreviousPeriod` is deliberately not, the previous calendar month, and the month-end page asks for it for every month it shows. The selector offers it as "Same period last month", between "Previous period" and "Same period last year".
+
+| Chosen range | A month earlier | Why |
+| --- | --- | --- |
+| 1–31 March 2026 | 1–28 February 2026 | 31 March is a month end, so March meets the whole of February |
+| 1–29 February 2024 | 1–31 January 2024 | The month end snaps forward in a leap year too |
+| 1–30 April 2026 | 1–31 March 2026 | 30 April is a month end, so the earlier end is 31 March, not 30 March |
+| 10–20 April 2026 | 10–20 March 2026 | Mid-month, nothing snaps |
+
+`ComparisonWindowTests` covers the month-end, leap-year and mid-month cases, January against the December before it, and a single 30 March, which meets 28 February because `AddMonths` clamps it.
 
 ### What the response carries
 

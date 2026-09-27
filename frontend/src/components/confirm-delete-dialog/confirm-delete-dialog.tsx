@@ -37,6 +37,7 @@ interface Props<T> {
   title?: string;
   description?: string;
   confirmLabel?: string;
+  destructive?: boolean;
   onCancel: () => void;
   onConfirm: (target: T) => void;
 }
@@ -47,6 +48,7 @@ export function ConfirmDeleteDialog<T>({
   title,
   description,
   confirmLabel,
+  destructive = true,
   onCancel,
   onConfirm,
 }: Readonly<Props<T>>) {
@@ -78,7 +80,10 @@ export function ConfirmDeleteDialog<T>({
         />
         <AlertDialogFooter>
           <AlertDialogCancel>{t("actions.cancel")}</AlertDialogCancel>
-          <AlertDialogAction variant="destructive" onClick={handleConfirm}>
+          <AlertDialogAction
+            variant={destructive ? "destructive" : "default"}
+            onClick={handleConfirm}
+          >
             {confirmLabel ?? t("actions.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>

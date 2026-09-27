@@ -24,6 +24,8 @@ const groupOf = {
   reports: "review",
   import: "ledger",
   categorizationRules: "ledger",
+  unusualAmounts: "review",
+  monthClose: "review",
   households: "ledger",
   multiCurrency: "ledger",
 } as const satisfies Record<FeatureKey, FeatureGroup>;

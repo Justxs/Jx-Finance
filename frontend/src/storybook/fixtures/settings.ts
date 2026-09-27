@@ -13,6 +13,8 @@ export const settings: SettingsResponse = {
     multiCurrency: true,
     investments: true,
     categorizationRules: true,
+    unusualAmounts: true,
+    monthClose: true,
   },
   reportingCurrency: "eur",
   enabledCurrencies: ["eur", "usd", "gbp", "pln", "chf", "sek", "nok"],

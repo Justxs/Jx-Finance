@@ -23,7 +23,8 @@
     "main": "Pagrindinė navigacija",
     "skip": "Pereiti prie turinio",
     "settings": "Nustatymai",
-    "investments": "Investicijos"
+    "investments": "Investicijos",
+    "monthClose": "Mėnesio uždarymas"
   },
   "actions": {
     "add": "Pridėti",
@@ -740,6 +741,14 @@
         "categorizationRules": {
           "name": "Kategorijų taisyklės",
           "hint": "Taisyklės, iš paaiškinimo parenkančios kategoriją ir žymas importo peržiūroje ir paleidus rankiniu būdu."
+        },
+        "unusualAmounts": {
+          "name": "Neįprastos sumos",
+          "hint": "Pažymi išlaidas, gerokai viršijančias įprastą gavėjo ar kategorijos sumą, ir prenumeratas, nuskaičiusias daugiau nei tikėtasi. Išjungus sustabdomas ir tikrinimas, ir jo pranešimai."
+        },
+        "monthClose": {
+          "name": "Mėnesio uždarymas",
+          "hint": "Puslapis, kuriame peržiūrite pasibaigusį mėnesį ir, jį uždarę, užfiksuojate jo skaičius. Vėlesni pakeitimai rodomi kaip nuokrypis. Išjungus nebesiunčiamas ir mėnesinis priminimas."
         }
       }
     },
@@ -890,7 +899,8 @@
     "theme": {
       "dark": "Perjungti į tamsią temą",
       "light": "Perjungti į šviesią temą"
-    }
+    },
+    "closeLastMonth": "Uždaryti praėjusį mėnesį"
   },
   "goals": {
     "title": "Tikslai",
@@ -1419,6 +1429,21 @@
     "title": "Pranešimai",
     "empty": "Naujų pranešimų nėra.",
     "markAllRead": "Pažymėti visus kaip skaitytus",
+    "kinds": {
+      "billDue": "Artėja pasikartojantis įrašas",
+      "budgetWarning": "Biudžetas pasiekė 80 %",
+      "budgetExceeded": "Biudžeto limitas pasiektas",
+      "unusualAmount": "Išlaidos gerokai viršija įprastą sumą",
+      "unusualAmounts": "Kelios neįprastos išlaidos vienu metu",
+      "recurringPriceRise": "Prenumerata nuskaičiavo daugiau nei tikėtasi",
+      "monthReadyToClose": "Pasibaigusį mėnesį galima uždaryti"
+    },
+    "unusualAmount": "{{amount}}: {{factor}} karto daugiau nei įprasta ({{typical}})",
+    "unusualAmounts_one": "{{count}} išlaida gerokai viršija įprastą sumą",
+    "unusualAmounts_few": "{{count}} išlaidos gerokai viršija įprastą sumą",
+    "unusualAmounts_many": "{{count}} išlaidų gerokai viršija įprastą sumą",
+    "unusualAmounts_other": "{{count}} išlaidų gerokai viršija įprastą sumą",
+    "recurringPriceRise": "Nuskaityta {{amount}}, tikėtasi {{expected}}",
     "billDue": {
       "expense": "Mokėjimo data: {{date}}",
       "income": "Numatoma gauti: {{date}}",
@@ -1427,7 +1452,8 @@
     "budgetWarning": "{{period}} limitas: panaudota {{percent}}%",
     "budgetExceeded": "{{period}} limitas pasiektas",
     "titleWithCount": "Pranešimai, neskaitytų: {{count}}",
-    "unavailable": "Nepavyko įkelti pranešimų"
+    "unavailable": "Nepavyko įkelti pranešimų",
+    "monthReadyToClose": "{{month}} baigėsi: peržiūrėkite ir uždarykite mėnesį"
   },
   "households": {
     "name": "Namų ūkio pavadinimas",
@@ -1559,6 +1585,7 @@
       "modes": {
         "none": "Be palyginimo",
         "previousPeriod": "Ankstesniu laikotarpiu",
+        "previousMonth": "Tuo pačiu laikotarpiu praėjusį mėnesį",
         "previousYear": "Tuo pačiu laikotarpiu pernai"
       },
       "against": "Palyginta su {{from}} – {{to}}",
@@ -1878,6 +1905,10 @@
       "locked": "Šios reikšmės keisti nebegalima.",
       "mustBeEmpty": "Palikite tuščią.",
       "mustDiffer": "Pasirinkite kitą reikšmę."
+    },
+    "monthClose": {
+      "invalidMonth": "Tokio mėnesio šiame puslapyje parodyti negalima.",
+      "notEnded": "Uždaryti galima tik pasibaigusį mėnesį."
     }
   },
   "export": {
@@ -1885,5 +1916,119 @@
     "chooseFormat": "Pasirinkite formatą",
     "csvHint": "Eilutės skaičiuoklei",
     "pdfHint": "Spausdinamas išrašas"
+  },
+  "monthClose": {
+    "title": "Mėnesio uždarymas",
+    "description": "Peržiūrėkite pasibaigusį mėnesį, sutvarkykite, kas liko, ir jį uždarykite.",
+    "picker": {
+      "label": "Mėnuo",
+      "previous": "Ankstesnis mėnuo",
+      "next": "Kitas mėnuo",
+      "year": "{{year}} m. mėnesiai",
+      "status": {
+        "notEnded": "Nesibaigęs",
+        "open": "Atviras",
+        "closed": "Uždarytas",
+        "closedChanged": "Pakeistas po uždarymo"
+      }
+    },
+    "status": {
+      "notEnded": "{{month}} dar nesibaigė. Galite jį peržiūrėti dabar, o uždaryti, kai jis baigsis.",
+      "open": "{{month}} atviras.",
+      "closed": "{{month}} uždarytas {{date}}.",
+      "closedChanged": "{{month}} uždarytas {{date}}. Nuo tada kažkas šio mėnesio pasikeitė."
+    },
+    "checklist": {
+      "title": "Kas dar laukia",
+      "uncategorized_one": "{{count}} operacija be kategorijos",
+      "uncategorized_few": "{{count}} operacijos be kategorijos",
+      "uncategorized_many": "{{count}} operacijos be kategorijos",
+      "uncategorized_other": "{{count}} operacijų be kategorijos",
+      "unusual_one": "{{count}} neįprasta išlaida",
+      "unusual_few": "{{count}} neįprastos išlaidos",
+      "unusual_many": "{{count}} neįprastos išlaidos",
+      "unusual_other": "{{count}} neįprastų išlaidų",
+      "recurring_one": "{{count}} periodinis įrašas iki mėnesio pabaigos",
+      "recurring_few": "{{count}} periodiniai įrašai iki mėnesio pabaigos",
+      "recurring_many": "{{count}} periodinio įrašo iki mėnesio pabaigos",
+      "recurring_other": "{{count}} periodinių įrašų iki mėnesio pabaigos",
+      "noUncategorized": "Visos operacijos turi kategoriją",
+      "noUnusual": "Neįprastų išlaidų nėra",
+      "noRecurring": "Nelaukia nė vienas periodinis įrašas",
+      "imports": "Paskutinė importuota operacija",
+      "importCovered": "{{account}}: {{date}}",
+      "importBehind": "{{account}}: {{date}}, prieš mėnesio pabaigą",
+      "review": "Peržiūrėti"
+    },
+    "figures": {
+      "title": "Koks buvo mėnuo",
+      "against": "Palyginti su {{from}} – {{to}}",
+      "savingsRate": "Taupymo dalis",
+      "noIncome": "Šį mėnesį pajamų nebuvo",
+      "movers": "Labiausiai pasikeitusios kategorijos",
+      "noMovers": "Palyginti su ankstesniu mėnesiu, nė viena kategorija nepasikeitė."
+    },
+    "budgets": {
+      "title": "Mėnesio biudžetai",
+      "description": "Panaudojimas paskutinę mėnesio dieną, lyginant su šiandienos limitais.",
+      "empty": "Mėnesio biudžetų nėra."
+    },
+    "netWorth": {
+      "title": "Grynoji vertė",
+      "change": "{{from}} → {{to}}",
+      "since": "Momentinės kopijos iš {{start}} ir {{end}}",
+      "noHistory": "Apie šį mėnesį nepakanka grynosios vertės momentinių kopijų."
+    },
+    "drift": {
+      "title": "Pakeista po uždarymo",
+      "description": "Skaičiai uždarymo metu, palyginti su šiandieniniais.",
+      "currencyChanged": "Nuo uždarymo ataskaitų valiuta pasikeitė iš {{currency}}, todėl pasikeitė visi skaičiai. Uždarykite iš naujo, kad užfiksuotumėte naujus.",
+      "closed": "Uždarant",
+      "now": "Dabar",
+      "difference": "Skirtumas",
+      "figure": "Rodiklis",
+      "income": "Pajamos",
+      "expense": "Išlaidos",
+      "net": "Grynasis rezultatas",
+      "count": "Operacijos",
+      "categories": "Kategorijos",
+      "rows": "Pakeistos eilutės",
+      "moreRows": "Rodomos {{shown}} naujausios iš {{count}} pakeistų eilučių.",
+      "noRows": "Po uždarymo nė viena eilutė nepasikeitė.",
+      "investmentEntry": "Investicijų įrašas",
+      "noDescription": "Be aprašymo",
+      "figuresUnchanged": "Pakeitimai mėnesio skaičių nepakeitė.",
+      "changedOn": "Pakeista {{date}}",
+      "change": {
+        "created": "Pridėta",
+        "edited": "Redaguota",
+        "deleted": "Ištrinta",
+        "movedOut": "Perkelta į kitą mėnesį"
+      }
+    },
+    "form": {
+      "title": "Uždaryti mėnesį",
+      "note": "Pastaba",
+      "noteHint": "Nebūtina. Pavyzdžiui: sutikrinta su banko išrašu.",
+      "close": "Uždaryti mėnesį",
+      "reclose": "Uždaryti iš naujo",
+      "recloseHint": "Uždarius iš naujo užfiksuojami nauji skaičiai ir pakeitimai priimami.",
+      "reopen": "Atidaryti",
+      "saveNote": "Išsaugoti pastabą",
+      "notEnded": "Šį mėnesį galėsite uždaryti, kai jis baigsis.",
+      "confirmTitle": "Uždaryti, nors kai kas liko?",
+      "confirmDescription_one": "Dar laukia {{count}} dalykas. Galite uždaryti dabar ir sutvarkyti vėliau; pakeitimas bus parodytas kaip nuokrypis.",
+      "confirmDescription_few": "Dar laukia {{count}} dalykai. Galite uždaryti dabar ir sutvarkyti vėliau; pakeitimai bus parodyti kaip nuokrypis.",
+      "confirmDescription_many": "Dar laukia {{count}} dalyko. Galite uždaryti dabar ir sutvarkyti vėliau; pakeitimai bus parodyti kaip nuokrypis.",
+      "confirmDescription_other": "Dar laukia {{count}} dalykų. Galite uždaryti dabar ir sutvarkyti vėliau; pakeitimai bus parodyti kaip nuokrypis.",
+      "closeAnyway": "Vis tiek uždaryti",
+      "reopenTitle": "Atidaryti {{month}}?",
+      "reopenDescription": "Užfiksuoti skaičiai ir pastaba bus ištrinti. Operacijos liks tokios, kokios yra.",
+      "closed": "{{month}} uždarytas",
+      "reclosed": "{{month}} uždarytas iš naujo",
+      "reopened": "{{month}} atidarytas",
+      "noteSaved": "Pastaba išsaugota"
+    },
+    "editHint": "{{month}} uždarytas. Išsaugojus pakeitimas bus parodytas kaip pakeistas po uždarymo."
   }
 }

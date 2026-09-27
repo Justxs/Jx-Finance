@@ -8,8 +8,12 @@ import {
   budgetWarningNotification,
   expenseDueNotification,
   incomeDueNotification,
+  monthReadyNotification,
   notifications,
+  priceRiseNotification,
   transferDueNotification,
+  unusualAmountNotification,
+  unusualAmountsNotification,
 } from "@/storybook/fixtures";
 import { emptyHandlers, errorHandlers, loadingHandlers, withHandlers } from "@/storybook/handlers";
 import { query } from "@/storybook/handlers/http";
@@ -102,6 +106,30 @@ export const RecurringEntryReminders: Story = {
     await expect(entries[0]).toHaveTextContent("Payment due");
     await expect(entries[1]).toHaveTextContent("Expected");
     await expect(entries[2]).toHaveTextContent("Transfer due");
+  },
+};
+
+export const UnusualAmountsPriceRisesAndMonthClose: Story = {
+  parameters: withHandlers(
+    notificationsHandler([
+      unusualAmountNotification,
+      unusualAmountsNotification,
+      priceRiseNotification,
+      monthReadyNotification,
+    ]),
+  ),
+  play: async ({ canvas }) => {
+    await userEvent.click(canvas.getByRole("button", { name: /4 unread/i }));
+
+    const panel = within(await openedDialog());
+    const entries = await panel.findAllByRole("link");
+
+    await expect(entries[0]).toHaveTextContent(/€249\.00: 4× the usual €61\.90/u);
+    await expect(entries[0]).toHaveAttribute("href", expect.stringContaining("unusual=true"));
+    await expect(entries[1]).toHaveTextContent("5 expenses are well above their usual amount");
+    await expect(entries[2]).toHaveTextContent(/Charged €27\.99, expected €24\.99/u);
+    await expect(entries[3]).toHaveTextContent("August 2026 has ended and is ready to close");
+    await expect(entries[3]).toHaveAttribute("href", expect.stringContaining("month=2026-08"));
   },
 };
 

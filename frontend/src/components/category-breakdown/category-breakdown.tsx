@@ -6,6 +6,7 @@ import {
   breakdownWeight,
 } from "@/components/breakdown-list/breakdown-list";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
+import { useCategoryName } from "@/hooks/use-category-name";
 
 const MAX_ROWS = 5;
 
@@ -18,19 +19,13 @@ interface Props {
 
 export function CategoryBreakdown({ items, type = "expense", dateFrom, dateTo }: Readonly<Props>) {
   const { t } = useTranslation();
+  const nameOf = useCategoryName();
 
   const compared = items.some((item) => item.comparisonAmount != null);
   const sorted = items.toSorted((a, b) => breakdownWeight(b) - breakdownWeight(a));
   const rest = sorted.slice(MAX_ROWS);
   const restTotal = rest.reduce((sum, item) => sum + Number(item.amount), 0);
   const restEarlier = rest.reduce((sum, item) => sum + Number(item.comparisonAmount ?? 0), 0);
-
-  function nameOf(item: CategoryBreakdownItem) {
-    if (item.syntheticGroup) {
-      return t(`reports.syntheticGroups.${item.syntheticGroup}`);
-    }
-    return item.categoryName ?? t("transactions.uncategorized");
-  }
 
   const rows: BreakdownRow[] = [
     ...sorted.slice(0, MAX_ROWS).map((item) => ({

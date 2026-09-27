@@ -17,7 +17,12 @@ interface Props {
 
 const PRESETS: ReportPreset[] = ["thisMonth", "lastMonth", "thisYear", "lastYear", "custom"];
 
-const COMPARISONS: ReportComparisonMode[] = ["none", "previousPeriod", "previousYear"];
+const COMPARISONS: ReportComparisonMode[] = [
+  "none",
+  "previousPeriod",
+  "previousMonth",
+  "previousYear",
+];
 
 export function ReportFilters({
   dateFrom,

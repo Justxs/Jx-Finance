@@ -13,6 +13,7 @@ import {
   transferBill,
   variableBill,
 } from "./recurring-bills";
+import { longDescriptionTransaction } from "./transactions";
 
 function billNotification(
   id: string,
@@ -95,6 +96,69 @@ export const transferDueNotification: NotificationResponse = billNotification(
   "inApp",
   "2026-09-19T06:05:00Z",
 );
+
+export const unusualAmountNotification: NotificationResponse = {
+  id: ids.notifications.unusualSenukai,
+  type: "unusualAmount",
+  title: "Senukai, Ukmergės g. 369, Vilnius",
+  message: "249.00 EUR: 4x the usual 61.90 EUR",
+  payload: {
+    transactionId: longDescriptionTransaction.id,
+    amount: "249.00",
+    typicalAmount: "61.90",
+    factor: 4,
+    currency: "eur",
+  },
+  relatedType: "Transaction",
+  relatedId: longDescriptionTransaction.id,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T07:00:00Z",
+};
+
+export const unusualAmountsNotification: NotificationResponse = {
+  id: ids.notifications.unusualSummary,
+  type: "unusualAmounts",
+  title: "Senukai, Maxima, Circle K…",
+  message: "5 expenses are well above their usual amount",
+  payload: { count: 5 },
+  relatedType: null,
+  relatedId: null,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T07:05:00Z",
+};
+
+export const priceRiseNotification: NotificationResponse = {
+  id: ids.notifications.teliaPriceRise,
+  type: "recurringPriceRise",
+  title: dueSoonBill.name,
+  message: "Charged 27.99, expected 24.99",
+  payload: {
+    billId: dueSoonBill.id,
+    amount: "27.99",
+    typicalAmount: "24.99",
+    currency: "eur",
+  },
+  relatedType: "RecurringBill",
+  relatedId: dueSoonBill.id,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-18T07:10:00Z",
+};
+
+export const monthReadyNotification: NotificationResponse = {
+  id: ids.notifications.augustReady,
+  type: "monthReadyToClose",
+  title: "August 2026",
+  message: "2026-08",
+  payload: { month: "2026-08-01" },
+  relatedType: null,
+  relatedId: null,
+  channel: "inApp",
+  isRead: false,
+  createdAt: "2026-09-01T07:00:00Z",
+};
 
 export const notifications: NotificationResponse[] = [
   expenseDueNotification,

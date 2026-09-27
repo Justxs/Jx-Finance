@@ -14,6 +14,8 @@ erDiagram
     AppUser ||--o{ RecurringBill : owns
     AppUser ||--o{ Notification : receives
     AppUser ||--o{ NetWorthSnapshot : "one per local day"
+    AppUser ||--o{ MonthClose : "one per month and scope"
+    Household |o--o{ MonthClose : "scope it was closed under"
     AppUser ||--o{ HouseholdMembership : "Owner or Member"
     Household ||--o{ HouseholdMembership : has
     Household ||--o{ Account : "shared scope"

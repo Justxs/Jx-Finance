@@ -137,6 +137,10 @@ public sealed class CategoryService(
                     .SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null),
                 cancellationToken);
 
+        await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == categoryId))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.UpdatedAt, now), cancellationToken);
         await db.TransactionLines.IgnoreQueryFilters().Where(l => l.CategoryId == categoryId)
             .ExecuteUpdateAsync(s => s.SetProperty(l => l.CategoryId, (CategoryId?)null), cancellationToken);
         await db.RecurringBills.IgnoreQueryFilters().Where(b => b.CategoryId == categoryId)

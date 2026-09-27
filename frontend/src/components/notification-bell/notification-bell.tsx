@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, linkOptions } from "@tanstack/react-router";
 import { Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -9,6 +9,7 @@ import {
   useMarkNotificationRead,
 } from "@/api/generated";
 import type {
+  NotificationPayload,
   NotificationResponse,
   NotificationType,
   NotificationsParams,
@@ -23,7 +24,8 @@ import {
 } from "@/components/ui/popover/popover";
 import { Rows } from "@/components/ui/rows/rows";
 import { Tooltip } from "@/components/ui/tooltip/tooltip";
-import { useDate } from "@/hooks/use-formatters";
+import { monthKeyOfIso } from "@/features/month-close/month-key";
+import { useDate, useMoney, useMonthName, useNumberFormat } from "@/hooks/use-formatters";
 import { type FeatureKey, useSettings } from "@/hooks/use-settings";
 import { parseIso } from "@/lib/calendar";
 import { pendingId } from "@/lib/mutations";
@@ -52,11 +54,26 @@ export function NotificationBellUnavailable() {
 
 export const unreadParams: NotificationsParams = { unread: true };
 
+const bills = linkOptions({ to: "/recurring-bills" });
+const budgets = linkOptions({ to: "/budgets" });
+const unusual = linkOptions({ to: "/transactions", search: { unusual: true } });
+
 const producers = {
-  billDue: { feature: "recurringBills", to: "/recurring-bills" },
-  budgetWarning: { feature: "budgets", to: "/budgets" },
-  budgetExceeded: { feature: "budgets", to: "/budgets" },
-} as const satisfies Record<NotificationType, { feature: FeatureKey; to: string }>;
+  billDue: { feature: "recurringBills", link: () => bills },
+  budgetWarning: { feature: "budgets", link: () => budgets },
+  budgetExceeded: { feature: "budgets", link: () => budgets },
+  unusualAmount: { feature: "unusualAmounts", link: () => unusual },
+  unusualAmounts: { feature: "unusualAmounts", link: () => unusual },
+  recurringPriceRise: { feature: "recurringBills", link: () => bills },
+  monthReadyToClose: {
+    feature: "monthClose",
+    link: ({ month }: NotificationPayload) =>
+      linkOptions({ to: "/close", search: { month: month ? monthKeyOfIso(month) : undefined } }),
+  },
+} as const satisfies Record<
+  NotificationType,
+  { feature: FeatureKey; link: (payload: NotificationPayload) => unknown }
+>;
 
 const entryClassName = "block w-full px-4 py-3 text-left text-sm hover:bg-accent";
 
@@ -71,6 +88,9 @@ interface Props {
 export function NotificationBell({ placement = "below" }: Readonly<Props>) {
   const { t } = useTranslation();
   const date = useDate();
+  const money = useMoney();
+  const factorFormat = useNumberFormat({ maximumFractionDigits: 1 });
+  const monthName = useMonthName();
   const features = useSettings().features;
   const [open, setOpen] = useState(false);
 
@@ -93,16 +113,8 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
     }),
   });
 
-  function describe(notification: NotificationResponse) {
-    const { dueDate, thresholdPercent, period, shape } = notification.payload;
-
-    if (notification.type === "billDue") {
-      const due = dueDate ? parseIso(dueDate) : null;
-      return due
-        ? t(`notifications.billDue.${shape ?? "expense"}`, { date: date.format(due) })
-        : notification.message;
-    }
-
+  function describeBudget(notification: NotificationResponse) {
+    const { thresholdPercent, period } = notification.payload;
     if (!period) {
       return notification.message;
     }
@@ -113,9 +125,42 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
       : t("notifications.budgetWarning", { period: periodName, percent: thresholdPercent ?? 80 });
   }
 
-  function destination(notification: NotificationResponse) {
-    const producer = producers[notification.type];
-    return features[producer.feature] ? producer.to : null;
+  function describe(notification: NotificationResponse) {
+    const { dueDate, shape, amount, typicalAmount, factor, count, currency, month } =
+      notification.payload;
+    const inCurrency = currency ?? undefined;
+
+    switch (notification.type) {
+      case "billDue": {
+        const due = dueDate ? parseIso(dueDate) : null;
+        return due
+          ? t(`notifications.billDue.${shape ?? "expense"}`, { date: date.format(due) })
+          : notification.message;
+      }
+      case "unusualAmount":
+        return amount && typicalAmount && factor
+          ? t("notifications.unusualAmount", {
+              amount: money.format(Number(amount), inCurrency),
+              typical: money.format(Number(typicalAmount), inCurrency),
+              factor: factorFormat.format(factor),
+            })
+          : notification.message;
+      case "unusualAmounts":
+        return count ? t("notifications.unusualAmounts", { count }) : notification.message;
+      case "recurringPriceRise":
+        return amount && typicalAmount
+          ? t("notifications.recurringPriceRise", {
+              amount: money.format(Number(amount), inCurrency),
+              expected: money.format(Number(typicalAmount), inCurrency),
+            })
+          : notification.message;
+      case "monthReadyToClose":
+        return month
+          ? t("notifications.monthReadyToClose", { month: monthName(month) })
+          : notification.message;
+      default:
+        return describeBudget(notification);
+    }
   }
 
   function entryState(notification: NotificationResponse) {
@@ -175,13 +220,16 @@ export function NotificationBell({ placement = "below" }: Readonly<Props>) {
             ) : (
               <Rows>
                 {unreadList.map((notification) => {
-                  const to = destination(notification);
+                  const producer = producers[notification.type];
+                  const link = features[producer.feature]
+                    ? producer.link(notification.payload)
+                    : null;
 
                   return (
                     <li key={notification.id}>
-                      {to ? (
+                      {link ? (
                         <Link
-                          to={to}
+                          {...link}
                           className={entryState(notification)}
                           onClick={() => {
                             setOpen(false);

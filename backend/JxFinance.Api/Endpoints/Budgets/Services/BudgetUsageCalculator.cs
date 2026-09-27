@@ -18,6 +18,7 @@ public sealed class BudgetUsageCalculator(
 {
     public async Task<IReadOnlyDictionary<BudgetId, BudgetUsage>> CalculateAsync(
         IReadOnlyList<Budget> budgets,
+        DateOnly asOf,
         CancellationToken cancellationToken)
     {
         if (budgets.Count == 0)
@@ -26,8 +27,7 @@ public sealed class BudgetUsageCalculator(
         }
 
         var firstDayOfWeek = settings.Current.FirstDayOfWeek;
-        var today = clock.Today;
-        var walks = budgets.ToDictionary(b => b.Id, b => Walk(b, today, firstDayOfWeek));
+        var walks = budgets.ToDictionary(b => b.Id, b => Walk(b, asOf, firstDayOfWeek));
 
         var spanStart = walks.Values.Min(windows => windows[0].Start);
         var spanEnd = walks.Values.Max(windows => windows[^1].End);
@@ -46,9 +46,9 @@ public sealed class BudgetUsageCalculator(
             b => Usage(b, walks[b.Id], spendByCategory.GetValueOrDefault(b.CategoryId, [])));
     }
 
-    private List<BudgetWindow> Walk(Budget budget, DateOnly today, FirstDayOfWeek firstDayOfWeek)
+    private List<BudgetWindow> Walk(Budget budget, DateOnly asOf, FirstDayOfWeek firstDayOfWeek)
     {
-        var current = BudgetWindow.For(today, budget.Period, firstDayOfWeek);
+        var current = BudgetWindow.For(asOf, budget.Period, firstDayOfWeek);
         if (!budget.RolloverEnabled)
         {
             return [current];

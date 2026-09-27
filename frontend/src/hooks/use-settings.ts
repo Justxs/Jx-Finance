@@ -36,6 +36,8 @@ const defaultSettings: SettingsResponse = {
     multiCurrency: true,
     investments: true,
     categorizationRules: true,
+    unusualAmounts: true,
+    monthClose: true,
   },
   reportingCurrency: DEFAULT_CURRENCY,
   enabledCurrencies: [DEFAULT_CURRENCY],

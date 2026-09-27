@@ -7,5 +7,6 @@ public interface IBudgetUsageCalculator
 {
     Task<IReadOnlyDictionary<BudgetId, BudgetUsage>> CalculateAsync(
         IReadOnlyList<Budget> budgets,
+        DateOnly asOf,
         CancellationToken cancellationToken);
 }

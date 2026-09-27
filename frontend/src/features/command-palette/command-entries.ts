@@ -196,6 +196,15 @@ function actionEntries(sources: CommandSources): CommandEntry[] {
     ),
   ];
 
+  if (features.monthClose) {
+    entries.push(
+      action("close-last-month", t("commandPalette.closeLastMonth"), t("nav.monthClose"), {
+        kind: "navigate",
+        to: "/close",
+      }),
+    );
+  }
+
   if (isAdmin) {
     entries.push(action("backup", t("backup.create"), t("backup.title"), { kind: "backup" }));
   }

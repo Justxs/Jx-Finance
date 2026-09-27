@@ -17,6 +17,7 @@ public static class ApiTags
     public const string Households = "Households";
     public const string Imports = "Imports";
     public const string Investments = "Investments";
+    public const string MonthClose = "MonthClose";
     public const string NetWorth = "NetWorth";
     public const string Notifications = "Notifications";
     public const string RecurringBills = "RecurringBills";

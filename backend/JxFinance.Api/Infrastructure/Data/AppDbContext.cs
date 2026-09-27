@@ -12,6 +12,7 @@ using JxFinance.Domain.ExchangeRates;
 using JxFinance.Domain.Goals;
 using JxFinance.Domain.Households;
 using JxFinance.Domain.Investments;
+using JxFinance.Domain.MonthCloses;
 using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
@@ -73,6 +74,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<SubscriptionDismissal> SubscriptionDismissals => Set<SubscriptionDismissal>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<NetWorthSnapshot> NetWorthSnapshots => Set<NetWorthSnapshot>();
+    public DbSet<MonthClose> MonthCloses => Set<MonthClose>();
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
@@ -193,6 +195,11 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                 case EntityState.Added:
                     entry.Entity.CreatedAt = now;
                     entry.Entity.UpdatedAt = now;
+                    if (entry.Entity is DeletionEntry { DeletedAt.Ticks: 0 } deletion)
+                    {
+                        deletion.DeletedAt = now;
+                    }
+
                     if (entry.Entity is OwnableEntity { UserId: var userId } ownable && userId == Guid.Empty)
                     {
                         ownable.UserId = CurrentUserId;

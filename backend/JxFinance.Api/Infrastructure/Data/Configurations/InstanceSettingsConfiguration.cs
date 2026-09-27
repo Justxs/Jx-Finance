@@ -10,7 +10,11 @@ public sealed class InstanceSettingsConfiguration : IEntityTypeConfiguration<Ins
     {
         builder.Property(s => s.Id).ValueGeneratedNever();
         builder.ComplexProperty(s => s.Features, features =>
-            features.Property(f => f.CategorizationRules).HasDefaultValue(true));
+        {
+            features.Property(f => f.CategorizationRules).HasDefaultValue(true);
+            features.Property(f => f.UnusualAmounts).HasDefaultValue(true);
+            features.Property(f => f.MonthClose).HasDefaultValue(true);
+        });
         builder.Property(s => s.InstanceName).HasMaxLength(40);
         builder.Property(s => s.EnabledCurrencyCodes).HasMaxLength(200);
         builder.Property(s => s.DefaultLanguage).HasMaxLength(5);

@@ -2,6 +2,7 @@ import type { LinkProps } from "@tanstack/react-router";
 import {
   ArrowLeftRight,
   Bookmark,
+  CalendarCheck,
   CalendarClock,
   ChartCandlestick,
   FileBarChart,
@@ -99,6 +100,14 @@ export const navPages = [
     group: "review",
     feature: "reports",
     shortcut: "r",
+  },
+  {
+    to: "/close",
+    key: "nav.monthClose",
+    icon: CalendarCheck,
+    group: "review",
+    feature: "monthClose",
+    shortcut: "m",
   },
   {
     to: "/households",

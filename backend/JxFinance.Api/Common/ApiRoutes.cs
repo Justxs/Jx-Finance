@@ -53,6 +53,9 @@ public static class ApiRoutes
     public const string Investments = "investments";
     public const string InvestmentsPath = Base + "/" + Investments;
 
+    public const string MonthClose = "month-close";
+    public const string MonthClosePath = Base + "/" + MonthClose;
+
     public const string NetWorth = "networth";
     public const string NetWorthPath = Base + "/" + NetWorth;
 

@@ -344,6 +344,10 @@ public static class TrashRestorers
         await db.TransactionLines
             .Where(l => lineIds.Contains(l.Id) && l.CategoryId == null)
             .ExecuteUpdateAsync(setters => setters.SetProperty(l => l.CategoryId, restoredId), r.CancellationToken);
+        await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => db.TransactionLines.Any(l => lineIds.Contains(l.Id) && l.TransactionId == t.Id && l.CategoryId == restoredId))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.UpdatedAt, now), r.CancellationToken);
 
         var billIds = r.Entry.Remembered<RecurringBillId>(DeletionChangeKind.RecurringBillCategory);
         var shape = category.Type == FlowType.Income ? RecurringBillShape.Income : RecurringBillShape.Expense;

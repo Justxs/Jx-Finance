@@ -24,7 +24,8 @@ public sealed class BudgetService(
     IBudgetUsageCalculator usageCalculator,
     IReferenceGuard references,
     IDeletionRecorder deletions,
-    IInstanceSettingsStore settings)
+    IInstanceSettingsStore settings,
+    IClock clock)
     : IBudgetService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Budget not found.");
@@ -32,7 +33,13 @@ public sealed class BudgetService(
     public async Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var budgets = await db.Budgets.ToListAsync(cancellationToken);
-        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, cancellationToken);
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, clock.Today, cancellationToken);
+    }
+
+    public async Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken)
+    {
+        var budgets = await db.Budgets.Where(b => b.Period == BudgetPeriod.Monthly).ToListAsync(cancellationToken);
+        return budgets.Count == 0 ? [] : await ToResponsesAsync(budgets, asOf, cancellationToken);
     }
 
     public async Task<Result<BudgetResponse>> CreateAsync(
@@ -122,11 +129,14 @@ public sealed class BudgetService(
     }
 
     private async Task<Result<BudgetResponse>> ToResponseAsync(Budget budget, CancellationToken cancellationToken) =>
-        (await ToResponsesAsync([budget], cancellationToken))[0];
+        (await ToResponsesAsync([budget], clock.Today, cancellationToken))[0];
 
-    private async Task<List<BudgetResponse>> ToResponsesAsync(List<Budget> budgets, CancellationToken cancellationToken)
+    private async Task<List<BudgetResponse>> ToResponsesAsync(
+        List<Budget> budgets,
+        DateOnly asOf,
+        CancellationToken cancellationToken)
     {
-        var usage = await usageCalculator.CalculateAsync(budgets, cancellationToken);
+        var usage = await usageCalculator.CalculateAsync(budgets, asOf, cancellationToken);
         var categoryIds = budgets.Select(b => b.CategoryId).Distinct().ToList();
         var names = await db.Categories
             .Where(c => categoryIds.Contains(c.Id))

@@ -193,6 +193,15 @@ export function usePercent() {
   return useNumberFormat({ style: "percent", maximumFractionDigits: 0 });
 }
 
+export function useMonthName() {
+  const format = useDateFormat({ month: "long", year: "numeric" });
+
+  return function formatMonth(isoDateOrMonth: string) {
+    const parsed = parseIso(isoDateOrMonth.length === 7 ? `${isoDateOrMonth}-01` : isoDateOrMonth);
+    return parsed ? format.format(parsed) : isoDateOrMonth;
+  };
+}
+
 export function useShortMonth() {
   return useDateFormat({ month: "short", year: "numeric" });
 }

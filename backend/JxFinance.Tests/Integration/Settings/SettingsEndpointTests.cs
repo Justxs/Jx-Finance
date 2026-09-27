@@ -306,7 +306,10 @@ public sealed class SettingsEndpointTests(ApiFixture fixture) : IntegrationTestB
         bool Import,
         bool Households,
         bool MultiCurrency,
-        bool Investments);
+        bool Investments,
+        bool CategorizationRules,
+        bool UnusualAmounts,
+        bool MonthClose);
 
     private sealed record SettingsDto(
         string? InstanceName,

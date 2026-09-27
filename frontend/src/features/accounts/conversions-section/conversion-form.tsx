@@ -11,6 +11,7 @@ import { createConversionBodyDescriptionMax } from "@/api/schemas/conversions/co
 import { MoneyPairField, useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
+import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { useUsableCurrencies } from "@/hooks/use-formatters";
 import { useToday } from "@/hooks/use-settings";
 import { DEFAULT_CURRENCY } from "@/lib/currency";
@@ -136,7 +137,13 @@ export function ConversionForm({
         </form.Field>
 
         <form.Field name="date">
-          {(field) => <field.DateField id="conversion-date" label={t("transactions.date")} />}
+          {(field) => (
+            <ClosedMonthHint date={field.value}>
+              {(hint) => (
+                <field.DateField id="conversion-date" label={t("transactions.date")} hint={hint} />
+              )}
+            </ClosedMonthHint>
+          )}
         </form.Field>
 
         <form.Subscribe selector={(state) => state.values.accountId}>

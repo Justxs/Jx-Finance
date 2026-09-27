@@ -9,6 +9,8 @@ public interface IBudgetService
 {
     Task<IReadOnlyList<BudgetResponse>> GetAllAsync(CancellationToken cancellationToken);
 
+    Task<IReadOnlyList<BudgetResponse>> GetMonthlyAsync(DateOnly asOf, CancellationToken cancellationToken);
+
     Task<Result<BudgetResponse>> CreateAsync(CreateBudgetRequest request, CancellationToken cancellationToken);
 
     Task<Result<BudgetResponse>> UpdateAsync(UpdateBudgetRequest request, CancellationToken cancellationToken);

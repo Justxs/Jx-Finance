@@ -24,6 +24,8 @@ public sealed class FeatureGateTests
         (ApiRoutes.ConversionsPath, Feature.MultiCurrency),
         (ApiRoutes.InvestmentsPath, Feature.Investments),
         (ApiRoutes.CategorizationRulesPath, Feature.CategorizationRules),
+        (ApiRoutes.TransactionsPath + "/{id}/unusual", Feature.UnusualAmounts),
+        (ApiRoutes.MonthClosePath, Feature.MonthClose),
     ];
 
     [Fact]

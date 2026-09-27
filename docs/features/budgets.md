@@ -63,6 +63,10 @@ The response separates the three numbers so the client can explain the total rat
 | `spent` | Attributed expense inside `windowStart` to `windowEnd` |
 | `remaining` | `effectiveLimit` minus `spent`, negative when the window is overspent |
 
+## Usage as of a date
+
+"Today" is a parameter, not something the calculator reads. `IBudgetUsageCalculator.CalculateAsync(budgets, asOf, ct)` walks the windows from the one that holds `asOf`; the budgets endpoints and `BudgetAlertJob` pass `IClock.Today`, so nothing about the page or the alerts changed. [Month-end close](month-end-close.md) is the one caller that passes another date: `IBudgetService.GetMonthlyAsync(asOf)` answers the monthly budgets only, measured in the window that holds the closed month's last day, with the carry walked back from there. The spend and the carry are what the page would have shown on that day, given the rows as they are now; the limits are today's, because a budget keeps no history of its limit, rollover switch or period, and the month-end page says so. Weekly, quarterly and yearly budgets are left out there, because their windows straddle the month and cannot be split honestly. `MonthCloseTests` checks a rollover budget measured as of the end of a past March.
+
 ## Alerts at 80% and 100%
 
 `BudgetAlertJob` turns the same numbers into in-app notifications. Every hour it walks the active users, calls `BudgetUsageCalculator` for that user's budgets and compares the spend against the effective limit — the base limit plus the carry, not the typed limit — so a budget that carried a remainder forward alerts later than its base limit would suggest, and one that carried an overspend alerts sooner.

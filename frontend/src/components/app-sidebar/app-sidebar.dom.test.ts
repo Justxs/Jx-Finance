@@ -42,7 +42,7 @@ test("each feature flag adds its page", () => {
     "/budgets",
     "/investments",
   ]);
-  expect(paths(allOn, false)).toHaveLength(13);
+  expect(paths(allOn, false)).toHaveLength(14);
 });
 
 test("multi-currency has no page of its own", () => {

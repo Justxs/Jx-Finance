@@ -11,6 +11,7 @@ import { FormError } from "@/components/form-error/form-error";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
 import { Label } from "@/components/ui/label/label";
 import { heldCurrencies } from "@/features/accounts/held-currencies";
+import { ClosedMonthHint } from "@/features/month-close/closed-month-hint/closed-month-hint";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { namedOptions } from "@/lib/options";
 import { emptyLine } from "./line-form-value";
@@ -182,7 +183,13 @@ export function TransactionForm({
         </form.Subscribe>
 
         <form.Field name="date">
-          {(field) => <field.DateField id="tx-date" label={t("transactions.date")} />}
+          {(field) => (
+            <ClosedMonthHint date={field.value}>
+              {(hint) => (
+                <field.DateField id="tx-date" label={t("transactions.date")} hint={hint} />
+              )}
+            </ClosedMonthHint>
+          )}
         </form.Field>
 
         <form.Field name="description">

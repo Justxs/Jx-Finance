@@ -44,7 +44,7 @@ public sealed class BudgetAlertJob(
         var calculator = ActivatorUtilities.CreateInstance<BudgetUsageCalculator>(
             services,
             new CategoryAttributionService(db));
-        var usage = await calculator.CalculateAsync(budgets, ct);
+        var usage = await calculator.CalculateAsync(budgets, clock.Today, ct);
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, c => c.Name, ct);
         var publisher = NotificationPublisher.For(services, db);
 

@@ -2,13 +2,17 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/notifications.md), [architecture: Background work and notifications](../architecture/background-jobs.md).
 
-Backend `Notifications`, written by background jobs and shown by `NotificationBell` in the sidebar foot. Notifications are not a feature of their own: they are the shared mechanism a producer uses to tell one user that something happened while nobody was looking. Two producers exist today, `RecurringBillReminderJob` and `BudgetAlertJob`, and each is gated by the feature it belongs to. The notification endpoints themselves are behind no feature switch and are not listed in `FeatureGateMiddleware`, so listing, the unread badge, marking one read and marking all read keep working as long as any producer is enabled — and also when none is.
+Backend `Notifications` and `Common/Notifications`, written by background jobs and shown by `NotificationBell` in the sidebar foot. Notifications are not a feature of their own: they are the shared mechanism a producer uses to tell one user that something happened while nobody was looking. Four producers exist today, `RecurringBillReminderJob`, `BudgetAlertJob`, since 2026-09-26 `UnusualAmountJob` and since 2026-09-27 `MonthCloseReminderJob`, and each is gated by the feature it belongs to. All four write through `INotificationPublisher`, which is the extension point: it adds the in-app row and, beside it, whatever the user asked to receive elsewhere. The notification endpoints themselves are behind no feature switch and are not listed in `FeatureGateMiddleware`, so listing, the unread badge, marking one read and marking all read keep working as long as any producer is enabled — and also when none is.
 
 ```mermaid
 flowchart TD
     Bills["RecurringBillReminderJob<br/>every 15 min, needs RecurringBills"] --> Dedupe
     Budgets["BudgetAlertJob<br/>hourly, needs Budgets"] --> Dedupe
-    Dedupe["Insert under an advisory lock<br/>unless the same row already exists in the same period"] --> Row["Notification: user, kind, title, typed payload, related row"]
+    Unusual["UnusualAmountJob<br/>every 15 min, needs UnusualAmounts;<br/>price rises also need RecurringBills"] --> Dedupe
+    Close["MonthCloseReminderJob<br/>hourly on days 1 to 5, needs MonthClose"] --> Dedupe
+    Dedupe["Publish under an advisory lock<br/>unless the same row already exists in the same period"] --> Pub["INotificationPublisher.Publish<br/>in the job's own transaction"]
+    Pub --> Row["Notification: user, kind, title, typed payload, related row"]
+    Pub --> Discord["A DiscordMessages row when Discord is allowed<br/>and the owner's webhook takes that kind"]
     Row --> List["GET /api/notifications, unread first for the badge"]
     List --> Bell["NotificationBell renders each kind from its payload"]
     Bell --> Text["Localized sentence in en and lt"]
@@ -40,6 +44,14 @@ Discord, since 2026-09-26, is the second channel outside the application, and it
 | `billDue` | The recurring entry's name | `dueDate`, `shape` | `RecurringBillReminderJob` |
 | `budgetWarning` | The category name | `thresholdPercent` (80), `period` | `BudgetAlertJob` |
 | `budgetExceeded` | The category name | `thresholdPercent` (100), `period` | `BudgetAlertJob` |
+| `unusualAmount` | The transaction's description | `transactionId`, `amount`, `typicalAmount`, `factor`, `currency` | `UnusualAmountJob` |
+| `unusualAmounts` | Up to three of the descriptions | `count` | `UnusualAmountJob`, instead of more than three `unusualAmount` rows for one owner in one pass |
+| `recurringPriceRise` | The recurring entry's name | `billId`, `transactionId`, `amount` (charged), `typicalAmount` (expected), `currency` | `UnusualAmountJob` |
+| `monthReadyToClose` | The month in the installation language, "August 2026" or "2026 m. rugpjūtis" | `month` | `MonthCloseReminderJob` |
+
+The three kinds added on 2026-09-26 carry `currency` beside the amounts, so the bell formats them in the currency they were computed in: the reporting currency for an unusual expense, the account's currency for a price rise. The two unusual kinds link to `/transactions?unusual=true` and belong to `UnusualAmounts`; the price rise links to `/recurring-bills` and belongs to `RecurringBills`. An unusual expense is raised once per transaction and a price rise once per entry and charge, for the account owner and the entry's owner respectively. See [Unusual amounts](unusual-amounts.md).
+
+`monthReadyToClose`, added on 2026-09-27, carries the first day of the month in `month`, and its `Message` is the same month as `yyyy-MM`, which is also what the job deduplicates on: one reminder per user and month, whether it was read, cleared or not. It names no related row. The bell says "{month} has ended and is ready to close" ("{month} baigėsi: peržiūrėkite ir uždarykite mėnesį") and links to `/close?month=yyyy-MM` while `MonthClose` is on; Discord gets the same sentence and the same link from `NotificationTexts.PageLink`. It goes only to users who have closed a month before and have not closed the previous one, on days 1 to 5 of a month. See [Month-end close](month-end-close.md).
 
 Before the payload existed, a bill reminder put the bill name in `Title` and the ISO due date in `Message`, and the client parsed that text. Rows written that way are still in the database, so `NotificationMapper` fills the payload from `Message` when the column is null: a `billDue` row whose message parses as `yyyy-MM-dd` answers with that date in `dueDate`, anything else answers with an empty payload. `Message` is still written and still returned as the plain-text fallback the client shows when a payload it does not recognise arrives, which is what a client one version behind a new kind sees.
 
@@ -49,7 +61,7 @@ The client never builds a sentence from server text. It reads the kind and the p
 
 ## A producer that was switched off
 
-A notification outlives the switch that produced it. When `Budgets` or `RecurringBills` is turned off, the rows already written stay in the list and stay in the unread count: they are a record of something that was true when it happened, hiding them would make the badge jump when an administrator flips a switch, and the list would have to learn which feature each kind belongs to in order to filter. What does change is the link. `NotificationBell` maps each kind to the page that explains it and to the feature that owns that page, and renders the entry as a link only while that feature is on; otherwise the entry is a plain button that marks the row read, because the page it would open is not in the navigation either.
+A notification outlives the switch that produced it. When `Budgets`, `RecurringBills`, `UnusualAmounts` or `MonthClose` is turned off, the rows already written stay in the list and stay in the unread count: they are a record of something that was true when it happened, hiding them would make the badge jump when an administrator flips a switch, and the list would have to learn which feature each kind belongs to in order to filter. What does change is the link. `NotificationBell` maps each kind to the page that explains it and to the feature that owns that page, and renders the entry as a link only while that feature is on; otherwise the entry is a plain button that marks the row read, because the page it would open is not in the navigation either.
 
 ## Budget alerts
 

@@ -34,7 +34,7 @@ public sealed class NetWorthSnapshotter(IServiceScopeFactory scopes) : INetWorth
                 new HoldingsValuation(db, rates, settings)),
             rates,
             clock,
-            new DeletionRecorder(db, clock),
+            new DeletionRecorder(db),
             user);
         await service.GetCurrentAsync(cancellationToken);
     }

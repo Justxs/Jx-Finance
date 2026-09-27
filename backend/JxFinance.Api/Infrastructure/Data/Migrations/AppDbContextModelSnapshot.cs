@@ -803,6 +803,52 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("SecurityPrices");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.MonthCloses.MonthClose", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("ClosedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("HouseholdId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateOnly>("Month")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Snapshot")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HouseholdId");
+
+                    b.HasIndex("UserId", "Month", "HouseholdId")
+                        .IsUnique();
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UserId", "Month", "HouseholdId"), false);
+
+                    b.ToTable("MonthCloses");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.NetWorth.Asset", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1340,6 +1386,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                             b1.Property<bool>("Investments")
                                 .HasColumnType("boolean");
+
+                            b1.Property<bool>("MonthClose")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
 
                             b1.Property<bool>("MultiCurrency")
                                 .HasColumnType("boolean");
@@ -2224,6 +2275,20 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("SecurityId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.MonthCloses.MonthClose", b =>
+                {
+                    b.HasOne("JxFinance.Domain.Households.Household", null)
+                        .WithMany()
+                        .HasForeignKey("HouseholdId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 

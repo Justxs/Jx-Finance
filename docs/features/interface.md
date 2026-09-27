@@ -39,8 +39,10 @@ flowchart TD
     Which -->|"/"| Search["click data-shortcut=search, else go to transactions"]
     Which -->|"?"| Help["toggle the help popover"]
     Which -->|"Mod+K"| Palette["open the command palette, or close it again"]
-    Which -->|"g then a letter within 1.2 s"| Go["d dashboard, t transactions, a accounts, c categories, u rules,<br/>b budgets, o goals, l bills, w net worth, v investments, r reports, h households"]
+    Which -->|"g then a letter within 1.2 s"| Go["d dashboard, t transactions, a accounts, c categories, u rules,<br/>b budgets, o goals, l bills, w net worth, v investments, r reports,<br/>m month-end close, h households"]
 ```
+
+The go-to letters come from `navPages` in `lib/navigation.ts`, the table the sidebar is drawn from, so a page behind a switched-off feature has neither a sidebar entry nor a working letter. `g m` opens `/close`, the [Month-end close](month-end-close.md) page, which sits in the sidebar's review group after Reports; `m` was free.
 
 Saved filters, templates and Duplicate got no shortcut, and they are not in the help list. The scheme knows four actions — go to a route, focus the search box, toggle the help, open the palette — and every one of them is global. Duplicate needs a row the keyboard has no way to point at, because the ledger has no row cursor, and a saved filter or a template is a popover on one page rather than a destination with a URL. A shortcut for either would have to invent a fifth action kind and a page-local registry for two menus.
 
@@ -76,7 +78,7 @@ Pages come from one table in `frontend/src/features/command-palette/command-entr
 
 Records are the accounts, the categories and the tags the caller can see; choosing one opens the ledger filtered to it, which is the ledger's own `accountId`, `categoryId` and `tagIds` parameters and not a new screen. There is no server-side search: the three lists are the complete, already-paged-free lists the ledger page loads anyway, they are filtered in the browser, and an installation would have to reach thousands of accounts before that stopped being instant. Transactions are deliberately not searchable from here — that is a paged, filtered query the ledger already answers far better than a fifty-row list could.
 
-Actions are the ones that exist today and that the caller may run: a new transaction, a new transfer, a new account, a backup for an administrator, signing out, switching the theme, switching the language, and switching the active household. The three create actions travel through the URL — `/transactions?new=true`, `/accounts?new=transfer` and `/accounts?new=account` — so the back button undoes them and the palette needs no handle on a dialog it does not own; the accounts page gained that `new` parameter for this, the way the transactions page already had one. The household entries are listed only while the switch is on and the caller has a membership, and the scope the caller is already in is left out rather than listed as a choice that would do nothing.
+Actions are the ones that exist today and that the caller may run: a new transaction, a new transfer, a new account, "Close last month" while the `MonthClose` switch is on, a backup for an administrator, signing out, switching the theme, switching the language, and switching the active household. "Close last month" navigates to `/close` without a month, which opens the latest ended month that is still open in its year, or last month when every one is closed. The three create actions travel through the URL — `/transactions?new=true`, `/accounts?new=transfer` and `/accounts?new=account` — so the back button undoes them and the palette needs no handle on a dialog it does not own; the accounts page gained that `new` parameter for this, the way the transactions page already had one. The household entries are listed only while the switch is on and the caller has a membership, and the scope the caller is already in is left out rather than listed as a choice that would do nothing.
 
 ```mermaid
 flowchart TD

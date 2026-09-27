@@ -10,6 +10,9 @@ public enum AppLock : long
     AdministratorChange = 738192437,
     BudgetAlerts = 738192438,
     EmailOutbox = 738192439,
+    DiscordOutbox = 738192440,
+    UnusualAmounts = 738192441,
+    MonthCloseReminders = 738192442,
 }
 
 public static class AdvisoryLock
