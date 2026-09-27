@@ -54,7 +54,7 @@ export function hasFormField(values: unknown, name: string): boolean {
 
 function aliasedName(name: string, aliases: FieldAliases) {
   const [head = "", ...rest] = name.split(/(?=[.[])/);
-  return [aliases[head] ?? head, ...rest].join("");
+  return aliases[name] ?? [aliases[head] ?? head, ...rest].join("");
 }
 
 export function splitServerErrors(values: unknown, error: unknown, aliases: FieldAliases = {}) {

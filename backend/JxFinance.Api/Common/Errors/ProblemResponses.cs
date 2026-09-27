@@ -39,9 +39,15 @@ public static class ProblemResponses
 
     public static object Build(List<ValidationFailure> failures, HttpContext context, int statusCode)
     {
-        foreach (var failure in failures.Where(failure => !ErrorCodes.IsKnown(failure.ErrorCode)))
+        foreach (var failure in failures)
         {
-            failure.ErrorCode = ErrorCodes.RequestMalformed;
+            failure.PropertyName = failure.PropertyName is { } name
+                ? string.Join('.', name.Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName))
+                : null;
+            if (!ErrorCodes.IsKnown(failure.ErrorCode))
+            {
+                failure.ErrorCode = ErrorCodes.RequestMalformed;
+            }
         }
 
         return new ProblemDetails(failures, context.Request.Path, context.TraceIdentifier, statusCode);
