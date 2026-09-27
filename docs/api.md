@@ -224,6 +224,7 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | GET | `/api/reports/summary` |
 | GET | `/api/settings` |
 | PUT | `/api/settings` |
+| PUT | `/api/settings/discord` |
 | POST | `/api/settings/exchange-rates/sync` |
 | GET | `/api/settings/public` |
 | GET | `/api/settings/smtp` |
@@ -259,6 +260,10 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | DELETE | `/api/users/me/dashboard-layout` |
 | GET | `/api/users/me/dashboard-layout` |
 | PUT | `/api/users/me/dashboard-layout` |
+| DELETE | `/api/users/me/discord` |
+| GET | `/api/users/me/discord` |
+| PUT | `/api/users/me/discord` |
+| POST | `/api/users/me/discord/test` |
 | POST | `/api/users/{id}/deactivate` |
 | POST | `/api/users/{id}/reactivate` |
 | POST | `/api/users/{id}/reset-password` |
@@ -267,6 +272,8 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 Import confirm rows optionally select TransferAccountId and ExistingTransferId. Recurring entry confirmation requires ExpectedDueDate. Transfer listing accepts an optional Date filter. 2FA setup/disable requires Password. Resetting another user's password requires NewPassword and the administrator's own CurrentPassword, with ResetTwoFactor optional. Updating a transfer takes the body of creating one; updating a conversion takes the body of creating one without the account. The broker import result carries Splits, SkippedCorporateActions per type and PositionMismatches, which is null when the report has no Open Positions section.
 
 `/api/users/me/dashboard-layout` is the signed-in user's own dashboard layout and is open to every signed-in user, under the `Dashboard` tag. `GET` answers `order` (every card id this version knows, saved ones first), `hidden` and `isDefault`; `PUT` takes `order` and `hidden` as lists of card id strings and answers the same shape, refusing an unknown id with `dashboard.cardUnknown` and a repeated one with `dashboard.cardDuplicate`; `DELETE` forgets the saved layout and answers the default. The card ids are the `DashboardCard` enum of the contract. See [Dashboard](features/dashboard.md).
+
+`/api/users/me/discord` is the signed-in user's own Discord webhook, open to every signed-in user under the `Users` tag. `GET` answers `hasWebhook`, `isEnabled`, `types`, `lastDeliveredAt`, `lastError`, `disabledByDiscord` and `unreadable`, never the URL; `PUT` takes `webhookUrl`, `isEnabled` and `types`, where an empty URL keeps the stored one; `DELETE` removes the webhook and its unsent posts; `POST /test` posts a test message at once and answers Discord's own error. `PUT` is throttled to 20 calls and the test to 10 calls per five minutes. `GET` and `PUT /api/settings/discord` are administrators only and carry `{ enabled }`; `GET /api/settings/public` carries the same flag as `discordEnabled`. See [Discord notifications](features/discord-notifications.md).
 
 Goal bodies carry `funding` (`manual` or `account`), `fundingAccountId` and `fundingSharePercent`, a whole percentage from 1 to 100 that defaults to 100 when omitted. `funding` defaults to `manual`, so a body written before this addition still creates the goal it used to. A funded goal must name an account and a manual goal must not, each refused by the validator with `fundingAccountId` as the field at fault, and an account that does not exist or is not visible to the caller answers 400 `reference.notFound` without naming a field, exactly as a recurring bill's account does. `currentAmount` stays required for a manual update and is ignored for a funded one, which is what preserves it across a switch. The response adds those three fields and `progressAmount`: the stored `currentAmount` for a manual goal, the computed share of the funding account's reporting balance for a funded one, never below zero, and null when that account is archived or no longer visible.
 

@@ -1,5 +1,7 @@
 # Plan: Discord notifications
 
+Implemented 2026-09-26. The feature page [Discord notifications](../features/discord-notifications.md) describes what shipped; this plan is kept as the record of intent.
+
 Status: planned 2026-09-25. Size M. Build this first of the three plans, because the other two add notification kinds that should arrive on Discord without extra work.
 
 ## Outcome

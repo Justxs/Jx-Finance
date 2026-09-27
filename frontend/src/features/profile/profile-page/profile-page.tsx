@@ -5,6 +5,7 @@ import { AppearancePicker } from "@/components/appearance-picker/appearance-pick
 import { SectionLayout } from "@/components/section-layout/section-layout";
 import { useNavSections } from "@/components/section-nav/section-nav";
 import { ImportDataSection } from "@/features/imports/import-data-section/import-data-section";
+import { DiscordSection } from "../discord-form/discord-section";
 import { ProfileForm } from "../profile-form/profile-form";
 import { ProfileNav, profileSections } from "../profile-nav/profile-nav";
 import { SessionsSection } from "../sessions-section/sessions-section";
@@ -26,6 +27,7 @@ export function ProfilePage() {
       {section === "account" ? <ProfileForm profile={me.data} /> : null}
       {section === "security" ? <TwoFactorSettings /> : null}
       {section === "sessions" ? <SessionsSection /> : null}
+      {section === "discord" ? <DiscordSection /> : null}
       {section === "trash" ? <TrashSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
       {section === "appearance" ? <AppearancePicker /> : null}

@@ -4,6 +4,7 @@ import {
   getSettingsMockHandler,
   getSmtpSettingsMockHandler,
   getSyncExchangeRatesMockHandler,
+  getUpdateDiscordSettingsMockHandler,
   getUpdateSettingsMockHandler,
   getUpdateSmtpSettingsMockHandler,
 } from "@/api/generated/settings/settings.msw";
@@ -21,6 +22,11 @@ export const emailEnabledHandler = getPublicSettingsMockHandler({
   emailEnabled: true,
 });
 
+export const discordOffHandler = getPublicSettingsMockHandler({
+  ...publicSettings,
+  discordEnabled: false,
+});
+
 export const settingsHandlers = [
   getPublicSettingsMockHandler(publicSettings),
   getSettingsMockHandler(settings),
@@ -35,4 +41,5 @@ export const settingsHandlers = [
     return { ...smtpSettings, ...body, hasPassword: Boolean(text(body.userName)) };
   }),
   getSendTestEmailMockHandler(smtpTestSent),
+  getUpdateDiscordSettingsMockHandler(),
 ];

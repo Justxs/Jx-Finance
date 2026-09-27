@@ -70,6 +70,10 @@ export function useEmailEnabled(): boolean {
   return usePublicSettings()?.emailEnabled ?? false;
 }
 
+export function useDiscordEnabled(): boolean {
+  return usePublicSettings()?.discordEnabled ?? false;
+}
+
 export function useFeature(feature: FeatureKey): boolean {
   return useSettings().features[feature];
 }

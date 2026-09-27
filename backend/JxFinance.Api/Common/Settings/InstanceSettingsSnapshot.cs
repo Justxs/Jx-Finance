@@ -15,7 +15,8 @@ public sealed record InstanceSettingsSnapshot(
     FirstDayOfWeek FirstDayOfWeek,
     Guid? DefaultAccountId,
     int DefaultPageSize,
-    SmtpSettingsSnapshot Smtp)
+    SmtpSettingsSnapshot Smtp,
+    bool DiscordEnabled)
 {
     public bool IsEnabled(Feature feature) => Features.IsEnabled(feature);
 
@@ -45,7 +46,8 @@ public sealed record InstanceSettingsSnapshot(
             settings.FirstDayOfWeek,
             settings.DefaultAccountId,
             settings.DefaultPageSize,
-            SmtpSettingsSnapshot.From(settings));
+            SmtpSettingsSnapshot.From(settings),
+            settings.DiscordEnabled);
     }
 
     public static bool IsValidTimeZone(string? id)

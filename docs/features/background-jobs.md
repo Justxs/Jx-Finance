@@ -14,13 +14,23 @@ flowchart LR
         E["ExchangeRateSyncJob<br/>every 6 h, obeys the auto-sync setting"]
         B["BrokerSyncJob<br/>daily, needs Investments"]
         M["EmailOutboxJob<br/>every minute, needs a mail server"]
+        D["DiscordOutboxJob<br/>every 30 s, needs the Discord setting"]
         L["RetentionJob<br/>daily, no feature gate"]
         P["AttachmentPurgeJob<br/>daily, no feature gate"]
     end
-    R --> Notif["Notifications, deduplicated per bill and local day"]
-    R --> Mail["An EmailMessages row in the same transaction,<br/>only for an owner who asked for reminder emails"]
+    R --> Pub["INotificationPublisher, in the producer's transaction"]
+    A --> Pub
+    U --> Pub
+    U --> Verdict["Verdicts on unchecked expenses, written with ExecuteUpdate;<br/>silent for rows not written since the backfill began,<br/>otherwise new flags within 45 days<br/>and price rises of recurring entries"]
+    C --> Pub
+    C --> Ready["One MonthReadyToClose per user who closed a month before<br/>and has not closed last month, deduplicated per user and month"]
+    Pub --> Notif["Notifications"]
+    Pub --> Mail["An EmailMessages row, only for a bill reminder<br/>whose owner asked for reminder emails"]
+    Pub --> Disc["A DiscordMessages row, only when Discord is allowed<br/>and the owner's webhook takes that kind"]
+    R --> BillDedupe["Bill reminders, deduplicated per bill and local day"]
     M --> Send["Claim, send with a timeout, retry with backoff,<br/>give up after five attempts, prune after a week"]
-    A --> Alert["Notifications at 80% and 100% of the effective limit,<br/>deduplicated per budget, window and threshold"]
+    D --> Post["Claim at most five per user, post in order,<br/>wait out a 429, disable a webhook Discord deleted,<br/>prune every row after a week"]
+    A --> Alert["Budget alerts at 80% and 100% of the effective limit,<br/>deduplicated per budget, window and threshold"]
     N --> Snap["Snapshot per active user, failures isolated per user"]
     E --> Rates["Rates from the day after the newest stored rate,<br/>or the last 30 days; prunes ExchangeRateFetchLog"]
     B --> Imp["ImportAsync per enabled connection, failures isolated;<br/>each statement is one audit row for the owner"]
@@ -38,6 +48,7 @@ flowchart LR
 | `RetentionJob` | 24 hours | none | Every window it enforces is measured in days — 400 for the audit log, 30 for the trash — so a day's delay is irrelevant. It runs whatever any feature switch says, because rows written while a feature was on still have to age out |
 | `AttachmentPurgeJob` | 24 hours | none | The window it enforces is 30 days (`DeletionEntry.RetentionDays`), so a day's delay only keeps a file a day longer. It hard-deletes the row and then the file of every attachment deleted, or whose transaction was deleted, more than 30 days ago, and removes files, `.tmp` files and restore staging folders that no row refers to once they are an hour old, so an upload or a restore still in progress is never swept. It is the only job that removes something a person put into the ledger, see [Attachments](attachments.md) |
 | `EmailOutboxJob` | 1 minute (`App:Email:OutboxIntervalSeconds`) | none, sends nothing while the mail server is off or incomplete | A password reset link is useless if it arrives in an hour. A minute is the shortest interval that still leaves a dead mail server cheap: a pass that finds nothing due is one indexed query. It prunes before it looks at the mail server, so rows sent while SMTP was configured still age out after it is switched off |
+| `DiscordOutboxJob` | 30 seconds | none, sends nothing while `DiscordEnabled` is off | A notification in a chat channel is expected to arrive about when it happened, and an idle pass is one indexed query. Discord rate-limits each webhook, so a pass takes at most five rows per user and the short interval drains a backlog without bursting. It deletes every row older than 7 days before it looks at the setting, sent or not, so posts queued before the switch went off are dropped rather than sent late |
 
 `BudgetAlertJob` iterates active users in id order and opens a per-user `AppDbContext`, the way `BrokerSyncJob` does, because `BudgetUsageCalculator` and `ICategoryAttributionService` read through the ownership query filter. Each user is handled in its own try block, so one user whose budgets cannot be computed is logged with the user id and everybody else still gets their alerts.
 

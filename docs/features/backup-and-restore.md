@@ -11,7 +11,7 @@ Since [attachments](attachments.md) a backup is a zip archive: `backup.json`, th
 ```mermaid
 flowchart TD
     Take["POST /api/backups"] --> Snap["One REPEATABLE READ transaction"]
-    Snap --> Tables["Every table of the EF model, each value as column::text<br/>UserSessions left out"]
+    Snap --> Tables["Every table of the EF model, each value as column::text<br/>transient tables left out: UserSessions, EmailMessages, DiscordMessages"]
     Tables --> Tmp["write id.tmp as a zip: backup.json with format, version, createdAt, migration, tables"]
     Tmp --> Files["then attachments/id for every attachment row whose file exists, stored uncompressed"]
     Files --> Rename["rename to id.zip, then write id.info.json"]

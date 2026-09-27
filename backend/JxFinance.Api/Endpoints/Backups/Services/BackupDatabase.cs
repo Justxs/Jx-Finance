@@ -1,4 +1,5 @@
 using JxFinance.Domain.Email;
+using JxFinance.Domain.Notifications;
 using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ public static class BackupDatabase
         [
             db.Model.FindEntityType(typeof(UserSession))!.GetTableName(),
             db.Model.FindEntityType(typeof(EmailMessage))!.GetTableName(),
+            db.Model.FindEntityType(typeof(DiscordMessage))!.GetTableName(),
         ];
 
         return db.Model.GetRelationalModel().Tables

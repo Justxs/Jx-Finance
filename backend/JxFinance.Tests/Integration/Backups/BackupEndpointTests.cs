@@ -3,10 +3,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json.Nodes;
+using JxFinance.Domain.Notifications;
 using JxFinance.Endpoints.Backups.Services;
 using JxFinance.Infrastructure.Backups;
 using JxFinance.Infrastructure.Configuration;
 using JxFinance.Tests.Support;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 
@@ -15,6 +17,8 @@ namespace JxFinance.Tests.Integration.Backups;
 [Collection<IntegrationCollection>]
 public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBase(fixture), IDisposable
 {
+    private static readonly string[] DiscordKinds = ["billDue"];
+
     private HttpClient? admin;
 
     public void Dispose() => admin?.Dispose();
@@ -341,6 +345,56 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         Assert.False(layout!.IsDefault);
         Assert.Equal(["upcomingBills", "summary"], layout.Order.Take(2));
         Assert.Equal(["netWorth"], layout.Hidden);
+    }
+
+    [Fact]
+    public async Task Restore_keeps_discord_webhooks_and_month_closes_and_drops_queued_discord_messages()
+    {
+        const string discordUrl = "/api/users/me/discord";
+        const string closeUrl = "/api/month-close/2025-05";
+        var member = await CreateUserAsync();
+        using var memberClient = await LoginAsync(member);
+        (await memberClient.PutAsJsonAsync(
+            discordUrl,
+            new { webhookUrl = "https://discord.com/api/webhooks/77/restore-token", isEnabled = true, types = DiscordKinds },
+            TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        await WithDbAsync(async db =>
+        {
+            db.DiscordMessages.Add(new DiscordMessage
+            {
+                UserId = member.Id,
+                NotificationType = NotificationType.BillDue,
+                Content = "queued before the backup",
+                CreatedAt = DateTimeOffset.UtcNow,
+                NextAttemptAt = DateTimeOffset.UtcNow.AddHours(1),
+            });
+            await db.SaveChangesAsync(TestContext.Current.CancellationToken);
+        });
+        var account = await CreateAccountAsync("100.00", client: memberClient);
+        await CreateTransactionAsync(memberClient, account, null, "expense", "12.00", "2025-05-03");
+        (await memberClient.PostAsJsonAsync(closeUrl, new { note = "Kept" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var backup = await CreateBackupAsync();
+        (await memberClient.DeleteAsync(discordUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await memberClient.DeleteAsync(closeUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+
+        try
+        {
+            Assert.Equal(HttpStatusCode.OK, (await RestoreAsync(backup.Id)).StatusCode);
+        }
+        finally
+        {
+            await SignInAgainAsync();
+        }
+
+        using var restoredClient = await LoginAsync(member);
+        var discord = await restoredClient.GetFromJsonAsync<JsonObject>(discordUrl, TestContext.Current.CancellationToken);
+        Assert.True(discord!["hasWebhook"]!.GetValue<bool>());
+        Assert.False(discord["unreadable"]!.GetValue<bool>());
+        Assert.Equal(0, await WithDbAsync(db => db.DiscordMessages.CountAsync(m => m.UserId == member.Id, TestContext.Current.CancellationToken)));
+        var review = await restoredClient.GetFromJsonAsync<JsonObject>(closeUrl, TestContext.Current.CancellationToken);
+        Assert.Equal("closed", review!["status"]!.GetValue<string>());
+        Assert.Equal("Kept", review["note"]!.GetValue<string>());
+        Assert.Equal("12.00", review["drift"]!["totals"]!["closedExpense"]!.GetValue<string>());
     }
 
     private sealed record RestoredLayoutDto(List<string> Order, List<string> Hidden, bool IsDefault);

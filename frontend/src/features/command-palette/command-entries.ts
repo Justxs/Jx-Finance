@@ -57,6 +57,7 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
     { id: "page-trash", search: { section: "trash" }, labelKey: "trash.title" },
     { id: "page-sessions", search: { section: "sessions" }, labelKey: "profile.sessions.title" },
     { id: "page-two-factor", search: { section: "security" }, labelKey: "profile.twoFactorTitle" },
+    { id: "page-discord", search: { section: "discord" }, labelKey: "profile.discord.title" },
     {
       id: "page-import",
       search: { section: "import" },
@@ -72,6 +73,11 @@ const pageSections: Partial<Record<RoutePath, readonly PageSection[]>> = {
       labelKey: "settings.features.title",
     },
     { id: "page-settings-email", search: { section: "email" }, labelKey: "settings.smtp.title" },
+    {
+      id: "page-settings-discord",
+      search: { section: "discord" },
+      labelKey: "settings.discord.title",
+    },
     { id: "page-settings-backups", search: { section: "backups" }, labelKey: "backup.title" },
   ],
 };

@@ -15,12 +15,21 @@ flowchart TD
     Bell --> Link["Click opens the producing page and marks the row read"]
     Link --> Read["PATCH {id}/read, optimistic"]
     Bell --> All["POST read-all, optimistic"]
-    Dedupe --> Mail["A bill reminder also writes an EmailMessages row<br/>when the owner asked for it, in the same transaction"]
 ```
+
+## The publisher
+
+No producer adds a `Notification` itself. Every one calls `INotificationPublisher.Publish(notification)` (`Common/Notifications`, scoped), after a `PreloadAsync(userIds)` that loads, in one go, what the publisher needs to know about the owners it is about to notify; publishing for a user who was not preloaded throws, so the batch load cannot be forgotten. The publisher adds the in-app row and a Discord message when the owner asked for that kind, all to the producer's own `AppDbContext`, so the producer's transaction and lock cover every channel at once. `BudgetAlertJob` works on a per-user context and gets a publisher bound to it through `NotificationPublisher.For(services, db)`.
+
+That makes the publisher the extension point. A new producer calls it and reaches every channel; a new channel is added in one place and every producer reaches it. The architecture test `NotificationPublisherTests` scans the API sources and fails when anything outside `Common/Notifications/NotificationPublisher.cs` calls `Notifications.Add` or `AddRange`.
 
 ## The email beside the bell
 
-`NotificationChannel` still has an `Email` value and no row ever carries it. Since email delivery arrived on 2026-09-20 a reminder that should also leave as mail is two rows, not one row on two channels: the `Notification` the bell shows and an `EmailMessages` row for the outbox. Keeping them apart is what lets the mail fail, wait and be retried for hours without the bell repeating itself or disappearing. They are written in the same transaction, under the same lock, behind the same "was this bill already reminded today" question, so they cannot disagree. Only recurring entries do this, only for a user who switched the preference on, only while the address is confirmed and the mail server is set up; a budget alert never leaves the application. See [Email](email.md).
+`NotificationChannel` still has an `Email` value and no row ever carries it. Since email delivery arrived on 2026-09-20 a reminder that should also leave as mail is two rows, not one row on two channels: the `Notification` the bell shows and an `EmailMessages` row for the outbox. Keeping them apart is what lets the mail fail, wait and be retried for hours without the bell repeating itself or disappearing. `RecurringBillReminderJob` publishes the notification and enqueues the message through `IEmailOutbox` on the same `AppDbContext`, so both are written in the same transaction, under the same lock, behind the same "was this bill already reminded today" question, and cannot disagree. Only recurring entries do this, only for a user who switched the preference on, only while the address is confirmed and the mail server is set up; a budget alert never leaves the application by email. See [Email](email.md).
+
+## Discord beside the bell
+
+Discord, since 2026-09-26, is the second channel outside the application, and it follows the same rule: one more row, `DiscordMessages`, written by the publisher next to the notification and drained by its own outbox job. Unlike the email it is not chosen by the producer. The publisher adds it for any kind when the installation allows Discord and the owner's webhook is enabled and takes that kind, with the text built in the installation language by `NotificationTexts`, which mirrors the bell's sentences. A new kind therefore reaches Discord once it has a sentence there, and a unit test fails until it does. See [Discord notifications](discord-notifications.md).
 
 ## Kinds and the typed payload
 

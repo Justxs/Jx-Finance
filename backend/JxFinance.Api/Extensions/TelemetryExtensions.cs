@@ -1,4 +1,7 @@
+using System.Diagnostics;
+using JxFinance.Common;
 using JxFinance.Infrastructure.Configuration;
+using JxFinance.Infrastructure.Discord;
 using Npgsql;
 using OpenTelemetry;
 using OpenTelemetry.Metrics;
@@ -31,7 +34,8 @@ public static class TelemetryExtensions
             .WithTracing(tracing => tracing
                 .AddAspNetCoreInstrumentation(options =>
                     options.Filter = context => !context.Request.Path.StartsWithSegments(ApiPipelineExtensions.HealthPath))
-                .AddHttpClientInstrumentation()
+                .AddHttpClientInstrumentation(options =>
+                    options.EnrichWithHttpRequestMessage = (activity, request) => RedactDiscord(activity, request))
                 .AddNpgsql())
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
@@ -41,6 +45,23 @@ public static class TelemetryExtensions
             .UseOtlpExporter();
 
         return builder;
+    }
+
+    public static string? RedactedDiscordUrl(Uri? uri) =>
+        uri is not null && uri.Host.EndsWith(DiscordWebhookClient.HostName, StringComparison.OrdinalIgnoreCase)
+            ? $"{uri.Scheme}://{uri.Host}/api/webhooks/{SecretText.Hidden}"
+            : null;
+
+    private static void RedactDiscord(Activity activity, HttpRequestMessage request)
+    {
+        if (RedactedDiscordUrl(request.RequestUri) is not { } redacted)
+        {
+            return;
+        }
+
+        activity.SetTag("url.full", redacted);
+        activity.SetTag("url.path", null);
+        activity.SetTag("url.query", null);
     }
 
     public static LoggerConfiguration WriteToTelemetry(this LoggerConfiguration logger, IConfiguration configuration)

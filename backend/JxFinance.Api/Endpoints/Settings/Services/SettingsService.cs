@@ -12,6 +12,7 @@ using JxFinance.Domain.Transactions;
 using JxFinance.Endpoints.Auth.Interfaces;
 using JxFinance.Endpoints.Settings.Interfaces;
 using JxFinance.Endpoints.Settings.Shared;
+using JxFinance.Endpoints.Settings.UpdateDiscordSettings;
 using JxFinance.Endpoints.Settings.UpdateSettings;
 using JxFinance.Endpoints.Settings.UpdateSmtpSettings;
 using JxFinance.Infrastructure.Configuration;
@@ -42,7 +43,11 @@ public sealed class SettingsService(
     }
 
     public PublicSettingsResponse GetPublic() =>
-        new(store.Current.InstanceName, store.Current.DefaultLanguage, store.Current.Smtp.IsConfigured);
+        new(
+            store.Current.InstanceName,
+            store.Current.DefaultLanguage,
+            store.Current.Smtp.IsConfigured,
+            store.Current.DiscordEnabled);
 
     public async Task<Result<SettingsResponse>> UpdateAsync(
         UpdateSettingsRequest request,
@@ -162,6 +167,16 @@ public sealed class SettingsService(
             cancellationToken);
 
         return sent.IsSuccess ? new SmtpTestResponse(address) : sent.Error;
+    }
+
+    public async Task UpdateDiscordAsync(UpdateDiscordSettingsRequest request, CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        var settings = await LoadOrCreateAsync(cancellationToken);
+        settings.DiscordEnabled = request.Enabled;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        store.Set(settings);
     }
 
     public async Task<ExchangeRateSyncResponse> SyncExchangeRatesAsync(CancellationToken cancellationToken)

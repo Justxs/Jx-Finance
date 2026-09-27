@@ -1,11 +1,20 @@
 import { Link } from "@tanstack/react-router";
-import { FileUp, MonitorSmartphone, Palette, ShieldCheck, Trash2, UserRound } from "lucide-react";
+import {
+  FileUp,
+  MessagesSquare,
+  MonitorSmartphone,
+  Palette,
+  ShieldCheck,
+  Trash2,
+  UserRound,
+} from "lucide-react";
 import { SectionNav, type SectionNavItem } from "@/components/section-nav/section-nav";
 
 export const profileSections = [
   "account",
   "security",
   "sessions",
+  "discord",
   "trash",
   "import",
   "appearance",
@@ -17,6 +26,7 @@ const items: Record<ProfileSection, SectionNavItem> = {
   account: { labelKey: "profile.detailsTitle", icon: UserRound },
   security: { labelKey: "profile.twoFactorTitle", icon: ShieldCheck },
   sessions: { labelKey: "profile.sessions.title", icon: MonitorSmartphone },
+  discord: { labelKey: "profile.discord.title", icon: MessagesSquare },
   trash: { labelKey: "trash.title", icon: Trash2 },
   import: { labelKey: "imports.sectionTitle", icon: FileUp },
   appearance: { labelKey: "settings.appearance", icon: Palette },

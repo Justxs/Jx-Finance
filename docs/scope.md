@@ -38,7 +38,7 @@ Dedicated ledger movement, excluded from income/expense; paginated history; acce
 
 ## Installation settings
 
-Administrators switch features on and off, choose the reporting currency and the currencies offered, control exchange-rate sync, set the installation name, default language, time zone, first day of the week, default account and rows per page, and configure the mail server in its own section
+Administrators switch features on and off, choose the reporting currency and the currencies offered, control exchange-rate sync, set the installation name, default language, time zone, first day of the week, default account and rows per page, configure the mail server in its own section and allow or stop Discord notifications in another
 
 ## Multi-currency
 

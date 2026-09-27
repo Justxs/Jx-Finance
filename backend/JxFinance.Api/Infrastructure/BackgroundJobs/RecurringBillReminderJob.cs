@@ -2,6 +2,7 @@ using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.Email;
 using JxFinance.Common.Formats;
+using JxFinance.Common.Notifications;
 using JxFinance.Common.Settings;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Email;
@@ -26,6 +27,7 @@ public sealed class RecurringBillReminderJob(
     {
         var db = services.GetRequiredService<AppDbContext>();
         var clock = services.GetRequiredService<IClock>();
+        var publisher = services.GetRequiredService<INotificationPublisher>();
         var outbox = services.GetRequiredService<IEmailOutbox>();
         var store = services.GetRequiredService<IInstanceSettingsStore>();
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
@@ -61,6 +63,7 @@ public sealed class RecurringBillReminderJob(
         var byOwner = subscribers.ToDictionary(u => u.Id);
         var settings = store.Current;
         var product = EmailTexts.Product(settings.InstanceName);
+        await publisher.PreloadAsync(ownerIds, ct);
 
         foreach (var bill in dueBills)
         {
@@ -69,7 +72,7 @@ public sealed class RecurringBillReminderJob(
                 continue;
             }
 
-            db.Notifications.Add(new Notification
+            publisher.Publish(new Notification
             {
                 UserId = bill.UserId,
                 Type = NotificationType.BillDue,

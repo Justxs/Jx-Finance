@@ -27,4 +27,5 @@ public sealed class InstanceSettings
     public string SmtpProtectedPassword { get; set; } = string.Empty;
     public string? SmtpFromAddress { get; set; }
     public string? SmtpFromName { get; set; }
+    public bool DiscordEnabled { get; set; }
 }

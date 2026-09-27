@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using FastEndpoints.Testing;
+using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
@@ -68,6 +69,9 @@ public sealed class ApiFixture : AppFixture<Program>
         services.RemoveAll<IEmailTransport>();
         services.AddSingleton<FakeEmailTransport>();
         services.AddSingleton<IEmailTransport>(sp => sp.GetRequiredService<FakeEmailTransport>());
+        services.RemoveAll<IDiscordWebhookClient>();
+        services.AddSingleton<FakeDiscordWebhookClient>();
+        services.AddSingleton<IDiscordWebhookClient>(sp => sp.GetRequiredService<FakeDiscordWebhookClient>());
     }
 
     protected override async ValueTask SetupAsync()

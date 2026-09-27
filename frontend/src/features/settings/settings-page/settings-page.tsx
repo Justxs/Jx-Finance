@@ -19,6 +19,7 @@ import { ImportDataSection } from "@/features/imports/import-data-section/import
 import { useIsoDate } from "@/hooks/use-formatters";
 import { useSettingsSuspense } from "@/hooks/use-settings";
 import { BackupSection } from "../backup-section/backup-section";
+import { DiscordSection } from "../discord-section/discord-section";
 import { SettingsForm } from "../settings-form/settings-form";
 import { type SettingsSection, SettingsNav, settingsSections } from "../settings-nav/settings-nav";
 import { SmtpSection } from "../smtp-section/smtp-section";
@@ -116,6 +117,7 @@ export function SettingsPage() {
         <SettingsContent section={section} />
       </QueryBoundary>
       {section === "email" ? <SmtpSection /> : null}
+      {section === "discord" ? <DiscordSection /> : null}
       {section === "import" ? <ImportDataSection /> : null}
       {section === "backups" ? <BackupSection /> : null}
       {section === "appearance" ? <AppearancePicker /> : null}

@@ -77,7 +77,7 @@ import { trashHandlers } from "./trash";
 import { userHandlers } from "./users";
 
 export { failWith, failWithStatus, onRouteOf, pending, problem } from "./http";
-export { emailEnabledHandler } from "./settings";
+export { discordOffHandler, emailEnabledHandler } from "./settings";
 
 export const handlers: RequestHandler[] = [
   ...accountHandlers,

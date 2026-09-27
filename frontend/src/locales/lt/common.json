@@ -646,6 +646,29 @@
       "billReminderEmailsHint": "Vienas laiškas įrašui per dieną, šalia pranešimo programoje. Pagal numatymą išjungta.",
       "needsEmail": "Ši įdiegtis dar negali siųsti laiškų. Paprašykite administratoriaus nustatyti pašto serverį.",
       "needsVerification": "Pirmiausia patvirtinkite adresą; kol kas į jį laiškai nesiunčiami."
+    },
+    "discord": {
+      "title": "Discord",
+      "description": "Siųskite savo pranešimus į savo Discord kanalą. Juos gaunate tik jūs; kiti namų ūkio nariai jūsų kanalo nemato.",
+      "webhookUrl": "Webhook nuoroda",
+      "webhookUrlHint": "Discord programoje: kanalo nustatymai, Integracijos, Webhooks, Naujas webhook, Kopijuoti webhook nuorodą.",
+      "enabled": "Siųsti mano pranešimus į Discord",
+      "kinds": "Ką siųsti",
+      "kindsHint": "Nepažymėkite nieko, jei norite laikinai sustabdyti Discord nepašalindami webhook.",
+      "test": "Siųsti bandomąją žinutę",
+      "testSent": "Bandomoji žinutė išsiųsta į Discord",
+      "remove": "Pašalinti webhook",
+      "removeTitle": "Pašalinti Discord webhook?",
+      "removeDescription": "Dar neišsiųstos žinutės bus atmestos. Pranešimai programoje lieka.",
+      "removed": "Discord webhook pašalintas",
+      "saved": "Discord nustatymai išsaugoti",
+      "lastDelivered": "Paskutinė žinutė pristatyta {{date}}.",
+      "neverDelivered": "Kol kas nieko nepristatyta.",
+      "lastError": "Paskutinė problema: {{error}}",
+      "gone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
+      "unreadable": "Išsaugoto webhook nebeįmanoma perskaityti, dažniausiai po atkūrimo iš kitos įdiegties. Įklijuokite webhook nuorodą iš naujo.",
+      "webhookPlaceholder": "Išsaugota. Įklijuokite naują nuorodą, kad pakeistumėte.",
+      "installationOff": "Administratorius šioje įdiegtyje neleido Discord pranešimų, todėl šis skyrius sustabdytas. Paprašykite administratoriaus įjungti Discord nustatymuose."
     }
   },
   "settings": {
@@ -792,6 +815,13 @@
       "test": "Siųsti bandomąjį laišką",
       "testHint": "Pirmiausia išsaugokite. Laiškas siunčiamas jūsų adresu ir niekas neįrašoma.",
       "testSent": "Bandomasis laiškas išsiųstas adresu {{email}}"
+    },
+    "discord": {
+      "title": "Discord",
+      "description": "Nariai gali siųsti savo pranešimus į Discord kanalą per webhook savo profilyje. Šis jungiklis leidžia arba sustabdo šį srautą visiems.",
+      "enabled": "Leisti Discord pranešimus",
+      "enabledHint": "Žinutės siunčiamos iš šio serverio į discord.com. Kol išjungta, niekas nesiunčiama, o narių webhook lieka išsaugoti.",
+      "saved": "Discord nustatymas išsaugotas"
     }
   },
   "budgets": {
@@ -1701,6 +1731,15 @@
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
+    },
+    "discord": {
+      "disabled": "Administratorius šioje įdiegtyje neleido Discord pranešimų.",
+      "invalidWebhook": "Įklijuokite Discord pateiktą webhook nuorodą; ji prasideda https://discord.com/api/webhooks/.",
+      "rateLimited": "Discord paprašė palaukti. Bandykite po minutės.",
+      "rejected": "{{reason}}",
+      "sendFailed": "Nepavyko susisiekti su Discord. Bandykite vėliau.",
+      "webhookGone": "Discord teigia, kad šio webhook nebėra. Sukurkite naują Discord programoje ir įklijuokite jo nuorodą.",
+      "webhookUnreadable": "Išsaugoto webhook nebeįmanoma perskaityti. Įklijuokite webhook nuorodą iš naujo."
     },
     "email": {
       "alreadyVerified": "Šis adresas jau patvirtintas.",

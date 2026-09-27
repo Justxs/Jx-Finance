@@ -2,7 +2,7 @@
 
 Back to the [feature walkthrough](README.md). See also [decisions](../decisions/installation-settings.md), [architecture: Installation settings](../architecture/installation-settings.md).
 
-Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `import`, `backups`, `appearance`. Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language and whether this installation can send email.
+Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `discord`, `import`, `backups`, `appearance`. Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language, whether this installation can send email and whether it allows Discord notifications.
 
 ```mermaid
 flowchart TD

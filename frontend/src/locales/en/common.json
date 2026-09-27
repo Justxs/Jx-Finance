@@ -628,6 +628,29 @@
       "billReminderEmailsHint": "One message per entry and day, beside the in-app reminder. Off by default.",
       "needsEmail": "This installation cannot send email yet. Ask an administrator to set up the mail server.",
       "needsVerification": "Confirm your address first; until then no mail is sent to it."
+    },
+    "discord": {
+      "title": "Discord",
+      "description": "Post your notifications to a Discord channel of your own. Only you receive them; nobody else in the household sees your channel.",
+      "webhookUrl": "Webhook URL",
+      "webhookUrlHint": "In Discord: channel settings, Integrations, Webhooks, New webhook, Copy webhook URL.",
+      "enabled": "Send my notifications to Discord",
+      "kinds": "What to send",
+      "kindsHint": "Leave all unticked to pause Discord without removing the webhook.",
+      "test": "Send a test message",
+      "testSent": "Test message posted to Discord",
+      "remove": "Remove webhook",
+      "removeTitle": "Remove the Discord webhook?",
+      "removeDescription": "Messages still waiting to be sent are dropped. In-app notifications are not affected.",
+      "removed": "Discord webhook removed",
+      "saved": "Discord settings saved",
+      "lastDelivered": "Last message delivered {{date}}.",
+      "neverDelivered": "Nothing has been delivered yet.",
+      "lastError": "Last problem: {{error}}",
+      "gone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
+      "unreadable": "The saved webhook can no longer be read, usually after a restore from another installation. Paste the webhook URL again.",
+      "webhookPlaceholder": "Saved. Paste a new URL to replace it.",
+      "installationOff": "An administrator has not allowed Discord notifications on this installation, so this section is paused. Ask an administrator to switch Discord on in Settings."
     }
   },
   "settings": {
@@ -770,6 +793,13 @@
       "test": "Send a test message",
       "testHint": "Save first. The message goes to your own address and nothing is stored.",
       "testSent": "Test message sent to {{email}}"
+    },
+    "discord": {
+      "title": "Discord",
+      "description": "Members can post their own notifications to a Discord channel through a webhook on their profile. This switch allows or stops that traffic for everyone.",
+      "enabled": "Allow Discord notifications",
+      "enabledHint": "Messages go from this server to discord.com. While this is off nothing is sent, and members' webhooks stay saved.",
+      "saved": "Discord setting saved"
     }
   },
   "budgets": {
@@ -1647,6 +1677,15 @@
     },
     "decimal": {
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
+    },
+    "discord": {
+      "disabled": "An administrator has not allowed Discord notifications on this installation.",
+      "invalidWebhook": "Paste the webhook URL Discord gave you; it starts with https://discord.com/api/webhooks/.",
+      "rateLimited": "Discord asked to slow down. Try again in a minute.",
+      "rejected": "{{reason}}",
+      "sendFailed": "Discord could not be reached. Try again later.",
+      "webhookGone": "Discord says this webhook no longer exists. Create a new one in Discord and paste its URL.",
+      "webhookUnreadable": "The saved webhook can no longer be read. Paste the webhook URL again."
     },
     "email": {
       "alreadyVerified": "This address is already confirmed.",

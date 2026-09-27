@@ -1,6 +1,7 @@
 using System.Globalization;
 using JxFinance.Common;
 using JxFinance.Common.CategoryAttributions;
+using JxFinance.Common.Notifications;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.Settings;
@@ -45,6 +46,7 @@ public sealed class BudgetAlertJob(
             new CategoryAttributionService(db));
         var usage = await calculator.CalculateAsync(budgets, ct);
         var categories = await db.Categories.ToDictionaryAsync(c => c.Id, c => c.Name, ct);
+        var publisher = NotificationPublisher.For(services, db);
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         await db.Database.LockAsync(AppLock.BudgetAlerts, ct);
@@ -54,6 +56,7 @@ public sealed class BudgetAlertJob(
             .Where(n => n.RelatedType == NotificationRelated.Budget && n.CreatedAt >= since)
             .Select(n => new { n.Type, n.RelatedId, n.CreatedAt })
             .ToListAsync(ct);
+        await publisher.PreloadAsync([userId], ct);
 
         foreach (var budget in budgets)
         {
@@ -69,7 +72,7 @@ public sealed class BudgetAlertJob(
                     continue;
                 }
 
-                db.Notifications.Add(new Notification
+                publisher.Publish(new Notification
                 {
                     UserId = userId,
                     Type = type,

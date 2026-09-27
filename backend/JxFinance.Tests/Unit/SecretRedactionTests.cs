@@ -1,8 +1,10 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
+using JxFinance.Common.Discord;
 using JxFinance.Common.Email;
 using JxFinance.Domain.Email;
+using JxFinance.Endpoints.Users.UpdateMyDiscord;
 
 namespace JxFinance.Tests.Unit;
 
@@ -62,6 +64,8 @@ public sealed partial class SecretRedactionTests
         }
 
         Assert.Contains(nameof(SmtpDelivery), guarded);
+        Assert.Contains(nameof(UpdateMyDiscordRequest), guarded);
+        Assert.Contains(nameof(DiscordTarget), guarded);
         Assert.True(
             offenders.Count == 0,
             "Records that print a secret in ToString:" + Environment.NewLine + string.Join(Environment.NewLine, offenders));
@@ -74,7 +78,7 @@ public sealed partial class SecretRedactionTests
 
     private static string Marker(PropertyInfo property) => $"marker-{property.Name}-7f3a";
 
-    [GeneratedRegex("Password|Token|Secret|SharedKey|AuthenticatorUri|TwoFactorCode")]
+    [GeneratedRegex("Password|Token|Secret|SharedKey|AuthenticatorUri|TwoFactorCode|Webhook")]
     private static partial Regex SecretName();
 
     [GeneratedRegex("SigningKey$")]

@@ -37,8 +37,8 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 
 - Routes: dashboard, transactions, accounts (with transfers), categories, budgets, goals, net worth, recurring bills, investments, households, reports, settings (admin: features, reporting currency, exchange-rate sync, installation defaults), users (admin), profile (password, 2FA), login, first-run setup. Bank statement import is not a route: it opens as a dialog from Settings and Profile (provider list, then Swedbank CSV review with bulk selection, bulk category and category recall). Import and investments can be switched off per installation.
 - Light and dark themes are both first-class.
-- The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync and a saved Interactive Brokers Flex connection.
-- Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, tags, categorization rules, credit-card statements, PWA/offline, email delivery.
+- The browser makes no third-party network requests. The Content-Security-Policy allows scripts, fonts and connections from the same origin only; fonts must be bundled. The only outbound traffic comes from the server, and only when an administrator enables it: the daily ECB rate sync, a saved Interactive Brokers Flex connection, and notifications posted to the Discord webhooks members add, once an administrator allows Discord.
+- Out of scope for the product: bank APIs, live investment prices, manual exchange rates, per-user reporting currency, machine-learned categorization, credit-card statements, PWA/offline, scheduled or offsite backups.
 - Frontend conventions that design work must respect: React Compiler (no manual memo hooks or effects), no code comments, function declarations, shadcn/ui components on Base UI, Storybook stories for every component.
 
 ## Brand Commitments
@@ -60,7 +60,7 @@ A private ledger that the household runs itself. Data stays in its own PostgreSQ
 2. Built for the bookkeeping session. Favor density, scanning and keyboard-friendly flows over first-impression spectacle.
 3. Every figure is traceable. A total should lead to the rows behind it, and every row can be corrected.
 4. Deliberate entry. Imports and destructive actions are reviewed before they change the ledger.
-5. Private and self-contained. Nothing in the interface depends on an outside service; the two optional server-side syncs are switched on deliberately and the ledger works without them.
+5. Private and self-contained. Nothing in the interface depends on an outside service; the optional outbound connections from the server are switched on deliberately and the ledger works without them.
 
 ## Accessibility & Inclusion
 

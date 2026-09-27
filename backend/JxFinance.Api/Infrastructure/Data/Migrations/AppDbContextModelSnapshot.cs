@@ -975,6 +975,107 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.ToTable("NetWorthSnapshots");
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.Notifications.DiscordMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DedupeKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("NotificationType")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<DateTimeOffset?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DedupeKey")
+                        .IsUnique()
+                        .HasFilter("\"DedupeKey\" IS NOT NULL");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SentAt", "NextAttemptAt");
+
+                    b.ToTable("DiscordMessages");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Notifications.DiscordWebhook", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DisabledByDiscordAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset?>("LastDeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("ProtectedUrl")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("Types")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.ToTable("DiscordWebhooks");
+                });
+
             modelBuilder.Entity("JxFinance.Domain.Notifications.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1149,6 +1250,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.Property<int>("DefaultPageSize")
                         .HasColumnType("integer");
+
+                    b.Property<bool>("DiscordEnabled")
+                        .HasColumnType("boolean");
 
                     b.Property<string>("EnabledCurrencyCodes")
                         .IsRequired()
@@ -2106,6 +2210,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                 });
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.NetWorthSnapshot", b =>
+                {
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.Notifications.DiscordWebhook", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
                         .WithMany()

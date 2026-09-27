@@ -29,6 +29,7 @@ export const publicSettings: PublicSettingsResponse = {
   instanceName: settings.instanceName,
   defaultLanguage: settings.defaultLanguage,
   emailEnabled: false,
+  discordEnabled: true,
 };
 
 export interface SettingsPatch extends Partial<Omit<SettingsResponse, "features">> {

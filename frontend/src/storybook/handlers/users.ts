@@ -1,9 +1,14 @@
+import { NotificationType } from "@/api/generated/model";
 import type { UserProfileResponse } from "@/api/generated/model";
 import {
   getCreateUserMockHandler,
   getDeactivateUserMockHandler,
+  getDeleteMyDiscordMockHandler,
+  getMyDiscordMockHandler,
   getReactivateUserMockHandler,
   getResetUserPasswordMockHandler,
+  getTestMyDiscordMockHandler,
+  getUpdateMyDiscordMockHandler,
   getUsersMockHandler,
   getUpdateMyProfileMockHandler,
   getUpdateUserRoleMockHandler,
@@ -11,6 +16,7 @@ import {
 import {
   adminPassword,
   currentUser,
+  myDiscord,
   userProfile,
   users,
   wrongAdminPasswordProblem,
@@ -94,4 +100,18 @@ export const userHandlers = [
     const body = await readBody(request);
     return mergeProfile(user, { role: body.role });
   }),
+  getMyDiscordMockHandler(myDiscord),
+  getUpdateMyDiscordMockHandler(async ({ request }) => {
+    const body = await readBody(request);
+    const chosen: unknown[] = Array.isArray(body.types) ? body.types : myDiscord.types;
+    return {
+      ...myDiscord,
+      hasWebhook: true,
+      isEnabled: body.isEnabled === true,
+      types: Object.values(NotificationType).filter((kind) => chosen.includes(kind)),
+      disabledByDiscord: text(body.webhookUrl) ? false : myDiscord.disabledByDiscord,
+    };
+  }),
+  getDeleteMyDiscordMockHandler(),
+  getTestMyDiscordMockHandler(),
 ];

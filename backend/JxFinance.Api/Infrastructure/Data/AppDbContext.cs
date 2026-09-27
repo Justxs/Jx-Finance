@@ -66,6 +66,8 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
     public DbSet<HouseholdMembership> HouseholdMemberships => Set<HouseholdMembership>();
     public DbSet<UserSession> UserSessions => Set<UserSession>();
     public DbSet<EmailMessage> EmailMessages => Set<EmailMessage>();
+    public DbSet<DiscordWebhook> DiscordWebhooks => Set<DiscordWebhook>();
+    public DbSet<DiscordMessage> DiscordMessages => Set<DiscordMessage>();
     public DbSet<DeletionEntry> DeletionEntries => Set<DeletionEntry>();
     public DbSet<DeletionChange> DeletionChanges => Set<DeletionChange>();
     public DbSet<AuditEvent> AuditEvents => Set<AuditEvent>();

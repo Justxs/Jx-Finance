@@ -1,10 +1,12 @@
 using FastEndpoints;
 using JxFinance.Api;
+using JxFinance.Common.Discord;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Endpoints.Backups.UploadBackup;
 using JxFinance.Infrastructure.BackgroundJobs;
 using JxFinance.Infrastructure.Brokers.InteractiveBrokers;
 using JxFinance.Infrastructure.Configuration;
+using JxFinance.Infrastructure.Discord;
 using JxFinance.Infrastructure.ExchangeRates;
 using Serilog;
 
@@ -45,6 +47,14 @@ public static class ApiServiceExtensions
             client.BaseAddress = new Uri(flexUrl);
             client.Timeout = TimeSpan.FromSeconds(30);
             client.MaxResponseContentBufferSize = 50 * 1024 * 1024;
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
+        }).RemoveAllLoggers();
+
+        builder.Services.AddHttpClient<IDiscordWebhookClient, DiscordWebhookClient>(client =>
+        {
+            client.BaseAddress = new Uri(DiscordWebhookClient.BaseAddress);
+            client.Timeout = TimeSpan.FromSeconds(10);
+            client.MaxResponseContentBufferSize = 64 * 1024;
             client.DefaultRequestHeaders.UserAgent.ParseAdd("JxFinance/1.0");
         }).RemoveAllLoggers();
 
