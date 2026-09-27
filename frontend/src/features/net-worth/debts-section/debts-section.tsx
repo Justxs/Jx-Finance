@@ -23,7 +23,7 @@ export function DebtsSection() {
   const debtList = useDeferredValue(debts.data);
 
   function scheduleLink(debt: DebtResponse) {
-    if (debt.payoffDate === null) {
+    if (debt.payoffDate === null && !debt.tracksPayments) {
       return null;
     }
 
@@ -59,7 +59,8 @@ export function DebtsSection() {
             ? t("netWorth.repayment.paidOff", { date: formatDate(debt.payoffDate) })
             : null,
         ),
-        amount: Number(debt.outstandingAmount),
+        amount: Number(debt.trackedBalance ?? debt.outstandingAmount),
+        currency: debt.currency,
         values: debtFormValues(debt),
         action: scheduleLink(debt),
       }))}

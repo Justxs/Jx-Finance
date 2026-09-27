@@ -1,6 +1,7 @@
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.NetWorth;
 
 namespace JxFinance.Domain.RecurringBills;
 
@@ -19,6 +20,8 @@ public sealed class RecurringBill : OwnableEntity
     public int AnchorDay { get; set; }
     public int RemindDaysBefore { get; set; } = 3;
     public bool IsActive { get; set; } = true;
+    public string? MatchKey { get; set; }
+    public DebtId? DebtId { get; set; }
 
     public void Schedule(DateOnly nextDueDate)
     {

@@ -1,6 +1,7 @@
 using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
+using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.RecurringBills;
 using JxFinance.Endpoints.RecurringBills.CreateRecurringBill;
 using JxFinance.Endpoints.RecurringBills.Shared;
@@ -37,7 +38,10 @@ public static class RecurringBillMapper
         bill.Cadence,
         bill.NextDueDate,
         bill.RemindDaysBefore,
-        bill.IsActive);
+        bill.IsActive,
+        bill.MatchKey,
+        latestMatch,
+        bill.DebtId?.Value);
 
     private static void ApplyShared(IRecurringBillInput input, RecurringBill bill)
     {
@@ -55,5 +59,8 @@ public static class RecurringBillMapper
         }
 
         bill.RemindDaysBefore = input.RemindDaysBefore;
+        var matchKey = SubscriptionDescription.Normalize(input.MatchKey);
+        bill.MatchKey = matchKey.Length > 0 ? matchKey : null;
+        bill.DebtId = input.DebtId is { } debtId ? new DebtId(debtId) : null;
     }
 }

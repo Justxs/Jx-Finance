@@ -40,4 +40,4 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Trash and undo](trash-and-undo.md) | Trash and undo | 10 | [Trash and undo](../features/trash-and-undo.md) |
 | [Attachments](attachments.md) | none | 3 | [Attachments](../features/attachments.md) |
 | [Audit log](audit-log.md) | none | 6 | [Audit log](../features/audit-log.md) |
-| [Debt amortization](debt-amortization.md) | none | 6 | [Debt amortization](../features/debt-amortization.md) |
+| [Debt amortization](debt-amortization.md) | none | 13 | [Debt amortization](../features/debt-amortization.md) |

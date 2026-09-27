@@ -1805,7 +1805,10 @@
     },
     "debt": {
       "paymentTooSmall": "The monthly payment does not repay the debt within 50 years. It has to be more than the first month's interest.",
-      "scheduleIncomplete": "This debt needs a loan amount, an interest rate, a first payment date and a term or a monthly payment."
+      "scheduleIncomplete": "This debt needs a loan amount, an interest rate, a first payment date and a term or a monthly payment.",
+      "paymentWrongType": "Only an expense can pay a debt.",
+      "paymentTaken": "This transaction already pays a debt.",
+      "notTracked": "Turn on Track payments for this debt first."
     },
     "decimal": {
       "malformed": "Enter a number with a dot as the decimal separator, e.g. 12.34."
@@ -1880,7 +1883,8 @@
       "invalid": "The value is outside the allowed range."
     },
     "recurringBill": {
-      "inactive": "This recurring entry is inactive."
+      "inactive": "This recurring entry is inactive.",
+      "debtShape": "Only a recurring expense can pay a debt."
     },
     "reference": {
       "notFound": "The selected item no longer exists."
@@ -1919,7 +1923,7 @@
     },
     "transaction": {
       "linesMismatch": "Split lines must add up to the transaction amount.",
-      "splitNotAllowed": "Split transactions cannot be recategorized in bulk."
+      "splitNotAllowed": "This cannot be done with a split transaction."
     },
     "transfer": {
       "amountMismatch": "Sent and received amounts must match in the same currency.",

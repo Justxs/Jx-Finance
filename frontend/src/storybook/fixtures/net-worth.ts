@@ -1,6 +1,9 @@
 import type {
   AmortizationType,
   AssetResponse,
+  AssetValuationResponse,
+  AssetValueHistoryResponse,
+  DebtPaymentResponse,
   DebtResponse,
   DebtSchedulePlan,
   DebtScheduleResponse,
@@ -8,10 +11,14 @@ import type {
   NetWorthHistoryResponse,
   NetWorthResponse,
   NetWorthSnapshotItem,
+  TransactionResponse,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
-import { FIXTURE_TODAY, ids, totalOf } from "./base";
+import { FIXTURE_TODAY, ids, totalOf, uid } from "./base";
+import { transactions } from "./transactions";
+
+const manual = { depreciation: null, monthlyDepreciation: null, fullyDepreciatedOn: null };
 
 export const assets: AssetResponse[] = [
   {
@@ -21,6 +28,8 @@ export const assets: AssetResponse[] = [
     currentValue: "145000.00",
     asOf: "2026-06-30",
     currency: "eur",
+    value: "145000.00",
+    ...manual,
   },
   {
     id: ids.assets.car,
@@ -29,6 +38,15 @@ export const assets: AssetResponse[] = [
     currentValue: "14500.00",
     asOf: "2026-08-15",
     currency: "eur",
+    value: "14343.75",
+    depreciation: {
+      startDate: "2025-03-10",
+      startValue: "18000.00",
+      lifeMonths: 96,
+      residualValue: "3000.00",
+    },
+    monthlyDepreciation: "156.25",
+    fullyDepreciatedOn: "2032-10-10",
   },
   {
     id: ids.assets.investments,
@@ -37,8 +55,78 @@ export const assets: AssetResponse[] = [
     currentValue: "8320.55",
     asOf: "2026-09-01",
     currency: "eur",
+    value: "8320.55",
+    ...manual,
   },
 ];
+
+export const fullyDepreciatedAsset: AssetResponse = {
+  id: ids.assets.laptop,
+  name: "MacBook Pro 2019",
+  type: "other",
+  currentValue: "2400.00",
+  asOf: "2019-11-20",
+  currency: "eur",
+  value: "200.00",
+  depreciation: {
+    startDate: "2019-11-20",
+    startValue: "2400.00",
+    lifeMonths: 36,
+    residualValue: "200.00",
+  },
+  monthlyDepreciation: "61.12",
+  fullyDepreciatedOn: "2022-11-20",
+};
+
+export const dollarAsset: AssetResponse = {
+  id: ids.assets.watch,
+  name: "Omega Speedmaster",
+  type: "valuable",
+  currentValue: "6200.00",
+  asOf: "2026-05-02",
+  currency: "usd",
+  value: "6200.00",
+  ...manual,
+};
+
+export const apartmentValuations: AssetValuationResponse[] = [
+  { date: "2026-06-30", value: "145000.00", note: "Bank valuation for refinancing" },
+  { date: "2025-06-12", value: "138500.00", note: null },
+  { date: "2024-07-01", value: "131000.00", note: "Purchase price" },
+];
+
+export const carValuations: AssetValuationResponse[] = [
+  { date: "2026-08-15", value: "14500.00", note: "Technical inspection" },
+  { date: "2025-03-10", value: "18000.00", note: "Purchase price" },
+];
+
+export const apartmentValueHistory: AssetValueHistoryResponse = {
+  currency: "eur",
+  points: [
+    { date: "2024-07-01", value: "131000.00", isValuation: true },
+    { date: "2025-01-01", value: "131000.00", isValuation: false },
+    { date: "2025-06-12", value: "138500.00", isValuation: true },
+    { date: "2026-01-01", value: "138500.00", isValuation: false },
+    { date: "2026-06-30", value: "145000.00", isValuation: true },
+    { date: "2026-09-18", value: "145000.00", isValuation: false },
+  ],
+};
+
+export const carValueHistory: AssetValueHistoryResponse = {
+  currency: "eur",
+  points: [
+    { date: "2025-03-10", value: "18000.00", isValuation: true },
+    { date: "2025-06-10", value: "17531.25", isValuation: false },
+    { date: "2025-09-10", value: "17062.50", isValuation: false },
+    { date: "2025-12-10", value: "16593.75", isValuation: false },
+    { date: "2026-03-10", value: "16125.00", isValuation: false },
+    { date: "2026-06-10", value: "15656.25", isValuation: false },
+    { date: "2026-08-10", value: "15343.75", isValuation: false },
+    { date: "2026-08-15", value: "14500.00", isValuation: true },
+    { date: "2026-09-10", value: "14343.75", isValuation: false },
+    { date: "2026-09-18", value: "14343.75", isValuation: false },
+  ],
+};
 
 export interface ScheduleExtra {
   extraMonthly?: string | null;
@@ -131,8 +219,15 @@ function schedulePlan(terms: ScheduleTerms, extra: ScheduleExtra = {}): DebtSche
   };
 }
 
-function withPayoff(debt: Omit<DebtResponse, "payoffDate">): DebtResponse {
-  return { ...debt, payoffDate: schedulePlan(debt)?.payoffDate ?? null };
+const untracked = {
+  tracksPayments: false,
+  trackedBalance: null,
+  trackedIncomplete: false,
+  unavailablePayments: 0,
+} as const;
+
+function withPayoff(debt: Omit<DebtResponse, "payoffDate" | keyof typeof untracked>): DebtResponse {
+  return { ...untracked, ...debt, payoffDate: schedulePlan(debt)?.payoffDate ?? null };
 }
 
 const noSchedule = {
@@ -247,8 +342,85 @@ export const zeroRateSchedule = buildDebtSchedule(zeroRateDebt);
 
 export const linearSchedule = buildDebtSchedule(linearDebt);
 
+export const trackedMortgage: DebtResponse = {
+  ...mortgage,
+  outstandingAmount: "99100.00",
+  asOf: "2026-06-30",
+  tracksPayments: true,
+  trackedBalance: "97210.95",
+};
+
+function payment(
+  n: number,
+  transactionId: string,
+  date: string,
+  split: Pick<DebtPaymentResponse, "amount" | "kind" | "interest" | "principal" | "balance">,
+  principalTyped = false,
+): DebtPaymentResponse {
+  return {
+    id: uid("dddddddd", n),
+    transactionId,
+    date,
+    accountId: split.kind === "extra" ? ids.accounts.checking : ids.accounts.shared,
+    description: split.kind === "extra" ? "Permoka" : "Būsto paskolos įmoka",
+    overpaid: "0.00",
+    principalTyped,
+    ...split,
+  };
+}
+
+export const mortgagePayments: DebtPaymentResponse[] = [
+  payment(1, uid("55555555", 901), "2026-07-05", {
+    amount: "612.00",
+    kind: "regular",
+    interest: "317.95",
+    principal: "294.05",
+    balance: "98805.95",
+  }),
+  payment(2, uid("55555555", 902), "2026-08-05", {
+    amount: "612.00",
+    kind: "regular",
+    interest: "317.00",
+    principal: "295.00",
+    balance: "98510.95",
+  }),
+  payment(3, uid("55555555", 903), "2026-08-20", {
+    amount: "1000.00",
+    kind: "extra",
+    interest: "0.00",
+    principal: "1000.00",
+    balance: "97510.95",
+  }),
+  payment(
+    4,
+    uid("55555555", 15),
+    "2026-09-05",
+    {
+      amount: "612.00",
+      kind: "regular",
+      interest: "312.00",
+      principal: "300.00",
+      balance: "97210.95",
+    },
+    true,
+  ),
+];
+
+function transactionOf(id: string): TransactionResponse {
+  const item = transactions.find((candidate) => candidate.id === id);
+  if (!item) {
+    throw new Error(`the transactions fixture has no ${id}`);
+  }
+  return item;
+}
+
+export const linkedPaymentTransaction: TransactionResponse = {
+  ...transactionOf(uid("55555555", 15)),
+  debtPayment: { id: uid("dddddddd", 4), debtId: mortgage.id, debtName: mortgage.name },
+};
+
 const accountsCents = totalOf(accounts.map((item) => item.currentBalance));
-const assetsCents = totalOf(assets.map((item) => item.currentValue));
+const assetsCents = totalOf(assets.map((item) => item.value));
 const debtsCents = totalOf(debts.map((item) => item.outstandingAmount));
 
 export const netWorth: NetWorthResponse = {

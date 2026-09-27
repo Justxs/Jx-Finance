@@ -14,4 +14,6 @@ public interface IRecurringBillInput
     RecurringBillCadence Cadence { get; }
     DateOnly NextDueDate { get; }
     int RemindDaysBefore { get; }
+    string? MatchKey { get; }
+    Guid? DebtId { get; }
 }

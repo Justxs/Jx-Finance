@@ -300,7 +300,18 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var debt = await PostAsync<RestoredDebtDto>(
             Client,
             "/api/debts",
-            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", interestRate = 5m, asOf = Today, loanAmount = "100000.00", firstPaymentDate = "2026-01-01", termMonths = 360, amortizationType = "linear" });
+            new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", interestRate = 5m, asOf = Today.AddDays(-5), loanAmount = "100000.00", firstPaymentDate = "2026-01-01", termMonths = 360, amortizationType = "linear", tracksPayments = true });
+        var paid = await CreateTransactionAsync(Client, await CreateAccountAsync(), null, "expense", "600.00", $"{Today:yyyy-MM-dd}");
+        var payments = $"/api/debts/{debt.Id}/payments";
+        (await Client.PostAsJsonAsync(payments, new { transactionId = paid.Id }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        var link = Assert.Single((await Client.GetFromJsonAsync<List<IdDto>>(payments, TestContext.Current.CancellationToken))!);
+        var depreciation = new RestoredDepreciationDto(Today.AddDays(-10), "12000.00", 96, "1500.00");
+        var asset = await PostAsync<IdDto>(
+            Client,
+            "/api/assets",
+            new { name = "Car", type = "vehicle", currentValue = "12000.00", asOf = Today.AddDays(-10), depreciation });
+        var valuationUrl = $"/api/assets/{asset.Id}/valuations/{Today.AddDays(-5):yyyy-MM-dd}";
+        (await Client.PutAsJsonAsync(valuationUrl, new { value = "11000.00", note = "Inspection" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
         var backup = await CreateBackupAsync();
         (await Client.PutAsJsonAsync(
             $"/api/debts/{debt.Id}",
@@ -321,7 +332,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         }
 
         var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
-        Assert.Equal(debt, restored);
+        Assert.Equal(debt with { TrackedBalance = "98812.50" }, restored);
+        Assert.Equal(link, Assert.Single((await Client.GetFromJsonAsync<List<IdDto>>(payments, TestContext.Current.CancellationToken))!));
         Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken)).StatusCode);
         var restoredAsset = Assert.Single((await Client.GetFromJsonAsync<List<RestoredAssetDto>>("/api/assets", TestContext.Current.CancellationToken))!, a => a.Id == asset.Id);
         Assert.Equal(new RestoredAssetDto(asset.Id, "11000.00", depreciation), restoredAsset);
@@ -422,7 +434,8 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         int? TermMonths,
         string? MonthlyPayment,
         string AmortizationType,
-        DateOnly? PayoffDate);
+        DateOnly? PayoffDate,
+        string? TrackedBalance);
 
     private async Task SetPriceAsync(Guid securityId, string lastPrice, string lastPriceDate) =>
         (await Client.PutAsJsonAsync($"/api/investments/securities/{securityId}/price", new { lastPrice, lastPriceDate })).EnsureSuccessStatusCode();

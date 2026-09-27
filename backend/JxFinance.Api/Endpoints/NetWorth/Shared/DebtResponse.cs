@@ -17,4 +17,8 @@ public sealed record DebtResponse(
     [property: Money] decimal? MonthlyPayment,
     AmortizationType AmortizationType,
     DateOnly? PayoffDate,
-    Currency Currency);
+    Currency Currency,
+    bool TracksPayments,
+    [property: Money] decimal? TrackedBalance,
+    bool TrackedIncomplete,
+    int UnavailablePayments);

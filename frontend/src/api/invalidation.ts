@@ -19,6 +19,8 @@ const ledger = [
   api.getReportSummaryQueryKey,
   api.getBudgetsQueryKey,
   api.getNetWorthQueryKey,
+  api.getDebtsQueryKey,
+  api.getMonthCloseYearQueryKey,
 ] as const;
 
 const holdings = [
@@ -30,6 +32,7 @@ const holdings = [
   api.getAccountsQueryKey,
   api.getDashboardSummaryQueryKey,
   api.getNetWorthQueryKey,
+  api.getMonthCloseYearQueryKey,
 ] as const;
 
 const rules: readonly Rule[] = [
@@ -109,6 +112,7 @@ const rules: readonly Rule[] = [
       api.getTransactionsQueryKey,
       api.getDashboardSummaryQueryKey,
       api.getNetWorthQueryKey,
+      api.getMonthCloseYearQueryKey,
     ],
   },
   {
@@ -119,6 +123,7 @@ const rules: readonly Rule[] = [
       api.getAccountsQueryKey,
       api.getDashboardSummaryQueryKey,
       api.getNetWorthQueryKey,
+      api.getMonthCloseYearQueryKey,
     ],
   },
   {
@@ -141,6 +146,7 @@ const rules: readonly Rule[] = [
       api.getCategoryBreakdownQueryKey,
       api.getReportSummaryQueryKey,
       api.getRecurringBillsQueryKey,
+      api.getMonthCloseYearQueryKey,
     ],
   },
   {
@@ -171,14 +177,27 @@ const rules: readonly Rule[] = [
     ],
   },
   {
-    after: [api.getCreateAssetMutationKey, api.getUpdateAssetMutationKey],
+    after: [
+      api.getCreateAssetMutationKey,
+      api.getUpdateAssetMutationKey,
+      api.getSetAssetValuationMutationKey,
+      api.getDeleteAssetValuationMutationKey,
+    ],
     deleted: [api.getDeleteAssetMutationKey],
-    refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey],
+    refresh: [api.getAssetsQueryKey, api.getNetWorthQueryKey, api.getNetWorthHistoryQueryKey],
   },
   {
     after: [api.getCreateDebtMutationKey, api.getUpdateDebtMutationKey],
     deleted: [api.getDeleteDebtMutationKey],
     refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey],
+  },
+  {
+    after: [
+      api.getLinkDebtPaymentMutationKey,
+      api.getUpdateDebtPaymentMutationKey,
+      api.getUnlinkDebtPaymentMutationKey,
+    ],
+    refresh: [api.getDebtsQueryKey, api.getNetWorthQueryKey, api.getTransactionsQueryKey],
   },
   {
     after: [api.getCreateRecurringBillMutationKey, api.getUpdateRecurringBillMutationKey],
@@ -252,6 +271,34 @@ const rules: readonly Rule[] = [
   {
     after: [api.getUpdateSmtpSettingsMutationKey],
     refresh: [api.getSmtpSettingsQueryKey, api.getPublicSettingsQueryKey],
+  },
+  {
+    after: [api.getDismissUnusualAmountMutationKey, api.getRestoreUnusualAmountMutationKey],
+    refresh: [
+      api.getTransactionsQueryKey,
+      api.getTransactionsSummaryQueryKey,
+      api.getMonthCloseYearQueryKey,
+    ],
+  },
+  {
+    after: [
+      api.getCloseMonthMutationKey,
+      api.getUpdateMonthNoteMutationKey,
+      api.getReopenMonthMutationKey,
+    ],
+    refresh: [api.getMonthCloseYearQueryKey],
+  },
+  {
+    after: [api.getUpdateDiscordSettingsMutationKey],
+    refresh: [api.getPublicSettingsQueryKey],
+  },
+  {
+    after: [
+      api.getUpdateMyDiscordMutationKey,
+      api.getDeleteMyDiscordMutationKey,
+      api.getTestMyDiscordMutationKey,
+    ],
+    refresh: [api.getMyDiscordQueryKey],
   },
   {
     after: [api.getVerifyEmailMutationKey],

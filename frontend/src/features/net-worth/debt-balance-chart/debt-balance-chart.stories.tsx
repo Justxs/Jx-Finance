@@ -10,7 +10,7 @@ import { DebtBalanceChart } from "./debt-balance-chart";
 const meta = {
   title: "Features/NetWorth/DebtBalanceChart",
   component: DebtBalanceChart,
-  args: { plan: mortgageSchedule.plan, withExtra: null },
+  args: { plan: mortgageSchedule.plan, withExtra: null, currency: "eur" },
   decorators: [withWidth("wide")],
 } satisfies Meta<typeof DebtBalanceChart>;
 

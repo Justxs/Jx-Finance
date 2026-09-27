@@ -19,4 +19,9 @@ public sealed record TransactionResponse(
     Currency Currency,
     [property: Money] decimal ReportingAmount,
     IReadOnlyList<Guid> TagIds,
-    int AttachmentCount);
+    int AttachmentCount,
+    UnusualAmountResponse? Unusual,
+    bool UnusualDismissed,
+    TransactionDebtPaymentResponse? DebtPayment = null);
+
+public sealed record TransactionDebtPaymentResponse(Guid Id, Guid DebtId, string DebtName);

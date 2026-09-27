@@ -3,14 +3,17 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
 using JxFinance.Common.Unusual;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.NetWorth;
 using JxFinance.Domain.Notifications;
 using JxFinance.Domain.RecurringBills;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.RecurringBills.ConfirmRecurringBill;
@@ -32,12 +35,17 @@ public sealed class RecurringBillService(
     ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions,
-    ITransferService transfers) : IRecurringBillService
+    ITransferService transfers,
+    IInstanceSettingsStore settings,
+    IClock clock) : IRecurringBillService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Recurring entry not found.");
 
     private static readonly DomainError CategoryGone =
         new(ErrorCodes.ReferenceNotFound, "The category of this recurring entry is no longer available.");
+
+    private static readonly DomainError DebtMissing = new(ErrorCodes.ReferenceNotFound, "Debt does not exist.");
+    private static readonly DomainError DebtNotTracked = new(ErrorCodes.DebtNotTracked, "Turn on payment tracking for this debt first.");
 
     private static readonly DomainError CategoryNotExpense =
         new(ErrorCodes.CategoryWrongType, "Choose an accessible expense category.");
@@ -183,6 +191,11 @@ public sealed class RecurringBillService(
             var posted = await PostTransactionAsync(bill, request, amount.Value, cancellationToken);
             if (posted.IsFailure) return posted.Error;
             transactionId = posted.Value;
+            if (bill.DebtId is { } debtId && settings.Current.IsEnabled(Feature.NetWorth)
+                && await db.Debts.AnyAsync(d => d.Id == debtId && d.TracksPayments, cancellationToken))
+            {
+                db.DebtPayments.Add(new DebtPayment { DebtId = debtId, TransactionId = new TransactionId(posted.Value), Kind = DebtPaymentKind.Regular });
+            }
         }
 
         bill.Advance();
@@ -300,6 +313,13 @@ public sealed class RecurringBillService(
     {
         if (input.AccountId is { } from && await references.AccountExistsAsync(new AccountId(from), ct) is { } fromError) return fromError;
         if (input.ToAccountId is { } to && await references.AccountExistsAsync(new AccountId(to), ct) is { } toError) return toError;
+        if (input.DebtId is { } debt && settings.Current.IsEnabled(Feature.NetWorth))
+        {
+            var tracks = await db.Debts.Where(d => d.Id == new DebtId(debt)).Select(d => (bool?)d.TracksPayments).FirstOrDefaultAsync(ct);
+            if (tracks is null) return DebtMissing;
+            if (tracks is false) return DebtNotTracked;
+        }
+
         if (input.Shape == RecurringBillShape.Transfer || input.CategoryId is not { } categoryId) return null;
 
         var flow = FlowOf(input.Shape);

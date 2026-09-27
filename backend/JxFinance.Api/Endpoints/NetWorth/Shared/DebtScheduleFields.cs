@@ -13,5 +13,6 @@ public static class DebtScheduleFields
         summary.Describe(nameof(IDebtInput.TermMonths), "Optional number of monthly payments, 1 to 600. Leave monthlyPayment empty when it is set.");
         summary.Describe(nameof(IDebtInput.MonthlyPayment), "Optional fixed monthly payment of an annuity, a positive decimal string; the term is derived from it. It must repay the debt within 600 payments (debt.paymentTooSmall).");
         summary.Describe(nameof(IDebtInput.AmortizationType), "annuity (level payment, the default) or linear (equal principal, needs termMonths).");
+        summary.Describe(nameof(IDebtInput.TracksPayments), "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.");
     }
 }

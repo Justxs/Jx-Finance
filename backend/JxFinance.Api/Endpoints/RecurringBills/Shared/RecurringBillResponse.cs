@@ -15,4 +15,7 @@ public sealed record RecurringBillResponse(
     RecurringBillCadence Cadence,
     DateOnly NextDueDate,
     int RemindDaysBefore,
-    bool IsActive);
+    bool IsActive,
+    string? MatchKey,
+    RecurringBillMatchResponse? LatestMatch,
+    Guid? DebtId);

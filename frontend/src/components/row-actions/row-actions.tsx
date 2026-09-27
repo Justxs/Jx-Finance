@@ -1,4 +1,4 @@
-import { Archive, Pencil, Trash2 } from "lucide-react";
+import { Archive, Pencil, Trash2, Unlink } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button/button";
@@ -7,18 +7,19 @@ import { cn } from "@/lib/utils";
 const removeKinds = {
   delete: { icon: Trash2, labelKey: "actions.delete" },
   archive: { icon: Archive, labelKey: "actions.archive" },
+  unlink: { icon: Unlink, labelKey: "netWorth.payments.unlinkFromDebt" },
 } as const;
 
 export interface DeleteProps {
   onDelete?: () => void;
   deletePending?: boolean;
   deleteDisabled?: boolean;
+  removeKind?: keyof typeof removeKinds;
 }
 
 interface Props extends DeleteProps {
   label: string;
   size?: "icon-sm" | "icon";
-  removeKind?: keyof typeof removeKinds;
   onEdit?: () => void;
   editDisabled?: boolean;
   className?: string;

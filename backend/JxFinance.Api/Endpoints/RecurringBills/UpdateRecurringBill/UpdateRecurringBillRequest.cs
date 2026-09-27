@@ -16,4 +16,6 @@ public sealed record UpdateRecurringBillRequest(
     RecurringBillCadence Cadence,
     DateOnly NextDueDate,
     int RemindDaysBefore,
-    bool IsActive) : IRecurringBillInput;
+    bool IsActive,
+    string? MatchKey = null,
+    Guid? DebtId = null) : IRecurringBillInput;

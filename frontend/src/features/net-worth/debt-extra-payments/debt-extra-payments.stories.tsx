@@ -8,6 +8,7 @@ const meta = {
   title: "Features/NetWorth/DebtExtraPayments",
   component: DebtExtraPayments,
   args: {
+    currency: "eur",
     idPrefix: "extra",
     draft: noExtraPayments,
     schedule: mortgageSchedule,

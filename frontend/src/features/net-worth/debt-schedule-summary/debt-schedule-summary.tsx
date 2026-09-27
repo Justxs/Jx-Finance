@@ -18,11 +18,12 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
   const money = useMoney();
   const formatDate = useIsoDate();
   const formatRate = useRatePercent();
-  const scheduled = money.format(Number(schedule.scheduledBalance));
+  const scheduled = money.format(Number(schedule.scheduledBalance), debt.currency);
   const update = useUpdateDebt(
     silent({ meta: { success: t("netWorth.schedule.balanceUpdated", { amount: scheduled }) } }),
   );
-  const differs = Number(schedule.scheduledBalance) !== Number(debt.outstandingAmount);
+  const differs =
+    Number(schedule.scheduledBalance) !== Number(debt.trackedBalance ?? debt.outstandingAmount);
 
   function applyScheduledBalance() {
     update.mutate({
@@ -38,16 +39,16 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
   const stats = [
     {
       label: t("netWorth.schedule.regularPayment"),
-      value: money.format(Number(schedule.regularPayment)),
+      value: money.format(Number(schedule.regularPayment), debt.currency),
     },
     { label: t("netWorth.interestRate"), value: formatRate(schedule.interestRate) },
     {
       label: t("netWorth.schedule.totalInterest"),
-      value: money.format(Number(schedule.plan.totalInterest)),
+      value: money.format(Number(schedule.plan.totalInterest), debt.currency),
     },
     {
       label: t("netWorth.schedule.totalPaid"),
-      value: money.format(Number(schedule.plan.totalPaid)),
+      value: money.format(Number(schedule.plan.totalPaid), debt.currency),
     },
   ];
 
@@ -88,11 +89,21 @@ export function DebtScheduleSummary({ debt, schedule }: Readonly<Props>) {
             <dd className="mt-0.5 text-xl font-semibold text-expense tabular-nums">{scheduled}</dd>
             <dd className="mt-1 text-xs text-muted-foreground tabular-nums">
               {t("netWorth.schedule.recorded", {
-                amount: money.format(Number(debt.outstandingAmount)),
+                amount: money.format(Number(debt.outstandingAmount), debt.currency),
                 date: formatDate(debt.asOf),
               })}
             </dd>
           </dl>
+          {debt.trackedBalance === null ? null : (
+            <dl className="min-w-0">
+              <dt className="text-sm text-muted-foreground">
+                {t("netWorth.schedule.trackedBalance")}
+              </dt>
+              <dd className="mt-0.5 text-xl font-semibold text-expense tabular-nums">
+                {money.format(Number(debt.trackedBalance), debt.currency)}
+              </dd>
+            </dl>
+          )}
           {differs ? (
             <Button
               variant="outline"

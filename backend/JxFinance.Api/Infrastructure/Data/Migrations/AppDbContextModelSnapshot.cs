@@ -978,6 +978,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int?>("TermMonths")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("TracksPayments")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
@@ -1008,6 +1011,49 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Debts");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtPayment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("DebtId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("Principal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<Guid>("TransactionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DebtId");
+
+                    b.HasIndex("TransactionId")
+                        .IsUnique()
+                        .HasFilter("\"IsDeleted\" = false");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("DebtPayments");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.NetWorthSnapshot", b =>
@@ -1237,6 +1283,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("DebtId")
+                        .HasColumnType("uuid");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
@@ -1279,6 +1328,8 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.HasIndex("AccountId");
 
                     b.HasIndex("CategoryId");
+
+                    b.HasIndex("DebtId");
 
                     b.HasIndex("ToAccountId");
 
@@ -2357,6 +2408,27 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.DebtPayment", b =>
+                {
+                    b.HasOne("JxFinance.Domain.NetWorth.Debt", null)
+                        .WithMany()
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Domain.Transactions.Transaction", null)
+                        .WithMany()
+                        .HasForeignKey("TransactionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("JxFinance.Domain.NetWorth.NetWorthSnapshot", b =>
                 {
                     b.HasOne("JxFinance.Infrastructure.Auth.AppUser", null)
@@ -2395,6 +2467,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("JxFinance.Domain.NetWorth.Debt", null)
+                        .WithMany()
+                        .HasForeignKey("DebtId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("JxFinance.Domain.Accounts.Account", null)
                         .WithMany()

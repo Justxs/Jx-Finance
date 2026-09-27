@@ -15,4 +15,5 @@ public sealed record UpdateDebtRequest(
     DateOnly? FirstPaymentDate = null,
     int? TermMonths = null,
     [property: Money] decimal? MonthlyPayment = null,
-    AmortizationType? AmortizationType = null) : IDebtInput;
+    AmortizationType? AmortizationType = null,
+    bool TracksPayments = false) : IDebtInput;

@@ -14,4 +14,5 @@ public interface IDebtInput
     int? TermMonths { get; }
     decimal? MonthlyPayment { get; }
     AmortizationType? AmortizationType { get; }
+    bool TracksPayments { get; }
 }

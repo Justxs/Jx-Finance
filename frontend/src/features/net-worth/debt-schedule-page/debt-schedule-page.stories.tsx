@@ -1,11 +1,21 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { expect, userEvent } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
+  getDebtPaymentCandidatesMockHandler,
+  getDebtPaymentsMockHandler,
   getDebtScheduleMockHandler,
   getDebtsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { withPageFrame } from "@/storybook/decorators";
-import { debts, ids, linearDebt, serverErrorProblem, zeroRateDebt } from "@/storybook/fixtures";
+import {
+  debts,
+  ids,
+  linearDebt,
+  mortgagePayments,
+  serverErrorProblem,
+  trackedMortgage,
+  zeroRateDebt,
+} from "@/storybook/fixtures";
 import {
   errorHandlers,
   failWith,
@@ -32,6 +42,15 @@ export const Default: Story = {
       await canvas.findByRole("heading", { name: "Būsto paskola (Swedbank)" }),
     ).toBeInTheDocument();
     await expect(canvas.getByRole("region", { name: /^(payments|įmokos)$/i })).toBeInTheDocument();
+  },
+};
+
+export const NotTrackingSkipsPayments: Story = {
+  parameters: withHandlers(getDebtPaymentsMockHandler(pending)),
+  play: async ({ canvas }) => {
+    await expect(
+      await canvas.findByRole("img", { name: /^(remaining balance|likęs skolos likutis)/i }),
+    ).toBeInTheDocument();
   },
 };
 
@@ -78,4 +97,89 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const ScheduleFails: Story = {
   parameters: withHandlers(getDebtScheduleMockHandler(failWith(serverErrorProblem))),
+};
+
+const tracking = getDebtsMockHandler([trackedMortgage, ...debts.slice(1)]);
+
+export const TrackingPayments: Story = {
+  parameters: withHandlers(tracking),
+  play: async ({ canvas }) => {
+    const payments = await canvas.findByRole("region", {
+      name: /^(linked payments|susietos įmokos)$/i,
+    });
+    await expect(payments).toHaveTextContent("97");
+    await expect(canvas.getAllByText(/tracked balance|stebimas likutis/i).length).toBeGreaterThan(
+      0,
+    );
+  },
+};
+
+export const TrackingWithMissingRate: Story = {
+  parameters: withHandlers(getDebtsMockHandler([{ ...trackedMortgage, trackedIncomplete: true }])),
+};
+
+export const TrackingWithUnavailablePayments: Story = {
+  parameters: withHandlers(getDebtsMockHandler([{ ...trackedMortgage, unavailablePayments: 2 }])),
+};
+
+export const TrackingPaidOff: Story = {
+  parameters: withHandlers(
+    getDebtsMockHandler([
+      { ...trackedMortgage, outstandingAmount: "900.00", trackedBalance: "0.00" },
+    ]),
+    getDebtPaymentsMockHandler([
+      {
+        ...mortgagePayments[2]!,
+        interest: "0.00",
+        principal: "900.00",
+        overpaid: "100.00",
+        balance: "0.00",
+      },
+    ]),
+  ),
+};
+
+export const TrackingWithoutSchedule: Story = {
+  args: { debtId: ids.debts.carLease },
+  parameters: withHandlers(
+    getDebtsMockHandler(
+      debts.map((debt) =>
+        debt.id === ids.debts.carLease
+          ? { ...debt, tracksPayments: true, trackedBalance: debt.outstandingAmount }
+          : debt,
+      ),
+    ),
+    getDebtPaymentsMockHandler([]),
+  ),
+};
+
+export const LinkingPayments: Story = {
+  parameters: withHandlers(tracking),
+  play: async ({ canvas }) => {
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /^(link payments|susieti įmokas)$/i }),
+    );
+    const body = within(document.body);
+    const [first] = await body.findAllByRole("checkbox");
+    await userEvent.click(first!);
+    await userEvent.click(body.getByRole("button", { name: /link 1 payment|susieti 1 įmoką/i }));
+    await waitFor(() => expect(body.queryByRole("dialog")).toBeNull());
+  },
+};
+
+export const NoCandidates: Story = {
+  parameters: withHandlers(tracking, getDebtPaymentCandidatesMockHandler([])),
+  play: async ({ canvas }) => {
+    await userEvent.click(
+      await canvas.findByRole("button", { name: /^(link payments|susieti įmokas)$/i }),
+    );
+  },
+};
+
+export const PaymentsLoading: Story = {
+  parameters: withHandlers(tracking, getDebtPaymentsMockHandler(pending)),
+};
+
+export const PaymentsFail: Story = {
+  parameters: withHandlers(tracking, getDebtPaymentsMockHandler(failWith(serverErrorProblem))),
 };

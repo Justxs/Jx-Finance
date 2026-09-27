@@ -31,9 +31,10 @@ public static class DebtMapper
         debt.TermMonths = input.TermMonths;
         debt.MonthlyPayment = input.MonthlyPayment;
         debt.AmortizationType = input.AmortizationType ?? AmortizationType.Annuity;
+        debt.TracksPayments = input.TracksPayments;
     }
 
-    public static DebtResponse ToResponse(this Debt debt) => new(
+    public static DebtResponse ToResponse(this Debt debt, DebtTracking? tracking) => new(
         debt.Id.Value,
         debt.Name,
         debt.Type,
@@ -46,7 +47,11 @@ public static class DebtMapper
         debt.MonthlyPayment,
         debt.AmortizationType,
         PayoffDate(debt),
-        debt.Currency);
+        debt.Currency,
+        debt.TracksPayments,
+        tracking?.Track.Balance,
+        tracking?.Incomplete ?? false,
+        tracking?.Unavailable ?? 0);
 
     private static DateOnly? PayoffDate(Debt debt) =>
         AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var schedule)

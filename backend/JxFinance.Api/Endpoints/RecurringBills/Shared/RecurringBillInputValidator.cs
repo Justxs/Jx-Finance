@@ -31,6 +31,12 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
             .WithMessage("A variable entry's amount is entered when it's confirmed, not set upfront.")
             .When(r => r.Kind == RecurringBillKind.Variable);
 
+        RuleFor(r => r.DebtId)
+            .IsAbsent()
+            .WithErrorCode(ErrorCodes.RecurringBillDebtShape)
+            .WithMessage("Only a recurring expense can pay a debt.")
+            .When(r => r.Shape != RecurringBillShape.Expense);
+
         When(r => r.Shape == RecurringBillShape.Transfer, () =>
         {
             RuleFor(r => r.AccountId)

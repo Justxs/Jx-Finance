@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import type { DebtScheduleParams, DebtScheduleResponse } from "@/api/generated/model";
+import type { Currency, DebtScheduleParams, DebtScheduleResponse } from "@/api/generated/model";
 import { FieldShell, shellAria } from "@/components/form/field-shell/field-shell";
 import { DatePicker } from "@/components/ui/date-picker/date-picker";
 import { Input } from "@/components/ui/input/input";
@@ -37,10 +37,17 @@ interface Props {
   idPrefix: string;
   draft: ExtraPaymentDraft;
   schedule: DebtScheduleResponse;
+  currency: Currency;
   onChange: (field: keyof ExtraPaymentDraft, value: string) => void;
 }
 
-export function DebtExtraPayments({ idPrefix, draft, schedule, onChange }: Readonly<Props>) {
+export function DebtExtraPayments({
+  idPrefix,
+  draft,
+  schedule,
+  currency,
+  onChange,
+}: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -119,7 +126,7 @@ export function DebtExtraPayments({ idPrefix, draft, schedule, onChange }: Reado
             {t("netWorth.schedule.savings", {
               date: formatDate(faster.payoffDate),
               count: schedule.paymentsSaved,
-              amount: money.format(Number(schedule.interestSaved)),
+              amount: money.format(Number(schedule.interestSaved), currency),
             })}
           </span>
         ) : (

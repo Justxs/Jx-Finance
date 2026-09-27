@@ -2,7 +2,13 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent } from "storybook/test";
 import { getCreateDebtMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { debtPaymentTooSmallProblem, debts, ids, zeroRateDebt } from "@/storybook/fixtures";
+import {
+  debtPaymentTooSmallProblem,
+  debts,
+  ids,
+  trackedMortgage,
+  zeroRateDebt,
+} from "@/storybook/fixtures";
 import { failWith, pending, withHandlers } from "@/storybook/handlers";
 import { DebtForm, debtFormValues } from "./debt-form";
 
@@ -85,5 +91,15 @@ export const PaymentTooSmall: Story = {
     await expect(
       await canvas.findByText(/does not repay the debt within 50 years|negrąžina per 50 metų/i),
     ).toBeInTheDocument();
+  },
+};
+
+export const TracksPayments: Story = {
+  args: { editing: { id: trackedMortgage.id, values: debtFormValues(trackedMortgage) } },
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("checkbox", { name: /track payments|sekti įmokas/i }),
+    ).toBeChecked();
+    await expect(canvas.getByLabelText(/^(balance on|likutis dieną)$/i)).toBeInTheDocument();
   },
 };

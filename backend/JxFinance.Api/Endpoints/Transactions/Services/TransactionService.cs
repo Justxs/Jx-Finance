@@ -54,11 +54,13 @@ public sealed class TransactionService(
         var linesByTransaction = await LoadLinesAsync(page.Items.Where(t => t.IsSplit).Select(t => t.Id), cancellationToken);
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
+        var debtPayments = await DebtPaymentsOfAsync(page.Items.Select(t => t.Id), cancellationToken);
 
         return page.Map(t => Shown(t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
             tagsByTransaction.GetValueOrDefault(t.Id),
-            attachmentCounts.GetValueOrDefault(t.Id)));
+            attachmentCounts.GetValueOrDefault(t.Id)) with
+        { DebtPayment = debtPayments.GetValueOrDefault(t.Id) }));
     }
 
     public async IAsyncEnumerable<TransactionResponse> StreamExportAsync(
@@ -551,6 +553,22 @@ public sealed class TransactionService(
             .GroupBy(a => a.TransactionId)
             .Select(g => new { g.Key, Count = g.Count() })
             .ToDictionaryAsync(g => g.Key, g => g.Count, cancellationToken);
+    }
+
+    private async Task<Dictionary<TransactionId, TransactionDebtPaymentResponse>> DebtPaymentsOfAsync(
+        IEnumerable<TransactionId> transactionIds,
+        CancellationToken cancellationToken)
+    {
+        if (!settings.Current.IsEnabled(Feature.NetWorth))
+        {
+            return [];
+        }
+
+        var ids = transactionIds.ToList();
+        return await db.DebtPayments
+            .Where(p => ids.Contains(p.TransactionId))
+            .Join(db.Debts, p => p.DebtId, d => d.Id, (p, d) => new { p.TransactionId, Marker = new TransactionDebtPaymentResponse(p.Id.Value, d.Id.Value, d.Name) })
+            .ToDictionaryAsync(x => x.TransactionId, x => x.Marker, cancellationToken);
     }
 
     private async Task<Dictionary<TransactionId, List<TagId>>> LoadTagsOfFilteredAsync(

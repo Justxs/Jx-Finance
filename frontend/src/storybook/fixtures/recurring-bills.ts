@@ -2,7 +2,15 @@ import type { RecurringBillResponse } from "@/api/generated/model";
 import { ids } from "./base";
 import { problemOf } from "./problems";
 
-type Defaulted = "shape" | "kind" | "toAccountId" | "cadence" | "isActive";
+type Defaulted =
+  | "shape"
+  | "kind"
+  | "toAccountId"
+  | "cadence"
+  | "isActive"
+  | "matchKey"
+  | "latestMatch"
+  | "debtId";
 
 type BillSeed = Omit<RecurringBillResponse, Defaulted> &
   Partial<Pick<RecurringBillResponse, Defaulted>>;
@@ -14,6 +22,9 @@ function bill(seed: BillSeed): RecurringBillResponse {
     toAccountId: null,
     cadence: "monthly",
     isActive: true,
+    matchKey: null,
+    latestMatch: null,
+    debtId: null,
     ...seed,
   };
 }
@@ -27,6 +38,12 @@ export const dueSoonBill = bill({
   nextDueDate: "2026-09-20",
   remindDaysBefore: 3,
 });
+
+export const priceRiseBill: RecurringBillResponse = {
+  ...dueSoonBill,
+  matchKey: "telia lietuva",
+  latestMatch: { date: "2026-09-03", amount: "27.99", expected: "24.99", isPriceRise: true },
+};
 
 export const variableBill = bill({
   id: ids.bills.ignitis,
@@ -97,22 +114,25 @@ export const crossCurrencyTransferBill = bill({
   remindDaysBefore: 5,
 });
 
+export const mortgageBill = bill({
+  id: ids.bills.mortgage,
+  name: "Būsto paskolos įmoka",
+  amount: "612.00",
+  categoryId: ids.categories.housing,
+  accountId: ids.accounts.shared,
+  nextDueDate: "2026-10-05",
+  remindDaysBefore: 3,
+  debtId: ids.debts.mortgage,
+});
+
 export const recurringBills: RecurringBillResponse[] = [
   overdueBill,
-  dueSoonBill,
+  priceRiseBill,
   variableBill,
   incomeBill,
   transferBill,
   crossCurrencyTransferBill,
-  bill({
-    id: ids.bills.mortgage,
-    name: "Būsto paskolos įmoka",
-    amount: "612.00",
-    categoryId: ids.categories.housing,
-    accountId: ids.accounts.shared,
-    nextDueDate: "2026-10-05",
-    remindDaysBefore: 3,
-  }),
+  mortgageBill,
   bill({
     id: ids.bills.insurance,
     name: "Privalomasis ir KASKO automobilio draudimas (Lietuvos draudimas), metinė įmoka",

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, fireEvent, fn, userEvent, waitFor } from "storybook/test";
+import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import { getUpdateRecurringBillMockHandler } from "@/api/generated/recurring-bills/recurring-bills.msw";
 import { withWidth } from "@/storybook/decorators";
 import {
@@ -9,9 +10,11 @@ import {
   dueSoonBill,
   inactiveBill,
   incomeBill,
+  mortgageBill,
   notFoundProblem,
   recurringBills,
   savingsAccount,
+  trackedMortgage,
   transferBill,
   variableBill,
 } from "@/storybook/fixtures";
@@ -149,5 +152,18 @@ export const BillNoLongerExists: Story = {
     await userEvent.click(canvas.getByRole("button", { name: "Save" }));
 
     await expect(await canvas.findByRole("alert")).toBeVisible();
+  },
+};
+
+export const PaysADebt: Story = {
+  args: { bill: mortgageBill },
+  parameters: withHandlers(getDebtsMockHandler([trackedMortgage])),
+  play: async ({ canvas, args }) => {
+    const debt = await canvas.findByRole("combobox", { name: "Pays debt" });
+    await expect(debt).toHaveTextContent(trackedMortgage.name);
+    await chooseOption(debt, "No debt");
+    await userEvent.click(canvas.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(args.onClose).toHaveBeenCalled());
   },
 };

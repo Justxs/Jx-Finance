@@ -55,6 +55,7 @@ public static class ErrorCodes
     public const string TransactionLinesMismatch = "transaction.linesMismatch";
     public const string TransactionSplitNotAllowed = "transaction.splitNotAllowed";
     public const string RecurringBillInactive = "recurringBill.inactive";
+    public const string RecurringBillDebtShape = "recurringBill.debtShape";
     public const string HoldingOversold = "holding.oversold";
     public const string HoldingDependentSales = "holding.dependentSales";
     public const string SecurityNotHeld = "security.notHeld";
@@ -73,6 +74,9 @@ public static class ErrorCodes
     public const string AssetLastValuation = "asset.lastValuation";
     public const string DebtPaymentTooSmall = "debt.paymentTooSmall";
     public const string DebtScheduleIncomplete = "debt.scheduleIncomplete";
+    public const string DebtPaymentWrongType = "debt.paymentWrongType";
+    public const string DebtPaymentTaken = "debt.paymentTaken";
+    public const string DebtNotTracked = "debt.notTracked";
     public const string AttachmentEmpty = "attachment.empty";
     public const string AttachmentTooLarge = "attachment.tooLarge";
     public const string AttachmentTypeNotAllowed = "attachment.typeNotAllowed";
@@ -117,7 +121,7 @@ public static class ErrorCodes
     {
         ResourceNotFound or FeatureDisabled => StatusCodes.Status404NotFound,
         ConflictDuplicate or ConflictStale or ConflictBusy or SetupAlreadyCompleted or RestoreSlotTaken
-            or RestoreNameTaken or AttachmentLimitReached => StatusCodes.Status409Conflict,
+            or RestoreNameTaken or AttachmentLimitReached or MonthCloseNotEnded or DebtPaymentTaken => StatusCodes.Status409Conflict,
         AccessForbidden or UserSelfChange or UserLastAdministrator or SecurityNotHeld or SessionCurrent => StatusCodes.Status403Forbidden,
         CredentialsInvalid => StatusCodes.Status401Unauthorized,
         CredentialsLockedOut => StatusCodes.Status429TooManyRequests,

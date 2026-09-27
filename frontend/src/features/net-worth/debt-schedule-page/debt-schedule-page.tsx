@@ -1,8 +1,12 @@
 import { ArrowLeft } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useDebtScheduleSuspense, useDebtsSuspense } from "@/api/generated";
-import type { DebtResponse } from "@/api/generated/model";
+import {
+  useDebtPaymentsSuspense,
+  useDebtScheduleSuspense,
+  useDebtsSuspense,
+} from "@/api/generated";
+import type { DebtResponse, DebtScheduleResponse } from "@/api/generated/model";
 import { PageHeader } from "@/components/page-header/page-header";
 import { QueryBoundary } from "@/components/query-boundary/query-boundary";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
@@ -19,6 +23,7 @@ import {
   noExtraPayments,
 } from "../debt-extra-payments/debt-extra-payments";
 import { DebtPaymentSplitChart } from "../debt-payment-split-chart";
+import { DebtPayments } from "../debt-payments/debt-payments";
 import { DebtScheduleSummary } from "../debt-schedule-summary/debt-schedule-summary";
 import { DebtScheduleTable } from "../debt-schedule-table/debt-schedule-table";
 
@@ -32,15 +37,7 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
   const debt = debts.data.find((item) => item.id === debtId);
 
   let content: ReactNode;
-  if (!debt) {
-    content = <EmptyText>{t("netWorth.schedule.notFound")}</EmptyText>;
-  } else if (debt.payoffDate === null) {
-    content = (
-      <Section>
-        <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
-      </Section>
-    );
-  } else {
+  if (debt) {
     content = (
       <QueryBoundary
         fallback={
@@ -51,9 +48,20 @@ export function DebtSchedulePage({ debtId }: Readonly<Props>) {
         }
         errorSubject={t("netWorth.schedule.table")}
       >
-        <DebtScheduleView debt={debt} />
+        <div className="space-y-5">
+          {debt.payoffDate === null ? (
+            <Section>
+              <EmptyText>{t("netWorth.schedule.incomplete")}</EmptyText>
+            </Section>
+          ) : (
+            <DebtScheduleView debt={debt} />
+          )}
+          {debt.tracksPayments ? <DebtPayments debt={debt} /> : null}
+        </div>
       </QueryBoundary>
     );
+  } else {
+    content = <EmptyText>{t("netWorth.schedule.notFound")}</EmptyText>;
   }
 
   return (
@@ -95,13 +103,22 @@ function DebtScheduleView({ debt }: Readonly<{ debt: DebtResponse }>) {
           idPrefix={`extra-${debt.id}`}
           draft={draft}
           schedule={schedule}
+          currency={debt.currency}
           onChange={change}
         />
       </TitledSection>
 
       <div className="grid gap-5 lg:grid-cols-2">
         <TitledSection title={t("netWorth.schedule.balanceChart")} bodyGap="md">
-          <DebtBalanceChart plan={schedule.plan} withExtra={schedule.withExtra} />
+          {debt.tracksPayments ? (
+            <TrackedBalanceChart debt={debt} schedule={schedule} />
+          ) : (
+            <DebtBalanceChart
+              plan={schedule.plan}
+              withExtra={schedule.withExtra}
+              currency={debt.currency}
+            />
+          )}
         </TitledSection>
         <TitledSection title={t("netWorth.schedule.splitChart")} bodyGap="md">
           <DebtPaymentSplitChart plan={shownPlan} />
@@ -114,8 +131,27 @@ function DebtScheduleView({ debt }: Readonly<{ debt: DebtResponse }>) {
           key={schedule.withExtra ? "extra" : "plan"}
           plan={shownPlan}
           asOf={schedule.asOf}
+          currency={debt.currency}
         />
       </Section>
     </StaleRegion>
+  );
+}
+
+interface TrackedProps {
+  debt: DebtResponse;
+  schedule: DebtScheduleResponse;
+}
+
+function TrackedBalanceChart({ debt, schedule }: Readonly<TrackedProps>) {
+  const payments = useDebtPaymentsSuspense(debt.id).data;
+
+  return (
+    <DebtBalanceChart
+      plan={schedule.plan}
+      withExtra={schedule.withExtra}
+      currency={debt.currency}
+      tracked={{ from: debt.asOf, until: schedule.asOf, opening: debt.outstandingAmount, payments }}
+    />
   );
 }

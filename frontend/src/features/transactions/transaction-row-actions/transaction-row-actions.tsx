@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { TransactionResponse } from "@/api/generated/model";
 import { RowActions } from "@/components/row-actions/row-actions";
 import { Button } from "@/components/ui/button/button";
+import { DebtPaymentAction } from "../debt-payment/debt-payment";
 import { isOptimistic } from "../transaction-amount";
 
 interface Props {
@@ -37,6 +38,7 @@ export function TransactionRowActions({
       deletePending={deletingId === transaction.id}
       deleteDisabled={optimistic || deletingId !== null}
     >
+      <DebtPaymentAction transaction={transaction} label={label} />
       <Button
         variant="ghost"
         size="icon-sm"

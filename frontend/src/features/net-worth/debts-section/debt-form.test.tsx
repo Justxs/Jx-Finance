@@ -1,11 +1,11 @@
 import { fireEvent, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
-import { debts, linearDebt, zeroRateDebt } from "@/storybook/fixtures";
+import { debts, linearDebt, trackedMortgage, zeroRateDebt } from "@/storybook/fixtures";
 import { renderWithQuery } from "@/test/query";
 import { DebtForm, debtFormValues, debtRequest } from "./debt-form";
 
 test("a debt read into the form and written back keeps every repayment term", () => {
-  for (const debt of [...debts, linearDebt, zeroRateDebt]) {
+  for (const debt of [...debts, linearDebt, zeroRateDebt, trackedMortgage]) {
     expect(debtRequest(debtFormValues(debt))).toEqual({
       name: debt.name,
       type: debt.type,
@@ -17,6 +17,7 @@ test("a debt read into the form and written back keeps every repayment term", ()
       termMonths: debt.termMonths,
       monthlyPayment: debt.monthlyPayment,
       amortizationType: debt.amortizationType,
+      tracksPayments: debt.tracksPayments,
     });
   }
 });
@@ -33,6 +34,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     termMonths: " ",
     monthlyPayment: "",
     amortizationType: "unknown",
+    tracksPayments: true,
   });
 
   expect(request).toEqual({
@@ -46,6 +48,7 @@ test("empty repayment fields are sent as null and a comma is read as a decimal p
     termMonths: null,
     monthlyPayment: null,
     amortizationType: "annuity",
+    tracksPayments: true,
   });
 });
 
@@ -65,4 +68,14 @@ test("a term outside 1 to 600 months is refused", async () => {
   fireEvent.change(screen.getByLabelText("Term, months"), { target: { value: "601" } });
 
   expect(await screen.findByText("Enter a whole number from 1 to 600.")).toBeInTheDocument();
+});
+
+test("tracking payments asks for the balance and the date it is good for", async () => {
+  renderWithQuery(<DebtForm onClose={() => {}} />);
+  expect(screen.queryByLabelText("Balance on")).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole("checkbox", { name: "Track payments" }));
+
+  expect(await screen.findByLabelText("Balance on")).toBeInTheDocument();
+  expect(screen.getByLabelText("Balance")).toBeInTheDocument();
 });

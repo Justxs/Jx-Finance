@@ -284,6 +284,11 @@ public static class TrashRestorers
             return CategoryGone;
         }
 
+        if (bill.DebtId is { } debtId && !await r.Db.Debts.AnyAsync(d => d.Id == debtId, r.CancellationToken))
+        {
+            bill.DebtId = null;
+        }
+
         return Result.Success();
     }
 

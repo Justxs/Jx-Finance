@@ -24,6 +24,7 @@ test("typing an extra amount commits it once typing pauses", () => {
   renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
+      currency="eur"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={onChange}
@@ -45,6 +46,7 @@ test("the savings sentence names the payments saved and the interest saved", () 
   renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
+      currency="eur"
       draft={{ ...noExtraPayments, extraMonthly: "150.00" }}
       schedule={faster}
       onChange={vi.fn()}
@@ -60,6 +62,7 @@ test("without an overpayment the sentence asks for an amount", () => {
   renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
+      currency="eur"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={vi.fn()}
@@ -75,6 +78,7 @@ test("an invalid amount is marked and explained", () => {
   renderWithQuery(
     <DebtExtraPayments
       idPrefix="extra"
+      currency="eur"
       draft={noExtraPayments}
       schedule={mortgageSchedule}
       onChange={vi.fn()}

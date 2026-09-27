@@ -6,7 +6,7 @@ Related: feature page [Net worth](../features/net-worth.md).
 
 ### Net worth
 
-Includes full balances of all visible accounts plus personal assets minus debts; this is not an ownership-percentage calculation
+Includes full balances of all visible accounts plus personal assets minus debts, a debt that tracks payments counting with its tracked balance; this is not an ownership-percentage calculation
 
 ### Snapshot schedule
 

@@ -1,6 +1,11 @@
+import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useCreateRecurringBill, useUpdateRecurringBill } from "@/api/generated";
+import {
+  getDebtsSuspenseQueryOptions,
+  useCreateRecurringBill,
+  useUpdateRecurringBill,
+} from "@/api/generated";
 import {
   type AccountResponse,
   type CategoryResponse,
@@ -10,6 +15,7 @@ import {
   RecurringBillShape,
 } from "@/api/generated/model";
 import {
+  updateRecurringBillBodyMatchKeyMax,
   updateRecurringBillBodyNameMax,
   updateRecurringBillBodyRemindDaysBeforeMax,
   updateRecurringBillBodyRemindDaysBeforeMin,
@@ -18,10 +24,16 @@ import { useServerForm } from "@/components/form";
 import { FormError } from "@/components/form-error/form-error";
 import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { FormGrid } from "@/components/ui/form-grid/form-grid";
-import { useToday } from "@/hooks/use-settings";
+import { useFeature, useToday } from "@/hooks/use-settings";
 import { silent, upsert } from "@/lib/mutations";
 import { namedOptions } from "@/lib/options";
-import { isPositiveMoney, requiredText, requiredValue, wholeNumberBetween } from "@/lib/validation";
+import {
+  isPositiveMoney,
+  optionalText,
+  requiredText,
+  requiredValue,
+  wholeNumberBetween,
+} from "@/lib/validation";
 
 interface FormValues {
   name: string;
@@ -35,6 +47,8 @@ interface FormValues {
   nextDueDate: string;
   remindDaysBefore: string;
   isActive: boolean;
+  matchKey: string;
+  debtId: string;
 }
 
 type RecurringBillDraft = Partial<Omit<RecurringBillResponse, "id">>;
@@ -50,6 +64,8 @@ interface Props {
 export function RecurringBillForm({ bill, draft, accounts, categories, onClose }: Readonly<Props>) {
   const { t } = useTranslation();
   const today = useToday();
+  const netWorth = useFeature("netWorth");
+  const debts = useQuery({ ...getDebtsSuspenseQueryOptions(), enabled: netWorth }).data ?? [];
   const fieldId = bill ? `bill-${bill.id}` : "bill";
 
   const schema = z
@@ -69,6 +85,8 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
         updateRecurringBillBodyRemindDaysBeforeMax,
       ),
       isActive: z.boolean(),
+      matchKey: optionalText(t, updateRecurringBillBodyMatchKeyMax),
+      debtId: z.string(),
     })
     .superRefine((value, ctx) => {
       if (value.kind === "fixed" && !isPositiveMoney(value.amount)) {
@@ -109,7 +127,10 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
     nextDueDate: seed.nextDueDate ?? today,
     remindDaysBefore: String(seed.remindDaysBefore ?? 3),
     isActive: seed.isActive ?? true,
+    matchKey: seed.matchKey ?? "",
+    debtId: netWorth && !debts.some((debt) => debt.id === seed.debtId) ? "" : (seed.debtId ?? ""),
   };
+  const payableDebts = debts.filter((debt) => debt.tracksPayments || debt.id === seed.debtId);
 
   const form = useServerForm({
     defaultValues,
@@ -127,6 +148,8 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
         cadence: value.cadence,
         nextDueDate: value.nextDueDate,
         remindDaysBefore: Number(value.remindDaysBefore),
+        matchKey: value.shape === "expense" ? value.matchKey.trim() || null : null,
+        debtId: value.shape === "expense" ? value.debtId || null : null,
       };
 
       return bill
@@ -257,6 +280,31 @@ export function RecurringBillForm({ bill, draft, accounts, categories, onClose }
                   />
                 )}
               </form.Field>
+
+              {shape === "expense" ? (
+                <form.Field name="matchKey">
+                  {(field) => (
+                    <field.TextField
+                      id={`${fieldId}-match-key`}
+                      label={t("recurringBills.matchKey")}
+                      hint={t("recurringBills.matchKeyHint")}
+                    />
+                  )}
+                </form.Field>
+              ) : null}
+
+              {shape === "expense" && payableDebts.length > 0 ? (
+                <form.Field name="debtId">
+                  {(field) => (
+                    <field.SelectFieldControl
+                      id={`${fieldId}-debt`}
+                      label={t("recurringBills.debt")}
+                      hint={t("recurringBills.debtHint")}
+                      options={namedOptions(payableDebts, t("recurringBills.noDebt"))}
+                    />
+                  )}
+                </form.Field>
+              ) : null}
 
               {shape === "transfer" ? (
                 <form.Field name="toAccountId">

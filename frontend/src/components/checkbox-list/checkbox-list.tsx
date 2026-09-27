@@ -15,6 +15,7 @@ interface Props {
   "aria-label": string;
   "aria-describedby"?: string;
   emptyText?: string;
+  disabled?: boolean;
   className?: string;
 }
 
@@ -26,6 +27,7 @@ export function CheckboxList({
   "aria-label": ariaLabel,
   "aria-describedby": ariaDescribedBy,
   emptyText,
+  disabled = false,
   className,
 }: Readonly<Props>) {
   const chosen = new Set(value);
@@ -49,6 +51,7 @@ export function CheckboxList({
           <label key={item.id} className="flex items-center gap-2.5 text-sm">
             <Checkbox
               checked={chosen.has(item.id)}
+              disabled={disabled}
               onCheckedChange={(next) => toggle(item.id, next)}
             />
             <span className="min-w-0 wrap-break-word">{item.name}</span>

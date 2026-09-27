@@ -22,6 +22,7 @@ interface Props {
   series: readonly ChartSeries[];
   formatLabel?: (label: string) => string;
   summaryKey?: string;
+  currency?: string;
 }
 
 export function ChartSwatch({ series }: Readonly<{ series: ChartSeries }>) {
@@ -47,6 +48,7 @@ export function ChartTooltip({
   series,
   formatLabel,
   summaryKey,
+  currency,
 }: Readonly<Props>) {
   const money = useMoney();
 
@@ -64,7 +66,9 @@ export function ChartTooltip({
 
   function formatValue(item: ChartSeries) {
     const amount = values.get(item.key) ?? 0;
-    return item.sign ? money.formatSigned(amount, item.sign) : money.format(amount);
+    return item.sign
+      ? money.formatSigned(amount, item.sign, currency)
+      : money.format(amount, currency);
   }
 
   return (

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { DebtSchedulePlan } from "@/api/generated/model";
+import type { Currency, DebtSchedulePlan } from "@/api/generated/model";
 import { Pagination } from "@/components/pagination/pagination";
 import {
   ScrollRegion,
@@ -20,6 +20,7 @@ export const SCHEDULE_PAGE_SIZE = 12;
 interface Props {
   plan: DebtSchedulePlan;
   asOf: string;
+  currency: Currency;
 }
 
 export function firstPageToShow(plan: DebtSchedulePlan, asOf: string) {
@@ -28,7 +29,7 @@ export function firstPageToShow(plan: DebtSchedulePlan, asOf: string) {
   return Math.floor(Math.max(0, index) / SCHEDULE_PAGE_SIZE) + 1;
 }
 
-export function DebtScheduleTable({ plan, asOf }: Readonly<Props>) {
+export function DebtScheduleTable({ plan, asOf, currency }: Readonly<Props>) {
   const { t } = useTranslation();
   const money = useMoney();
   const formatDate = useIsoDate();
@@ -39,7 +40,7 @@ export function DebtScheduleTable({ plan, asOf }: Readonly<Props>) {
   const rows = plan.rows.slice(start, start + SCHEDULE_PAGE_SIZE);
 
   function amount(value: string) {
-    return money.format(Number(value));
+    return money.format(Number(value), currency);
   }
 
   return (

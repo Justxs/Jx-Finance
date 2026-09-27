@@ -37,6 +37,7 @@ export interface DebtFormValues {
   termMonths: string;
   monthlyPayment: string;
   amortizationType: string;
+  tracksPayments: boolean;
 }
 
 export function debtFormValues(debt: DebtResponse): DebtFormValues {
@@ -51,6 +52,7 @@ export function debtFormValues(debt: DebtResponse): DebtFormValues {
     termMonths: debt.termMonths === null ? "" : String(debt.termMonths),
     monthlyPayment: debt.monthlyPayment ?? "",
     amortizationType: debt.amortizationType,
+    tracksPayments: debt.tracksPayments,
   };
 }
 
@@ -73,6 +75,7 @@ export function debtRequest(values: DebtFormValues) {
     amortizationType:
       amortizationTypes.find((type) => type === values.amortizationType) ??
       AmortizationType.annuity,
+    tracksPayments: values.tracksPayments,
   };
 }
 
@@ -97,6 +100,7 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
       termMonths: optionalWholeNumberBetween(t, TERM_MIN, createDebtBodyTermMonthsMax),
       monthlyPayment: optionalPositiveMoney(t),
       amortizationType: z.string(),
+      tracksPayments: z.boolean(),
     })
     .refine((value) => !(value.termMonths.trim() && value.monthlyPayment.trim()), {
       message: t("netWorth.repayment.termOrPayment"),
@@ -118,6 +122,7 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
     termMonths: "",
     monthlyPayment: "",
     amortizationType: AmortizationType.annuity,
+    tracksPayments: false,
   };
 
   const form = useServerForm({
@@ -147,14 +152,18 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
           )}
         </form.Field>
 
-        <form.Field name="amount">
-          {(field) => (
-            <field.MoneyInputField
-              id={`${idPrefix}-amount`}
-              label={t("netWorth.outstandingAmount")}
-            />
+        <form.Subscribe selector={(state) => state.values.tracksPayments}>
+          {(tracks) => (
+            <form.Field name="amount">
+              {(field) => (
+                <field.MoneyInputField
+                  id={`${idPrefix}-amount`}
+                  label={tracks ? t("netWorth.tracking.balance") : t("netWorth.outstandingAmount")}
+                />
+              )}
+            </form.Field>
           )}
-        </form.Field>
+        </form.Subscribe>
 
         <form.Field name="interestRate">
           {(field) => (
@@ -165,6 +174,32 @@ export function DebtForm({ editing, onClose }: Readonly<HoldingFormProps<DebtFor
             />
           )}
         </form.Field>
+
+        <form.Field name="tracksPayments">
+          {(field) => (
+            <field.CheckboxField
+              id={`${idPrefix}-tracks`}
+              label={t("netWorth.tracking.enable")}
+              hint={t("netWorth.tracking.hint")}
+              className="col-span-full"
+            />
+          )}
+        </form.Field>
+
+        <form.Subscribe selector={(state) => state.values.tracksPayments}>
+          {(tracks) =>
+            tracks ? (
+              <form.Field name="asOf">
+                {(field) => (
+                  <field.DateField
+                    id={`${idPrefix}-as-of`}
+                    label={t("netWorth.tracking.balanceOn")}
+                  />
+                )}
+              </form.Field>
+            ) : null
+          }
+        </form.Subscribe>
 
         <fieldset className="col-span-full grid gap-4 border-t pt-4 sm:grid-cols-2">
           <legend className="float-left mb-1 w-full text-sm font-semibold">

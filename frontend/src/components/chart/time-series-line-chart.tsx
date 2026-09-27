@@ -30,6 +30,7 @@ type TimeSeriesPoint = Readonly<Record<string, string | number | undefined>>;
 
 export interface TimeSeriesLine extends ChartSeries {
   comparison?: boolean;
+  markers?: boolean;
 }
 
 interface Props {
@@ -42,6 +43,7 @@ interface Props {
   xAxis?: keyof typeof X_AXES;
   curve?: "monotone" | "stepAfter";
   formatLabel?: (label: string) => string;
+  currency?: string;
 }
 
 export function TimeSeriesLineChart({
@@ -54,6 +56,7 @@ export function TimeSeriesLineChart({
   xAxis = "date",
   curve = "monotone",
   formatLabel,
+  currency,
 }: Readonly<Props>) {
   const axisMoney = useAxisMoney();
   const formatDate = useIsoDate();
@@ -92,13 +95,19 @@ export function TimeSeriesLineChart({
           <YAxis
             {...axisProps}
             domain={yDomain}
-            tickFormatter={(value) => axisMoney.format(Number(value))}
+            tickFormatter={(value) => axisMoney.format(Number(value), currency)}
             tickCount={5}
             width={axis.yWidth}
           />
           <Tooltip
             cursor={chartCursor}
-            content={<ChartTooltip series={swatchSeries} formatLabel={formatLabel ?? formatDate} />}
+            content={
+              <ChartTooltip
+                series={swatchSeries}
+                formatLabel={formatLabel ?? formatDate}
+                currency={currency}
+              />
+            }
             isAnimationActive={false}
             offset={12}
           />
@@ -108,10 +117,14 @@ export function TimeSeriesLineChart({
               isAnimationActive={false}
               type={curve}
               dataKey={item.key}
-              stroke={item.color}
+              stroke={item.markers ? "none" : item.color}
               strokeWidth={item === series[0] ? 2 : 1.5}
               strokeDasharray={item.comparison ? "4 3" : undefined}
-              dot={false}
+              dot={
+                item.markers
+                  ? { r: 4, fill: item.color, stroke: "var(--background)", strokeWidth: 2 }
+                  : false
+              }
               activeDot={
                 item.comparison
                   ? false

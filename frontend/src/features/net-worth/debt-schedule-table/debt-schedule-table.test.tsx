@@ -21,7 +21,7 @@ function firstCell(row: HTMLElement | undefined) {
 test("the table opens on the page that holds the next payment", () => {
   const nextIndex = plan.rows.findIndex((row) => row.date > asOf);
 
-  renderWithQuery(<DebtScheduleTable plan={plan} asOf={asOf} />);
+  renderWithQuery(<DebtScheduleTable currency="eur" plan={plan} asOf={asOf} />);
 
   const expectedPage = Math.floor(nextIndex / SCHEDULE_PAGE_SIZE) + 1;
   expect(screen.getByText(`Page ${expectedPage} of ${pageCount}`)).toBeInTheDocument();
@@ -31,7 +31,7 @@ test("the table opens on the page that holds the next payment", () => {
 });
 
 test("the last page holds the payoff and paging goes back from it", () => {
-  renderWithQuery(<DebtScheduleTable plan={plan} asOf="2099-01-01" />);
+  renderWithQuery(<DebtScheduleTable currency="eur" plan={plan} asOf="2099-01-01" />);
 
   expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
   expect(firstCell(bodyRows().at(-1))).toHaveTextContent(String(plan.rows.length));
@@ -46,10 +46,12 @@ test("the overpayment column appears only when a row carries an overpayment", ()
     throw new Error("the fixture has no overpayment plan");
   }
 
-  const { rerender } = renderWithQuery(<DebtScheduleTable plan={plan} asOf={asOf} />);
+  const { rerender } = renderWithQuery(
+    <DebtScheduleTable currency="eur" plan={plan} asOf={asOf} />,
+  );
   expect(screen.queryByRole("columnheader", { name: "Overpayment" })).toBeNull();
 
-  rerender(<DebtScheduleTable plan={faster} asOf={asOf} />);
+  rerender(<DebtScheduleTable currency="eur" plan={faster} asOf={asOf} />);
   expect(screen.getByRole("columnheader", { name: "Overpayment" })).toBeInTheDocument();
 });
 

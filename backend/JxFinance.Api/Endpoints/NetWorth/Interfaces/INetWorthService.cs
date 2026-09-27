@@ -2,9 +2,17 @@ using JxFinance.Common.Amortization;
 using JxFinance.Domain.Common;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
+using JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
+using JxFinance.Endpoints.NetWorth.GetAssetValueHistory;
+using JxFinance.Endpoints.NetWorth.GetDebtPaymentCandidates;
+using JxFinance.Endpoints.NetWorth.LinkDebtPayment;
+using JxFinance.Endpoints.NetWorth.SetAssetValuation;
 using JxFinance.Endpoints.NetWorth.Shared;
+using JxFinance.Endpoints.NetWorth.UnlinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.UpdateAsset;
 using JxFinance.Endpoints.NetWorth.UpdateDebt;
+using JxFinance.Endpoints.NetWorth.UpdateDebtPayment;
+using JxFinance.Endpoints.Transactions.Shared;
 
 namespace JxFinance.Endpoints.NetWorth.Interfaces;
 
@@ -35,6 +43,18 @@ public interface INetWorthService
     Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken);
 
     Task<Result<DebtScheduleResponse>> GetDebtScheduleAsync(Guid id, ExtraPayments extra, CancellationToken cancellationToken);
+
+    Task<Result<IReadOnlyList<DebtPaymentResponse>>> GetDebtPaymentsAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<DebtResponse>> LinkDebtPaymentAsync(LinkDebtPaymentRequest request, CancellationToken cancellationToken);
+
+    Task<Result<DebtResponse>> UpdateDebtPaymentAsync(UpdateDebtPaymentRequest request, CancellationToken cancellationToken);
+
+    Task<Result> UnlinkDebtPaymentAsync(UnlinkDebtPaymentRequest request, CancellationToken cancellationToken);
+
+    Task<Result<IReadOnlyList<TransactionResponse>>> GetDebtPaymentCandidatesAsync(
+        GetDebtPaymentCandidatesRequest request,
+        CancellationToken cancellationToken);
 
     Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken);
 

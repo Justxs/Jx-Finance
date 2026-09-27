@@ -4,8 +4,10 @@ import type { CategoryResponse, TagResponse, TransactionResponse } from "@/api/g
 import { Tag } from "@/components/ui/tag/tag";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
+import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { EMPTY_VALUE, useIsoDate } from "@/hooks/use-formatters";
 import { CategoryIcon } from "@/lib/category-icons";
+import { DebtPaymentMarker } from "../debt-payment/debt-payment";
 import { TransactionAmount, isOptimistic, transactionName } from "../transaction-amount";
 import { TransactionRowActions } from "../transaction-row-actions/transaction-row-actions";
 import type { transactionTableFeatures } from "./table-features";
@@ -73,6 +75,13 @@ export function useTransactionColumns({
               <span className="text-muted-foreground">{EMPTY_VALUE}</span>
             )}
             <AttachmentCount count={info.row.original.attachmentCount} className="mt-0.5" />
+            <UnusualAmountBadge
+              transactionId={info.row.original.id}
+              unusual={info.row.original.unusual}
+              dismissed={info.row.original.unusualDismissed}
+              className="mt-0.5"
+            />
+            <DebtPaymentMarker transaction={info.row.original} className="mt-0.5" />
           </span>
         );
       },

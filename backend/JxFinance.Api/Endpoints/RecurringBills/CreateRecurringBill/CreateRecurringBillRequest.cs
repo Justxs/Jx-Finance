@@ -14,4 +14,6 @@ public sealed record CreateRecurringBillRequest(
     Guid? ToAccountId,
     RecurringBillCadence Cadence,
     DateOnly NextDueDate,
-    int RemindDaysBefore) : IRecurringBillInput;
+    int RemindDaysBefore,
+    string? MatchKey = null,
+    Guid? DebtId = null) : IRecurringBillInput;

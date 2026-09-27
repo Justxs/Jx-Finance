@@ -20,6 +20,9 @@ Stored per user and per group — the account and the normalized description —
 
 Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
 
+- **2026-09-27.** A recurring expense may name only a debt that tracks payments, checked while Net worth is on; while it is off the stored link is left alone and a confirmation links nothing
+  - Rejected: Accepting any owned debt and linking nothing on confirmation; refusing a debt while Net worth is off
+  - Why: A link that silently does nothing looks like it works until the balance is wrong. Refusing it while the feature is off would make an unrelated edit, such as "Update expected", fail on an entry that was valid when it was saved
 - **2026-09-20.** A recurring entry gains a `Shape` (`Expense`, `Income`, `Transfer`) beside its existing `Kind`, and a transfer carries a second account in the new `ToAccountId`
   - Rejected: A separate `RecurringTransfer` entity and endpoint group; overloading `Kind` into one five-value enum; deriving the shape from which fields are filled
   - Why: A second entity would duplicate the cadence, the anchor day, the reminder window, the reminder job, the dedupe rule, the stale-confirmation handling and the page for a row that differs in what one method writes. One five-value enum makes "fixed or variable" and "expense, income or transfer" the same question, so a variable transfer becomes unexpressible. Deriving the shape from the filled fields has no answer for an expense that has no category and no default account, which is a normal entry today

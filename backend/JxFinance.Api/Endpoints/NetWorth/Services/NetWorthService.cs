@@ -8,18 +8,28 @@ using JxFinance.Common.Trash;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Common;
 using JxFinance.Domain.NetWorth;
+using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
 using JxFinance.Endpoints.Accounts.Interfaces;
 using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
+using JxFinance.Endpoints.NetWorth.DeleteAssetValuation;
+using JxFinance.Endpoints.NetWorth.GetAssetValueHistory;
+using JxFinance.Endpoints.NetWorth.GetDebtPaymentCandidates;
 using JxFinance.Endpoints.NetWorth.Interfaces;
+using JxFinance.Endpoints.NetWorth.LinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.Mappers;
 using JxFinance.Endpoints.NetWorth.SetAssetValuation;
 using JxFinance.Endpoints.NetWorth.Shared;
+using JxFinance.Endpoints.NetWorth.UnlinkDebtPayment;
 using JxFinance.Endpoints.NetWorth.UpdateAsset;
 using JxFinance.Endpoints.NetWorth.UpdateDebt;
+using JxFinance.Endpoints.NetWorth.UpdateDebtPayment;
+using JxFinance.Endpoints.Transactions.Mappers;
+using JxFinance.Endpoints.Transactions.Shared;
 using JxFinance.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace JxFinance.Endpoints.NetWorth.Services;
 
@@ -34,6 +44,7 @@ public sealed class NetWorthService(
 {
     private const string AssetNotFound = "Asset not found.";
     private const string DebtNotFound = "Debt not found.";
+    private const string PaymentNotFound = "That payment is not linked to this debt.";
 
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
@@ -184,8 +195,9 @@ public sealed class NetWorthService(
 
     public async Task<IReadOnlyList<DebtResponse>> GetDebtsAsync(CancellationToken cancellationToken)
     {
-        var debts = await db.Debts.OrderBy(d => d.CreatedAt).ToListAsync(cancellationToken);
-        return debts.Select(d => d.ToResponse()).ToList();
+        var debts = await db.Debts.AsNoTracking().OrderBy(d => d.CreatedAt).ToListAsync(cancellationToken);
+        var tracked = await TrackAsync(debts, cancellationToken);
+        return debts.Select(d => d.ToResponse(tracked.GetValueOrDefault(d.Id))).ToList();
     }
 
     public async Task<Result<DebtResponse>> CreateDebtAsync(
@@ -196,7 +208,7 @@ public sealed class NetWorthService(
         db.Debts.Add(debt);
         await db.SaveChangesAsync(cancellationToken);
 
-        return debt.ToResponse();
+        return await ToResponseAsync(debt, cancellationToken);
     }
 
     public async Task<Result<DebtResponse>> UpdateDebtAsync(
@@ -205,7 +217,7 @@ public sealed class NetWorthService(
     {
         var debtId = new DebtId(request.Id);
         var updated = await db.UpdateOrNotFoundAsync<Debt>(d => d.Id == debtId, DebtNotFound, request.ApplyTo, cancellationToken);
-        return updated.Map(debt => debt.ToResponse());
+        return updated.TryGetValue(out var debt) ? await ToResponseAsync(debt, cancellationToken) : updated.Error;
     }
 
     public Task<Result<Guid>> DeleteDebtAsync(Guid id, CancellationToken cancellationToken)
@@ -256,6 +268,158 @@ public sealed class NetWorthService(
             withExtra is null ? null : ToPlan(withExtra),
             withExtra is null ? null : plan.TotalInterest - withExtra.TotalInterest,
             withExtra is null ? null : plan.Rows.Count - withExtra.Rows.Count);
+    }
+
+    public async Task<Result<IReadOnlyList<DebtPaymentResponse>>> GetDebtPaymentsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var tracking = (await TrackAsync([debt], cancellationToken)).GetValueOrDefault(debt.Id);
+        return (tracking?.Track.Rows ?? []).Select(row =>
+        {
+            var transaction = tracking!.Transactions[row.Payment.Id];
+            return new DebtPaymentResponse(
+                row.Payment.Id,
+                transaction.Id.Value,
+                row.Payment.Date,
+                transaction.AccountId.Value,
+                transaction.Description,
+                row.Payment.Amount,
+                row.Payment.Kind,
+                row.Interest,
+                row.Principal,
+                row.Payment.Principal is not null,
+                row.Overpaid,
+                row.Balance);
+        }).ToList();
+    }
+
+    public async Task<Result<DebtResponse>> LinkDebtPaymentAsync(LinkDebtPaymentRequest request, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        if (!debt.TracksPayments)
+        {
+            return new DomainError(ErrorCodes.DebtNotTracked, "Turn on payment tracking for this debt first.");
+        }
+
+        var transactionId = new TransactionId(request.TransactionId);
+        var transaction = await db.Transactions.AsNoTracking().FirstOrDefaultAsync(t => t.Id == transactionId, cancellationToken);
+        if (transaction is null)
+        {
+            return new DomainError(ErrorCodes.ReferenceNotFound, "Transaction does not exist.");
+        }
+
+        if (transaction.Type != FlowType.Expense)
+        {
+            return new DomainError(ErrorCodes.DebtPaymentWrongType, "Only an expense can pay a debt.");
+        }
+
+        if (transaction.IsSplit)
+        {
+            return new DomainError(ErrorCodes.TransactionSplitNotAllowed, "A split transaction cannot pay a debt.");
+        }
+
+        await db.DebtPayments
+            .Where(p => p.TransactionId == transactionId && !LiveDebtPayments().Any(live => live.Id == p.Id))
+            .ExecuteDeleteAsync(cancellationToken);
+        var month = transaction.Date;
+        var regularThatMonth = await db.DebtPayments.AnyAsync(
+            p => p.DebtId == debt.Id && p.Kind == DebtPaymentKind.Regular
+                && db.Transactions.Any(t => t.Id == p.TransactionId && t.Date.Year == month.Year && t.Date.Month == month.Month),
+            cancellationToken);
+        db.DebtPayments.Add(new DebtPayment
+        {
+            DebtId = debt.Id,
+            TransactionId = transactionId,
+            Kind = request.Kind ?? (regularThatMonth ? DebtPaymentKind.Extra : DebtPaymentKind.Regular),
+            Principal = request.Principal,
+        });
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return new DomainError(ErrorCodes.DebtPaymentTaken, "This transaction already pays a debt.");
+        }
+
+        return await ToResponseAsync(debt, cancellationToken);
+    }
+
+    public async Task<Result<DebtResponse>> UpdateDebtPaymentAsync(UpdateDebtPaymentRequest request, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var paymentId = new DebtPaymentId(request.PaymentId);
+        var link = await db.DebtPayments.FindOrNotFoundAsync(p => p.Id == paymentId && p.DebtId == debt.Id, PaymentNotFound, cancellationToken);
+        if (!link.TryGetValue(out var payment))
+        {
+            return link.Error;
+        }
+
+        payment.Kind = request.Kind;
+        payment.Principal = request.Principal;
+        await db.SaveChangesAsync(cancellationToken);
+        return await ToResponseAsync(debt, cancellationToken);
+    }
+
+    public async Task<Result> UnlinkDebtPaymentAsync(UnlinkDebtPaymentRequest request, CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var paymentId = new DebtPaymentId(request.PaymentId);
+        var removed = await db.DebtPayments.Where(p => p.Id == paymentId && p.DebtId == debt.Id).ExecuteDeleteAsync(cancellationToken);
+        return removed == 1 ? Result.Success() : EntityLookup.NotFound(PaymentNotFound);
+    }
+
+    public async Task<Result<IReadOnlyList<TransactionResponse>>> GetDebtPaymentCandidatesAsync(
+        GetDebtPaymentCandidatesRequest request,
+        CancellationToken cancellationToken)
+    {
+        var found = await FindDebtAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var debt))
+        {
+            return found.Error;
+        }
+
+        var from = request.From ?? debt.AsOf.AddDays(1);
+        var known = await db.RecurringBills.Where(b => b.DebtId == debt.Id).Select(b => b.Name).ToListAsync(cancellationToken);
+        known.AddRange(await db.Transactions
+            .Where(t => t.Description != null && db.DebtPayments.Any(p => p.DebtId == debt.Id && p.TransactionId == t.Id))
+            .Select(t => t.Description!)
+            .ToListAsync(cancellationToken));
+        var regular = AmortizationTerms.From(debt) is { } terms && AmortizationCalculator.Calculate(terms).TryGetValue(out var plan)
+            ? plan.RegularPayment
+            : debt.MonthlyPayment;
+        var candidates = await db.Transactions
+            .AsNoTracking()
+            .Where(t => t.Type == FlowType.Expense && !t.IsSplit && t.Date >= from && !LiveDebtPayments().Any(p => p.TransactionId == t.Id))
+            .OrderByDescending(t => t.Date)
+            .Take(200)
+            .ToListAsync(cancellationToken);
+
+        int Score(Transaction t) =>
+            (known.Contains(t.Description, StringComparer.OrdinalIgnoreCase) ? 2 : 0)
+            + (regular is { } amount && t.Amount.Currency == debt.Currency && Math.Abs(t.Amount.Amount - amount) <= amount * 0.05m ? 1 : 0);
+
+        return candidates.OrderByDescending(Score).Take(50).Select(t => t.ToResponse(null).WithoutUnusual()).ToList();
     }
 
     public async Task<NetWorthResponse> GetCurrentAsync(CancellationToken cancellationToken)
@@ -320,6 +484,84 @@ public sealed class NetWorthService(
             .Select(row => new DebtScheduleRow(row.Number, row.Date, row.Payment, row.Interest, row.Principal, row.Extra, row.Balance))
             .ToList());
 
+    private Task<Result<Asset>> FindAssetAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var assetId = new AssetId(id);
+        return db.Assets.FindOrNotFoundAsync(a => a.Id == assetId, AssetNotFound, cancellationToken);
+    }
+
+    private async Task<ILookup<AssetId, AssetValuation>> ValuationsOfAsync(List<Asset> assets, CancellationToken cancellationToken)
+    {
+        var ids = assets.Select(a => a.Id).ToList();
+        var valuations = await db.AssetValuations.AsNoTracking().Where(v => ids.Contains(v.AssetId)).ToListAsync(cancellationToken);
+        return valuations.ToLookup(v => v.AssetId);
+    }
+
+    private async Task<AssetResponse> ToResponseAsync(Asset asset, CancellationToken cancellationToken) =>
+        asset.ToResponse((await ValuationsOfAsync([asset], cancellationToken))[asset.Id].ToList(), clock.Today);
+
+    private Task<Result<Debt>> FindDebtAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var debtId = new DebtId(id);
+        return db.Debts.FindOrNotFoundAsync(d => d.Id == debtId, DebtNotFound, cancellationToken);
+    }
+
+    private async Task<DebtResponse> ToResponseAsync(Debt debt, CancellationToken cancellationToken) =>
+        debt.ToResponse((await TrackAsync([debt], cancellationToken)).GetValueOrDefault(debt.Id));
+
+    private static bool PaysDebt(Transaction? transaction) => transaction is { Type: FlowType.Expense, IsSplit: false };
+
+    private IQueryable<DebtPayment> LiveDebtPayments() =>
+        db.DebtPayments.Where(p => db.Debts.Any(d => d.Id == p.DebtId));
+
+    private async Task<Dictionary<DebtId, DebtTracking>> TrackAsync(IReadOnlyCollection<Debt> debts, CancellationToken cancellationToken)
+    {
+        var tracking = debts.Where(d => d.TracksPayments).ToList();
+        if (tracking.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = tracking.Select(d => d.Id).ToList();
+        var links = await (
+                from payment in db.DebtPayments.AsNoTracking()
+                where ids.Contains(payment.DebtId)
+                join transaction in db.Transactions.AsNoTracking() on payment.TransactionId equals transaction.Id into matches
+                from transaction in matches.DefaultIfEmpty()
+                orderby payment.CreatedAt
+                select new { Link = payment, Transaction = transaction })
+            .ToListAsync(cancellationToken);
+        var foreign = links
+            .Where(l => l.Transaction is not null && l.Transaction.Amount.Currency != tracking.First(d => d.Id == l.Link.DebtId).Currency)
+            .Select(l => l.Transaction!.Date)
+            .ToList();
+        var history = foreign.Count == 0 ? null : await rates.GetHistoryAsync(foreign.Min(), foreign.Max(), cancellationToken);
+
+        return tracking.ToDictionary(debt => debt.Id, debt =>
+        {
+            var mine = links.Where(l => l.Link.DebtId == debt.Id).ToList();
+            var visible = mine.Where(l => PaysDebt(l.Transaction)).ToDictionary(l => l.Link.Id.Value, l => l.Transaction!);
+            var payments = new List<TrackedPayment>();
+            var incomplete = false;
+            foreach (var link in mine.Where(l => PaysDebt(l.Transaction)))
+            {
+                var paid = link.Transaction!.Amount;
+                var amount = paid.Currency == debt.Currency ? paid.Amount : history!.OnOrBefore(link.Transaction.Date).Convert(paid.Amount, paid.Currency, debt.Currency);
+                if (amount is { } value)
+                {
+                    payments.Add(new TrackedPayment(link.Link.Id.Value, link.Transaction.Date, Money.Round(value), link.Link.Kind, link.Link.Principal));
+                }
+                else
+                {
+                    incomplete |= link.Transaction.Date > debt.AsOf;
+                }
+            }
+
+            var track = DebtBalance.Track(debt.OutstandingAmount.Amount, debt.AsOf, debt.InterestRate, payments);
+            return new DebtTracking(track, incomplete, mine.Count - visible.Count, visible);
+        });
+    }
+
     private async Task<(decimal Accounts, decimal Assets, decimal Debts, decimal NetWorth, bool IsComplete)> ComputeTotalsAsync(
         CancellationToken cancellationToken)
     {
@@ -339,7 +581,7 @@ public sealed class NetWorthService(
             assetsTotal,
             debtsTotal,
             accountsTotal + assetsTotal - debtsTotal,
-            accountsComplete && assetsComplete && debtsComplete);
+            accountsComplete && assetsComplete && debtsComplete && !tracked.Values.Any(t => t.Incomplete));
     }
 
     private async Task<(decimal Total, bool IsComplete)> ToReportingAsync(

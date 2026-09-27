@@ -6,8 +6,10 @@ import { EmptyText } from "@/components/ui/empty-text/empty-text";
 import { Rows } from "@/components/ui/rows/rows";
 import { TagChips } from "@/features/tags/tag-chips/tag-chips";
 import { AttachmentCount } from "@/features/transactions/transaction-attachments/attachment-count";
+import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useIsoDate } from "@/hooks/use-formatters";
 import { cn, metaLine } from "@/lib/utils";
+import { DebtPaymentMarker } from "../debt-payment/debt-payment";
 import {
   TransactionAmount,
   isOptimistic,
@@ -70,6 +72,12 @@ export function TransactionsList({
                   {name}
                 </p>
                 <AttachmentCount count={row.attachmentCount} />
+                <UnusualAmountBadge
+                  transactionId={row.id}
+                  unusual={row.unusual}
+                  dismissed={row.unusualDismissed}
+                />
+                <DebtPaymentMarker transaction={row} />
                 <TransactionAmount
                   transaction={row}
                   showReporting

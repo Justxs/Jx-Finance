@@ -18,4 +18,5 @@ public sealed class Debt : OwnableEntity
     public int? TermMonths { get; set; }
     public decimal? MonthlyPayment { get; set; }
     public AmortizationType AmortizationType { get; set; }
+    public bool TracksPayments { get; set; }
 }

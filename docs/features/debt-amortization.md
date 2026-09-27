@@ -146,7 +146,7 @@ sequenceDiagram
     API-->>NW: next total subtracts the new amount
 ```
 
-The outstanding amount stays what the owner recorded, and net worth keeps subtracting that and only that. The schedule is what the contract says the balance should be, and the two differ for honest reasons: an overpayment the schedule does not know, a rate that changed, a payment holiday, a bank that counts days. Overwriting the recorded figure silently would also rewrite a net worth that the history has already snapshotted. So the summary shows both numbers side by side, and when they differ offers "Use scheduled balance", which is an ordinary update of the debt with the scheduled balance and today's date; the update invalidates the debts and net worth queries as any other debt update does. The choice is in the [decision log](../decisions/debt-amortization.md).
+The outstanding amount stays what the owner recorded, and net worth keeps subtracting that and only that, unless the debt tracks its payments (below). The schedule is what the contract says the balance should be, and the two differ for honest reasons: an overpayment the schedule does not know, a rate that changed, a payment holiday, a bank that counts days. Overwriting the recorded figure silently would also rewrite a net worth that the history has already snapshotted. So the summary shows both numbers side by side, and when they differ offers "Use scheduled balance", which is an ordinary update of the debt with the scheduled balance and today's date; the update invalidates the debts and net worth queries as any other debt update does. The choice is in the [decision log](../decisions/debt-amortization.md).
 
 ## The screens
 
@@ -165,7 +165,60 @@ flowchart TD
 
 The form groups the repayment terms under their own heading below the fields a debt always had, with a hint that they are optional, and checks on the client what the server checks: a term from 1 to 600, positive amounts, and not a term and a payment together. A server refusal such as `debt.paymentTooSmall` lands under the monthly payment through the form's usual field mapping.
 
-The page reads the debt from the debts list and the schedule from its own query. A debt that is gone shows a sentence instead; a debt without complete terms says which terms are missing. Typing an overpayment waits 400 ms (TanStack Pacer through `useDebouncedDraft`), then asks again, and the old schedule stays on screen, marked stale, until the new one arrives. When an overpayment applies, the table, the yearly chart and the savings sentence show the faster plan and the table gains an Overpayment column, while the balance chart draws both lines. Up to 600 rows are paged twelve at a time, one year a page; the first page shown is the one holding the next payment, and paid rows are dimmed. Every amount and date goes through the formatters in `use-formatters.ts`, so both languages and the reporting currency apply.
+The page reads the debt from the debts list and the schedule from its own query. A debt that is gone shows a sentence instead; a debt without complete terms says which terms are missing. Typing an overpayment waits 400 ms (TanStack Pacer through `useDebouncedDraft`), then asks again, and the old schedule stays on screen, marked stale, until the new one arrives. When an overpayment applies, the table, the yearly chart and the savings sentence show the faster plan and the table gains an Overpayment column, while the balance chart draws both lines. Up to 600 rows are paged twelve at a time, one year a page; the first page shown is the one holding the next payment, and paid rows are dimmed. Every amount and date goes through the formatters in `use-formatters.ts`, so both languages and the reporting currency apply; the balance chart's axis and tooltip use the debt's currency. A debt that does not track payments never asks for its payments.
+
+## Tracking payments
+
+Backend `NetWorth` (`GetDebtPayments`, `LinkDebtPayment`, `UpdateDebtPayment`, `UnlinkDebtPayment`, `GetDebtPaymentCandidates`, the tracking fields of the debt endpoints) and `Common/Amortization/DebtBalance`; frontend `net-worth/debt-payments` on the debt page and `transactions/debt-payment` in the ledger. A debt with "Track payments" on keeps its balance current from the payments linked to it instead of from hand edits.
+
+```mermaid
+erDiagram
+    DEBT ||--o{ DEBT_PAYMENT : "is paid by"
+    TRANSACTION ||--o| DEBT_PAYMENT : "pays"
+    RECURRING_BILL }o--o| DEBT : "pays"
+    DEBT_PAYMENT {
+        uuid Id
+        uuid DebtId "cascade on purge"
+        uuid TransactionId "unique, cascade on purge"
+        int Kind "regular (0) or extra (1)"
+        numeric Principal "typed from the statement, optional"
+        uuid UserId "the owner of the debt"
+    }
+```
+
+The balance is derived on every read and never stored. The recorded `outstandingAmount` on its `asOf` date is the anchor; the tracked balance is the anchor minus the principal of every linked payment dated after it, oldest first and, on one date, in the order they were linked. Editing the amount or the date sets a new anchor, and payments on or before it stop counting. `DebtBalance.Track` works each payment out in the currency of the debt:
+
+| Payment | Interest | Principal |
+| --- | --- | --- |
+| regular | round(balance before × rate / 12), at most the amount | the rest of the amount |
+| extra | 0 | the whole amount |
+| principal typed on the link | the amount less the typed principal | the typed principal, at most the amount |
+
+With no rate, or a zero rate, everything is principal. The principal is capped at the balance before the payment, and anything beyond it is shown as overpaid, so the balance stops at 0.00. A payment in another currency than the debt's is converted at the rate of its date from the preloaded rate history; a payment with no rate is left out and the balance is marked `trackedIncomplete`. A link whose transaction was deleted, sits on an account the owner no longer sees, or was later edited into income, a transfer or a split, is left out as well and counted in `unavailablePayments`; restoring the transaction from the trash brings it back with no change to the link. A housemate who edits the amount of a linked row on a shared account moves the owner's balance, but never sees the link: it is a row under the owner filter, not a column on the transaction.
+
+Worked example, the one `DebtPaymentTests` pins: 10 000.00 on 1 May at 6% a year. A 500.00 payment on 10 May is regular, 50.00 interest and 450.00 principal, leaving 9 550.00. A 1 000.00 payment on 12 May is linked without a kind; May already has a regular payment, so it is extra and leaves 8 550.00. Typing 900.00 as its principal from the bank statement makes it 100.00 interest and 900.00 principal, leaving 8 650.00. Setting the balance to 9 000.00 on 31 May starts again from there.
+
+| Route | What it does |
+| --- | --- |
+| `GET /api/debts/{id}/payments` | the counted payments, oldest first, each with the transaction, account, description, amount, kind, interest, principal, whether it was typed, overpaid and the balance after it |
+| `POST /api/debts/{id}/payments` | links `{ transactionId, kind?, principal? }`; without a kind it is regular unless the month already has a regular payment |
+| `PUT /api/debts/{id}/payments/{paymentId}` | sets the kind and the typed principal |
+| `DELETE /api/debts/{id}/payments/{paymentId}` | unlinks for good; a link is a pointer and does not go to the trash |
+| `GET /api/debts/{id}/payment-candidates?from` | up to 50 unlinked, unsplit expenses since the anchor, best matches first: a description equal to a recurring entry that pays the debt or to an earlier linked payment, then an amount within 5% of the schedule's regular payment |
+
+| Code | Status | When |
+| --- | --- | --- |
+| `debt.notTracked` | 400 | the debt does not track payments |
+| `reference.notFound` | 400 | the transaction does not exist or is not visible |
+| `debt.paymentWrongType` | 400 | the transaction is not an expense |
+| `transaction.splitNotAllowed` | 400 | the transaction is split; a line id changes on every edit |
+| `debt.paymentTaken` | 409 | the transaction already pays a debt, the caller's or a housemate's |
+
+A deleted debt keeps its links for a restore, but they no longer hold their transactions: those show up as candidates again, and linking one to another debt drops the old link, so a restored debt comes back without it.
+
+A recurring expense can name a debt that tracks payments (`debtId`), and confirming it links the posted transaction as a regular payment in the same database transaction. The whole payment stays an expense in reports and budgets.
+
+On the page the summary shows the tracked balance beside the scheduled one, the balance chart draws it from the anchor to today against the contract line, and a Linked payments section lists the payments newest first with their split and an edit and an unlink action. "Link payments" opens the candidates with a checkbox each and links the chosen ones oldest first, so the server picks the kind; a wrong kind is fixed on the row. A tracking debt without complete terms still has the page, with the payments and without the schedule. In the ledger a linked row carries a small debt mark that opens the debt, and the row actions offer "Link to debt" on an unlinked plain expense when some debt tracks payments, or "Unlink from debt" on a linked one.
 
 ## Trash, backups and the demo data
 
@@ -175,5 +228,4 @@ A deleted debt keeps its terms on the row, so restoring it from the trash brings
 
 - Payments other than monthly; the terms would need a frequency and the term a number of payments.
 - A rate that changes over the life of the loan; the schedule uses the one rate the debt has now.
-- Linking the schedule to real payments from an account or a recurring entry; the recorded outstanding amount is the only link, set by hand or by "Use scheduled balance".
 - An overpayment that lowers the payment and keeps the term.

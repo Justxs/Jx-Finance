@@ -7,6 +7,7 @@ import {
   useCategoriesSuspense,
   useRecurringBillsSuspense,
   useSubscriptionCandidatesSuspense,
+  useUpdateRecurringBill,
 } from "@/api/generated";
 import type { RecurringBillResponse } from "@/api/generated/model";
 import { ConfirmDeleteDialog } from "@/components/confirm-delete-dialog/confirm-delete-dialog";
@@ -16,6 +17,7 @@ import { PageHeader } from "@/components/page-header/page-header";
 import { PanelRows } from "@/components/panel-rows/panel-rows";
 import { TitledSection } from "@/components/ui/section/section";
 import { useConfirmedDelete } from "@/hooks/use-confirmed-delete";
+import { notify, pendingId } from "@/lib/mutations";
 import { optimisticRemoval } from "@/lib/optimistic";
 import { BillsForecastChart } from "../bills-forecast-chart";
 import { RecurringBillForm } from "../recurring-bill-form/recurring-bill-form";
@@ -35,6 +37,28 @@ export function RecurringBillsPage() {
   const deleteMutation = useDeleteRecurringBill({
     mutation: optimisticRemoval<RecurringBillResponse>(getRecurringBillsQueryKey()),
   });
+  const updateMutation = useUpdateRecurringBill(notify(t("recurringBills.expectedUpdated")));
+
+  function updateExpected(bill: RecurringBillResponse, amount: string) {
+    updateMutation.mutate({
+      id: bill.id,
+      data: {
+        name: bill.name,
+        shape: bill.shape,
+        kind: bill.kind,
+        amount,
+        categoryId: bill.categoryId,
+        accountId: bill.accountId,
+        toAccountId: bill.toAccountId,
+        cadence: bill.cadence,
+        nextDueDate: bill.nextDueDate,
+        remindDaysBefore: bill.remindDaysBefore,
+        isActive: bill.isActive,
+        matchKey: bill.matchKey,
+        debtId: bill.debtId,
+      },
+    });
+  }
 
   const accountList = accounts.data;
   const categoryList = categories.data;
@@ -66,6 +90,8 @@ export function RecurringBillsPage() {
             categories={categoryList}
             onEdit={() => setEditing(bill)}
             onConfirm={() => setConfirming(bill)}
+            onUpdateAmount={(amount) => updateExpected(bill, amount)}
+            updatePending={pendingId(updateMutation) === bill.id}
             {...remove.deleteProps(bill.id)}
           />
         ))}

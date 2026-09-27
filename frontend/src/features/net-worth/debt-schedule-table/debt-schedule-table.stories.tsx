@@ -11,7 +11,7 @@ import { DebtScheduleTable } from "./debt-schedule-table";
 const meta = {
   title: "Features/NetWorth/DebtScheduleTable",
   component: DebtScheduleTable,
-  args: { plan: mortgageSchedule.plan, asOf: mortgageSchedule.asOf },
+  args: { plan: mortgageSchedule.plan, asOf: mortgageSchedule.asOf, currency: "eur" },
   decorators: [withWidth("wide")],
 } satisfies Meta<typeof DebtScheduleTable>;
 

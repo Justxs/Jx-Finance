@@ -1865,7 +1865,10 @@
     },
     "debt": {
       "paymentTooSmall": "Tokia mėnesio įmoka skolos negrąžina per 50 metų. Ji turi būti didesnė už pirmojo mėnesio palūkanas.",
-      "scheduleIncomplete": "Šiai skolai reikia paskolos sumos, palūkanų normos, pirmosios įmokos datos ir termino arba mėnesio įmokos."
+      "scheduleIncomplete": "Šiai skolai reikia paskolos sumos, palūkanų normos, pirmosios įmokos datos ir termino arba mėnesio įmokos.",
+      "paymentWrongType": "Skolą gali mokėti tik išlaidos.",
+      "paymentTaken": "Ši operacija jau moka skolą.",
+      "notTracked": "Pirmiausia įjunkite šios skolos įmokų sekimą."
     },
     "decimal": {
       "malformed": "Įveskite skaičių su tašku kaip dešimtainiu skirtuku, pvz., 12.34."
@@ -1940,7 +1943,8 @@
       "invalid": "Reikšmė nepatenka į leistiną intervalą."
     },
     "recurringBill": {
-      "inactive": "Šis periodinis įrašas neaktyvus."
+      "inactive": "Šis periodinis įrašas neaktyvus.",
+      "debtShape": "Skolą gali mokėti tik periodinės išlaidos."
     },
     "reference": {
       "notFound": "Pasirinktas įrašas nebeegzistuoja."
@@ -1979,7 +1983,7 @@
     },
     "transaction": {
       "linesMismatch": "Padalintų eilučių suma turi sutapti su operacijos suma.",
-      "splitNotAllowed": "Padalintų operacijų kategorijos masiškai keisti negalima."
+      "splitNotAllowed": "Su padalinta operacija to padaryti negalima."
     },
     "transfer": {
       "amountMismatch": "Ta pačia valiuta išsiųsta ir gauta suma turi sutapti.",
