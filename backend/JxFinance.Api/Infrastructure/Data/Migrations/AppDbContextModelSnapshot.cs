@@ -893,11 +893,49 @@ namespace JxFinance.Infrastructure.Data.Migrations
                                 .HasColumnName("Currency");
                         });
 
+                    b.ComplexProperty(typeof(Dictionary<string, object>), "Depreciation", "JxFinance.Domain.NetWorth.Asset.Depreciation#Depreciation", b1 =>
+                        {
+                            b1.Property<int>("LifeMonths")
+                                .HasColumnType("integer");
+
+                            b1.Property<decimal>("ResidualValue")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<DateOnly>("StartDate")
+                                .HasColumnType("date");
+
+                            b1.Property<decimal>("StartValue")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+                        });
+
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("Assets");
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.AssetValuation", b =>
+                {
+                    b.Property<Guid>("AssetId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("Value")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.HasKey("AssetId", "Date");
+
+                    b.ToTable("AssetValuations");
                 });
 
             modelBuilder.Entity("JxFinance.Domain.NetWorth.Debt", b =>
@@ -2298,6 +2336,15 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("JxFinance.Domain.NetWorth.AssetValuation", b =>
+                {
+                    b.HasOne("JxFinance.Domain.NetWorth.Asset", null)
+                        .WithMany()
+                        .HasForeignKey("AssetId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

@@ -10,4 +10,5 @@ public sealed class Asset : OwnableEntity
     public Money CurrentValue { get; set; }
     public Currency Currency => CurrentValue.Currency;
     public DateOnly AsOf { get; set; }
+    public Depreciation? Depreciation { get; set; }
 }

@@ -10,4 +10,20 @@ public sealed record AssetResponse(
     AssetType Type,
     [property: Money] decimal CurrentValue,
     DateOnly AsOf,
-    Currency Currency);
+    Currency Currency,
+    [property: Money] decimal Value,
+    DepreciationResponse? Depreciation,
+    [property: Money] decimal? MonthlyDepreciation,
+    DateOnly? FullyDepreciatedOn);
+
+public sealed record DepreciationResponse(
+    DateOnly StartDate,
+    [property: Money] decimal StartValue,
+    int LifeMonths,
+    [property: Money] decimal ResidualValue);
+
+public sealed record AssetValuationResponse(DateOnly Date, [property: Money] decimal Value, string? Note);
+
+public sealed record AssetValuePoint(DateOnly Date, [property: Money] decimal Value, bool IsValuation);
+
+public sealed record AssetValueHistoryResponse(Currency Currency, IReadOnlyList<AssetValuePoint> Points);

@@ -295,7 +295,7 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
     }
 
     [Fact]
-    public async Task Restore_brings_back_the_repayment_terms_of_a_debt()
+    public async Task Restore_brings_back_the_repayment_terms_and_payments_of_a_debt_and_the_valuations_of_an_asset()
     {
         var debt = await PostAsync<RestoredDebtDto>(
             Client,
@@ -305,6 +305,11 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         (await Client.PutAsJsonAsync(
             $"/api/debts/{debt.Id}",
             new { name = "Mortgage", type = "mortgage", outstandingAmount = "99000.00", asOf = Today, monthlyPayment = "10.00" }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync($"{payments}/{link.Id}", TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.PutAsJsonAsync(
+            $"/api/assets/{asset.Id}",
+            new { name = "Car", type = "vehicle", currentValue = "12000.00", asOf = Today.AddDays(-10) }, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
+        (await Client.DeleteAsync(valuationUrl, TestContext.Current.CancellationToken)).EnsureSuccessStatusCode();
 
         try
         {
@@ -318,7 +323,18 @@ public sealed class BackupEndpointTests(ApiFixture fixture) : IntegrationTestBas
         var restored = Assert.Single((await Client.GetFromJsonAsync<List<RestoredDebtDto>>("/api/debts", TestContext.Current.CancellationToken))!, d => d.Id == debt.Id);
         Assert.Equal(debt, restored);
         Assert.Equal(HttpStatusCode.OK, (await Client.GetAsync($"/api/debts/{debt.Id}/schedule", TestContext.Current.CancellationToken)).StatusCode);
+        var restoredAsset = Assert.Single((await Client.GetFromJsonAsync<List<RestoredAssetDto>>("/api/assets", TestContext.Current.CancellationToken))!, a => a.Id == asset.Id);
+        Assert.Equal(new RestoredAssetDto(asset.Id, "11000.00", depreciation), restoredAsset);
+        Assert.Equal(
+            [new RestoredValuationDto(Today.AddDays(-5), "11000.00"), new RestoredValuationDto(Today.AddDays(-10), "12000.00")],
+            await Client.GetFromJsonAsync<List<RestoredValuationDto>>($"/api/assets/{asset.Id}/valuations", TestContext.Current.CancellationToken));
     }
+
+    private sealed record RestoredValuationDto(DateOnly Date, string Value);
+
+    private sealed record RestoredAssetDto(Guid Id, string CurrentValue, RestoredDepreciationDto? Depreciation);
+
+    private sealed record RestoredDepreciationDto(DateOnly StartDate, string StartValue, int LifeMonths, string ResidualValue);
 
     [Fact]
     public async Task Restore_brings_back_the_dashboard_layout_of_each_user()

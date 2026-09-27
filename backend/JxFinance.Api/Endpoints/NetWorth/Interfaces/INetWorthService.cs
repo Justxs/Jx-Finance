@@ -18,6 +18,14 @@ public interface INetWorthService
 
     Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Result<IReadOnlyList<AssetValuationResponse>>> GetValuationsAsync(Guid id, CancellationToken cancellationToken);
+
+    Task<Result<AssetResponse>> SetValuationAsync(SetAssetValuationRequest request, CancellationToken cancellationToken);
+
+    Task<Result> DeleteValuationAsync(DeleteAssetValuationRequest request, CancellationToken cancellationToken);
+
+    Task<Result<AssetValueHistoryResponse>> GetValueHistoryAsync(GetAssetValueHistoryRequest request, CancellationToken cancellationToken);
+
     Task<IReadOnlyList<DebtResponse>> GetDebtsAsync(CancellationToken cancellationToken);
 
     Task<Result<DebtResponse>> CreateDebtAsync(CreateDebtRequest request, CancellationToken cancellationToken);

@@ -100,7 +100,25 @@ public static class DemoDataCommand
                 FundingAccountId = savings.Id,
                 FundingSharePercent = 100,
             });
-        db.Assets.Add(new Asset { UserId = user.Id, Name = "Car", Type = AssetType.Vehicle, CurrentValue = new Money(8500.00m, DemoCurrency), AsOf = today });
+        var bought = today.AddYears(-3);
+        var inspected = bought.AddYears(2);
+        var car = new Asset
+        {
+            UserId = user.Id,
+            Name = "Car",
+            Type = AssetType.Vehicle,
+            CurrentValue = new Money(11800.00m, DemoCurrency),
+            AsOf = inspected,
+            Depreciation = new Depreciation(bought, 16000.00m, 96, 2000.00m),
+        };
+        var flat = new Asset { UserId = user.Id, Name = "Flat", Type = AssetType.Property, CurrentValue = new Money(156000.00m, DemoCurrency), AsOf = today };
+        db.Assets.AddRange(car, flat);
+        db.AssetValuations.AddRange(
+            new AssetValuation { AssetId = car.Id, Date = bought, Value = 16000.00m, Note = "Purchase price" },
+            new AssetValuation { AssetId = car.Id, Date = inspected, Value = 11800.00m, Note = "Inspection" },
+            new AssetValuation { AssetId = flat.Id, Date = today.AddYears(-2), Value = 142000.00m },
+            new AssetValuation { AssetId = flat.Id, Date = today.AddYears(-1), Value = 150000.00m },
+            new AssetValuation { AssetId = flat.Id, Date = today, Value = 156000.00m });
         db.Debts.Add(new Debt
         {
             UserId = user.Id,

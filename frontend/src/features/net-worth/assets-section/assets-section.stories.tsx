@@ -1,11 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, within } from "storybook/test";
+import { expect, userEvent, within } from "storybook/test";
 import {
   getDeleteAssetMockHandler,
   getAssetsMockHandler,
 } from "@/api/generated/net-worth/net-worth.msw";
 import { withWidth } from "@/storybook/decorators";
-import { assets, many } from "@/storybook/fixtures";
+import { assets, dollarAsset, many } from "@/storybook/fixtures";
 import {
   emptyHandlers,
   errorHandlers,
@@ -38,6 +38,13 @@ export const ServerError: Story = { parameters: { msw: { handlers: errorHandlers
 
 export const LongList: Story = {
   parameters: withHandlers(getAssetsMockHandler(manyItems)),
+};
+
+export const SeveralCurrencies: Story = {
+  parameters: withHandlers(getAssetsMockHandler([...assets, dollarAsset])),
+  play: async ({ canvas }) => {
+    await expect(await canvas.findAllByText("$6,200.00")).toHaveLength(2);
+  },
 };
 
 export const AddDialogOpen: Story = {

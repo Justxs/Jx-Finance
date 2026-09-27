@@ -8,4 +8,5 @@ public interface IAssetInput
     AssetType Type { get; }
     decimal? CurrentValue { get; }
     DateOnly AsOf { get; }
+    DepreciationInput? Depreciation { get; }
 }

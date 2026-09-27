@@ -52,6 +52,9 @@ public static class CommonRules
     public static IRuleBuilderOptions<T, DateOnly?> IsNotInFuture<T>(this IRuleBuilder<T, DateOnly?> rule, Func<DateOnly> today) =>
         rule.Must(date => date is null || date <= today()).WithErrorCode(ErrorCodes.RangeInvalid);
 
+    public static IRuleBuilderOptions<T, DateOnly> IsNotInFuture<T>(this IRuleBuilder<T, DateOnly> rule, Func<DateOnly> today) =>
+        rule.Must(date => date <= today()).WithErrorCode(ErrorCodes.RangeInvalid);
+
     public static IRuleBuilderOptions<T, TProperty> DiffersFrom<T, TProperty>(
         this IRuleBuilder<T, TProperty> rule,
         Expression<Func<T, TProperty>> other) =>

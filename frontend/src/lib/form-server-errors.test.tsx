@@ -83,6 +83,17 @@ test("an alias maps a request property onto a differently named form field", () 
   expect(unplaced).toEqual([]);
 });
 
+test("an alias can map a nested request path onto a flat form field", () => {
+  const error = problem([{ name: "depreciation.lifeMonths", reason: "Out of range." }]);
+
+  const { fields, placed } = splitServerErrors({ lifeYears: "" }, error, {
+    "depreciation.lifeMonths": "lifeYears",
+  });
+
+  expect(fields).toEqual({ lifeYears: ["Out of range."] });
+  expect(placed).toEqual(["depreciation.lifeMonths"]);
+});
+
 test("an error that never went through a form keeps every entry", () => {
   const error = problem([{ name: "amount", reason: "Too small." }]);
 

@@ -169,7 +169,7 @@ The page reads the debt from the debts list and the schedule from its own query.
 
 ## Trash, backups and the demo data
 
-A deleted debt keeps its terms on the row, so restoring it from the trash brings the schedule back with it. A backup copies every column of every table by name, so the new columns are carried without any change to the backup code; `Restore_brings_back_the_repayment_terms_of_a_debt` takes a backup, clears the terms, restores and reads them back. `--seed-demo` gives the demo car loan a loan amount of 6 000.00 over 48 months, with its first payment 23 months before the first of the current month.
+A deleted debt keeps its terms on the row, so restoring it from the trash brings the schedule back with it. A backup copies every column of every table by name, so the new columns are carried without any change to the backup code; `Restore_brings_back_the_repayment_terms_and_payments_of_a_debt_and_the_valuations_of_an_asset` takes a backup, clears the terms and unlinks a payment, restores and reads both back. Purging a debt or a transaction from the trash deletes its payment links with it, and purging a debt clears it from any recurring entry that paid it; restoring a recurring entry whose debt is gone clears the debt instead of refusing. `--seed-demo` gives the demo car loan a loan amount of 6 000.00 over 48 months, with its first payment 23 months before the first of the current month.
 
 ## Not covered
 

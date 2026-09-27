@@ -22,6 +22,7 @@ function holding(id: string, name: string, details: string, amount: number): Hol
     name,
     details,
     amount,
+    currency: "eur",
     values: {
       name,
       type: "other",

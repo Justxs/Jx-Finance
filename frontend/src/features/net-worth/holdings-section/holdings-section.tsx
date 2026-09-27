@@ -18,6 +18,7 @@ export interface HoldingItem<TValues> {
   name: string;
   details: string;
   amount: number;
+  currency: string;
   values: TValues;
   action?: ReactNode;
 }
@@ -54,7 +55,10 @@ export function HoldingsSection<TValues>({
   const [editTarget, setEditTarget] = useState<string | null>(null);
   const editItem = items.find((item) => item.id === editTarget);
 
-  const total = items.reduce((sum, item) => sum + item.amount, 0);
+  const totals = new Map<string, number>();
+  for (const item of items) {
+    totals.set(item.currency, (totals.get(item.currency) ?? 0) + item.amount);
+  }
   const amountClass = cn(
     "font-semibold whitespace-nowrap tabular-nums",
     tone === "expense" && EXPENSE_TONE,
@@ -79,7 +83,9 @@ export function HoldingsSection<TValues>({
                 onEdit={() => setEditTarget(item.id)}
                 {...remove.deleteProps(item.id)}
               >
-                <span className={cn("text-right", amountClass)}>{money.format(item.amount)}</span>
+                <span className={cn("text-right", amountClass)}>
+                  {money.format(item.amount, item.currency)}
+                </span>
                 {item.action}
               </RowActions>
             </li>
@@ -93,7 +99,15 @@ export function HoldingsSection<TValues>({
     <Section>
       <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-2">
         <SectionTitle className="min-w-0 flex-1">{title}</SectionTitle>
-        {items.length > 0 ? <span className={amountClass}>{money.format(total)}</span> : null}
+        {totals.size > 0 ? (
+          <div className="flex flex-col items-end">
+            {[...totals].map(([currency, total]) => (
+              <span key={currency} className={amountClass}>
+                {money.format(total, currency)}
+              </span>
+            ))}
+          </div>
+        ) : null}
         <CreateDialog label={addLabel} title={addLabel} secondary>
           {(close) => <Form onClose={close} />}
         </CreateDialog>

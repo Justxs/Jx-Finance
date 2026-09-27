@@ -87,7 +87,7 @@ Failures answer `application/problem+json` shaped by FastEndpoints' RFC 9457 `Pr
 }
 ```
 
-`name` is the offending request property, or `generalErrors` for a failure that is not tied to one field. `code` is the machine-readable reason, and is what clients should branch on rather than the prose in `reason`.
+`name` is the offending request property, or `generalErrors` for a failure that is not tied to one field. A nested property is a path with every segment in camel case, such as `depreciation.lifeMonths` or `lines[1].amount`; `ProblemResponses.Build` converts each segment. `code` is the machine-readable reason, and is what clients should branch on rather than the prose in `reason`.
 
 Services return `Result<T>` with one of the codes in `Common/Errors/ErrorCodes.cs`. Endpoints hand it to one of the sender helpers in `Common/ResultResponses.cs`, which answer without throwing and map the code to a status through `ErrorCodes.StatusCodeFor`: `not_found` to 404, `conflict` to 409, `forbidden` to 403, `unauthorized` to 401, anything else to 400. `feature.disabled` maps to 404 as well, so a service that answers it — today only a restore of a record whose feature is switched off — reads the same as the feature gate's own answer on a gated prefix. Nothing reaching for a resource it cannot see is told the difference between "missing" and "not yours": those cases return 404 on purpose.
 
@@ -120,6 +120,10 @@ Every 201 goes through `CreatedAsync`, which sets `Location` to a path built fro
 | POST | `/api/assets` |
 | DELETE | `/api/assets/{id}` |
 | PUT | `/api/assets/{id}` |
+| GET | `/api/assets/{id}/valuations` |
+| DELETE | `/api/assets/{id}/valuations/{date}` |
+| PUT | `/api/assets/{id}/valuations/{date}` |
+| GET | `/api/assets/{id}/value-history` |
 | DELETE | `/api/attachments/{id}` |
 | GET | `/api/attachments/{id}/content` |
 | POST | `/api/auth/2fa/disable` |

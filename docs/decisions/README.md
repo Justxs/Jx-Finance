@@ -22,7 +22,7 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Goals](goals.md) | none | 3 | [Goals](../features/goals.md) |
 | [Recurring entries and subscription detection](recurring-bills.md) | Recurring entries, Subscription detection, Dismissing a suggestion | 4 | [Recurring entries](../features/recurring-bills.md) |
 | [Notifications](notifications.md) | none | 2 | [Notifications](../features/notifications.md) |
-| [Net worth](net-worth.md) | Net worth, Snapshot schedule | 1 | [Net worth](../features/net-worth.md) |
+| [Net worth](net-worth.md) | Net worth, Snapshot schedule, Asset value | 8 | [Net worth](../features/net-worth.md) |
 | [Households and sharing](households-and-sharing.md) | Sharing, Member removal | 4 | [Households and sharing](../features/households-and-sharing.md) |
 | [Dashboard](dashboard.md) | Dashboard layout | 7 | [Dashboard](../features/dashboard.md) |
 | [Reports](reports.md) | none | 4 | [Reports](../features/reports.md) |

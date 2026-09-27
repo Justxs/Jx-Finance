@@ -63,7 +63,7 @@ Create/edit/delete names, targets and dates; progress is either typed by hand (z
 
 ## Net worth
 
-All visible account balances plus personal assets minus personal debts; daily values refreshed hourly and on viewing; a total too large for the history is still shown but not stored; a debt with its repayment terms gets a monthly schedule with the interest and principal of each payment, a payoff date and an overpayment preview
+All visible account balances plus personal assets minus personal debts; daily values refreshed hourly and on viewing; a total too large for the history is still shown but not stored; a debt with its repayment terms gets a monthly schedule with the interest and principal of each payment, a payoff date and an overpayment preview; a debt can track its payments, so that expenses linked to it by hand, from suggestions or by confirming a recurring entry lower its balance by their principal, worked out from its rate or typed from the statement; an asset keeps dated valuations, may depreciate on a straight line in monthly steps down to a residual value, counts from its first valuation, and has a page with its value over time and its valuations
 
 ## Recurring entries
 

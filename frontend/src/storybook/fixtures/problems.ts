@@ -94,6 +94,13 @@ export const debtPaymentTooSmallProblem = problemOf(
   { name: "monthlyPayment", instance: "/api/debts" },
 );
 
+export const lastValuationProblem = problemOf(
+  400,
+  "asset.lastValuation",
+  "An asset keeps at least one valuation. Delete the asset instead.",
+  { instance: "/api/assets/bbbbbbbb-0000-0000-0000-000000000003/valuations/2026-09-01" },
+);
+
 export const scheduleIncompleteProblem = problemOf(
   400,
   "debt.scheduleIncomplete",

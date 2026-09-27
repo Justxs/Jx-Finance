@@ -9,10 +9,12 @@ public sealed class UpdateAssetSummary : Summary<UpdateAssetEndpoint, UpdateAsse
     public UpdateAssetSummary()
     {
         Summary = "Update an asset";
-        Description = "Revalues or renames an asset. Net worth uses the new value from the next read "
-            + "onwards; snapshots already taken keep the value that was current when they were written.";
+        Description = "Revalues, renames or sets the depreciation of an asset. A changed value or date records a "
+            + "valuation for that date instead of overwriting the history. Net worth uses the new value from the next "
+            + "read onwards; snapshots already taken keep the value that was current when they were written.";
         ExampleRequest = new UpdateAssetRequest(Guid.Empty, "Flat", AssetType.Property, 185000.00m, new DateOnly(2026, 9, 1));
         Params["id"] = "The asset id. Takes precedence over the id in the body.";
+        RequestParam(r => r.Depreciation, CreateAsset.CreateAssetSummary.DepreciationText);
         Responses[200] = "The updated asset.";
         Responses[400] = SummaryText.ValidationFailed;
         Responses[404] = "No such asset belongs to the signed-in user.";

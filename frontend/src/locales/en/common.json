@@ -991,7 +991,91 @@
       "lumpSumDateNeeded": "Pick the date of the one-off payment.",
       "savings_one": "Paid off {{date}}, {{count}} payment sooner, saving {{amount}} in interest.",
       "savings_other": "Paid off {{date}}, {{count}} payments sooner, saving {{amount}} in interest.",
-      "noSavings": "Enter an amount to see how much sooner the debt is repaid."
+      "noSavings": "Enter an amount to see how much sooner the debt is repaid.",
+      "trackedBalance": "Tracked balance",
+      "balanceTracked": "Tracked"
+    },
+    "depreciation": {
+      "title": "Depreciation",
+      "enable": "Loses value every month",
+      "hint": "Straight line: the value falls by the same amount each month, on the start date's day, down to the residual value. A new valuation restarts the decline from that value.",
+      "startDate": "Start date",
+      "startValue": "Start value",
+      "startValueHint": "Empty means the current value.",
+      "lifeYears": "Useful life, years",
+      "lifeMonths": "and months",
+      "residualValue": "Residual value",
+      "residualHint": "Empty means 0.",
+      "lifeRange": "The useful life is 1 to 600 months.",
+      "startDateInvalid": "Pick a start date that is not in the future.",
+      "residualTooHigh": "The residual value must be below the start value.",
+      "preview": "Loses {{amount}} a month, reaches {{residual}} in {{month}}.",
+      "perMonth": "↓ {{amount}} per month"
+    },
+    "asset": {
+      "open": "Value history: {{name}}",
+      "notFound": "This asset no longer exists.",
+      "valueToday": "Value today",
+      "lastValuation": "Last valuation",
+      "monthly": "Monthly depreciation",
+      "residual": "Down to {{amount}}",
+      "noDepreciation": "Does not depreciate",
+      "fullyDepreciatedOn": "Fully depreciated",
+      "chart": "Value over time",
+      "chartLabel": "Value of the asset by date, with its valuations marked",
+      "value": "Value",
+      "valuation": "Valuation"
+    },
+    "valuations": {
+      "title": "Valuations",
+      "hint": "What the asset was worth on a date. A deleted valuation cannot be restored.",
+      "add": "Add valuation",
+      "edit": "Edit valuation",
+      "value": "Value ({{currency}})",
+      "date": "Date",
+      "note": "Note",
+      "notePlaceholder": "Dealer quote",
+      "dateFuture": "The date cannot be in the future.",
+      "newest": "Current value"
+    },
+    "tracking": {
+      "enable": "Track payments",
+      "hint": "The balance becomes the amount below on its date, less the principal of the payments you link to this debt after it.",
+      "balance": "Balance",
+      "balanceOn": "Balance on"
+    },
+    "payments": {
+      "title": "Linked payments",
+      "balance": "Tracked balance",
+      "anchor": "{{amount}} on {{date}}, less the principal paid since. A regular payment pays a month of interest at the debt's rate first; an extra payment is all principal.",
+      "incomplete": "Some payments have no exchange rate for their date and are left out of the balance.",
+      "unavailable_one": "{{count}} linked payment was deleted or is no longer shared with you, so it is left out.",
+      "unavailable_other": "{{count}} linked payments were deleted or are no longer shared with you, so they are left out.",
+      "empty": "No payments are linked yet.",
+      "link": "Link payments",
+      "noCandidates": "No unlinked expenses since the balance date.",
+      "linkSelected_one": "Link {{count}} payment",
+      "linkSelected_other": "Link {{count}} payments",
+      "edit": "Edit payment",
+      "debt": "Debt",
+      "kind": "Kind",
+      "kinds": {
+        "regular": "Regular",
+        "extra": "Extra",
+        "auto": "Regular, or extra if the month has one"
+      },
+      "principal": "Principal from the statement",
+      "principalHint": "Optional. Replaces the split worked out from the rate.",
+      "interest": "interest {{amount}}",
+      "principalPart": "principal {{amount}}",
+      "typed": "principal {{amount}} from the statement",
+      "balanceAfter": "balance {{amount}}",
+      "overpaid": "overpaid {{amount}}",
+      "unlink": "Unlink",
+      "pays": "Pays debt: {{name}}",
+      "linkToDebt": "Link to debt",
+      "unlinkFromDebt": "Unlink from debt",
+      "open": "Open the debt"
     }
   },
   "investments": {
@@ -1675,6 +1759,10 @@
   "serverErrors": {
     "access": {
       "forbidden": "You do not have permission to do this."
+    },
+    "asset": {
+      "depreciationIncomplete": "Give the start date, start value, useful life and residual value of the depreciation, or none of them.",
+      "lastValuation": "An asset keeps at least one valuation. Delete the asset instead."
     },
     "attachment": {
       "contentMismatch": "The file's content does not match its type. Save it again from the program that made it and retry.",

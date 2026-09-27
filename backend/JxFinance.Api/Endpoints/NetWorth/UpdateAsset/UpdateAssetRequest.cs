@@ -9,4 +9,5 @@ public sealed record UpdateAssetRequest(
     string Name,
     AssetType Type,
     [property: Money(NotNull = true)] decimal? CurrentValue,
-    DateOnly AsOf) : IAssetInput;
+    DateOnly AsOf,
+    DepreciationInput? Depreciation = null) : IAssetInput;

@@ -131,11 +131,17 @@ export const ids = {
     transportExceeded: uid("aaaaaaaa", 6),
     salary: uid("aaaaaaaa", 7),
     savingsOrder: uid("aaaaaaaa", 8),
+    unusualSenukai: uid("aaaaaaaa", 9),
+    unusualSummary: uid("aaaaaaaa", 10),
+    teliaPriceRise: uid("aaaaaaaa", 11),
+    augustReady: uid("aaaaaaaa", 12),
   },
   assets: {
     apartment: uid("bbbbbbbb", 1),
     car: uid("bbbbbbbb", 2),
     investments: uid("bbbbbbbb", 3),
+    laptop: uid("bbbbbbbb", 4),
+    watch: uid("bbbbbbbb", 5),
   },
   debts: {
     mortgage: uid("cccccccc", 1),

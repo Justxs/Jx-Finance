@@ -1015,7 +1015,95 @@
       "savings_few": "Grąžinta {{date}}, {{count}} įmokomis anksčiau, sutaupoma {{amount}} palūkanų.",
       "savings_many": "Grąžinta {{date}}, {{count}} įmokų anksčiau, sutaupoma {{amount}} palūkanų.",
       "savings_other": "Grąžinta {{date}}, {{count}} įmokų anksčiau, sutaupoma {{amount}} palūkanų.",
-      "noSavings": "Įveskite sumą ir pamatysite, kiek anksčiau skola bus grąžinta."
+      "noSavings": "Įveskite sumą ir pamatysite, kiek anksčiau skola bus grąžinta.",
+      "trackedBalance": "Stebimas likutis",
+      "balanceTracked": "Stebimas"
+    },
+    "depreciation": {
+      "title": "Nusidėvėjimas",
+      "enable": "Kas mėnesį nuvertėja",
+      "hint": "Tiesiniu būdu: vertė kas mėnesį, pradžios datos dieną, sumažėja ta pačia suma iki likutinės vertės. Naujas įvertinimas nuvertėjimą pradeda iš naujo nuo tos vertės.",
+      "startDate": "Pradžios data",
+      "startValue": "Pradinė vertė",
+      "startValueHint": "Tuščia reiškia dabartinę vertę.",
+      "lifeYears": "Naudingo tarnavimo laikas, metai",
+      "lifeMonths": "ir mėnesiai",
+      "residualValue": "Likutinė vertė",
+      "residualHint": "Tuščia reiškia 0.",
+      "lifeRange": "Naudingo tarnavimo laikas – nuo 1 iki 600 mėnesių.",
+      "startDateInvalid": "Pasirinkite pradžios datą, kuri nėra ateityje.",
+      "residualTooHigh": "Likutinė vertė turi būti mažesnė už pradinę.",
+      "preview": "Kas mėnesį nuvertėja po {{amount}}, iki {{residual}} – {{month}}.",
+      "perMonth": "↓ {{amount}} per mėnesį"
+    },
+    "asset": {
+      "open": "Vertės istorija: {{name}}",
+      "notFound": "Šio turto nebėra.",
+      "valueToday": "Vertė šiandien",
+      "lastValuation": "Paskutinis įvertinimas",
+      "monthly": "Nuvertėjimas per mėnesį",
+      "residual": "Iki {{amount}}",
+      "noDepreciation": "Nenuvertėja",
+      "fullyDepreciatedOn": "Visiškai nuvertės",
+      "chart": "Vertė laikui bėgant",
+      "chartLabel": "Turto vertė pagal datą su pažymėtais įvertinimais",
+      "value": "Vertė",
+      "valuation": "Įvertinimas"
+    },
+    "valuations": {
+      "title": "Įvertinimai",
+      "hint": "Kiek turtas buvo vertas tam tikrą dieną. Ištrinto įvertinimo atkurti negalima.",
+      "add": "Pridėti įvertinimą",
+      "edit": "Keisti įvertinimą",
+      "value": "Vertė ({{currency}})",
+      "date": "Data",
+      "note": "Pastaba",
+      "notePlaceholder": "Pardavėjo pasiūlymas",
+      "dateFuture": "Data negali būti ateityje.",
+      "newest": "Dabartinė vertė"
+    },
+    "tracking": {
+      "enable": "Sekti įmokas",
+      "hint": "Likutis tampa žemiau įrašyta suma tą dieną, atėmus vėliau su šia skola susietų įmokų pagrindinę dalį.",
+      "balance": "Likutis",
+      "balanceOn": "Likutis dieną"
+    },
+    "payments": {
+      "title": "Susietos įmokos",
+      "balance": "Stebimas likutis",
+      "anchor": "{{amount}} {{date}}, atėmus nuo tada grąžintą pagrindinę dalį. Įprasta įmoka pirmiausia padengia mėnesio palūkanas pagal skolos palūkanų normą, papildoma įmoka visa tenka pagrindinei daliai.",
+      "incomplete": "Kai kurioms įmokoms trūksta tos dienos valiutos kurso, todėl jos į likutį neįskaičiuotos.",
+      "unavailable_one": "{{count}} susieta įmoka ištrinta arba jums nebebendrinama, todėl neįskaičiuota.",
+      "unavailable_few": "{{count}} susietos įmokos ištrintos arba jums nebebendrinamos, todėl neįskaičiuotos.",
+      "unavailable_many": "{{count}} susietų įmokų ištrinta arba jums nebebendrinama, todėl neįskaičiuotos.",
+      "unavailable_other": "{{count}} susietų įmokų ištrinta arba jums nebebendrinama, todėl neįskaičiuotos.",
+      "empty": "Susietų įmokų dar nėra.",
+      "link": "Susieti įmokas",
+      "noCandidates": "Nuo likučio dienos nesusietų išlaidų nėra.",
+      "linkSelected_one": "Susieti {{count}} įmoką",
+      "linkSelected_few": "Susieti {{count}} įmokas",
+      "linkSelected_many": "Susieti {{count}} įmokų",
+      "linkSelected_other": "Susieti {{count}} įmokų",
+      "edit": "Keisti įmoką",
+      "debt": "Skola",
+      "kind": "Rūšis",
+      "kinds": {
+        "regular": "Įprasta",
+        "extra": "Papildoma",
+        "auto": "Įprasta arba papildoma, jei mėnuo jau turi įprastą"
+      },
+      "principal": "Pagrindinė dalis pagal išrašą",
+      "principalHint": "Neprivaloma. Pakeičia pagal palūkanų normą apskaičiuotą padalijimą.",
+      "interest": "palūkanos {{amount}}",
+      "principalPart": "pagrindinė dalis {{amount}}",
+      "typed": "pagrindinė dalis {{amount}} pagal išrašą",
+      "balanceAfter": "likutis {{amount}}",
+      "overpaid": "permokėta {{amount}}",
+      "unlink": "Atsieti",
+      "pays": "Moka skolą: {{name}}",
+      "linkToDebt": "Susieti su skola",
+      "unlinkFromDebt": "Atsieti nuo skolos",
+      "open": "Atidaryti skolą"
     }
   },
   "investments": {
@@ -1731,6 +1819,10 @@
   "serverErrors": {
     "access": {
       "forbidden": "Neturite teisės atlikti šio veiksmo."
+    },
+    "asset": {
+      "depreciationIncomplete": "Nurodykite nusidėvėjimo pradžios datą, pradinę vertę, naudingo tarnavimo laiką ir likutinę vertę arba nė vieno iš jų.",
+      "lastValuation": "Turtas turi turėti bent vieną įvertinimą. Vietoj to ištrinkite turtą."
     },
     "attachment": {
       "contentMismatch": "Failo turinys neatitinka jo tipo. Išsaugokite jį iš naujo programa, kuria jis sukurtas, ir bandykite dar kartą.",

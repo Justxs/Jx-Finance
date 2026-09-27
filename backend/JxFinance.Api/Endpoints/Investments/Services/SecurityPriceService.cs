@@ -22,8 +22,6 @@ namespace JxFinance.Endpoints.Investments.Services;
 public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService rates, IClock clock)
     : ISecurityPriceService
 {
-    private const int DailyUpToDays = 92;
-    private const int WeeklyUpToDays = 731;
     private const string NotHeldMessage =
         "Only someone who holds this security, or an administrator, can change its prices.";
 
@@ -153,7 +151,7 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         var books = new Dictionary<AccountId, Dictionary<SecurityId, Position>>();
         var replayed = 0;
         var points = new List<ValueHistoryPoint>();
-        foreach (var date in Sample(start, to))
+        foreach (var date in DateWindow.Sample(start, to))
         {
             while (replayed < entries.Count && entries[replayed].Date <= date)
             {
@@ -192,32 +190,6 @@ public sealed class SecurityPriceService(AppDbContext db, IExchangeRateService r
         }
 
         return new ValueHistoryResponse(reporting, points);
-    }
-
-    private static List<DateOnly> Sample(DateOnly start, DateOnly end)
-    {
-        var days = end.DayNumber - start.DayNumber;
-        var dates = new List<DateOnly>();
-        for (var index = 0; ; index++)
-        {
-            var date = days <= DailyUpToDays
-                ? end.AddDays(-index)
-                : days <= WeeklyUpToDays ? end.AddDays(-7 * index) : end.AddMonths(-index);
-            if (date < start)
-            {
-                break;
-            }
-
-            dates.Add(date);
-        }
-
-        if (dates[^1] != start)
-        {
-            dates.Add(start);
-        }
-
-        dates.Reverse();
-        return dates;
     }
 
     private static decimal? PriceOnOrBefore(List<SecurityPrice>? history, DateOnly date)

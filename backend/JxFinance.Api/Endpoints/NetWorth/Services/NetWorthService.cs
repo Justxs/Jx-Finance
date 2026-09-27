@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common;
 using JxFinance.Common.Amortization;
+using JxFinance.Common.Assets;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.Trash;
@@ -13,6 +14,7 @@ using JxFinance.Endpoints.NetWorth.CreateAsset;
 using JxFinance.Endpoints.NetWorth.CreateDebt;
 using JxFinance.Endpoints.NetWorth.Interfaces;
 using JxFinance.Endpoints.NetWorth.Mappers;
+using JxFinance.Endpoints.NetWorth.SetAssetValuation;
 using JxFinance.Endpoints.NetWorth.Shared;
 using JxFinance.Endpoints.NetWorth.UpdateAsset;
 using JxFinance.Endpoints.NetWorth.UpdateDebt;
@@ -35,8 +37,9 @@ public sealed class NetWorthService(
 
     public async Task<IReadOnlyList<AssetResponse>> GetAssetsAsync(CancellationToken cancellationToken)
     {
-        var assets = await db.Assets.OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
-        return assets.Select(a => a.ToResponse()).ToList();
+        var assets = await db.Assets.AsNoTracking().OrderBy(a => a.CreatedAt).ToListAsync(cancellationToken);
+        var valuations = await ValuationsOfAsync(assets, cancellationToken);
+        return assets.Select(a => a.ToResponse(valuations[a.Id].ToList(), clock.Today)).ToList();
     }
 
     public async Task<Result<AssetResponse>> CreateAssetAsync(
@@ -45,18 +48,127 @@ public sealed class NetWorthService(
     {
         var asset = request.ToEntity(rates.ReportingCurrency);
         db.Assets.Add(asset);
+        await AssetValuationBook.RecordAsync(db, asset, request.AsOf, request.CurrentValue!.Value, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
 
-        return asset.ToResponse();
+        return await ToResponseAsync(asset, cancellationToken);
     }
 
     public async Task<Result<AssetResponse>> UpdateAssetAsync(
         UpdateAssetRequest request,
         CancellationToken cancellationToken)
     {
-        var assetId = new AssetId(request.Id);
-        var updated = await db.UpdateOrNotFoundAsync<Asset>(a => a.Id == assetId, AssetNotFound, request.ApplyTo, cancellationToken);
-        return updated.Map(asset => asset.ToResponse());
+        var found = await FindAssetAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var asset))
+        {
+            return found.Error;
+        }
+
+        request.ApplyTo(asset);
+        if (request.CurrentValue != asset.CurrentValue.Amount || request.AsOf != asset.AsOf)
+        {
+            await AssetValuationBook.RecordAsync(db, asset, request.AsOf, request.CurrentValue!.Value, cancellationToken);
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        return await ToResponseAsync(asset, cancellationToken);
+    }
+
+    public async Task<Result<IReadOnlyList<AssetValuationResponse>>> GetValuationsAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var found = await FindAssetAsync(id, cancellationToken);
+        if (!found.TryGetValue(out var asset))
+        {
+            return found.Error;
+        }
+
+        var valuations = await db.AssetValuations
+            .AsNoTracking()
+            .Where(v => v.AssetId == asset.Id)
+            .OrderByDescending(v => v.Date)
+            .ToListAsync(cancellationToken);
+        return valuations.Select(v => v.ToResponse()).ToList();
+    }
+
+    public async Task<Result<AssetResponse>> SetValuationAsync(
+        SetAssetValuationRequest request,
+        CancellationToken cancellationToken)
+    {
+        var found = await FindAssetAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var asset))
+        {
+            return found.Error;
+        }
+
+        var point = await AssetValuationBook.RecordAsync(db, asset, request.Date, request.Value!.Value, cancellationToken);
+        point.Note = OptionalText.Normalize(request.Note);
+        try
+        {
+            await db.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex) when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            return new DomainError(ErrorCodes.ConflictBusy, "Someone else recorded a valuation for that date just now. Try again.");
+        }
+
+        return await ToResponseAsync(asset, cancellationToken);
+    }
+
+    public async Task<Result> DeleteValuationAsync(DeleteAssetValuationRequest request, CancellationToken cancellationToken)
+    {
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
+        await db.Database.LockAsync(currentUser.Id, cancellationToken);
+        var found = await FindAssetAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var asset))
+        {
+            return found.Error;
+        }
+
+        var point = await db.AssetValuations.FindOrNotFoundAsync(
+            v => v.AssetId == asset.Id && v.Date == request.Date,
+            "No valuation is recorded for that date.",
+            cancellationToken);
+        if (!point.TryGetValue(out var valuation))
+        {
+            return point.Error;
+        }
+
+        var removed = await AssetValuationBook.RemoveAsync(db, asset, valuation, cancellationToken);
+        if (removed.IsSuccess)
+        {
+            await db.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+
+        return removed;
+    }
+
+    public async Task<Result<AssetValueHistoryResponse>> GetValueHistoryAsync(
+        GetAssetValueHistoryRequest request,
+        CancellationToken cancellationToken)
+    {
+        var found = await FindAssetAsync(request.Id, cancellationToken);
+        if (!found.TryGetValue(out var asset))
+        {
+            return found.Error;
+        }
+
+        var valuations = await db.AssetValuations.AsNoTracking().Where(v => v.AssetId == asset.Id).ToListAsync(cancellationToken);
+        var today = clock.Today;
+        var to = request.To is { } end && end < today ? end : today;
+        if (valuations.Count == 0)
+        {
+            return new AssetValueHistoryResponse(asset.Currency, []);
+        }
+
+        var first = valuations.Min(v => v.Date);
+        var from = request.From is { } start && start > first ? start : first;
+        var points = from > to
+            ? []
+            : AssetValue.Series(from, to, valuations, asset.Depreciation)
+                .Select(point => new AssetValuePoint(point.Date, point.Value, point.IsValuation))
+                .ToList();
+        return new AssetValueHistoryResponse(asset.Currency, points);
     }
 
     public Task<Result<Guid>> DeleteAssetAsync(Guid id, CancellationToken cancellationToken)
@@ -214,9 +326,13 @@ public sealed class NetWorthService(
         var (accountsTotal, accountsComplete) = await accountService.GetReportingTotalAsync(cancellationToken);
         var assets = await db.Assets.AsNoTracking().ToListAsync(cancellationToken);
         var debts = await db.Debts.AsNoTracking().ToListAsync(cancellationToken);
+        var valuations = await ValuationsOfAsync(assets, cancellationToken);
+        var assetValues = assets.Select(a => new Money(AssetValue.On(clock.Today, valuations[a.Id], a.Depreciation) ?? 0m, a.Currency));
 
-        var (assetsTotal, assetsComplete) = await ToReportingAsync(assets.Select(a => a.CurrentValue), cancellationToken);
-        var (debtsTotal, debtsComplete) = await ToReportingAsync(debts.Select(d => d.OutstandingAmount), cancellationToken);
+        var (assetsTotal, assetsComplete) = await ToReportingAsync(assetValues, cancellationToken);
+        var tracked = await TrackAsync(debts, cancellationToken);
+        var debtBalances = debts.Select(d => tracked.TryGetValue(d.Id, out var t) ? new Money(t.Track.Balance, d.Currency) : d.OutstandingAmount);
+        var (debtsTotal, debtsComplete) = await ToReportingAsync(debtBalances, cancellationToken);
 
         return (
             accountsTotal,

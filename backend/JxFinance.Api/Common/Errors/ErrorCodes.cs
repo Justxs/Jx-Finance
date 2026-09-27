@@ -69,6 +69,8 @@ public static class ErrorCodes
     public const string RestoreSecurityChanged = "restore.securityChanged";
     public const string RestoreNameTaken = "restore.nameTaken";
     public const string ExportTooManyRows = "export.tooManyRows";
+    public const string AssetDepreciationIncomplete = "asset.depreciationIncomplete";
+    public const string AssetLastValuation = "asset.lastValuation";
     public const string DebtPaymentTooSmall = "debt.paymentTooSmall";
     public const string DebtScheduleIncomplete = "debt.scheduleIncomplete";
     public const string AttachmentEmpty = "attachment.empty";
