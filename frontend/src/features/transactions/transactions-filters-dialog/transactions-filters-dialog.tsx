@@ -6,6 +6,7 @@ import { FieldShell } from "@/components/form/field-shell/field-shell";
 import { Modal } from "@/components/modal";
 import { SelectField, type SelectOption } from "@/components/select-field/select-field";
 import { Button } from "@/components/ui/button/button";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-picker";
 import { Input } from "@/components/ui/input/input";
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
@@ -83,6 +84,13 @@ export function TransactionsFiltersDialog({
           </FieldShell>
 
           <FilterSelect id="tx-filter-type" field={fields.type} />
+
+          {fields.unusual.enabled ? (
+            <label className="flex items-center gap-2.5 text-sm font-medium">
+              <Checkbox checked={fields.unusual.value} onCheckedChange={fields.unusual.set} />
+              {fields.unusual.label}
+            </label>
+          ) : null}
 
           <FieldShell id="tx-filter-date" label={fields.date.label}>
             <DateRangePicker

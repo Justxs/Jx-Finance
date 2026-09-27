@@ -27,6 +27,8 @@ export const transactionsSearchSchema = z.object({
   type: optionalParam(z.enum(FlowType)),
   dateFrom: optionalParam(z.string()),
   dateTo: optionalParam(z.string()),
+  unusual: optionalParam(z.boolean()),
+  uncategorized: optionalParam(z.boolean()),
   ...sortParams(TransactionSortField),
   new: optionalParam(z.boolean()),
 });

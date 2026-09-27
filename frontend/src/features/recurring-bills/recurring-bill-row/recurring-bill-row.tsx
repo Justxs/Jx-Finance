@@ -1,3 +1,4 @@
+import { TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type {
   AccountResponse,
@@ -25,6 +26,8 @@ interface Props extends DeleteProps {
   categories: CategoryResponse[];
   onEdit: () => void;
   onConfirm: () => void;
+  onUpdateAmount?: (amount: string) => void;
+  updatePending?: boolean;
 }
 
 export function RecurringBillRow({
@@ -33,6 +36,8 @@ export function RecurringBillRow({
   categories,
   onEdit,
   onConfirm,
+  onUpdateAmount,
+  updatePending = false,
   ...deleteProps
 }: Readonly<Props>) {
   const { t } = useTranslation();
@@ -46,6 +51,8 @@ export function RecurringBillRow({
   const today = useToday();
   const overdue = bill.isActive && Boolean(bill.nextDueDate) && bill.nextDueDate < today;
   const isTransfer = bill.shape === "transfer";
+  const rise = bill.latestMatch?.isPriceRise && bill.latestMatch.expected ? bill.latestMatch : null;
+  const currency = account?.currency;
 
   const meta = metaLine(
     t(`recurringBills.cadences.${bill.cadence}`),
@@ -72,12 +79,37 @@ export function RecurringBillRow({
         </>
       }
       meta={
-        <p className="text-xs wrap-break-word text-muted-foreground">
-          <span className={cn("tabular-nums", bill.isActive && "text-foreground")}>
-            {t("recurringBills.nextDueDate")}: {formatDate(bill.nextDueDate)}
-          </span>
-          {meta ? ` · ${meta}` : ""}
-        </p>
+        <>
+          <p className="text-xs wrap-break-word text-muted-foreground">
+            <span className={cn("tabular-nums", bill.isActive && "text-foreground")}>
+              {t("recurringBills.nextDueDate")}: {formatDate(bill.nextDueDate)}
+            </span>
+            {meta ? ` · ${meta}` : ""}
+          </p>
+          {rise ? (
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+              <span className="inline-flex items-center gap-1 font-medium text-expense tabular-nums">
+                <TrendingUp className="size-3.5 shrink-0" aria-hidden="true" />
+                {t("recurringBills.priceRise", {
+                  amount: money.format(Number(rise.amount), currency),
+                  date: formatDate(rise.date),
+                  expected: money.format(Number(rise.expected), currency),
+                })}
+              </span>
+              {bill.kind === "fixed" && onUpdateAmount ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="inline"
+                  pending={updatePending}
+                  onClick={() => onUpdateAmount(rise.amount)}
+                >
+                  {t("recurringBills.updateExpected")}
+                </Button>
+              ) : null}
+            </p>
+          ) : null}
+        </>
       }
       amount={
         bill.amount ? (

@@ -5,7 +5,9 @@ import {
   getBulkTagTransactionsMockHandler,
   getCreateTransactionMockHandler,
   getDeleteTransactionMockHandler,
+  getDismissUnusualAmountMockHandler,
   getExportTransactionsMockHandler,
+  getRestoreUnusualAmountMockHandler,
   getExportTransactionsPdfMockHandler,
   getTransactionMockHandler,
   getTransactionsMockHandler,
@@ -78,6 +80,8 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
   const search = params.get("search");
   const dateFrom = params.get("dateFrom");
   const dateTo = params.get("dateTo");
+  const unusualOnly = params.get("unusual") === "true";
+  const uncategorizedOnly = params.get("uncategorized") === "true";
   const filtered = transactions.filter(
     (item) =>
       (!accountId || item.accountId === accountId) &&
@@ -86,7 +90,12 @@ function filterTransactions(params: URLSearchParams): TransactionResponse[] {
       (!type || item.type === type) &&
       (!search || includesText(item.description, search)) &&
       (!dateFrom || item.date >= dateFrom) &&
-      (!dateTo || item.date <= dateTo),
+      (!dateTo || item.date <= dateTo) &&
+      (!unusualOnly || (item.unusual !== null && !item.unusualDismissed)) &&
+      (!uncategorizedOnly ||
+        (item.isSplit
+          ? (item.lines ?? []).some((line) => line.categoryId === null)
+          : item.categoryId === null)),
   );
   const sorted = filtered.toSorted(compareTransactions(params.get("sort")));
   return applyDirection(sorted, params, "desc");
@@ -161,11 +170,15 @@ export const transactionHandlers = [
       lines: null,
       tagIds: [],
       attachmentCount: 0,
+      unusual: null,
+      unusualDismissed: false,
     };
     return mergeTransaction(base, await readBody(request));
   }),
   getTransactionMockHandler(byIdFrom(transactions)),
   getUpdateTransactionMockHandler(updateFrom(transactions, mergeTransaction)),
   getDeleteTransactionMockHandler(),
+  getDismissUnusualAmountMockHandler(),
+  getRestoreUnusualAmountMockHandler(),
   getBulkTagTransactionsMockHandler(bulkUpdate),
 ];

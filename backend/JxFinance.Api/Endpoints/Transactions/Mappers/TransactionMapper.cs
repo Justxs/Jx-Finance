@@ -76,7 +76,17 @@ public static class TransactionMapper
         transaction.Amount.Currency,
         Money.Round(transaction.ReportingAmount),
         (tagIds ?? []).Select(tagId => tagId.Value).ToList(),
-        attachmentCount);
+        attachmentCount,
+        (transaction.UnusualBasis is { } basis
+            ? new UnusualVerdict(basis, transaction.UnusualTypicalAmount ?? 0m, transaction.UnusualFactor ?? 0m, transaction.UnusualSampleSize ?? 0)
+            : null).ToResponse(),
+        transaction.UnusualBasis is not null && transaction.UnusualDismissedAt is not null);
+
+    public static UnusualAmountResponse? ToResponse(this UnusualVerdict? verdict) =>
+        verdict is null ? null : new(verdict.Basis, verdict.TypicalAmount, verdict.Factor, verdict.SampleSize);
+
+    public static TransactionResponse WithoutUnusual(this TransactionResponse response) =>
+        response with { Unusual = null, UnusualDismissed = false };
 
     private static CategoryId? ResolveCategoryId(Guid? categoryId, bool isSplit)
     {

@@ -133,7 +133,8 @@ public sealed class CategoryService(
             .ExecuteUpdateAsync(
                 setters => setters
                     .SetProperty(t => t.CategoryId, (CategoryId?)null)
-                    .SetProperty(t => t.UpdatedAt, now),
+                    .SetProperty(t => t.UpdatedAt, now)
+                    .SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null),
                 cancellationToken);
 
         await db.TransactionLines.IgnoreQueryFilters().Where(l => l.CategoryId == categoryId)

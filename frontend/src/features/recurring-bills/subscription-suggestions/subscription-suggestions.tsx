@@ -86,6 +86,7 @@ export function SubscriptionSuggestions({ candidates, accounts, categories }: Re
               accountId: candidate.accountId,
               cadence: candidate.cadence,
               nextDueDate: candidate.nextExpectedDate,
+              matchKey: candidate.description,
             }}
             accounts={accounts}
             categories={categories}

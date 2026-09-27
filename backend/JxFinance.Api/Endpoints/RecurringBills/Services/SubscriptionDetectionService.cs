@@ -1,6 +1,7 @@
 using FastEndpoints;
 using JxFinance.Common.References;
 using JxFinance.Common.Subscriptions;
+using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
@@ -139,11 +140,11 @@ public sealed class SubscriptionDetectionService(
     {
         var active = await db.RecurringBills
             .Where(b => b.IsActive)
-            .Select(b => new { b.Name, b.AccountId })
+            .Select(b => new { b.Name, b.MatchKey, b.AccountId })
             .ToListAsync(cancellationToken);
 
         return active
-            .Select(b => new Coverage(SubscriptionDescription.Normalize(b.Name), b.AccountId))
+            .Select(b => new Coverage(PriceRiseMatcher.KeyOf(b.MatchKey, b.Name), b.AccountId))
             .Where(c => c.Description.Length > 0)
             .ToList();
     }

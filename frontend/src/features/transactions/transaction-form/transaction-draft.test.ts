@@ -22,6 +22,8 @@ const split: TransactionResponse = {
   createdAt: "2026-09-13T08:30:00Z",
   tagIds: ["tag-1", "tag-2"],
   attachmentCount: 0,
+  unusual: null,
+  unusualDismissed: false,
   lines: [
     { id: "line-a", categoryId: "category-1", amount: "74.15", description: "Food" },
     { id: "line-b", categoryId: null, amount: "54.25", description: null },

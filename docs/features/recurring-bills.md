@@ -88,7 +88,7 @@ flowchart TD
     Cad -->|"no"| Drop
     Cad -->|"yes"| Amt{"every amount within 15%<br/>of the median?"}
     Amt -->|"no"| Drop
-    Amt -->|"yes"| Cover{"an active recurring entry<br/>whose name normalizes the same?"}
+    Amt -->|"yes"| Cover{"an active recurring entry whose match key,<br/>or else name, normalizes the same?"}
     Cover -->|"yes"| Drop
     Cover -->|"no"| Dism{"dismissed by this user?"}
     Dism -->|"yes"| Drop
@@ -118,7 +118,7 @@ The grouping cannot be a `GROUP BY`, because the noise banks put in a descriptio
 
 ### What suppresses a candidate
 
-An **active recurring entry** whose name normalizes to the group's description hides it, when that entry has no default account or names the same one. Inactive entries do not: switching an entry off is how you say you no longer track it, and the suggestion coming back is the honest consequence.
+An **active recurring entry** whose key equals the group's description hides it, when that entry has no default account or names the same one. The key is `PriceRiseMatcher.KeyOf`: the entry's normalized `MatchKey` when it has one, its normalized name otherwise, so an entry created from a suggestion keeps covering its group after it is renamed. Inactive entries do not: switching an entry off is how you say you no longer track it, and the suggestion coming back is the honest consequence.
 
 A **dismissal** is a row in `SubscriptionDismissals` holding the user, the account and the normalized description — the group, not the transactions behind it. That is the whole point: next month's payment joins the same group, the group is still dismissed, and the suggestion does not reappear. Dismissing twice writes nothing the second time. It is personal, like a categorization rule: two members of one household can disagree about whether a shared account's payment is a subscription, and each answer is right for the person who gave it. There is no screen to undo a dismissal; the row exists, so one can be added later.
 
@@ -131,7 +131,7 @@ sequenceDiagram
     participant Form as RecurringBillForm
     participant Api as API
     User->>List: Create entry
-    List->>Form: draft: name, monthly, median amount,<br/>account, category, next expected date
+    List->>Form: draft: name, monthly, median amount,<br/>account, category, next expected date,<br/>match key = the normalized description
     Note over Form: the ordinary create form,<br/>every field still editable
     Form->>Api: POST /api/recurring-bills
     Api-->>List: entries and suggestions refetched,<br/>and the new entry now covers the group
@@ -143,6 +143,14 @@ sequenceDiagram
 Creating goes through `RecurringBillForm` and `POST /api/recurring-bills`, the same path the **Add recurring entry** button uses. The form gained a `draft` prop that seeds its default values and nothing else: `bill` still means "edit this one", `draft` means "start from this", and the validation, the shape rules and the error handling are the ones that were already there. A candidate is always offered as a fixed expense, because that is what was detected; the kind, the shape and everything else can be changed before saving.
 
 The suggestions sit in their own section at the **bottom** of the page, under the entries and the forecast. The entries somebody already keeps are what the page is for and stay first; a suggestion is an offer, and an offer that pushed the list down every time the ledger grew a pattern would be the wrong way round. The section always renders, with its own empty state, so the count is a stable place on the page rather than a block that appears and disappears.
+
+## Matching bank text and price rises
+
+Since 2026-09-26 an entry can say which bank rows pay it. `MatchKey`, "Matches bank text" in the form, is shown for expense entries only; it is filled with the candidate's normalized description when the entry is created from a suggestion, can be typed or cleared by hand, and is normalized again on the server. Empty means the entry's name is used instead, as the coverage check always did.
+
+While the `UnusualAmounts` switch is on, that key links an active expense entry with an account to the bank charges it pays: non-split expenses on the same account, in the account's currency, whose normalized description equals the key. `GET /api/recurring-bills` answers the latest such charge of the last 13 months on each entry as `latestMatch`, compared with what the entry expects — its amount when it is fixed, the median of the earlier matching charges when it is variable. More than 3% and more than 0.50 above that is a price rise: the row says "Charged €27.99 on 3 Sep, expected €24.99", and a fixed entry gets "Update expected amount", which saves the entry through the ordinary update with the charged amount. `UnusualAmountJob` makes the same comparison for new charges dated within the last 45 days and raises one `recurringPriceRise` notification per entry and charge for the entry's owner, while `RecurringBills` is on as well.
+
+Detection's 15% `AmountTolerance` is unchanged and still absorbs a rise: a subscription that went from 9.99 to 10.99 stays one group, and one suggestion, as it should. The price-rise check is the separate question that reports it. See [Unusual amounts](unusual-amounts.md).
 
 ## Reminders and the forecast
 

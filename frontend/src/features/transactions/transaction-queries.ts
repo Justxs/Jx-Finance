@@ -9,6 +9,8 @@ interface TransactionsView {
   type?: FlowType;
   dateFrom?: string;
   dateTo?: string;
+  unusual?: boolean;
+  uncategorized?: boolean;
   sort?: TransactionSortField;
   direction?: SortDirection;
 }
@@ -27,7 +29,7 @@ export function transactionListParams(view: TransactionsView, pageSize: number) 
 }
 
 export interface TransactionFilter {
-  [key: string]: string | undefined;
+  [key: string]: string | boolean | undefined;
   search?: string;
   accountId?: string;
   categoryId?: string;
@@ -35,6 +37,8 @@ export interface TransactionFilter {
   type?: FlowType;
   dateFrom?: string;
   dateTo?: string;
+  unusual?: boolean;
+  uncategorized?: boolean;
 }
 
 export function transactionFilterParams(view: TransactionsView): TransactionFilter {
@@ -46,11 +50,15 @@ export function transactionFilterParams(view: TransactionsView): TransactionFilt
     type: view.type,
     dateFrom: view.dateFrom,
     dateTo: view.dateTo,
+    unusual: view.unusual || undefined,
+    uncategorized: view.uncategorized || undefined,
   };
 }
 
 export function isEmptyFilter(filter: TransactionFilter) {
-  return Object.values(filter).every((value) => value === undefined || value === "");
+  return Object.values(filter).every(
+    (value) => value === undefined || value === "" || value === false,
+  );
 }
 
 interface KnownEntities {

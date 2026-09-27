@@ -8,6 +8,7 @@ import {
   inactiveBill,
   incomeBill,
   overdueBill,
+  priceRiseBill,
   recurringBills,
   savingsAccount,
   transferBill,
@@ -49,6 +50,29 @@ export const Default: Story = {};
 export const DueSoon: Story = { args: { bill: dueSoonBill } };
 
 export const Overdue: Story = { args: { bill: overdueBill } };
+
+export const PriceRise: Story = {
+  args: { bill: priceRiseBill, onUpdateAmount: fn() },
+  play: async ({ canvas, args }) => {
+    await expect(canvas.getByText(/Charged €27\.99 on .*, expected €24\.99/u)).toBeVisible();
+    await userEvent.click(canvas.getByRole("button", { name: "Update expected amount" }));
+    await expect(args.onUpdateAmount).toHaveBeenCalledOnce();
+  },
+};
+
+export const PriceRiseOnAVariableEntry: Story = {
+  args: {
+    bill: {
+      ...variableBill,
+      latestMatch: { date: "2026-09-03", amount: "61.40", expected: "48.20", isPriceRise: true },
+    },
+    onUpdateAmount: fn(),
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByText(/expected €48\.20/u)).toBeVisible();
+    await expect(canvas.queryByRole("button", { name: "Update expected amount" })).toBeNull();
+  },
+};
 
 export const Variable: Story = { args: { bill: variableBill } };
 

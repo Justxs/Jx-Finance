@@ -2,6 +2,7 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { AccountResponse, CategoryResponse } from "@/api/generated/model";
 import { useSearchTable } from "@/hooks/use-search-table";
+import { useFeature } from "@/hooks/use-settings";
 import { namedOptions } from "@/lib/options";
 import {
   SEARCH_DEBOUNCE_MS,
@@ -18,6 +19,8 @@ import {
   transactionFilterParams,
 } from "./transaction-queries";
 
+const UNCATEGORIZED = "uncategorized";
+
 interface Args {
   accounts: AccountResponse[];
   categories: CategoryResponse[];
@@ -31,14 +34,16 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     void navigate({ search: (prev) => ({ ...prev, ...patch, page: 1 }) });
   }
   const table = useSearchTable(search, patchSearch);
+  const unusualEnabled = useFeature("unusualAmounts");
 
   const activeCount = [
     search.search,
     search.type,
     search.dateFrom || search.dateTo,
-    search.categoryId,
+    search.categoryId || search.uncategorized,
     search.accountId,
     search.tagIds,
+    unusualEnabled && search.unusual,
   ].filter(Boolean).length;
 
   const selectedTagIds = parseTagIds(search.tagIds);
@@ -46,6 +51,11 @@ export function useTransactionFilters({ accounts, categories }: Args) {
   const dateRange = { from: search.dateFrom ?? "", to: search.dateTo ?? "" };
   const columnLabels = sortFieldLabels(t);
   const sorts = sortOptions(t);
+  const categoryOptions = [
+    { value: "", label: t("transactions.allCategories") },
+    { value: UNCATEGORIZED, label: t("transactions.uncategorized") },
+    ...namedOptions(categories),
+  ];
   const sortValue: TransactionSortValue = `${search.sort ?? "date"}:${search.direction ?? "desc"}`;
 
   function setTagIds(next: string[]) {
@@ -83,9 +93,14 @@ export function useTransactionFilters({ accounts, categories }: Args) {
     },
     category: {
       label: columnLabels.category,
-      value: search.categoryId ?? "",
-      options: namedOptions(categories, t("transactions.allCategories")),
-      set: (next: string) => patchSearch({ categoryId: next || undefined }),
+      value: search.uncategorized ? UNCATEGORIZED : (search.categoryId ?? ""),
+      options: categoryOptions,
+      set: (next: string) =>
+        patchSearch(
+          next === UNCATEGORIZED
+            ? { categoryId: undefined, uncategorized: true }
+            : { categoryId: next || undefined, uncategorized: undefined },
+        ),
     },
     account: {
       label: columnLabels.account,
@@ -100,6 +115,16 @@ export function useTransactionFilters({ accounts, categories }: Args) {
       active: selectedTagIds.length > 0,
       set: setTagIds,
       clear: () => setTagIds([]),
+    },
+    amount: {
+      set: (type: TransactionTypeFilter, unusual: boolean) =>
+        patchSearch({ type: type || undefined, unusual: unusual || undefined }),
+    },
+    unusual: {
+      label: t("transactions.unusual.only"),
+      enabled: unusualEnabled,
+      value: search.unusual === true,
+      set: (next: boolean) => patchSearch({ unusual: next || undefined }),
     },
     sort: {
       label: t("transactions.sortBy"),

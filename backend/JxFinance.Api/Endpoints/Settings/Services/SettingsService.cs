@@ -31,6 +31,7 @@ public sealed class SettingsService(
     IEmailDelivery emails,
     IAuthService authService,
     IDataProtectionProvider protection,
+    IClock clock,
     IOptions<AppOptions> options) : ISettingsService
 {
     private const string LockRevaluedTables =
@@ -234,14 +235,23 @@ public sealed class SettingsService(
             return error;
         }
 
+        var now = clock.UtcNow;
         await db.Transactions
             .IgnoreQueryFilters()
-            .Where(t => t.Amount.Currency == reportingCurrency)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.Amount.Amount), cancellationToken);
+            .Where(t => t.Amount.Currency == reportingCurrency && t.ReportingAmount != t.Amount.Amount)
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(t => t.ReportingAmount, t => t.Amount.Amount).SetProperty(t => t.UpdatedAt, now),
+                cancellationToken);
         await db.InvestmentTransactions
             .IgnoreQueryFilters()
-            .Where(t => t.CashAmount.Currency == reportingCurrency)
-            .ExecuteUpdateAsync(s => s.SetProperty(t => t.ReportingAmount, t => t.CashAmount.Amount), cancellationToken);
+            .Where(t => t.CashAmount.Currency == reportingCurrency && t.ReportingAmount != t.CashAmount.Amount)
+            .ExecuteUpdateAsync(
+                s => s.SetProperty(t => t.ReportingAmount, t => t.CashAmount.Amount).SetProperty(t => t.UpdatedAt, now),
+                cancellationToken);
+        await db.Transactions
+            .IgnoreQueryFilters()
+            .Where(t => t.UnusualCheckedAt != null)
+            .ExecuteUpdateAsync(s => s.SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null), cancellationToken);
 
         return null;
     }

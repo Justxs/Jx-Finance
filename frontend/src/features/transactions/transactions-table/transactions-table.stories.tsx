@@ -3,16 +3,21 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { expect } from "storybook/test";
 import type { TransactionResponse } from "@/api/generated/model";
+import { getDebtsMockHandler } from "@/api/generated/net-worth/net-worth.msw";
 import {
   accounts,
   categories,
+  debts,
   foreignCurrencyTransactions,
+  linkedPaymentTransaction,
   longDescriptionTransaction,
   splitTransaction,
   tags,
+  trackedMortgage,
   transactions,
   uncategorisedTransaction,
 } from "@/storybook/fixtures";
+import { withHandlers } from "@/storybook/handlers";
 import { TransactionsTable } from "./transactions-table";
 import { useTransactionColumnHeaders } from "./use-transaction-column-headers";
 import { isSelectableTransaction, useTransactionColumns } from "./use-transaction-columns";
@@ -140,5 +145,19 @@ export const OptimisticRow: Story = {
 export const SpecialRows: Story = {
   args: {
     data: [splitTransaction, longDescriptionTransaction, uncategorisedTransaction],
+  },
+};
+
+export const PaysADebt: Story = {
+  args: { data: [linkedPaymentTransaction, ...transactions.slice(0, 4)] },
+  parameters: withHandlers(getDebtsMockHandler([trackedMortgage, ...debts.slice(1)])),
+  play: async ({ canvas }) => {
+    await expect(
+      canvas.getByRole("link", { name: `Pays debt: ${trackedMortgage.name}` }),
+    ).toBeInTheDocument();
+    await expect(await canvas.findAllByRole("button", { name: /^Link to debt:/ })).not.toHaveLength(
+      0,
+    );
+    await expect(canvas.getByRole("button", { name: /^Unlink from debt:/ })).toBeInTheDocument();
   },
 };

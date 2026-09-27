@@ -9,7 +9,7 @@ using JxFinance.Common.References;
 using JxFinance.Common.Settings;
 using JxFinance.Common.Transfers;
 using JxFinance.Common.Trash;
-using JxFinance.Common.Validation;
+using JxFinance.Common.Unusual;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
@@ -37,6 +37,7 @@ public sealed class ImportService(
     ITransferAmountResolver transferAmounts,
     IReferenceGuard references,
     ICategorizationRuleService rules,
+    IUnusualAmountService unusualAmounts,
     IInstanceSettingsStore settings) : IImportService
 {
     private const string TransactionRowType = "20";
@@ -76,6 +77,7 @@ public sealed class ImportService(
 
         var existingRefSet = await ExistingRefsAsync(typedAccountId, parsedRows.Select(r => r.ImportRef), cancellationToken);
         var suggestions = await SuggestionsAsync(typedAccountId, parsedRows, cancellationToken);
+        var unusualVerdicts = await UnusualAsync(typedAccountId, parsedRows, suggestions, cancellationToken);
 
         var rows = parsedRows
             .Select((r, index) => new ImportPreviewRow(

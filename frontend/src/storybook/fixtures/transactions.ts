@@ -3,6 +3,7 @@ import type {
   TransactionLineResponse,
   TransactionResponse,
   TransactionsSummaryResponse,
+  UnusualAmountResponse,
 } from "@/api/generated/model";
 import { fromCents, toCents } from "@/lib/money";
 import { accounts } from "./accounts";
@@ -56,6 +57,8 @@ function transactionFrom(source: TransactionResponse["source"]) {
       lines: null,
       tagIds,
       attachmentCount,
+      unusual: null,
+      unusualDismissed: false,
     };
   };
 }
@@ -99,15 +102,32 @@ export const splitTransaction: TransactionResponse = {
   attachmentCount: 2,
 };
 
-export const longDescriptionTransaction: TransactionResponse = imported(
-  16,
-  "09-05",
-  checking,
-  shopping,
-  -249,
-  "Senukai, Ukmergės g. 369, Vilnius – sodo baldų komplektas su pagalvėlėmis, pristatymas į namus, surinkimo paslauga ir pratęsta dvejų metų garantija (užsakymo Nr. LT-2026-0905-778812)",
-  [renovation, reimbursable],
-);
+export const payeeUnusual: UnusualAmountResponse = {
+  basis: "payee",
+  typicalAmount: "42.00",
+  factor: 3.1,
+  sampleSize: 6,
+};
+
+export const categoryUnusual: UnusualAmountResponse = {
+  basis: "category",
+  typicalAmount: "61.90",
+  factor: 4,
+  sampleSize: 14,
+};
+
+export const longDescriptionTransaction: TransactionResponse = {
+  ...imported(
+    16,
+    "09-05",
+    checking,
+    shopping,
+    -249,
+    "Senukai, Ukmergės g. 369, Vilnius – sodo baldų komplektas su pagalvėlėmis, pristatymas į namus, surinkimo paslauga ir pratęsta dvejų metų garantija (užsakymo Nr. LT-2026-0905-778812)",
+    [renovation, reimbursable],
+  ),
+  unusual: categoryUnusual,
+};
 
 export const uncategorisedTransaction: TransactionResponse = manual(
   21,

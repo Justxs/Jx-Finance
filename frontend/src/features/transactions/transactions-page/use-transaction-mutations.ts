@@ -53,6 +53,8 @@ function optimisticTransaction(
     tagIds: data.tagIds ?? [],
     createdAt: new Date().toISOString(),
     attachmentCount: 0,
+    unusual: null,
+    unusualDismissed: false,
   };
 }
 

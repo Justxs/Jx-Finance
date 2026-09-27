@@ -6,12 +6,12 @@ Backend `Transactions`, page `/transactions`. One `Filtered` method builds the q
 
 ```mermaid
 flowchart TD
-    Url["Search params<br/>text, account, category, tags, type, dateFrom, dateTo, sort, direction, page"] --> Defer["useDeferredParams"]
+    Url["Search params<br/>text, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized, sort, direction, page"] --> Defer["useDeferredParams"]
     Defer --> List["GET /api/transactions"]
     Defer --> Summary["GET /api/transactions/summary"]
     Url --> Csv["GET /api/transactions/export"]
     Url --> Pdf["GET /api/transactions/export/pdf"]
-    List --> F["TransactionService.Filtered(ITransactionFilter)"]
+    List --> F["TransactionService.Filtered(TransactionFilterRequest)"]
     Summary --> F
     Csv --> F
     Pdf --> F
@@ -70,7 +70,7 @@ A saved filter is a name put on the filter half of the search params. It lives i
 
 ```mermaid
 flowchart TD
-    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo"]
+    Url["Search params on /transactions"] --> Part["transactionFilterParams:<br/>search, account, category, tags, type, dateFrom, dateTo, unusual, uncategorized"]
     Part --> Save["Save filter under a name"]
     Save --> Store[("jx-saved-filters<br/>one row per filter: id, name, filter")]
     Store --> List["Saved filters menu"]

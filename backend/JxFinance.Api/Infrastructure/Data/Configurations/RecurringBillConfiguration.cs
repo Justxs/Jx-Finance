@@ -9,6 +9,7 @@ public sealed class RecurringBillConfiguration : IEntityTypeConfiguration<Recurr
     public void Configure(EntityTypeBuilder<RecurringBill> builder)
     {
         builder.Property(b => b.Name).HasMaxLength(100);
+        builder.Property(b => b.MatchKey).HasMaxLength(SubscriptionDescription.MaxLength);
         builder.Property(b => b.NextDueDate).IsConcurrencyToken();
     }
 }

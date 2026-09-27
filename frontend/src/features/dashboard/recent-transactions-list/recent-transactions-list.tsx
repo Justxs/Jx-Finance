@@ -15,6 +15,7 @@ import {
   transactionCategoryLabel,
   transactionName,
 } from "@/features/transactions/transaction-amount";
+import { UnusualAmountBadge } from "@/features/transactions/unusual-amount/unusual-amount-badge";
 import { useShortDayIso } from "@/hooks/use-formatters";
 import { byId, nameById } from "@/lib/options";
 import { metaLine } from "@/lib/utils";
@@ -83,7 +84,16 @@ function RecentRows() {
             transaction.description ? transactionCategoryLabel(transaction, categoryById, t) : null,
             accountNames.get(transaction.accountId),
           )}
-          amount={<TransactionAmount transaction={transaction} className="shrink-0" />}
+          amount={
+            <span className="flex shrink-0 items-center gap-1.5">
+              <UnusualAmountBadge
+                transactionId={transaction.id}
+                unusual={transaction.unusual}
+                dismissed={transaction.unusualDismissed}
+              />
+              <TransactionAmount transaction={transaction} className="shrink-0" />
+            </span>
+          }
         />
       ))}
     </Rows>

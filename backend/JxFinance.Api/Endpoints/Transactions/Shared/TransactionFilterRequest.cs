@@ -17,4 +17,8 @@ public abstract class TransactionFilterRequest
     public DateOnly? DateFrom { get; init; }
 
     public DateOnly? DateTo { get; init; }
+
+    public bool? Unusual { get; init; }
+
+    public bool? Uncategorized { get; init; }
 }

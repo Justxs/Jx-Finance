@@ -17,4 +17,10 @@ public sealed class Transaction : OwnableEntity, IAccountScoped
     public TransactionSource Source { get; set; }
     public string? ImportRef { get; set; }
     public bool IsSplit { get; set; }
+    public DateTimeOffset? UnusualCheckedAt { get; set; }
+    public UnusualBasis? UnusualBasis { get; set; }
+    public decimal? UnusualTypicalAmount { get; set; }
+    public decimal? UnusualFactor { get; set; }
+    public int? UnusualSampleSize { get; set; }
+    public DateTimeOffset? UnusualDismissedAt { get; set; }
 }

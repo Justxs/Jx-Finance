@@ -1,5 +1,7 @@
 # Plan: Unusual-amount flags and subscription price rises
 
+Implemented 2026-09-26. The feature page [Unusual amounts](../features/unusual-amounts.md) describes what shipped; this plan is kept as the record of intent.
+
 Status: planned 2026-09-25. Size M. Build this after [Discord notifications](discord-notifications.md), because its two new notification kinds should reach Discord through the publisher.
 
 ## Outcome

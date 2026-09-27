@@ -186,7 +186,8 @@ public sealed class CategorizationRuleService(
                 .ExecuteUpdateAsync(
                     setters => setters
                         .SetProperty(t => t.CategoryId, categoryId)
-                        .SetProperty(t => t.UpdatedAt, now),
+                        .SetProperty(t => t.UpdatedAt, now)
+                        .SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null),
                     cancellationToken);
         }
 

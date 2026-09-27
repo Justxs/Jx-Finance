@@ -20,6 +20,8 @@ function transaction(overrides: Partial<TransactionResponse>): TransactionRespon
     reportingAmount: "1.00",
     tagIds: [],
     attachmentCount: 0,
+    unusual: null,
+    unusualDismissed: false,
     ...overrides,
   };
 }

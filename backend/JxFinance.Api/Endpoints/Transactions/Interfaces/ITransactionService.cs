@@ -40,6 +40,8 @@ public interface ITransactionService
 
     Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken);
 
+    Task<Result<Guid>> SetUnusualDismissedAsync(Guid id, bool dismissed, CancellationToken cancellationToken);
+
     IAsyncEnumerable<TransactionResponse> StreamExportAsync(
         GetTransactionsRequest request,
         CancellationToken cancellationToken = default);

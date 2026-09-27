@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { AccountResponse, CategoryResponse, TagResponse } from "@/api/generated/model";
+import { SelectField } from "@/components/select-field/select-field";
+import { Checkbox } from "@/components/ui/checkbox/checkbox";
 import {
   ColumnFilter,
   SelectColumnFilter,
@@ -10,6 +12,7 @@ import { DateRangePicker } from "@/components/ui/date-range-picker/date-range-pi
 import { TagPicker } from "@/features/tags/tag-picker/tag-picker";
 import { SEARCH_SHORTCUT_TARGET } from "@/lib/shortcuts";
 import { type AriaSort, ariaSortFor } from "@/lib/sort";
+import type { TransactionTypeFilter } from "../transaction-filter-fields";
 import { useTransactionFilters } from "../use-transaction-filters";
 
 interface Args {
@@ -107,12 +110,32 @@ export function useTransactionColumnHeaders({ accounts, categories, tags }: Args
     ),
     amount: header(
       "amount",
-      <SelectColumnFilter
+      <ColumnFilter<{ type: TransactionTypeFilter; unusual: boolean }>
         label={columnLabels.amount}
-        value={fields.type.value}
-        onChange={fields.type.set}
-        options={fields.type.options}
-      />,
+        value={{ type: fields.type.value, unusual: fields.unusual.value }}
+        empty={{ type: "", unusual: false }}
+        onApply={(next) => fields.amount.set(next.type, next.unusual)}
+      >
+        {(draft, setDraft) => (
+          <>
+            <SelectField
+              aria-label={fields.type.label}
+              value={draft.type}
+              onChange={(type) => setDraft({ ...draft, type })}
+              options={fields.type.options}
+            />
+            {fields.unusual.enabled ? (
+              <label className="flex items-center gap-2.5 text-sm">
+                <Checkbox
+                  checked={draft.unusual}
+                  onCheckedChange={(unusual) => setDraft({ ...draft, unusual })}
+                />
+                {fields.unusual.label}
+              </label>
+            ) : null}
+          </>
+        )}
+      </ColumnFilter>,
     ),
   };
 

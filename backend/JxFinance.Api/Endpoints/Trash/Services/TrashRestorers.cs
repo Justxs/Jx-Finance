@@ -334,7 +334,10 @@ public static class TrashRestorers
             .IgnoreQueryFilters()
             .Where(t => transactionIds.Contains(t.Id) && t.CategoryId == null && !t.IsSplit && t.Type == category.Type)
             .ExecuteUpdateAsync(
-                setters => setters.SetProperty(t => t.CategoryId, restoredId).SetProperty(t => t.UpdatedAt, now),
+                setters => setters
+                    .SetProperty(t => t.CategoryId, restoredId)
+                    .SetProperty(t => t.UpdatedAt, now)
+                    .SetProperty(t => t.UnusualCheckedAt, (DateTimeOffset?)null),
                 r.CancellationToken);
 
         var lineIds = r.Entry.Remembered(DeletionChangeKind.LineCategory);

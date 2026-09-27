@@ -1,6 +1,7 @@
 using FastEndpoints;
 using FluentValidation;
 using JxFinance.Common.Errors;
+using JxFinance.Common.Subscriptions;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.RecurringBills;
 
@@ -16,6 +17,7 @@ public abstract class RecurringBillInputValidator<TRequest> : Validator<TRequest
         RuleFor(r => r.Cadence).IsKnownEnum();
         RuleFor(r => r.Name).IsRequired().HasMaxLength(100);
         RuleFor(r => r.RemindDaysBefore).IsWithin(0, 365);
+        RuleFor(r => r.MatchKey).HasMaxLength(SubscriptionDescription.MaxLength);
         RuleFor(r => r.NextDueDate).IsRequired();
         RuleFor(r => r.Amount)
             .IsPositiveMoney()

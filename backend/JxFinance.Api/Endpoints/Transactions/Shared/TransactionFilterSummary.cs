@@ -28,5 +28,13 @@ public static class TransactionFilterSummary
         summary.Describe(nameof(TransactionFilterRequest.Search), "Case-insensitive match against the description.");
         summary.Describe(nameof(TransactionFilterRequest.DateFrom), dateFrom);
         summary.Describe(nameof(TransactionFilterRequest.DateTo), dateTo);
+        summary.Describe(
+            nameof(TransactionFilterRequest.Unusual),
+            "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the "
+            + "unusualAmounts feature is off.");
+        summary.Describe(
+            nameof(TransactionFilterRequest.Uncategorized),
+            "true keeps only transactions without a category, and split transactions with at least one line "
+            + "without one.");
     }
 }

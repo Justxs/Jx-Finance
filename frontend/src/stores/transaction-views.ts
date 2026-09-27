@@ -22,6 +22,8 @@ const savedFilterSchema = z.object({
     type: flowType.optional().catch(undefined),
     dateFrom: z.string().optional().catch(undefined),
     dateTo: z.string().optional().catch(undefined),
+    unusual: z.boolean().optional().catch(undefined),
+    uncategorized: z.boolean().optional().catch(undefined),
   }),
 });
 

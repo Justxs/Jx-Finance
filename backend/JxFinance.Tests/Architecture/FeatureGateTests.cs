@@ -55,7 +55,11 @@ public sealed class FeatureGateTests
     private static Feature? ExpectedFeature(RouteEndpoint endpoint)
     {
         var path = PathOf(endpoint);
-        return GatedPrefixes.Where(gate => IsUnder(path, gate.Prefix)).Select(gate => (Feature?)gate.Feature).SingleOrDefault();
+        return GatedPrefixes
+            .Where(gate => IsUnder(path, gate.Prefix))
+            .OrderByDescending(gate => gate.Prefix.Length)
+            .Select(gate => (Feature?)gate.Feature)
+            .FirstOrDefault();
     }
 
     private static PathString PathOf(RouteEndpoint endpoint) => new("/" + endpoint.RoutePattern.RawText?.TrimStart('/'));

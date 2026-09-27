@@ -24,12 +24,23 @@ using JxFinance.Infrastructure.Auth;
 using JxFinance.Infrastructure.Data.Auditing;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace JxFinance.Infrastructure.Data;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurrentUser currentUser, IClock clock)
     : IdentityDbContext<AppUser, AppRole, Guid>(options)
 {
+    private static readonly string[] UnusualInputs =
+    [
+        nameof(Transaction.AccountId),
+        nameof(Transaction.CategoryId),
+        nameof(Transaction.Type),
+        nameof(Transaction.Date),
+        nameof(Transaction.Description),
+        nameof(Transaction.IsSplit),
+    ];
+
     private Guid CurrentUserId => currentUser.Id;
 
     private HouseholdId? ActiveHouseholdId => currentUser.ActiveHouseholdId;
@@ -189,6 +200,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
                     break;
                 case EntityState.Modified:
                     entry.Entity.UpdatedAt = now;
+                    if (entry.Entity is Transaction transaction && ChangesUnusualInputs(entry))
+                    {
+                        transaction.UnusualCheckedAt = null;
+                        if (transaction.IsSplit || transaction.Type != FlowType.Expense)
+                        {
+                            transaction.UnusualBasis = null;
+                            transaction.UnusualTypicalAmount = null;
+                            transaction.UnusualFactor = null;
+                            transaction.UnusualSampleSize = null;
+                        }
+                    }
+
                     break;
                 case EntityState.Deleted:
                     entry.State = EntityState.Modified;
@@ -205,6 +228,10 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options, ICurren
 
         return now;
     }
+
+    private static bool ChangesUnusualInputs(EntityEntry<EntityBase> entry) =>
+        entry.Properties.Any(p => p.IsModified && UnusualInputs.Contains(p.Metadata.Name))
+        || entry.ComplexProperty(nameof(Transaction.Amount)).Properties.Any(p => p.IsModified);
 
     private void ApplyQueryFilters(ModelBuilder builder)
     {

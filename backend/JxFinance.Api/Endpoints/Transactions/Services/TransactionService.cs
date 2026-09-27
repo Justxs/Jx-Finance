@@ -4,11 +4,13 @@ using JxFinance.Common;
 using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
+using JxFinance.Common.Settings;
 using JxFinance.Common.Trash;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Audit;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.Common;
+using JxFinance.Domain.Settings;
 using JxFinance.Domain.Tags;
 using JxFinance.Domain.Transactions;
 using JxFinance.Domain.Trash;
@@ -35,6 +37,8 @@ public sealed class TransactionService(
     ITransactionValuation valuations,
     IReferenceGuard references,
     IDeletionRecorder deletions,
+    IInstanceSettingsStore settings,
+    IClock clock,
     IOptions<AppOptions> options) : ITransactionService
 {
     private static readonly DomainError NotFound = EntityLookup.NotFound("Transaction not found.");
@@ -51,7 +55,7 @@ public sealed class TransactionService(
         var tagsByTransaction = await LoadTagsAsync(page.Items.Select(t => t.Id), cancellationToken);
         var attachmentCounts = await CountAttachmentsAsync(page.Items.Select(t => t.Id), cancellationToken);
 
-        return page.Map(t => t.ToResponse(
+        return page.Map(t => Shown(t.ToResponse(
             linesByTransaction.GetValueOrDefault(t.Id),
             tagsByTransaction.GetValueOrDefault(t.Id),
             attachmentCounts.GetValueOrDefault(t.Id)));
@@ -188,8 +192,25 @@ public sealed class TransactionService(
             query = query.Where(t => t.Date <= dateTo);
         }
 
+        if (request.Unusual == true && UnusualEnabled)
+        {
+            query = query.Where(t => t.UnusualBasis != null && t.UnusualDismissedAt == null);
+        }
+
+        if (request.Uncategorized == true)
+        {
+            query = query.Where(t => t.IsSplit
+                ? db.TransactionLines.Any(l => l.TransactionId == t.Id && l.CategoryId == null)
+                : t.CategoryId == null);
+        }
+
         return query;
     }
+
+    private bool UnusualEnabled => settings.Current.IsEnabled(Feature.UnusualAmounts);
+
+    private TransactionResponse Shown(TransactionResponse response) =>
+        UnusualEnabled ? response : response.WithoutUnusual();
 
     public async Task<Result<TransactionResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
@@ -205,7 +226,21 @@ public sealed class TransactionService(
         var tagIds = await TagIdsOfAsync(transactionId, cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return transaction.ToResponse(lines, tagIds, attachmentCount);
+        return Shown(transaction.ToResponse(lines, tagIds, attachmentCount));
+    }
+
+    public async Task<Result<Guid>> SetUnusualDismissedAsync(
+        Guid id,
+        bool dismissed,
+        CancellationToken cancellationToken)
+    {
+        var transactionId = new TransactionId(id);
+        DateTimeOffset? dismissedAt = dismissed ? clock.UtcNow : null;
+        var changed = await db.Transactions
+            .Where(t => t.Id == transactionId)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(t => t.UnusualDismissedAt, dismissedAt), cancellationToken);
+
+        return changed == 0 ? NotFound : id;
     }
 
     public async Task<Result<TransactionResponse>> CreateAsync(
@@ -230,7 +265,7 @@ public sealed class TransactionService(
         var (lines, tagIds) = AddChildren(request, transaction.Id, currency);
         await db.SaveChangesAsync(cancellationToken);
 
-        return transaction.ToResponse(lines, tagIds);
+        return Shown(transaction.ToResponse(lines, tagIds));
     }
 
     public async Task<Result<TransactionResponse>> UpdateAsync(
@@ -273,7 +308,7 @@ public sealed class TransactionService(
         await db.SaveChangesAsync(cancellationToken);
         var attachmentCount = await db.TransactionAttachments.CountAsync(a => a.TransactionId == transactionId, cancellationToken);
 
-        return transaction.ToResponse(lines, tagIds, attachmentCount);
+        return Shown(transaction.ToResponse(lines, tagIds, attachmentCount));
     }
 
     public async Task<Result<int>> BulkCategorizeAsync(

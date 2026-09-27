@@ -1162,6 +1162,10 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("Kind")
                         .HasColumnType("integer");
 
+                    b.Property<string>("MatchKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1348,6 +1352,11 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                             b1.Property<bool>("Reports")
                                 .HasColumnType("boolean");
+
+                            b1.Property<bool>("UnusualAmounts")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true);
                         });
 
                     b.HasKey("Id");
@@ -1437,6 +1446,27 @@ namespace JxFinance.Infrastructure.Data.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
+                    b.Property<string>("UnusualBasis")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTimeOffset?>("UnusualCheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("UnusualDismissedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("UnusualFactor")
+                        .HasPrecision(9, 2)
+                        .HasColumnType("numeric(9,2)");
+
+                    b.Property<int?>("UnusualSampleSize")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal?>("UnusualTypicalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1463,6 +1493,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("UnusualCheckedAt")
+                        .HasFilter("\"UnusualCheckedAt\" IS NULL");
+
                     b.HasIndex("AccountId", "Date");
 
                     b.HasIndex("AccountId", "ImportRef")
@@ -1470,6 +1503,9 @@ namespace JxFinance.Infrastructure.Data.Migrations
                         .HasFilter("\"ImportRef\" IS NOT NULL");
 
                     b.HasIndex("UserId", "Date");
+
+                    b.HasIndex(new[] { "AccountId", "Date" }, "IX_Transactions_Unusual")
+                        .HasFilter("\"UnusualBasis\" IS NOT NULL AND \"UnusualDismissedAt\" IS NULL");
 
                     b.ToTable("Transactions");
                 });

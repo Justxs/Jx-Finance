@@ -1,6 +1,6 @@
 import { useActiveHouseholdId } from "@/stores/active-household-store";
 
-type ExportParams = Record<string, string | number | undefined>;
+type ExportParams = Record<string, string | number | boolean | undefined>;
 
 export function useExportUrl(path: string, params: ExportParams) {
   const activeHouseholdId = useActiveHouseholdId();

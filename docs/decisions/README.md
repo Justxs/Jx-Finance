@@ -32,6 +32,9 @@ Before changing behaviour that a page here covers, read that page. When you choo
 | [Backup and restore](backup-and-restore.md) | Backup and restore | 4 | [Backup and restore](../features/backup-and-restore.md) |
 | [Interface and command palette](interface.md) | Design, Command palette | 9 | [Interface](../features/interface.md) |
 | [Email](email.md) | Email | 8 | [Email](../features/email.md) |
+| [Discord notifications](discord-notifications.md) | Discord notifications | 13 | [Discord notifications](../features/discord-notifications.md) |
+| [Unusual amounts](unusual-amounts.md) | Unusual amounts | 7 | [Unusual amounts](../features/unusual-amounts.md) |
+| [Month-end close](month-end-close.md) | Month-end close | 13 | [Month-end close](../features/month-end-close.md) |
 | [Tags](tags.md) | Tags | 6 | [Tags](../features/tags.md) |
 | [Categorization rules](categorization-rules.md) | Categorization rules | 7 | [Categorization rules](../features/categorization-rules.md) |
 | [Trash and undo](trash-and-undo.md) | Trash and undo | 10 | [Trash and undo](../features/trash-and-undo.md) |

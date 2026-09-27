@@ -4,6 +4,7 @@ using JxFinance.Common.Errors;
 using JxFinance.Common.ExchangeRates;
 using JxFinance.Common.References;
 using JxFinance.Common.Trash;
+using JxFinance.Common.Unusual;
 using JxFinance.Common.Validation;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
@@ -47,15 +48,62 @@ public sealed class RecurringBillService(
     public async Task<IReadOnlyList<RecurringBillResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         var bills = await db.RecurringBills.AsNoTracking().OrderBy(b => b.NextDueDate).ToListAsync(cancellationToken);
-        return bills.Select(b => b.ToResponse()).ToList();
+        var matches = await LatestMatchesAsync(bills, cancellationToken);
+        return bills.Select(b => b.ToResponse(matches.GetValueOrDefault(b.Id))).ToList();
+    }
+
+    private async Task<Dictionary<RecurringBillId, RecurringBillMatchResponse>> LatestMatchesAsync(
+        List<RecurringBill> bills,
+        CancellationToken cancellationToken)
+    {
+        var eligible = bills
+            .Where(b => b.IsActive && b.Shape == RecurringBillShape.Expense && b.AccountId is not null)
+            .ToList();
+        if (!settings.Current.IsEnabled(Feature.UnusualAmounts) || eligible.Count == 0)
+        {
+            return [];
+        }
+
+        var accountIds = eligible.Select(b => b.AccountId!.Value).Distinct().ToList();
+        var currencies = await db.Accounts
+            .Where(a => accountIds.Contains(a.Id))
+            .ToDictionaryAsync(a => a.Id, a => a.StartingBalance.Currency, cancellationToken);
+        var charges = await PriceRiseMatcher.LoadChargesAsync(db.Transactions, accountIds, clock.Today, cancellationToken);
+
+        var matches = new Dictionary<RecurringBillId, RecurringBillMatchResponse>();
+        foreach (var bill in eligible)
+        {
+            if (!currencies.TryGetValue(bill.AccountId!.Value, out var currency))
+            {
+                continue;
+            }
+
+            var target = BillMatchTarget.Of(bill, currency);
+            if (charges.FirstOrDefault(charge => PriceRiseMatcher.Matches(target, charge)) is not { } latest)
+            {
+                continue;
+            }
+
+            var comparison = PriceRiseMatcher.Compare(target, latest, charges);
+            matches[bill.Id] = new RecurringBillMatchResponse(
+                latest.Date,
+                latest.Amount,
+                comparison?.Expected,
+                comparison?.IsRise ?? false);
+        }
+
+        return matches;
     }
 
     public async Task<Result<RecurringBillResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await FindAsync(id, cancellationToken) is { } bill
-            ? bill.ToResponse()
+            ? await ResponseAsync(bill, cancellationToken)
             : NotFound;
     }
+
+    private async Task<RecurringBillResponse> ResponseAsync(RecurringBill bill, CancellationToken cancellationToken) =>
+        bill.ToResponse((await LatestMatchesAsync([bill], cancellationToken)).GetValueOrDefault(bill.Id));
 
     public async Task<Result<RecurringBillResponse>> CreateAsync(
         CreateRecurringBillRequest request,
@@ -68,7 +116,7 @@ public sealed class RecurringBillService(
         db.RecurringBills.Add(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return bill.ToResponse();
+        return await ResponseAsync(bill, cancellationToken);
     }
 
     public async Task<Result<RecurringBillResponse>> UpdateAsync(
@@ -86,7 +134,7 @@ public sealed class RecurringBillService(
         request.ApplyTo(bill);
         await db.SaveChangesAsync(cancellationToken);
 
-        return bill.ToResponse();
+        return await ResponseAsync(bill, cancellationToken);
     }
 
     public Task<Result<Guid>> DeleteAsync(Guid id, CancellationToken cancellationToken)
@@ -145,7 +193,7 @@ public sealed class RecurringBillService(
         await db.SaveChangesAsync(cancellationToken);
 
         await dbTransaction.CommitAsync(cancellationToken);
-        return new ConfirmRecurringBillResponse(bill.ToResponse(), transactionId, transferId);
+        return new ConfirmRecurringBillResponse(await ResponseAsync(bill, cancellationToken), transactionId, transferId);
     }
 
     private Task<RecurringBill?> FindAsync(Guid id, CancellationToken cancellationToken)

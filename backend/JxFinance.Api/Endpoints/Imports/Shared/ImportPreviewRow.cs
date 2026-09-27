@@ -15,4 +15,7 @@ public sealed record ImportPreviewRow(
     Currency Currency,
     Guid? SuggestedCategoryId,
     IReadOnlyList<Guid> SuggestedTagIds,
-    string? MatchedRuleName);
+    string? MatchedRuleName,
+    bool IsReversal,
+    Guid? SuggestedTransferAccountId,
+    UnusualAmountResponse? Unusual = null);

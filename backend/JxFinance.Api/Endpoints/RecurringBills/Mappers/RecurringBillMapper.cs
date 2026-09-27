@@ -1,3 +1,4 @@
+using JxFinance.Common.Subscriptions;
 using JxFinance.Domain.Accounts;
 using JxFinance.Domain.Categories;
 using JxFinance.Domain.RecurringBills;
@@ -22,7 +23,9 @@ public static class RecurringBillMapper
         bill.IsActive = request.IsActive;
     }
 
-    public static RecurringBillResponse ToResponse(this RecurringBill bill) => new(
+    public static RecurringBillResponse ToResponse(
+        this RecurringBill bill,
+        RecurringBillMatchResponse? latestMatch = null) => new(
         bill.Id.Value,
         bill.Name,
         bill.Shape,
