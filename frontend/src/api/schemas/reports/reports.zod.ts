@@ -111,7 +111,7 @@ export const ReportSummaryResponse = zod.object({
     .union([
       zod.null(),
       zod.object({
-        mode: zod.enum(["none", "previousPeriod", "previousYear"]),
+        mode: zod.enum(["none", "previousPeriod", "previousYear", "previousMonth"]),
         periodStart: zod.iso.date(),
         periodEnd: zod.iso.date(),
         totalIncome: zod.stringFormat(

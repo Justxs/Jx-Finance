@@ -11,4 +11,5 @@ export interface PublicSettingsResponse {
   instanceName: string | null;
   defaultLanguage: string;
   emailEnabled: boolean;
+  discordEnabled: boolean;
 }

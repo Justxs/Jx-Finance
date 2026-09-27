@@ -6,7 +6,9 @@
  * OpenAPI spec version: v1
  */
 import type { ImportPreviewRow } from "./importPreviewRow";
+import type { ImportStatementSummary } from "./importStatementSummary";
 
 export interface ImportPreviewResponse {
   rows: ImportPreviewRow[];
+  statement: ImportStatementSummary;
 }

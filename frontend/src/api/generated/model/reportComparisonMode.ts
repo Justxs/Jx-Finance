@@ -12,4 +12,5 @@ export const ReportComparisonMode = {
   none: "none",
   previousPeriod: "previousPeriod",
   previousYear: "previousYear",
+  previousMonth: "previousMonth",
 } as const;

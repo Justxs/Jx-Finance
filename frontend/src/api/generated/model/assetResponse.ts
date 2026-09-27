@@ -8,6 +8,8 @@
 import type { AssetType } from "./assetType";
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
+import type { DepreciationResponse } from "./depreciationResponse";
+import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 
 export interface AssetResponse {
   id: string;
@@ -16,4 +18,9 @@ export interface AssetResponse {
   currentValue: string;
   asOf: DateOnly;
   currency: Currency;
+  value: string;
+  depreciation: null | DepreciationResponse;
+  /** @nullable */
+  monthlyDepreciation: string | null;
+  fullyDepreciatedOn: null | NullableOfDateOnly;
 }

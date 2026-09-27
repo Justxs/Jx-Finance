@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { ImportConfirmRow } from "./importConfirmRow";
+import type { StatementFormat } from "./statementFormat";
 
 export interface ImportConfirmRequest {
   /**
@@ -15,4 +16,5 @@ export interface ImportConfirmRequest {
   accountId: string;
   /** The rows to import, as returned by preview, with any category and tag corrections applied. */
   rows: ImportConfirmRow[];
+  format: StatementFormat;
 }

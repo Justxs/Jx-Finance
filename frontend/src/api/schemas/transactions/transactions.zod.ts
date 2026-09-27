@@ -84,6 +84,9 @@ export const CreateTransactionBody = zod.object({
 export const createTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const CreateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -141,6 +144,29 @@ export const CreateTransactionResponse = zod.object({
   reportingAmount: zod.stringFormat("decimal", createTransactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
   attachmentCount: zod.int(),
+  unusual: zod.union([
+    zod.null(),
+    zod.object({
+      basis: zod.enum(["payee", "category"]),
+      typicalAmount: zod.stringFormat(
+        "decimal",
+        createTransactionResponseUnusualTwoTypicalAmountRegExp,
+      ),
+      factor: zod.number(),
+      sampleSize: zod.int(),
+    }),
+  ]),
+  unusualDismissed: zod.boolean(),
+  debtPayment: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        debtId: zod.uuid(),
+        debtName: zod.string(),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -152,6 +178,9 @@ export const transactionsResponseItemsItemLinesItemAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 export const transactionsResponseItemsItemReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const transactionsResponseItemsItemUnusualTwoTypicalAmountRegExp = new RegExp(
   "^-?\\d+(\\.\\d{1,8})?$",
 );
 
@@ -216,6 +245,29 @@ export const TransactionsResponse = zod.object({
       ),
       tagIds: zod.array(zod.uuid()),
       attachmentCount: zod.int(),
+      unusual: zod.union([
+        zod.null(),
+        zod.object({
+          basis: zod.enum(["payee", "category"]),
+          typicalAmount: zod.stringFormat(
+            "decimal",
+            transactionsResponseItemsItemUnusualTwoTypicalAmountRegExp,
+          ),
+          factor: zod.number(),
+          sampleSize: zod.int(),
+        }),
+      ]),
+      unusualDismissed: zod.boolean(),
+      debtPayment: zod
+        .union([
+          zod.null(),
+          zod.object({
+            id: zod.uuid(),
+            debtId: zod.uuid(),
+            debtName: zod.string(),
+          }),
+        ])
+        .optional(),
     }),
   ),
   page: zod.int(),
@@ -297,6 +349,9 @@ export const DeleteTransactionResponse = zod.void();
 export const transactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const transactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const transactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const transactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const TransactionResponse = zod.object({
   id: zod.uuid(),
@@ -354,6 +409,26 @@ export const TransactionResponse = zod.object({
   reportingAmount: zod.stringFormat("decimal", transactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
   attachmentCount: zod.int(),
+  unusual: zod.union([
+    zod.null(),
+    zod.object({
+      basis: zod.enum(["payee", "category"]),
+      typicalAmount: zod.stringFormat("decimal", transactionResponseUnusualTwoTypicalAmountRegExp),
+      factor: zod.number(),
+      sampleSize: zod.int(),
+    }),
+  ]),
+  unusualDismissed: zod.boolean(),
+  debtPayment: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        debtId: zod.uuid(),
+        debtName: zod.string(),
+      }),
+    ])
+    .optional(),
 });
 
 /**
@@ -430,6 +505,9 @@ export const UpdateTransactionBody = zod.object({
 export const updateTransactionResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransactionResponseLinesItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateTransactionResponseReportingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateTransactionResponseUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const UpdateTransactionResponse = zod.object({
   id: zod.uuid(),
@@ -487,4 +565,39 @@ export const UpdateTransactionResponse = zod.object({
   reportingAmount: zod.stringFormat("decimal", updateTransactionResponseReportingAmountRegExp),
   tagIds: zod.array(zod.uuid()),
   attachmentCount: zod.int(),
+  unusual: zod.union([
+    zod.null(),
+    zod.object({
+      basis: zod.enum(["payee", "category"]),
+      typicalAmount: zod.stringFormat(
+        "decimal",
+        updateTransactionResponseUnusualTwoTypicalAmountRegExp,
+      ),
+      factor: zod.number(),
+      sampleSize: zod.int(),
+    }),
+  ]),
+  unusualDismissed: zod.boolean(),
+  debtPayment: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        debtId: zod.uuid(),
+        debtName: zod.string(),
+      }),
+    ])
+    .optional(),
 });
+
+/**
+ * Keeps the flag the background check stored but stops showing it: the ledger's unusual filter leaves the row out and the response reports unusualDismissed. The mark survives later edits of the transaction, so correcting a typo does not bring the flag back. Only an annotation; the transaction itself is not changed. Needs the unusualAmounts feature.
+ * @summary Mark an unusual expense as not unusual
+ */
+export const DismissUnusualAmountResponse = zod.void();
+
+/**
+ * Removes the "not unusual" mark, so a stored flag shows in the ledger and in its unusual filter again. The undo of POST /api/transactions/{id}/unusual/dismiss. Needs the unusualAmounts feature.
+ * @summary Mark an expense as unusual again
+ */
+export const RestoreUnusualAmountResponse = zod.void();

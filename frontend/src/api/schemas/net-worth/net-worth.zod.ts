@@ -8,13 +8,17 @@
 import * as zod from "zod";
 
 /**
- * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.
+ * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency. The value and date become its first valuation.
  * @summary Add an asset
  */
 export const createAssetBodyNameMin = 0;
 export const createAssetBodyNameMax = 100;
 
 export const createAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAssetBodyDepreciationTwoStartValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAssetBodyDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const CreateAssetBody = zod.object({
   name: zod.string().min(createAssetBodyNameMin).max(createAssetBodyNameMax),
@@ -25,9 +29,35 @@ export const CreateAssetBody = zod.object({
     .stringFormat("decimal", createAssetBodyCurrentValueRegExp)
     .describe("Decimal string with at most two decimal places."),
   asOf: zod.iso.date(),
+  depreciation: zod
+    .union([
+      zod.null(),
+      zod.object({
+        startDate: zod.union([zod.null(), zod.iso.date()]),
+        startValue: zod
+          .stringFormat("decimal", createAssetBodyDepreciationTwoStartValueRegExp)
+          .nullable(),
+        lifeMonths: zod.int().nullable(),
+        residualValue: zod
+          .stringFormat("decimal", createAssetBodyDepreciationTwoResidualValueRegExp)
+          .nullable(),
+      }),
+    ])
+    .optional()
+    .describe(
+      "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value.",
+    ),
 });
 
 export const createAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAssetResponseValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createAssetResponseDepreciationTwoStartValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createAssetResponseDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createAssetResponseMonthlyDepreciationRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateAssetResponse = zod.object({
   id: zod.uuid(),
@@ -69,13 +99,36 @@ export const CreateAssetResponse = zod.object({
     "ils",
     "zar",
   ]),
+  value: zod.stringFormat("decimal", createAssetResponseValueRegExp),
+  depreciation: zod.union([
+    zod.null(),
+    zod.object({
+      startDate: zod.iso.date(),
+      startValue: zod.stringFormat("decimal", createAssetResponseDepreciationTwoStartValueRegExp),
+      lifeMonths: zod.int(),
+      residualValue: zod.stringFormat(
+        "decimal",
+        createAssetResponseDepreciationTwoResidualValueRegExp,
+      ),
+    }),
+  ]),
+  monthlyDepreciation: zod
+    .stringFormat("decimal", createAssetResponseMonthlyDepreciationRegExp)
+    .nullable(),
+  fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
 });
 
 /**
- * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
  * @summary List assets
  */
 export const assetsResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const assetsResponseValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const assetsResponseDepreciationTwoStartValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const assetsResponseDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const assetsResponseMonthlyDepreciationRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const AssetsResponseItem = zod.object({
   id: zod.uuid(),
@@ -117,6 +170,20 @@ export const AssetsResponseItem = zod.object({
     "ils",
     "zar",
   ]),
+  value: zod.stringFormat("decimal", assetsResponseValueRegExp),
+  depreciation: zod.union([
+    zod.null(),
+    zod.object({
+      startDate: zod.iso.date(),
+      startValue: zod.stringFormat("decimal", assetsResponseDepreciationTwoStartValueRegExp),
+      lifeMonths: zod.int(),
+      residualValue: zod.stringFormat("decimal", assetsResponseDepreciationTwoResidualValueRegExp),
+    }),
+  ]),
+  monthlyDepreciation: zod
+    .stringFormat("decimal", assetsResponseMonthlyDepreciationRegExp)
+    .nullable(),
+  fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
 });
 export const AssetsResponse = zod.array(AssetsResponseItem);
 
@@ -127,13 +194,17 @@ export const AssetsResponse = zod.array(AssetsResponseItem);
 export const DeleteAssetResponse = zod.void();
 
 /**
- * Revalues or renames an asset. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
+ * Revalues, renames or sets the depreciation of an asset. A changed value or date records a valuation for that date instead of overwriting the history. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
  * @summary Update an asset
  */
 export const updateAssetBodyNameMin = 0;
 export const updateAssetBodyNameMax = 100;
 
 export const updateAssetBodyCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAssetBodyDepreciationTwoStartValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAssetBodyDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const UpdateAssetBody = zod.object({
   name: zod.string().min(updateAssetBodyNameMin).max(updateAssetBodyNameMax),
@@ -142,9 +213,35 @@ export const UpdateAssetBody = zod.object({
     .describe("Property, Vehicle, Investment, Valuable, or Other."),
   currentValue: zod.stringFormat("decimal", updateAssetBodyCurrentValueRegExp),
   asOf: zod.iso.date(),
+  depreciation: zod
+    .union([
+      zod.null(),
+      zod.object({
+        startDate: zod.union([zod.null(), zod.iso.date()]),
+        startValue: zod
+          .stringFormat("decimal", updateAssetBodyDepreciationTwoStartValueRegExp)
+          .nullable(),
+        lifeMonths: zod.int().nullable(),
+        residualValue: zod
+          .stringFormat("decimal", updateAssetBodyDepreciationTwoResidualValueRegExp)
+          .nullable(),
+      }),
+    ])
+    .optional()
+    .describe(
+      "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value.",
+    ),
 });
 
 export const updateAssetResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAssetResponseValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateAssetResponseDepreciationTwoStartValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateAssetResponseDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateAssetResponseMonthlyDepreciationRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateAssetResponse = zod.object({
   id: zod.uuid(),
@@ -186,6 +283,184 @@ export const UpdateAssetResponse = zod.object({
     "ils",
     "zar",
   ]),
+  value: zod.stringFormat("decimal", updateAssetResponseValueRegExp),
+  depreciation: zod.union([
+    zod.null(),
+    zod.object({
+      startDate: zod.iso.date(),
+      startValue: zod.stringFormat("decimal", updateAssetResponseDepreciationTwoStartValueRegExp),
+      lifeMonths: zod.int(),
+      residualValue: zod.stringFormat(
+        "decimal",
+        updateAssetResponseDepreciationTwoResidualValueRegExp,
+      ),
+    }),
+  ]),
+  monthlyDepreciation: zod
+    .stringFormat("decimal", updateAssetResponseMonthlyDepreciationRegExp)
+    .nullable(),
+  fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+});
+
+/**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
+ * @summary List the valuations of an asset
+ */
+export const assetValuationsResponseValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const AssetValuationsResponseItem = zod.object({
+  date: zod.iso.date(),
+  value: zod.stringFormat("decimal", assetValuationsResponseValueRegExp),
+  note: zod.string().nullable(),
+});
+export const AssetValuationsResponse = zod.array(AssetValuationsResponseItem);
+
+/**
+ * Removes the valuation recorded for one date for good; it does not go to the trash. The current value of the asset becomes the newest remaining valuation. The last valuation cannot be deleted.
+ * @summary Delete a valuation of an asset
+ */
+export const DeleteAssetValuationResponse = zod.void();
+
+/**
+ * Records what the asset was worth on one date, replacing a valuation already recorded for that date. The current value and as-of date of the asset follow the newest valuation, so a valuation for an earlier date only adds history. On a depreciating asset a valuation on or after the start date restarts the decline from that value at the same monthly amount. Net worth snapshots already taken are not rewritten.
+ * @summary Record a valuation of an asset
+ */
+export const setAssetValuationBodyValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setAssetValuationBodyNoteMin = 0;
+export const setAssetValuationBodyNoteMax = 200;
+
+export const SetAssetValuationBody = zod.object({
+  value: zod
+    .stringFormat("decimal", setAssetValuationBodyValueRegExp)
+    .describe("Decimal string with at most two decimal places, in the currency of the asset."),
+  note: zod
+    .string()
+    .min(setAssetValuationBodyNoteMin)
+    .max(setAssetValuationBodyNoteMax)
+    .nullish()
+    .describe('Optional, up to 200 characters, such as "dealer quote".'),
+});
+
+export const setAssetValuationResponseCurrentValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setAssetValuationResponseValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const setAssetValuationResponseDepreciationTwoStartValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const setAssetValuationResponseDepreciationTwoResidualValueRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const setAssetValuationResponseMonthlyDepreciationRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const SetAssetValuationResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  type: zod
+    .enum(["property", "vehicle", "investment", "valuable", "other"])
+    .describe("Property, Vehicle, Investment, Valuable, or Other."),
+  currentValue: zod.stringFormat("decimal", setAssetValuationResponseCurrentValueRegExp),
+  asOf: zod.iso.date(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  value: zod.stringFormat("decimal", setAssetValuationResponseValueRegExp),
+  depreciation: zod.union([
+    zod.null(),
+    zod.object({
+      startDate: zod.iso.date(),
+      startValue: zod.stringFormat(
+        "decimal",
+        setAssetValuationResponseDepreciationTwoStartValueRegExp,
+      ),
+      lifeMonths: zod.int(),
+      residualValue: zod.stringFormat(
+        "decimal",
+        setAssetValuationResponseDepreciationTwoResidualValueRegExp,
+      ),
+    }),
+  ]),
+  monthlyDepreciation: zod
+    .stringFormat("decimal", setAssetValuationResponseMonthlyDepreciationRegExp)
+    .nullable(),
+  fullyDepreciatedOn: zod.union([zod.null(), zod.iso.date()]),
+});
+
+/**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
+ * @summary Get the value of an asset over time
+ */
+export const assetValueHistoryResponsePointsItemValueRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const AssetValueHistoryResponse = zod.object({
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  points: zod.array(
+    zod.object({
+      date: zod.iso.date(),
+      value: zod.stringFormat("decimal", assetValueHistoryResponsePointsItemValueRegExp),
+      isValuation: zod.boolean(),
+    }),
+  ),
 });
 
 /**
@@ -203,6 +478,7 @@ export const createDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$
 export const createDebtBodyTermMonthsMax = 600;
 
 export const createDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtBodyTracksPaymentsDefault = false;
 
 export const CreateDebtBody = zod.object({
   name: zod.string().min(createDebtBodyNameMin).max(createDebtBodyNameMax),
@@ -247,11 +523,18 @@ export const CreateDebtBody = zod.object({
     .describe(
       "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
     ),
+  tracksPayments: zod
+    .boolean()
+    .default(createDebtBodyTracksPaymentsDefault)
+    .describe(
+      "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
+    ),
 });
 
 export const createDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createDebtResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const createDebtResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createDebtResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const CreateDebtResponse = zod.object({
   id: zod.uuid(),
@@ -298,6 +581,10 @@ export const CreateDebtResponse = zod.object({
     "ils",
     "zar",
   ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod.stringFormat("decimal", createDebtResponseTrackedBalanceRegExp).nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
 });
 
 /**
@@ -307,6 +594,7 @@ export const CreateDebtResponse = zod.object({
 export const debtsResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const debtsResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const debtsResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtsResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const DebtsResponseItem = zod.object({
   id: zod.uuid(),
@@ -353,6 +641,10 @@ export const DebtsResponseItem = zod.object({
     "ils",
     "zar",
   ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod.stringFormat("decimal", debtsResponseTrackedBalanceRegExp).nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
 });
 export const DebtsResponse = zod.array(DebtsResponseItem);
 
@@ -377,6 +669,7 @@ export const updateDebtBodyLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$
 export const updateDebtBodyTermMonthsMax = 600;
 
 export const updateDebtBodyMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtBodyTracksPaymentsDefault = false;
 
 export const UpdateDebtBody = zod.object({
   name: zod.string().min(updateDebtBodyNameMin).max(updateDebtBodyNameMax),
@@ -418,11 +711,18 @@ export const UpdateDebtBody = zod.object({
     .describe(
       "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
     ),
+  tracksPayments: zod
+    .boolean()
+    .default(updateDebtBodyTracksPaymentsDefault)
+    .describe(
+      "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
+    ),
 });
 
 export const updateDebtResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateDebtResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateDebtResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 
 export const UpdateDebtResponse = zod.object({
   id: zod.uuid(),
@@ -469,6 +769,310 @@ export const UpdateDebtResponse = zod.object({
     "ils",
     "zar",
   ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod.stringFormat("decimal", updateDebtResponseTrackedBalanceRegExp).nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
+});
+
+/**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
+ * @summary Suggest transactions to link to a debt
+ */
+export const debtPaymentCandidatesResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtPaymentCandidatesResponseLinesItemAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtPaymentCandidatesResponseReportingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const debtPaymentCandidatesResponseUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+
+export const DebtPaymentCandidatesResponseItem = zod.object({
+  id: zod.uuid(),
+  accountId: zod.uuid(),
+  categoryId: zod.uuid().nullable(),
+  type: zod.enum(["income", "expense"]),
+  amount: zod.stringFormat("decimal", debtPaymentCandidatesResponseAmountRegExp),
+  date: zod.iso.date(),
+  description: zod.string().nullable(),
+  source: zod.enum(["manual", "imported"]),
+  isSplit: zod.boolean(),
+  createdAt: zod.iso.datetime({ offset: true }),
+  lines: zod
+    .array(
+      zod.object({
+        id: zod.uuid(),
+        categoryId: zod.uuid().nullable(),
+        amount: zod.stringFormat("decimal", debtPaymentCandidatesResponseLinesItemAmountRegExp),
+        description: zod.string().nullable(),
+      }),
+    )
+    .nullable(),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  reportingAmount: zod.stringFormat("decimal", debtPaymentCandidatesResponseReportingAmountRegExp),
+  tagIds: zod.array(zod.uuid()),
+  attachmentCount: zod.int(),
+  unusual: zod.union([
+    zod.null(),
+    zod.object({
+      basis: zod.enum(["payee", "category"]),
+      typicalAmount: zod.stringFormat(
+        "decimal",
+        debtPaymentCandidatesResponseUnusualTwoTypicalAmountRegExp,
+      ),
+      factor: zod.number(),
+      sampleSize: zod.int(),
+    }),
+  ]),
+  unusualDismissed: zod.boolean(),
+  debtPayment: zod
+    .union([
+      zod.null(),
+      zod.object({
+        id: zod.uuid(),
+        debtId: zod.uuid(),
+        debtName: zod.string(),
+      }),
+    ])
+    .optional(),
+});
+export const DebtPaymentCandidatesResponse = zod.array(DebtPaymentCandidatesResponseItem);
+
+/**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
+ * @summary List the payments of a debt
+ */
+export const debtPaymentsResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtPaymentsResponseInterestRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtPaymentsResponsePrincipalRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtPaymentsResponseOverpaidRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const debtPaymentsResponseBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const DebtPaymentsResponseItem = zod.object({
+  id: zod.uuid(),
+  transactionId: zod.uuid(),
+  date: zod.iso.date(),
+  accountId: zod.uuid(),
+  description: zod.string().nullable(),
+  amount: zod.stringFormat("decimal", debtPaymentsResponseAmountRegExp),
+  kind: zod
+    .enum(["regular", "extra"])
+    .describe("regular (a month of interest first) or extra (all principal)."),
+  interest: zod.stringFormat("decimal", debtPaymentsResponseInterestRegExp),
+  principal: zod.stringFormat("decimal", debtPaymentsResponsePrincipalRegExp),
+  principalTyped: zod.boolean(),
+  overpaid: zod.stringFormat("decimal", debtPaymentsResponseOverpaidRegExp),
+  balance: zod.stringFormat("decimal", debtPaymentsResponseBalanceRegExp),
+});
+export const DebtPaymentsResponse = zod.array(DebtPaymentsResponseItem);
+
+/**
+ * Marks an expense transaction as a payment of a debt that tracks its payments, lowering the tracked balance by its principal. The transaction stays an ordinary expense in reports and budgets. A transaction pays at most one debt. The link is private to the owner of the debt, even on a shared account.
+ * @summary Link a payment to a debt
+ */
+
+export const linkDebtPaymentBodyPrincipalRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const LinkDebtPaymentBody = zod.object({
+  transactionId: zod
+    .uuid()
+    .min(1)
+    .describe("An expense transaction the signed-in user can see, not split."),
+  kind: zod
+    .union([
+      zod.null(),
+      zod
+        .enum(["regular", "extra"])
+        .describe("regular (a month of interest first) or extra (all principal)."),
+    ])
+    .optional()
+    .describe(
+      "regular or extra. Left out, it is regular unless a regular payment is already linked in the same calendar month.",
+    ),
+  principal: zod
+    .stringFormat("decimal", linkDebtPaymentBodyPrincipalRegExp)
+    .nullish()
+    .describe(
+      "Optional principal from the bank statement, a positive decimal string in the currency of the debt. It replaces the calculated split.",
+    ),
+});
+
+export const linkDebtPaymentResponseOutstandingAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const linkDebtPaymentResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const linkDebtPaymentResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const linkDebtPaymentResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const LinkDebtPaymentResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
+  outstandingAmount: zod.stringFormat("decimal", linkDebtPaymentResponseOutstandingAmountRegExp),
+  interestRate: zod.number().nullable(),
+  asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", linkDebtPaymentResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod
+    .stringFormat("decimal", linkDebtPaymentResponseMonthlyPaymentRegExp)
+    .nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod
+    .stringFormat("decimal", linkDebtPaymentResponseTrackedBalanceRegExp)
+    .nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
+});
+
+/**
+ * Removes the link for good; it does not go to the trash. The transaction itself is not touched.
+ * @summary Unlink a payment from a debt
+ */
+export const UnlinkDebtPaymentResponse = zod.void();
+
+/**
+ * Sets the kind of a linked payment and the principal typed from the bank statement. Leaving the principal out goes back to the calculated split.
+ * @summary Change how a payment counts against a debt
+ */
+export const updateDebtPaymentBodyPrincipalRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateDebtPaymentBody = zod.object({
+  kind: zod
+    .enum(["regular", "extra"])
+    .describe("regular (a month of interest first) or extra (all principal)."),
+  principal: zod
+    .stringFormat("decimal", updateDebtPaymentBodyPrincipalRegExp)
+    .nullish()
+    .describe("Optional principal, a positive decimal string in the currency of the debt."),
+});
+
+export const updateDebtPaymentResponseOutstandingAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateDebtPaymentResponseLoanAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtPaymentResponseMonthlyPaymentRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateDebtPaymentResponseTrackedBalanceRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+
+export const UpdateDebtPaymentResponse = zod.object({
+  id: zod.uuid(),
+  name: zod.string(),
+  type: zod.enum(["mortgage", "loan", "other"]).describe("Mortgage, Loan, or Other."),
+  outstandingAmount: zod.stringFormat("decimal", updateDebtPaymentResponseOutstandingAmountRegExp),
+  interestRate: zod.number().nullable(),
+  asOf: zod.iso.date(),
+  loanAmount: zod.stringFormat("decimal", updateDebtPaymentResponseLoanAmountRegExp).nullable(),
+  firstPaymentDate: zod.union([zod.null(), zod.iso.date()]),
+  termMonths: zod.int().nullable(),
+  monthlyPayment: zod
+    .stringFormat("decimal", updateDebtPaymentResponseMonthlyPaymentRegExp)
+    .nullable(),
+  amortizationType: zod.enum(["annuity", "linear"]),
+  payoffDate: zod.union([zod.null(), zod.iso.date()]),
+  currency: zod.enum([
+    "eur",
+    "usd",
+    "gbp",
+    "chf",
+    "pln",
+    "sek",
+    "nok",
+    "dkk",
+    "czk",
+    "huf",
+    "ron",
+    "isk",
+    "try",
+    "jpy",
+    "cny",
+    "hkd",
+    "sgd",
+    "krw",
+    "inr",
+    "idr",
+    "myr",
+    "php",
+    "thb",
+    "aud",
+    "nzd",
+    "cad",
+    "mxn",
+    "brl",
+    "ils",
+    "zar",
+  ]),
+  tracksPayments: zod.boolean(),
+  trackedBalance: zod
+    .stringFormat("decimal", updateDebtPaymentResponseTrackedBalanceRegExp)
+    .nullable(),
+  trackedIncomplete: zod.boolean(),
+  unavailablePayments: zod.int(),
 });
 
 /**

@@ -25,15 +25,24 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   AssetResponse,
+  AssetValuationResponse,
+  AssetValueHistoryParams,
+  AssetValueHistoryResponse,
   CreateAssetRequest,
   CreateDebtRequest,
+  DebtPaymentCandidatesParams,
+  DebtPaymentResponse,
   DebtResponse,
   DebtScheduleParams,
   DebtScheduleResponse,
+  LinkDebtPaymentRequest,
   NetWorthHistoryResponse,
   NetWorthResponse,
   ProblemDetails,
+  SetAssetValuationRequest,
+  TransactionResponse,
   UpdateAssetRequest,
+  UpdateDebtPaymentRequest,
   UpdateDebtRequest,
 } from "../model";
 
@@ -59,7 +68,7 @@ export const getCreateAssetUrl = () => {
 };
 
 /**
- * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.
+ * Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency. The value and date become its first valuation.
  * @summary Add an asset
  */
 export const createAsset = async (
@@ -163,7 +172,7 @@ export const getAssetsUrl = () => {
 };
 
 /**
- * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.
+ * Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.
  * @summary List assets
  */
 export const assets = async (
@@ -349,7 +358,7 @@ export const getUpdateAssetUrl = (id: string) => {
 };
 
 /**
- * Revalues or renames an asset. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
+ * Revalues, renames or sets the depreciation of an asset. A changed value or date records a valuation for that date instead of overwriting the history. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.
  * @summary Update an asset
  */
 export const updateAsset = async (
@@ -449,6 +458,468 @@ export const useUpdateAsset = <TError = ErrorType<ProblemDetails>, TContext = un
 > => {
   return useMutation(getUpdateAssetMutationOptions(options), queryClient);
 };
+export const getAssetValuationsUrl = (id: string) => {
+  return `/api/assets/${id}/valuations`;
+};
+
+/**
+ * Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.
+ * @summary List the valuations of an asset
+ */
+export const assetValuations = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AssetValuationResponse[]> => {
+  return customFetch<AssetValuationResponse[]>(getAssetValuationsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAssetValuationsQueryKey = (id: string) => {
+  return [`/api/assets/${id}/valuations`] as const;
+};
+
+export const getAssetValuationsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAssetValuationsQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof assetValuations>>> = ({ signal }) =>
+    assetValuations(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type AssetValuationsSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof assetValuations>>
+>;
+export type AssetValuationsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useAssetValuationsSuspense<
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAssetValuationsSuspense<
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAssetValuationsSuspense<
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the valuations of an asset
+ */
+
+export function useAssetValuationsSuspense<
+  TData = Awaited<ReturnType<typeof assetValuations>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValuations>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAssetValuationsSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDeleteAssetValuationUrl = (id: string, date: string) => {
+  return `/api/assets/${id}/valuations/${date}`;
+};
+
+/**
+ * Removes the valuation recorded for one date for good; it does not go to the trash. The current value of the asset becomes the newest remaining valuation. The last valuation cannot be deleted.
+ * @summary Delete a valuation of an asset
+ */
+export const deleteAssetValuation = async (
+  id: string,
+  date: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteAssetValuationUrl(id, date), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteAssetValuationMutationKey = () => ["deleteAssetValuation"] as const;
+
+export const getDeleteAssetValuationMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteAssetValuation>>,
+    TError,
+    DeleteAssetValuationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof deleteAssetValuation>>,
+  TError,
+  DeleteAssetValuationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDeleteAssetValuationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof deleteAssetValuation>>,
+    DeleteAssetValuationMutationVariables
+  > = (props) => {
+    const { id, date } = props ?? {};
+
+    return deleteAssetValuation(id, date, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteAssetValuationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteAssetValuation>>
+>;
+
+export type DeleteAssetValuationMutationError = ErrorType<ProblemDetails>;
+export type DeleteAssetValuationMutationVariables = { id: string; date: string };
+
+/**
+ * @summary Delete a valuation of an asset
+ */
+export const useDeleteAssetValuation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteAssetValuation>>,
+      TError,
+      DeleteAssetValuationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof deleteAssetValuation>>,
+  TError,
+  DeleteAssetValuationMutationVariables,
+  TContext
+> => {
+  return useMutation(getDeleteAssetValuationMutationOptions(options), queryClient);
+};
+export const getSetAssetValuationUrl = (id: string, date: string) => {
+  return `/api/assets/${id}/valuations/${date}`;
+};
+
+/**
+ * Records what the asset was worth on one date, replacing a valuation already recorded for that date. The current value and as-of date of the asset follow the newest valuation, so a valuation for an earlier date only adds history. On a depreciating asset a valuation on or after the start date restarts the decline from that value at the same monthly amount. Net worth snapshots already taken are not rewritten.
+ * @summary Record a valuation of an asset
+ */
+export const setAssetValuation = async (
+  id: string,
+  date: string,
+  setAssetValuationRequest: SetAssetValuationRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AssetResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<AssetResponse>(getSetAssetValuationUrl(id, date), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(setAssetValuationRequest),
+  });
+};
+
+export const getSetAssetValuationMutationKey = () => ["setAssetValuation"] as const;
+
+export const getSetAssetValuationMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof setAssetValuation>>,
+    TError,
+    SetAssetValuationMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof setAssetValuation>>,
+  TError,
+  SetAssetValuationMutationVariables,
+  TContext
+> => {
+  const mutationKey = getSetAssetValuationMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof setAssetValuation>>,
+    SetAssetValuationMutationVariables
+  > = (props) => {
+    const { id, date, data } = props ?? {};
+
+    return setAssetValuation(id, date, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type SetAssetValuationMutationResult = NonNullable<
+  Awaited<ReturnType<typeof setAssetValuation>>
+>;
+export type SetAssetValuationMutationBody = SetAssetValuationRequest;
+export type SetAssetValuationMutationError = ErrorType<ProblemDetails>;
+export type SetAssetValuationMutationVariables = {
+  id: string;
+  date: string;
+  data: SetAssetValuationRequest;
+};
+
+/**
+ * @summary Record a valuation of an asset
+ */
+export const useSetAssetValuation = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof setAssetValuation>>,
+      TError,
+      SetAssetValuationMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof setAssetValuation>>,
+  TError,
+  SetAssetValuationMutationVariables,
+  TContext
+> => {
+  return useMutation(getSetAssetValuationMutationOptions(options), queryClient);
+};
+export const getAssetValueHistoryUrl = (id: string, params?: AssetValueHistoryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/assets/${id}/value-history?${stringifiedParams}`
+    : `/api/assets/${id}/value-history`;
+};
+
+/**
+ * Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.
+ * @summary Get the value of an asset over time
+ */
+export const assetValueHistory = async (
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<AssetValueHistoryResponse> => {
+  return customFetch<AssetValueHistoryResponse>(getAssetValueHistoryUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getAssetValueHistoryQueryKey = (id: string, params?: AssetValueHistoryParams) => {
+  return [`/api/assets/${id}/value-history`, ...(params ? [params] : [])] as const;
+};
+
+export const getAssetValueHistorySuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getAssetValueHistoryQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof assetValueHistory>>> = ({ signal }) =>
+    assetValueHistory(id, params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type AssetValueHistorySuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof assetValueHistory>>
+>;
+export type AssetValueHistorySuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useAssetValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: undefined | AssetValueHistoryParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAssetValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useAssetValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Get the value of an asset over time
+ */
+
+export function useAssetValueHistorySuspense<
+  TData = Awaited<ReturnType<typeof assetValueHistory>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: AssetValueHistoryParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof assetValueHistory>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getAssetValueHistorySuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
 export const getCreateDebtUrl = () => {
   return `/api/debts`;
 };
@@ -843,6 +1314,578 @@ export const useUpdateDebt = <TError = ErrorType<ProblemDetails>, TContext = unk
   TContext
 > => {
   return useMutation(getUpdateDebtMutationOptions(options), queryClient);
+};
+export const getDebtPaymentCandidatesUrl = (id: string, params?: DebtPaymentCandidatesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : String(value));
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/debts/${id}/payment-candidates?${stringifiedParams}`
+    : `/api/debts/${id}/payment-candidates`;
+};
+
+/**
+ * Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.
+ * @summary Suggest transactions to link to a debt
+ */
+export const debtPaymentCandidates = async (
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<TransactionResponse[]> => {
+  return customFetch<TransactionResponse[]>(getDebtPaymentCandidatesUrl(id, params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDebtPaymentCandidatesQueryKey = (
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+) => {
+  return [`/api/debts/${id}/payment-candidates`, ...(params ? [params] : [])] as const;
+};
+
+export const getDebtPaymentCandidatesSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDebtPaymentCandidatesQueryKey(id, params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof debtPaymentCandidates>>> = ({ signal }) =>
+    debtPaymentCandidates(id, params, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<
+    Awaited<ReturnType<typeof debtPaymentCandidates>>,
+    TError,
+    TData
+  > & { queryKey: DataTag<QueryKey, TData, TError> } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type DebtPaymentCandidatesSuspenseQueryResult = NonNullable<
+  Awaited<ReturnType<typeof debtPaymentCandidates>>
+>;
+export type DebtPaymentCandidatesSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDebtPaymentCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params: undefined | DebtPaymentCandidatesParams,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtPaymentCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtPaymentCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Suggest transactions to link to a debt
+ */
+
+export function useDebtPaymentCandidatesSuspense<
+  TData = Awaited<ReturnType<typeof debtPaymentCandidates>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  params?: DebtPaymentCandidatesParams,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPaymentCandidates>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDebtPaymentCandidatesSuspenseQueryOptions(id, params, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getDebtPaymentsUrl = (id: string) => {
+  return `/api/debts/${id}/payments`;
+};
+
+/**
+ * Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.
+ * @summary List the payments of a debt
+ */
+export const debtPayments = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtPaymentResponse[]> => {
+  return customFetch<DebtPaymentResponse[]>(getDebtPaymentsUrl(id), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getDebtPaymentsQueryKey = (id: string) => {
+  return [`/api/debts/${id}/payments`] as const;
+};
+
+export const getDebtPaymentsSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getDebtPaymentsQueryKey(id);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof debtPayments>>> = ({ signal }) =>
+    debtPayments(id, { signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type DebtPaymentsSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof debtPayments>>>;
+export type DebtPaymentsSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useDebtPaymentsSuspense<
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options: {
+    query: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtPaymentsSuspense<
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useDebtPaymentsSuspense<
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary List the payments of a debt
+ */
+
+export function useDebtPaymentsSuspense<
+  TData = Awaited<ReturnType<typeof debtPayments>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  id: string,
+  options?: {
+    query?: Partial<
+      UseSuspenseQueryOptions<Awaited<ReturnType<typeof debtPayments>>, TError, TData>
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getDebtPaymentsSuspenseQueryOptions(id, options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getLinkDebtPaymentUrl = (id: string) => {
+  return `/api/debts/${id}/payments`;
+};
+
+/**
+ * Marks an expense transaction as a payment of a debt that tracks its payments, lowering the tracked balance by its principal. The transaction stays an ordinary expense in reports and budgets. A transaction pays at most one debt. The link is private to the owner of the debt, even on a shared account.
+ * @summary Link a payment to a debt
+ */
+export const linkDebtPayment = async (
+  id: string,
+  linkDebtPaymentRequest: LinkDebtPaymentRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<DebtResponse>(getLinkDebtPaymentUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(linkDebtPaymentRequest),
+  });
+};
+
+export const getLinkDebtPaymentMutationKey = () => ["linkDebtPayment"] as const;
+
+export const getLinkDebtPaymentMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof linkDebtPayment>>,
+    TError,
+    LinkDebtPaymentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof linkDebtPayment>>,
+  TError,
+  LinkDebtPaymentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getLinkDebtPaymentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof linkDebtPayment>>,
+    LinkDebtPaymentMutationVariables
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return linkDebtPayment(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type LinkDebtPaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof linkDebtPayment>>
+>;
+export type LinkDebtPaymentMutationBody = LinkDebtPaymentRequest;
+export type LinkDebtPaymentMutationError = ErrorType<ProblemDetails>;
+export type LinkDebtPaymentMutationVariables = { id: string; data: LinkDebtPaymentRequest };
+
+/**
+ * @summary Link a payment to a debt
+ */
+export const useLinkDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof linkDebtPayment>>,
+      TError,
+      LinkDebtPaymentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof linkDebtPayment>>,
+  TError,
+  LinkDebtPaymentMutationVariables,
+  TContext
+> => {
+  return useMutation(getLinkDebtPaymentMutationOptions(options), queryClient);
+};
+export const getUnlinkDebtPaymentUrl = (id: string, paymentId: string) => {
+  return `/api/debts/${id}/payments/${paymentId}`;
+};
+
+/**
+ * Removes the link for good; it does not go to the trash. The transaction itself is not touched.
+ * @summary Unlink a payment from a debt
+ */
+export const unlinkDebtPayment = async (
+  id: string,
+  paymentId: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getUnlinkDebtPaymentUrl(id, paymentId), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getUnlinkDebtPaymentMutationKey = () => ["unlinkDebtPayment"] as const;
+
+export const getUnlinkDebtPaymentMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof unlinkDebtPayment>>,
+    TError,
+    UnlinkDebtPaymentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof unlinkDebtPayment>>,
+  TError,
+  UnlinkDebtPaymentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUnlinkDebtPaymentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof unlinkDebtPayment>>,
+    UnlinkDebtPaymentMutationVariables
+  > = (props) => {
+    const { id, paymentId } = props ?? {};
+
+    return unlinkDebtPayment(id, paymentId, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UnlinkDebtPaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof unlinkDebtPayment>>
+>;
+
+export type UnlinkDebtPaymentMutationError = ErrorType<ProblemDetails>;
+export type UnlinkDebtPaymentMutationVariables = { id: string; paymentId: string };
+
+/**
+ * @summary Unlink a payment from a debt
+ */
+export const useUnlinkDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof unlinkDebtPayment>>,
+      TError,
+      UnlinkDebtPaymentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof unlinkDebtPayment>>,
+  TError,
+  UnlinkDebtPaymentMutationVariables,
+  TContext
+> => {
+  return useMutation(getUnlinkDebtPaymentMutationOptions(options), queryClient);
+};
+export const getUpdateDebtPaymentUrl = (id: string, paymentId: string) => {
+  return `/api/debts/${id}/payments/${paymentId}`;
+};
+
+/**
+ * Sets the kind of a linked payment and the principal typed from the bank statement. Leaving the principal out goes back to the calculated split.
+ * @summary Change how a payment counts against a debt
+ */
+export const updateDebtPayment = async (
+  id: string,
+  paymentId: string,
+  updateDebtPaymentRequest: UpdateDebtPaymentRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DebtResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<DebtResponse>(getUpdateDebtPaymentUrl(id, paymentId), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateDebtPaymentRequest),
+  });
+};
+
+export const getUpdateDebtPaymentMutationKey = () => ["updateDebtPayment"] as const;
+
+export const getUpdateDebtPaymentMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDebtPayment>>,
+    TError,
+    UpdateDebtPaymentMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDebtPayment>>,
+  TError,
+  UpdateDebtPaymentMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateDebtPaymentMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDebtPayment>>,
+    UpdateDebtPaymentMutationVariables
+  > = (props) => {
+    const { id, paymentId, data } = props ?? {};
+
+    return updateDebtPayment(id, paymentId, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDebtPaymentMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDebtPayment>>
+>;
+export type UpdateDebtPaymentMutationBody = UpdateDebtPaymentRequest;
+export type UpdateDebtPaymentMutationError = ErrorType<ProblemDetails>;
+export type UpdateDebtPaymentMutationVariables = {
+  id: string;
+  paymentId: string;
+  data: UpdateDebtPaymentRequest;
+};
+
+/**
+ * @summary Change how a payment counts against a debt
+ */
+export const useUpdateDebtPayment = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateDebtPayment>>,
+      TError,
+      UpdateDebtPaymentMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateDebtPayment>>,
+  TError,
+  UpdateDebtPaymentMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateDebtPaymentMutationOptions(options), queryClient);
 };
 export const getDebtScheduleUrl = (id: string, params?: DebtScheduleParams) => {
   const normalizedParams = new URLSearchParams();

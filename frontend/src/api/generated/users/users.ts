@@ -25,8 +25,10 @@ import { customFetch } from "../../client";
 import type { ErrorType } from "../../client";
 import type {
   CreateUserRequest,
+  DiscordWebhookResponse,
   ProblemDetails,
   ResetUserPasswordRequest,
+  UpdateMyDiscordRequest,
   UpdateMyProfileRequest,
   UpdateUserRoleRequest,
   UserProfileResponse,
@@ -380,6 +382,342 @@ export const useUpdateMyProfile = <TError = ErrorType<ProblemDetails>, TContext 
   TContext
 > => {
   return useMutation(getUpdateMyProfileMutationOptions(options), queryClient);
+};
+export const getDeleteMyDiscordUrl = () => {
+  return `/api/users/me/discord`;
+};
+
+/**
+ * Forgets your webhook URL and drops every Discord message still waiting to be sent to it. In-app notifications are not affected.
+ * @summary Remove your Discord webhook
+ */
+export const deleteMyDiscord = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDeleteMyDiscordUrl(), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getDeleteMyDiscordMutationKey = () => ["deleteMyDiscord"] as const;
+
+export const getDeleteMyDiscordMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof deleteMyDiscord>>,
+    TError,
+    void,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof deleteMyDiscord>>, TError, void, TContext> => {
+  const mutationKey = getDeleteMyDiscordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteMyDiscord>>, void> = () => {
+    return deleteMyDiscord(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DeleteMyDiscordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof deleteMyDiscord>>
+>;
+
+export type DeleteMyDiscordMutationError = ErrorType<ProblemDetails>;
+
+/**
+ * @summary Remove your Discord webhook
+ */
+export const useDeleteMyDiscord = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof deleteMyDiscord>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof deleteMyDiscord>>, TError, void, TContext> => {
+  return useMutation(getDeleteMyDiscordMutationOptions(options), queryClient);
+};
+export const getMyDiscordUrl = () => {
+  return `/api/users/me/discord`;
+};
+
+/**
+ * Answers whether a webhook is saved, whether it is switched on, which notification kinds it receives, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Without a saved webhook the answer lists every kind, as a starting point for the form.
+ * @summary Read your Discord notification settings
+ */
+export const myDiscord = async (
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DiscordWebhookResponse> => {
+  return customFetch<DiscordWebhookResponse>(getMyDiscordUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getMyDiscordQueryKey = () => {
+  return [`/api/users/me/discord`] as const;
+};
+
+export const getMyDiscordSuspenseQueryOptions = <
+  TData = Awaited<ReturnType<typeof myDiscord>>,
+  TError = ErrorType<ProblemDetails>,
+>(options?: {
+  query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData>>;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getMyDiscordQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof myDiscord>>> = ({ signal }) =>
+    myDiscord({ signal, ...requestOptions });
+
+  return queryOptionsBuilder({
+    queryKey,
+    ...queryOptions,
+    queryFn: queryOptions?.queryFn ?? queryFn,
+  }) as UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData> & {
+    queryKey: DataTag<QueryKey, TData, TError>;
+  } & {
+    throwOnError?: ((this: never, error: TError) => boolean) & { readonly __inferenceOnly: never };
+  };
+};
+
+export type MyDiscordSuspenseQueryResult = NonNullable<Awaited<ReturnType<typeof myDiscord>>>;
+export type MyDiscordSuspenseQueryError = ErrorType<ProblemDetails>;
+
+export function useMyDiscordSuspense<
+  TData = Awaited<ReturnType<typeof myDiscord>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options: {
+    query: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMyDiscordSuspense<
+  TData = Awaited<ReturnType<typeof myDiscord>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+export function useMyDiscordSuspense<
+  TData = Awaited<ReturnType<typeof myDiscord>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+/**
+ * @summary Read your Discord notification settings
+ */
+
+export function useMyDiscordSuspense<
+  TData = Awaited<ReturnType<typeof myDiscord>>,
+  TError = ErrorType<ProblemDetails>,
+>(
+  options?: {
+    query?: Partial<UseSuspenseQueryOptions<Awaited<ReturnType<typeof myDiscord>>, TError, TData>>;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseSuspenseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+  const queryOptions = getMyDiscordSuspenseQueryOptions(options);
+
+  const query = useSuspenseQuery(queryOptions, queryClient) as UseSuspenseQueryResult<
+    TData,
+    TError
+  > & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+export const getUpdateMyDiscordUrl = () => {
+  return `/api/users/me/discord`;
+};
+
+/**
+ * Stores your personal Discord webhook, whether it is switched on and which notification kinds it receives. Every in-app notification of a chosen kind is then also posted to that channel, as long as an administrator allows Discord on this installation. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. The first save needs a URL. An empty list of kinds is allowed and sends nothing.
+ * @summary Save your Discord notification settings
+ */
+export const updateMyDiscord = async (
+  updateMyDiscordRequest: UpdateMyDiscordRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<DiscordWebhookResponse> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<DiscordWebhookResponse>(getUpdateMyDiscordUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateMyDiscordRequest),
+  });
+};
+
+export const getUpdateMyDiscordMutationKey = () => ["updateMyDiscord"] as const;
+
+export const getUpdateMyDiscordMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateMyDiscord>>,
+    TError,
+    UpdateMyDiscordMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateMyDiscord>>,
+  TError,
+  UpdateMyDiscordMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateMyDiscordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateMyDiscord>>,
+    UpdateMyDiscordMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateMyDiscord(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateMyDiscordMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateMyDiscord>>
+>;
+export type UpdateMyDiscordMutationBody = UpdateMyDiscordRequest;
+export type UpdateMyDiscordMutationError = ErrorType<ProblemDetails | void>;
+export type UpdateMyDiscordMutationVariables = { data: UpdateMyDiscordRequest };
+
+/**
+ * @summary Save your Discord notification settings
+ */
+export const useUpdateMyDiscord = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateMyDiscord>>,
+      TError,
+      UpdateMyDiscordMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateMyDiscord>>,
+  TError,
+  UpdateMyDiscordMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateMyDiscordMutationOptions(options), queryClient);
+};
+export const getTestMyDiscordUrl = () => {
+  return `/api/users/me/discord/test`;
+};
+
+/**
+ * Posts one short message to your saved webhook right away and waits for Discord's answer. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it on your profile), discord.rateLimited, discord.rejected or discord.sendFailed. discord.disabled means an administrator has not allowed Discord on this installation, and discord.webhookUnreadable that the stored URL cannot be decrypted any more. Save the webhook before testing it. Rate limited to 10 calls per five minutes per client.
+ * @summary Send a test message to your Discord channel
+ */
+export const testMyDiscord = async (options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+  return customFetch<void>(getTestMyDiscordUrl(), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getTestMyDiscordMutationKey = () => ["testMyDiscord"] as const;
+
+export const getTestMyDiscordMutationOptions = <
+  TError = ErrorType<ProblemDetails | void>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<Awaited<ReturnType<typeof testMyDiscord>>, TError, void, TContext>;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<Awaited<ReturnType<typeof testMyDiscord>>, TError, void, TContext> => {
+  const mutationKey = getTestMyDiscordMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<Awaited<ReturnType<typeof testMyDiscord>>, void> = () => {
+    return testMyDiscord(requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type TestMyDiscordMutationResult = NonNullable<Awaited<ReturnType<typeof testMyDiscord>>>;
+
+export type TestMyDiscordMutationError = ErrorType<ProblemDetails | void>;
+
+/**
+ * @summary Send a test message to your Discord channel
+ */
+export const useTestMyDiscord = <TError = ErrorType<ProblemDetails | void>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof testMyDiscord>>,
+      TError,
+      void,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<Awaited<ReturnType<typeof testMyDiscord>>, TError, void, TContext> => {
+  return useMutation(getTestMyDiscordMutationOptions(options), queryClient);
 };
 export const getDeactivateUserUrl = (id: string) => {
   return `/api/users/${id}/deactivate`;

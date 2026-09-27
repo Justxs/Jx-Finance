@@ -29,4 +29,9 @@ export interface DebtResponse {
   amortizationType: AmortizationType;
   payoffDate: null | NullableOfDateOnly;
   currency: Currency;
+  tracksPayments: boolean;
+  /** @nullable */
+  trackedBalance: string | null;
+  trackedIncomplete: boolean;
+  unavailablePayments: number;
 }

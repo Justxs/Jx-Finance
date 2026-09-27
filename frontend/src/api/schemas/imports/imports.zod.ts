@@ -8,7 +8,7 @@
 import * as zod from "zod";
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. The audit entry names the format the rows came from.
  * @summary Commit previewed statement rows
  */
 
@@ -70,6 +70,11 @@ export const ImportConfirmBody = zod.object({
     .describe(
       "The rows to import, as returned by preview, with any category and tag corrections applied.",
     ),
+  format: zod
+    .enum(["swedbankCsv", "camt053"])
+    .describe(
+      "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.",
+    ),
 });
 
 export const ImportConfirmResponse = zod.object({
@@ -78,15 +83,30 @@ export const ImportConfirmResponse = zod.object({
 });
 
 /**
- * Parses an exported Swedbank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
- * @summary Preview a Swedbank CSV statement
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
+ * @summary Preview a bank statement
  */
 export const ImportPreviewBody = zod.object({
   file: zod.instanceof(Blob).optional(),
   accountId: zod.uuid().optional().describe("The account the statement belongs to."),
+  format: zod
+    .enum(["swedbankCsv", "camt053"])
+    .optional()
+    .describe(
+      "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement.",
+    ),
 });
 
 export const importPreviewResponseRowsItemAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const importPreviewResponseRowsItemUnusualTwoTypicalAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importPreviewResponseStatementClosingBalanceRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const importPreviewResponseStatementLedgerBalanceAtCloseRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const ImportPreviewResponse = zod.object({
   rows: zod.array(
@@ -134,6 +154,71 @@ export const ImportPreviewResponse = zod.object({
       suggestedCategoryId: zod.uuid().nullable(),
       suggestedTagIds: zod.array(zod.uuid()),
       matchedRuleName: zod.string().nullable(),
+      isReversal: zod.boolean(),
+      suggestedTransferAccountId: zod.uuid().nullable(),
+      unusual: zod
+        .union([
+          zod.null(),
+          zod.object({
+            basis: zod.enum(["payee", "category"]),
+            typicalAmount: zod.stringFormat(
+              "decimal",
+              importPreviewResponseRowsItemUnusualTwoTypicalAmountRegExp,
+            ),
+            factor: zod.number(),
+            sampleSize: zod.int(),
+          }),
+        ])
+        .optional(),
     }),
   ),
+  statement: zod.object({
+    iban: zod.string().nullable(),
+    ibanMatchesAccount: zod.boolean(),
+    otherAccountId: zod.uuid().nullable(),
+    notBooked: zod.int(),
+    unreadable: zod.int(),
+    closingDate: zod.union([zod.null(), zod.iso.date()]),
+    closingBalance: zod
+      .stringFormat("decimal", importPreviewResponseStatementClosingBalanceRegExp)
+      .nullable(),
+    closingCurrency: zod.union([
+      zod.null(),
+      zod.enum([
+        "eur",
+        "usd",
+        "gbp",
+        "chf",
+        "pln",
+        "sek",
+        "nok",
+        "dkk",
+        "czk",
+        "huf",
+        "ron",
+        "isk",
+        "try",
+        "jpy",
+        "cny",
+        "hkd",
+        "sgd",
+        "krw",
+        "inr",
+        "idr",
+        "myr",
+        "php",
+        "thb",
+        "aud",
+        "nzd",
+        "cad",
+        "mxn",
+        "brl",
+        "ils",
+        "zar",
+      ]),
+    ]),
+    ledgerBalanceAtClose: zod
+      .stringFormat("decimal", importPreviewResponseStatementLedgerBalanceAtCloseRegExp)
+      .nullable(),
+  }),
 });

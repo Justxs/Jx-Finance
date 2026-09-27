@@ -18,7 +18,7 @@ export const getImportConfirmMockHandler = (
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
-    "*/api/import/swedbank/confirm",
+    "*/api/import/confirm",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
@@ -42,7 +42,7 @@ export const getImportPreviewMockHandler = (
   options?: RequestHandlerOptions,
 ) => {
   return http.post(
-    "*/api/import/swedbank/preview",
+    "*/api/import/preview",
     async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined

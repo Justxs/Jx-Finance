@@ -104,6 +104,82 @@ export const UpdateMyProfileResponse = zod.object({
 });
 
 /**
+ * Forgets your webhook URL and drops every Discord message still waiting to be sent to it. In-app notifications are not affected.
+ * @summary Remove your Discord webhook
+ */
+export const DeleteMyDiscordResponse = zod.void();
+
+/**
+ * Answers whether a webhook is saved, whether it is switched on, which notification kinds it receives, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Without a saved webhook the answer lists every kind, as a starting point for the form.
+ * @summary Read your Discord notification settings
+ */
+export const MyDiscordResponse = zod.object({
+  hasWebhook: zod.boolean(),
+  isEnabled: zod.boolean(),
+  types: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByDiscord: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Stores your personal Discord webhook, whether it is switched on and which notification kinds it receives. Every in-app notification of a chosen kind is then also posted to that channel, as long as an administrator allows Discord on this installation. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. The first save needs a URL. An empty list of kinds is allowed and sends nothing.
+ * @summary Save your Discord notification settings
+ */
+export const UpdateMyDiscordBody = zod.object({
+  webhookUrl: zod.string().nullable().describe("Leave empty to keep the stored webhook."),
+  isEnabled: zod.boolean(),
+  types: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
+});
+
+export const UpdateMyDiscordResponse = zod.object({
+  hasWebhook: zod.boolean(),
+  isEnabled: zod.boolean(),
+  types: zod.array(
+    zod.enum([
+      "billDue",
+      "budgetWarning",
+      "budgetExceeded",
+      "unusualAmount",
+      "unusualAmounts",
+      "recurringPriceRise",
+      "monthReadyToClose",
+    ]),
+  ),
+  lastDeliveredAt: zod.iso.datetime({ offset: true }).nullable(),
+  lastError: zod.string().nullable(),
+  disabledByDiscord: zod.boolean(),
+  unreadable: zod.boolean(),
+});
+
+/**
+ * Posts one short message to your saved webhook right away and waits for Discord's answer. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it on your profile), discord.rateLimited, discord.rejected or discord.sendFailed. discord.disabled means an administrator has not allowed Discord on this installation, and discord.webhookUnreadable that the stored URL cannot be decrypted any more. Save the webhook before testing it. Rate limited to 10 calls per five minutes per client.
+ * @summary Send a test message to your Discord channel
+ */
+export const TestMyDiscordResponse = zod.void();
+
+/**
  * Locks the account out instead of deleting it, so the transactions and households it touched stay intact. Existing sessions are rejected on their next request. You cannot deactivate yourself, and the last active administrator cannot be deactivated, so an instance is never left without one. Administrators only.
  * @summary Deactivate a user
  */

@@ -48,4 +48,6 @@ export interface CreateDebtRequest {
   monthlyPayment?: string | null;
   /** annuity (level payment, the default) or linear (equal principal, needs termMonths). */
   amortizationType?: null | AmortizationType;
+  /** When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point. */
+  tracksPayments?: boolean;
 }

@@ -63,6 +63,25 @@ export const getUpdateSettingsMockHandler = (
   );
 };
 
+export const getUpdateDiscordSettingsMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.put>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/settings/discord",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
 export const getSyncExchangeRatesMockHandler = (
   overrideResponse?:
     | ExchangeRateSyncResponse
@@ -185,6 +204,7 @@ export const getSendTestEmailMockHandler = (
 export const getSettingsMock = () => [
   getSettingsMockHandler(),
   getUpdateSettingsMockHandler(),
+  getUpdateDiscordSettingsMockHandler(),
   getSyncExchangeRatesMockHandler(),
   getPublicSettingsMockHandler(),
   getSmtpSettingsMockHandler(),

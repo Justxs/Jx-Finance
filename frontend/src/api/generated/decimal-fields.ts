@@ -17,9 +17,13 @@ export const decimalFields: ReadonlySet<string> = new Set([
   "monthlyPayment",
   "outstandingAmount",
   "price",
+  "principal",
   "quantity",
   "receivedAmount",
+  "residualValue",
   "startingBalance",
+  "startValue",
   "targetAmount",
   "toAmount",
+  "value",
 ]);

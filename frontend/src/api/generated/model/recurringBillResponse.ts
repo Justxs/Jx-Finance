@@ -8,6 +8,7 @@
 import type { DateOnly } from "./dateOnly";
 import type { RecurringBillCadence } from "./recurringBillCadence";
 import type { RecurringBillKind } from "./recurringBillKind";
+import type { RecurringBillMatchResponse } from "./recurringBillMatchResponse";
 import type { RecurringBillShape } from "./recurringBillShape";
 
 export interface RecurringBillResponse {
@@ -27,4 +28,9 @@ export interface RecurringBillResponse {
   nextDueDate: DateOnly;
   remindDaysBefore: number;
   isActive: boolean;
+  /** @nullable */
+  matchKey: string | null;
+  latestMatch: null | RecurringBillMatchResponse;
+  /** @nullable */
+  debtId: string | null;
 }

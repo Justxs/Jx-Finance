@@ -13,6 +13,7 @@ export * from "./goals/goals";
 export * from "./households/households";
 export * from "./imports/imports";
 export * from "./investments/investments";
+export * from "./month-close/month-close";
 export * from "./net-worth/net-worth";
 export * from "./notifications/notifications";
 export * from "./recurring-bills/recurring-bills";

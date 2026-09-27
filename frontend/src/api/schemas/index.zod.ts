@@ -13,6 +13,7 @@ export * from "./goals/goals.zod";
 export * from "./households/households.zod";
 export * from "./imports/imports.zod";
 export * from "./investments/investments.zod";
+export * from "./month-close/month-close.zod";
 export * from "./net-worth/net-worth.zod";
 export * from "./notifications/notifications.zod";
 export * from "./problems/problems.zod";

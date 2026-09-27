@@ -9,10 +9,14 @@ import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
 import type {
   AssetResponse,
+  AssetValuationResponse,
+  AssetValueHistoryResponse,
+  DebtPaymentResponse,
   DebtResponse,
   DebtScheduleResponse,
   NetWorthHistoryResponse,
   NetWorthResponse,
+  TransactionResponse,
 } from "../model";
 
 export const getCreateAssetMockHandler = (
@@ -93,6 +97,97 @@ export const getUpdateAssetMockHandler = (
   return http.put(
     "*/api/assets/:id",
     async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAssetValuationsMockHandler = (
+  overrideResponse?:
+    | AssetValuationResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AssetValuationResponse[]> | AssetValuationResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/assets/:id/valuations",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDeleteAssetValuationMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/assets/:id/valuations/:date",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getSetAssetValuationMockHandler = (
+  overrideResponse?:
+    | AssetResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<AssetResponse> | AssetResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/assets/:id/valuations/:date",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getAssetValueHistoryMockHandler = (
+  overrideResponse?:
+    | AssetValueHistoryResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<AssetValueHistoryResponse> | AssetValueHistoryResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/assets/:id/value-history",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
       return HttpResponse.json(
         overrideResponse !== undefined
           ? typeof overrideResponse === "function"
@@ -197,6 +292,121 @@ export const getUpdateDebtMockHandler = (
   );
 };
 
+export const getDebtPaymentCandidatesMockHandler = (
+  overrideResponse?:
+    | TransactionResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<TransactionResponse[]> | TransactionResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/debts/:id/payment-candidates",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getDebtPaymentsMockHandler = (
+  overrideResponse?:
+    | DebtPaymentResponse[]
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DebtPaymentResponse[]> | DebtPaymentResponse[]),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/debts/:id/payments",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getLinkDebtPaymentMockHandler = (
+  overrideResponse?:
+    | DebtResponse
+    | ((
+        info: Parameters<Parameters<typeof http.post>[1]>[0],
+      ) => Promise<DebtResponse> | DebtResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/debts/:id/payments",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUnlinkDebtPaymentMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/debts/:id/payments/:paymentId",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getUpdateDebtPaymentMockHandler = (
+  overrideResponse?:
+    | DebtResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<DebtResponse> | DebtResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/debts/:id/payments/:paymentId",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
 export const getDebtScheduleMockHandler = (
   overrideResponse?:
     | DebtScheduleResponse
@@ -273,10 +483,19 @@ export const getNetWorthMock = () => [
   getAssetsMockHandler(),
   getDeleteAssetMockHandler(),
   getUpdateAssetMockHandler(),
+  getAssetValuationsMockHandler(),
+  getDeleteAssetValuationMockHandler(),
+  getSetAssetValuationMockHandler(),
+  getAssetValueHistoryMockHandler(),
   getCreateDebtMockHandler(),
   getDebtsMockHandler(),
   getDeleteDebtMockHandler(),
   getUpdateDebtMockHandler(),
+  getDebtPaymentCandidatesMockHandler(),
+  getDebtPaymentsMockHandler(),
+  getLinkDebtPaymentMockHandler(),
+  getUnlinkDebtPaymentMockHandler(),
+  getUpdateDebtPaymentMockHandler(),
   getDebtScheduleMockHandler(),
   getNetWorthMockHandler(),
   getNetWorthHistoryMockHandler(),

@@ -25,11 +25,11 @@ import type {
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 export const getImportConfirmUrl = () => {
-  return `/api/import/swedbank/confirm`;
+  return `/api/import/confirm`;
 };
 
 /**
- * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.
+ * Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. The audit entry names the format the rows came from.
  * @summary Commit previewed statement rows
  */
 export const importConfirm = async (
@@ -129,12 +129,12 @@ export const useImportConfirm = <TError = ErrorType<ProblemDetails>, TContext = 
   return useMutation(getImportConfirmMutationOptions(options), queryClient);
 };
 export const getImportPreviewUrl = () => {
-  return `/api/import/swedbank/preview`;
+  return `/api/import/preview`;
 };
 
 /**
- * Parses an exported Swedbank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
- * @summary Preview a Swedbank CSV statement
+ * Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.
+ * @summary Preview a bank statement
  */
 export const importPreview = async (
   importPreviewRequest: ImportPreviewRequest,
@@ -146,6 +146,9 @@ export const importPreview = async (
   }
   if (importPreviewRequest.accountId !== undefined) {
     formData.append(`accountId`, importPreviewRequest.accountId);
+  }
+  if (importPreviewRequest.format !== undefined) {
+    formData.append(`format`, importPreviewRequest.format);
   }
 
   return customFetch<ImportPreviewResponse>(getImportPreviewUrl(), {
@@ -199,7 +202,7 @@ export type ImportPreviewMutationError = ErrorType<ProblemDetails>;
 export type ImportPreviewMutationVariables = { data: ImportPreviewRequest };
 
 /**
- * @summary Preview a Swedbank CSV statement
+ * @summary Preview a bank statement
  */
 export const useImportPreview = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
   options?: {

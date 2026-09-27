@@ -1232,3 +1232,173 @@ export const useUpdateTransaction = <TError = ErrorType<ProblemDetails>, TContex
 > => {
   return useMutation(getUpdateTransactionMutationOptions(options), queryClient);
 };
+export const getDismissUnusualAmountUrl = (id: string) => {
+  return `/api/transactions/${id}/unusual/dismiss`;
+};
+
+/**
+ * Keeps the flag the background check stored but stops showing it: the ledger's unusual filter leaves the row out and the response reports unusualDismissed. The mark survives later edits of the transaction, so correcting a typo does not bring the flag back. Only an annotation; the transaction itself is not changed. Needs the unusualAmounts feature.
+ * @summary Mark an unusual expense as not unusual
+ */
+export const dismissUnusualAmount = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getDismissUnusualAmountUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getDismissUnusualAmountMutationKey = () => ["dismissUnusualAmount"] as const;
+
+export const getDismissUnusualAmountMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof dismissUnusualAmount>>,
+    TError,
+    DismissUnusualAmountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof dismissUnusualAmount>>,
+  TError,
+  DismissUnusualAmountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getDismissUnusualAmountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof dismissUnusualAmount>>,
+    DismissUnusualAmountMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return dismissUnusualAmount(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type DismissUnusualAmountMutationResult = NonNullable<
+  Awaited<ReturnType<typeof dismissUnusualAmount>>
+>;
+
+export type DismissUnusualAmountMutationError = ErrorType<ProblemDetails>;
+export type DismissUnusualAmountMutationVariables = { id: string };
+
+/**
+ * @summary Mark an unusual expense as not unusual
+ */
+export const useDismissUnusualAmount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof dismissUnusualAmount>>,
+      TError,
+      DismissUnusualAmountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof dismissUnusualAmount>>,
+  TError,
+  DismissUnusualAmountMutationVariables,
+  TContext
+> => {
+  return useMutation(getDismissUnusualAmountMutationOptions(options), queryClient);
+};
+export const getRestoreUnusualAmountUrl = (id: string) => {
+  return `/api/transactions/${id}/unusual/dismiss`;
+};
+
+/**
+ * Removes the "not unusual" mark, so a stored flag shows in the ledger and in its unusual filter again. The undo of POST /api/transactions/{id}/unusual/dismiss. Needs the unusualAmounts feature.
+ * @summary Mark an expense as unusual again
+ */
+export const restoreUnusualAmount = async (
+  id: string,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  return customFetch<void>(getRestoreUnusualAmountUrl(id), {
+    ...options,
+    method: "DELETE",
+  });
+};
+
+export const getRestoreUnusualAmountMutationKey = () => ["restoreUnusualAmount"] as const;
+
+export const getRestoreUnusualAmountMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof restoreUnusualAmount>>,
+    TError,
+    RestoreUnusualAmountMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof restoreUnusualAmount>>,
+  TError,
+  RestoreUnusualAmountMutationVariables,
+  TContext
+> => {
+  const mutationKey = getRestoreUnusualAmountMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof restoreUnusualAmount>>,
+    RestoreUnusualAmountMutationVariables
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return restoreUnusualAmount(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RestoreUnusualAmountMutationResult = NonNullable<
+  Awaited<ReturnType<typeof restoreUnusualAmount>>
+>;
+
+export type RestoreUnusualAmountMutationError = ErrorType<ProblemDetails>;
+export type RestoreUnusualAmountMutationVariables = { id: string };
+
+/**
+ * @summary Mark an expense as unusual again
+ */
+export const useRestoreUnusualAmount = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof restoreUnusualAmount>>,
+      TError,
+      RestoreUnusualAmountMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof restoreUnusualAmount>>,
+  TError,
+  RestoreUnusualAmountMutationVariables,
+  TContext
+> => {
+  return useMutation(getRestoreUnusualAmountMutationOptions(options), queryClient);
+};

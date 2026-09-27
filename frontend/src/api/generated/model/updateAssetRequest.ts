@@ -7,6 +7,7 @@
  */
 import type { AssetType } from "./assetType";
 import type { DateOnly } from "./dateOnly";
+import type { DepreciationInput } from "./depreciationInput";
 
 export interface UpdateAssetRequest {
   /**
@@ -17,4 +18,6 @@ export interface UpdateAssetRequest {
   type: AssetType;
   currentValue: string;
   asOf: DateOnly;
+  /** Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value. */
+  depreciation?: null | DepreciationInput;
 }

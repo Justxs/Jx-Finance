@@ -7,7 +7,7 @@
  */
 import { HttpResponse, http } from "msw";
 import type { RequestHandlerOptions } from "msw";
-import type { UserProfileResponse } from "../model";
+import type { DiscordWebhookResponse, UserProfileResponse } from "../model";
 
 export const getCreateUserMockHandler = (
   overrideResponse?:
@@ -76,6 +76,92 @@ export const getUpdateMyProfileMockHandler = (
           : undefined,
         { status: 200 },
       );
+    },
+    options,
+  );
+};
+
+export const getDeleteMyDiscordMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.delete>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.delete(
+    "*/api/users/me/discord",
+    async (info: Parameters<Parameters<typeof http.delete>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
+    },
+    options,
+  );
+};
+
+export const getMyDiscordMockHandler = (
+  overrideResponse?:
+    | DiscordWebhookResponse
+    | ((
+        info: Parameters<Parameters<typeof http.get>[1]>[0],
+      ) => Promise<DiscordWebhookResponse> | DiscordWebhookResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.get(
+    "*/api/users/me/discord",
+    async (info: Parameters<Parameters<typeof http.get>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getUpdateMyDiscordMockHandler = (
+  overrideResponse?:
+    | DiscordWebhookResponse
+    | ((
+        info: Parameters<Parameters<typeof http.put>[1]>[0],
+      ) => Promise<DiscordWebhookResponse> | DiscordWebhookResponse),
+  options?: RequestHandlerOptions,
+) => {
+  return http.put(
+    "*/api/users/me/discord",
+    async (info: Parameters<Parameters<typeof http.put>[1]>[0]) => {
+      return HttpResponse.json(
+        overrideResponse !== undefined
+          ? typeof overrideResponse === "function"
+            ? await overrideResponse(info)
+            : overrideResponse
+          : undefined,
+        { status: 200 },
+      );
+    },
+    options,
+  );
+};
+
+export const getTestMyDiscordMockHandler = (
+  overrideResponse?:
+    | void
+    | ((info: Parameters<Parameters<typeof http.post>[1]>[0]) => Promise<void> | void),
+  options?: RequestHandlerOptions,
+) => {
+  return http.post(
+    "*/api/users/me/discord/test",
+    async (info: Parameters<Parameters<typeof http.post>[1]>[0]) => {
+      if (typeof overrideResponse === "function") {
+        await overrideResponse(info);
+      }
+
+      return new HttpResponse(null, { status: 204 });
     },
     options,
   );
@@ -170,6 +256,10 @@ export const getUsersMock = () => [
   getCreateUserMockHandler(),
   getUsersMockHandler(),
   getUpdateMyProfileMockHandler(),
+  getDeleteMyDiscordMockHandler(),
+  getMyDiscordMockHandler(),
+  getUpdateMyDiscordMockHandler(),
+  getTestMyDiscordMockHandler(),
   getDeactivateUserMockHandler(),
   getReactivateUserMockHandler(),
   getResetUserPasswordMockHandler(),

@@ -24,6 +24,8 @@ export const SettingsResponse = zod.object({
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
     categorizationRules: zod.boolean(),
+    unusualAmounts: zod.boolean(),
+    monthClose: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -125,6 +127,8 @@ export const UpdateSettingsBody = zod.object({
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
     categorizationRules: zod.boolean(),
+    unusualAmounts: zod.boolean(),
+    monthClose: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -218,6 +222,8 @@ export const UpdateSettingsResponse = zod.object({
     multiCurrency: zod.boolean(),
     investments: zod.boolean(),
     categorizationRules: zod.boolean(),
+    unusualAmounts: zod.boolean(),
+    monthClose: zod.boolean(),
   }),
   reportingCurrency: zod.enum([
     "eur",
@@ -295,6 +301,16 @@ export const UpdateSettingsResponse = zod.object({
 });
 
 /**
+ * Switches outbound Discord traffic on or off for everyone. While it is off no Discord message is queued, the outbox sends nothing, and members' test buttons answer discord.disabled. Switching it off leaves every member's webhook in place; messages that were already queued are not sent late but pruned after seven days. Administrators only.
+ * @summary Allow or stop Discord notifications for this installation
+ */
+export const UpdateDiscordSettingsBody = zod.object({
+  enabled: zod.boolean(),
+});
+
+export const UpdateDiscordSettingsResponse = zod.void();
+
+/**
  * Administrators only. Fetches reference rates published since the newest stored date. It works even when automatic sync is turned off.
  * @summary Fetch exchange rates now
  */
@@ -304,13 +320,14 @@ export const SyncExchangeRatesResponse = zod.object({
 });
 
 /**
- * Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers "Forgot password". No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const PublicSettingsResponse = zod.object({
   instanceName: zod.string().nullable(),
   defaultLanguage: zod.string(),
   emailEnabled: zod.boolean(),
+  discordEnabled: zod.boolean(),
 });
 
 /**

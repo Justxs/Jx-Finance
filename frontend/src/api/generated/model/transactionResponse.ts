@@ -8,8 +8,10 @@
 import type { Currency } from "./currency";
 import type { DateOnly } from "./dateOnly";
 import type { FlowType } from "./flowType";
+import type { TransactionDebtPaymentResponse } from "./transactionDebtPaymentResponse";
 import type { TransactionLineResponse } from "./transactionLineResponse";
 import type { TransactionSource } from "./transactionSource";
+import type { UnusualAmountResponse } from "./unusualAmountResponse";
 
 export interface TransactionResponse {
   id: string;
@@ -30,4 +32,7 @@ export interface TransactionResponse {
   reportingAmount: string;
   tagIds: string[];
   attachmentCount: number;
+  unusual: null | UnusualAmountResponse;
+  unusualDismissed: boolean;
+  debtPayment?: null | TransactionDebtPaymentResponse;
 }

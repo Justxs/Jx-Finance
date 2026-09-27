@@ -36,6 +36,7 @@ import type {
   SettingsResponse,
   SmtpSettingsResponse,
   SmtpTestResponse,
+  UpdateDiscordSettingsRequest,
   UpdateSettingsRequest,
   UpdateSmtpSettingsRequest,
 } from "../model";
@@ -357,6 +358,112 @@ export const useUpdateSettings = <TError = ErrorType<ProblemDetails>, TContext =
 > => {
   return useMutation(getUpdateSettingsMutationOptions(options), queryClient);
 };
+export const getUpdateDiscordSettingsUrl = () => {
+  return `/api/settings/discord`;
+};
+
+/**
+ * Switches outbound Discord traffic on or off for everyone. While it is off no Discord message is queued, the outbox sends nothing, and members' test buttons answer discord.disabled. Switching it off leaves every member's webhook in place; messages that were already queued are not sent late but pruned after seven days. Administrators only.
+ * @summary Allow or stop Discord notifications for this installation
+ */
+export const updateDiscordSettings = async (
+  updateDiscordSettingsRequest: UpdateDiscordSettingsRequest,
+  options?: Parameters<typeof customFetch>[1],
+): Promise<void> => {
+  const getHeaders = (
+    h?: NonNullable<RequestInit["headers"]>,
+  ): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(
+          h as Iterable<Iterable<string>>,
+          (entry) => Array.from(entry) as [string, string],
+        ),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+  return customFetch<void>(getUpdateDiscordSettingsUrl(), {
+    ...options,
+    method: "PUT",
+    headers: { "Content-Type": "application/json", ...getHeaders(options?.headers) },
+    body: JSON.stringify(updateDiscordSettingsRequest),
+  });
+};
+
+export const getUpdateDiscordSettingsMutationKey = () => ["updateDiscordSettings"] as const;
+
+export const getUpdateDiscordSettingsMutationOptions = <
+  TError = ErrorType<ProblemDetails>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof updateDiscordSettings>>,
+    TError,
+    UpdateDiscordSettingsMutationVariables,
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof updateDiscordSettings>>,
+  TError,
+  UpdateDiscordSettingsMutationVariables,
+  TContext
+> => {
+  const mutationKey = getUpdateDiscordSettingsMutationKey();
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation && "mutationKey" in options.mutation && options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof updateDiscordSettings>>,
+    UpdateDiscordSettingsMutationVariables
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return updateDiscordSettings(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type UpdateDiscordSettingsMutationResult = NonNullable<
+  Awaited<ReturnType<typeof updateDiscordSettings>>
+>;
+export type UpdateDiscordSettingsMutationBody = UpdateDiscordSettingsRequest;
+export type UpdateDiscordSettingsMutationError = ErrorType<ProblemDetails>;
+export type UpdateDiscordSettingsMutationVariables = { data: UpdateDiscordSettingsRequest };
+
+/**
+ * @summary Allow or stop Discord notifications for this installation
+ */
+export const useUpdateDiscordSettings = <TError = ErrorType<ProblemDetails>, TContext = unknown>(
+  options?: {
+    mutation?: UseMutationOptions<
+      Awaited<ReturnType<typeof updateDiscordSettings>>,
+      TError,
+      UpdateDiscordSettingsMutationVariables,
+      TContext
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+  queryClient?: QueryClient,
+): UseMutationResult<
+  Awaited<ReturnType<typeof updateDiscordSettings>>,
+  TError,
+  UpdateDiscordSettingsMutationVariables,
+  TContext
+> => {
+  return useMutation(getUpdateDiscordSettingsMutationOptions(options), queryClient);
+};
 export const getSyncExchangeRatesUrl = () => {
   return `/api/settings/exchange-rates/sync`;
 };
@@ -430,7 +537,7 @@ export const getPublicSettingsUrl = () => {
 };
 
 /**
- * Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers "Forgot password". No host name, no address and no credential is part of the answer.
+ * Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers "Forgot password", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section. No host name, no address and no credential is part of the answer.
  * @summary Read the settings the sign-in page needs
  */
 export const publicSettings = async (

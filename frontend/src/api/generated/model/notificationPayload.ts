@@ -6,6 +6,7 @@
  * OpenAPI spec version: v1
  */
 import type { BudgetPeriod } from "./budgetPeriod";
+import type { Currency } from "./currency";
 import type { NullableOfDateOnly } from "./nullableOfDateOnly";
 import type { RecurringBillShape } from "./recurringBillShape";
 
@@ -15,4 +16,18 @@ export interface NotificationPayload {
   thresholdPercent?: number | null;
   period?: null | BudgetPeriod;
   shape?: null | RecurringBillShape;
+  /** @nullable */
+  transactionId?: string | null;
+  /** @nullable */
+  billId?: string | null;
+  /** @nullable */
+  amount?: string | null;
+  /** @nullable */
+  typicalAmount?: string | null;
+  /** @nullable */
+  factor?: number | null;
+  /** @nullable */
+  count?: number | null;
+  currency?: null | Currency;
+  month?: null | NullableOfDateOnly;
 }

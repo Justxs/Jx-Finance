@@ -17,4 +17,6 @@ export interface FeatureFlags {
   multiCurrency: boolean;
   investments: boolean;
   categorizationRules: boolean;
+  unusualAmounts: boolean;
+  monthClose: boolean;
 }

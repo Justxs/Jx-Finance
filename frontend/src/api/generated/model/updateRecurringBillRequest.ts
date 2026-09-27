@@ -34,4 +34,12 @@ export interface UpdateRecurringBillRequest {
    */
   remindDaysBefore: number;
   isActive: boolean;
+  /**
+   * @minLength 0
+   * @maxLength 200
+   * @nullable
+   */
+  matchKey?: string | null;
+  /** @nullable */
+  debtId?: string | null;
 }

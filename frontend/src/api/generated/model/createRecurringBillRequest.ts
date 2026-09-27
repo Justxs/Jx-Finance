@@ -46,4 +46,12 @@ export interface CreateRecurringBillRequest {
    * @maximum 365
    */
   remindDaysBefore: number;
+  /**
+   * @minLength 0
+   * @maxLength 200
+   * @nullable
+   */
+  matchKey?: string | null;
+  /** @nullable */
+  debtId?: string | null;
 }

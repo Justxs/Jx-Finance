@@ -18,6 +18,9 @@ export const createRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,
 export const createRecurringBillBodyRemindDaysBeforeMin = 0;
 export const createRecurringBillBodyRemindDaysBeforeMax = 365;
 
+export const createRecurringBillBodyMatchKeyMin = 0;
+export const createRecurringBillBodyMatchKeyMax = 200;
+
 export const CreateRecurringBillBody = zod.object({
   name: zod.string().min(createRecurringBillBodyNameMin).max(createRecurringBillBodyNameMax),
   shape: zod
@@ -53,9 +56,21 @@ export const CreateRecurringBillBody = zod.object({
     .min(createRecurringBillBodyRemindDaysBeforeMin)
     .max(createRecurringBillBodyRemindDaysBeforeMax)
     .describe("How many days ahead of the due date to raise a notification."),
+  matchKey: zod
+    .string()
+    .min(createRecurringBillBodyMatchKeyMin)
+    .max(createRecurringBillBodyMatchKeyMax)
+    .nullish(),
+  debtId: zod.uuid().nullish(),
 });
 
 export const createRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const createRecurringBillResponseLatestMatchTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const createRecurringBillResponseLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const CreateRecurringBillResponse = zod.object({
   id: zod.uuid(),
@@ -76,6 +91,19 @@ export const CreateRecurringBillResponse = zod.object({
   nextDueDate: zod.iso.date(),
   remindDaysBefore: zod.int(),
   isActive: zod.boolean(),
+  matchKey: zod.string().nullable(),
+  latestMatch: zod.union([
+    zod.null(),
+    zod.object({
+      date: zod.iso.date(),
+      amount: zod.stringFormat("decimal", createRecurringBillResponseLatestMatchTwoAmountRegExp),
+      expected: zod
+        .stringFormat("decimal", createRecurringBillResponseLatestMatchTwoExpectedRegExp)
+        .nullable(),
+      isPriceRise: zod.boolean(),
+    }),
+  ]),
+  debtId: zod.uuid().nullable(),
 });
 
 /**
@@ -83,6 +111,12 @@ export const CreateRecurringBillResponse = zod.object({
  * @summary List recurring entries
  */
 export const recurringBillsResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringBillsResponseLatestMatchTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const recurringBillsResponseLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const RecurringBillsResponseItem = zod.object({
   id: zod.uuid(),
@@ -103,6 +137,19 @@ export const RecurringBillsResponseItem = zod.object({
   nextDueDate: zod.iso.date(),
   remindDaysBefore: zod.int(),
   isActive: zod.boolean(),
+  matchKey: zod.string().nullable(),
+  latestMatch: zod.union([
+    zod.null(),
+    zod.object({
+      date: zod.iso.date(),
+      amount: zod.stringFormat("decimal", recurringBillsResponseLatestMatchTwoAmountRegExp),
+      expected: zod
+        .stringFormat("decimal", recurringBillsResponseLatestMatchTwoExpectedRegExp)
+        .nullable(),
+      isPriceRise: zod.boolean(),
+    }),
+  ]),
+  debtId: zod.uuid().nullable(),
 });
 export const RecurringBillsResponse = zod.array(RecurringBillsResponseItem);
 
@@ -156,6 +203,10 @@ export const DeleteRecurringBillResponse = zod.void();
  * @summary Get one recurring entry
  */
 export const recurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringBillResponseLatestMatchTwoAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const recurringBillResponseLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const RecurringBillResponse = zod.object({
   id: zod.uuid(),
@@ -176,6 +227,19 @@ export const RecurringBillResponse = zod.object({
   nextDueDate: zod.iso.date(),
   remindDaysBefore: zod.int(),
   isActive: zod.boolean(),
+  matchKey: zod.string().nullable(),
+  latestMatch: zod.union([
+    zod.null(),
+    zod.object({
+      date: zod.iso.date(),
+      amount: zod.stringFormat("decimal", recurringBillResponseLatestMatchTwoAmountRegExp),
+      expected: zod
+        .stringFormat("decimal", recurringBillResponseLatestMatchTwoExpectedRegExp)
+        .nullable(),
+      isPriceRise: zod.boolean(),
+    }),
+  ]),
+  debtId: zod.uuid().nullable(),
 });
 
 /**
@@ -188,6 +252,9 @@ export const updateRecurringBillBodyNameMax = 100;
 export const updateRecurringBillBodyAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
 export const updateRecurringBillBodyRemindDaysBeforeMin = 0;
 export const updateRecurringBillBodyRemindDaysBeforeMax = 365;
+
+export const updateRecurringBillBodyMatchKeyMin = 0;
+export const updateRecurringBillBodyMatchKeyMax = 200;
 
 export const UpdateRecurringBillBody = zod.object({
   name: zod.string().min(updateRecurringBillBodyNameMin).max(updateRecurringBillBodyNameMax),
@@ -210,9 +277,21 @@ export const UpdateRecurringBillBody = zod.object({
     .min(updateRecurringBillBodyRemindDaysBeforeMin)
     .max(updateRecurringBillBodyRemindDaysBeforeMax),
   isActive: zod.boolean(),
+  matchKey: zod
+    .string()
+    .min(updateRecurringBillBodyMatchKeyMin)
+    .max(updateRecurringBillBodyMatchKeyMax)
+    .nullish(),
+  debtId: zod.uuid().nullish(),
 });
 
 export const updateRecurringBillResponseAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const updateRecurringBillResponseLatestMatchTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const updateRecurringBillResponseLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const UpdateRecurringBillResponse = zod.object({
   id: zod.uuid(),
@@ -233,6 +312,19 @@ export const UpdateRecurringBillResponse = zod.object({
   nextDueDate: zod.iso.date(),
   remindDaysBefore: zod.int(),
   isActive: zod.boolean(),
+  matchKey: zod.string().nullable(),
+  latestMatch: zod.union([
+    zod.null(),
+    zod.object({
+      date: zod.iso.date(),
+      amount: zod.stringFormat("decimal", updateRecurringBillResponseLatestMatchTwoAmountRegExp),
+      expected: zod
+        .stringFormat("decimal", updateRecurringBillResponseLatestMatchTwoExpectedRegExp)
+        .nullable(),
+      isPriceRise: zod.boolean(),
+    }),
+  ]),
+  debtId: zod.uuid().nullable(),
 });
 
 /**
@@ -265,6 +357,12 @@ export const ConfirmRecurringBillBody = zod.object({
 });
 
 export const confirmRecurringBillResponseBillAmountRegExp = new RegExp("^-?\\d+(\\.\\d{1,8})?$");
+export const confirmRecurringBillResponseBillLatestMatchTwoAmountRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
+export const confirmRecurringBillResponseBillLatestMatchTwoExpectedRegExp = new RegExp(
+  "^-?\\d+(\\.\\d{1,8})?$",
+);
 
 export const ConfirmRecurringBillResponse = zod.object({
   bill: zod.object({
@@ -286,6 +384,22 @@ export const ConfirmRecurringBillResponse = zod.object({
     nextDueDate: zod.iso.date(),
     remindDaysBefore: zod.int(),
     isActive: zod.boolean(),
+    matchKey: zod.string().nullable(),
+    latestMatch: zod.union([
+      zod.null(),
+      zod.object({
+        date: zod.iso.date(),
+        amount: zod.stringFormat(
+          "decimal",
+          confirmRecurringBillResponseBillLatestMatchTwoAmountRegExp,
+        ),
+        expected: zod
+          .stringFormat("decimal", confirmRecurringBillResponseBillLatestMatchTwoExpectedRegExp)
+          .nullable(),
+        isPriceRise: zod.boolean(),
+      }),
+    ]),
+    debtId: zod.uuid().nullable(),
   }),
   transactionId: zod.uuid().nullable(),
   transferId: zod.uuid().nullable(),

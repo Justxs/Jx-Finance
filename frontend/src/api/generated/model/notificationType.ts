@@ -12,4 +12,8 @@ export const NotificationType = {
   billDue: "billDue",
   budgetWarning: "budgetWarning",
   budgetExceeded: "budgetExceeded",
+  unusualAmount: "unusualAmount",
+  unusualAmounts: "unusualAmounts",
+  recurringPriceRise: "recurringPriceRise",
+  monthReadyToClose: "monthReadyToClose",
 } as const;

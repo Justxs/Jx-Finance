@@ -588,7 +588,7 @@
           "NetWorth"
         ],
         "summary": "Add an asset",
-        "description": "Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency.",
+        "description": "Starts tracking something of value that is not an account balance. Its value counts towards net worth from the as-of date onwards. The asset is kept in the reporting currency of the day it is created, and later edits keep that currency. The value and date become its first valuation.",
         "operationId": "CreateAsset",
         "requestBody": {
           "content": {
@@ -600,7 +600,8 @@
                 "name": "Flat",
                 "type": "property",
                 "currentValue": "180000.00",
-                "asOf": "2026-09-01"
+                "asOf": "2026-09-01",
+                "depreciation": null
               }
             }
           },
@@ -659,7 +660,7 @@
           "NetWorth"
         ],
         "summary": "List assets",
-        "description": "Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation and the date that valuation is as of.",
+        "description": "Returns the assets you track outside the ledger, such as property or vehicles, each with its latest valuation, the date that valuation is as of, and its value today, which is lower than the latest valuation when the asset depreciates.",
         "operationId": "GetAssets",
         "responses": {
           "200": {
@@ -788,7 +789,7 @@
           "NetWorth"
         ],
         "summary": "Update an asset",
-        "description": "Revalues or renames an asset. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.",
+        "description": "Revalues, renames or sets the depreciation of an asset. A changed value or date records a valuation for that date instead of overwriting the history. Net worth uses the new value from the next read onwards; snapshots already taken keep the value that was current when they were written.",
         "operationId": "UpdateAsset",
         "parameters": [
           {
@@ -813,7 +814,8 @@
                 "name": "Flat",
                 "type": "property",
                 "currentValue": "185000.00",
-                "asOf": "2026-09-01"
+                "asOf": "2026-09-01",
+                "depreciation": null
               }
             }
           },
@@ -826,6 +828,380 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AssetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such asset belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/assets/{id}/valuations": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "List the valuations of an asset",
+        "description": "Returns the dated valuations of an asset, newest first. Each is a value set by hand for one date, in the currency of the asset. Depreciation writes no valuations: it is computed from them on every read.",
+        "operationId": "GetAssetValuations",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The asset id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The valuations, newest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssetValuationResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such asset belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/assets/{id}/valuations/{date}": {
+      "delete": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Delete a valuation of an asset",
+        "description": "Removes the valuation recorded for one date for good; it does not go to the trash. The current value of the asset becomes the newest remaining valuation. The last valuation cannot be deleted.",
+        "operationId": "DeleteAssetValuation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The asset id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the valuation, as yyyy-MM-dd.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted."
+          },
+          "400": {
+            "description": "asset.lastValuation when this is the only valuation of the asset.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such asset belongs to the signed-in user, or no valuation is recorded for that date.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Record a valuation of an asset",
+        "description": "Records what the asset was worth on one date, replacing a valuation already recorded for that date. The current value and as-of date of the asset follow the newest valuation, so a valuation for an earlier date only adds history. On a depreciating asset a valuation on or after the start date restarts the decline from that value at the same monthly amount. Net worth snapshots already taken are not rewritten.",
+        "operationId": "SetAssetValuation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The asset id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "date",
+            "in": "path",
+            "description": "The date of the valuation, as yyyy-MM-dd. Not in the future.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetAssetValuationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The asset with its new current value.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such asset belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Someone else recorded a valuation for the same date at the same moment. Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/assets/{id}/value-history": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Get the value of an asset over time",
+        "description": "Returns the value of an asset for a series of dates, in its own currency. Nothing is stored: each value is the latest valuation on or before the date, less the straight-line depreciation since then when the asset depreciates. The series is daily for ranges up to about three months, weekly up to two years and monthly beyond, always ends on the last date of the range, and also holds every valuation date in the range, marked with isValuation. Dates before the first valuation have no point.",
+        "operationId": "GetAssetValueHistory",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The asset id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "First date of the range. Defaults to the first valuation.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "description": "Last date of the range. Defaults to today and is never later than today.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The points, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetValueHistoryResponse"
                 }
               }
             }
@@ -4450,7 +4826,8 @@
                 "firstPaymentDate": "2020-10-15",
                 "termMonths": 360,
                 "monthlyPayment": null,
-                "amortizationType": "annuity"
+                "amortizationType": "annuity",
+                "tracksPayments": false
               }
             }
           },
@@ -4669,7 +5046,8 @@
                 "firstPaymentDate": "2020-10-15",
                 "termMonths": 360,
                 "monthlyPayment": null,
-                "amortizationType": "annuity"
+                "amortizationType": "annuity",
+                "tracksPayments": false
               }
             }
           },
@@ -4708,6 +5086,457 @@
           },
           "404": {
             "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/debts/{id}/payment-candidates": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Suggest transactions to link to a debt",
+        "description": "Lists up to 50 expense transactions that are not split and not linked to any of the signed-in user's debts, best matches first. A description equal to the name of a recurring entry that pays this debt, or to the description of a payment already linked, counts most; an amount within 5% of the schedule's regular payment counts next. Ties go to the newest.",
+        "operationId": "GetDebtPaymentCandidates",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "Optional first date to look at. Defaults to the day after the as-of date of the debt.",
+            "schema": {
+              "type": [
+                "null",
+                "string"
+              ],
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The candidate transactions, best matches first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/debts/{id}/payments": {
+      "get": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "List the payments of a debt",
+        "description": "Returns the linked payments dated after the as-of date of a debt that tracks its payments, oldest first. Each row splits the payment, in the currency of the debt, into interest and principal and carries the balance after it. A regular payment pays a month of interest at the debt's rate first, an extra payment is all principal, and a principal typed on the link wins over both. Payments whose transaction was deleted or is no longer visible, and payments without an exchange rate, are left out; the debt counts them in unavailablePayments and trackedIncomplete. A debt that does not track payments has none.",
+        "operationId": "GetDebtPayments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The payments, oldest first.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DebtPaymentResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Link a payment to a debt",
+        "description": "Marks an expense transaction as a payment of a debt that tracks its payments, lowering the tracked balance by its principal. The transaction stays an ordinary expense in reports and budgets. A transaction pays at most one debt. The link is private to the owner of the debt, even on a shared account.",
+        "operationId": "LinkDebtPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LinkDebtPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The debt with its new tracked balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed. debt.notTracked when the debt does not track payments; reference.notFound when the transaction is not visible; debt.paymentWrongType when it is not an expense; transaction.splitNotAllowed when it is split.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "debt.paymentTaken when the transaction already pays a debt.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/debts/{id}/payments/{paymentId}": {
+      "delete": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Unlink a payment from a debt",
+        "description": "Removes the link for good; it does not go to the trash. The transaction itself is not touched.",
+        "operationId": "UnlinkDebtPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "path",
+            "description": "The id of the link.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Unlinked."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user, or the payment is not linked to it.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "NetWorth"
+        ],
+        "summary": "Change how a payment counts against a debt",
+        "description": "Sets the kind of a linked payment and the principal typed from the bank statement. Leaving the principal out goes back to the calculated split.",
+        "operationId": "UpdateDebtPayment",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The debt id.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "paymentId",
+            "in": "path",
+            "description": "The id of the link, from the payments list.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDebtPaymentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The debt with its new tracked balance.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DebtResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such debt belongs to the signed-in user, or the payment is not linked to it.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -6088,13 +6917,13 @@
         ]
       }
     },
-    "/api/import/swedbank/confirm": {
+    "/api/import/confirm": {
       "post": {
         "tags": [
           "Imports"
         ],
         "summary": "Commit previewed statement rows",
-        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags.",
+        "description": "Writes the rows the user kept from a preview into the ledger. Rows the preview flagged as already present are skipped rather than duplicated, and the response reports how many were imported and how many were skipped. A row's tagIds are written as they arrive, whether a rule suggested them in the preview or the user picked them, so an empty list imports the row with no tags. The audit entry names the format the rows came from.",
         "operationId": "ImportConfirm",
         "requestBody": {
           "content": {
@@ -6155,13 +6984,13 @@
         ]
       }
     },
-    "/api/import/swedbank/preview": {
+    "/api/import/preview": {
       "post": {
         "tags": [
           "Imports"
         ],
-        "summary": "Preview a Swedbank CSV statement",
-        "description": "Parses an exported Swedbank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
+        "summary": "Preview a bank statement",
+        "description": "Parses an exported bank statement and returns the rows it found, each with a flag saying whether a matching transaction already exists in the account. Two formats are read: swedbankCsv, the Swedbank CSV export, and camt053, an ISO 20022 camt.053 XML statement. From a camt.053 file only booked entries are returned; pending and informational entries and entries that could not be read are counted in statement. When the file holds several statements, the one for the account's IBAN is read. A counterparty IBAN that belongs to another of your accounts fills in suggestedTransferAccountId. Your categorization rules are evaluated against each row's description, amount and flow type, and the first rule that matches fills in suggestedCategoryId, suggestedTagIds and matchedRuleName; a row nothing matched carries none of them. The suggestion is a suggestion: confirm sends back whatever the client decided. Nothing is written: this call only reads the file. Send the file as multipart/form-data.",
         "operationId": "ImportPreview",
         "requestBody": {
           "content": {
@@ -6175,7 +7004,7 @@
         },
         "responses": {
           "200": {
-            "description": "The parsed rows, with suggestions and duplicate flags.",
+            "description": "The parsed rows with suggestions and duplicate flags, and what the statement says about its account and closing balance.",
             "content": {
               "application/json": {
                 "schema": {
@@ -6185,7 +7014,7 @@
             }
           },
           "400": {
-            "description": "No file, a file over 5 MB, an unreadable statement, or an account that is not yours.",
+            "description": "No file, a file over the size limit, an unreadable statement, a file with no statement for this account, or an account that is not yours.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -7820,6 +8649,384 @@
         ]
       }
     },
+    "/api/month-close": {
+      "get": {
+        "tags": [
+          "MonthClose"
+        ],
+        "summary": "List the close status of every month in a year",
+        "description": "Answers twelve entries, January to December, each with its status: notEnded while the month is still running in the installation time zone, open when it has ended and is not closed, closed, or closedChanged when a transaction or investment entry dated in that month was created, edited, deleted or moved out of it after the close, its total income or expense differs from the snapshot, or the reporting currency changed since. Closes are yours alone and belong to the household scope you are viewing, so switching the active household shows that scope's closes. The month review also compares each category.",
+        "operationId": "GetMonthCloseYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "query",
+            "description": "The calendar year, from 2000 to 2999. Defaults to the current year.",
+            "schema": {
+              "type": [
+                "null",
+                "integer"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Twelve month statuses.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthCloseYearResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "monthClose.invalidMonth: the year is outside the supported range.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/month-close/{month}": {
+      "post": {
+        "tags": [
+          "MonthClose"
+        ],
+        "summary": "Close or re-close a month",
+        "description": "Freezes a snapshot of the month's figures as the report summary answers them now, for you and the household scope you are viewing. Nothing is locked: every transaction stays editable, and later changes show as drift in the month review. Closing an already closed month replaces its snapshot, which is how drift is accepted. A note is optional; leaving it out keeps the note already saved, and an empty note clears it. Only a month that has ended in the installation time zone can be closed.",
+        "operationId": "CloseMonth",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "description": "The month as YYYY-MM.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CloseMonthRequest"
+              },
+              "example": {
+                "note": "Reconciled with the bank statement."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The month review after the close.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or monthClose.invalidMonth.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "monthClose.notEnded: the month has not ended yet.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "MonthClose"
+        ],
+        "summary": "Review one month for closing",
+        "description": "Everything the month-end close page shows for one calendar month. checklist counts what still needs attention: uncategorized transactions dated in the month (the same rows as the ledger with uncategorized=true), active recurring entries due on or before the month's last day while the recurringBills feature is on, unusual expenses not marked \"not unusual\" while the unusualAmounts feature is on, and per account the date of the latest imported transaction while the import feature is on; a disabled feature answers null. figures is the report summary of the month compared with the previous month. budgets holds the monthly budgets with their usage as of the month's last day, measured against today's limits, and is null while the budgets feature is off. netWorthStart and netWorthEnd hold the last net worth snapshots before the month and on or before its last day; both are null while the netWorth feature is off. drift is null until the month is closed. Once closed it holds the totals frozen at the close, every category whose amount moved, and up to 100 of the transactions and investment entries created, edited, deleted or moved out of the month since, newest first; rowCount gives the full number. When the totals and categories match today's figures, the listed changes left the month's figures as they were. After a change of reporting currency every figure moves, so drift only says currencyChanged and lists nothing. Tags, attachments and notes are not part of the figures and never count as drift.",
+        "operationId": "GetMonthReview",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "description": "The month as YYYY-MM.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The month review.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "monthClose.invalidMonth: the month is not a YYYY-MM value between 2000 and 2999.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "MonthClose"
+        ],
+        "summary": "Reopen a closed month",
+        "description": "Deletes the close and its snapshot in the household scope you are viewing. The month's transactions are not touched. Reopening a month that is not closed does nothing.",
+        "operationId": "ReopenMonth",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "description": "The month as YYYY-MM.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The month is open."
+          },
+          "400": {
+            "description": "monthClose.invalidMonth: the month is not a YYYY-MM value between 2000 and 2999.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/month-close/{month}/note": {
+      "put": {
+        "tags": [
+          "MonthClose"
+        ],
+        "summary": "Change the note of a closed month",
+        "description": "Replaces the note of the close in the household scope you are viewing, without touching its snapshot. An empty note clears it.",
+        "operationId": "UpdateMonthNote",
+        "parameters": [
+          {
+            "name": "month",
+            "in": "path",
+            "description": "The month as YYYY-MM.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMonthNoteRequest"
+              },
+              "example": {
+                "note": "Two refunds still pending."
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The month review with the new note.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MonthReviewResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or monthClose.invalidMonth.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The month is not closed in this scope.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/networth": {
       "get": {
         "tags": [
@@ -8194,7 +9401,9 @@
                 "toAccountId": null,
                 "cadence": "monthly",
                 "nextDueDate": "2026-10-01",
-                "remindDaysBefore": 3
+                "remindDaysBefore": 3,
+                "matchKey": null,
+                "debtId": null
               }
             }
           },
@@ -8610,7 +9819,9 @@
                 "cadence": "monthly",
                 "nextDueDate": "2026-11-01",
                 "remindDaysBefore": 3,
-                "isActive": true
+                "isActive": true,
+                "matchKey": null,
+                "debtId": null
               }
             }
           },
@@ -8996,6 +10207,81 @@
         ]
       }
     },
+    "/api/settings/discord": {
+      "put": {
+        "tags": [
+          "Settings"
+        ],
+        "summary": "Allow or stop Discord notifications for this installation",
+        "description": "Switches outbound Discord traffic on or off for everyone. While it is off no Discord message is queued, the outbox sends nothing, and members' test buttons answer discord.disabled. Switching it off leaves every member's webhook in place; messages that were already queued are not sent late but pruned after seven days. Administrators only.",
+        "operationId": "UpdateDiscordSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDiscordSettingsRequest"
+              },
+              "example": {
+                "enabled": true
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "The switch was saved; the public settings carry it as discordEnabled."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Only administrators can change installation settings.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [
+              "Admin"
+            ]
+          }
+        ]
+      }
+    },
     "/api/settings/exchange-rates/sync": {
       "post": {
         "tags": [
@@ -9071,7 +10357,7 @@
           "Settings"
         ],
         "summary": "Read the settings the sign-in page needs",
-        "description": "Anonymous. Returns only the installation name, the default language and whether this installation can send email, which is what decides if the sign-in page offers \"Forgot password\". No host name, no address and no credential is part of the answer.",
+        "description": "Anonymous. Returns only the installation name, the default language, whether this installation can send email, which is what decides if the sign-in page offers \"Forgot password\", and whether an administrator allowed Discord notifications, which the profile uses to explain its Discord section. No host name, no address and no credential is part of the answer.",
         "operationId": "GetPublicSettings",
         "responses": {
           "200": {
@@ -9987,6 +11273,28 @@
               ],
               "format": "date"
             }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
           }
         ],
         "responses": {
@@ -10324,6 +11632,28 @@
               ],
               "format": "date"
             }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
           }
         ],
         "responses": {
@@ -10494,6 +11824,28 @@
               ],
               "format": "date"
             }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
           }
         ],
         "responses": {
@@ -10631,6 +11983,28 @@
                 "string"
               ],
               "format": "date"
+            }
+          },
+          {
+            "name": "unusual",
+            "in": "query",
+            "description": "true keeps only expenses flagged as unusual and not marked \"not unusual\". Ignored while the unusualAmounts feature is off.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
+            }
+          },
+          {
+            "name": "uncategorized",
+            "in": "query",
+            "description": "true keeps only transactions without a category, and split transactions with at least one line without one.",
+            "schema": {
+              "type": [
+                "null",
+                "boolean"
+              ]
             }
           }
         ],
@@ -10903,6 +12277,146 @@
           },
           "404": {
             "description": "No such transaction is visible to the signed-in user.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/transactions/{id}/unusual/dismiss": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Mark an unusual expense as not unusual",
+        "description": "Keeps the flag the background check stored but stops showing it: the ledger's unusual filter leaves the row out and the response reports unusualDismissed. The mark survives later edits of the transaction, so correcting a typo does not bring the flag back. Only an annotation; the transaction itself is not changed. Needs the unusualAmounts feature.",
+        "operationId": "DismissUnusualAmount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transaction id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The transaction is marked as not unusual."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transaction is visible to the signed-in user, or the feature is off.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Transactions"
+        ],
+        "summary": "Mark an expense as unusual again",
+        "description": "Removes the \"not unusual\" mark, so a stored flag shows in the ledger and in its unusual filter again. The undo of POST /api/transactions/{id}/unusual/dismiss. Needs the unusualAmounts feature.",
+        "operationId": "RestoreUnusualAmount",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The transaction id.",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The mark is removed."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such transaction is visible to the signed-in user, or the feature is off.",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -12094,6 +13608,270 @@
         ]
       }
     },
+    "/api/users/me/discord": {
+      "delete": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Remove your Discord webhook",
+        "description": "Forgets your webhook URL and drops every Discord message still waiting to be sent to it. In-app notifications are not affected.",
+        "operationId": "DeleteMyDiscord",
+        "responses": {
+          "204": {
+            "description": "The webhook is removed."
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No webhook is saved on your profile.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Read your Discord notification settings",
+        "description": "Answers whether a webhook is saved, whether it is switched on, which notification kinds it receives, when a message last reached it and the last error. The webhook URL is never part of the answer, because anyone holding it can post to the channel. disabledByDiscord is true after Discord answered that the webhook no longer exists; unreadable is true when the stored URL cannot be decrypted, which a restore into an installation with other data protection keys leaves behind. Without a saved webhook the answer lists every kind, as a starting point for the form.",
+        "operationId": "GetMyDiscord",
+        "responses": {
+          "200": {
+            "description": "Your Discord settings, without the webhook URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscordWebhookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Save your Discord notification settings",
+        "description": "Stores your personal Discord webhook, whether it is switched on and which notification kinds it receives. Every in-app notification of a chosen kind is then also posted to that channel, as long as an administrator allows Discord on this installation. Only webhook URLs on discord.com, discordapp.com, ptb.discord.com or canary.discord.com of the form https://discord.com/api/webhooks/{id}/{token} are accepted; anything else answers 400 discord.invalidWebhook. The URL is encrypted before it is stored and never returned. Leaving webhookUrl empty keeps the stored one; a new URL also clears the mark Discord left on a webhook it no longer knows. The first save needs a URL. An empty list of kinds is allowed and sends nothing.",
+        "operationId": "UpdateMyDiscord",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyDiscordRequest"
+              },
+              "example": {
+                "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz",
+                "isEnabled": true,
+                "types": [
+                  "billDue",
+                  "budgetExceeded"
+                ]
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Your saved Discord settings, without the webhook URL.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscordWebhookResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed, or discord.invalidWebhook.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "conflict.busy: the first webhook was saved from another window at the same moment. Try again.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many changes from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
+    "/api/users/me/discord/test": {
+      "post": {
+        "tags": [
+          "Users"
+        ],
+        "summary": "Send a test message to your Discord channel",
+        "description": "Posts one short message to your saved webhook right away and waits for Discord's answer. Nothing is queued, so a failure is not retried. A refusal answers 400 with Discord's own words: discord.webhookGone when Discord no longer knows the webhook (which also marks it on your profile), discord.rateLimited, discord.rejected or discord.sendFailed. discord.disabled means an administrator has not allowed Discord on this installation, and discord.webhookUnreadable that the stored URL cannot be decrypted any more. Save the webhook before testing it. Rate limited to 10 calls per five minutes per client.",
+        "operationId": "TestMyDiscord",
+        "responses": {
+          "204": {
+            "description": "Discord accepted the message."
+          },
+          "400": {
+            "description": "Discord refused the message, or Discord is switched off for this installation.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No webhook is saved on your profile.",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many test messages from this client; wait and retry."
+          },
+          "500": {
+            "description": "Server Error",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Cookie": [ ]
+          }
+        ]
+      }
+    },
     "/api/users/{id}/deactivate": {
       "post": {
         "tags": [
@@ -12685,7 +14463,11 @@
           "type",
           "currentValue",
           "asOf",
-          "currency"
+          "currency",
+          "value",
+          "depreciation",
+          "monthlyDepreciation",
+          "fullyDepreciatedOn"
         ],
         "type": "object",
         "properties": {
@@ -12708,6 +14490,37 @@
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "value": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "depreciation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DepreciationResponse"
+              }
+            ]
+          },
+          "monthlyDepreciation": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "fullyDepreciatedOn": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
           }
         }
       },
@@ -12721,6 +14534,67 @@
         ],
         "type": "string",
         "description": "Property, Vehicle, Investment, Valuable, or Other."
+      },
+      "AssetValuationResponse": {
+        "required": [
+          "date",
+          "value",
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "value": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AssetValueHistoryResponse": {
+        "required": [
+          "currency",
+          "points"
+        ],
+        "type": "object",
+        "properties": {
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssetValuePoint"
+            }
+          }
+        }
+      },
+      "AssetValuePoint": {
+        "required": [
+          "date",
+          "value",
+          "isValuation"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "value": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "isValuation": {
+            "type": "boolean"
+          }
+        }
       },
       "AttachmentResponse": {
         "required": [
@@ -13406,6 +15280,27 @@
           }
         }
       },
+      "CloseMonthRequest": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "At most 1000 characters.",
+            "example": "Reconciled with the bank statement."
+          }
+        },
+        "example": {
+          "note": "Reconciled with the bank statement."
+        }
+      },
       "ConfirmRecurringBillRequest": {
         "required": [
           "amount",
@@ -13676,13 +15571,25 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "depreciation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DepreciationInput"
+              }
+            ],
+            "description": "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value."
           }
         },
         "example": {
           "name": "Flat",
           "type": "property",
           "currentValue": "180000.00",
-          "asOf": "2026-09-01"
+          "asOf": "2026-09-01",
+          "depreciation": null
         }
       },
       "CreateBackupRequest": {
@@ -14052,6 +15959,12 @@
             ],
             "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
             "example": "annuity"
+          },
+          "tracksPayments": {
+            "type": "boolean",
+            "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
+            "default": false,
+            "example": false
           }
         },
         "example": {
@@ -14064,7 +15977,8 @@
           "firstPaymentDate": "2020-10-15",
           "termMonths": 360,
           "monthlyPayment": null,
-          "amortizationType": "annuity"
+          "amortizationType": "annuity",
+          "tracksPayments": false
         }
       },
       "CreateGoalRequest": {
@@ -14328,6 +16242,21 @@
             "description": "How many days ahead of the due date to raise a notification.",
             "format": "int32",
             "example": 3
+          },
+          "matchKey": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debtId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -14340,7 +16269,9 @@
           "toAccountId": null,
           "cadence": "monthly",
           "nextDueDate": "2026-10-01",
-          "remindDaysBefore": 3
+          "remindDaysBefore": 3,
+          "matchKey": null,
+          "debtId": null
         }
       },
       "CreateTagRequest": {
@@ -14748,6 +16679,80 @@
         "type": "string",
         "format": "date"
       },
+      "DebtPaymentKind": {
+        "enum": [
+          "regular",
+          "extra"
+        ],
+        "type": "string",
+        "description": "regular (a month of interest first) or extra (all principal)."
+      },
+      "DebtPaymentResponse": {
+        "required": [
+          "id",
+          "transactionId",
+          "date",
+          "accountId",
+          "description",
+          "amount",
+          "kind",
+          "interest",
+          "principal",
+          "principalTyped",
+          "overpaid",
+          "balance"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/DebtPaymentKind"
+          },
+          "interest": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "principal": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "principalTyped": {
+            "type": "boolean"
+          },
+          "overpaid": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "balance": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "DebtResponse": {
         "required": [
           "id",
@@ -14762,7 +16767,11 @@
           "monthlyPayment",
           "amortizationType",
           "payoffDate",
-          "currency"
+          "currency",
+          "tracksPayments",
+          "trackedBalance",
+          "trackedIncomplete",
+          "unavailablePayments"
         ],
         "type": "object",
         "properties": {
@@ -14836,6 +16845,23 @@
           },
           "currency": {
             "$ref": "#/components/schemas/Currency"
+          },
+          "tracksPayments": {
+            "type": "boolean"
+          },
+          "trackedBalance": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "trackedIncomplete": {
+            "type": "boolean"
+          },
+          "unavailablePayments": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -15003,6 +17029,74 @@
         "type": "string",
         "description": "Mortgage, Loan, or Other."
       },
+      "DepreciationInput": {
+        "required": [
+          "startDate",
+          "startValue",
+          "lifeMonths",
+          "residualValue"
+        ],
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "startValue": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "lifeMonths": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "residualValue": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          }
+        }
+      },
+      "DepreciationResponse": {
+        "required": [
+          "startDate",
+          "startValue",
+          "lifeMonths",
+          "residualValue"
+        ],
+        "type": "object",
+        "properties": {
+          "startDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "startValue": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "lifeMonths": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "residualValue": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
       "DescriptionMatch": {
         "enum": [
           "contains",
@@ -15010,6 +17104,51 @@
           "exact"
         ],
         "type": "string"
+      },
+      "DiscordWebhookResponse": {
+        "required": [
+          "hasWebhook",
+          "isEnabled",
+          "types",
+          "lastDeliveredAt",
+          "lastError",
+          "disabledByDiscord",
+          "unreadable"
+        ],
+        "type": "object",
+        "properties": {
+          "hasWebhook": {
+            "type": "boolean"
+          },
+          "isEnabled": {
+            "type": "boolean"
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationType"
+            }
+          },
+          "lastDeliveredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "lastError": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "disabledByDiscord": {
+            "type": "boolean"
+          },
+          "unreadable": {
+            "type": "boolean"
+          }
+        }
       },
       "DismissSubscriptionCandidateRequest": {
         "required": [
@@ -15064,6 +17203,8 @@
       "ErrorCode": {
         "enum": [
           "access.forbidden",
+          "asset.depreciationIncomplete",
+          "asset.lastValuation",
           "attachment.contentMismatch",
           "attachment.empty",
           "attachment.limitReached",
@@ -15085,9 +17226,19 @@
           "currency.disabled",
           "dashboard.cardDuplicate",
           "dashboard.cardUnknown",
+          "debt.notTracked",
+          "debt.paymentTaken",
           "debt.paymentTooSmall",
+          "debt.paymentWrongType",
           "debt.scheduleIncomplete",
           "decimal.malformed",
+          "discord.disabled",
+          "discord.invalidWebhook",
+          "discord.rateLimited",
+          "discord.rejected",
+          "discord.sendFailed",
+          "discord.webhookGone",
+          "discord.webhookUnreadable",
           "email.alreadyVerified",
           "email.insecureConnection",
           "email.invalid",
@@ -15109,17 +17260,21 @@
           "household.scopeMismatch",
           "iban.invalid",
           "import.invalidFile",
+          "import.noStatementForAccount",
           "import.transferAlreadyMatched",
           "import.transferMismatch",
           "money.invalid",
           "money.nonNegative",
           "money.positive",
+          "monthClose.invalidMonth",
+          "monthClose.notEnded",
           "password.incorrect",
           "password.tooWeak",
           "passwordReset.tokenInvalid",
           "quantity.nonNegative",
           "quantity.positive",
           "range.invalid",
+          "recurringBill.debtShape",
           "recurringBill.inactive",
           "reference.notFound",
           "request.invalid",
@@ -15212,7 +17367,9 @@
           "households",
           "multiCurrency",
           "investments",
-          "categorizationRules"
+          "categorizationRules",
+          "unusualAmounts",
+          "monthClose"
         ],
         "type": "object",
         "properties": {
@@ -15244,6 +17401,12 @@
             "type": "boolean"
           },
           "categorizationRules": {
+            "type": "boolean"
+          },
+          "unusualAmounts": {
+            "type": "boolean"
+          },
+          "monthClose": {
             "type": "boolean"
           }
         }
@@ -15523,7 +17686,8 @@
       "ImportConfirmRequest": {
         "required": [
           "accountId",
-          "rows"
+          "rows",
+          "format"
         ],
         "type": "object",
         "properties": {
@@ -15539,6 +17703,9 @@
               "$ref": "#/components/schemas/ImportConfirmRow"
             },
             "description": "The rows to import, as returned by preview, with any category and tag corrections applied."
+          },
+          "format": {
+            "$ref": "#/components/schemas/StatementFormat"
           }
         }
       },
@@ -15643,12 +17810,16 @@
             "type": "string",
             "description": "The account the statement belongs to.",
             "format": "uuid"
+          },
+          "format": {
+            "$ref": "#/components/schemas/StatementFormat"
           }
         }
       },
       "ImportPreviewResponse": {
         "required": [
-          "rows"
+          "rows",
+          "statement"
         ],
         "type": "object",
         "properties": {
@@ -15657,6 +17828,9 @@
             "items": {
               "$ref": "#/components/schemas/ImportPreviewRow"
             }
+          },
+          "statement": {
+            "$ref": "#/components/schemas/ImportStatementSummary"
           }
         }
       },
@@ -15673,7 +17847,9 @@
           "currency",
           "suggestedCategoryId",
           "suggestedTagIds",
-          "matchedRuleName"
+          "matchedRuleName",
+          "isReversal",
+          "suggestedTransferAccountId"
         ],
         "type": "object",
         "properties": {
@@ -15730,6 +17906,100 @@
               "null",
               "string"
             ]
+          },
+          "isReversal": {
+            "type": "boolean"
+          },
+          "suggestedTransferAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "unusual": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/UnusualAmountResponse"
+              }
+            ]
+          }
+        }
+      },
+      "ImportStatementSummary": {
+        "required": [
+          "iban",
+          "ibanMatchesAccount",
+          "otherAccountId",
+          "notBooked",
+          "unreadable",
+          "closingDate",
+          "closingBalance",
+          "closingCurrency",
+          "ledgerBalanceAtClose"
+        ],
+        "type": "object",
+        "properties": {
+          "iban": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ibanMatchesAccount": {
+            "type": "boolean"
+          },
+          "otherAccountId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "notBooked": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unreadable": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "closingDate": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
+          },
+          "closingBalance": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "closingCurrency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "ledgerBalanceAtClose": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
           }
         }
       },
@@ -15832,6 +18102,39 @@
         ],
         "type": "string"
       },
+      "LinkDebtPaymentRequest": {
+        "required": [
+          "transactionId"
+        ],
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "An expense transaction the signed-in user can see, not split.",
+            "format": "uuid"
+          },
+          "kind": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DebtPaymentKind"
+              }
+            ],
+            "description": "regular or extra. Left out, it is regular unless a regular payment is already linked in the same calendar month."
+          },
+          "principal": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional principal from the bank statement, a positive decimal string in the currency of the debt. It replaces the calculated split.",
+            "format": "decimal"
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -15896,6 +18199,297 @@
           }
         }
       },
+      "MonthChecklist": {
+        "required": [
+          "uncategorized",
+          "unconfirmedRecurring",
+          "unusual",
+          "imports"
+        ],
+        "type": "object",
+        "properties": {
+          "uncategorized": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "unconfirmedRecurring": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "unusual": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "imports": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MonthImportCoverage"
+            }
+          }
+        }
+      },
+      "MonthCloseMonthStatus": {
+        "required": [
+          "month",
+          "status",
+          "closedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MonthCloseStatus"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "MonthCloseStatus": {
+        "enum": [
+          "notEnded",
+          "open",
+          "closed",
+          "closedChanged"
+        ],
+        "type": "string"
+      },
+      "MonthCloseYearResponse": {
+        "required": [
+          "year",
+          "months"
+        ],
+        "type": "object",
+        "properties": {
+          "year": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "months": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthCloseMonthStatus"
+            }
+          }
+        }
+      },
+      "MonthDrift": {
+        "required": [
+          "currencyChanged",
+          "closedCurrency",
+          "totals",
+          "categories",
+          "rows",
+          "rowCount"
+        ],
+        "type": "object",
+        "properties": {
+          "currencyChanged": {
+            "type": "boolean"
+          },
+          "closedCurrency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "totals": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MonthDriftTotals"
+              }
+            ]
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthDriftCategory"
+            }
+          },
+          "rows": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonthDriftRow"
+            }
+          },
+          "rowCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MonthDriftCategory": {
+        "required": [
+          "type",
+          "categoryId",
+          "syntheticGroup",
+          "categoryName",
+          "closedAmount",
+          "currentAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FlowType"
+          },
+          "categoryId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "syntheticGroup": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SyntheticCategoryGroup"
+              }
+            ]
+          },
+          "categoryName": {
+            "type": "string"
+          },
+          "closedAmount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currentAmount": {
+            "type": "string",
+            "format": "decimal"
+          }
+        }
+      },
+      "MonthDriftChange": {
+        "enum": [
+          "created",
+          "edited",
+          "deleted",
+          "movedOut"
+        ],
+        "type": "string"
+      },
+      "MonthDriftRow": {
+        "required": [
+          "id",
+          "kind",
+          "change",
+          "date",
+          "description",
+          "amount",
+          "currency",
+          "changedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/MonthDriftRowKind"
+          },
+          "change": {
+            "$ref": "#/components/schemas/MonthDriftChange"
+          },
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "currency": {
+            "$ref": "#/components/schemas/Currency"
+          },
+          "changedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "MonthDriftRowKind": {
+        "enum": [
+          "transaction",
+          "investmentEntry"
+        ],
+        "type": "string"
+      },
+      "MonthDriftTotals": {
+        "required": [
+          "closedIncome",
+          "closedExpense",
+          "closedNet",
+          "closedCount",
+          "currentCount"
+        ],
+        "type": "object",
+        "properties": {
+          "closedIncome": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "closedExpense": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "closedNet": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "closedCount": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "currentCount": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "MonthImportCoverage": {
+        "required": [
+          "accountId",
+          "accountName",
+          "latestImportedDate"
+        ],
+        "type": "object",
+        "properties": {
+          "accountId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "accountName": {
+            "type": "string"
+          },
+          "latestImportedDate": {
+            "$ref": "#/components/schemas/DateOnly"
+          }
+        }
+      },
       "MonthlyTrendItem": {
         "required": [
           "year",
@@ -15934,6 +18528,91 @@
             "items": {
               "$ref": "#/components/schemas/MonthlyTrendItem"
             }
+          }
+        }
+      },
+      "MonthReviewResponse": {
+        "required": [
+          "month",
+          "monthEnd",
+          "status",
+          "closedAt",
+          "note",
+          "checklist",
+          "figures",
+          "budgets",
+          "netWorthStart",
+          "netWorthEnd",
+          "drift"
+        ],
+        "type": "object",
+        "properties": {
+          "month": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "monthEnd": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "status": {
+            "$ref": "#/components/schemas/MonthCloseStatus"
+          },
+          "closedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "checklist": {
+            "$ref": "#/components/schemas/MonthChecklist"
+          },
+          "figures": {
+            "$ref": "#/components/schemas/ReportSummaryResponse"
+          },
+          "budgets": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/BudgetResponse"
+            }
+          },
+          "netWorthStart": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NetWorthSnapshotItem"
+              }
+            ]
+          },
+          "netWorthEnd": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NetWorthSnapshotItem"
+              }
+            ]
+          },
+          "drift": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MonthDrift"
+              }
+            ]
           }
         }
       },
@@ -16082,6 +18761,66 @@
                 "$ref": "#/components/schemas/RecurringBillShape"
               }
             ]
+          },
+          "transactionId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "billId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "amount": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "typicalAmount": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "factor": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "count": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "currency": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/Currency"
+              }
+            ]
+          },
+          "month": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NullableOfDateOnly"
+              }
+            ]
           }
         }
       },
@@ -16145,7 +18884,11 @@
         "enum": [
           "billDue",
           "budgetWarning",
-          "budgetExceeded"
+          "budgetExceeded",
+          "unusualAmount",
+          "unusualAmounts",
+          "recurringPriceRise",
+          "monthReadyToClose"
         ],
         "type": "string"
       },
@@ -16523,7 +19266,8 @@
         "required": [
           "instanceName",
           "defaultLanguage",
-          "emailEnabled"
+          "emailEnabled",
+          "discordEnabled"
         ],
         "type": "object",
         "properties": {
@@ -16537,6 +19281,9 @@
             "type": "string"
           },
           "emailEnabled": {
+            "type": "boolean"
+          },
+          "discordEnabled": {
             "type": "boolean"
           }
         }
@@ -16574,6 +19321,34 @@
         "type": "string",
         "description": "Fixed when the amount is always the same; Variable when it changes each time."
       },
+      "RecurringBillMatchResponse": {
+        "required": [
+          "date",
+          "amount",
+          "expected",
+          "isPriceRise"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "$ref": "#/components/schemas/DateOnly"
+          },
+          "amount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "expected": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "decimal"
+          },
+          "isPriceRise": {
+            "type": "boolean"
+          }
+        }
+      },
       "RecurringBillResponse": {
         "required": [
           "id",
@@ -16587,7 +19362,10 @@
           "cadence",
           "nextDueDate",
           "remindDaysBefore",
-          "isActive"
+          "isActive",
+          "matchKey",
+          "latestMatch",
+          "debtId"
         ],
         "type": "object",
         "properties": {
@@ -16644,6 +19422,29 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "matchKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "latestMatch": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecurringBillMatchResponse"
+              }
+            ]
+          },
+          "debtId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -16660,7 +19461,8 @@
         "enum": [
           "none",
           "previousPeriod",
-          "previousYear"
+          "previousYear",
+          "previousMonth"
         ],
         "type": "string"
       },
@@ -17290,6 +20092,28 @@
           }
         }
       },
+      "SetAssetValuationRequest": {
+        "required": [
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string",
+            "description": "Decimal string with at most two decimal places, in the currency of the asset.",
+            "format": "decimal"
+          },
+          "note": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional, up to 200 characters, such as \"dealer quote\"."
+          }
+        }
+      },
       "SetSecurityPriceRequest": {
         "required": [
           "lastPrice"
@@ -17522,6 +20346,14 @@
           "desc"
         ],
         "type": "string"
+      },
+      "StatementFormat": {
+        "enum": [
+          "swedbankCsv",
+          "camt053"
+        ],
+        "type": "string",
+        "description": "The statement format: swedbankCsv for a Swedbank CSV export or camt053 for an ISO 20022 camt.053 XML statement."
       },
       "SubscriptionCandidateResponse": {
         "required": [
@@ -17991,6 +20823,27 @@
           }
         }
       },
+      "TransactionDebtPaymentResponse": {
+        "required": [
+          "id",
+          "debtId",
+          "debtName"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "debtId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "debtName": {
+            "type": "string"
+          }
+        }
+      },
       "TransactionLineRequest": {
         "required": [
           "categoryId",
@@ -18066,7 +20919,9 @@
           "currency",
           "reportingAmount",
           "tagIds",
-          "attachmentCount"
+          "attachmentCount",
+          "unusual",
+          "unusualDismissed"
         ],
         "type": "object",
         "properties": {
@@ -18137,6 +20992,29 @@
           "attachmentCount": {
             "type": "integer",
             "format": "int32"
+          },
+          "unusual": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/UnusualAmountResponse"
+              }
+            ]
+          },
+          "unusualDismissed": {
+            "type": "boolean"
+          },
+          "debtPayment": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TransactionDebtPaymentResponse"
+              }
+            ]
           }
         }
       },
@@ -18308,6 +21186,39 @@
           }
         }
       },
+      "UnusualAmountResponse": {
+        "required": [
+          "basis",
+          "typicalAmount",
+          "factor",
+          "sampleSize"
+        ],
+        "type": "object",
+        "properties": {
+          "basis": {
+            "$ref": "#/components/schemas/UnusualBasis"
+          },
+          "typicalAmount": {
+            "type": "string",
+            "format": "decimal"
+          },
+          "factor": {
+            "type": "number",
+            "format": "double"
+          },
+          "sampleSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "UnusualBasis": {
+        "enum": [
+          "payee",
+          "category"
+        ],
+        "type": "string"
+      },
       "UpdateAccountRequest": {
         "required": [
           "name",
@@ -18407,13 +21318,25 @@
           },
           "asOf": {
             "$ref": "#/components/schemas/DateOnly"
+          },
+          "depreciation": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DepreciationInput"
+              }
+            ],
+            "description": "Optional straight-line depreciation: startDate (not in the future), startValue, lifeMonths (1 to 600) and residualValue (0 or more, below the start value). Give all four or leave it out (asset.depreciationIncomplete). The value falls by (startValue - residualValue) / lifeMonths, rounded up to the cent, on the start date's day of each month and never below the residual value."
           }
         },
         "example": {
           "name": "Flat",
           "type": "property",
           "currentValue": "185000.00",
-          "asOf": "2026-09-01"
+          "asOf": "2026-09-01",
+          "depreciation": null
         }
       },
       "UpdateBackupRequest": {
@@ -18668,6 +21591,25 @@
           "feeCategoryId": null
         }
       },
+      "UpdateDebtPaymentRequest": {
+        "required": [
+          "kind"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/DebtPaymentKind"
+          },
+          "principal": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Optional principal, a positive decimal string in the currency of the debt.",
+            "format": "decimal"
+          }
+        }
+      },
       "UpdateDebtRequest": {
         "required": [
           "name",
@@ -18756,6 +21698,12 @@
             ],
             "description": "annuity (level payment, the default) or linear (equal principal, needs termMonths).",
             "example": "annuity"
+          },
+          "tracksPayments": {
+            "type": "boolean",
+            "description": "When true, the balance is outstandingAmount on asOf minus the principal of the payments linked after asOf. Editing outstandingAmount or asOf sets a new starting point.",
+            "default": false,
+            "example": false
           }
         },
         "example": {
@@ -18768,7 +21716,23 @@
           "firstPaymentDate": "2020-10-15",
           "termMonths": 360,
           "monthlyPayment": null,
-          "amortizationType": "annuity"
+          "amortizationType": "annuity",
+          "tracksPayments": false
+        }
+      },
+      "UpdateDiscordSettingsRequest": {
+        "required": [
+          "enabled"
+        ],
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "example": {
+          "enabled": true
         }
       },
       "UpdateGoalRequest": {
@@ -18971,6 +21935,67 @@
           "role": "owner"
         }
       },
+      "UpdateMonthNoteRequest": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "maxLength": 1000,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "At most 1000 characters.",
+            "example": "Two refunds still pending."
+          }
+        },
+        "example": {
+          "note": "Two refunds still pending."
+        }
+      },
+      "UpdateMyDiscordRequest": {
+        "required": [
+          "webhookUrl",
+          "isEnabled",
+          "types"
+        ],
+        "type": "object",
+        "properties": {
+          "webhookUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Leave empty to keep the stored webhook.",
+            "example": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz"
+          },
+          "isEnabled": {
+            "type": "boolean",
+            "example": true
+          },
+          "types": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationType"
+            },
+            "example": [
+              "billDue",
+              "budgetExceeded"
+            ]
+          }
+        },
+        "example": {
+          "webhookUrl": "https://discord.com/api/webhooks/123456789012345678/abcdefghijklmnopqrstuvwxyz",
+          "isEnabled": true,
+          "types": [
+            "billDue",
+            "budgetExceeded"
+          ]
+        }
+      },
       "UpdateMyProfileRequest": {
         "required": [
           "displayName",
@@ -19088,6 +22113,21 @@
           "isActive": {
             "type": "boolean",
             "example": true
+          },
+          "matchKey": {
+            "maxLength": 200,
+            "minLength": 0,
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "debtId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         },
         "example": {
@@ -19101,7 +22141,9 @@
           "cadence": "monthly",
           "nextDueDate": "2026-11-01",
           "remindDaysBefore": 3,
-          "isActive": true
+          "isActive": true,
+          "matchKey": null,
+          "debtId": null
         }
       },
       "UpdateSettingsRequest": {
@@ -19691,6 +22733,9 @@
     {
       "name": "Investments",
       "description": "Securities, trades, dividends and holdings on investment accounts, with Interactive Brokers import."
+    },
+    {
+      "name": "MonthClose"
     },
     {
       "name": "NetWorth",

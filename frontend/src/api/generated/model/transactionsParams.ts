@@ -54,4 +54,14 @@ export type TransactionsParams = {
    * @nullable
    */
   dateTo?: string | null;
+  /**
+   * true keeps only expenses flagged as unusual and not marked "not unusual". Ignored while the unusualAmounts feature is off.
+   * @nullable
+   */
+  unusual?: boolean | null;
+  /**
+   * true keeps only transactions without a category, and split transactions with at least one line without one.
+   * @nullable
+   */
+  uncategorized?: boolean | null;
 };
