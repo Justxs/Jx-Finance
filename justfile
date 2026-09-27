@@ -74,8 +74,8 @@ check: format-check-backend test gen-check check-frontend test-stories
     nub run --cwd frontend build
     nub run --cwd frontend build-storybook
 
-# The quick loop without Docker: backend format and build, frontend types, lint, format and unit tests.
-check-fast: format-check-backend check-frontend
+# The quick loop without Docker: docs links, backend format and build, frontend types, lint, format and unit tests.
+check-fast: check-docs format-check-backend check-frontend
     dotnet build backend/JxFinance.slnx -c Release
 
 # Frontend types, lint, format and tests.
@@ -84,6 +84,10 @@ check-frontend:
     nub run --cwd frontend lint
     nub run --cwd frontend format:check
     nub run --cwd frontend test
+
+# Fail on a broken link or heading anchor in the Markdown docs, a docs file name with spaces or capitals, or a line too long for an agent to read whole.
+check-docs:
+    node scripts/check-docs.mjs
 
 # Fail when backend code is not formatted or breaks a code style rule.
 format-check-backend:

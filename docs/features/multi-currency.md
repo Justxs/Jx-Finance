@@ -1,0 +1,83 @@
+# Multi-currency
+
+Back to the [feature walkthrough](README.md). See also [decisions](../decisions/multi-currency.md), [architecture: Multi-currency](../architecture/multi-currency.md).
+
+Backend `Conversions`, `Currencies`, `Infrastructure/ExchangeRates`. Feature `MultiCurrency` gates `/api/conversions`; with it off only the reporting currency can be entered.
+
+## Two kinds of value
+
+```mermaid
+flowchart LR
+    subgraph Historic["Frozen at the transaction date"]
+        RA["Transaction.ReportingAmount"] --> IE["Income, expense, budgets, trends, breakdowns, reports"]
+    end
+    subgraph Today["Valued at the newest rate"]
+        Bal["Balances per currency"] --> Tot["Account totals, dashboard balance, net worth, market value"]
+    end
+    Rates[("ExchangeRate<br/>units per euro, crossed through EUR")] --> RA
+    Rates --> Tot
+```
+
+## Rate lookup
+
+```mermaid
+flowchart TD
+    Ask["GetForDateAsync(date)"] --> Future{"Date in the future?"}
+    Future -->|"yes"| TodayRates["use today's rates"]
+    Future -->|"no"| Stored{"Rate stored on or before the date,<br/>within 5 days?"}
+    Stored -->|"yes"| Use["use newest rate on or before the date"]
+    Stored -->|"no"| Log{"Range failed in the last 15 minutes?<br/>ExchangeRateFetchLog"}
+    Log -->|"yes"| Stale
+    Log -->|"no"| Fetch["fetch the 10 days ending at the date from Frankfurter<br/>INSERT ON CONFLICT DO NOTHING"]
+    Fetch --> Again{"Rate within 5 days now?"}
+    Again -->|"yes"| Use
+    Again -->|"no"| Stale["write in a foreign currency fails validation,<br/>read totals leave the currency out,<br/>net worth snapshot skipped that day"]
+```
+
+## Filling a range once
+
+`EnsureRangeAsync(from, to)` is what a broker import and a reporting-currency change call before they value many dates at once. It used to re-download the whole range on every call. It now reads the dates already stored between `from - 10` and `to` in one query and downloads only the holes that would leave a date stale, that is a hole wider than the five days `GetForDateAsync` tolerates. Weekends and bank holidays are therefore never fetched again, while a range that was never fetched, or one whose history stops early, is still downloaded in 90-day chunks. Rates already stored are never overwritten either way, because the insert is `ON CONFLICT DO NOTHING`.
+
+`PreloadAsync(from, to)` is the read-side counterpart. Valuing many rows used to cost one query per distinct date, because `GetForDateAsync` caches per date but loads each one on its own. A caller that knows its date range up front loads the whole history once with `GetHistoryAsync` and every later lookup inside that range is answered from it by binary search. The Swedbank CSV confirm does this for the dates it has to convert. Any fetch that adds rows drops the preloaded history, so a lookup after a fetch reads the database again.
+
+## Conversion with a fee
+
+```mermaid
+sequenceDiagram
+    actor User
+    participant Form as ConversionForm
+    participant Api as Conversions service
+    participant Db as PostgreSQL
+    User->>Form: sold amount, bought amount, date, optional fee and category
+    Form-->>User: resulting rate beside the ECB reference rate
+    Form->>Api: POST or PUT /api/conversions
+    alt imported from a broker (ImportRef set)
+        Api-->>Form: resource.readOnly
+    else fee expense was split by hand and the edit would change it
+        Api-->>Form: transaction.splitNotAllowed
+    else ok
+        Api->>Db: conversion row
+        alt feeAmount present
+            Api->>Db: create or update the fee Transaction,<br/>ReportingAmount at the new date
+        else feeAmount null
+            Api->>Db: soft-delete the fee Transaction, clear FeeTransactionId
+        end
+        Note over Api,Db: one SaveChanges, conversion and fee change together
+    end
+```
+
+## Changing the reporting currency
+
+```mermaid
+flowchart TD
+    Save["PUT /api/settings with a new reporting currency"] --> Tx["Begin transaction"]
+    Tx --> LockT["LOCK TABLE Transactions, InvestmentTransactions<br/>SHARE ROW EXCLUSIVE"]
+    LockT --> Range["Fetch only the uncovered holes of the needed range"]
+    Range --> Batch["Foreign-currency rows, deleted ones included,<br/>batches of 500 by ascending id,<br/>each batch asking for the ids above the last one"]
+    Batch --> Missing{"Any rate missing?"}
+    Missing -->|"yes"| Rollback["Roll back everything, settings unchanged"]
+    Missing -->|"no"| Same["One UPDATE per table for rows already in the new currency"]
+    Same --> Commit["Commit, settings snapshot replaced"]
+    Commit --> Manual["Budgets, goals, bills keep their numbers:<br/>review by hand"]
+    Commit --> Kept["Assets, debts, snapshots keep their own currency,<br/>converted whenever net worth is read"]
+```

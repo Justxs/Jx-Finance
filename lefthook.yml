@@ -16,6 +16,9 @@ pre-commit:
       exclude: "backend/JxFinance.Api/Infrastructure/Data/Migrations/*"
       run: dotnet format whitespace backend --folder --include {staged_files}
       stage_fixed: true
+    - name: docs links
+      glob: "*.md"
+      run: node scripts/check-docs.mjs --staged
 
 commit-msg:
   jobs:

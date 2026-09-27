@@ -1,0 +1,108 @@
+# Features and scope
+
+## Authentication
+
+First-run administrator setup; admin-created users; 1-day absolute session or 30-day remembered session (short-lived JWT access cookie plus rotating refresh cookie); optional authenticator 2FA and recovery codes; a list of signed-in browsers on the profile with sign out for one browser or for every other browser, effective on that browser's next request
+
+## User management
+
+Create users, change roles, deactivate (after a confirmation that explains the consequences) and reactivate; the last active administrator cannot be deactivated or demoted; an administrator sets a temporary password for a user who forgot theirs, confirmed with the administrator's own password, optionally clearing that user's 2FA, and a user can also reset their own password through an emailed link; update own name, password and bill reminder email preference; new users receive starter categories and, when the mail server is set up, a confirmation link for their address
+
+## Accounts
+
+Create/edit/archive accounts and restore an archived one from a collapsed list on the same page; exact computed balances; personal or shared scope
+
+## Transactions
+
+Create/edit/delete; optional category splits; text/account/category/tag/type/date filters; paginated list; set one category, or a whole set of tags, on many selected rows at once; the current filter can be named and reopened later, and a row can be duplicated or its shape saved as a named template that starts a new entry, all three kept in the browser rather than on the server
+
+## Receipts and attachments
+
+Up to ten JPEG, PNG, WebP, HEIC or PDF files of at most 10 MB per transaction, dropped or chosen in the edit dialog, with thumbnails, download and removal with undo; a paperclip with the count in the ledger. Files follow the transaction's sharing, stay with it in the trash, appear in the household log and travel in backups. See [Attachments](features/attachments.md)
+
+## Trash and undo
+
+Deleting a transaction, transfer, currency conversion, budget, goal, asset, debt or recurring entry shows a toast with Undo, and the same delete stays in a Trash section of the profile for 30 days with a Restore button; a restored transaction brings its split lines and its tags with it and counts again in balances, budgets and reports, and a restored conversion brings back its fee transaction. Restoring is refused, with a reason, when the account was archived, the category is gone, a conversion's fee was deleted on its own or another budget took the category and period. Deleting a category, a tag, a rule or a household is still final, because those deletes rewrite rows they cannot put back, and archiving an account is still its own operation, undone from the accounts page. After the 30 days a nightly job removes the record for good, so a delete really is a delete in the end
+
+## Tags
+
+Free labels beside the category, owned like a category with personal or shared scope and a name unique per owner, ignoring case; many tags per transaction and none on split lines; the ledger filter keeps a row only when it carries every chosen tag; a report breakdown of expenses by tag with untagged spending as its own group; a tag column in both exports; deleting a tag takes it off its transactions and changes nothing else about them
+
+## Categorization rules
+
+Personal, ordered rules that read a description (contains, starts with or equals, ignoring case) and set a category, a set of tags or both, optionally narrowed to one account and an amount range; the first matching rule decides a row; a rule fills in a suggestion in the import preview that the user can still change, and a separate on-demand run fills only transactions that carry no category, with a per-rule preview and an explicit apply, plus a clearly labelled option that also replaces categories already set
+
+## Transfers
+
+Dedicated ledger movement, excluded from income/expense; paginated history; accessible-account checks; separate sent and received amounts when the two currencies differ; date, amounts, description and both accounts can be edited, except the values a bank or broker import fixed
+
+## Installation settings
+
+Administrators switch features on and off, choose the reporting currency and the currencies offered, control exchange-rate sync, set the installation name, default language, time zone, first day of the week, default account and rows per page, and configure the mail server in its own section
+
+## Multi-currency
+
+Each account has a main currency and can hold balances in any of 30 supported currencies; transactions carry their own currency; in-account currency conversions with an optional fee booked as an expense, editable afterwards with the fee transaction kept in step, unless a broker import wrote them; ECB reference rates synced daily; totals, budgets and reports expressed in one reporting currency using the rate on each transaction's date
+
+## Investments
+
+Securities (stocks, ETFs, funds, bonds, crypto, other; bonds by hand only) shared across the installation: anyone can add one, only an administrator changes its details, and its price can be set by whoever currently holds it or by an administrator; buys, sells, dividends, withholding tax, interest, fees and splits on any account; first-in-first-out cost basis, unrealised and realised gain with trade commissions inside them, income and standalone fees by year; entries recorded by hand can be corrected in place under the same rules as recording them, while broker-imported entries are corrected at the broker and imported again; a price per day kept as history, written by the broker import or by hand for today or a past date and deletable under the same rule, with the newest point shown as the last price, and a chart of the portfolio's value against its cost basis over any range;
+Interactive Brokers Flex Query import by file upload or daily through the Flex Web Service, deduplicated by broker id, with forward and reverse splits booked from the Corporate Actions section, other corporate actions counted per type, and a warning for every holding whose quantity differs from the broker's open positions; holdings count toward the account's value, the dashboard total and net worth; while the feature is on, dividends and interest count as income and withholding tax and standalone fees as expense in reports and on the dashboard, never in budgets, while buys, sells and realised gain stay in the portfolio view; a yearly tax summary of one calendar year on chosen visible accounts, listing every disposal with its proceeds, first-in-first-out cost basis, gain or loss and the acquisition date, quantity and cost of each lot it consumed, and every dividend, interest, withholding tax and standalone fee, each shown in the reporting currency at the frozen rate beside the currency it was recorded in, with a CSV of the same rows and a printable view, stated plainly as a summary of recorded data and not tax advice: no tax, rate or allowance is applied and no tax form is named
+
+## CSV import
+
+Swedbank format validation in any supported currency, preview, row selection, category and tag selection per row with a categorization rule filling both in before the user confirms, explicit transfer creation/matching, duplicate detection including deleted imports
+
+## Budgets
+
+Create/edit/delete weekly, monthly, quarterly or yearly category limits, one per category and period, each counted inside the window that holds today in the installation time zone and, for weekly, from the configured first day of the week; an optional rollover carries the previous window's remainder into the current limit and an overspend lowers it, walking back at most twelve windows or to the budget's creation; the response separates base limit, carried amount and effective limit; spending includes split category allocations; an hourly job raises one in-app notification when spending reaches 80% and another when it reaches 100% of the effective limit, once per budget, window and threshold
+
+## Goals
+
+Create/edit/delete names, targets and dates; progress is either typed by hand (zero or more, above the target is allowed) or read from one visible account, taking a whole percentage of its reporting balance at read time, never below zero and never stored; switching between the two keeps the typed amount; an archived or no longer shared funding account leaves the goal listed with its progress marked unavailable
+
+## Net worth
+
+All visible account balances plus personal assets minus personal debts; daily values refreshed hourly and on viewing; a total too large for the history is still shown but not stored; a debt with its repayment terms gets a monthly schedule with the interest and principal of each payment, a payoff date and an overpayment preview
+
+## Recurring entries
+
+A schedule records an expense, an income or a transfer between two of your own accounts, each fixed or variable; every property can be edited afterwards, including the shape, the cadence, the next due date and whether it is active, and a shape change must bring the fields the new shape needs; manual confirmation writes one expense, one income or one transfer for the expected due date, a cross-currency transfer asks for the amount that arrived, and a stale confirmation is explained and retried on refreshed data; inactive entries cannot be confirmed. The page also suggests entries it found: expenses of the last two years that repeat weekly, monthly, quarterly or yearly for about the same amount, grouped by a description stripped of bank noise and by account, offered with their cadence, typical amount, occurrence dates and next expected date, and either turned into an entry through the ordinary create form or dismissed for good
+
+## Notifications
+
+A shared in-app channel any feature can write to, listed and cleared whatever is switched on: bill reminders checked every 15 minutes and deduplicated per bill/local day, and budget alerts checked hourly; each row carries a typed payload the client turns into localized text and a link to the page that explains it; confirmation marks reminders read; rows stay listed when the feature that produced them is switched off afterwards; a bill reminder can also leave as an email when the recipient asked for it and the mail server is set up
+
+## Households
+
+Household/member management; Accounts, Categories and Tags shareable; transactions follow their account; a global switcher narrows the whole application to one household or shows everything, with personal records visible in every scope
+
+## Reports
+
+Custom date ranges, income/expense/net, expense and income breakdown by category, expense breakdown by tag with untagged spending as its own group, and trends; year presets use the same report; investment dividends and interest count as income and withholding tax and standalone fees as expense, shown as the groups "Investment income" and "Investment taxes and fees" that have no category link; an optional comparison against the previous period of the same length or against the same range a year earlier, where a range ending on a month end again ends on a month end so February meets the whole of February, giving every total, category, group, tag and trend bucket its earlier counterpart with zero on the side a period never touched, shown as an amount and a percentage with an arrow rather than colour alone, and with "up from nothing" instead of an infinite percentage when the earlier figure was zero
+
+## Exports
+
+Filtered transaction CSV and PDF, both carrying account, category and tag names; a yearly investment tax summary CSV, printed from the page rather than laid out as a PDF
+
+## Backup and restore
+
+Administrators take a backup of the whole installation on demand from Settings, add a note, download it, upload one taken elsewhere, restore it or delete it; a restore replaces everything and signs everyone out; nothing is scheduled and nothing is copied offsite
+
+## Email
+
+Administrators set one SMTP server for the installation: host, port, encryption mode, optional user name and password, sender address and name, and a switch that stops every message without losing the settings; the password is encrypted with ASP.NET Data Protection and never leaves the server; a test message goes to the administrator's own address and reports the mail server's own words; a user who forgot their password asks for a single-use link from the sign-in screen and the screen answers the same whether the address exists or not; a new user's address is confirmed by a link and can be asked for again; a per-user preference, off by default, adds an email to a recurring entry's reminder; every message is plain text in the installation language, queued in an outbox table and sent by a background job, so no request and no other job waits for the mail server
+
+## UI
+
+English/Lithuanian, light/dark themes, per-browser color palettes, typeface and text size, locale formatting, comma-decimal entry, keyboard shortcuts and mobile navigation; a command palette on `Ctrl+K` (`⌘K` on macOS) that searches every page and section, every account, category and tag the caller can see, and the actions they may run — a new transaction, transfer or account, a backup for an administrator, signing out, the theme, the language and the active household — matching without regard to case or accents, ordering the last eight choices first, and offering nothing the caller's role or the installation's feature switches would refuse
+
+Email delivery is implemented since 2026-09-20 and is described in [Email](features/email.md). It replaces the unused `NotificationChannel.Email` placeholder with a real outbox, a mail transport and a sender configured in the installation settings. An installation that leaves the mail server switched off keeps working exactly as before: the administrator reset, the recovery codes and the `--recover-admin` command remain the way back in, and nothing in the product depends on a confirmed address.
+
+Tags on transactions are implemented since 2026-09-20 and are described in [Tags](features/tags.md). They are the second way to classify a transaction, beside the category: the category says what kind of spending it was, the tag says what it was for, and a transaction carries as many tags as it needs. They are owned and shared exactly like a category, they have no feature switch because they are an attribute of a transaction rather than a screen of their own, and they sit on the transaction rather than on its split lines.
+
+Categorization rules are implemented since 2026-09-20 and are described in [Categorization rules](features/categorization-rules.md). They turn "this description means that category" into something the installation remembers: the import preview fills a row in before it is confirmed, and a run fills in the transactions already in the ledger that nobody has categorised. They are personal, ordered, and behind their own feature switch, because unlike a tag a rule is a screen of its own and turning it off leaves every row it already filled exactly as it is.
+
+Undo for delete and the trash are implemented since 2026-09-21 and are described in [Trash and undo](features/trash-and-undo.md). Soft deletion had been keeping the rows since the first release without ever giving them back; this turns that into a toast with Undo and a 30-day list in the profile, for the eight record kinds whose delete touches nothing else. The kinds whose delete rewrites other rows — categories, tags, categorization rules and households — stay final, and are listed with the reason rather than silently left out.
+
+Outside this release: machine-learned categorization, live investment prices, per-user settings and reporting currency, manual exchange rates, credit-card statements, PWA/offline, bank APIs, scheduled or offsite backups and expanded sharing for budgets/goals/assets/debts/bills. A global active-household switcher is implemented since 2026-09-20: it narrows the view to one household and never widens it, but it does not make the deferred record types shareable.

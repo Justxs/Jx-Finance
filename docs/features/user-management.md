@@ -1,0 +1,59 @@
+# User management
+
+Back to the [feature walkthrough](README.md). See also [decisions](../decisions/user-management.md).
+
+Backend `Users`, Admin role only, page `/users`. There is no public registration.
+
+A created user starts with an unconfirmed address and, when the installation has a mail server, one queued confirmation link. Nothing waits for it: the account is usable at once, and an unconfirmed address blocks only unsolicited mail to that address. The administrator's password reset below stays the primary way back in; a user with a working mailbox can now also reset their own password from the sign-in screen. See [Email](email.md).
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active: POST /api/users, starter categories seeded
+    Active --> Deactivated: deactivate, LockoutEnd = MaxValue,<br/>stamp changes, signed out everywhere
+    Deactivated --> Active: reactivate, counter cleared, stamp changes,<br/>old password works, old sessions stay closed
+    Active --> TemporarilyLocked: 5 wrong secrets in a row
+    TemporarilyLocked --> Active: 15 minutes pass,<br/>or password reset by an administrator
+    Active --> Active: role change Admin or Member
+```
+
+## Listing users
+
+`GET /api/users` used to load every user and then ask Identity for each one's roles, so a hundred users cost a hundred and one queries, and the role and status filters were applied to the materialized list afterwards. The role now comes back with the user, as an `IsAdmin` flag computed from `AspNetUserRoles` and `AspNetRoles` in the same statement, and both filters are `WHERE` clauses: a deactivated user is one whose `LockoutEnd` reaches the deactivation sentinel, and a role that is neither `Admin` nor `Member` matches nobody and answers an empty list without asking the database at all. Sorting by name, email, role or status still happens in memory over the answered page, because role and status are computed values and the sort has to be stable on the email order the query returns.
+
+## Last administrator guard
+
+```mermaid
+flowchart TD
+    Call["PUT role or POST deactivate"] --> Self{"Target is the caller?"}
+    Self -->|"yes"| SelfErr["403 user.selfChange"]
+    Self -->|"no"| Tx["Begin transaction"]
+    Tx --> Lock["Advisory lock AppLock.AdministratorChange"]
+    Lock --> Count{"Target is the only active administrator?"}
+    Count -->|"yes"| Last["403 user.lastAdministrator"]
+    Count -->|"no"| Apply["Apply change, security stamp moves, commit"]
+```
+
+## Password reset by an administrator
+
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant Api as POST /api/users/{id}/reset-password
+    participant Auth as ConfirmPasswordAsync
+    participant Identity
+    Admin->>Api: newPassword, currentPassword, resetTwoFactor
+    Api->>Auth: verify the administrator's own password first
+    alt wrong
+        Auth-->>Admin: 400 password.incorrect, counts toward lockout
+    else target is the caller
+        Api-->>Admin: 403 user.selfChange
+    else ok
+        Api->>Identity: reset token, password validators (password.tooWeak)
+        Identity->>Identity: stamp changes, every session of the target ends
+        Identity->>Identity: clear counter and temporary lockout, deactivation stays
+        opt resetTwoFactor
+            Identity->>Identity: disable authenticator, new key, recovery codes invalidated
+        end
+        Api-->>Admin: 204, users list refreshed
+    end
+```

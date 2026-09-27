@@ -1,0 +1,72 @@
+# Adding a feature end to end
+
+This is the path a change takes from a new API operation to a tested screen. Every step names the command that does the mechanical part and the check that tells you the step is finished. The example archives a savings goal.
+
+## 0. Once per checkout
+
+```powershell
+just setup
+just dev
+```
+
+`just setup` creates `.env` with a generated database password, installs frontend packages, .NET tools and the git hooks, writes `.local/api-debug.env` for the VS Code debugger and runs `just doctor`. `just dev` starts PostgreSQL, the API (its output stays in the same terminal) and Vite once the API answers `/health`. After creating the first administrator, `just seed <email>` fills that user with six months of demo data; `just db-reset` starts over with an empty database.
+
+## 1. Backend slice
+
+```powershell
+just new-endpoint Goals ArchiveGoal post "goals/{id}/archive"
+```
+
+The recipe creates `Endpoints/Goals/ArchiveGoal` with the request, response, validator, endpoint and summary. For the `delete` verb it creates only the endpoint and the summary: the endpoint derives from `Common/DeleteEndpoint.cs`, which reads the id from the route, calls the `DeleteAsync` override and answers 204 or the problem, so the concrete class holds the route, the group and the one service call. Then:
+
+1. Put the behaviour in the tag's service (`Endpoints/Goals/Services`), never in the endpoint; `LayeringTests` fails when an endpoint touches `AppDbContext`.
+2. Give every validation rule a published code. The shared rule extensions in `Common/Validation` set one for you; a new kind of failure needs a constant in `Common/Errors/ErrorCodes.cs`. `ValidatorErrorCodeTests` fails on a rule without a code. When a create and an update request share fields, the rules are written once: both request records implement `I<Entity>Input` from the feature's `Shared/` folder, the rules live in the abstract `<Entity>InputValidator<TRequest>` next to it, and the two concrete validators are empty subclasses that add only what differs. The mapper follows the same interface: a static class in the feature's `Mappers/` folder with `request.ToEntity()`, one `input.ApplyTo(entity)` on `I<Entity>Input` that `ToEntity` reuses, and `entity.ToResponse()`. The service calls them; it takes the request, validates it before `ApplyTo` touches the tracked entity, and returns `Result<TResponse>`, so the endpoint only sends what it gets back: `await Send.OkOrProblemAsync(await goalService.ArchiveAsync(req, ct), ct);`. A create declares `Description(d => d.ProducesCreated<GoalResponse>())` and answers `await Send.CreatedOrProblemAsync(await goalService.CreateAsync(req, ct), goal => $"{ApiRoutes.GoalsPath}/{goal.Id}", ct);`; an operation without a body answers `Send.NoContentOrProblemAsync`. The helpers live in `Common/ResultResponses.cs`; an endpoint never throws for an expected failure (see [Errors](api.md#errors)). Never derive from FastEndpoints' `Mapper`, `RequestMapper` or `ResponseMapper`; `LayeringTests` fails on it.
+3. Reuse the shared service helpers in `Common/` instead of repeating their bodies: `FindOrNotFoundAsync`, `UpdateOrNotFoundAsync` and `DeleteOrNotFoundAsync` for the lookup that answers 404 (and `EntityLookup.NotFound(message)` for any other 404; `NotFoundTests` fails on a hand-built `ErrorCodes.ResourceNotFound`), `IReferenceGuard` for "does this account exist" and "is this category of the right type", `Common/Sharing` for a record a household can share (`IShareableInput`, `RequiresHouseholdWhenShared`, `ApplySharing`, `ISharingGuard` and one entry in `ShareableSet.All`), and `IPagedRequest` with `ToPageAsync` for a paged list.
+4. Write the summary: what the operation does, when to call it, every response status. It becomes the API documentation and the JSDoc of the generated hook.
+5. A model change needs a migration: `just migrate-add AddGoalArchive`. `DatabaseToolingTests` fails when the model and the migrations disagree.
+6. Add an integration test next to the others in `JxFinance.Tests/Integration/Goals`. Derive from `IntegrationTestBase`, open the data through the builders in `Support/Seed.cs` rather than a hand-written POST body, take a household owner and partner with their clients from `CreateHouseholdPairAsync`, reach the database through `WithDbAsync` instead of a hand-made scope, and pass `TestContext.Current.CancellationToken` to every call that accepts one; the `xUnit1051` analyzer fails the build otherwise. A response shape that more than one test class needs belongs in `Support/Dtos.cs`.
+
+Finished when `just test` passes, except for `OpenApi_document_matches_the_approved_contract`, which is expected to fail until the next step.
+
+## 2. Contract and generated client
+
+```powershell
+just gen
+```
+
+This exports the OpenAPI document from the backend build into `frontend/openapi.json`, the single committed copy of the contract, and regenerates the React Query hooks, MSW handlers and zod schemas. Review the diff of `frontend/openapi.json` first: it is the API change as a client sees it. Commit the contract and the generated folders together with the backend change; CI regenerates both and fails on any difference.
+
+A new mutation must be listed in `src/api/invalidation.ts`, either with the query roots it makes stale or in `mutationsWithoutInvalidation`; `invalidation.test.ts` fails otherwise. A new error code needs an English and a Lithuanian text under `serverErrors` in `src/locales/*/common.json`; `server-error-codes.test.ts` fails otherwise.
+
+## 3. Fixtures and handlers
+
+Add a typed fixture to `src/storybook/fixtures/goals.ts` and a default handler to `src/storybook/handlers/goals.ts` built from the generated `get…MockHandler`. List the fixture in `fixtures.contract.test.ts` so it is parsed by the generated zod response schema; a fixture whose name ends in `Problem` is checked against the problem schema without a listing, and the test fails when a fixture export is neither checked nor listed as exempt.
+
+## 4. Component, story, test
+
+```powershell
+just new-component goals goal-archive-dialog
+```
+
+The recipe creates the component, a story and a DOM test; there is no `index.ts` barrel, so import the component file itself (`@/features/<feature>/<name>/<name>`). Conventions that the linter and the tests enforce:
+
+- Forms use `useServerForm` (or `useAppForm` when the submit needs `formApi`) with `form.FormShell`, `form.FormActions` and the field components in `src/components/form`, schemas come from the builders in `src/lib/validation.ts`, submission goes through `submitToServer` so API field errors land on their inputs, and the mutation is `silent(...)` with its error in a `FormError`.
+- Lists and tables reuse the shared pieces instead of copying them: `useConfirmedDelete` with `ConfirmDeleteDialog` for deletes, `usePagedList` and `usePageClamp` for paged sections, `useSearchTable` for URL-driven sorting and filters, `EditModal` or `Modal onClose` for dialogs, `EmptyText`, `TableEmptyRow` and `ScrollRegion` for empty and wide tables, `namedOptions` and `nameById` from `src/lib/options.ts` for selects, and the date and number hooks in `src/hooks/use-formatters.ts` instead of a local `Intl` formatter.
+- Text comes from `t("…")`. Keys are typed from `src/locales/en/common.json`, so a misspelt key is a compile error, and `locales.test.ts` fails when English and Lithuanian keys or placeholders differ.
+- Stories cover the states a reviewer needs to see: default, empty, loading (`pending`), server error (`failWith`), and an interaction written as a `play` function. Every story runs as a Vitest test in jsdom (`just test-stories`) together with an axe scan, so a `play` function is an assertion, not a demo. jsdom has no CSS and no layout: assert on roles, names, text and state, and give a story whose assertion truly needs geometry `tags: ["browser-only"]`, which keeps it out of the run and in Storybook. Colour contrast is not measured by the run; look at a new surface in Storybook's Accessibility panel in both themes.
+- A page route gets a `loader` that warms its queries through `warm` in `src/lib/route-prefetch.ts`.
+
+## 5. Checks
+
+| Command | What it runs | When |
+| --- | --- | --- |
+| `just check-fast` | backend format and build, frontend types, lint, format, unit and DOM tests | while working; no Docker needed |
+| `just test-stories` | every story's `play` function and an axe scan, in jsdom, about three minutes | after touching components, stories, fixtures or handlers |
+| `just e2e` | the smoke tests and the user-flow specs against a throwaway Docker stack on port 8089 | after touching auth, routing, startup, Docker files or a flow that a spec in `frontend/e2e` covers |
+| `just check` | everything CI runs except the end-to-end tests, story tests included | before pushing |
+
+The git hooks cover the rest: a commit formats staged files (frontend and C#), lints the frontend ones and checks the commit subject is a conventional commit; a push type-checks, runs the tests related to the pushed files and builds the backend.
+
+## 6. Commit
+
+One commit carries the backend change, `frontend/openapi.json`, the generated client and the frontend change, with a conventional subject such as `feat(goals): archive a finished goal`. Behaviour that a future reader could not infer from the code goes in the matching page under [architecture](architecture/README.md); a choice between real alternatives goes in the Log of the topic's page under [decisions](decisions/README.md). Update the feature page under [features](features/README.md) and, for a new feature, add its row to the walkthrough table. `just check-docs` fails on a broken link.

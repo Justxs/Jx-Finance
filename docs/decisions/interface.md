@@ -1,0 +1,45 @@
+# Interface and command palette: decisions
+
+Related: feature page [Interface](../features/interface.md); architecture [Visual system and motion](../architecture/visual-system.md), [Accessibility and keyboard shortcuts](../architecture/accessibility.md).
+
+## Current
+
+### Design
+
+Neutral surfaces, compact controls, readable typography, semantic colors, mobile navigation; no external fonts
+
+### Command palette
+
+One dialog on `Mod+K` over every page: the pages and sections from a table beside the entries, the accounts, categories and tags from the lists the client already holds, and the actions that exist today, each row gated by the caller's role and the installation's feature switches. Matching is case- and accent-insensitive and fuzzy, ordered by how close the match is and then by what was used recently; the last eight choices live in `jx-preferences`. It loads its four lists when it first opens, never on page load, and adds no endpoint
+
+## Log
+
+Newest first. Each entry is a choice between real alternatives: what was chosen, what was rejected, and why.
+
+- **2026-09-26.** Stale content dims to 55% after a 150 ms delay, with `aria-busy` and a progress cursor; this replaces the ink rule of 2026-09-20
+  - Rejected: Keeping the ink rule; a small "Updating…" label beside the section's first line; no visible cue
+  - Why: The owner found a line appearing above the table on every sort and filter distracting. The dimmed rows are superseded content that is about to be replaced, and the owner accepted that their muted text drops below 4.5:1 for that moment. The delay keeps fast answers from flickering
+- **2026-09-26.** Column filter popovers hold a draft and apply it with an Apply button (or Enter); Clear sits beside it as an outline button
+  - Rejected: Applying on every change, with the text filter debounced for 300 ms
+  - Why: Every committed change is a navigation and a request, so typing or picking a date range fired several of them and redrew the table under the open popover. The phone filters dialog keeps applying as it goes
+- **2026-09-21.** The command palette opens on `Mod+K` — `Ctrl+K` on Windows and Linux, `⌘K` on macOS — and it is the only shortcut in the scheme that carries a modifier and the only one that still fires while a field has focus
+  - Rejected: A bare letter such as `k` or `p`, to match the rest of the scheme; reusing `/`; a `g`-style sequence
+  - Why: Every bare key in this scheme is deliberately ignored inside an input, a textarea or a combobox, and a palette whose whole point is to be reachable from anywhere — including the middle of a transaction form — cannot be. `/` is taken and means something narrower and more useful: focus the search box of the page you are on. A sequence would make the one entry point to the whole application the slowest shortcut in the product. `Mod+K` is also what a person already reaching for a palette presses. The cost is the browser's own `Ctrl+K`, which is prevented while the application has focus, and one extra rule in the guard: a shortcut with a modifier skips the "you are typing" test but still yields to an ordinary open dialog, so the palette never lands on top of a half-filled form
+- **2026-09-21.** The palette's pages come from a table written next to the entries, not from the generated route tree
+  - Rejected: Walking `routeTree` and deriving a title per route; a `staticData` title on every route
+  - Why: A route is a path; an entry is a name someone types, a title in two languages, a feature switch and a role. Half of what the palette offers is not a route at all — the trash, the signed-in browsers, the import and appearance sections, the tax summary view and the feature, email and backup sections of settings are search parameters on four routes — so a walk of the route tree would have needed a second table beside it for exactly those. Putting the gate in the same row as the destination is also what makes "never show an entry that leads to a 404 or a 403" checkable: one pure function takes `features` and `role` and answers the list, and one unit test reads it
+- **2026-09-21.** Accounts, categories and tags are filtered in the browser from the lists the client already loads; transactions are not searchable from the palette and no endpoint was added
+  - Rejected: A `GET /api/search` across the ledger; a per-kind search endpoint; prefetching the three lists when the application starts
+  - Why: The three lists are small, unpaged and already fetched by the ledger, the categories screen and the tags screen, so the palette usually costs nothing at all: it asks for them when it first opens and holds them for five minutes. A search endpoint would be a new contract, a new permission surface and a round trip per keystroke for data already in memory. Transactions are the one thing that genuinely needs the server, and the ledger already answers that far better than fifty rows in a dialog could — so the palette sends you to the ledger filtered by an account, a category or a tag instead of pretending to be it. Prefetching on load was rejected outright: it would put three requests on every page load for a dialog most visits never open
+- **2026-09-21.** Recently used entries are kept in the existing `jx-preferences` row as `commandRecents`, capped at eight, and the ranking uses them only to break ties
+  - Rejected: A collection of its own like the saved filters; a usage count per entry; recents above everything even when something matches better
+  - Why: Recents are one short list per browser, exactly like the theme or the sidebar state, so they belong in the row that already holds those rather than in a third local-storage collection with its own schema and id per row. A count would keep rewarding something used often months ago; eight entries, newest first, is what a person actually reaches for. Letting recency outrank the score would mean typing the exact name of a page and watching something else sit above it, which is the one thing a palette may never do
+- **2026-09-20.** Shared surfaces are React components and `cva` variants built from Tailwind utilities (`Card`, `Panel`, `Section`, `SectionTitle`, `Rows`, `FormGrid`, `SplitColumns`, `StaleRegion`); `global.css` has no `@layer components`
+  - Rejected: Semantic classes written with `@apply` (`.section`, `.rows`, `.form-grid`, `.is-stale`, ...)
+  - Why: The project rule is utilities only. The classes hid their styles from the class sorter and `tailwind-merge`, could not be typed or found by reference, and flattened nested surfaces through selectors nobody saw at the call site. Parity was checked with before and after screenshots of every story
+- **2026-09-20.** Stale content keeps full contrast and shows an ink rule on its top edge with `aria-busy`
+  - Rejected: Dimming to 70% opacity; a tinted background
+  - Why: Dimmed muted text cannot reach 4.5:1, which forced seven `color-contrast` exemptions; a tint would have to be checked against every palette in both themes, a rule depends on none of them
+- **2026-09-19.** Per-browser preferences (theme, palette, typeface, text size, sidebar, language) are one row in a TanStack DB local-storage collection with a zod schema and the explicit key `jx-preferences`; old single-value keys are migrated once
+  - Rejected: Raw `localStorage` calls wrapped in a hand-written try/catch helper
+  - Why: One schema-checked place for what the browser remembers, cross-tab updates from the library instead of our own `storage` listener, and the same TanStack family as the rest of the client. The cost is a stored JSON format that `theme-init.js` must understand and an in-memory `storage` passed explicitly, because the library's default reads `window.localStorage` unguarded

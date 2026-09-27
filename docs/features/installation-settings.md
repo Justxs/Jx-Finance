@@ -1,0 +1,42 @@
+# Installation settings and feature switches
+
+Back to the [feature walkthrough](README.md). See also [decisions](../decisions/installation-settings.md), [architecture: Installation settings](../architecture/installation-settings.md).
+
+Backend `Settings`, page `/settings` with sections `general`, `features`, `currencies`, `regional`, `defaults`, `email`, `import`, `backups`, `appearance`. Administrators only; `GET /api/settings/public` is anonymous and carries only the name, the default language and whether this installation can send email.
+
+```mermaid
+flowchart TD
+    Save["PUT /api/settings"] --> Svc["SettingsService"]
+    Svc --> Row[("InstanceSettings row, Id 1")]
+    Svc --> Store["IInstanceSettingsStore: immutable snapshot replaced,<br/>no restart needed, assumes one API process"]
+    Store --> Gate["FeatureGateMiddleware: RequiresFeature on the endpoint group"]
+    Store --> Jobs["PeriodicJob.RequiredFeature"]
+    Store --> Clock["SystemClock: time zone"]
+    Store --> Rates["ExchangeRateService: reporting currency, enabled currencies"]
+    Client["useSettings, non-suspense, falls back to everything on"] --> Nav["Sidebar hides disabled features"]
+    Client --> Before["requireFeature in beforeLoad: redirect to the dashboard"]
+    Client --> Cur["CurrencySelect: usable currencies plus the record's own;<br/>renders nothing when only one is usable"]
+```
+
+Each switch is declared by the endpoint groups under these prefixes (`ApiGroup(tag, Feature.X)`); `FeatureGateTests` keeps the groups and the prefixes in step.
+
+| Feature switch | Route prefixes gated | Also stops |
+| --- | --- | --- |
+| `Budgets` | `/api/budgets` | budget alert job, and the link on a budget alert in the bell |
+| `Goals` | `/api/goals` | |
+| `RecurringBills` | `/api/recurring-bills` | reminder job, and the link on a bill reminder in the bell |
+| `NetWorth` | `/api/networth`, `/api/assets`, `/api/debts` | snapshot job |
+| `Reports` | `/api/reports` | |
+| `Import` | `/api/import` | |
+| `Households` | `/api/households` (list answers empty) | |
+| `MultiCurrency` | `/api/conversions` | foreign currency entry |
+| `Investments` | `/api/investments` | broker sync job |
+| `CategorizationRules` | `/api/categorization-rules` | the rule suggestions in the import preview |
+
+The mail server is the one installation setting that is not part of this form and not a feature switch. It has its own admin-only pair, `GET` and `PUT /api/settings/smtp`, and its own `enabled` flag, because `GET /api/settings` is readable by every signed-in user and an SMTP user name is a credential; because one save of the main form would have to either resend the password or lose it; and because `forgot-password`, `reset-password` and `verify-email` must keep answering even when sending is switched off, so gating them in `FeatureGateMiddleware` would break links that were already mailed. See [Email](email.md).
+
+Turning a feature off deletes nothing; turning it on brings the data back. `/api/notifications` is deliberately not in the table: the notification channel belongs to no single feature, so it answers whatever is switched on, and notifications already raised stay listed and countable after their producer is switched off.
+
+`/api/tags` is not in the table either, and neither is `/api/transactions/bulk-tags`. A tag is an attribute of a transaction, exactly like its category, not a screen with its own data: `GET /api/transactions` would still answer `tagIds` and take the `tagIds` filter, both exports would still have to decide about their tag column and the report about `expenseByTag`, so a switch would buy a hidden management page at the price of a second shape for every one of those. A household that turned it off would also keep rows carrying tags it could no longer read or clear. Categories, the closest thing in the product, have no switch for the same reasons. See [Tags](tags.md).
+
+`CategorizationRules` is in the table for the mirror image of that reasoning. A rule is a screen and a route of its own, and what it produces is ordinary values on ordinary transactions: with the switch off the page leaves the navigation, the routes answer `feature.disabled`, the import preview stops suggesting and carries on importing, and every category and tag a rule ever set stays exactly where it is. Nothing anywhere else needs a second shape. See [Categorization rules](categorization-rules.md).

@@ -124,4 +124,4 @@ public sealed class ${name}Summary : Summary<${name}Endpoint, ${name}Request>
 
 scaffold(join(tagFolder, name), verb === "Delete" ? deleteFiles : requestFiles);
 console.log("Next: implement the handler through the tag's service, write the summary, add an integration test,");
-console.log("then run 'just gen' and follow docs/13. Adding a feature.md for the frontend half.");
+console.log("then run 'just gen' and follow docs/adding-a-feature.md for the frontend half.");

@@ -1,0 +1,71 @@
+# Release checklist
+
+The earlier M0–M7 history mixed implementation, deferred ideas and old test results. This checklist tracks the actual completion pass. Updated 2026-09-19.
+
+- [x] Import validation, duplicate/concurrency handling, deleted-reference retention and explicit transfer matching.
+- [x] Expected-date bill confirmation, inactive-bill rejection and reference validation.
+- [x] Sharing boundary restrictions, account-following transaction visibility and transfer mutation checks.
+- [x] Session revocation, password checks for 2FA changes and host-side administrator recovery.
+- [x] Per-user starter categories, budget editing, complete goal editing, transfer pagination and decimal-comma entry.
+- [x] Failed form saves retain values; JSON ProblemDetails parsing and validation messages.
+- [x] Scheduled net-worth values, unique daily observations and deduplicated reminder checks.
+- [x] Neutral design, mobile navigation, no remote fonts and phone layout fixes.
+- [x] Remove the `pg_dump` based backup scripts, scheduler, configuration and container logic (2026-09-05).
+- [x] Transaction table refresh and local-calendar report date fixes.
+- [x] Rewrite documentation around current behavior and release boundaries.
+- [x] Backend Release tests, frontend checks and generated-client stability; evidence recorded in Verification.
+- [x] Compose configuration validation.
+- [x] Desktop/mobile browser acceptance pass; covered flows and limits recorded in Verification.
+
+Added after the 2026-09-06 verification pass:
+
+- [x] Multi-currency accounts, transactions, transfers and in-account conversions with ECB rates and one reporting currency.
+- [x] Investments ledger, first-in-first-out cost basis and Interactive Brokers Flex Query import and daily sync.
+- [x] Installation settings and feature switches.
+- [x] Administrator backup and restore written by the application as JSON (2026-09-19); see the [backup decisions](decisions/backup-and-restore.md) for why this is not the design removed on 2026-09-05.
+- [x] Stories run as browser tests, end-to-end smoke tests against a throwaway Compose project, one committed API contract.
+- [x] Operations review fixes (2026-09-19): development backups kept out of the Docker build context, production overlay publishes only 443, response headers on `/api/*`, frontend health check and bounded logs, base images pinned by digest with `just update-images`, CI actions pinned by SHA, vulnerability audit and a `production-overlay` CI job, `AllowedHosts` restricted under the overlay, secrets at rest documented. Results in Verification.
+- [x] Production overlay started locally on 2026-09-19 with `scripts/verify-production.mjs`: HTTPS with Caddy's internal certificate, Secure cookies and a session surviving recreation of the API container all passed. It ran against commit 686de01 plus the operations files, not the uncommitted backend changes of that day, see Verification.
+
+Added on 2026-09-20 and 2026-09-21, each with its own integration tests, stories and page under `docs/features/`:
+
+- [x] Signed-in browsers listed on the profile, with sign out for one browser or for every other one.
+- [x] Investment dividends and interest as report and dashboard income, withholding tax and standalone fees as expense.
+- [x] A price per security and date, and the portfolio's value over time computed from it.
+- [x] Goals funded from an account instead of by hand.
+- [x] Weekly, monthly, quarterly and yearly budgets, with an optional rollover of the previous window.
+- [x] Notifications as a shared channel rather than a bill-only one, and budget alerts at 80% and 100%.
+- [x] Recurring entries covering income and transfers, not only expenses.
+- [x] A global active-household switcher that narrows the view and never widens it.
+- [x] Email delivery: SMTP settings, a password reset by link, address confirmation and optional reminder emails, queued in an outbox.
+- [x] Tags on transactions, with a filter, a report breakdown and export columns.
+- [x] Categorization rules, applied in the import preview and on demand over the ledger.
+- [x] Saved ledger filters, transaction templates and duplicate.
+- [x] Undo for delete and a 30-day trash.
+- [x] Subscription detection offering a recurring entry for payments that repeat.
+- [x] A yearly investment tax summary with a CSV and a printable view.
+- [x] Report comparisons against the previous period or the same period a year earlier.
+- [x] A command palette on `Ctrl+K`.
+- [x] Restoring an archived account from the accounts page.
+- [x] Investment entries in the trash, restored only when the replayed holding is never oversold.
+- [x] Categories, tags, categorization rules and households in the trash, restored together with the rows their delete rewrote.
+- [x] An audit log of shared changes: who created, changed, deleted, restored or shared what in a household, with filters, pruned after 400 days.
+- [x] Receipts and other files attached to a transaction: kept on their own volume under generated ids, checked by their first bytes, in the trash and the household log, and carried in a backup that is now a zip archive.
+- [x] Debt amortization: optional repayment terms on a debt, a computed monthly schedule with the interest and principal of every payment, the payoff date, the scheduled balance beside the recorded one, and an overpayment preview.
+- [x] Dashboard customisation: each user chooses which cards the dashboard shows and in what order, stored on the account so it follows them to every device, with move up and move down buttons, a reset to the default, and no requests for hidden cards.
+
+None of that has been through a deployment, a real SMTP server or a day of ordinary use; only the automated checks have run.
+
+Still open:
+
+- [ ] Record a verification pass for everything added on 2026-09-20 and 2026-09-21. The backend suite, the frontend unit and DOM tests, the story tests with their accessibility scans and the Mermaid parse of every diagram all pass, but nothing in that list has been used by a person.
+- [ ] Run the end-to-end suite and the production overlay against the fifteen migrations added on those two days. They have only been applied by the test containers.
+- [ ] Production overlay on the real host: certificate trust on client devices, the real `SITE_ADDRESS` and `BIND_ADDRESS`. The script accepts Caddy's certificate without trusting it, so it proves nothing about trust.
+- [ ] Rerun `just verify-production` once the backend changes in progress on 2026-09-19 have their migration; on that working tree the API container did not start (pending model changes).
+- [ ] The CI jobs added on 2026-09-19 have not run on the Gitea runner yet.
+- [ ] Administrator recovery command invoked inside the container.
+- [ ] Record a fresh verification pass in Verification; the evidence there predates everything in the "added after" list.
+
+The Docker engine that blocked container checks on 2026-09-06 is available again, and `just e2e` and the CI `e2e` job build the images and start the HTTP stack. The production overlay is covered by `just verify-production` and the CI `production-overlay` job, within the limits listed above.
+
+A task is not verified merely because its implementation is checked above. Offline, tags, ML, live investment prices, scheduled or offsite backups and expanded sharing remain outside this release. Email delivery is implemented since 2026-09-20, but it is verified only against a fake transport: no run against a real SMTP server has happened yet, and the operator still has to supply the server, the sender address and `App:SiteUrl`. Real deployment configuration and a sustained daily-use trial cannot be inferred from automated checks.

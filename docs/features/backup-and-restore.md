@@ -1,0 +1,65 @@
+# Backup and restore
+
+Back to the [feature walkthrough](README.md). See also [decisions](../decisions/backup-and-restore.md), [architecture: Backup and restore](../architecture/backup-and-restore.md).
+
+Backend `Backups` (`BackupService`, `BackupArchive`, `BackupStore`, `BackupReader`, `BackupInspector`, `BackupRestorer`, `BackupDatabase`), Backups section of `/settings`. Administrators only; nothing is scheduled or copied offsite.
+
+Since [attachments](attachments.md) a backup is a zip archive: `backup.json`, the same JSON document as before, deflated, and one uncompressed entry `attachments/<id>` per attached file. A restore writes the files back after checking each one's SHA-256 against its restored row. Backups taken before are gzip-compressed JSON and are still listed, downloaded and uploaded as they are. The archive is about as large as the attachment directory plus the compressed data, so an upload may now be 2 GB, and the decompressed-size guard applies to `backup.json` alone.
+
+## Taking and uploading
+
+```mermaid
+flowchart TD
+    Take["POST /api/backups"] --> Snap["One REPEATABLE READ transaction"]
+    Snap --> Tables["Every table of the EF model, each value as column::text<br/>UserSessions left out"]
+    Tables --> Tmp["write id.tmp as a zip: backup.json with format, version, createdAt, migration, tables"]
+    Tmp --> Files["then attachments/id for every attachment row whose file exists, stored uncompressed"]
+    Files --> Rename["rename to id.zip, then write id.info.json"]
+    Upload["POST /api/backups/upload, at most 2 GB:<br/>zip, gzip JSON or plain JSON"] --> Inspect["BackupReader + BackupInspector: streaming, counts only,<br/>LimitedReadStream caps backup.json at 1 GiB,<br/>every other entry must be attachments/id within 10 MB"]
+    Inspect --> Rename
+    Rename --> List["GET /api/backups: reads the directory, RemoveOrphans sweeps files older than 1 h"]
+    List --> Flag{"migration equals the running application?"}
+    Flag -->|"yes"| Restorable["restorable true"]
+    Flag -->|"no"| NotRestorable["listed and downloadable, restore answers backup.schemaMismatch"]
+```
+
+## Restore
+
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant Dlg as RestoreBackupDialog
+    participant Api as POST /api/backups/{id}/restore
+    participant Rd as BackupReader + BackupRestorer
+    participant Db as PostgreSQL
+    Admin->>Dlg: confirmation word and current password
+    Dlg->>Api: password in the body, throttled 5 per 5 minutes
+    Api->>Api: verify the password first
+    alt wrong
+        Api-->>Dlg: 400 password.incorrect, counted toward lockout, field cleared
+    else locked out
+        Api-->>Dlg: 429 credentials.lockedOut
+    else ok
+        Api->>Rd: stream the file, header read and accepted
+        Rd->>Db: begin transaction, lock_timeout 15 s
+        Rd->>Db: foreign keys DEFERRABLE INITIALLY DEFERRED
+        Rd->>Db: TRUNCATE every table of the model
+        loop batches of 500 rows
+            Rd->>Db: INSERT with CAST of each text value to the column's store type
+        end
+        Rd->>Db: SET CONSTRAINTS ALL IMMEDIATE, keys back to NOT DEFERRABLE, sequences moved
+        alt value or reference rejected (SQLSTATE 22 or 23), bad shape
+            Db-->>Dlg: rollback, backup.invalidFile
+        else lock timeout, deadlock, serialization failure
+            Db-->>Dlg: rollback, 409 conflict.busy, safe to send again
+        else ok
+            Rd->>Db: read id and Sha256 of every restored attachment row
+            Rd->>Rd: copy each archive entry to a staging folder, hashing it
+            Rd->>Db: commit, or roll back with backup.invalidFile when a hash differs
+            Rd->>Rd: move the staged files into the attachment directory
+            Api->>Api: reload the instance settings snapshot
+            Api-->>Dlg: cookies cleared
+            Dlg->>Dlg: clear the query cache, go to the sign-in page
+        end
+    end
+```
