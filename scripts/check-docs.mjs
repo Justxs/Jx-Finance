@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fail, root, run } from "./run.mjs";
@@ -21,8 +22,52 @@ function slugify(heading) {
     .replace(/\s/g, "-");
 }
 
+const staged = process.argv.includes("--staged")
+  ? run("git", ["ls-files"], { capture: true }).stdout.split(/\r?\n/).filter(Boolean)
+  : null;
+const stagedSet = new Set(staged ?? []);
+const indexed = staged ? readIndex(staged.filter((file) => file.endsWith(".md"))) : new Map();
+
+function readIndex(paths) {
+  const output = execFileSync("git", ["cat-file", "--batch"], {
+    cwd: root,
+    input: paths.map((file) => `:${file}`).join("\n"),
+    maxBuffer: 1 << 28,
+  });
+  const contents = new Map();
+  let offset = 0;
+  for (const file of paths) {
+    const headerEnd = output.indexOf(10, offset);
+    const size = Number(output.subarray(offset, headerEnd).toString().split(" ")[2]);
+    contents.set(file, output.subarray(headerEnd + 1, headerEnd + 1 + size).toString("utf8"));
+    offset = headerEnd + 1 + size + 1;
+  }
+  return contents;
+}
+
+function onDisk(file) {
+  return existsSync(path.join(root, file));
+}
+
+function exists(target) {
+  return stagedSet.has(target) || onDisk(target);
+}
+
+function readDisk(file) {
+  return onDisk(file) ? readFileSync(path.join(root, file), "utf8") : "";
+}
+
 function parse(file) {
-  const lines = readFileSync(path.join(root, file), "utf8").split(/\r?\n/);
+  return scan(indexed.get(file) ?? readDisk(file));
+}
+
+function anchorsOf(file) {
+  const anchors = parse(file).anchors;
+  return staged ? new Set([...anchors, ...scan(readDisk(file)).anchors]) : anchors;
+}
+
+function scan(text) {
+  const lines = text.split(/\r?\n/);
   const anchors = new Set();
   const counts = new Map();
   const links = [];
@@ -47,12 +92,9 @@ function parse(file) {
   return { anchors, links, long };
 }
 
-const staged = process.argv.includes("--staged")
-  ? new Set(run("git", ["ls-files", "--", "*.md"], { capture: true }).stdout.split(/\r?\n/))
-  : null;
-const files = [...rootFiles.filter((file) => existsSync(path.join(root, file))), ...walk("docs")].filter(
-  (file) => !staged || staged.has(file),
-);
+const files = staged
+  ? staged.filter((file) => rootFiles.includes(file) || (file.startsWith("docs/") && file.endsWith(".md")))
+  : [...rootFiles.filter((file) => exists(file)), ...walk("docs")];
 const parsed = new Map(files.map((file) => [file, parse(file)]));
 const problems = [];
 
@@ -70,12 +112,12 @@ for (const file of files) {
     const resolved = pathPart
       ? path.posix.normalize(path.posix.join(path.posix.dirname(file), decodeURI(pathPart)))
       : file;
-    if (!existsSync(path.join(root, resolved))) {
+    if (!exists(resolved)) {
       problems.push(`${file}:${line}: broken link ${target}`);
       continue;
     }
     if (anchor && resolved.endsWith(".md")) {
-      const targetAnchors = parsed.get(resolved)?.anchors ?? parse(resolved).anchors;
+      const targetAnchors = anchorsOf(resolved);
       if (!targetAnchors.has(anchor)) problems.push(`${file}:${line}: no heading #${anchor} in ${resolved}`);
     }
   }
